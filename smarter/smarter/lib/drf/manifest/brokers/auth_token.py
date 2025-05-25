@@ -267,7 +267,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
 
         data = []
         name = kwargs.get(SAMMetadataKeys.NAME.value)
-        name = self.clean_cli_param(param=name, param_name="name", url=request.build_absolute_uri())
+        url = self.smarter_build_absolute_uri(request) or "Unknown URL"
+        name = self.clean_cli_param(param=name, param_name="name", url=url)
 
         if name:
             # if the name is not None, then we are looking for a specific SmarterAuthToken

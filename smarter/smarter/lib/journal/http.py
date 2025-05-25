@@ -211,7 +211,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             elif isinstance(e, str):
                 description = e
 
-        url = request.build_absolute_uri() if request else "Unknown URL"
+        url = request.build_absolute_uri() if request and hasattr(request, "build_absolute_uri") else "Unknown URL"
         status = str(status) if status else e.status if hasattr(e, "status") else "500"
         args = e.args if isinstance(e, dict) and hasattr(e, "args") else "url=" + url
         cause = str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else "Python Exception"

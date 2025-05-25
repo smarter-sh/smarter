@@ -21,7 +21,7 @@ def handle_chat_session_invoked(sender, instance: SmarterChatSession, request, *
     """Handle chat session invoked signal."""
     url: str = None
     if request is not None:
-        url = request.build_absolute_uri()
+        url = request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else None
 
     logger.info(
         "%s.%s %s - %s", formatted_text("smarter.apps.chatapp.receivers.chat_session_invoked"), sender, instance, url
@@ -33,7 +33,7 @@ def handle_chat_config_invoked_(sender, instance: ChatConfigView, request, *args
     """Handle chat config invoked signal."""
     url: str = None
     if request is not None:
-        url = request.build_absolute_uri()
+        url = request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else None
 
     logger.info(
         "%s.%s %s - %s", formatted_text("smarter.apps.chatapp.receivers.chat_config_invoked_"), sender, instance, url

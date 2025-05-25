@@ -124,7 +124,11 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             self.user = request.user
 
         self._smarter_request: WSGIRequest = request
-        url = request.build_absolute_uri() if request else "http://localhost:8000/"
+        url = (
+            request.build_absolute_uri()
+            if request and hasattr(request, "build_absolute_uri")
+            else "http://localhost:8000/"
+        )
         self._url = urlparse(url)
         self._url_urlunparse_without_params: str = None
 
@@ -802,8 +806,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
         # alternatively we look for the session key in the request body
         # and also in the request headers.
+        url = self.smarter_request.build_absolute_uri() if hasattr(self.smarter_request, "build_absolute_uri") else None
         session_key = (
-            session_key_from_url(self.smarter_request.build_absolute_uri())
+            session_key_from_url(url)
             or self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
             or self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
         )

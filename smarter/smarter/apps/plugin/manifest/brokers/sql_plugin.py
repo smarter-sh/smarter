@@ -133,7 +133,7 @@ class SAMSqlPluginBroker(AbstractBroker, AccountMixin):
 
         data = []
         name = kwargs.get(SAMMetadataKeys.NAME.value)
-        name = self.clean_cli_param(param=name, param_name="name", url=request.build_absolute_uri())
+        name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:

@@ -191,7 +191,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             self.account = self.chatbot.account
         else:
             self._name = self._name or name
-            self._url = self.request.build_absolute_uri()
+            self._url = self.smarter_build_absolute_uri(request)
             self._url = SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
         if not self.chatbot:
             if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
@@ -272,7 +272,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     # pylint: disable=W0613
     def get(self, request, *args, name: str = None, **kwargs):
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
-            url = self.chatbot_helper.url if self.chatbot_helper else request.build_absolute_uri()
+            url = self.chatbot_helper.url if self.chatbot_helper else self.smarter_build_absolute_uri(request)
             logger.info("%s.get(): url=%s", self.formatted_class_name, url)
             logger.info("%s.get(): headers=%s", self.formatted_class_name, request.META)
         retval = {

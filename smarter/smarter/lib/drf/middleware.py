@@ -79,7 +79,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
     def url(self) -> str:
         """Return the full URL from the request object."""
         if self.request:
-            return self.request.build_absolute_uri()
+            return self.request.build_absolute_uri() if hasattr(self.request, "build_absolute_uri") else None
 
     def __init__(self, get_response):
         super().__init__(get_response)

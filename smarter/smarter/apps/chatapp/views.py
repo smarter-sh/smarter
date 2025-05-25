@@ -91,7 +91,7 @@ class SmarterChatSession(SmarterRequestMixin):
     def __init__(self, request, *args, chatbot: ChatBot = None, **kwargs):
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
 
-        self._url = self.clean_url(request.build_absolute_uri())
+        self._url = self.clean_url(request.build_absolute_uri()) if hasattr(request, "build_absolute_uri") else None
 
         if chatbot:
             self._chatbot = chatbot
@@ -378,7 +378,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code >= 300:
             return response
-        self.url = request.build_absolute_uri()
+        self.url = self.smarter_build_absolute_uri(request)
 
         try:
             if waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE) or waffle.switch_is_active(
