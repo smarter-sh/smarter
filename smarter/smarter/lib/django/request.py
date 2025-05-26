@@ -119,9 +119,10 @@ class SmarterRequestMixin(AccountMixin):
 
         if not request:
             logger.warning("%s - request is None", self.formatted_class_name)
+        if not self.smarter_request_ready:
             return None
 
-        self.helper_logger(f"init() request: {self.url}")
+        self.helper_logger(f"init() request: {self._url}")
 
         # lazy excuses to not do anything...
         if not self.qualified_request:
@@ -160,36 +161,6 @@ class SmarterRequestMixin(AccountMixin):
 
         if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             self.dump()
-
-        cached_properties = [
-            "qualified_request",
-            "url",
-            "url_path_parts",
-            "smarter_request_chatbot_id",
-            "smarter_request_chatbot_name",
-            "timestamp",
-            "data",
-            "unique_client_string",
-            "client_key",
-            "ip_address",
-            "user_agent",
-            "is_config",
-            "is_dashboard",
-            "is_environment_root_domain",
-            "is_smarter_api",
-            "is_chatbot_smarter_api_url",
-            "is_chatbot_cli_api_url",
-            "is_chatbot_named_url",
-            "is_chatbot_sandbox_url",
-            "is_default_domain",
-            "path",
-            "root_domain",
-            "subdomain",
-            "api_subdomain",
-            "domain",
-        ]
-        for prop in cached_properties:
-            self.__dict__.pop(prop, None)
 
     # pylint: disable=W0613
     def __init__(self, request: WSGIRequest, *args, **kwargs):
@@ -241,6 +212,50 @@ class SmarterRequestMixin(AccountMixin):
             logger.warning("%s - request url is None.", self.formatted_class_name)
 
         self.init(request=request)
+        self.invalidate_cached_properties()
+
+        if self.smarter_request_ready:
+            self.helper_logger("__init__() initialized successfully.")
+        else:
+            logger.error(
+                "%s.__init__() request is not ready. Please check the request object and ensure it is valid.",
+                self.formatted_class_name,
+            )
+
+    def invalidate_cached_properties(self):
+        """
+        Invalidate cached properties to force re-evaluation.
+        This is useful for testing or when the request object changes.
+        """
+        cached_properties = [
+            "qualified_request",
+            "url",
+            "url_path_parts",
+            "smarter_request_chatbot_id",
+            "smarter_request_chatbot_name",
+            "timestamp",
+            "data",
+            "unique_client_string",
+            "client_key",
+            "ip_address",
+            "user_agent",
+            "is_config",
+            "is_dashboard",
+            "is_environment_root_domain",
+            "is_smarter_api",
+            "is_chatbot_smarter_api_url",
+            "is_chatbot_cli_api_url",
+            "is_chatbot_named_url",
+            "is_chatbot_sandbox_url",
+            "is_default_domain",
+            "path",
+            "root_domain",
+            "subdomain",
+            "api_subdomain",
+            "domain",
+        ]
+        for prop in cached_properties:
+            self.__dict__.pop(prop, None)
 
     @property
     def smarter_request(self) -> WSGIRequest:
@@ -869,3 +884,14 @@ class SmarterRequestMixin(AccountMixin):
         Dump the object to the console.
         """
         return json.dumps(self.to_json(), indent=4)
+
+    @property
+    def smarter_request_ready(self) -> bool:
+        """
+        a comprehensive self-check to determine if the request is ready for processing.
+        """
+        try:
+            self.to_json()
+            return True
+        except SmarterValueError:
+            return False

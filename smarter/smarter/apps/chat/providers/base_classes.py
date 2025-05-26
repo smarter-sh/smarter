@@ -223,7 +223,6 @@ class ChatProviderBase(ProviderDbMixin):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.init()
         self.chat = kwargs.get("chat")
         self._provider = provider
         self._base_url = base_url
@@ -248,7 +247,6 @@ class ChatProviderBase(ProviderDbMixin):
         chat_provider_initialized.send(sender=self)
 
     def init(self):
-        super().init()
         self._default_model = None
         self._default_system_role = None
         self._default_temperature = None

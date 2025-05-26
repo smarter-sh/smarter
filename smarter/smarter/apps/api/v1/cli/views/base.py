@@ -300,7 +300,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
-        self.init(*args, request=request, **kwargs)
 
     def initial(self, request, *args, **kwargs):
         """
@@ -315,6 +314,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         try:
             super().initial(request, *args, **kwargs)
         except NotAuthenticated as e:
+            # regardless of the authentication error, we still need to
+            # initialize the SmarterRequestMixin so that we can
+            # access the request object, headers, url, etc.
+            SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
             auth_header = request.headers.get("Authorization")
             if auth_header:
                 logger.error(
@@ -330,12 +333,17 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 "Smarter api v1 command-line interface error: authentication failed"
             ) from e
 
-        # FIX NOTE: do we need this 2nd call to init()?
-        self.init(*args, request=request, **kwargs)
+        # allow me to explain: none of the SmarterRequestMixin initialization is
+        # relevant unless/until the request object a.) exists, and b.) is authenticated.
+        # so we necessarily have to defer this call until after the
+        # super().initial() call has been made and has succeeded.
+        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         if self.smarter_request is None:
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}.smarter_request request object is not set. This should not happen."
             )
+        if not self.smarter_request_ready:
+            raise SmarterValueError(f"{self.formatted_class_name}.smarter_request is not ready. Cannot continue.")
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data

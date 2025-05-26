@@ -7,6 +7,8 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
+from logging import getLogger
+
 from django.test import Client
 from django.urls import reverse
 
@@ -20,6 +22,9 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..const import namespace
 from ..utils import json_schema_name, manifest_name
+
+
+logger = getLogger(__name__)
 
 
 class TestDocsUrls(SmarterTestBase):
@@ -52,6 +57,7 @@ class TestDocsUrls(SmarterTestBase):
         """Process url."""
         self.client.logout()
         self.client.force_login(self.user)
+        logger.info("%s - Testing URL: %s", self.__class__.__name__, url)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
