@@ -62,8 +62,8 @@ class ProviderBaseClass(TestAccountMixin):
     _chat_completion_tool_call_received = False
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.init()
+        super().__init__(*args, **kwargs)
 
     def init(self):
         self._provider = None
