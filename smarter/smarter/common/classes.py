@@ -1,9 +1,14 @@
 """Common classes"""
 
+from logging import getLogger
+
 from django.http import HttpRequest
 
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.validators import SmarterValidator
+
+
+logger = getLogger(__name__)
 
 
 class Singleton(type):
@@ -52,8 +57,13 @@ class SmarterHelperMixin:
         url: str = None
 
         try:
-            url = request.build_absolute_uri(request) if hasattr(request, "build_absolute_uri") else None
+            url = request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else None
         except (AttributeError, KeyError):
+            logger.warning(
+                "%s.smarter_build_absolute_uri() failed to call request.build_absolute_uri() with error: %s",
+                self.formatted_class_name,
+                formatted_text("AttributeError or KeyError"),
+            )
             url = None
 
         if url is not None:
@@ -64,7 +74,11 @@ class SmarterHelperMixin:
             if SmarterValidator.is_valid_url(url):
                 return url
         except (AttributeError, KeyError):
-            pass
+            logger.warning(
+                "%s.smarter_build_absolute_uri() failed to call request.get_host() or request.get_full_path() with error: %s",
+                self.formatted_class_name,
+                formatted_text("AttributeError or KeyError"),
+            )
 
         try:
             scheme = request.META.get("wsgi.url_scheme", "http")
@@ -72,7 +86,21 @@ class SmarterHelperMixin:
             path = request.get_full_path()
             url = f"{scheme}://{host}{path}"
             if SmarterValidator.is_valid_url(url):
+                logger.info(
+                    "%s.smarter_build_absolute_uri() generated with request.META parameters: %s",
+                    self.formatted_class_name,
+                    url,
+                )
                 return url
         except (AttributeError, KeyError):
-            pass
+            logger.warning(
+                "%s.smarter_build_absolute_uri() failed to build URL from request.META with error: %s",
+                self.formatted_class_name,
+                formatted_text("AttributeError or KeyError"),
+            )
+
+        logger.error(
+            "%s.smarter_build_absolute_uri() failed to generate a valid URL from the request object.",
+            self.formatted_class_name,
+        )
         return None
