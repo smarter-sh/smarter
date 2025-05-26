@@ -6,7 +6,7 @@ from logging import getLogger
 
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
 from .signals import chat_config_invoked, chat_session_invoked
 from .views import ChatConfigView, SmarterChatSession
@@ -29,12 +29,13 @@ def handle_chat_session_invoked(sender, instance: SmarterChatSession, request, *
 
 
 @receiver(chat_config_invoked, dispatch_uid="chat_config_invoked")
-def handle_chat_config_invoked_(sender, instance: ChatConfigView, request, *args, **kwargs):
+def handle_chat_config_invoked_(sender, instance: ChatConfigView, request, data: dict, *args, **kwargs):
     """Handle chat config invoked signal."""
-    url: str = None
-    if request is not None:
-        url = request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else None
+    url: str = sender.url
 
     logger.info(
-        "%s.%s %s - %s", formatted_text("smarter.apps.chatapp.receivers.chat_config_invoked_"), sender, instance, url
+        "%s url=%s, data=%s",
+        formatted_text("smarter.apps.chatapp.receivers.chat_config_invoked"),
+        url,
+        formatted_json(data),
     )

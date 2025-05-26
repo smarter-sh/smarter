@@ -8,6 +8,7 @@ from http import HTTPStatus
 from typing import Type
 
 import yaml
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import QueryDict
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
@@ -129,10 +130,14 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _params: dict[str, any] = None
     _prompt: str = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request = kwargs.get("request", None)
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.CliBaseApiView()"
 
     @property
     def loader(self) -> SAMLoader:
@@ -290,18 +295,21 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return SmarterJournalCliCommands(_command)
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
-    def setup(self, request, *args, **kwargs):
+    def setup(self, request: WSGIRequest, *args, **kwargs):
         """
         Setup the view. This is called by Django before dispatch() and is used to
         set up the view for the request.
         """
         super().setup(request, *args, **kwargs)
+        # experiment: we want to ensure that the request object is
+        # initialized before we call the SmarterRequestMixin.
+        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
 
-    def initial(self, request, *args, **kwargs):
+    def initial(self, request: WSGIRequest, *args, **kwargs):
         """
         Initialize the view. This is called by DRF after setup() but before dispatch().
         """
@@ -350,7 +358,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # from the request body, and then we'll leave it to the child views to
         # decide if/when to actually parse the manifest and instantiate the broker.
         try:
-            data = request.body.decode("utf-8")
+            data = request.body.decode("utf-8") if request and hasattr(request, "body") else {}
+            self._data = json.loads(data)
+            logger.info("%s.initial() set self._data from request.body: %s", self.formatted_class_name, self.data)
             # if the command is 'chat', then the raw prompt text
             # or the encoded file attachment data will be in the request body.
             # otherwise, the request body should contain manifest text.
@@ -399,7 +409,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 )
 
     # pylint: disable=too-many-return-statements,too-many-branches
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: WSGIRequest, *args, **kwargs):
         """
         Dispatch the request to the appropriate handler method. This is
         called by the Django REST framework when a request is received.

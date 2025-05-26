@@ -223,30 +223,8 @@ class ChatProviderBase(ProviderDbMixin):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.chat = kwargs.get("chat")
-        self._provider = provider
-        self._base_url = base_url
-        self._api_key = api_key
 
-        self._default_model = default_model
-        self._default_system_role = default_system_role
-        self._default_temperature = default_temperature
-        self._default_max_tokens = default_max_tokens
-        self._valid_chat_completion_models = valid_chat_completion_models
-
-        weather_tool = weather_tool_factory()
-        self.tools: list[dict] = [weather_tool] if add_built_in_tools else []
-        self.available_functions = (
-            {
-                "get_current_weather": get_current_weather,
-            }
-            if add_built_in_tools
-            else {}
-        )
-
-        chat_provider_initialized.send(sender=self)
-
-    def init(self):
+        # constructor arguments
         self._default_model = None
         self._default_system_role = None
         self._default_temperature = None
@@ -286,7 +264,30 @@ class ChatProviderBase(ProviderDbMixin):
             InternalKeys.MESSAGES_KEY: [],
         }
 
+        # initializations
         self.serialized_tool_calls = None
+        self.chat = kwargs.get("chat")
+        self._provider = provider
+        self._base_url = base_url
+        self._api_key = api_key
+
+        self._default_model = default_model
+        self._default_system_role = default_system_role
+        self._default_temperature = default_temperature
+        self._default_max_tokens = default_max_tokens
+        self._valid_chat_completion_models = valid_chat_completion_models
+
+        weather_tool = weather_tool_factory()
+        self.tools: list[dict] = [weather_tool] if add_built_in_tools else []
+        self.available_functions = (
+            {
+                "get_current_weather": get_current_weather,
+            }
+            if add_built_in_tools
+            else {}
+        )
+
+        chat_provider_initialized.send(sender=self)
 
     def validate(self):
 

@@ -264,7 +264,7 @@ class ChatConfigView(View, SmarterRequestMixin):
         """
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s - post()", self.formatted_class_name)
-        data = self.config(request=request)
+        data = self.config()
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     # pylint: disable=unused-argument
@@ -274,7 +274,7 @@ class ChatConfigView(View, SmarterRequestMixin):
         """
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s - get()", self.formatted_class_name)
-        data = self.config(request=request)
+        data = self.config()
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     def clean_url(self, url: str) -> str:
@@ -286,13 +286,13 @@ class ChatConfigView(View, SmarterRequestMixin):
             retval = retval[:-8]
         return retval
 
-    def config(self, request) -> dict:
+    def config(self) -> dict:
         """
         React context for all templates that render
         a React app.
         """
         chatbot_serializer = (
-            ChatBotConfigSerializer(self.chatbot, context={"request": request}) if self.chatbot else None
+            ChatBotConfigSerializer(self.chatbot, context={"request": self.smarter_request}) if self.chatbot else None
         )
 
         # plugins context. the main thing we need here is to constrain the number of plugins
@@ -332,7 +332,7 @@ class ChatConfigView(View, SmarterRequestMixin):
                 },
             },
         }
-        chat_config_invoked.send(sender=self.__class__, instance=self, request=request)
+        chat_config_invoked.send(sender=self.__class__, instance=self, request=self.smarter_request, data=retval)
         return retval
 
 

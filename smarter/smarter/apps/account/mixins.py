@@ -132,8 +132,8 @@ class AccountMixin(SmarterHelperMixin):
         Returns the class name in a formatted string
         along with the name of this mixin.
         """
-        child_class = super().formatted_class_name
-        return f"{child_class} -> AccountMixin()"
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class} AccountMixin()"
 
     @property
     def account(self) -> Account:

@@ -516,6 +516,14 @@ class ChatBotHelper(SmarterRequestMixin):
         "_err",
     )
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for the ChatBotHelper.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.ChatBotHelper()"
+
     def init_slots(self):
         self._chatbot: ChatBot = None
         self._chatbot_custom_domain: ChatBotCustomDomain = None
@@ -685,10 +693,6 @@ class ChatBotHelper(SmarterRequestMixin):
                 self._name = path_parts[2]
 
         return self._name
-
-    @property
-    def formatted_class_name(self):
-        return formatted_text(self.__class__.__name__)
 
     def log_dump(self):
         if not self._chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):

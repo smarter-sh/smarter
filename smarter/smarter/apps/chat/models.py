@@ -154,10 +154,9 @@ class ChatHelper(SmarterRequestMixin):
         if not request:
             logger.error("ChatHelper - request object is missing.")
         logger.info("%s - session_key: %s, chatbot: %s", self.formatted_class_name, session_key, chatbot)
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
         self._chat: Chat = None
         self._chatbot: ChatBot = chatbot
-        self.session_key = session_key
         self._clean_url: str = None
 
         if not session_key and not chatbot:
@@ -175,6 +174,14 @@ class ChatHelper(SmarterRequestMixin):
         return self.session_key
 
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for the ChatBotHelper.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.ChatHelper()"
+
+    @property
     def chat(self):
         return self._chat
 
@@ -183,10 +190,6 @@ class ChatHelper(SmarterRequestMixin):
         if self._chatbot:
             return self._chatbot
         self._chatbot = get_cached_chatbot_by_request(request=self.request)
-
-    @property
-    def formatted_class_name(self):
-        return formatted_text(self.__class__.__name__)
 
     @property
     def chat_history(self) -> ChatHistory:

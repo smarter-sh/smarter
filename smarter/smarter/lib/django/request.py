@@ -112,7 +112,7 @@ class SmarterRequestMixin(AccountMixin):
         parent of Classes that do not necessarily initialize with a request object.
         For example, Django Views do not pass a request object to the __init__ method.
         """
-        logger.info("%s.init() -> SmarterRequestMixin()", self.formatted_class_name)
+        logger.info("%s.init()", self.formatted_class_name)
         if self._smarter_request:
             # we've already been initialized. nothing to do.
             return None
@@ -133,7 +133,7 @@ class SmarterRequestMixin(AccountMixin):
             if account_number:
                 if self.account and self.account.account_number != account_number:
                     logger.warning(
-                        "%s.init() -> SmarterRequestMixin() - account number from url (%s) does not match existing account (%s). Changing to account from named url %s.",
+                        "%s.init() - account number from url (%s) does not match existing account (%s). Changing to account from named url %s.",
                         self.formatted_class_name,
                         account_number,
                         self.account.account_number,
@@ -143,7 +143,7 @@ class SmarterRequestMixin(AccountMixin):
 
             if self.account and not self._user:
                 logger.warning(
-                    "%s.init() -> SmarterRequestMixin() - account (%s) is set but user is not. Attempting to get admin user for account %s.",
+                    "%s.init() - account (%s) is set but user is not. Attempting to get admin user for account %s.",
                     self.formatted_class_name,
                     self.account,
                     self.account.account_number,
@@ -163,7 +163,7 @@ class SmarterRequestMixin(AccountMixin):
             self.dump()
 
     # pylint: disable=W0613
-    def __init__(self, request: WSGIRequest, *args, **kwargs):
+    def __init__(self, request: WSGIRequest, *args, session_key: str = None, **kwargs):
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
@@ -174,7 +174,7 @@ class SmarterRequestMixin(AccountMixin):
         # do lazy initialization of the request object first.
         self._smarter_request: WSGIRequest = request
         self._timestamp = datetime.now()
-        self._session_key: str = None
+        self._session_key: str = session_key
         self._data: dict = None
         self._url = None
         self._url_urlunparse_without_params = None
@@ -207,6 +207,7 @@ class SmarterRequestMixin(AccountMixin):
 
             # either extract or generate a session_key.
             self._session_key = self.get_session_key()
+            logger.info("%s.__init__() - session_key=%s", self.formatted_class_name, self._session_key)
 
         else:
             logger.warning("%s - request url is None.", self.formatted_class_name)
@@ -767,6 +768,15 @@ class SmarterRequestMixin(AccountMixin):
             return None
         return self.parsed_url.netloc if self.parsed_url else None
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.SmarterRequestMixin()"
+
     # --------------------------------------------------------------------------
     # instance methods
     # --------------------------------------------------------------------------
@@ -839,14 +849,13 @@ class SmarterRequestMixin(AccountMixin):
         Create a log entry
         """
         if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-            logger.info("%s -> SmarterRequestMixin() %s", self.formatted_class_name, message)
+            logger.info("%s %s", self.formatted_class_name, message)
 
     def get_session_key(self) -> str:
         """
         Extract the session key from the URL, the request body, or the request headers.
         """
         if not self.smarter_request:
-            self.helper_logger("get_session_key() - request is None")
             return None
         session_key: str = None
 
@@ -877,6 +886,7 @@ class SmarterRequestMixin(AccountMixin):
 
         # if we still don't have a session key, we generate a new one.
         session_key = self.generate_key()
+        self.helper_logger(f"get_session_key() - generated new session_key: {session_key}")
         return session_key
 
     def dump(self):
