@@ -19,6 +19,15 @@ class ApiV1CliUndeployApiView(CliBaseApiView):
     This class is a child of the Django Rest Framework View.
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliUndeployApiView()"
+
     @swagger_auto_schema(
         operation_description="""
 Executes the 'undeploy' command for deployable Smarter resources. The resource name is passed in the url query parameters.

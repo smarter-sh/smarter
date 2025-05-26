@@ -23,6 +23,15 @@ class ApiV1CliManifestApiView(CliBaseApiView):
     authentication_classes = ()
     permission_classes = ()
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliManifestApiView()"
+
     @swagger_auto_schema(
         operation_description="""
 Executes the 'manifest' command for Smarter resources. The resource name is passed in the url query parameters.

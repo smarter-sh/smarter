@@ -44,24 +44,18 @@ class ProviderDbMixin(AccountMixin):
         """
         Constructor method for the ProviderDbMixin class.
         """
-        self.init()
-        super().__init__(*args, **kwargs)
-        session_key = kwargs.get("session_key", None)
-        if session_key:
-            self._chat = Chat.objects.get(session_key=session_key)
-        else:
-            self._chat = kwargs.get("chat", None)
-
-    def init(self):
-        """
-        This method initializes the provider instance.
-        """
         self._chat: Chat = None
         self._chat_tool_call: ChatToolCall = None
         self._chat_plugin_usage: ChatPluginUsage = None
         self._charges: QuerySet[Charge] = None
         self._chat_history: QuerySet[ChatHistory] = None
         self._message_history: list[dict] = None
+        super().__init__(*args, **kwargs)
+        session_key = kwargs.get("session_key", None)
+        if session_key:
+            self._chat = Chat.objects.get(session_key=session_key)
+        else:
+            self._chat = kwargs.get("chat", None)
 
     @property
     def ready(self) -> bool:

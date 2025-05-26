@@ -22,6 +22,15 @@ from ..base import CliBaseApiView
 class ApiV1CliStatusApiView(CliBaseApiView):
     """Smarter API command-line interface 'apply' view"""
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliStatusApiView()"
+
     def get_service_status(self, region_name):
         try:
             client = boto3.client("health", region_name=region_name)

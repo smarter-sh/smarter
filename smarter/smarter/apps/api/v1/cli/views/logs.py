@@ -19,6 +19,15 @@ class ApiV1CliLogsApiView(CliBaseApiView):
     This class is a child of the Django Rest Framework View.
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliLogsApiView()"
+
     @swagger_auto_schema(
         operation_description="""
 Executes the 'logs' command for Smarter resources. The resource name is passed in the url query parameters.

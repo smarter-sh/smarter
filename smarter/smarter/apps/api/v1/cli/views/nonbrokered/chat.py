@@ -63,6 +63,15 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
     _is_config_view: bool = False
 
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliChatBaseApiView()"
+
+    @property
     def is_config_view(self) -> bool:
         """
         True if this is a config view, as opposed to the chat view
@@ -82,7 +91,9 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             return None
         retval = self.data.get("prompt", None)
         if not retval:
-            raise APIV1CLIChatViewError("Internal error. 'prompt' key is missing from the request body.")
+            raise APIV1CLIChatViewError(
+                f"Internal error. 'prompt' key is missing from the request body. self.data: {self.data}"
+            )
         return retval
 
     @property
@@ -144,8 +155,10 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         common validations for the chat views. This is called before dispatch() and is used to
         """
 
-    def setup(self, request: WSGIRequest, *args, **kwargs):
+    def initial(self, request: WSGIRequest, *args, **kwargs):
         """
+        Initialize the view. This is called by DRF after setup() but before dispatch().
+
         Base dispatch method for the Chat views. This method will attempt to
         extract the session_key from the request body. If the session_key is
         not provided then it will attempt to retrieve it from the cache. If
@@ -163,26 +176,18 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             distinguished from the manifest text based on the url path.
 
         """
-        super().setup(request, *args, **kwargs)
+        super().initial(request, *args, **kwargs)
         self._name = kwargs.get(SAMMetadataKeys.NAME.value)
-        logger.info("%s Chat view name: %s", self.formatted_class_name, self.name)
+        logger.info("%s.initial() chat view name: %s", self.formatted_class_name, self.name)
 
-        try:
-            # extract the body from the request body
-            # if it exists.
-            self._data = json.loads(request.body)
-
-            # try to extract the session_key from the request body
-            # if it exists.
-            self._session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        except json.JSONDecodeError:
-            pass
-
-    def dispatch(self, request, *args, **kwargs):
+        if not self.data and not self.is_config_view:
+            raise APIV1CLIChatViewError(
+                f"Internal error. Request body is empty. This is intended to be a json object with a 'prompt' key and an optional 'session_key' key. url: {self.url}"
+            )
 
         if not self.uid:
             raise APIV1CLIChatViewError(
-                f"Internal error. UID is missing. This is intended to be a unique identifier for the client, passed as a url param named 'uid'. url: {self.smarter_build_absolute_uri(request)}"
+                f"Internal error. UID is missing. This is intended to be a unique identifier for the client, passed as a url param named 'uid'. url: {self.url}"
             )
 
         self.cache_key = (self.__class__.__name__, self.request.user.username, self.name, self.uid)
@@ -193,10 +198,24 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             self._session_key = None
             cache.delete(self.cache_key)
 
-        # attempt to retrieve a session_key from the cache. if we get a hit
+        # 1.) attempt to retrieve a session_key from the cache. if we get a hit
         # then we will update the request body with the session_key
         # and pass it along to the ChatConfigView.
-        self._session_key = cache.get(self.cache_key)
+        session_key = cache.get(self.cache_key)
+        if session_key:
+            self._session_key = session_key
+            logger.info("%s.initial() found a cached session_key: %s", self.formatted_class_name, self.session_key)
+        else:
+            # 2.) try to extract the session_key from the request body if it exists.
+            session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
+            if session_key:
+                self._session_key = session_key
+                logger.info(
+                    "%s.initial() session_key found in request body: %s", self.formatted_class_name, self.session_key
+                )
+
+        # 3.) at this point we either have a session_key from the cache, or from the request body
+        #     or from SmarterRequestMixin(). Otherwise, this will raise a SmarterValueError.
         if self.session_key:
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.info(
@@ -213,8 +232,6 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             request._body = new_body.encode("utf-8")
 
         self.validate()
-
-        return super().dispatch(request, *args, **kwargs)
 
 
 class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
@@ -248,6 +265,15 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
     _chat_config: dict = None
     _chat_history: ChatHistory = None
     _messages: list[dict] = None
+
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliChatApiView()"
 
     @property
     def chat_config(self) -> dict:
