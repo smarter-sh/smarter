@@ -462,9 +462,14 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                         ) from e
                     _, created = ChatBotPlugin.objects.get_or_create(chatbot=self.chatbot, plugin_meta=plugin)
                     if created:
-                        logger.info("Attached Plugin %s to ChatBot %s", plugin.name, self.chatbot.name)
+                        logger.info(
+                            "%s attached Plugin %s to ChatBot %s",
+                            self.formatted_class_name,
+                            plugin.name,
+                            self.chatbot.name,
+                        )
 
-            # ChatBotFunctions: add what's missing, remove what in the model but not in the manifest
+            # ChatBotFunctions: add what's missing, remove what's in the model but not in the manifest
             # -------------
             for function in ChatBotFunctions.objects.filter(chatbot=self.chatbot):
                 if function.name not in self.manifest.spec.functions:
@@ -479,7 +484,12 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                         )
                     _, created = ChatBotFunctions.objects.get_or_create(chatbot=self.chatbot, name=function)
                     if created:
-                        logger.info("Attached Function %s to ChatBot %s", function, self.chatbot.name)
+                        logger.info(
+                            "%s attached Function %s to ChatBot %s",
+                            self.formatted_class_name,
+                            function,
+                            self.chatbot.name,
+                        )
 
             # done! return the response. Django will take care of committing the transaction
             return self.json_response_ok(command=command, data={})

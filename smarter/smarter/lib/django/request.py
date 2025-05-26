@@ -28,7 +28,6 @@ from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
 )
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.url_helpers import session_key_from_url
@@ -40,7 +39,7 @@ from smarter.lib.django.validators import SmarterValidator
 logger = logging.getLogger(__name__)
 
 
-class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
+class SmarterRequestMixin(AccountMixin):
     """
     Helper class for the Django request object that enforces authentication and
     provides lazy loading of the user, account, user profile and session_key.
@@ -111,7 +110,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         parent of Classes that do not necessarily initialize with a request object.
         For example, Django Views do not pass a request object to the __init__ method.
         """
-        logger.info("%s.init()", self.formatted_class_name)
+        logger.info("%s.init() -> SmarterRequestMixin()", self.formatted_class_name)
         if self._smarter_request:
             # we've already been initialized. nothing to do.
             return None
@@ -119,14 +118,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if not request:
             logger.warning("%s - request is None", self.formatted_class_name)
             return None
-
-        if hasattr(request, "user") and request.user and request.user.is_authenticated:
-            self.user = request.user
-
-        self._smarter_request: WSGIRequest = request
-        url = self.smarter_build_absolute_uri(request) or "http://localhost:8000/"
-        self._url = urlparse(url)
-        self._url_urlunparse_without_params: str = None
 
         self.helper_logger(f"init() request: {self.url}")
         self.session_key = self.get_session_key()
@@ -187,25 +178,43 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
     # pylint: disable=W0613
     def __init__(self, request: WSGIRequest, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._smarter_request: WSGIRequest = None
+        # validate, standardize and parse the request url string into a ParseResult.
+        # Note that the setter and getter both work with strings
+        # but we store the private instance variable _url as a ParseResult.
+        request = request or kwargs.pop("request", None)
+        if not request and args:
+            request = args[0]
+
+        # do lazy initialization of the request object first.
+        self._smarter_request: WSGIRequest = request
         self._timestamp = datetime.now()
         self._session_key: str = None
         self._data: dict = None
         self._url = None
         self._url_urlunparse_without_params = None
 
-        # validate, standardize and parse the request url string into a ParseResult.
-        # Note that the setter and getter both work with strings
-        # but we store the private instance variable _url as a ParseResult.
-        request: WSGIRequest = request or kwargs.get("request", None)
-        if not request and args:
-            request = args[0]
-        self._smarter_request = request
-
         if not request:
             logger.warning("%s - request is None. Ditching.", self.formatted_class_name)
             return None
+
+        url = self.smarter_build_absolute_uri(self.smarter_request)
+        if not url:
+            logger.warning("%s - request url is None. Ditching.", self.formatted_class_name)
+            return None
+        self._url = urlparse(url)
+        if not self._url:
+            logger.warning("%s - request url is not a valid URL. Ditching.", self.formatted_class_name)
+            return None
+
+        # pop the account, user and user_profile from kwargs, if they exist.
+        # this is to allow the class to be used in a context where these are not
+        # provided, such as in a Django View where the request object is passed
+        # but the account, user and user_profile are not.
+        account = kwargs.pop("account", None)
+        user = kwargs.pop("user", None)
+        user_profile = kwargs.pop("user_profile", None)
+        super().__init__(*args, request=request, account=account, user=user, user_profile=user_profile, **kwargs)
+
         self.init(request=request)
 
     @property
@@ -267,9 +276,10 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             )
             self._url_urlunparse_without_params = SmarterValidator.urlify(self._url_urlunparse_without_params)
             return self._url_urlunparse_without_params
-        logger.warning(
-            "%s.url() - property was accessed prior to url being set. Returning None", self.formatted_class_name
-        )
+        raise ValueError("URL has not been set. Please set the URL before accessing this property.")
+        # logger.warning(
+        #     "%s.url() - property was accessed prior to url being set. Returning None", self.formatted_class_name
+        # )
 
     @property
     def parsed_url(self) -> ParseResult:
