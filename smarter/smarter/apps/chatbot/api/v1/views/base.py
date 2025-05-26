@@ -49,6 +49,12 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     - api key authentication
     - Account and ChatBot initializations
     - dispatching.
+
+    examples:
+    - https://customer-support.3141-5926-5359.api.smarter.sh/
+    - https://platform.smarter/chatbots/example/
+    - https://platform.smarter/api/v1/chatbots/1/chat/
+
     """
 
     _chatbot_id: int = None
@@ -67,11 +73,6 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     def session_key(self):
         # Initialize the chat session for this request. session_key is generated
         # and managed by the /config/ endpoint for the chatbot
-        #
-        # examples:
-        # - https://customer-support.3141-5926-5359.api.smarter.sh/
-        # - https://platform.smarter/chatbots/example/
-        # - https://platform.smarter/api/v1/chatbots/1/chat/
         #
         # The React app calls this endpoint at app initialization to get a
         # json dict that includes, among other pertinent info, this session_key
@@ -119,7 +120,16 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         if not (self.url or self.chatbot_id or (self.account and self.name)):
             return None
         try:
-            self._chatbot_helper = ChatBotHelper(request=self.request, name=self.name, chatbot_id=self.chatbot_id)
+            self._chatbot_helper = ChatBotHelper(
+                request=self.request,
+                name=self.name,
+                chatbot_id=self.chatbot_id,
+                # these would hopefully have been set by AccountMixin,
+                # and if so then we should propagate them to the ChatBotHelper.
+                account=self.account,
+                user=self.user,
+                user_profile=self.user_profile,
+            )
         # smarter.apps.chatbot.models.ChatBot.DoesNotExist: ChatBot matching query does not exist.
         except ChatBot.DoesNotExist as e:
             raise SmarterChatBotException("ChatBot not found") from e

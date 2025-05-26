@@ -293,7 +293,7 @@ class TestPluginBase(TestAccountMixin):
         # verify that all of the sample plugins were correctdly created
         # and are in a ready state.
         for plugin in plugins:
-            self.assertTrue(StaticPlugin(plugin_meta=plugin).ready)
+            self.assertTrue(StaticPlugin(user_profile=self.user_profile, plugin_meta=plugin).ready)
 
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):

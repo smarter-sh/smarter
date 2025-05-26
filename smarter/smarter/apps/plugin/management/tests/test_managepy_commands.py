@@ -71,7 +71,13 @@ class ManageCommandCreatePluginTestCase(TestPluginClassBase):
             f"{self.file_path}",
         )
         call_command(
-            "update_plugin", "--account_number", f"{self.account.account_number}", "--file_path", f"{self.file_path}"
+            "update_plugin",
+            "--account_number",
+            f"{self.account.account_number}",
+            "--username",
+            f"{self.admin_user.username}",
+            "--file_path",
+            f"{self.file_path}",
         )
 
     def test_delete_plugin(self):

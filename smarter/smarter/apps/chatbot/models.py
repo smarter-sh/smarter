@@ -531,10 +531,31 @@ class ChatBotHelper(SmarterRequestMixin):
         :param environment: The environment to use for the URL. (for unit testing only)
         """
         self.init_slots()
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+
+        # SmarterRequestMixin inherits AccountMixin, so we should consider
+        # the possibility that at least some of the initialization data
+        # for AccountMixin might be passed in via kwargs.
+        request = request or kwargs.pop("request", None)
+        account = kwargs.pop("account", None)
+        user = kwargs.pop("user", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, *args, request=request, account=account, user=user, user_profile=user_profile, **kwargs
+        )
 
         self._chatbot_id: int = self._chatbot_id or chatbot_id or self.smarter_request_chatbot_id
         self._name: str = self._name or name or self.smarter_request_chatbot_name
+
+        logger.info(
+            "%s.__init__() initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s",
+            self.formatted_class_name,
+            self.url,
+            self.name,
+            self.chatbot_id,
+            self.user,
+            self.account,
+        )
+        logger.info("%s request=%s, smarter_request=%s", self.formatted_class_name, request, self.smarter_request)
 
         if self.chatbot:
             self.account = self.chatbot.account
@@ -714,6 +735,8 @@ class ChatBotHelper(SmarterRequestMixin):
           returns 'alpha.api.smarter.sh'
         - https://hr.smarter.querium.com/chatbot/
           return 'smarter.querium.com'
+        - http://api.localhost:8000
+          return 'api.localhost:8000'
         """
         if self.is_default_domain:
             return smarter_settings.environment_api_domain
@@ -722,7 +745,7 @@ class ChatBotHelper(SmarterRequestMixin):
             return ".".join(domain_parts[1:])
         if self.is_chatbot_sandbox_url:
             return self.path
-        return None
+        return smarter_settings.environment_api_domain
 
     @property
     def is_custom_domain(self) -> bool:

@@ -29,14 +29,19 @@ class SmarterHelperMixin:
 
     @property
     def formatted_class_name(self):
+        """
+        For logging. Applies standardized styling to the class name.
+        """
         return formatted_text(self.__class__.__name__)
 
     def smarter_build_absolute_uri(self, request: HttpRequest) -> str:
         """
-        A utility function to attempt to get the request URL.
-        from any valid child class of HttpRequest. This mostly protects
-        us from unit tests class mutations that do not implement
-        build_absolute_uri().
+        A utility function to attempt to get the request URL from any valid
+        child class of HttpRequest. This mostly protects us from unit tests
+        class mutations that do not implement build_absolute_uri().
+
+        TO DO: refactor initialize request from __init__() to a property
+        to avoid having to redundantly pass the request object around.
 
         :param request: The request object.
         :return: The request URL.
@@ -44,7 +49,12 @@ class SmarterHelperMixin:
         if request is None:
             return None
 
-        url = request.build_absolute_uri(request) if hasattr(request, "build_absolute_uri") else None
+        url: str = None
+
+        try:
+            url = request.build_absolute_uri(request) if hasattr(request, "build_absolute_uri") else None
+        except (AttributeError, KeyError):
+            url = None
 
         if url is not None:
             return url
@@ -53,7 +63,7 @@ class SmarterHelperMixin:
             url = f"{request.scheme}://{request.get_host()}{request.get_full_path()}"
             if SmarterValidator.is_valid_url(url):
                 return url
-        except AttributeError:
+        except (AttributeError, KeyError):
             pass
 
         try:
@@ -63,6 +73,6 @@ class SmarterHelperMixin:
             url = f"{scheme}://{host}{path}"
             if SmarterValidator.is_valid_url(url):
                 return url
-        except AttributeError:
+        except (AttributeError, KeyError):
             pass
         return None

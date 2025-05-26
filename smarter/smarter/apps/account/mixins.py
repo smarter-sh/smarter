@@ -50,64 +50,68 @@ class AccountMixin(SmarterHelperMixin):
         self._user: UserType = None
         self._user_profile: UserProfile = None
 
-        account_arg: Account = account or kwargs.get("account")
-        user_arg: UserType = user or kwargs.get("user")
-        request: WSGIRequest = request or kwargs.get("request")
-        self._user_profile: UserProfile = None
+        account = account or kwargs.get("account")
+        user = user or kwargs.get("user")
+        request = request or kwargs.get("request")
+
         if account_number is not None:
-            logger.info("%s: received account_number %s", self.formatted_class_name, account_number)
+            logger.info("%s -> AccountMixin(): received account_number %s", self.formatted_class_name, account_number)
             self._account = get_cached_account(account_number=account_number) if account_number else account
-        if account_arg is not None:
-            logger.info("%s: received account %s", self.formatted_class_name, account_arg)
-            self._account = account_arg
-        if user_arg is not None:
-            self._user = user_arg
-            logger.info("%s: received user %s", self.formatted_class_name, user_arg)
-            self._account = get_cached_account_for_user(user_arg)
+        if account is not None:
+            logger.info("%s -> AccountMixin(): received account %s", self.formatted_class_name, account)
+            self._account = account
+        if user is not None:
+            self._user = user
+            logger.info("%s -> AccountMixin(): received user %s", self.formatted_class_name, user)
+            self._account = get_cached_account_for_user(user)
             if self._account:
-                logger.info("%s: set account to %s", self.formatted_class_name, self._account)
+                logger.info("%s -> AccountMixin(): set account to %s", self.formatted_class_name, self._account)
 
         # evaluate these in reverse order, so that the first one wins.
         if request is not None:
             url: str = self.smarter_build_absolute_uri(request)
-            logger.info("%s: received request %s", self.formatted_class_name, url)
+            logger.info("%s -> AccountMixin(): received request %s", self.formatted_class_name, url)
             if hasattr(request, "user"):
                 self._user = request.user
-                logger.info("%s: received request user %s", self.formatted_class_name, self._user)
+                logger.info("%s -> AccountMixin(): received request user %s", self.formatted_class_name, self._user)
                 self._account = get_cached_account_for_user(self._user)
                 if self._account:
-                    logger.info("%s: set account to %s", self.formatted_class_name, self._account)
+                    logger.info("%s -> AccountMixin(): set account to %s", self.formatted_class_name, self._account)
             else:
-                logger.warning("%s: did not find a user in the request object", self.formatted_class_name)
+                logger.warning(
+                    "%s -> AccountMixin(): did not find a user in the request object", self.formatted_class_name
+                )
             if not self._account:
                 # if the account is not set, then try to get it from the request
                 # by parsing the URL.
                 account_number = account_number_from_url(url)
                 if account_number:
                     logger.info(
-                        "%s: located account number %s from the request url %s",
+                        "%s -> AccountMixin(): located account number %s from the request url %s",
                         self.formatted_class_name,
                         account_number,
                         url,
                     )
                     self._account = get_cached_account(account_number=account_number)
                     if self._account:
-                        logger.info("%s: set account to %s", self.formatted_class_name, self._account)
+                        logger.info("%s -> AccountMixin(): set account to %s", self.formatted_class_name, self._account)
                 else:
                     logger.warning(
-                        "%s: unable to locate an account number from the request url %s", self.formatted_class_name, url
+                        "%s -> AccountMixin(): unable to locate an account number from the request url %s",
+                        self.formatted_class_name,
+                        url,
                     )
 
         if self._user and self._account:
             logger.info(
-                "%s: is fully initialized with user %s and account %s",
+                "%s -> AccountMixin(): is fully initialized with user %s and account %s",
                 self.formatted_class_name,
                 self._user,
                 self._account,
             )
         else:
             logger.warning(
-                "%s: is not fully initialized: user %s, account %s",
+                "%s -> AccountMixin(): is not fully initialized: user %s, account %s",
                 self.formatted_class_name,
                 self._user,
                 self._account,
