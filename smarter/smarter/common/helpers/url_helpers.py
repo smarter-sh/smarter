@@ -33,5 +33,5 @@ def session_key_from_url(url: str) -> str:
     parsed_url = urlparse(url)
     query_params = parse_qs(parsed_url.query)
     session_key = query_params.get(SMARTER_CHAT_SESSION_KEY_NAME, [None])[0]
-
+    session_key = session_key.strip() if isinstance(session_key, str) else None
     return session_key

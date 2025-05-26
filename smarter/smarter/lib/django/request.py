@@ -11,16 +11,18 @@ known url patterns for Smarter chatbots. key features include:
 - logging.
 """
 
+import hashlib
 import json
 import logging
 import re
 import warnings
 from datetime import datetime
 from functools import cached_property
-from urllib.parse import ParseResult, parse_qs, urlparse, urlunsplit
+from urllib.parse import ParseResult, urlparse, urlunsplit
 
 import tldextract
 from django.core.handlers.wsgi import WSGIRequest
+from django.http import QueryDict
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import (
@@ -96,10 +98,18 @@ class SmarterRequestMixin(AccountMixin):
     - https://hr.smarter.querium.com/
 
     session_key is a unique identifier for a chat session.
-    It originates from generate_key() in this class.
+    It originates from generate_session_key() in this class.
     """
 
-    __slots__ = ("_smarter_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params")
+    __slots__ = (
+        "_smarter_request",
+        "_timestamp",
+        "_session_key",
+        "_data",
+        "_url",
+        "_url_urlunparse_without_params",
+        "_params",
+    )
 
     # pylint: disable=W0613
     def init(self, request: WSGIRequest, *args, **kwargs):
@@ -178,6 +188,7 @@ class SmarterRequestMixin(AccountMixin):
         self._data: dict = None
         self._url = None
         self._url_urlunparse_without_params = None
+        self._params = None
 
         # pop the account, user and user_profile from kwargs, if they exist.
         # this is to allow the class to be used in a context where these are not
@@ -204,11 +215,6 @@ class SmarterRequestMixin(AccountMixin):
                 (self._url.scheme, self._url.netloc, self._url.path, "", "")
             )
             self._url_urlunparse_without_params = SmarterValidator.urlify(self._url_urlunparse_without_params)
-
-            # either extract or generate a session_key.
-            self._session_key = self.get_session_key()
-            logger.info("%s.__init__() - session_key=%s", self.formatted_class_name, self._session_key)
-
         else:
             logger.warning("%s - request url is None.", self.formatted_class_name)
 
@@ -326,19 +332,136 @@ class SmarterRequestMixin(AccountMixin):
         return [None, None, None, None]
 
     @property
+    def params(self) -> dict[str, any]:
+        """
+        The query string parameters from the Django request object. This extracts
+        the query string parameters from the request object and converts them to a
+        dictionary. This is used in child views to pass optional command-line
+        parameters to the broker.
+        """
+        if not self._params:
+            try:
+                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", "")) or {}
+            except AttributeError as e:
+                logger.error(
+                    "%s.params() internal error. Could not parse query string parameters: %s",
+                    self.formatted_class_name,
+                    e,
+                )
+                return {}
+        return self._params
+
+    @property
+    def uid(self) -> str:
+        """
+        Unique identifier for the client. This is assumed to be a
+        combination of the machine mac address and the hostname.
+        """
+        return self.params.get("uid", None)
+
+    @property
+    def cache_key(self) -> str:
+        """
+        Returns a cache key for the request.
+        This is used to cache the chat request thread.
+
+        The key is a combination of the class name, authenticated username,
+        the chat name, and the client UID. Currently used by the
+        ApiV1CliChatConfigApiView and ApiV1CliChatApiView as a means of sharing the session_key.
+
+        :param name: a generic object or resource name
+        :param uid: UID of the client, assumed to have been created from the
+         machine mac address and the hostname of the client
+        """
+        if not self.smarter_request:
+            return None
+
+        if self._cache_key:
+            return self._cache_key
+
+        raw_string = (
+            self.__class__.__name__ + "_" + self.smarter_request.user.username + "_" + "cache_key()" + "_" + self.uid
+        )
+        hash_object = hashlib.sha256()
+        hash_object.update(raw_string.encode())
+        hash_string = hash_object.hexdigest()
+        self._cache_key = hash_string
+
+        return self._cache_key
+
+    @property
     def session_key(self):
         """
+        returns the unique chat session key value for this request.
+        session_key is managed by the /config/ endpoint for the chatbot
+
+        The React app calls this endpoint at app initialization to get a
+        json dict that includes, among other pertinent info, this session_key
+        which uniquely identifies the device and the individual chatbot session
+        for the device.
+
+        for subsequent chat prompt requests the session_key is intended to be
+        sent in the body of the request as a key-value pair,
+        e.g. {"session_key": "1234567890"}.
+
+        But, this method will also check the request headers for the session_key.
         Get the session key from one of the following:
          - url parameter http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
          - request json body {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
          - request header {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
          - a session_key generator
+
         """
         if self._session_key:
             return self._session_key
-        raise SmarterValueError(
-            "Session key has not been set. Please set the session key before accessing this property."
-        )
+
+        session_key: str = None
+
+        # this is our expected case. we look for the session key in the parsed url.
+        session_key = session_key_from_url(self.url)
+        if session_key:
+            SmarterValidator.validate_session_key(session_key)
+            self.helper_logger(
+                f"session_key() - initialized from url: {session_key}",
+            )
+            self._session_key = session_key
+            return self._session_key
+
+        # next, we look for it in the request body data.
+        session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
+        session_key = session_key.strip() if isinstance(session_key, str) else None
+        if session_key:
+            SmarterValidator.validate_session_key(session_key)
+            self.helper_logger(
+                f"session_key() - initialized from request body: {session_key}",
+            )
+            self._session_key = session_key
+            return self._session_key
+
+        # next, we look for it in the cookie data.
+        session_key = self.get_cookie_value(SMARTER_CHAT_SESSION_KEY_NAME)
+        session_key = session_key.strip() if isinstance(session_key, str) else None
+        if session_key:
+            SmarterValidator.validate_session_key(session_key)
+            self.helper_logger(
+                f"session_key() - initialized from cookie data of the request object: {session_key}",
+            )
+            self._session_key = session_key
+            return self._session_key
+
+        # finally, we look for it in the GET parameters.
+        session_key = self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
+        session_key = session_key.strip() if isinstance(session_key, str) else None
+        if session_key:
+            SmarterValidator.validate_session_key(session_key)
+            self.helper_logger(
+                f"session_key() - initialized from the get() parameters of the request object: {session_key}",
+            )
+            self._session_key = session_key
+            return self._session_key
+
+        self._session_key = self.generate_session_key()
+        return self._session_key
 
     @cached_property
     def smarter_request_chatbot_id(self) -> int:
@@ -430,8 +553,7 @@ class SmarterRequestMixin(AccountMixin):
                 self.helper_logger(f"request body={self.smarter_request.body}")
                 body_str = self.smarter_request.body.decode("utf-8").strip()
                 self._data = json.loads(body_str) if body_str else {}
-        # pylint: disable=broad-except
-        except Exception as e:
+        except json.JSONDecodeError as e:
             logger.warning("%s - failed to parse request body: %s", self.formatted_class_name, e)
 
         self._data = self._data or {}
@@ -487,10 +609,17 @@ class SmarterRequestMixin(AccountMixin):
     def is_config(self) -> bool:
         """
         Returns True if the url resolves to a config endpoint.
+
+        examples:
+        - http://testserver/api/v1/cli/chat/config/testc7098865f39202d5/
+        - http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+        - http://localhost:8000/api/v1/chatbots/<int:chatbot_id>/chat/config/
+        - http://example.api.localhost:8000/config
+
         """
         if not self.smarter_request:
             return False
-        return self.url_path_parts[-1] == "config"
+        return "config" in self.url_path_parts
 
     @cached_property
     def is_dashboard(self) -> bool:
@@ -777,10 +906,32 @@ class SmarterRequestMixin(AccountMixin):
         parent_class = super().formatted_class_name
         return f"{parent_class}.SmarterRequestMixin()"
 
+    @property
+    def smarter_request_ready(self) -> bool:
+        """
+        a comprehensive self-check to determine if the request is ready for processing.
+        """
+        try:
+            self.to_json()
+            return True
+        except SmarterValueError:
+            return False
+
     # --------------------------------------------------------------------------
     # instance methods
     # --------------------------------------------------------------------------
-    def generate_key(self) -> str:
+    def get_cookie_value(self, cookie_name):
+        """
+        Retrieve the value of a cookie from the request object.
+
+        :param request: Django HttpRequest object
+        :param cookie_name: Name of the cookie to retrieve
+        :return: Value of the cookie or None if the cookie does not exist
+        """
+        if self.smarter_request and self.smarter_request.COOKIES:
+            return self.smarter_request.COOKIES.get(cookie_name)
+
+    def generate_session_key(self) -> str:
         """
         Generate a session_key based on a unique string and the current datetime.
         """
@@ -851,57 +1002,8 @@ class SmarterRequestMixin(AccountMixin):
         if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             logger.info("%s %s", self.formatted_class_name, message)
 
-    def get_session_key(self) -> str:
-        """
-        Extract the session key from the URL, the request body, or the request headers.
-        """
-        if not self.smarter_request:
-            return None
-        session_key: str = None
-
-        if self._url:
-            # this is our expected case. we look for the session key in th parsed url.
-            query_params = parse_qs(self._url.query)
-            session_key = query_params.get("session_key", [None])[0] if query_params else None
-            session_key = session_key.strip() if isinstance(session_key, str) else None
-            if session_key:
-                self.helper_logger(
-                    f"get_session_key() - session_key found in url: {session_key}",
-                )
-                return session_key
-
-        # alternatively we look for the session key in the request body
-        # and also in the request headers.
-        url = self.smarter_build_absolute_uri(self.smarter_request)
-        session_key = (
-            session_key_from_url(url)
-            or self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            or self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        )
-
-        session_key = session_key.strip() if isinstance(session_key, str) else None
-        if session_key:
-            self.helper_logger(f"get_session_key() - session_key found in url: {session_key}")
-            return session_key
-
-        # if we still don't have a session key, we generate a new one.
-        session_key = self.generate_key()
-        self.helper_logger(f"get_session_key() - generated new session_key: {session_key}")
-        return session_key
-
     def dump(self):
         """
         Dump the object to the console.
         """
         return json.dumps(self.to_json(), indent=4)
-
-    @property
-    def smarter_request_ready(self) -> bool:
-        """
-        a comprehensive self-check to determine if the request is ready for processing.
-        """
-        try:
-            self.to_json()
-            return True
-        except SmarterValueError:
-            return False

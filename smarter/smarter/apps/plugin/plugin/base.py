@@ -211,11 +211,6 @@ class PluginBase(ABC, SmarterHelperMixin):
     # Base class properties
     ###########################################################################
     @property
-    def session_key(self) -> str:
-        """Return the session key."""
-        return self._session_key
-
-    @property
     def metadata_class(self) -> str:
         """Return the metadata class."""
         return self._metadata_class

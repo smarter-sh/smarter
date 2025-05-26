@@ -88,8 +88,8 @@ class SmarterChatSession(SmarterRequestMixin):
     _chat_helper: ChatHelper = None
     _chatbot: ChatBot = None
 
-    def __init__(self, request, *args, chatbot: ChatBot = None, **kwargs):
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+    def __init__(self, request, session_key, *args, chatbot: ChatBot = None, **kwargs):
+        SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
 
         self._url = self.smarter_build_absolute_uri(request)
 
@@ -113,7 +113,7 @@ class SmarterChatSession(SmarterRequestMixin):
         return self.__repr__()
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(chatbot={self.chatbot}) - session_key={self.session_key}"
+        return f"{self.__class__.__name__}(chatbot={self.chatbot}, session_key={self.session_key})"
 
     @property
     def chatbot(self):
@@ -245,7 +245,7 @@ class ChatConfigView(View, SmarterRequestMixin):
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
-        self.session = SmarterChatSession(request, chatbot=self.chatbot)
+        self.session = SmarterChatSession(request, session_key=self.session_key, chatbot=self.chatbot)
 
         if not self.chatbot:
             return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)

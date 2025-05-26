@@ -9,7 +9,6 @@ from typing import Type
 
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
-from django.http import QueryDict
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -162,26 +161,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 self._manifest_load_failed = True
 
         return self._loader
-
-    @property
-    def params(self) -> dict[str, any]:
-        """
-        The query string parameters from the Django request object. This extracts
-        the query string parameters from the request object and converts them to a
-        dictionary. This is used in child views to pass optional command-line
-        parameters to the broker.
-        """
-        if not self._params:
-            try:
-                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", "")) or {}
-            except AttributeError as e:
-                logger.error(
-                    "%s.params() internal error. Could not parse query string parameters: %s",
-                    self.formatted_class_name,
-                    e,
-                )
-                return {}
-        return self._params
 
     @property
     def BrokerClass(self) -> Type[AbstractBroker]:
@@ -358,19 +337,17 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # from the request body, and then we'll leave it to the child views to
         # decide if/when to actually parse the manifest and instantiate the broker.
         try:
-            data = request.body.decode("utf-8") if request and hasattr(request, "body") else {}
-            self._data = json.loads(data)
-            logger.info("%s.initial() set self._data from request.body: %s", self.formatted_class_name, self.data)
             # if the command is 'chat', then the raw prompt text
             # or the encoded file attachment data will be in the request body.
             # otherwise, the request body should contain manifest text.
             if self.command == SmarterJournalCliCommands.CHAT:
-                self._prompt = data
+                self._prompt = self.data
                 self._manifest_kind = SAMKinds.CHAT.value
             else:
-                self._manifest_data = json.loads(data)
+                self._manifest_data = json.loads(self.data)
         except json.JSONDecodeError:
             try:
+                data = request.body.decode("utf-8") if request and hasattr(request, "body") else None
                 self._manifest_data = yaml.safe_load(data)
             except yaml.YAMLError as e:
                 try:
