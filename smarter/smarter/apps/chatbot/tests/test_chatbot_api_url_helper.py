@@ -70,7 +70,13 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         middleware.process_request(request)
         request.session.save()
 
-        helper = ChatBotHelper(request=request, chatbot_id=self.chatbot.id)
+        helper = ChatBotHelper(
+            request=request,
+            chatbot_id=self.chatbot.id,
+            account=self.account,
+            user=self.admin_user,
+            user_profile=self.user_profile,
+        )
 
         self.assertTrue(
             helper.is_valid,
@@ -99,7 +105,9 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
     def test_non_api_url(self):
         """Test a non-api url."""
         request: WSGIRequest = self.wsgi_request_factory.get("/", SERVER_NAME="localhost:8000")
-        helper = ChatBotHelper(request=request, chatbot_id=None)
+        helper = ChatBotHelper(
+            request=request, chatbot_id=None, account=self.account, user=self.admin_user, user_profile=self.user_profile
+        )
 
         self.assertFalse(helper.is_chatbot)
         self.assertFalse(helper.is_smarter_api)
@@ -115,7 +123,13 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         self.assertIsNotNone(self.custom_chatbot.id)
         url = self.custom_chatbot.url
         request: WSGIRequest = self.wsgi_request_factory.get(url, SERVER_NAME="smarter.querium.com")
-        helper = ChatBotHelper(request=request, chatbot_id=self.custom_chatbot.id)
+        helper = ChatBotHelper(
+            request=request,
+            chatbot_id=self.custom_chatbot.id,
+            account=self.account,
+            user=self.admin_user,
+            user_profile=self.user_profile,
+        )
 
         chatbot = helper.chatbot
 

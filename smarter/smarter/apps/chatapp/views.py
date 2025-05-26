@@ -168,10 +168,17 @@ class ChatConfigView(View, SmarterRequestMixin):
         if self.chatbot:
             # throw everything but the kitchen sink at the ChatBotHelper
             self._chatbot_helper = ChatBotHelper(
-                request=self.request, name=self._chatbot.name, chatbot_id=self._chatbot.id
+                request=self.request,
+                name=self._chatbot.name,
+                chatbot_id=self._chatbot.id,
+                account=self.account,
+                user=self.user,
+                user_profile=self.user_profile,
             )
         else:
-            self._chatbot_helper = ChatBotHelper(request=self.request)
+            self._chatbot_helper = ChatBotHelper(
+                request=self.request, account=self.account, user=self.user, user_profile=self.user_profile
+            )
         return self._chatbot_helper
 
     @chatbot_helper.setter
@@ -198,7 +205,14 @@ class ChatConfigView(View, SmarterRequestMixin):
         try:
             self._chatbot = get_cached_chatbot_by_request(request=request)
             if not self._chatbot:
-                self.chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot_id, name=name)
+                self.chatbot_helper = ChatBotHelper(
+                    request=request,
+                    chatbot_id=chatbot_id,
+                    name=name,
+                    account=self.account,
+                    user=self.user,
+                    user_profile=self.user_profile,
+                )
         except ChatBot.DoesNotExist:
             return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
 
@@ -394,7 +408,9 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 )
             self.chatbot = get_cached_chatbot_by_request(request=request)
             if not self.chatbot:
-                self.chatbot_helper = ChatBotHelper(request=request, name=name)
+                self.chatbot_helper = ChatBotHelper(
+                    request=request, name=name, account=self.account, user=self.user, user_profile=self.user_profile
+                )
                 self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
             if not self.chatbot:
                 raise ChatBot.DoesNotExist
@@ -453,7 +469,13 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
         self.chatbots = get_chatbots_for_account(account=self.account)
 
         for chatbot in self.chatbots:
-            chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot.id)
+            chatbot_helper = ChatBotHelper(
+                request=request,
+                chatbot_id=chatbot.id,
+                account=self.account,
+                user=self.user,
+                user_profile=self.user_profile,
+            )
             if not was_already_added(chatbot_helper):
                 self.chatbot_helpers.append(chatbot_helper)
 

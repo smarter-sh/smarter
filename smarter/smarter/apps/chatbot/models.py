@@ -555,7 +555,6 @@ class ChatBotHelper(SmarterRequestMixin):
             self.user,
             self.account,
         )
-        logger.info("%s request=%s, smarter_request=%s", self.formatted_class_name, request, self.smarter_request)
 
         if self.chatbot:
             self.account = self.chatbot.account

@@ -1,6 +1,7 @@
 """Test SmarterRequestMixin."""
 
 from datetime import datetime
+from logging import getLogger
 from urllib.parse import ParseResult
 
 from django.contrib.auth import authenticate
@@ -9,10 +10,12 @@ from django.test import Client, RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.request import SmarterRequestMixin
 
 
 SMARTER_DEV_ADMIN_PASSWORD = "smarter"
+logger = getLogger(__name__)
 
 
 class TestSmarterRequestMixin(TestAccountMixin):
@@ -71,8 +74,22 @@ class TestSmarterRequestMixin(TestAccountMixin):
         Test that SmarterRequestMixin doesn't identify any kind of resource nor api.
         """
         srm = SmarterRequestMixin(request=None)
+        try:
+            srm.to_json()
+        except SmarterValueError as e:
+            self.assertIsInstance(e, SmarterValueError)
+
+        try:
+            srm.session_key
+        except SmarterValueError as e:
+            self.assertIsInstance(e, SmarterValueError)
+
+        try:
+            srm.url
+        except SmarterValueError as e:
+            self.assertIsInstance(e, SmarterValueError)
+
         self.assertIsNone(srm.account)
-        self.assertIsNone(srm.session_key)
         self.assertIsNone(srm.domain)
         self.assertIsNone(srm.ip_address)
         self.assertFalse(srm.is_smarter_api)
