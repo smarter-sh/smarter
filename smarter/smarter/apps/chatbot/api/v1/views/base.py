@@ -12,7 +12,6 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 
-from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.chat.models import ChatHelper
 from smarter.apps.chat.providers.providers import chat_providers
 from smarter.apps.chatbot.exceptions import SmarterChatBotException
@@ -24,7 +23,7 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
 from smarter.lib.journal.enum import (
@@ -43,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=too-many-instance-attributes
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
+class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
     """
     Base viewset for all ChatBot APIs. Handles
     - api key authentication
@@ -65,30 +64,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     _name: str = None
 
     data: dict = {}
-    request: HttpRequest = None
     http_method_names: list[str] = ["get", "post", "options"]
     plugins: List[StaticPlugin] = None
-
-    @property
-    def session_key(self):
-        # Initialize the chat session for this request. session_key is generated
-        # and managed by the /config/ endpoint for the chatbot
-        #
-        # The React app calls this endpoint at app initialization to get a
-        # json dict that includes, among other pertinent info, this session_key
-        # which uniquely identifies the device and the individual chatbot session
-        # for the device.
-        #
-        # the session_key is intended to be sent in the body of the request
-        # as a key-value pair, e.g. {"session_key": "1234567890"}
-        #
-        # But, this method will also check the request headers for the session_key.
-        self._session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        if not self._session_key:
-            self._session_key = self.get_cookie_value(SMARTER_CHAT_SESSION_KEY_NAME)
-        if self._session_key:
-            SmarterValidator.validate_session_key(self._session_key)
-        return self._session_key
 
     @property
     def chatbot_id(self):
@@ -99,7 +76,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         if self._chat_helper:
             return self._chat_helper
         if self.session_key or self.chatbot:
-            self._chat_helper = ChatHelper(request=self.request, session_key=self.session_key, chatbot=self.chatbot)
+            self._chat_helper = ChatHelper(
+                request=self.smarter_request, session_key=self.session_key, chatbot=self.chatbot
+            )
             if self._chat_helper:
                 self.helper_logger(
                     (
@@ -121,7 +100,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             return None
         try:
             self._chatbot_helper = ChatBotHelper(
-                request=self.request,
+                request=self.smarter_request,
                 name=self.name,
                 chatbot_id=self.chatbot_id,
                 # these would hopefully have been set by AccountMixin,
@@ -135,9 +114,17 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             raise SmarterChatBotException("ChatBot not found") from e
 
         self._chatbot_id = self._chatbot_helper.chatbot_id
-        self._url = self._chatbot_helper.url
-        self._user = self._chatbot_helper.user
-        self._account = self._chatbot_helper.account
+        if self._chatbot_id:
+            self._url = self._chatbot_helper.url
+            self._user = self._chatbot_helper.user
+            self._account = self._chatbot_helper.account
+            logger.info(
+                "%s: %s initialized with id: %s, url: %s",
+                self.formatted_class_name,
+                self._chatbot_helper,
+                self._chatbot_id,
+                self._url,
+            )
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
             logger.info(
                 "%s: %s initialized with url: %s id: %s",
@@ -159,8 +146,13 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         return self.chatbot_helper.chatbot if self.chatbot_helper else None
 
     @property
-    def formatted_class_name(self):
-        return formatted_text(self.__class__.__name__)
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class} ChatBotApiBaseViewSet()"
 
     @property
     def url(self):
@@ -168,32 +160,20 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
 
     @property
     def is_web_platform(self):
-        host = self.request.get_host()
+        host = self.smarter_request.get_host()
         if host in smarter_settings.environment_domain:
             return True
         return False
-
-    def get_cookie_value(self, cookie_name):
-        """
-        Retrieve the value of a cookie from the request object.
-
-        :param request: Django HttpRequest object
-        :param cookie_name: Name of the cookie to retrieve
-        :return: Value of the cookie or None if the cookie does not exist
-        """
-        if self.request and self.request.COOKIES:
-            return self.request.COOKIES.get(cookie_name)
 
     def helper_logger(self, message: str):
         """
         Create a log entry
         """
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
-            logger.info(f"{self.formatted_class_name}: {message}")
+            logger.info("%s: %s", self.formatted_class_name, message)
 
     def dispatch(self, request: WSGIRequest, *args, name: str = None, **kwargs):
-        AccountMixin.__init__(self, user=request.user)
-        self.request = request
+        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         self._chatbot_id = kwargs.get("chatbot_id")
         if self._chatbot_id:
             kwargs.pop("chatbot_id")
@@ -201,8 +181,6 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             self.account = self.chatbot.account
         else:
             self._name = self._name or name
-            self._url = self.smarter_build_absolute_uri(request)
-            self._url = SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
         if not self.chatbot:
             if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
                 logger.error(

@@ -41,15 +41,6 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
     this request.
     """
 
-    def setup(self, request: HttpRequest, *args, **kwargs):
-        """
-        Setup the view. This is called before dispatch() and is used to
-        set up the view for the request.
-        """
-        super().setup(request, *args, **kwargs)
-        self._is_config_view = False
-        logger.info("ApiV1CliChatConfigApiView.setup() - %s", self.formatted_class_name)
-
     @csrf_exempt
     def post(self, request: HttpRequest, name: str, *args, **kwargs):
         """

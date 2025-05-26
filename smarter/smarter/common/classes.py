@@ -33,7 +33,7 @@ class SmarterHelperMixin:
     """
 
     @property
-    def formatted_class_name(self):
+    def formatted_class_name(self) -> str:
         """
         For logging. Applies standardized styling to the class name.
         """

@@ -1,13 +1,11 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'chat' view"""
 
-import hashlib
 import json
 import logging
 import re
 import traceback
 from http import HTTPStatus
-from typing import Tuple
 
 import waffle
 from django.core.cache import cache
@@ -60,7 +58,6 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
     _name: str = None
     _prompt: str = None
     _session_key: str = None
-    _is_config_view: bool = False
 
     @property
     def formatted_class_name(self) -> str:
@@ -72,21 +69,13 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         return f"{inherited_class}.ApiV1CliChatBaseApiView()"
 
     @property
-    def is_config_view(self) -> bool:
-        """
-        True if this is a config view, as opposed to the chat view
-        to which the config refers.
-        """
-        return self._is_config_view
-
-    @property
     def prompt(self) -> str:
         """
         The chat prompt from the request body. This is a single raw text input
         from the user. This will need to be added to a message list and sent
         to the chatbot.
         """
-        if self.is_config_view:
+        if self.is_config:
             # config views are not expected to have a prompt
             return None
         retval = self.data.get("prompt", None)
@@ -107,43 +96,9 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         return str(self.params.get("new_session", "false")).lower() == "true"
 
     @property
-    def uid(self) -> str:
-        """
-        Unique identifier for the client. This is assumed to be a
-        combination of the machine mac address and the hostname.
-        """
-        return self.params.get("uid", None)
-
-    @property
     def name(self) -> str:
         """The name of the ChatBot. This is passed as a url slug."""
         return self._name
-
-    @property
-    def cache_key(self) -> str:
-        """For cached values, get the cache key for the chat config view."""
-        if not self._cache_key:
-            raise APIV1CLIViewError("Internal error. Cache key has not been set.")
-        return self._cache_key
-
-    @cache_key.setter
-    def cache_key(self, key_tuple: Tuple[str, str, str, str]) -> None:
-        """
-        Set a cache key based on a name string and a unique identifier 'uid'. This key is used to cache
-        the session_key for the chat. The key is a combination of the class name, authenticated username,
-        the chat name, and the client UID. Currently used by the
-        ApiV1CliChatConfigApiView and ApiV1CliChatApiView as a means of sharing the session_key.
-
-        :param name: a generic object or resource name
-        :param uid: UID of the client, assumed to have been created from the
-         machine mac address and the hostname of the client
-        """
-        class_name, username, name, uid = key_tuple
-        raw_string = class_name + "_" + username + "_" + name + "_" + uid
-        hash_object = hashlib.sha256()
-        hash_object.update(raw_string.encode())
-        hash_string = hash_object.hexdigest()
-        self._cache_key = hash_string
 
     @property
     def data(self) -> dict:
@@ -180,7 +135,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         self._name = kwargs.get(SAMMetadataKeys.NAME.value)
         logger.info("%s.initial() chat view name: %s", self.formatted_class_name, self.name)
 
-        if not self.data and not self.is_config_view:
+        if not self.data and not self.is_config:
             raise APIV1CLIChatViewError(
                 f"Internal error. Request body is empty. This is intended to be a json object with a 'prompt' key and an optional 'session_key' key. url: {self.url}"
             )
@@ -190,12 +145,15 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
                 f"Internal error. UID is missing. This is intended to be a unique identifier for the client, passed as a url param named 'uid'. url: {self.url}"
             )
 
-        self.cache_key = (self.__class__.__name__, self.request.user.username, self.name, self.uid)
-
         # if the new_session url parameter was passed and is set to True
         # then we will delete the cache_key and the session_key.
         if self.new_session:
             self._session_key = None
+            logger.info(
+                "%s.initial() new_session is True, resetting the session_key and deleting cache_key: %s",
+                self.formatted_class_name,
+                self.cache_key,
+            )
             cache.delete(self.cache_key)
 
         # 1.) attempt to retrieve a session_key from the cache. if we get a hit
@@ -205,14 +163,6 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         if session_key:
             self._session_key = session_key
             logger.info("%s.initial() found a cached session_key: %s", self.formatted_class_name, self.session_key)
-        else:
-            # 2.) try to extract the session_key from the request body if it exists.
-            session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            if session_key:
-                self._session_key = session_key
-                logger.info(
-                    "%s.initial() session_key found in request body: %s", self.formatted_class_name, self.session_key
-                )
 
         # 3.) at this point we either have a session_key from the cache, or from the request body
         #     or from SmarterRequestMixin(). Otherwise, this will raise a SmarterValueError.
@@ -408,15 +358,21 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             chat_config_content = chat_config.content.decode("utf-8")
             chat_config: dict = json.loads(chat_config_content)
             self._chat_config = chat_config.get(SCLIResponseGet.DATA.value)
-            self._session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            if self._cache_key:
-                cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
-                if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                    logger.info(
-                        "%s.handler() caching session_key for chat config: %s",
-                        self.formatted_class_name,
-                        self.session_key,
-                    )
+            session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
+            if session_key:
+                self._session_key = session_key
+                logger.info(
+                    "%s.handler() initialized session_key from chat config: %s",
+                    self.formatted_class_name,
+                    self.session_key,
+                )
+            cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.info(
+                    "%s.handler() caching session_key for chat config: %s",
+                    self.formatted_class_name,
+                    self.session_key,
+                )
         except json.JSONDecodeError as e:
             raise APIV1CLIViewError(
                 f"Misconfigured. Failed to cache session key for chat config: {chat_config.content}"
@@ -497,7 +453,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         }
         """
         super().validate()
-        if not self.prompt and not self.is_config_view:
+        if not self.prompt and not self.is_config:
             raise APIV1CLIChatViewError("Internal error. 'prompt' key is missing from the request body.")
         messages = self.data.get("messages", None)
         if messages:
