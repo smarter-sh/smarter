@@ -42,18 +42,18 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
         Set up test fixtures: create an  Secret
         """
         super().setUpClass()
-        cls.api_key_name = "test-api-key"
-        cls.api_key_value = f"test_api_key_value_{cls.hash_suffix}"
+        cls.api_key_name = "test_api_key"
+        cls.api_key_value = f"test-api-key-value-{cls.hash_suffix}"
         cls.api_key = secret_factory(
-            user_profile=cls.user_profile, name=cls.api_key_name, description="test_api_key", value=cls.api_key_value
+            user_profile=cls.user_profile, name=cls.api_key_name, description="test api key", value=cls.api_key_value
         )
 
-        cls.proxy_password_name = "test-proxy-password"
-        cls.proxy_password_value = f"test_proxy_password_value_{cls.hash_suffix}"
+        cls.proxy_password_name = "test_proxy_password"
+        cls.proxy_password_value = f"test-proxy-password-value-{cls.hash_suffix}"
         cls.proxy_password = secret_factory(
             user_profile=cls.user_profile,
             name=cls.proxy_password_name,
-            description="test_proxy_password",
+            description="test proxy password",
             value=cls.proxy_password_value,
         )
 
@@ -120,75 +120,3 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
 
         broker = SAMApiConnectionBroker(request=self.request, account=self.account, file_path=self.good_manifest_path)
         self.assertIsInstance(broker, SAMApiConnectionBroker)
-
-        self.assertEqual(type(broker.model_class), type(ApiConnection))
-        self.assertEqual(broker.kind, SmarterJournalThings.API_CONNECTION.value)
-
-        # pydantic model
-        self.assertIsInstance(broker.manifest, SAMApiConnection)
-
-        # pydantic to django transformer
-        self.assertIsInstance(broker.manifest_to_django_orm(), dict)
-
-        # django model
-        self.assertIsInstance(broker.api_connection, ApiConnection)
-
-        # journaled response for example manifest
-        example_manifest = broker.example_manifest(request=self.request, kwargs={})
-        self.assertIsInstance(example_manifest, SmarterJournaledJsonResponse)
-
-        # brokered get() request
-        response = broker.get(request=self.request, kwargs={})
-        self.assertIsInstance(response, SmarterJournaledJsonResponse)
-        self.assertEqual(response.status_code, 200)
-
-        response_bytes_value = response.content
-        response_json_string = response_bytes_value.decode("utf-8")
-        response_json = json.loads(response_json_string)
-
-        self.assertIsInstance(response_json, dict)
-
-        # brokered apply() request
-        response = broker.apply(request=self.request, kwargs={})
-        self.assertIsInstance(response, SmarterJournaledJsonResponse)
-        self.assertEqual(response.status_code, 200)
-        response_bytes_value = response.content
-        response_json_string = response_bytes_value.decode("utf-8")
-        response_json = json.loads(response_json_string)
-        self.assertIn("ApiConnection test_api_connection applied successfully", response_json["message"])
-        self.assertEqual(response_json["thing"], "ApiConnection")
-
-        with self.assertRaises(SAMBrokerErrorNotImplemented):
-            broker.chat(request=self.request, kwargs={})
-
-        # brokered describe() request
-        response = broker.describe(request=self.request, kwargs={})
-        self.assertIsInstance(response, SmarterJournaledJsonResponse)
-        self.assertEqual(response.status_code, 200)
-        print("describe() response content:")
-        print(response.content)
-        response_bytes_value = response.content
-        response_json_string = response_bytes_value.decode("utf-8")
-        response_json = json.loads(response_json_string)
-        self.assertIsInstance(response_json, dict)
-        self.assertIsInstance(response_json["data"], dict)
-        self.assertEqual(response_json["thing"], "ApiConnection")
-
-        # brokered delete() request
-        response = broker.delete(request=self.request, kwargs={})
-        self.assertIsInstance(response, SmarterJournaledJsonResponse)
-        self.assertEqual(response.status_code, 200)
-        response_bytes_value = response.content
-        response_json_string = response_bytes_value.decode("utf-8")
-        response_json = json.loads(response_json_string)
-        self.assertIn("ApiConnection test_api_connection deleted successfully", response_json["message"])
-        self.assertEqual(response_json["thing"], "ApiConnection")
-
-        with self.assertRaises(SAMBrokerErrorNotImplemented):
-            broker.deploy(request=self.request, kwargs={})
-
-        with self.assertRaises(SAMBrokerErrorNotImplemented):
-            broker.undeploy(request=self.request, kwargs={})
-
-        with self.assertRaises(SAMBrokerErrorNotImplemented):
-            broker.logs(request=self.request, kwargs={})

@@ -176,13 +176,13 @@ def secret_post_delete(sender, instance, **kwargs):
 
 
 @receiver(secret_created)
-def secret_created_receiver(sender, secret, **kwargs):
+def secret_created_receiver(sender, secret: Secret, **kwargs):
     """Signal receiver for secret_created signal."""
     logger.info(
         "%s.%s secret_created signal received. instance: %s id: %s",
         formatted_text("secret_created_receiver()"),
         sender,
-        secret,
+        str(secret),
         secret.id,
     )
 
@@ -194,7 +194,7 @@ def secret_edited_receiver(sender, secret, **kwargs):
         "%s.%s secret_edited signal received. instance: %s, id: %s",
         formatted_text("secret_edited_receiver()"),
         sender,
-        secret,
+        str(secret),
         secret.id,
     )
 
@@ -218,7 +218,7 @@ def secret_ready_receiver(sender, secret: SecretTransformer, **kwargs):
         "%s.%s secret_ready signal received. instance: %s, id: %s",
         formatted_text("secret_ready_receiver()"),
         sender,
-        secret,
+        str(secret),
         secret.id,
     )
 
