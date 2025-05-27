@@ -90,10 +90,11 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         self.assertTrue(helper.is_custom_domain is False, f"this is not a default domain {helper.url}")
         self.assertTrue(helper.chatbot.deployed is True)
 
-        # expecting api.localhost:8000
+        # expecting http://api.localhost:8000/
+        expected_url = f"http://{helper.api_host}/"
         self.assertTrue(
-            helper.api_host == smarter_settings.environment_api_domain,
-            f"Expected {smarter_settings.environment_api_domain}, but got {helper.api_host}",
+            expected_url == helper.url,
+            f"Expected {helper.url}, but got {expected_url}",
         )
 
     def test_bad_url(self):

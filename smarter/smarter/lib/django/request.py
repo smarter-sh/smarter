@@ -625,16 +625,15 @@ class SmarterRequestMixin(AccountMixin):
     def is_smarter_api(self) -> bool:
         """
         Returns True if the url is of the form http://localhost:8000/api/v1/
-        example path_parts: ['api', 'v1', 'chatbots', '1', 'chat']
+        examples:
+        - path_parts: ['api', 'v1', 'chatbots', '1', 'chat']
+        - http://api.localhost:8000/
         """
         if not self.smarter_request:
             return False
-        if self.url_path_parts[0] != "api":
-            return False
-        # expecting 'v1', 'v2', 'v3', etc. in the path
-        if not re.match(r"^v\d+", self.url_path_parts[1]):
-            return False
-        return True
+        if "api" in self.url_path_parts:
+            return True
+        return False
 
     @cached_property
     def is_chatbot_smarter_api_url(self) -> bool:
