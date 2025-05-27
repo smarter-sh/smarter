@@ -45,6 +45,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         super().setUp()
         self.client = Client()
         self.wsgi_request_factory = RequestFactory()
+        self.session_key = "1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a"
 
     def tearDown(self):
         try:
@@ -80,16 +81,12 @@ class TestSmarterRequestMixin(TestAccountMixin):
             self.assertIsInstance(e, SmarterValueError)
 
         try:
-            srm.session_key
-        except SmarterValueError as e:
-            self.assertIsInstance(e, SmarterValueError)
-
-        try:
             srm.url
         except SmarterValueError as e:
             self.assertIsInstance(e, SmarterValueError)
 
         self.assertIsNone(srm.account)
+        self.assertIsNone(srm.session_key)
         self.assertIsNone(srm.domain)
         self.assertIsNone(srm.ip_address)
         self.assertFalse(srm.is_smarter_api)
@@ -140,10 +137,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
         """
-        request = self.wsgi_request_factory.get("/")
+        request = self.wsgi_request_factory.get(f"/?session_key={self.session_key}", SERVER_NAME="testserver")
         srm = SmarterRequestMixin(request)
         self.assertIsNone(srm.account)
-        self.assertIsNotNone(srm.session_key)
+        self.assertIsNone(srm.session_key)
         self.assertEqual(srm.domain, "testserver")
         self.assertEqual(srm.ip_address, "127.0.0.1")
         self.assertFalse(srm.is_smarter_api)
@@ -204,8 +201,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertFalse(srm.is_chatbot_cli_api_url)
         self.assertFalse(srm.is_chatbot_sandbox_url)
         self.assertFalse(srm.is_smarter_api)
-        self.assertIsNotNone(srm.session_key)
-        self.assertIsInstance(srm.session_key, str)
+        self.assertIsNone(srm.session_key)
         self.assertEqual(srm.domain, "example.3141-5926-5359.api.localhost:8000")
 
     def test_sandbox_url(self):
@@ -218,13 +214,13 @@ class TestSmarterRequestMixin(TestAccountMixin):
             self.skipTest("Smarter admin user profile is not available")
 
         path = "/chatbots/example/"
-        url = "http://localhost:8000" + path
+        url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
-        self.assertEqual(srm.url, url)
+        self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNotNone(srm.client_key)
+        self.assertIsNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
@@ -243,13 +239,13 @@ class TestSmarterRequestMixin(TestAccountMixin):
             self.skipTest("Smarter admin user profile is not available")
 
         path = "/api/v1/chatbots/1/chat/"
-        url = "http://localhost:8000" + path
+        url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
-        self.assertEqual(srm.url, url)
+        self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNotNone(srm.client_key)
+        self.assertIsNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
@@ -268,13 +264,13 @@ class TestSmarterRequestMixin(TestAccountMixin):
             self.skipTest("Smarter admin user profile is not available")
 
         path = "/api/v1/cli/chat/example/"
-        url = "http://localhost:8000" + path
+        url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
-        self.assertEqual(srm.url, url)
+        self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNotNone(srm.client_key)
+        self.assertIsNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
