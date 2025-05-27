@@ -1,13 +1,12 @@
 # pylint: disable=W0611
 """ChatBot api/v1/chatbots base view, for invoking a ChatBot."""
-import json
 import logging
 import traceback
 from http import HTTPStatus
 from typing import List
 
 from django.core.handlers.wsgi import WSGIRequest
-from django.http import HttpRequest, JsonResponse
+from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
@@ -56,13 +55,10 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
     """
 
     _chatbot_id: int = None
-    _url: str = None
     _chatbot_helper: ChatBotHelper = None
     _chat_helper: ChatHelper = None
-    _session_key: str = None
     _name: str = None
 
-    data: dict = {}
     http_method_names: list[str] = ["get", "post", "options"]
     plugins: List[StaticPlugin] = None
 
@@ -91,7 +87,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
                     )
                 )
         else:
-            raise SmarterChatBotException("ChatHelper not found. Please provide a session key or chatbot.")
+            raise SmarterChatBotException(
+                f"ChatHelper not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
+            )
 
         return self._chat_helper
 
@@ -116,20 +114,25 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
             )
         # smarter.apps.chatbot.models.ChatBot.DoesNotExist: ChatBot matching query does not exist.
         except ChatBot.DoesNotExist as e:
-            raise SmarterChatBotException("ChatBot not found") from e
+            raise SmarterChatBotException(
+                f"ChatBot not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
+            ) from e
 
         self._chatbot_id = self._chatbot_helper.chatbot_id
         if self._chatbot_id:
-            self._url = self._chatbot_helper.url
-            self._user = self._chatbot_helper.user
-            self._account = self._chatbot_helper.account
             logger.info(
-                "%s: %s initialized with id: %s, url: %s",
+                "%s: %s initialized ChatBotHelper with id: %s, url: %s",
                 self.formatted_class_name,
                 self._chatbot_helper,
                 self._chatbot_id,
                 self._url,
             )
+            logger.info(
+                "%s: %s ChatBotHelper reinitializing user: %s, account: %s",
+            )
+            self._url = self._chatbot_helper.url
+            self._user = self._chatbot_helper.user
+            self._account = self._chatbot_helper.account
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
             logger.info(
                 "%s: %s initialized with url: %s id: %s",
@@ -177,9 +180,12 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s: %s", self.formatted_class_name, message)
 
-    def setup(self, request: WSGIRequest, *args, name: str = None, **kwargs):
-        super().setup(request, *args, **kwargs)
-
+    def dispatch(self, request: WSGIRequest, *args, name: str = None, **kwargs):
+        """
+        Setup method for the ChatBot API base viewset.
+        This method initializes the ChatBotHelper and ChatHelper instances,
+        sets up the request, and logs relevant information.
+        """
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         self._chatbot_id = kwargs.get("chatbot_id")
         if self._chatbot_id:
@@ -232,13 +238,6 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
 
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
-        try:
-            self.data = json.loads(request.body)
-            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
-                logger.info("%s.dispatch(): request.body successfully converted to json", self.formatted_class_name)
-        except json.JSONDecodeError:
-            self.data = {}
-
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and self.chatbot_helper.is_chatbot:
             logger.info("%s.dispatch(): account=%s", self.formatted_class_name, self.account)
             logger.info("%s.dispatch(): chatbot=%s", self.formatted_class_name, self.chatbot)
@@ -252,6 +251,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
 
         if self.chatbot_helper.is_chatbot and self.chat_helper:
             chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
+
+        return super().dispatch(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
@@ -325,7 +326,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
         if not self.chatbot:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
-                e=SmarterChatBotException("ChatBot not found"),
+                e=SmarterChatBotException(
+                    f"ChatBot not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
+                ),
                 safe=False,
                 thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
@@ -336,7 +339,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
         if not self.chat_helper:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
-                e=SmarterChatBotException("ChatHelper not found"),
+                e=SmarterChatBotException(
+                    f"ChatHelper not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
+                ),
                 safe=False,
                 thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),

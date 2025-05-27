@@ -300,7 +300,11 @@ class SmarterRequestMixin(AccountMixin):
         if self._url_urlunparse_without_params:
             return self._url_urlunparse_without_params
 
-        raise SmarterValueError("URL has not been set. Please set the URL before accessing this property.")
+        logger.error(
+            "%s.url() property was accessed before it was initialized. request: %s",
+            self.formatted_class_name,
+            self.smarter_request,
+        )
 
     @property
     def parsed_url(self) -> ParseResult:
