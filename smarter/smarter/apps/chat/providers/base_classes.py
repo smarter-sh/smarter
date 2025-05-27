@@ -765,7 +765,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 self.messages = self.get_message_thread(data=self.data)
 
             for plugin in self.plugins:
-                if plugin.selected(user=self.user, input_text=self.input_text):
+                if plugin.selected(user=self.user, input_text=self.input_text, messages=self.messages):
                     self.handle_plugin_selected(plugin=plugin)
 
             self.prep_first_request()

@@ -132,10 +132,14 @@ def handle_plugin_ready(sender, plugin: PluginBase, **kwargs):
 
 
 @receiver(plugin_selected, dispatch_uid="plugin_selected")
-def handle_plugin_selected(sender, plugin: PluginBase, user, messages: list[dict], search_term: str, **kwargs):
+def handle_plugin_selected(sender, *args, **kwargs):
     """Handle plugin selected signal."""
-
+    # plugin: PluginBase, user, messages: list[dict], search_term: str, messages: list[dict] = None
     input_text: str = kwargs.get("input_text")
+    plugin: PluginBase = kwargs.get("plugin")
+    user = kwargs.get("user")
+    messages: list[dict] = kwargs.get("messages", [])
+    search_term: str = kwargs.get("search_term", "")
     user_id: int = user.id if user else None
 
     prompt = input_text if input_text else formatted_json(messages)
