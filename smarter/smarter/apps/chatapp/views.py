@@ -169,6 +169,7 @@ class ChatConfigView(View, SmarterRequestMixin):
             # throw everything but the kitchen sink at the ChatBotHelper
             self._chatbot_helper = ChatBotHelper(
                 request=self.request,
+                session_key=self.session_key,
                 name=self._chatbot.name,
                 chatbot_id=self._chatbot.id,
                 account=self.account,
@@ -177,7 +178,11 @@ class ChatConfigView(View, SmarterRequestMixin):
             )
         else:
             self._chatbot_helper = ChatBotHelper(
-                request=self.request, account=self.account, user=self.user, user_profile=self.user_profile
+                request=self.request,
+                session_key=self.session_key,
+                account=self.account,
+                user=self.user,
+                user_profile=self.user_profile,
             )
         return self._chatbot_helper
 
@@ -194,11 +199,13 @@ class ChatConfigView(View, SmarterRequestMixin):
             if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
                 logger.info("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
 
-    def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+    def setup(self, request, *args, chatbot_id: int = None, **kwargs):
+        super().setup(request, *args, **kwargs)
+        name = kwargs.pop("name", None)
+        session_key = kwargs.pop("session_key", None)
+        SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s - dispatch() url=%s session=%s", self.formatted_class_name, self.url, self.session)
-        name = kwargs.pop("name", None)
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
 
@@ -207,6 +214,7 @@ class ChatConfigView(View, SmarterRequestMixin):
             if not self._chatbot:
                 self.chatbot_helper = ChatBotHelper(
                     request=request,
+                    session_key=session_key,
                     chatbot_id=chatbot_id,
                     name=name,
                     account=self.account,
@@ -252,7 +260,6 @@ class ChatConfigView(View, SmarterRequestMixin):
 
         self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
-        return super().dispatch(request, *args, **kwargs)
 
     def __str__(self):
         return str(self.chatbot) if self.chatbot else "ChatConfigView"
@@ -336,7 +343,7 @@ class ChatConfigView(View, SmarterRequestMixin):
         return retval
 
 
-class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
+class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView, SmarterRequestMixin):
     """
     Chat app view for smarter web. This view is protected and requires the user
     to be authenticated. It works with deployed and not-yet-deployed ChatBots.
@@ -387,11 +394,15 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     chatbot_helper: ChatBotHelper = None
     url: str = None
 
-    def dispatch(self, request, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        SmarterRequestMixin.__init__(self, *args, **kwargs)
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
         name = kwargs.pop("name", None)
-        response = super().dispatch(request, *args, **kwargs)
-        if response.status_code >= 300:
-            return response
+        session_key = kwargs.pop("session_key", None)
+        SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
         self.url = self.smarter_build_absolute_uri(request)
 
         try:
@@ -409,7 +420,12 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             self.chatbot = get_cached_chatbot_by_request(request=request)
             if not self.chatbot:
                 self.chatbot_helper = ChatBotHelper(
-                    request=request, name=name, account=self.account, user=self.user, user_profile=self.user_profile
+                    request=request,
+                    session_key=self.session_key,
+                    name=name,
+                    account=self.account,
+                    user=self.user,
+                    user_profile=self.user_profile,
                 )
                 self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
             if not self.chatbot:

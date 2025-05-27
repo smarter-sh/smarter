@@ -547,8 +547,16 @@ class ChatBotHelper(SmarterRequestMixin):
         account = kwargs.pop("account", None)
         user = kwargs.pop("user", None)
         user_profile = kwargs.pop("user_profile", None)
+        session_key = kwargs.pop("session_key", None)
         SmarterRequestMixin.__init__(
-            self, *args, request=request, account=account, user=user, user_profile=user_profile, **kwargs
+            self,
+            *args,
+            request=request,
+            session_key=session_key,
+            account=account,
+            user=user,
+            user_profile=user_profile,
+            **kwargs,
         )
 
         self._chatbot_id: int = self._chatbot_id or chatbot_id or self.smarter_request_chatbot_id
