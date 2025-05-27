@@ -2,6 +2,7 @@
 
 import json
 import os
+from logging import getLogger
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.test import Client, RequestFactory
@@ -15,6 +16,7 @@ from ..base import ChatBotApiBaseViewSet
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+logger = getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -75,6 +77,7 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         # invoke dispatch method in order to set our class properties
         base_class.dispatch(self.request, name=self.broker.chatbot.name)
 
+        logger.info(f"test_base_class_properties() request={self.request} name={self.broker.chatbot.name}")
         self.assertEqual(base_class.chatbot_helper.account_number, self.account.account_number)
         self.assertEqual(base_class.chatbot_helper.user, self.admin_user)
         self.assertEqual(base_class.chatbot_helper.user_profile, self.user_profile)
