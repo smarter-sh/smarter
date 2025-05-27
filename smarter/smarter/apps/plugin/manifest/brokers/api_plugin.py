@@ -6,15 +6,11 @@ from typing import Type
 
 from django.core.handlers.wsgi import WSGIRequest
 
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
-from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.api_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.api import ApiPlugin
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -29,7 +25,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 from . import PluginSerializer, SAMPluginBrokerError
 
@@ -37,7 +32,7 @@ from . import PluginSerializer, SAMPluginBrokerError
 logger = logging.getLogger(__name__)
 
 
-class SAMApiPluginBroker(AbstractBroker, AccountMixin):
+class SAMApiPluginBroker(AbstractBroker):
     """
     Smarter API ApiPlugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml ApiPlugin manifests
@@ -52,41 +47,6 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
     _pydantic_model: Type[SAMApiPlugin] = SAMApiPlugin
     _plugin: PluginBase = None
     _plugin_meta: PluginMeta = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: WSGIRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            account=account,
-            api_version=api_version,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        user = request.user if hasattr(request, "user") else None
-        AccountMixin.__init__(self, account=account, user=user, request=request)
 
     ###########################################################################
     # Smarter abstract property implementations

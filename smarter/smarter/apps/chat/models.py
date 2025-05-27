@@ -150,12 +150,14 @@ class ChatHelper(SmarterRequestMixin):
 
     # FIX NOTE: remove session_key
     def __init__(self, request: WSGIRequest, session_key: str, *args, chatbot: ChatBot = None, **kwargs) -> None:
-        if not request:
-            logger.error("ChatHelper - request object is missing.")
         logger.info(
-            "%s__init__() received session_key: %s, chatbot: %s", self.formatted_class_name, session_key, chatbot
+            "ChatHelper().__init__() - received request: %s session_key: %s, chatbot: %s", request, session_key, chatbot
         )
+        if not request:
+            raise SmarterValueError(f"{self.formatted_class_name} request object is required.")
         SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
+        if not self.session_key:
+            self.session_key = self.generate_session_key()
         self._chat: Chat = None
         self._chatbot: ChatBot = chatbot
         self._clean_url: str = None
@@ -166,10 +168,19 @@ class ChatHelper(SmarterRequestMixin):
             )
 
         if chatbot:
+            logger.info("%s.__init__() received ChatBot instance: %s", self.formatted_class_name, chatbot)
             self.account = chatbot.account
+            logger.info(
+                "%s.__init__() - reinitializing account from chatbot.account: %s",
+                self.formatted_class_name,
+                self.account,
+            )
 
         if session_key:
+            logger.info("%s.__init__() received session_key: %s", self.formatted_class_name, session_key)
             self._chat = self.get_cached_chat()
+
+        logger.info("ChatHelper().__init__() - finished with session_key: %s, chat: %s", self.session_key, self._chat)
 
     def __str__(self):
         return self.session_key
