@@ -17,8 +17,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("-a", "--account_number", type=str, nargs="?", help="Account number that owns the plugins.")
-        parser.add_argument("-u", "--username", type=str, nargs="?", help="user that owns the plugins.")
+        parser.add_argument(
+            "-a", "--account_number", type=str, required=True, help="Account number that owns the plugins."
+        )
+        parser.add_argument("-u", "--username", type=str, required=True, help="user that owns the plugins.")
 
     def handle(self, *args, **options):
         """delete the plugin."""

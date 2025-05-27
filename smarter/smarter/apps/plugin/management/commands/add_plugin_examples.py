@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("username", type=str, nargs="?", default=None, help="A user associated with the account.")
+        parser.add_argument("--username", type=str, required=True, help="The user that will own the new plugin.")
 
     def handle(self, *args, **options):
         """create the plugin."""
