@@ -109,13 +109,13 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
             request=request, chatbot_id=None, account=self.account, user=self.admin_user, user_profile=self.user_profile
         )
 
-        self.assertFalse(helper.is_chatbot)
-        self.assertFalse(helper.is_smarter_api)
-        self.assertTrue(helper.account is None)
-        self.assertTrue(helper.chatbot is None)
-        self.assertTrue(helper.account_number is None)
-        self.assertTrue(helper.is_custom_domain is False)
-        self.assertTrue(helper.api_host is None)
+        self.assertFalse(helper.is_chatbot, f"Expected False, but got {helper.is_chatbot}")
+        self.assertFalse(helper.is_smarter_api, f"Expected False, but got {helper.is_smarter_api}")
+        self.assertFalse(helper.is_custom_domain)
+        self.assertEqual(helper.account, self.account)
+        self.assertIsNone(helper.chatbot, f"Expected None, but got {helper.chatbot}")
+        self.assertEqual(helper.account_number, self.account.account_number)
+        self.assertIsNone(helper.api_host, f"Expected None, but got {helper.api_host}")
         self.assertIsNone(helper.api_subdomain, f"Expected None, but got {helper.api_subdomain}")
 
     def test_custom_domain(self):
@@ -160,12 +160,12 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         """Test no url."""
         helper = ChatBotHelper(request=None)
 
-        self.assertTrue(helper.is_valid is False)
-        self.assertTrue(helper.account is None)
-        self.assertTrue(helper.chatbot is None)
-        self.assertTrue(helper.account_number is None)
-        self.assertTrue(helper.is_custom_domain is False)
-        self.assertTrue(helper.url is None)
-        self.assertTrue(helper.is_deployed is False)
-        self.assertTrue(helper.api_host is None)
-        self.assertTrue(helper.api_subdomain is None)
+        self.assertTrue(helper.is_valid is False, f"Expected False, but got {helper.is_valid}")
+        self.assertTrue(helper.account is None, f"Expected None, but got {helper.account}")
+        self.assertTrue(helper.chatbot is None, f"Expected None, but got {helper.chatbot}")
+        self.assertTrue(helper.account_number is None, f"Expected None, but got {helper.account_number}")
+        self.assertTrue(helper.is_custom_domain is False, f"Expected False, but got {helper.is_custom_domain}")
+        self.assertTrue(helper.url is None, f"Expected None, but got {helper.url}")
+        self.assertTrue(helper.is_deployed is False, f"Expected False, but got {helper.is_deployed}")
+        self.assertTrue(helper.api_host is None, f"Expected None, but got {helper.api_host}")
+        self.assertTrue(helper.api_subdomain is None, f"Expected None, but got {helper.api_subdomain}")
