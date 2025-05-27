@@ -345,7 +345,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 self.new_session,
             )
 
-        chat_config: JsonResponse = ChatConfigView.as_view()(request, name=name)
+        chat_config: JsonResponse = ChatConfigView.as_view()(request, name=name, session_key=self.session_key)
         if chat_config.status_code != 200:
             raise APIV1CLIChatViewError(
                 f"Internal error. Failed to get chat config for chatbot: {name} {chat_config.get('content')}"
