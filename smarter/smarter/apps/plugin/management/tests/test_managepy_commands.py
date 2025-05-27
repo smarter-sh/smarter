@@ -92,13 +92,25 @@ class ManageCommandCreatePluginTestCase(TestPluginClassBase):
             f"{self.file_path}",
         )
         call_command(
-            "delete_plugin", "--account_number", f"{self.account.account_number}", "--name", f"{self.plugin_name}"
+            "delete_plugin",
+            "--account_number",
+            f"{self.account.account_number}",
+            "--username",
+            f"{self.admin_user.username}",
+            "--name",
+            f"{self.plugin_name}",
         )
 
     def test_add_plugin_examples(self):
 
-        call_command("add_plugin_examples", f"{self.admin_user.get_username()}")
+        call_command("add_plugin_examples", "--username", f"{self.admin_user.get_username()}")
 
     def test_get_plugins(self):
 
-        call_command("get_plugins", "--account_number", f"{self.account.account_number}")
+        call_command(
+            "get_plugins",
+            "--account_number",
+            f"{self.account.account_number}",
+            "--username",
+            f"{self.admin_user.username}",
+        )

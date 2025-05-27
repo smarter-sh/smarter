@@ -19,15 +19,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("--account_number", type=str, nargs="?", help="Account number that owns the plugin.")
-        parser.add_argument("--username", type=str, nargs="?", help="The user that owns the plugin.")
-        parser.add_argument("--plugin_file_path", type=str, nargs="?", help="The path to the plugin YAML file")
+        parser.add_argument("--account_number", type=str, required=True, help="Account number that owns the plugin.")
+        parser.add_argument("--username", type=str, required=True, help="The user that owns the plugin.")
+        parser.add_argument("--file_path", type=str, required=True, help="The path to the plugin YAML file")
 
     def handle(self, *args, **options):
         """update the plugin."""
         account_number = options["account_number"]
         username = options["username"]
-        file_path = options["plugin_file_path"]
+        file_path = options["file_path"]
 
         account: Account = None
         user: UserType = None
