@@ -112,71 +112,13 @@ class SmarterRequestMixin(AccountMixin):
     )
 
     # pylint: disable=W0613
-    def init(self, request: WSGIRequest, *args, **kwargs):
-        """
-        validate, standardize and parse the request url string into a ParseResult.
-        Note that the setter and getter both work with strings
-        but we store the private instance variable _url as a ParseResult.
-
-        note: this is separated from __init__ because SmarterRequestMixin is a
-        parent of Classes that do not necessarily initialize with a request object.
-        For example, Django Views do not pass a request object to the __init__ method.
-        """
-        logger.info("%s.init()", self.formatted_class_name)
-        if self._smarter_request:
-            # we've already been initialized. nothing to do.
-            return None
-
-        if not request:
-            logger.warning("%s - request is None", self.formatted_class_name)
-        if not self.smarter_request_ready:
-            return None
-
-        self.helper_logger(f"init() request: {self._url}")
-
-        # lazy excuses to not do anything...
-        if not self.qualified_request:
-            return None
-
-        if self.is_chatbot_named_url:
-            account_number = account_number_from_url(self.url)
-            if account_number:
-                if self.account and self.account.account_number != account_number:
-                    logger.warning(
-                        "%s.init() - account number from url (%s) does not match existing account (%s). Changing to account from named url %s.",
-                        self.formatted_class_name,
-                        account_number,
-                        self.account.account_number,
-                        account_number,
-                    )
-                self.account = get_cached_account(account_number=account_number)
-
-            if self.account and not self._user:
-                logger.warning(
-                    "%s.init() - account (%s) is set but user is not. Attempting to get admin user for account %s.",
-                    self.formatted_class_name,
-                    self.account,
-                    self.account.account_number,
-                )
-                self._user = get_cached_admin_user_for_account(account=self.account)
-
-        self.eval_chatbot_url()
-
-        if self.is_chatbot:
-            self.helper_logger(
-                f"chatbot_name={self.smarter_request_chatbot_name} chatbot_id={self.smarter_request_chatbot_id}"
-            )
-        if self.is_config:
-            self.helper_logger("is_config=True")
-
-        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-            self.dump()
-
-    # pylint: disable=W0613
     def __init__(self, request: WSGIRequest, *args, session_key: str = None, **kwargs):
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
+        logger.info(
+            "SmarterRequestMixin().__init__() - initializing with request=%s, session_key=%s", request, session_key
+        )
         request = request or kwargs.pop("request", None)
         if not request and args:
             request = args[0]
@@ -184,11 +126,15 @@ class SmarterRequestMixin(AccountMixin):
         # do lazy initialization of the request object first.
         self._smarter_request: WSGIRequest = request
         self._timestamp = datetime.now()
-        self._session_key: str = session_key
+        self._session_key: str = None
         self._data: dict = None
         self._url = None
         self._url_urlunparse_without_params = None
         self._params = None
+        self.invalidate_cached_properties()
+
+        if session_key is not None:
+            self.session_key = session_key
 
         # pop the account, user and user_profile from kwargs, if they exist.
         # this is to allow the class to be used in a context where these are not
@@ -198,9 +144,6 @@ class SmarterRequestMixin(AccountMixin):
         user = kwargs.pop("user", None)
         user_profile = kwargs.pop("user_profile", None)
         super().__init__(*args, request=request, account=account, user=user, user_profile=user_profile, **kwargs)
-
-        if not request:
-            logger.warning("%s - request is None.", self.formatted_class_name)
 
         url = self.smarter_build_absolute_uri(self.smarter_request)
         if url:
@@ -218,16 +161,51 @@ class SmarterRequestMixin(AccountMixin):
         else:
             logger.warning("%s - request url is None.", self.formatted_class_name)
 
-        self.init(request=request)
-        self.invalidate_cached_properties()
+        # lazy excuses to not do anything...
+        if not self.qualified_request:
+            logger.info("%s.__init__() - request is not qualified. url=%s", self.formatted_class_name, url)
+            return None
+
+        if self.is_chatbot_named_url:
+            account_number = account_number_from_url(self.url)
+            if account_number:
+                if self.account and self.account.account_number != account_number:
+                    raise SmarterValueError(
+                        f"account number from url ({account_number}) does not match existing account ({self.account.account_number})."
+                    )
+
+            if self.account and not self._user:
+                logger.warning(
+                    "%s.__init__() - account (%s) is set but user is not.",
+                    self.formatted_class_name,
+                    self.account,
+                )
+
+        self.eval_chatbot_url()
+
+        if self.is_chatbot:
+            self.helper_logger(
+                f"chatbot_name={self.smarter_request_chatbot_name} chatbot_id={self.smarter_request_chatbot_id}"
+            )
+        if self.is_config:
+            self.helper_logger("is_config=True")
+
+        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+            self.dump()
 
         if self.smarter_request_ready:
-            self.helper_logger("__init__() initialized successfully.")
+            self.helper_logger(f"__init__() initialized successfully url={self.url}, session_key={self.session_key}")
         else:
             logger.error(
                 "%s.__init__() request is not ready. Please check the request object and ensure it is valid.",
                 self.formatted_class_name,
             )
+        logger.info(
+            "SmarterRequestMixin().__init__() - finished with request=%s, session_key=%s ready=%s",
+            self.smarter_request,
+            self.session_key,
+            self.smarter_request_ready,
+        )
 
     def invalidate_cached_properties(self):
         """
@@ -392,76 +370,24 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def session_key(self):
         """
-        returns the unique chat session key value for this request.
-        session_key is managed by the /config/ endpoint for the chatbot
-
-        The React app calls this endpoint at app initialization to get a
-        json dict that includes, among other pertinent info, this session_key
-        which uniquely identifies the device and the individual chatbot session
-        for the device.
-
-        for subsequent chat prompt requests the session_key is intended to be
-        sent in the body of the request as a key-value pair,
-        e.g. {"session_key": "1234567890"}.
-
-        But, this method will also check the request headers for the session_key.
-        Get the session key from one of the following:
-         - url parameter http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-         - request json body {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
-         - request header {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
-         - a session_key generator
-
+        Getter for the session_key property. The session_key is a unique identifier
+        for a chat session. It is used to identify the chat session across multiple requests.
         """
-        if self._session_key:
-            return self._session_key
-
-        session_key: str = None
-
-        # this is our expected case. we look for the session key in the parsed url.
-        session_key = session_key_from_url(self.url)
-        if session_key:
-            SmarterValidator.validate_session_key(session_key)
-            self.helper_logger(
-                f"session_key() - initialized from url: {session_key}",
-            )
-            self._session_key = session_key
-            return self._session_key
-
-        # next, we look for it in the request body data.
-        session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        session_key = session_key.strip() if isinstance(session_key, str) else None
-        if session_key:
-            SmarterValidator.validate_session_key(session_key)
-            self.helper_logger(
-                f"session_key() - initialized from request body: {session_key}",
-            )
-            self._session_key = session_key
-            return self._session_key
-
-        # next, we look for it in the cookie data.
-        session_key = self.get_cookie_value(SMARTER_CHAT_SESSION_KEY_NAME)
-        session_key = session_key.strip() if isinstance(session_key, str) else None
-        if session_key:
-            SmarterValidator.validate_session_key(session_key)
-            self.helper_logger(
-                f"session_key() - initialized from cookie data of the request object: {session_key}",
-            )
-            self._session_key = session_key
-            return self._session_key
-
-        # finally, we look for it in the GET parameters.
-        session_key = self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        session_key = session_key.strip() if isinstance(session_key, str) else None
-        if session_key:
-            SmarterValidator.validate_session_key(session_key)
-            self.helper_logger(
-                f"session_key() - initialized from the get() parameters of the request object: {session_key}",
-            )
-            self._session_key = session_key
-            return self._session_key
-
-        self._session_key = self.generate_session_key()
         return self._session_key
+
+    @session_key.setter
+    def session_key(self, value: str):
+        """
+        Setter for the session_key property.
+        This is used to set the session_key from the request object.
+        """
+        if not value:
+            raise SmarterValueError("Session key cannot be None or empty.")
+        SmarterValidator.validate_session_key(value)
+        if not self.smarter_request:
+            raise SmarterValueError("Session key cannot be set without a valid request object.")
+        logger.info("%s.session_key() - setting session_key to %s", self.formatted_class_name, value)
+        self._session_key = value
 
     @cached_property
     def smarter_request_chatbot_id(self) -> int:
@@ -939,6 +865,72 @@ class SmarterRequestMixin(AccountMixin):
         if key_string:
             session_key = hash_factory(length=64)
             self.helper_logger(f"Generated new session key: {session_key}")
+            return session_key
+
+    def find_session_key(self) -> str:
+        """
+        returns the unique chat session key value for this request.
+        session_key is managed by the /config/ endpoint for the chatbot
+
+        The React app calls this endpoint at app initialization to get a
+        json dict that includes, among other pertinent info, this session_key
+        which uniquely identifies the device and the individual chatbot session
+        for the device.
+
+        for subsequent chat prompt requests the session_key is intended to be
+        sent in the body of the request as a key-value pair,
+        e.g. {"session_key": "1234567890"}.
+
+        But, this method will also check the request headers for the session_key.
+        Get the session key from one of the following:
+         - url parameter http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+         - request json body {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
+         - request header {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
+         - a session_key generator
+
+        """
+        if self._session_key:
+            return self._session_key
+
+        session_key: str = None
+
+        # this is our expected case. we look for the session key in the parsed url.
+        session_key = session_key_from_url(self.url)
+        if session_key:
+            SmarterValidator.validate_session_key(session_key)
+            self.helper_logger(
+                f"session_key() - initialized from url: {session_key}",
+            )
+            return session_key
+
+        # next, we look for it in the request body data.
+        session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
+        session_key = session_key.strip() if isinstance(session_key, str) else None
+        if session_key:
+            SmarterValidator.validate_session_key(session_key)
+            self.helper_logger(
+                f"session_key() - initialized from request body: {session_key}",
+            )
+            return session_key
+
+        # next, we look for it in the cookie data.
+        session_key = self.get_cookie_value(SMARTER_CHAT_SESSION_KEY_NAME)
+        session_key = session_key.strip() if isinstance(session_key, str) else None
+        if session_key:
+            SmarterValidator.validate_session_key(session_key)
+            self.helper_logger(
+                f"session_key() - initialized from cookie data of the request object: {session_key}",
+            )
+            return session_key
+
+        # finally, we look for it in the GET parameters.
+        session_key = self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
+        session_key = session_key.strip() if isinstance(session_key, str) else None
+        if session_key:
+            SmarterValidator.validate_session_key(session_key)
+            self.helper_logger(
+                f"session_key() - initialized from the get() parameters of the request object: {session_key}",
+            )
             return session_key
 
     def to_json(self) -> dict:

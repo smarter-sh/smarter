@@ -16,7 +16,11 @@ from django.conf import settings
 
 from smarter.apps.account.models import Account, AccountContact
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL, SmarterEnvironments
+from smarter.common.const import (
+    SMARTER_CHAT_SESSION_KEY_NAME,
+    SMARTER_CUSTOMER_SUPPORT_EMAIL,
+    SmarterEnvironments,
+)
 from smarter.common.helpers.aws.exceptions import (
     AWSACMCertificateNotFound,
     AWSACMVerificationNotFound,
@@ -111,10 +115,11 @@ def verify_certificate(certificate_arn: str):
 )
 def create_chatbot_request(chatbot_id: int, request_data: dict):
     """Create a ChatBot request record."""
+
     pre_create_chatbot_request.send(sender=create_chatbot_request, chatbot_id=chatbot_id, request_data=request_data)
     logger.info("%s - chatbot %s", formatted_text(module_prefix + "create_chatbot_request()"), chatbot_id)
     chatbot = ChatBot.objects.get(id=chatbot_id)
-    session_key = request_data.get("session_key")
+    session_key = request_data.get(SMARTER_CHAT_SESSION_KEY_NAME)
     ChatBotRequests.objects.create(chatbot=chatbot, request=request_data, session_key=session_key)
     post_create_chatbot_request.send(sender=create_chatbot_request, chatbot_id=chatbot_id, request_data=request_data)
 

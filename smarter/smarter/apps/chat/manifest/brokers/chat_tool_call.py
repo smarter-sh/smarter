@@ -14,6 +14,7 @@ from smarter.apps.chat.manifest.models.chat_tool_call.const import MANIFEST_KIND
 from smarter.apps.chat.manifest.models.chat_tool_call.model import SAMChatToolCall
 from smarter.apps.chat.models import Chat, ChatToolCall
 from smarter.common.api import SmarterApiVersions
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -216,11 +217,14 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        self._session_key: str = kwargs.get("session_key", None)
+        self._session_key: str = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
         self._session_key = self.clean_cli_param(
-            param=self._session_key, param_name="session_key", url=self.smarter_build_absolute_uri(request)
+            param=self._session_key,
+            param_name=SMARTER_CHAT_SESSION_KEY_NAME,
+            url=self.smarter_build_absolute_uri(request),
         )
 
         data = []

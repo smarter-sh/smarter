@@ -17,6 +17,7 @@ from smarter.apps.chat.tasks import (
     create_chat_tool_call_history,
     update_chat,
 )
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 
 
@@ -44,6 +45,7 @@ class ProviderDbMixin(AccountMixin):
         """
         Constructor method for the ProviderDbMixin class.
         """
+
         self._chat: Chat = None
         self._chat_tool_call: ChatToolCall = None
         self._chat_plugin_usage: ChatPluginUsage = None
@@ -51,7 +53,7 @@ class ProviderDbMixin(AccountMixin):
         self._chat_history: QuerySet[ChatHistory] = None
         self._message_history: list[dict] = None
         super().__init__(*args, **kwargs)
-        session_key = kwargs.get("session_key", None)
+        session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
         if session_key:
             self._chat = Chat.objects.get(session_key=session_key)
         else:
@@ -78,8 +80,13 @@ class ProviderDbMixin(AccountMixin):
         """
         This method sets the chat instance.
         """
-        self.init()
         self._chat = value
+        self._chat = None
+        self._chat_tool_call = None
+        self._chat_plugin_usage = None
+        self._charges = None
+        self._chat_history = None
+        self._message_history = None
 
     @property
     def chat_history(self) -> QuerySet[ChatHistory]:

@@ -13,9 +13,8 @@ from rest_framework import serializers
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.const import SmarterWaffleSwitches
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
@@ -29,7 +28,7 @@ class Chat(TimestampedModel):
 
     class Meta:
         verbose_name_plural = "Chats"
-        unique_together = ("session_key", "url")
+        unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
 
     session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=False, null=False)
@@ -191,7 +190,7 @@ class ChatHelper(SmarterRequestMixin):
     def chatbot(self):
         if self._chatbot:
             return self._chatbot
-        self._chatbot = get_cached_chatbot_by_request(request=self.request)
+        self._chatbot = get_cached_chatbot_by_request(request=self.smarter_request)
 
     @property
     def chat_history(self) -> ChatHistory:

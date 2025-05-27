@@ -21,8 +21,11 @@ from smarter.apps.account.utils import (
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT, SmarterWaffleSwitches
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.const import (
+    SMARTER_CHAT_SESSION_KEY_NAME,
+    SMARTER_DEFAULT_CACHE_TIMEOUT,
+    SmarterWaffleSwitches,
+)
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.lib.cache import cache_request, cache_results
 from smarter.lib.django import waffle
@@ -540,14 +543,18 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         self.init_slots()
 
-        # SmarterRequestMixin inherits AccountMixin, so we should consider
-        # the possibility that at least some of the initialization data
-        # for AccountMixin might be passed in via kwargs.
+        # SmarterRequestMixin can receive the request object
+        # and also a session_key.
         request = request or kwargs.pop("request", None)
+        session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
+
+        # Additionally, SmarterRequestMixin inherits AccountMixin, so we
+        # should consider the possibility that at least some of the
+        # initialization data for AccountMixin might be passed in via kwargs.
         account = kwargs.pop("account", None)
         user = kwargs.pop("user", None)
         user_profile = kwargs.pop("user_profile", None)
-        session_key = kwargs.pop("session_key", None)
+
         SmarterRequestMixin.__init__(
             self,
             *args,
@@ -563,13 +570,14 @@ class ChatBotHelper(SmarterRequestMixin):
         self._name: str = self._name or name or self.smarter_request_chatbot_name
 
         logger.info(
-            "%s.__init__() initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s",
+            "%s.__init__() initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
             self.formatted_class_name,
             self.url,
             self.name,
             self.chatbot_id,
             self.user,
             self.account,
+            self.session_key,
         )
 
         if self.chatbot:
@@ -949,6 +957,7 @@ def get_cached_chatbot_by_request(request: WSGIRequest) -> ChatBot:
     """
     chatbot: ChatBot = None
 
+    logging.info("get_cached_chatbot_by_request() called with request: %s", request)
     chatbot_helper = ChatBotHelper(request=request)
     if chatbot_helper.chatbot:
         chatbot = chatbot_helper.chatbot

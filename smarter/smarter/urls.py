@@ -1,5 +1,7 @@
 """URL configuration for Smarter Api and web console."""
 
+from logging import getLogger
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -28,6 +30,8 @@ from smarter.apps.docs.views.webserver import (
 )
 
 
+logger = getLogger(__name__)
+
 admin.site = restricted_site
 
 # Load the admin modules of all installed apps
@@ -50,6 +54,7 @@ def root_redirector(request):
     2. the dashboard if the user is authenticated,
     3. otherwise to the Wagtail docs homepage.
     """
+    logger.info("root_redirector()")
     # 1. check if the url is a chatbot endpoint
     chatbot = get_cached_chatbot_by_request(request=request)
     if chatbot:
@@ -68,6 +73,7 @@ def config_redirector(request):
     """
     Handles traffic sent to the config endpoints of the website.
     """
+    logger.info("config_redirector()")
     chatbot = get_cached_chatbot_by_request(request=request)
     if chatbot:
         view = ChatConfigView.as_view()

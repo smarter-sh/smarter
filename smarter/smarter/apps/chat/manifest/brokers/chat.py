@@ -216,11 +216,12 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        session_key: str = kwargs.get("session_key", "")
+        session_key: str = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, "")
         session_key = self.clean_cli_param(
-            param=session_key, param_name="session_key", url=self.smarter_build_absolute_uri(request)
+            param=session_key, param_name=SMARTER_CHAT_SESSION_KEY_NAME, url=self.smarter_build_absolute_uri(request)
         )
 
         data = []
