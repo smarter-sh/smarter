@@ -37,7 +37,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 
 User = get_user_model()
@@ -171,6 +170,15 @@ class SAMSecretBroker(AbstractBroker):
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for logging purposes.
+        This is used to provide a more readable class name in logs.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.SAMSecretBroker()"
+
     @property
     def kind(self) -> str:
         return MANIFEST_KIND

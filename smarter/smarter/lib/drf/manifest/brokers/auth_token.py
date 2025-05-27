@@ -6,10 +6,9 @@ from logging import getLogger
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
+from pydantic_core import ValidationError as PydanticValidationError
 from rest_framework.serializers import ModelSerializer
 
-from smarter.apps.account.mixins import AccountMixin
-from smarter.common.api import SmarterApiVersions
 from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
 from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
 from smarter.lib.drf.manifest.models.auth_token.model import SAMSmarterAuthToken
@@ -29,11 +28,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
-
-if typing.TYPE_CHECKING:
-    from smarter.apps.account.models import Account
 
 MAX_RESULTS = 1000
 logger = getLogger(__name__)
@@ -56,7 +51,7 @@ class SmarterAuthTokenSerializer(ModelSerializer):
         fields = ["key_id", "name", "description", "is_active", "last_used_at", "created_at", "updated_at"]
 
 
-class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
+class SAMSmarterAuthTokenBroker(AbstractBroker):
     """
     Smarter API SmarterAuthToken Manifest Broker. This class is responsible for
     - loading, validating and parsing the Smarter Api yaml SmarterAuthToken manifests
@@ -75,43 +70,26 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     _smarter_auth_token: SmarterAuthToken = None
     _token_key: str = None
 
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: HttpRequest,
-        account: "Account",
-        *args,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-        **kwargs,
-    ):
+    def __init__(self, *args, **kwargs):
         """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
+        Initialize the SAMSmarterAuthTokenBroker with the given arguments.
+        The constructor initializes the parent class and sets up the manifest
+        and user attributes.
         """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        account = account or kwargs.get("account")
-        user = kwargs.get("user")
-        AccountMixin.__init__(self, account=account, user=user, request=request)
+        self._smarter_auth_token = None
+        self._token_key = None
+        self._created = False
+        self._name = None
+        super().__init__(*args, **kwargs)
+
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for logging purposes.
+        This is used to provide a more readable class name in logs.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.SAMSmarterAuthTokenBroker()"
 
     @property
     def smarter_auth_token(self) -> SmarterAuthToken:
@@ -135,7 +113,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 self._created = True
             else:
                 raise SAMBrokerErrorNotFound(
-                    f"Did not find {self.kind} {self.name}.", thing=self.kind, command=None
+                    f"{self.kind} {self.name} does not exist and it could not be created because manifest is None",
+                    thing=self.kind,
+                    command=None,
                 ) from e
 
         return self._smarter_auth_token
@@ -145,9 +125,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         A dictionary representation of the SmarterAuthToken object.
         This is used to serialize the object to JSON for the API response.
         """
-        if self.smarter_auth_token:
+        if self._smarter_auth_token:
             return SmarterAuthTokenSerializer(self.smarter_auth_token).data
-        return {}
+        return None
 
     @property
     def token_key(self) -> str:
@@ -225,12 +205,30 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSmarterAuthToken(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=self.loader.manifest_metadata,
-                spec=self.loader.manifest_spec,
-                status=self.loader.manifest_status,
+
+            try:
+                self._manifest = SAMSmarterAuthToken(
+                    apiVersion=self.loader.manifest_api_version,
+                    kind=self.loader.manifest_kind,
+                    metadata=self.loader.manifest_metadata,
+                    spec=self.loader.manifest_spec,
+                    status=self.loader.manifest_status,
+                )
+                logger.info(
+                    "%s.manifest() initialized with SAMSmarterAuthToken() using data from self.loader", self.kind
+                )
+            except PydanticValidationError as e:
+                logger.error(
+                    "%s.manifest() could not be initialized with SAMSmarterAuthToken() using data from self.loader: %s",
+                    self.kind,
+                    str(e),
+                )
+        else:
+            logger.warning(
+                "%s.manifest() %s could not be initialized. self.loader is %s.",
+                self.kind,
+                self.formatted_class_name,
+                "initialized" if self.loader is not None else "not initialized",
             )
         return self._manifest
 

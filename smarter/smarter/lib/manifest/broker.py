@@ -159,10 +159,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         **kwargs,
     ):
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
-        if name:
-            self._name = name
-            logger.info("%s.__init__() set name to %s", self.formatted_class_name, self._name)
-        self._loader = loader
+        logger.info("AbstractBroker.__init__() initializing")
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(
                 message=f"Unsupported apiVersion: {api_version}",
@@ -170,25 +167,50 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             )
         self._api_version = api_version
 
-        try:
-            self._loader = SAMLoader(
-                api_version=api_version,
-                kind=kind,
-                manifest=manifest,
-                file_path=file_path,
-                url=url,
-            )
-            if self._loader:
-                self._validated = True
-        except SAMLoaderError:
-            pass
+        if name:
+            self._name = name
+            logger.info("%s.__init__() set name to %s", self.formatted_class_name, self._name)
+
+        self._loader = loader
+        if self._loader:
+            logger.info("%s.__init__() received a %s loader", self.formatted_class_name, self._loader.manifest_kind)
+        else:
+            try:
+                self._loader = SAMLoader(
+                    api_version=api_version,
+                    kind=kind,
+                    manifest=manifest,
+                    file_path=file_path,
+                    url=url,
+                )
+                if self._loader:
+                    self._validated = True
+                    logger.info(
+                        "%s.__init__() loader initialized with manifest kind: %s",
+                        self.formatted_class_name,
+                        self._loader.manifest_kind,
+                    )
+            except SAMLoaderError as e:
+                logger.error("%s.__init__() failed to initialize loader: %s", self.formatted_class_name, str(e))
 
         self._kind = kind or self.loader.manifest_kind if self.loader else None
         self._created = False
+        logger.info(
+            "AbstractBroker.__init__() finished initializing %s with api_version: %s", self.kind, self.api_version
+        )
 
     ###########################################################################
     # Class Instance Properties
     ###########################################################################
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for logging purposes.
+        This is used to provide a more readable class name in logs.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.AbstractBroker()"
+
     @property
     def plugin(self) -> PluginBase:
         """
@@ -294,10 +316,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if not self._name and self.manifest and self.manifest.metadata and self.manifest.metadata.name:
             # assign from the manifest metadata, if we have it
             self._name = self.manifest.metadata.name
+            logger.info("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
         name_param = self.params.get("name", None)
         if name_param:
-            logger.info("%s.__init__() set name to %s", self.formatted_class_name, self._name)
             self._name = name_param
+            logger.info("%s.__init__() set name to %s from name url param", self.formatted_class_name, self._name)
 
         return self._name
 
