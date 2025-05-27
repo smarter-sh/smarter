@@ -344,7 +344,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 self._prompt = self.data
                 self._manifest_kind = SAMKinds.CHAT.value
             else:
-                self._manifest_data = json.loads(self.data)
+                self._manifest_data = self.data
         except json.JSONDecodeError:
             try:
                 data = request.body.decode("utf-8") if request and hasattr(request, "body") else None

@@ -132,9 +132,7 @@ def handle_plugin_ready(sender, plugin: PluginBase, **kwargs):
 
 
 @receiver(plugin_selected, dispatch_uid="plugin_selected")
-def handle_plugin_selected(
-    sender, plugin: PluginBase, user, messages: list[dict], search_term: str, session_key: str, **kwargs
-):
+def handle_plugin_selected(sender, plugin: PluginBase, user, messages: list[dict], search_term: str, **kwargs):
     """Handle plugin selected signal."""
 
     input_text: str = kwargs.get("input_text")
@@ -155,7 +153,6 @@ def handle_plugin_selected(
         input_text=input_text,
         messages=messages,
         search_term=search_term,
-        session_key=session_key,
     )
 
 

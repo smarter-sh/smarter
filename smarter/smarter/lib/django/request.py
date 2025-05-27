@@ -256,11 +256,16 @@ class SmarterRequestMixin(AccountMixin):
         """
         if not self._smarter_request:
             return False
-        if self._smarter_request.path in ["/favicon.ico", "/robots.txt", "/sitemap.xml"]:
+        url = self.url
+        path = urlparse(url).path
+        if not path:
             return False
-        if self._smarter_request.path.startswith("/admin/"):
+
+        if path in ["/favicon.ico", "/robots.txt", "/sitemap.xml"]:
             return False
-        if self._smarter_request.path.startswith("/docs/"):
+        if path.startswith("/admin/"):
+            return False
+        if path.startswith("/docs/"):
             return False
 
         static_extensions = [
@@ -277,7 +282,7 @@ class SmarterRequestMixin(AccountMixin):
             ".eot",
             ".ico",
         ]
-        if any(self._smarter_request.path.endswith(ext) for ext in static_extensions):
+        if any(path.endswith(ext) for ext in static_extensions):
             return False
 
         return True
@@ -474,10 +479,14 @@ class SmarterRequestMixin(AccountMixin):
         """
         if self._data:
             return self._data
+        if not self.smarter_request:
+            logger.warning("%s.data() - request is None or not set.", self.formatted_class_name)
+            return {}
         try:
-            if self.smarter_request and self.smarter_request.body:
-                self.helper_logger(f"request body={self.smarter_request.body}")
-                body_str = self.smarter_request.body.decode("utf-8").strip()
+            body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
+            if body is not None:
+                self.helper_logger(f"request body={body}")
+                body_str = body.decode("utf-8").strip()
                 self._data = json.loads(body_str) if body_str else {}
         except json.JSONDecodeError as e:
             logger.warning("%s - failed to parse request body: %s", self.formatted_class_name, e)
