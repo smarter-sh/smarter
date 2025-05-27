@@ -8,12 +8,9 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.forms.models import model_to_dict
 from rest_framework.serializers import ModelSerializer
 
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
 from smarter.apps.chat.manifest.models.chat_history.const import MANIFEST_KIND
 from smarter.apps.chat.manifest.models.chat_history.model import SAMChatHistory
 from smarter.apps.chat.models import Chat, ChatHistory
-from smarter.common.api import SmarterApiVersions
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -54,7 +51,7 @@ class ChatHistorySerializer(ModelSerializer):
         fields = "__all__"
 
 
-class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
+class SAMChatHistoryBroker(AbstractBroker):
     """
     Smarter API Chat Manifest Broker. This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Chat manifests
@@ -72,41 +69,6 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
     _pydantic_model: typing.Type[SAMChatHistory] = SAMChatHistory
     _chat_history: ChatHistory = None
     _session_key: str = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: WSGIRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        user = request.user if hasattr(request, "user") else None
-        AccountMixin.__init__(self, account=account, user=user, request=request)
 
     @property
     def session_key(self) -> str:

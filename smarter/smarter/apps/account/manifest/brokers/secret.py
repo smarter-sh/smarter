@@ -19,9 +19,7 @@ from smarter.apps.account.manifest.enum import (
 from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, Secret
-from smarter.common.api import SmarterApiVersions
+from smarter.apps.account.models import Secret
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib.django.user import get_user_model
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -65,7 +63,7 @@ class SAMSecretBrokerError(SAMBrokerError):
         return "Smarter API Secret Manifest Broker Error"
 
 
-class SAMSecretBroker(AbstractBroker, AccountMixin):
+class SAMSecretBroker(AbstractBroker):
     """
     Smarter API Secret Manifest Broker. This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Secret manifests
@@ -82,41 +80,6 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     _manifest: SAMSecret = None
     _pydantic_model: typing.Type[SAMSecret] = SAMSecret
     _secret_transformer: SecretTransformer = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: HttpRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        user = request.user if hasattr(request, "user") else None
-        AccountMixin.__init__(self, account=account, user=user, request=request)
 
     @property
     def secret_transformer(self) -> SecretTransformer:

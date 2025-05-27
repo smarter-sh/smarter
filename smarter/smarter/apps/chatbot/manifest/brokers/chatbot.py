@@ -9,8 +9,6 @@ from django.db import transaction
 from django.forms.models import model_to_dict
 from rest_framework.serializers import ModelSerializer
 
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
 from smarter.apps.chatbot.manifest.enum import SAMChatbotSpecKeys
 from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
@@ -22,7 +20,6 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
-from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -40,7 +37,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 
 logger = logging.getLogger(__name__)
@@ -64,7 +60,7 @@ class ChatBotSerializer(ModelSerializer):
         fields = ["name", "url", "dns_verification_status", "deployed", "created_at", "updated_at"]
 
 
-class SAMChatbotBroker(AbstractBroker, AccountMixin):
+class SAMChatbotBroker(AbstractBroker):
     """
     Smarter API Chatbot Manifest Broker. This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Chatbot manifests
@@ -83,42 +79,6 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     _chatbot: ChatBot = None
     _chatbot_api_key: ChatBotAPIKey = None
     _name: str = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: WSGIRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        user = request.user if hasattr(request, "user") else None
-        AccountMixin.__init__(self, account=account, user=user, request=request)
-        self._name = self.params.get("name", None)
 
     @property
     def name(self) -> str:

@@ -8,7 +8,6 @@ from typing import Type
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
-from smarter.apps.account.mixins import Account, AccountMixin
 from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
@@ -21,7 +20,6 @@ from smarter.apps.plugin.manifest.models.sql_connection.enum import (
 )
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
-from smarter.common.api import SmarterApiVersions
 from smarter.common.utils import camel_to_snake
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -36,7 +34,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 from ..models.sql_connection.const import MANIFEST_KIND
 from ..models.sql_connection.model import SAMSqlConnection
@@ -46,7 +43,7 @@ from . import SAMConnectionBrokerError
 logger = getLogger(__name__)
 
 
-class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
+class SAMSqlConnectionBroker(AbstractBroker):
     """
     Smarter API SqlConnection Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml SqlConnection manifests
@@ -62,41 +59,6 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
     _sql_connection: SqlConnection = None
     _password_secret: Secret = None
     _proxy_password_secret: Secret = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: HttpRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        user = request.user if hasattr(request, "user") else None
-        AccountMixin.__init__(self, account=account, user=user, request=request)
 
     ###########################################################################
     # Smarter abstract property implementations
