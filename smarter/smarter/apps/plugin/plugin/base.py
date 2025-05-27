@@ -81,7 +81,6 @@ class PluginBase(ABC, SmarterHelperMixin):
     _selected: bool = False
     _params: dict = None
 
-    _session_key: str = None
     _user_profile: UserProfile = None
 
     # abstract properties
@@ -99,7 +98,6 @@ class PluginBase(ABC, SmarterHelperMixin):
         plugin_id: int = None,
         plugin_meta: PluginMeta = None,
         data: Union[dict, str] = None,
-        session_key: str = None,
         **kwargs,
     ):
         """
@@ -119,7 +117,6 @@ class PluginBase(ABC, SmarterHelperMixin):
         self.api_version = api_version or self.api_version
         self._selected = selected
         self._user_profile = user_profile
-        self._session_key = session_key
 
         #######################################################################
         # identifiers for existing plugins
@@ -381,9 +378,8 @@ class PluginBase(ABC, SmarterHelperMixin):
         """Return the user profile."""
         if not self._user_profile:
             logger.warning(
-                "%s.user_profile() was accessed prior to being set. session_key=%s.",
+                "%s.user_profile() was accessed prior to being set.",
                 self.formatted_class_name,
-                self.session_key,
             )
         return self._user_profile
 
@@ -505,7 +501,6 @@ class PluginBase(ABC, SmarterHelperMixin):
                         user=self.user_profile.user if self.user_profile else None,
                         input_text=input_text,
                         search_term=search_term,
-                        session_key=self.session_key,
                     )
                     return True
 
@@ -523,7 +518,6 @@ class PluginBase(ABC, SmarterHelperMixin):
                                 user=user,
                                 messages=messages,
                                 search_term=search_term,
-                                session_key=self.session_key,
                             )
                             return True
 

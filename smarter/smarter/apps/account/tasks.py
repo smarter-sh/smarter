@@ -14,6 +14,7 @@ from django.conf import settings
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Sum
 
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
 
 # Smarter stuff
@@ -59,7 +60,7 @@ def create_charge(*args, **kwargs):
             if account:
                 user = get_cached_admin_user_for_account(account=account)
 
-    session_key = kwargs.get("session_key")
+    session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
     provider = kwargs.get("provider")
     charge_type = kwargs.get("charge_type")
     prompt_tokens = kwargs.get("prompt_tokens")

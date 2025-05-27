@@ -21,6 +21,7 @@ from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -57,7 +58,6 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
     _data: dict = None
     _name: str = None
     _prompt: str = None
-    _session_key: str = None
 
     @property
     def formatted_class_name(self) -> str:
@@ -87,7 +87,11 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
     @property
     def new_session(self) -> bool:
-        """True if the new_session url parameter was passed and is set to 'true'"""
+        """
+        True if the new_session url parameter was passed and is set to 'true'
+
+        example: http://localhost:8000/api/v1/cli/chat/smarter/?new_session=false&uid=mcdaniel
+        """
         if self.params.get("new_session", "false").lower() not in ["true", "false"]:
             bad_value = self.params.get("new_session")
             raise APIV1CLIChatViewError(
@@ -148,28 +152,39 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         # if the new_session url parameter was passed and is set to True
         # then we will delete the cache_key and the session_key.
         if self.new_session:
-            self._session_key = None
+            self.session_key = self.generate_session_key()
             logger.info(
                 "%s.initial() new_session is True, resetting the session_key and deleting cache_key: %s",
                 self.formatted_class_name,
                 self.cache_key,
             )
             cache.delete(self.cache_key)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.info("%s.initial() deleted cache_key: %s", self.formatted_class_name, self.cache_key)
+        else:
+            session_key = self.find_session_key()
+            if session_key is not None:
+                self.session_key = session_key
 
         # 1.) attempt to retrieve a session_key from the cache. if we get a hit
         # then we will update the request body with the session_key
         # and pass it along to the ChatConfigView.
         session_key = cache.get(self.cache_key)
-        if session_key:
-            self._session_key = session_key
-            logger.info("%s.initial() found a cached session_key: %s", self.formatted_class_name, self.session_key)
+        if session_key is not None:
+            logger.info(
+                "%s.initial() resetting session_key from %s to cached key: %s",
+                self.formatted_class_name,
+                self.session_key,
+                session_key,
+            )
+            self.session_key = session_key
 
         # 3.) at this point we either have a session_key from the cache, or from the request body
         #     or from SmarterRequestMixin(). Otherwise, this will raise a SmarterValueError.
         if self.session_key:
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.info(
-                    "%s.handler() caching session_key for chat config: %s", self.formatted_class_name, self.session_key
+                    "%s.initial() caching session_key for chat config: %s", self.formatted_class_name, self.session_key
                 )
             if self.data:
                 new_body = self.data.copy()
@@ -359,10 +374,10 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             chat_config: dict = json.loads(chat_config_content)
             self._chat_config = chat_config.get(SCLIResponseGet.DATA.value)
             session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            if session_key:
-                self._session_key = session_key
+            if session_key is not None:
+                self.session_key = session_key
                 logger.info(
-                    "%s.handler() initialized session_key from chat config: %s",
+                    "%s.handler() initialized session_key from chat_config: %s",
                     self.formatted_class_name,
                     self.session_key,
                 )
@@ -464,9 +479,9 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             if not isinstance(messages, list):
                 raise APIV1CLIChatViewError(f"Internal error. Messages must be a list: {messages}")
         session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
+
         if session_key:
-            if not re.match(r"^[a-f0-9]{64}$", session_key):
-                raise APIV1CLIChatViewError("Invalid session_key format. Must be a 64-character hexadecimal string.")
+            SmarterValidator.validate_session_key(session_key=session_key)
 
     # pylint: disable=too-many-locals
     @csrf_exempt

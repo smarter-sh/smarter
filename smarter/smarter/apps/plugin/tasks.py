@@ -9,6 +9,7 @@ from smarter.apps.account.utils import (
     get_cached_user_profile,
 )
 from smarter.apps.plugin.plugin.base import SmarterPluginError
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.smarter_celery import app
 
@@ -59,7 +60,7 @@ def create_plugin_selector_history(*args, **kwargs):
     input_text: str = kwargs.get("input_text")
     messages: list[dict] = kwargs.get("messages")
     search_term: str = kwargs.get("search_term")
-    session_key: str = kwargs.get("session_key")
+    session_key: str = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
 
     PluginSelectorHistory.objects.create(
         plugin_selector=plugin.plugin_selector,

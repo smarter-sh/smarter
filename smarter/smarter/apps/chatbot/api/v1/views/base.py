@@ -20,8 +20,7 @@ from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValidator
@@ -100,11 +99,12 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
             return None
         try:
             self._chatbot_helper = ChatBotHelper(
-                request=self.smarter_request,
                 name=self.name,
                 chatbot_id=self.chatbot_id,
-                # these would hopefully have been set by AccountMixin,
-                # and if so then we should propagate them to the ChatBotHelper.
+                # SmarterRequestMixin should have set these properties
+                request=self.smarter_request,
+                session_key=self.session_key,
+                # and these, for AccountMixin,
                 account=self.account,
                 user=self.user,
                 user_profile=self.user_profile,

@@ -9,6 +9,7 @@ from http import HTTPStatus
 from urllib.parse import urljoin
 
 from django.conf import settings
+from django.core.handlers.wsgi import WSGIHandler
 from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -88,7 +89,8 @@ class SmarterChatSession(SmarterRequestMixin):
     _chat_helper: ChatHelper = None
     _chatbot: ChatBot = None
 
-    def __init__(self, request, session_key, *args, chatbot: ChatBot = None, **kwargs):
+    def __init__(self, request: WSGIHandler, session_key: str, *args, chatbot: ChatBot = None, **kwargs):
+        logger.info("SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot)
         SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
 
         self._url = self.smarter_build_absolute_uri(request)
@@ -169,7 +171,7 @@ class ChatConfigView(View, SmarterRequestMixin):
             # throw everything but the kitchen sink at the ChatBotHelper
             self._chatbot_helper = ChatBotHelper(
                 request=self.request,
-                session_key=self.session_key,
+                session_key=self.session.session_key,
                 name=self._chatbot.name,
                 chatbot_id=self._chatbot.id,
                 account=self.account,
@@ -179,7 +181,8 @@ class ChatConfigView(View, SmarterRequestMixin):
         else:
             self._chatbot_helper = ChatBotHelper(
                 request=self.request,
-                session_key=self.session_key,
+                name=self.smarter_request_chatbot_name,
+                session_key=self.session.session_key,
                 account=self.account,
                 user=self.user,
                 user_profile=self.user_profile,
@@ -199,15 +202,13 @@ class ChatConfigView(View, SmarterRequestMixin):
             if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
                 logger.info("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
 
-    def setup(self, request, *args, chatbot_id: int = None, **kwargs):
+    def setup(self, request: WSGIHandler, *args, chatbot_id: int = None, **kwargs):
+
         super().setup(request, *args, **kwargs)
         name = kwargs.pop("name", None)
-        session_key = kwargs.pop("session_key", None)
+        session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
+
         SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
-            logger.info("%s - dispatch() url=%s session=%s", self.formatted_class_name, self.url, self.session)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
-            logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
 
         try:
             self._chatbot = get_cached_chatbot_by_request(request=request)
@@ -223,6 +224,33 @@ class ChatConfigView(View, SmarterRequestMixin):
                 )
         except ChatBot.DoesNotExist:
             return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
+
+        # Initialize the chat session for this request. session_key is generated
+        # and managed by the /config/ endpoint for the chatbot
+        #
+        # example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbots/config/?session_key=123456
+        #
+        # The React app calls this endpoint at app initialization to get a
+        # json dict that includes, among other pertinent info, this session_key
+        # which uniquely identifies the device and the individual chatbot session
+        # for the device.
+        self.session = SmarterChatSession(request, session_key=self.session_key, chatbot=self.chatbot)
+        session_key = self.session.session_key or self.session_key
+        if session_key != self.session_key and session_key is not None:
+            logger.info("%s.setup() modifying session_key to %s", self.formatted_class_name, session_key)
+            self.session_key = session_key
+        logger.info(
+            "%s.setup() received url=%s session_key=%s, name=%s",
+            self.formatted_class_name,
+            self.url,
+            self.session_key,
+            name,
+        )
+
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            logger.info("%s - dispatch() url=%s session=%s", self.formatted_class_name, self.url, self.session)
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
 
         if self.chatbot_helper and self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
             try:
@@ -244,28 +272,24 @@ class ChatConfigView(View, SmarterRequestMixin):
                 "%s - chatbot=%s - chatbot_helper=%s", self.formatted_class_name, self.chatbot, self.chatbot_helper
             )
 
-        # Initialize the chat session for this request. session_key is generated
-        # and managed by the /config/ endpoint for the chatbot
-        #
-        # example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbots/config/?session_key=123456
-        #
-        # The React app calls this endpoint at app initialization to get a
-        # json dict that includes, among other pertinent info, this session_key
-        # which uniquely identifies the device and the individual chatbot session
-        # for the device.
-        self.session = SmarterChatSession(request, session_key=self.session_key, chatbot=self.chatbot)
-
         if not self.chatbot:
             return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
 
         self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
 
+        logger.info(
+            "%s.setup() completed with chatbot=%s, session_key=%s",
+            self.formatted_class_name,
+            self.chatbot,
+            self.session.session_key,
+        )
+
     def __str__(self):
         return str(self.chatbot) if self.chatbot else "ChatConfigView"
 
     # pylint: disable=unused-argument
-    def post(self, request, *args, **kwargs):
+    def post(self, request: WSGIHandler, *args, **kwargs):
         """
         Get the chatbot configuration.
         """
@@ -275,7 +299,7 @@ class ChatConfigView(View, SmarterRequestMixin):
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     # pylint: disable=unused-argument
-    def get(self, request, *args, **kwargs):
+    def get(self, request: WSGIHandler, *args, **kwargs):
         """
         Get the chatbot configuration.
         """
@@ -401,7 +425,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView, SmarterReques
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         name = kwargs.pop("name", None)
-        session_key = kwargs.pop("session_key", None)
+        session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
         SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
         self.url = self.smarter_build_absolute_uri(request)
 

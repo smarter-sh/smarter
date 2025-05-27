@@ -41,6 +41,15 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
     this request.
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliChatConfigApiView()"
+
     @csrf_exempt
     def post(self, request: HttpRequest, name: str, *args, **kwargs):
         """
@@ -52,9 +61,10 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         :param uid: UID of the client, created from the machine mac address and the hostname
         """
         uid: str = request.POST.get("uid", None)
+        session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
         logger.info("%s Chat config view for chat %s and client %s.", self.formatted_class_name, name, uid)
 
-        response = ChatConfigView.as_view()(request, name=name)
+        response = ChatConfigView.as_view()(request, name=name, uid=uid, session_key=session_key)
 
         try:
             content = json.loads(response.content)
