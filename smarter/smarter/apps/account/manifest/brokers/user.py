@@ -10,9 +10,7 @@ from django.http import HttpRequest
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.user.model import SAMUser
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, AccountContact, UserProfile
-from smarter.common.api import SmarterApiVersions
+from smarter.apps.account.models import AccountContact, UserProfile
 from smarter.lib.django.serializers import UserSerializer
 from smarter.lib.django.user import get_user_model
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -46,7 +44,7 @@ class SAMUserBrokerError(SAMBrokerError):
         return "Smarter API User Manifest Broker Error"
 
 
-class SAMUserBroker(AbstractBroker, AccountMixin):
+class SAMUserBroker(AbstractBroker):
     """
     Smarter API User Manifest Broker. This class is responsible for
     - loading, validating and parsing the Smarter Api yaml User manifests
@@ -63,41 +61,6 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     _manifest: SAMUser = None
     _pydantic_model: typing.Type[SAMUser] = SAMUser
     _account_contact: AccountContact = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: HttpRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        user = request.user if hasattr(request, "user") else None
-        AccountMixin.__init__(self, account=account, user=user, request=request)
 
     @property
     def account_contact(self) -> AccountContact:
