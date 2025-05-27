@@ -6,7 +6,6 @@ from typing import Type
 
 from django.core.handlers.wsgi import WSGIRequest
 
-from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.apps.plugin.models import PluginMeta
@@ -32,7 +31,7 @@ from . import PluginSerializer, SAMPluginBrokerError
 logger = logging.getLogger(__name__)
 
 
-class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
+class SAMStaticPluginBroker(AbstractBroker):
     """
     Smarter API StaticPlugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml StaticPlugin manifests
@@ -45,23 +44,6 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
     # override the base abstract manifest model with the StaticPlugin model
     _manifest: SAMStaticPlugin = None
     _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        *args,
-        **kwargs,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(*args, **kwargs)
-        AccountMixin.__init__(self, *args, **kwargs)
 
     ###########################################################################
     # Smarter abstract property implementations

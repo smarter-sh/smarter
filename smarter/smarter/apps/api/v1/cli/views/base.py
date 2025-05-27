@@ -336,31 +336,15 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # So for now, we'll only set the private class variable _manifest_data
         # from the request body, and then we'll leave it to the child views to
         # decide if/when to actually parse the manifest and instantiate the broker.
-        try:
-            # if the command is 'chat', then the raw prompt text
-            # or the encoded file attachment data will be in the request body.
-            # otherwise, the request body should contain manifest text.
-            if self.command == SmarterJournalCliCommands.CHAT:
-                self._prompt = self.data
-                self._manifest_kind = SAMKinds.CHAT.value
-            else:
-                self._manifest_data = self.data
-        except json.JSONDecodeError:
-            try:
-                data = request.body.decode("utf-8") if request and hasattr(request, "body") else None
-                self._manifest_data = yaml.safe_load(data)
-            except yaml.YAMLError as e:
-                try:
-                    raise APIV1CLIViewError("Could not parse manifest. Valid formats: yaml, json.") from e
-                except APIV1CLIViewError as ex:
-                    return SmarterJournaledJsonErrorResponse(
-                        request=request,
-                        thing=self.manifest_kind,
-                        command=self.command,
-                        e=ex,
-                        status=HTTPStatus.BAD_REQUEST.value,
-                        stack_trace=traceback.format_exc(),
-                    )
+
+        # if the command is 'chat', then the raw prompt text
+        # or the encoded file attachment data will be in the request body.
+        # otherwise, the request body should contain manifest text.
+        if self.command == SmarterJournalCliCommands.CHAT:
+            self._prompt = self.data
+            self._manifest_kind = SAMKinds.CHAT.value
+        else:
+            self._manifest_data = self.data
 
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.

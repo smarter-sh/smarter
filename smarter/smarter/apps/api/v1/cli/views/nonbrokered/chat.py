@@ -104,11 +104,6 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         """The name of the ChatBot. This is passed as a url slug."""
         return self._name
 
-    @property
-    def data(self) -> dict:
-        """The raw contents of the request body, assumed to be in json format."""
-        return self._data or {}
-
     def validate(self):
         """
         common validations for the chat views. This is called before dispatch() and is used to

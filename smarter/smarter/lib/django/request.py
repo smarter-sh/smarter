@@ -21,6 +21,7 @@ from functools import cached_property
 from urllib.parse import ParseResult, urlparse, urlunsplit
 
 import tldextract
+import yaml
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import QueryDict
 
@@ -162,8 +163,12 @@ class SmarterRequestMixin(AccountMixin):
             logger.warning("%s - request url is None.", self.formatted_class_name)
 
         # lazy excuses to not do anything...
-        if not self.qualified_request:
-            logger.info("%s.__init__() - request is not qualified. url=%s", self.formatted_class_name, url)
+        if not self.smarter_request_ready:
+            logger.info(
+                "%s.__init__() - request is not in a ready state. Abandoning initialization. url=%s",
+                self.formatted_class_name,
+                url,
+            )
             return None
 
         if self.is_chatbot_named_url:
@@ -256,8 +261,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         if not self._smarter_request:
             return False
-        url = self.url
-        path = urlparse(url).path
+        path = self._url.path if self._url else None
         if not path:
             return False
 
@@ -489,6 +493,18 @@ class SmarterRequestMixin(AccountMixin):
                 body_str = body.decode("utf-8").strip()
                 self._data = json.loads(body_str) if body_str else {}
         except json.JSONDecodeError as e:
+            # try again assuming that body contains a yaml document
+            try:
+
+                body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
+                if body is not None:
+                    body_str = body.decode("utf-8").strip()
+                    self._data = yaml.safe_load(body_str) if body_str else {}
+            except ImportError:
+                logger.error(
+                    "%s - failed to parse request body as JSON or YAML. Please install PyYAML to support YAML parsing.",
+                    self.formatted_class_name,
+                )
             logger.warning("%s - failed to parse request body: %s", self.formatted_class_name, e)
 
         self._data = self._data or {}
@@ -849,7 +865,7 @@ class SmarterRequestMixin(AccountMixin):
         try:
             self.to_json()
             return True
-        except SmarterValueError:
+        except (SmarterValueError, AttributeError, TypeError):
             return False
 
     # --------------------------------------------------------------------------

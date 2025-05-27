@@ -74,6 +74,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
     def chat_helper(self) -> ChatHelper:
         if self._chat_helper:
             return self._chat_helper
+        if not self.session_key:
+            self.session_key = self.find_session_key() or self.generate_session_key()
+
         if self.session_key or self.chatbot:
             self._chat_helper = ChatHelper(
                 request=self.smarter_request, session_key=self.session_key, chatbot=self.chatbot
@@ -87,6 +90,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
                         self.chatbot,
                     )
                 )
+        else:
+            raise SmarterChatBotException("ChatHelper not found. Please provide a session key or chatbot.")
 
         return self._chat_helper
 
@@ -172,7 +177,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s: %s", self.formatted_class_name, message)
 
-    def dispatch(self, request: WSGIRequest, *args, name: str = None, **kwargs):
+    def setup(self, request: WSGIRequest, *args, name: str = None, **kwargs):
+        super().setup(request, *args, **kwargs)
+
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         self._chatbot_id = kwargs.get("chatbot_id")
         if self._chatbot_id:
@@ -245,8 +252,6 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
 
         if self.chatbot_helper.is_chatbot and self.chat_helper:
             chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
-
-        return super().dispatch(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
