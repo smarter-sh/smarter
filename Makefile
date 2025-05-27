@@ -134,7 +134,7 @@ docker-collectstatic:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "./manage.py test smarter.apps.plugin.management.tests.test_managepy_commands"
+	docker exec smarter-app bash -c "./manage.py test smarter.apps.plugin.manifest.brokers.tests"
 
 docker-prune:
 	make docker-check && \

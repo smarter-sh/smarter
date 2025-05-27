@@ -8,7 +8,7 @@ metadata:
 spec:
   connection:
     baseUrl: http://localhost:8000/
-    apiKey: test-api-key
+    apiKey: test_api_key
     authMethod: token
     timeout: 10
     proxyProtocol: http
