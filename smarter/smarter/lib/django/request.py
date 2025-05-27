@@ -223,8 +223,6 @@ class SmarterRequestMixin(AccountMixin):
             "url_path_parts",
             "smarter_request_chatbot_id",
             "smarter_request_chatbot_name",
-            "timestamp",
-            "data",
             "unique_client_string",
             "client_key",
             "ip_address",
@@ -471,7 +469,7 @@ class SmarterRequestMixin(AccountMixin):
 
         return None
 
-    @cached_property
+    @property
     def timestamp(self):
         """
         create a consistent timestamp
@@ -479,7 +477,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         return self._timestamp
 
-    @cached_property
+    @property
     def data(self) -> dict:
         """
         Get the request body data as a dictionary.
@@ -496,20 +494,28 @@ class SmarterRequestMixin(AccountMixin):
                 self.helper_logger(f"request body={body}")
                 body_str = body.decode("utf-8").strip()
                 self._data = json.loads(body_str) if body_str else {}
-        except json.JSONDecodeError as e:
-            # try again assuming that body contains a yaml document
+                logger.info(
+                    "%s.data() - initialized from parsed request body as json: %s",
+                    self.formatted_class_name,
+                    self._data,
+                )
+        except json.JSONDecodeError:
             try:
-
                 body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
                 if body is not None:
                     body_str = body.decode("utf-8").strip()
                     self._data = yaml.safe_load(body_str) if body_str else {}
-            except ImportError:
+                    logger.info(
+                        "%s.data() - initialized from parsed request body as yaml: %s",
+                        self.formatted_class_name,
+                        self._data,
+                    )
+            except yaml.YAMLError:
                 logger.error(
-                    "%s - failed to parse request body as JSON or YAML. Please install PyYAML to support YAML parsing.",
+                    "%s - failed to parse request body as JSON or YAML. request.body=%s",
                     self.formatted_class_name,
+                    body_str,
                 )
-            logger.warning("%s - failed to parse request body: %s", self.formatted_class_name, e)
 
         self._data = self._data or {}
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):

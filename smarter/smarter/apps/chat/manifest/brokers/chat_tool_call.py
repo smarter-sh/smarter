@@ -129,6 +129,15 @@ class SAMChatToolCallBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for logging purposes.
+        This is used to provide a more readable class name in logs.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.SAMChatToolCallBroker()"
+
+    @property
     def model_class(self) -> ChatToolCall:
         return ChatToolCall
 

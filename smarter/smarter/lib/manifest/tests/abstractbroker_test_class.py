@@ -7,16 +7,12 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
-from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.user import UserType
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
-from smarter.lib.manifest.loader import SAMLoader
 
 
 MAX_RESULTS = 1000
@@ -30,7 +26,7 @@ class SAMUserBrokerError(SAMBrokerError):
         return "Smarter API User Manifest Broker Error"
 
 
-class SAMTestBroker(AbstractBroker, AccountMixin):
+class SAMTestBroker(AbstractBroker):
     """Test class for unit tests of the abstract broker class."""
 
     # override the base abstract manifest model with the User model
@@ -40,41 +36,6 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
     _pydantic_model: typing.Type[SAMStaticPlugin] = SAMStaticPlugin
     _user: UserType = None
     _username: str = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: HttpRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        user = request.user if hasattr(request, "user") else None
-        AccountMixin.__init__(self, account=account, user=user, request=request)
 
     @property
     def username(self) -> str:
@@ -118,6 +79,15 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for logging purposes.
+        This is used to provide a more readable class name in logs.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.SAMTestBroker()"
+
     @property
     def kind(self) -> str:
         # FIX NOTE: WE SHOULD NOT BE USING AN ACTUAL KIND HERE. WE NEED A
