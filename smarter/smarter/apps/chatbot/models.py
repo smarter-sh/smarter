@@ -757,6 +757,10 @@ class ChatBotHelper(SmarterRequestMixin):
         - http://api.localhost:8000
           return 'api.localhost:8000'
         """
+        if not self.url:
+            return None
+        if not self.is_smarter_api:
+            return
         if self.is_default_domain:
             return smarter_settings.environment_api_domain
         if self.is_custom_domain:
