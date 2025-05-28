@@ -104,7 +104,7 @@ class ChatBotCustomDomainDNS(TimestampedModel):
 
 def validate_provider(value):
     # pylint: disable=C0415
-    from smarter.apps.chat.providers.providers import chat_providers
+    from smarter.apps.prompt.providers.providers import chat_providers
 
     if not value in chat_providers.all:
         raise ValidationError(

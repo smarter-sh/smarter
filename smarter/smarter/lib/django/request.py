@@ -55,19 +55,19 @@ class SmarterRequestMixin(AccountMixin):
             self.is_chatbot_named_url==True
         --------
         - http://example.3141-5926-5359.api.localhost:8000/			            -> smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView
-        - http://example.3141-5926-5359.api.localhost:8000/config		        -> smarter.apps.chatapp.views.ChatConfigView
+        - http://example.3141-5926-5359.api.localhost:8000/config		        -> smarter.apps.prompt.views.ChatConfigView
 
         2.) authenticated sandbox end points. Authenticated chats
             self.is_chatbot_sandbox_url==True
         --------
-        - http://localhost:8000/workbench/<str:name>/				            -> smarter.apps.chatapp.views.ChatAppWorkbenchView
-        - http://localhost:8000/workbench/<str:name>/config/			            -> smarter.apps.chatapp.views.ChatConfigView
+        - http://localhost:8000/workbench/<str:name>/				            -> smarter.apps.prompt.views.ChatAppWorkbenchView
+        - http://localhost:8000/workbench/<str:name>/config/			            -> smarter.apps.prompt.views.ChatConfigView
 
         3.) smarter.sh/v1 end points. Public or authenticated chats
             self.is_chatbot_smarter_api_url==True
         --------
         - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/		    -> smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView
-        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/	-> smarter.apps.chatapp.views.ChatConfigView
+        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/	-> smarter.apps.prompt.views.ChatConfigView
 
         4.) command-line interface api end points. Authenticated chats
             self.is_chatbot_cli_api_url==True

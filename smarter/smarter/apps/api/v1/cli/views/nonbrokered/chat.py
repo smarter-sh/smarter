@@ -14,11 +14,11 @@ from django.http import HttpRequest, JsonResponse
 from django.test import RequestFactory
 from django.views.decorators.csrf import csrf_exempt
 
-from smarter.apps.chat.models import Chat, ChatHistory
-from smarter.apps.chat.providers.const import OpenAIMessageKeys
-from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.prompt.models import Chat, ChatHistory
+from smarter.apps.prompt.providers.const import OpenAIMessageKeys
+from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.lib.django.validators import SmarterValidator

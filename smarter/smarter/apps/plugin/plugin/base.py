@@ -15,7 +15,7 @@ from rest_framework import serializers
 
 # smarter stuff
 from smarter.apps.account.models import UserProfile
-from smarter.apps.chat.providers.const import OpenAIMessageKeys
+from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError

@@ -12,13 +12,6 @@ from smarter.__version__ import __version__
 from smarter.apps.account.admin import SecretAdmin
 from smarter.apps.account.models import Account, PaymentMethod, Secret, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.apps.chat.admin import (
-    ChatAdmin,
-    ChatHistoryAdmin,
-    ChatPluginUsageAdmin,
-    ChatToolCallHistoryAdmin,
-)
-from smarter.apps.chat.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from smarter.apps.chatbot.admin import (
     ChatBotAdmin,
     ChatBotAPIKeyAdmin,
@@ -51,6 +44,13 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistory,
     SqlConnection,
 )
+from smarter.apps.prompt.admin import (
+    ChatAdmin,
+    ChatHistoryAdmin,
+    ChatPluginUsageAdmin,
+    ChatToolCallHistoryAdmin,
+)
+from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from smarter.lib.django.admin import RestrictedModelAdmin, SuperUserOnlyModelAdmin
 from smarter.lib.django.user import User
 from smarter.lib.drf.admin import SmarterAuthTokenAdmin
