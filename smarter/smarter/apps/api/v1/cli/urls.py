@@ -14,6 +14,7 @@ Smarter API command-line interface URL configuration.
 
 from django.urls import path
 
+from .const import namespace
 from .views.apply import ApiV1CliApplyApiView
 from .views.delete import ApiV1CliDeleteApiView
 from .views.deploy import ApiV1CliDeployApiView
@@ -30,24 +31,27 @@ from .views.schema import ApiV1CliSchemaApiView
 from .views.undeploy import ApiV1CliUndeployApiView
 
 
+app_name = namespace
+
+
 class ApiV1CliReverseViews:
     """Reverse views for the CLI commands"""
 
-    manifest = "api_v1_cli_manifest_view"
-    apply = "api_v1_cli_apply_view"
-    chat = "api_v1_cli_chat_view"
-    chat_config = "api_v1_cli_chatconfig_view"
-    delete = "api_v1_cli_delete_view"
-    deploy = "api_v1_cli_deploy_view"
-    undeploy = "api_v1_cli_undeploy_view"
-    describe = "api_v1_cli_describe_view"
-    get = "api_v1_cli_get_view"
-    logs = "api_v1_cli_logs_kind_view"
-    example_manifest = "api_v1_cli_manifest_view"
-    status = "api_v1_cli_status_view"
-    schema = "api_v1_cli_schema_view"
-    version = "api_v1_cli_version_view"
-    whoami = "api_v1_cli_whoami_view"
+    manifest = "ApiV1CliManifestApiView".lower()
+    apply = "ApiV1CliChatApiView".lower()
+    chat = "ApiV1CliChatConfigApiView".lower()
+    chat_config = "chatconfig_view".lower()
+    delete = "ApiV1CliDeleteApiView".lower()
+    deploy = "ApiV1CliDeployApiView".lower()
+    undeploy = "ApiV1CliUndeployApiView".lower()
+    describe = "desApiV1CliDescribeApiViewcribe_view".lower()
+    get = "ApiV1CliGetApiView".lower()
+    logs = "ApiV1CliLogsApiView".lower()
+    example_manifest = "ApiV1CliManifestApiView".lower()
+    status = "ApiV1CliStatusApiView".lower()
+    schema = "ApiV1CliSchemaApiView".lower()
+    version = "ApiV1CliVersionApiView".lower()
+    whoami = "ApiV1CliWhoamiApiView".lower()
 
 
 urlpatterns = [

@@ -6,6 +6,7 @@ import sys
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.plugin.utils import Plugins
 from smarter.lib.django.user import User, UserType
 from smarter.lib.manifest.enum import SAMKeys
@@ -43,7 +44,7 @@ class Command(BaseCommand):
             sys.exit(1)
 
         try:
-            UserProfile.objects.get(user=user, account=account)
+            get_cached_user_profile(user=user, account=account)
         except UserProfile.DoesNotExist:
             self.stdout.write(
                 self.style.ERROR(f"manage.py retrieve_plugin: UserProfile for {user} and {account} does not exist.")

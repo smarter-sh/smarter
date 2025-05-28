@@ -37,7 +37,7 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
     The cache_key is a combination of the class name, the chat name and a client
     UID created from the machine mac address and its hostname.
 
-    See smarter/apps/chatapp/data/chat_config.json for an example response to
+    See smarter/apps/workbench/data/chat_config.json for an example response to
     this request.
     """
 

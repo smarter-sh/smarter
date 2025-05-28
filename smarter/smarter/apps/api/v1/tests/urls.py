@@ -4,6 +4,7 @@ URL configuration for smarter test end points.
 
 from django.urls import path
 
+from .const import namespace
 from .views.test_views import (
     TestJsonDictView,
     TestJsonDictViewAuthenticated,
@@ -11,6 +12,8 @@ from .views.test_views import (
     TestJsonListViewAuthenticated,
 )
 
+
+app_name = namespace
 
 # /api/v1/tests/ is the main entry point
 urlpatterns = [

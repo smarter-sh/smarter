@@ -22,7 +22,6 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
-from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -49,8 +48,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
 
     examples:
     - https://customer-support.3141-5926-5359.api.smarter.sh/
-    - https://platform.smarter/chatbots/example/
-    - https://platform.smarter/api/v1/chatbots/1/chat/
+    - https://platform.smarter/workbench/example/
+    - https://platform.smarter/api/v1/workbench/1/chat/
 
     """
 

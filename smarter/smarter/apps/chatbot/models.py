@@ -504,10 +504,15 @@ class ChatBotHelper(SmarterRequestMixin):
     - https://example.3141-5926-5359.alpha.api.smarter.sh/config/
 
     # authenticated urls
-    - https://alpha.api.smarter.sh/chatbots/1/
-    - https://alpha.api.smarter.sh/chatbots/example/
     - https://alpha.api.smarter.sh/smarter/example/
     - https://example.smarter.querium.com/chatbot/
+    - https://alpha.api.smarter.sh/workbench/1/
+    - https://alpha.api.smarter.sh/workbench/example/
+
+    # legacy pre v0.12 urls
+    - https://alpha.api.smarter.sh/chatbots/1/
+    - https://alpha.api.smarter.sh/chatbots/example/
+
     """
 
     __slots__ = (
@@ -527,21 +532,18 @@ class ChatBotHelper(SmarterRequestMixin):
         parent_class = super().formatted_class_name
         return f"{parent_class}.ChatBotHelper()"
 
-    def init_slots(self):
-        self._chatbot: ChatBot = None
-        self._chatbot_custom_domain: ChatBotCustomDomain = None
-        self._chatbot_requests: ChatBotRequests = None
-        self._chatbot_id: int = None
-        self._name: str = None
-        self._err: str = None
-
     def __init__(self, *args, request: WSGIRequest = None, name: str = None, chatbot_id: int = None, **kwargs):
         """
         Constructor for ChatBotHelper.
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
-        self.init_slots()
+        self._chatbot: ChatBot = None
+        self._chatbot_custom_domain: ChatBotCustomDomain = None
+        self._chatbot_requests: ChatBotRequests = None
+        self._chatbot_id: int = None
+        self._name: str = None
+        self._err: str = None
 
         # SmarterRequestMixin can receive the request object
         # and also a session_key.
@@ -642,8 +644,8 @@ class ChatBotHelper(SmarterRequestMixin):
             # possibilities:
             # - http://localhost:8000/api/v1/cli/chat/example/
             # - https://example.3141-5926-5359.api.smarter.sh/
-            # - https://alpha.platform.smarter.sh/chatbots/example/
-            # - http://localhost:8000/api/v1/chatbots/1/chat/
+            # - https://alpha.platform.smarter.sh/workbench/example/
+            # - http://localhost:8000/api/v1/workbench/1/chat/
             self._chatbot = ChatBot.objects.get(name=self.chatbot_name, account=self.account)
             self._chatbot_id = self.chatbot.id
             self.helper_logger(
@@ -703,7 +705,7 @@ class ChatBotHelper(SmarterRequestMixin):
             self._name = self.parsed_url.hostname.split(".")[0]
 
         if self.is_chatbot_sandbox_url:
-            # covers a case like http://localhost:8000/chatbots/example/
+            # covers a case like http://localhost:8000/workbench/example/
             path_parts = self.parsed_url.path.split("/")
             if len(path_parts) > 2:
                 self._name = path_parts[2]
@@ -934,13 +936,13 @@ class ChatBotHelper(SmarterRequestMixin):
         Create a log entry
         """
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-            logger.info(f"{self.formatted_class_name}: {message}")
+            logger.info("%s: %s", self.formatted_class_name, message)
 
     def helper_warning(self, message: str):
         """
         Create a log entry
         """
-        logger.warning(f"{self.formatted_class_name}: {message}")
+        logger.warning("%s: %s", self.formatted_class_name, message)
 
     def clean_url(self, url: str) -> str:
         """
@@ -961,9 +963,9 @@ def get_cached_chatbot_by_request(request: WSGIRequest) -> ChatBot:
     """
     chatbot: ChatBot = None
 
-    logging.info("get_cached_chatbot_by_request() called with request: %s", request)
     chatbot_helper = ChatBotHelper(request=request)
     if chatbot_helper.chatbot:
         chatbot = chatbot_helper.chatbot
+        logging.info("get_cached_chatbot_by_request() caching chatbot %s for request: %s", chatbot, request)
 
     return chatbot

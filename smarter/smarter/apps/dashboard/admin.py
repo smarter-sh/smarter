@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from smarter.__version__ import __version__
 from smarter.apps.account.admin import SecretAdmin
 from smarter.apps.account.models import Account, PaymentMethod, Secret, UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.chat.admin import (
     ChatAdmin,
     ChatHistoryAdmin,
@@ -112,7 +113,7 @@ class RestrictedUserAdmin(UserAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()

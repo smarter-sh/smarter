@@ -1,12 +1,14 @@
 """Docs utils."""
 
+namespace = "api:v1:cli"
+
 
 def manifest_path(kind: str) -> str:
     return f"manifest/{kind}/".lower()
 
 
 def manifest_name(kind: str) -> str:
-    return f"api_docs_manifest_{kind}".lower()
+    return f"{namespace}:manifest_{kind}".lower()
 
 
 def json_schema_path(kind: str) -> str:
@@ -14,4 +16,4 @@ def json_schema_path(kind: str) -> str:
 
 
 def json_schema_name(kind: str) -> str:
-    return f"api_docs_json_schema_{kind}".lower()
+    return f"{namespace}:json_schema_{kind}".lower()
