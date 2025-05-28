@@ -17,7 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.chatapp.views import ChatConfigView
-from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
+from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
@@ -216,9 +216,9 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
     kwargs: {'new_session': ['false'], 'uid': ['Lawrences-Mac-Studio.local-c6%3A6b%3A2e%3A7a%3A3d%3A6c']}
 
     example request/response:
-    - smarter/apps/chatapp/data/chat_config.json
-    - smarter/apps/chatapp/data/request.json
-    - smarter/apps/chatapp/data/response.json
+    - smarter/apps/workbench/data/chat_config.json
+    - smarter/apps/workbench/data/request.json
+    - smarter/apps/workbench/data/response.json
     """
 
     _chat: Chat = None
@@ -398,7 +398,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         # create a Smarter chatbot request and prompt the chatbot
         chat_request = self.chat_request_factory(request_body=request_body)
-        chat_response = DefaultChatBotApiView.as_view()(request=chat_request, name=name)
+        chat_response = DefaultChatbotApiView.as_view()(request=chat_request, name=name)
         chat_response = json.loads(chat_response.content)
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)

@@ -26,17 +26,17 @@ class TestSmarterRequestMixin(TestAccountMixin):
     - http://localhost:8000/
     - http://localhost:8000/docs/
     - http://localhost:8000/dashboard/
-    - https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
+    - https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
     - https://alpha.platform.smarter.sh/api/v1/cli/chat/example/
     - http://example.com/contact/
-    - http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+    - http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
     - https://hr.3141-5926-5359.alpha.api.smarter.sh/
     - https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
     - http://example.3141-5926-5359.api.localhost:8000/
     - http://example.3141-5926-5359.api.localhost:8000/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
     - http://example.3141-5926-5359.api.localhost:8000/config/
     - http://example.3141-5926-5359.api.localhost:8000/config/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
-    - http://localhost:8000/api/v1/chatbots/1/chat/
+    - http://localhost:8000/api/v1/workbench/1/chat/
     - https://hr.smarter.querium.com/
 
     """
@@ -207,13 +207,13 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def test_sandbox_url(self):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
-        http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+        http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
         """
         smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/chatbots/example/"
+        path = "/workbench/example/"
         url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
@@ -232,13 +232,13 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def test_api_url(self):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
-        http://localhost:8000/api/v1/chatbots/1/chat/
+        http://localhost:8000/api/v1/workbench/1/chat/
         """
         smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/api/v1/chatbots/1/chat/"
+        path = "/api/v1/workbench/1/chat/"
         url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 

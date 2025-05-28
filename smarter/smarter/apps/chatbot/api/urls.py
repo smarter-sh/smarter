@@ -3,6 +3,10 @@
 from django.urls import include, path
 from django.views.generic import RedirectView
 
+from .const import namespace
+
+
+app_name = namespace
 
 urlpatterns = [
     path("", RedirectView.as_view(url="v1/")),

@@ -3,6 +3,7 @@
 from django.urls import path
 from django.views import View
 
+from .const import namespace
 from .views import (
     AddPluginExamplesView,
     PluginCloneView,
@@ -10,6 +11,9 @@ from .views import (
     PluginUploadView,
     PluginView,
 )
+
+
+app_name = namespace
 
 
 class RequestRouter(View):

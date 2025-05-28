@@ -2,6 +2,7 @@
 
 from django.urls import path
 
+from .const import namespace
 from .views.history import (
     ChatHistoryListView,
     ChatHistoryView,
@@ -12,6 +13,8 @@ from .views.history import (
 )
 from .views.providers.smarter import SmarterChatApiViewSet
 
+
+app_name = namespace
 
 urlpatterns = [
     path("smarter/", SmarterChatApiViewSet.as_view(), name="smarter-chat-api"),

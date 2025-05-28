@@ -10,6 +10,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
@@ -39,7 +40,7 @@ class APIKeyBase(SmarterAdminWebView):
     user_profile: UserProfile = None
 
     def dispatch(self, request, *args, **kwargs):
-        self.user_profile = UserProfile.objects.get(user=request.user)
+        self.user_profile = get_cached_user_profile(user=request.user)
         self.account = self.user_profile.account
         return super().dispatch(request, *args, **kwargs)
 

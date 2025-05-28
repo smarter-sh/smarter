@@ -73,7 +73,7 @@ class ListViewBase(SmarterAdminListAPIView):
 ###############################################################################
 
 
-class ChatBotView(ViewBase):
+class ChatbotView(ViewBase):
     """ChatBot view for smarter api."""
 
     serializer_class = ChatBotSerializer
@@ -88,8 +88,8 @@ class ChatBotView(ViewBase):
             kwargs.pop("chatbot_id")
             self.chatbot = get_object_or_404(ChatBot, pk=chatbot_id)
             self.account = self.chatbot.account
-            logger.info("ChatBotView.dispatch() chatbot_id: %s", chatbot_id)
-            logger.info("ChatBotView.dispatch() account: %s", self.account)
+            logger.info("ChatbotView.dispatch() chatbot_id: %s", chatbot_id)
+            logger.info("ChatbotView.dispatch() account: %s", self.account)
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, chatbot_id: int):
@@ -151,7 +151,7 @@ class ChatBotView(ViewBase):
         return HttpResponseRedirect(plugins_path)
 
 
-class ChatBotListView(ListViewBase):
+class ChatbotListView(ListViewBase):
     """ChatBot list view for smarter api."""
 
     serializer_class = ChatBotSerializer
@@ -185,7 +185,7 @@ class ChatBotDeployView(ViewBase):
 ###############################################################################
 # ChatBotPlugin views
 ###############################################################################
-class ChatBotPluginView(ViewBase):
+class ChatbotPluginView(ViewBase):
     """ChatBotPlugin view for smarter api."""
 
     serializer_class = ChatBotPluginSerializer
@@ -228,7 +228,7 @@ class ChatBotPluginView(ViewBase):
         return HttpResponseRedirect(request.path_info.rsplit("/", 2)[0])
 
 
-class ChatBotPluginListView(ListViewBase):
+class ChatbotPluginListView(ListViewBase):
     """ChatBotPlugin list view for smarter api."""
 
     serializer_class = ChatBotPluginSerializer
@@ -244,7 +244,7 @@ class ChatBotPluginListView(ListViewBase):
 ###############################################################################
 
 
-class ChatBotAPIKeyView(ViewBase):
+class ChatbotAPIKeyView(ViewBase):
     """ChatBotAPIKey view for smarter api."""
 
     serializer_class = ChatBotAPIKeySerializer
@@ -277,7 +277,7 @@ class ChatBotAPIKeyView(ViewBase):
         return HttpResponseRedirect(request.path_info.rsplit("/", 2)[0])
 
 
-class ChatBotAPIKeyListView(ListViewBase):
+class ChatbotAPIKeyListView(ListViewBase):
     """ChatBotAPIKey list view for smarter api."""
 
     serializer_class = ChatBotAPIKeySerializer
@@ -293,7 +293,7 @@ class ChatBotAPIKeyListView(ListViewBase):
 ###############################################################################
 
 
-class ChatBotCustomDomainView(ViewBase):
+class ChatbotCustomDomainView(ViewBase):
     """ChatBotCustomDomain view for smarter api."""
 
     serializer_class = ChatBotCustomDomainSerializer
@@ -326,7 +326,7 @@ class ChatBotCustomDomainView(ViewBase):
         return HttpResponseRedirect(request.path_info.rsplit("/", 2)[0])
 
 
-class ChatBotCustomDomainListView(ListViewBase):
+class ChatbotCustomDomainListView(ListViewBase):
     """ChatBotCustomDomain list view for smarter api."""
 
     serializer_class = ChatBotCustomDomainSerializer
@@ -342,7 +342,7 @@ class ChatBotCustomDomainListView(ListViewBase):
 ###############################################################################
 
 
-class ChatBotFunctionsView(ViewBase):
+class ChatbotFunctionsView(ViewBase):
     """ChatBotFunctions view for smarter api."""
 
     serializer_class = ChatBotFunctionsSerializer

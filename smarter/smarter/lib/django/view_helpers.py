@@ -18,9 +18,10 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 # from django.views.decorators.csrf import ensure_csrf_cookie
 from htmlmin.main import minify
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.common.classes import SmarterHelperMixin
+from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import get_cached_user_profile, get_resolved_user
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
+from smarter.lib.django.request import SmarterRequestMixin
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ def redirect_and_expire_cache(path: str = "/"):
 # ------------------------------------------------------------------------------
 # Web Views
 # ------------------------------------------------------------------------------
-class SmarterView(View, SmarterHelperMixin):
+class SmarterView(View, SmarterRequestMixin):
     """
     Base view for smarter views.
     """
@@ -77,6 +78,10 @@ class SmarterView(View, SmarterHelperMixin):
         html_no_comments = self.remove_comments(html=html)
         minified_html = self.minify_html(html=html_no_comments)
         return minified_html
+
+    def setup(self, request: WSGIRequest, *args, **kwargs):
+        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        return super().setup(request, *args, **kwargs)
 
 
 class SmarterWebXmlView(SmarterView):
@@ -128,20 +133,17 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     and forces a 404 response for users without a profile.
     """
 
-    account: Account = None
-    user_profile: UserProfile = None
-
     def smarter_init(self, request: WSGIRequest, *args, **kwargs) -> HttpResponse:
         """Initialize the view with the user profile and account."""
 
         if request.user.is_anonymous:
             return redirect_and_expire_cache(path="/login/")
 
-        if self.user_profile and self.account:
-            return HttpResponse(status=200)
-
         try:
-            self.user_profile = UserProfile.objects.get(user=request.user)
+            self.user = get_resolved_user(request.user)
+            if not self.user or not self.user.is_authenticated:
+                return redirect_and_expire_cache(path="/login/")
+            self.user_profile = get_cached_user_profile(self.user)
             self.account = self.user_profile.account
         except UserProfile.DoesNotExist:
             if not request.user.is_authenticated:

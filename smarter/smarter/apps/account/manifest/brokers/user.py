@@ -11,6 +11,7 @@ from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.user.model import SAMUser
 from smarter.apps.account.models import AccountContact, UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.lib.django.serializers import UserSerializer
 from smarter.lib.django.user import get_user_model
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -266,7 +267,7 @@ class SAMUserBroker(AbstractBroker):
             ) from e
 
         try:
-            self._user_profile = UserProfile.objects.get(user=self._user, account=self.account)
+            self._user_profile = get_cached_user_profile(user=self._user, account=self.account)
         except UserProfile.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {self.username}. User is not associated with your account",

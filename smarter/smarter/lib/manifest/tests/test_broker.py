@@ -302,7 +302,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
             "test_camel_case2": "test_camel_case2",
             "test_camel_case3": "test_camel_case3",
         }
-        camel_to_snake = self.broker.camel_to_snake(dictionary=d)
+        camel_to_snake = self.broker.camel_to_snake(data=d)
         self.assertEqual(camel_to_snake, d_result)
 
     def test_snake_to_camel(self) -> None:
@@ -317,7 +317,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
             "testCamelCase2": "test_camel_case2",
             "testCamelCase3": "test_camel_case3",
         }
-        snake_to_camel = self.broker.snake_to_camel(dictionary=d)
+        snake_to_camel = self.broker.snake_to_camel(data=d)
         self.assertEqual(snake_to_camel, d_result)
 
     def test_BrokerNotImplemented(self) -> None:

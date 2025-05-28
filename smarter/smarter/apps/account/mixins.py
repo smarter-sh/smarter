@@ -4,6 +4,7 @@ import logging
 
 from django.core.handlers.wsgi import WSGIRequest
 
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.user import UserType
@@ -164,7 +165,7 @@ class AccountMixin(SmarterHelperMixin):
             # If the user is already set, then we need to verify that the user is part of the account
             # by attempting to fetch the user_profile.
             try:
-                self._user_profile = UserProfile.objects.get(user=self._user, account=self._account)
+                self._user_profile = get_cached_user_profile(user=self._user, account=self._account)
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {self._account.account_number}."
@@ -223,7 +224,7 @@ class AccountMixin(SmarterHelperMixin):
             # If the account is already set, then we need to check if the user is part of the account
             # by attempting to fetch the user_profile.
             try:
-                self._user_profile = UserProfile.objects.get(user=self._user, account=self._account)
+                self._user_profile = get_cached_user_profile(user=self._user, account=self._account)
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {self._account.account_number}."

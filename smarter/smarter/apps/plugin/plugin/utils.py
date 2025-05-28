@@ -8,6 +8,7 @@ import re
 import yaml
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.django.user import UserType
@@ -28,8 +29,8 @@ class Plugins:
     def __init__(self, user: UserType, account: Account):
 
         self.plugins = []
-        self.account = account or UserProfile.objects.get(user=user).account
-        self.user_profile = UserProfile.objects.get(user=user, account=account)
+        self.account = account or get_cached_user_profile(user=user).account
+        self.user_profile = get_cached_user_profile(user=user, account=account)
 
         for plugin in PluginMeta.objects.filter(account=self.account):
             self.plugins.append(StaticPlugin(user_profile=self.user_profile, plugin_id=plugin.id))

@@ -14,7 +14,6 @@ known url patterns for Smarter chatbots. key features include:
 import hashlib
 import json
 import logging
-import re
 import warnings
 from datetime import datetime
 from functools import cached_property
@@ -55,20 +54,20 @@ class SmarterRequestMixin(AccountMixin):
         1.) root end points for named urls. Public or authenticated chats
             self.is_chatbot_named_url==True
         --------
-        - http://example.3141-5926-5359.api.localhost:8000/			            -> smarter.apps.chatbot.api.v1.views.default.DefaultChatBotApiView
+        - http://example.3141-5926-5359.api.localhost:8000/			            -> smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView
         - http://example.3141-5926-5359.api.localhost:8000/config		        -> smarter.apps.chatapp.views.ChatConfigView
 
         2.) authenticated sandbox end points. Authenticated chats
             self.is_chatbot_sandbox_url==True
         --------
-        - http://localhost:8000/chatbots/<str:name>/				            -> smarter.apps.chatapp.views.ChatAppWorkbenchView
-        - http://localhost:8000/chatbots/<str:name>/config/			            -> smarter.apps.chatapp.views.ChatConfigView
+        - http://localhost:8000/workbench/<str:name>/				            -> smarter.apps.chatapp.views.ChatAppWorkbenchView
+        - http://localhost:8000/workbench/<str:name>/config/			            -> smarter.apps.chatapp.views.ChatConfigView
 
         3.) smarter.sh/v1 end points. Public or authenticated chats
             self.is_chatbot_smarter_api_url==True
         --------
-        - http://localhost:8000/api/v1/chatbots/<int:chatbot_id>/chat/		    -> smarter.apps.chatbot.api.v1.views.default.DefaultChatBotApiView
-        - http://localhost:8000/api/v1/chatbots/<int:chatbot_id>/chat/config/	-> smarter.apps.chatapp.views.ChatConfigView
+        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/		    -> smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView
+        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/	-> smarter.apps.chatapp.views.ChatConfigView
 
         4.) command-line interface api end points. Authenticated chats
             self.is_chatbot_cli_api_url==True
@@ -85,16 +84,16 @@ class SmarterRequestMixin(AccountMixin):
     - http://localhost:8000/
     - http://localhost:8000/docs/
     - http://localhost:8000/dashboard/
-    - https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
+    - https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
     - http://example.com/contact/
-    - http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+    - http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
     - https://hr.3141-5926-5359.alpha.api.smarter.sh/
     - https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
     - http://example.3141-5926-5359.api.localhost:8000/
     - http://example.3141-5926-5359.api.localhost:8000/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
     - http://example.3141-5926-5359.api.localhost:8000/config/
     - http://example.3141-5926-5359.api.localhost:8000/config/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
-    - http://localhost:8000/api/v1/chatbots/1/chat/
+    - http://localhost:8000/api/v1/workbench/1/chat/
     - http://localhost:8000/api/v1/cli/chat/smarter/?new_session=false&uid=mcdaniel
     - https://hr.smarter.querium.com/
 
@@ -113,10 +112,11 @@ class SmarterRequestMixin(AccountMixin):
     )
 
     # pylint: disable=W0613
-    def __init__(self, request: WSGIRequest, *args, session_key: str = None, **kwargs):
+    def __init__(self, request: WSGIRequest, *args, **kwargs):
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
+        session_key: str = kwargs.pop("session_key", None)
         logger.info(
             "SmarterRequestMixin().__init__() - initializing with request=%s, session_key=%s", request, session_key
         )
@@ -206,10 +206,11 @@ class SmarterRequestMixin(AccountMixin):
                 self.formatted_class_name,
             )
         logger.info(
-            "SmarterRequestMixin().__init__() - finished with request=%s, session_key=%s ready=%s",
+            "SmarterRequestMixin().__init__() - finished with request=%s, session_key=%s ready=%s, user=%s",
             self.smarter_request,
             self.session_key,
             self.smarter_request_ready,
+            self.user_profile,
         )
 
     def invalidate_cached_properties(self):
@@ -404,7 +405,7 @@ class SmarterRequestMixin(AccountMixin):
     def smarter_request_chatbot_id(self) -> int:
         """
         Extract the chatbot id from the URL.
-        example: http://localhost:8000/api/v1/chatbots/<int:chatbot_id>/chat/config/
+        example: http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/
         """
         if self.is_chatbot_smarter_api_url:
             path_parts = self.url_path_parts
@@ -428,7 +429,7 @@ class SmarterRequestMixin(AccountMixin):
             )
             return retval
 
-        # 2.) example: http://localhost:8000/chatbots/<str:name>/config/
+        # 2.) example: http://localhost:8000/workbench/<str:name>/config/
         if self.is_chatbot_sandbox_url:
             try:
                 retval = self.url_path_parts[1]
@@ -443,7 +444,7 @@ class SmarterRequestMixin(AccountMixin):
                     self.formatted_class_name,
                     self.url,
                 )
-        # 3.) http://localhost:8000/api/v1/chatbots/<int:chatbot_id>
+        # 3.) http://localhost:8000/api/v1/workbench/<int:chatbot_id>
         # no name. nothing to do in this case.
         if self.is_chatbot_smarter_api_url:
             self.helper_logger(
@@ -497,7 +498,7 @@ class SmarterRequestMixin(AccountMixin):
                 logger.info(
                     "%s.data() - initialized from parsed request body as json: %s",
                     self.formatted_class_name,
-                    self._data,
+                    body_str,
                 )
         except json.JSONDecodeError:
             try:
@@ -508,7 +509,7 @@ class SmarterRequestMixin(AccountMixin):
                     logger.info(
                         "%s.data() - initialized from parsed request body as yaml: %s",
                         self.formatted_class_name,
-                        self._data,
+                        body_str,
                     )
             except yaml.YAMLError:
                 logger.error(
@@ -573,8 +574,8 @@ class SmarterRequestMixin(AccountMixin):
 
         examples:
         - http://testserver/api/v1/cli/chat/config/testc7098865f39202d5/
-        - http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-        - http://localhost:8000/api/v1/chatbots/<int:chatbot_id>/chat/config/
+        - http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/
         - http://example.api.localhost:8000/config
 
         """
@@ -638,7 +639,7 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_chatbot_smarter_api_url(self) -> bool:
         """
-        Returns True if the url is of the form http://localhost:8000/api/v1/chatbots/1/chat/
+        Returns True if the url is of the form http://localhost:8000/api/v1/workbench/1/chat/
         path_parts: ['api', 'v1', 'chatbots', '1', 'chat']
         """
         if not self.smarter_request:
@@ -690,13 +691,13 @@ class SmarterRequestMixin(AccountMixin):
     def is_chatbot_sandbox_url(self) -> bool:
         """
         example urls:
-        - https://alpha.platform.smarter.sh/chatbots/example/
-          https://<environment_domain>/chatbots/<name>
-          path_parts: ['chatbots', 'example']
+        - https://alpha.platform.smarter.sh/workbench/example/
+          https://<environment_domain>/workbench/<name>
+          path_parts: ['workbench', 'example']
 
-        - https://alpha.platform.smarter.sh/chatbots/example/config/
-          https://<environment_domain>/chatbots/<name>/config/
-          path_parts: ['chatbots', 'example', 'config']
+        - https://alpha.platform.smarter.sh/workbench/example/config/
+          https://<environment_domain>/workbench/<name>/config/
+          path_parts: ['workbench', 'example', 'config']
         """
         if not self.smarter_request:
             return False
@@ -709,8 +710,8 @@ class SmarterRequestMixin(AccountMixin):
 
         path_parts = self.url_path_parts
         # valid path_parts:
-        #   ['chatbots', '<slug>']
-        #   ['chatbots', '<slug>', 'config']
+        #   ['workbench', '<slug>']
+        #   ['workbench', '<slug>', 'config']
         if self.parsed_url.netloc != smarter_settings.environment_domain:
             self.helper_logger(
                 f"is_chatbot_sandbox_url() - netloc != smarter_settings.environment_domain: {self.parsed_url.netloc} for url: {self.url}"
@@ -719,14 +720,14 @@ class SmarterRequestMixin(AccountMixin):
         if len(path_parts) < 2:
             self.helper_logger(f"is_chatbot_sandbox_url() - len(path_parts) < 2: {path_parts} for url: {self.url}")
             return False
-        if path_parts[0] != "chatbots":
-            # expecting this form: ['chatbots', '<slug>', 'config']
+        if path_parts[0] != "workbench":
+            # expecting this form: ['workbench', '<slug>', 'config']
             self.helper_logger(
-                f"is_chatbot_sandbox_url() - path_parts[0] != 'chatbots': {path_parts} for url: {self.url}"
+                f"is_chatbot_sandbox_url() - path_parts[0] != 'workbench': {path_parts} for url: {self.url}"
             )
             return False
         if not path_parts[1].isalpha():
-            # expecting <slug> to be alpha: ['chatbots', '<slug>', 'config']
+            # expecting <slug> to be alpha: ['workbench', '<slug>', 'config']
             self.helper_logger(
                 f"is_chatbot_sandbox_url() - not path_parts[2].isalpha(): {path_parts} for url: {self.url}"
             )
@@ -736,7 +737,7 @@ class SmarterRequestMixin(AccountMixin):
             return False
 
         if len(path_parts) == 2 and not path_parts[1].isalpha():
-            # expecting: ['chatbots', '<slug>']
+            # expecting: ['workbench', '<slug>']
             self.helper_logger(
                 f"is_chatbot_sandbox_url() - not path_parts[1].isalpha(): {path_parts} for url: {self.url}"
             )
@@ -744,8 +745,8 @@ class SmarterRequestMixin(AccountMixin):
 
         if len(path_parts) == 3 and not self.is_config:
             # expecting either of:
-            # ['chatbots', '<slug>', 'config']
-            # ['chatbots', '<slug>']
+            # ['workbench', '<slug>', 'config']
+            # ['workbench', '<slug>']
             self.helper_logger(f"is_chatbot_sandbox_url() - is not 'config' for url: {self.url}")
             return False
 
@@ -917,7 +918,7 @@ class SmarterRequestMixin(AccountMixin):
 
         But, this method will also check the request headers for the session_key.
         Get the session key from one of the following:
-         - url parameter http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+         - url parameter http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
          - request json body {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
          - request header {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
          - a session_key generator
@@ -1015,7 +1016,7 @@ class SmarterRequestMixin(AccountMixin):
             if self.account and not self.user:
                 self.user = get_cached_admin_user_for_account(account=self.account)
         if self.is_chatbot_smarter_api_url:
-            # https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
+            # https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
             pass
         if self.is_chatbot_cli_api_url:
             # http://localhost:8000/api/v1/cli/chat/example/

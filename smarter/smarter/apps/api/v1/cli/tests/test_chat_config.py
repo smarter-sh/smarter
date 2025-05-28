@@ -98,7 +98,7 @@ class TestApiCliV1ChatConfig(ApiV1TestBase):
                 "debug_mode": True,
                 "chatbot": {
                     "id": 1581,
-                    "url_chatbot": "http://localhost:8000/api/v1/chatbots/1581/chat/",
+                    "url_chatbot": "http://localhost:8000/api/v1/workbench/1581/chat/",
                     "account": {"accountNumber": "2873-5129-3755"},
                     "default_system_role": "The current date/time is Thursday, 2025-05-22T19:35:04+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
                     "created_at": "2025-05-22T19:35:03.935229Z",
@@ -203,7 +203,7 @@ class TestApiCliV1ChatConfig(ApiV1TestBase):
                         "app_file_attachment": False,
                         "dns_verification_status": "Not Verified",
                         "tls_certificate_issuance_status": "No Certificate",
-                        "url_chatbot": "http://localhost:8000/api/v1/chatbots/1581/chat/",
+                        "url_chatbot": "http://localhost:8000/api/v1/workbench/1581/chat/",
                     },
                     "api_host": None,
                     "is_custom_domain": False,

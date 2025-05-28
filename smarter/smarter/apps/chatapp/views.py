@@ -41,6 +41,7 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistorySerializer,
 )
 from smarter.common.api import SmarterApiVersions
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
@@ -51,7 +52,6 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
-from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
@@ -80,7 +80,7 @@ class SmarterChatappViewError(SmarterExceptionBase):
         return "Smarter Chatapp error"
 
 
-class SmarterChatSession(SmarterRequestMixin):
+class SmarterChatSession(SmarterHelperMixin):
     """
     Helper class that provides methods for creating a session key and client key.
     """
@@ -88,12 +88,13 @@ class SmarterChatSession(SmarterRequestMixin):
     _chat: Chat = None
     _chat_helper: ChatHelper = None
     _chatbot: ChatBot = None
+    request: WSGIHandler = None
+    session_key: str = None
 
     def __init__(self, request: WSGIHandler, session_key: str, *args, chatbot: ChatBot = None, **kwargs):
         logger.info("SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot)
-        SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
-
-        self._url = self.smarter_build_absolute_uri(request)
+        self.request = request
+        self.session_key = session_key
 
         if chatbot:
             self._chatbot = chatbot
@@ -141,11 +142,11 @@ class SmarterChatSession(SmarterRequestMixin):
 
 # pylint: disable=R0902
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatConfigView(View, SmarterRequestMixin):
+class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat config view for smarter web. This view is protected and requires the user
-    to be authenticated. It works with any ChatBots but is aimed at chatbots running
-    inside the web console in sandbox mode.
+    to be authenticated. It works with any ChatBot instance but is aimed at chatbots
+    instances running inside the web console in sandbox mode.
 
     example: https://smarter.3141-5926-5359.alpha.api.smarter.sh/config/
     """
@@ -208,11 +209,13 @@ class ChatConfigView(View, SmarterRequestMixin):
         name = kwargs.pop("name", None)
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
 
-        SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
-
         try:
             self._chatbot = get_cached_chatbot_by_request(request=request)
             if not self._chatbot:
+                logger.info(
+                    "%s.setup() - attempting to instantiate ChatBotHelper with additional info",
+                    self.formatted_class_name,
+                )
                 self.chatbot_helper = ChatBotHelper(
                     request=request,
                     session_key=session_key,
@@ -228,7 +231,7 @@ class ChatConfigView(View, SmarterRequestMixin):
         # Initialize the chat session for this request. session_key is generated
         # and managed by the /config/ endpoint for the chatbot
         #
-        # example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbots/config/?session_key=123456
+        # example: https://customer-support.3141-5926-5359.api.smarter.sh/workbench/config/?session_key=123456
         #
         # The React app calls this endpoint at app initialization to get a
         # json dict that includes, among other pertinent info, this session_key
@@ -367,18 +370,18 @@ class ChatConfigView(View, SmarterRequestMixin):
         return retval
 
 
-class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView, SmarterRequestMixin):
+class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat app view for smarter web. This view is protected and requires the user
     to be authenticated. It works with deployed and not-yet-deployed ChatBots.
     The url is expected to be in one of three formats.
 
     Sandbox mode:
-    - http://smarter.querium.com/chatapp/hr/
-    - http://127.0.0.1:8000/chatapp/<str:name>/
+    - http://smarter.querium.com/workbench/hr/
+    - http://127.0.0.1:8000/workbench/<str:name>/
 
     Production mode:
-    - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatapp/
+    - https://hr.3141-5926-5359.alpha.api.smarter.sh/workbench/
 
     It serves the chat app's main page within the Smarter
     dashboard web app. React builds are served from an AWS Cloudfront CDN
@@ -416,18 +419,17 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView, SmarterReques
 
     chatbot: ChatBot = None
     chatbot_helper: ChatBotHelper = None
-    url: str = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        SmarterRequestMixin.__init__(self, *args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     SmarterRequestMixin.__init__(self, request=None, *args, **kwargs)
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         name = kwargs.pop("name", None)
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
-        SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
-        self.url = self.smarter_build_absolute_uri(request)
+        if session_key:
+            self.session_key = session_key
 
         try:
             if waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE) or waffle.switch_is_active(
@@ -452,13 +454,24 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView, SmarterReques
                     user_profile=self.user_profile,
                 )
                 self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
-            if not self.chatbot:
+            if self.chatbot:
+                logger.info(
+                    "%s.setup() - set chatbot=%s from self.chatbot_helper", self.formatted_class_name, self.chatbot
+                )
+            else:
                 raise ChatBot.DoesNotExist
         except ChatBot.DoesNotExist:
             return SmarterHttpResponseNotFound(request=request, error_message="ChatBot not found")
         # pylint: disable=broad-except
         except Exception as e:
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Dispatch method to handle the request.
+        """
+        if not self.chatbot:
+            return SmarterHttpResponseNotFound(request=request, error_message="ChatBot not found")
 
         # the basic idea is to pass the names of the necessary cookies to the React app, and then
         # it is supposed to find and read the cookies to get the chat session key, csrf token, etc.
@@ -512,8 +525,8 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
             chatbot_helper = ChatBotHelper(
                 request=request,
                 chatbot_id=chatbot.id,
-                account=self.account,
                 user=self.user,
+                account=self.account,
                 user_profile=self.user_profile,
             )
             if not was_already_added(chatbot_helper):
