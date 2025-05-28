@@ -3,10 +3,10 @@
 
 import logging
 import re
-import typing
 from abc import ABC, abstractmethod
 from datetime import datetime
 from http import HTTPStatus
+from typing import Any, Dict, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
@@ -20,6 +20,7 @@ from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.api import SmarterApiVersions
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
@@ -135,7 +136,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _api_version: str = None
     _loader: SAMLoader = None
     _manifest: AbstractSAMBase = None
-    _pydantic_model: typing.Type[AbstractSAMBase] = AbstractSAMBase
+    _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
     _name: str = None
     _kind: str = None
     _validated: bool = False
@@ -340,12 +341,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # Abstract Properties
     ###########################################################################
     @property
-    def model_class(self) -> typing.Type[TimestampedModel]:
+    def model_class(self) -> Type[TimestampedModel]:
         """Return the Django ORM model class for the broker."""
         raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
 
     @property
-    def pydantic_model(self) -> typing.Type[AbstractSAMBase]:
+    def pydantic_model(self) -> Type[AbstractSAMBase]:
         """Return the Pydantic model for the broker."""
         return self._pydantic_model
 
@@ -453,7 +454,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             message="undeploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.UNDEPLOY
         )
 
-    def schema(self, request: WSGIRequest, kwargs: dict) -> typing.Dict[str, typing.Any]:
+    def schema(self, request: WSGIRequest, kwargs: dict) -> Dict[str, Any]:
         """Return the published JSON schema for the Pydantic model."""
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
@@ -515,7 +516,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ###########################################################################
     # http json response helpers
     ###########################################################################
-    def _retval(self, data: dict = None, error: dict = None, message: str = None) -> dict[str, typing.Any]:
+    def _retval(self, data: dict = None, error: dict = None, message: str = None) -> dict[str, Any]:
         retval = {}
         if data:
             retval[SmarterJournalApiResponseKeys.DATA] = data
@@ -657,13 +658,20 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         ]
         return fields_and_types
 
-    def camel_to_snake(self, dictionary: dict) -> dict:
+    def camel_to_snake(self, data: Union[str, dict, list]) -> dict:
         """Converts camelCase dict keys to snake_case."""
 
         def convert(name: str):
             s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
             return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
+        if isinstance(data, str):
+            return convert(data)
+        if isinstance(data, list):
+            return [self.camel_to_snake(item) for item in data]
+        if not isinstance(data, dict):
+            raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
+        dictionary: dict = data if isinstance(data, dict) else {}
         retval = {}
         for key, value in dictionary.items():
             if isinstance(value, dict):
@@ -672,17 +680,27 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             retval[new_key] = value
         return retval
 
-    def snake_to_camel(self, dictionary: dict, convert_values: bool = False) -> dict:
+    def snake_to_camel(self, data: Union[str, dict, list], convert_values: bool = False) -> dict:
         """Converts snake_case dict keys to camelCase."""
 
         def convert(name: str):
             components = name.split("_")
             return components[0] + "".join(x.title() for x in components[1:])
 
+        if isinstance(data, str):
+            return convert(data)
+
+        if isinstance(data, list):
+            return [self.snake_to_camel(item, convert_values=convert_values) for item in data]
+
+        if not isinstance(data, dict):
+            raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
+
+        dictionary: dict = data if isinstance(data, dict) else {}
         retval = {}
         for key, value in dictionary.items():
             if isinstance(value, dict):
-                value = self.snake_to_camel(dictionary=value, convert_values=convert_values)
+                value = self.snake_to_camel(data=value, convert_values=convert_values)
             new_key = convert(key)
             if convert_values:
                 new_value = convert(value) if isinstance(value, str) else value
