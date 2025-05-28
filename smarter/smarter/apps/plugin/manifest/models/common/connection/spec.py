@@ -6,12 +6,12 @@ from typing import ClassVar, List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from smarter.apps.chat.providers.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonSpecPromptKeys,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
     SAMPluginCommonSpecSelectorKeys,
 )
+from smarter.apps.prompt.providers.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError

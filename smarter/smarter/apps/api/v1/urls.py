@@ -17,6 +17,7 @@ Including another URLconf
 
 from django.urls import include, path
 
+from .cli.const import namespace as cli_namespace
 from .const import namespace
 
 
@@ -27,13 +28,13 @@ urlpatterns = [
     # chatbots: the url is of the form https://example.3141-5926-5359.alpha.api.smarter.sh
     path("", include("smarter.apps.chatbot.api.v1.urls", namespace="chatbot:api:v1")),
     # /api/v1/cli/ is used for the command-line interface
-    path("cli/", include("smarter.apps.api.v1.cli.urls", namespace="cli")),
+    path("cli/", include("smarter.apps.api.v1.cli.urls", namespace=cli_namespace)),
     # /api/v1/cli/tests is used for unit tests
     path("tests/", include("smarter.apps.api.v1.tests.urls", namespace="tests")),
     # smarter apps:
     path("account/", include("smarter.apps.account.api.v1.urls", namespace="account:api:v1")),
     path("chatbots/", include("smarter.apps.chatbot.api.v1.urls", namespace="chatbot:api:v1")),
-    path("chat/", include("smarter.apps.chat.api.v1.urls", namespace="chat:api:v1")),
+    path("chat/", include("smarter.apps.prompt.api.v1.urls", namespace="chat:api:v1")),
     path("plugins/", include("smarter.apps.plugin.api.v1.urls", namespace="plugin:api:v1")),
 ]
 

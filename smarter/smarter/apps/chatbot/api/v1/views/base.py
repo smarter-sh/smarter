@@ -11,13 +11,13 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 
-from smarter.apps.chat.models import ChatHelper
-from smarter.apps.chat.providers.providers import chat_providers
 from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.prompt.models import ChatHelper
+from smarter.apps.prompt.providers.providers import chat_providers
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle

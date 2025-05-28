@@ -5,8 +5,9 @@ from logging import getLogger
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.core.handlers.wsgi import WSGIRequest
 from django.shortcuts import redirect
-from django.urls import include, path, re_path
+from django.urls import include, path, re_path, reverse
 from django.views.generic.base import RedirectView
 from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
@@ -17,7 +18,6 @@ from smarter.apps.account.views.authentication import (
     LoginView,
     LogoutView,
 )
-from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.chatbot.models import get_cached_chatbot_by_request
 from smarter.apps.dashboard.admin import restricted_site
@@ -29,6 +29,7 @@ from smarter.apps.docs.views.webserver import (
     RobotsTxtView,
     SitemapXmlView,
 )
+from smarter.apps.prompt.views import ChatConfigView
 
 
 logger = getLogger(__name__)
@@ -42,7 +43,7 @@ admin.autodiscover()
 name_prefix = "root"
 
 
-def root_redirector(request):
+def root_redirector(request: WSGIRequest) -> RedirectView:
     """
     Handles traffic sent to the root of the website. Requests
     can take the form of:
@@ -67,13 +68,13 @@ def root_redirector(request):
 
     # 2. check if the user is authenticated, if so redirect to the dashboard
     if request.user.is_authenticated:
-        return redirect("/dashboard/")
+        return redirect(reverse("dashboard:dashboard"))
 
     # 3. otherwise redirect to the Wagtail docs homepage
     return redirect("/docs/")
 
 
-def config_redirector(request):
+def config_redirector(request: WSGIRequest) -> ChatConfigView:
     """
     Handles traffic sent to the config endpoints of the website.
     """
@@ -111,7 +112,7 @@ urlpatterns = [
         "chatbots/",
         RedirectView.as_view(url="dashboard/", permanent=True),
     ),
-    path("workbench/", include("smarter.apps.chatapp.urls", namespace="chatapp")),
+    path("workbench/", include("smarter.apps.prompt.urls", namespace="prompt")),
     path("dashboard/", include("smarter.apps.dashboard.urls", namespace="dashboard")),
     path("admin/docs/", include("django.contrib.admindocs.urls")),
     path("admin/", admin.site.urls, name=f"{name_prefix}_django_admin"),

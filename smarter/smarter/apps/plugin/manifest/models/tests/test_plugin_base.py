@@ -11,7 +11,6 @@ from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonSpecPromptKeys,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
@@ -44,6 +43,7 @@ from smarter.apps.plugin.signals import (
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.utils import camel_to_snake, get_readonly_yaml_file
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoaderError

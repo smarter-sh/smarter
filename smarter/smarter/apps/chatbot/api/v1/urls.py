@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from smarter.apps.chatapp.views import ChatConfigView
+from smarter.apps.prompt.views import ChatConfigView
 
 from .const import namespace
 from .views.default import DefaultChatbotApiView

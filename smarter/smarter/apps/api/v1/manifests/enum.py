@@ -12,18 +12,6 @@ from smarter.apps.account.manifest.models.secret.const import (
 from smarter.apps.account.manifest.models.user.const import (
     MANIFEST_KIND as USER_MANIFEST_KIND,
 )
-from smarter.apps.chat.manifest.models.chat.const import (
-    MANIFEST_KIND as CHAT_MANIFEST_KIND,
-)
-from smarter.apps.chat.manifest.models.chat_history.const import (
-    MANIFEST_KIND as CHAT_HISTORY_MANIFEST_KIND,
-)
-from smarter.apps.chat.manifest.models.chat_plugin_usage.const import (
-    MANIFEST_KIND as CHAT_PLUGIN_USAGE_MANIFEST_KIND,
-)
-from smarter.apps.chat.manifest.models.chat_tool_call.const import (
-    MANIFEST_KIND as CHAT_TOOL_CALL_MANIFEST_KIND,
-)
 from smarter.apps.chatbot.manifest.models.chatbot.const import (
     MANIFEST_KIND as CHATBOT_MANIFEST_KIND,
 )
@@ -41,6 +29,18 @@ from smarter.apps.plugin.manifest.models.sql_plugin.const import (
 )
 from smarter.apps.plugin.manifest.models.static_plugin.const import (
     MANIFEST_KIND as STATICPLUGIN_MANIFEST_KIND,
+)
+from smarter.apps.prompt.manifest.models.chat.const import (
+    MANIFEST_KIND as CHAT_MANIFEST_KIND,
+)
+from smarter.apps.prompt.manifest.models.chat_history.const import (
+    MANIFEST_KIND as CHAT_HISTORY_MANIFEST_KIND,
+)
+from smarter.apps.prompt.manifest.models.chat_plugin_usage.const import (
+    MANIFEST_KIND as CHAT_PLUGIN_USAGE_MANIFEST_KIND,
+)
+from smarter.apps.prompt.manifest.models.chat_tool_call.const import (
+    MANIFEST_KIND as CHAT_TOOL_CALL_MANIFEST_KIND,
 )
 from smarter.lib.drf.manifest.models.auth_token.const import (
     MANIFEST_KIND as AUTH_TOKEN_MANIFEST_KIND,

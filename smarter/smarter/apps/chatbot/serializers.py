@@ -30,7 +30,7 @@ class ChatBotSerializer(SmarterCamelCaseSerializer):
 
 class ChatBotConfigSerializer(serializers.ModelSerializer):
     """
-    Serializer for the smarter.apps.chatapp.views.ChatConfigView
+    Serializer for the smarter.apps.prompt.views.ChatConfigView
     which should not be camelCased.
     """
 

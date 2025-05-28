@@ -1,0 +1,88 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Chatbot List{% endblock %}
+
+{% block body_class %}
+<style>
+  .chatbot-card > .card-header {
+    border-bottom: 1px solid #E5E5E5;
+  }
+  .smarter-chatbot-card {
+    background-color: #D9D9D9;
+  }
+  .user-chatbot-card {
+    background-color: #FFE5B4;
+  }
+  .card-body > p {
+    margin-bottom: 2px !important;
+  }
+</style>
+{% endblock %}
+
+
+{% block dashboard_content %}
+<div id="kt_app_content" class="app-content flex-column-fluid">
+  <!--begin::Content container-->
+  <div id="kt_app_content_container" class="app-container container-xxl">
+    <!--begin::Row-->
+    <div class="row g-5 g-xl-10">
+      <!--begin::Col-->
+      <div class="col-xl-8 mb-5 mb-xl-10">
+        <!--begin::Row-->
+        <div class="row g-5 g-xl-10 mb-l-10">
+
+          {% for chatbot_helper in chatbot_helpers %}
+          <!--begin::Col Smarter Chatbot Card-->
+          <div class="col-lg-6 mb-4 p-5">
+            <!--begin::Chatbot card-->
+            <a href="{% url 'prompt:by_name' chatbot_helper.name %}">
+              <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card {% if chatbot_helper.user_profile == smarter_admin %}smarter-chatbot-card{% else %}user-chatbot-card{% endif %}">
+                <!--begin::Header-->
+                <div class="p-5">
+                  {% if chatbot_helper.chatbot.is_authentication_required %}
+                  <i class="fas fa-lock" style="position: absolute; top: 10px; right: 30px; color: darkgreen; padding: 5px;"></i>
+                  {% else %}
+                  <i class="fas fa-unlock" style="position: absolute; top: 10px; right: 30px; color: darkred; padding: 5px;"></i>
+                  {% endif %}
+                  {% if chatbot_helper.chatbot.deployed %}
+                  <i class="fas fa-check" style="position: absolute; top: 10px; right: 10px; background-color: green; color: white; border-radius: 50%; padding: 5px;"></i>
+                  {% endif %}
+                  <!--begin::Title-->
+                  <h4 class="card-title card-label fw-bold text-gray-800 pb-2 text-center" style="border-bottom: 1px solid red;">{{ chatbot_helper.name }}{% if chatbot_helper.chatbot.version %} v{{ chatbot_helper.chatbot.version }}{% endif %}</h4>
+                  <!--end::Title-->
+                </div>
+                <!--end::Header-->
+                <!--begin::Body-->
+                <div class="card-body py-6">
+                  <p>created: {{ chatbot_helper.chatbot.created_at }}</p>
+                  <p>last updated: {{ chatbot_helper.chatbot.updated_at }}</p>
+                  <p>url: <span style="color: black; text-decoration: underline; cursor: pointer;"></span>{{ chatbot_helper.chatbot.url }}</span></p>
+                  <p>provider: {{ chatbot_helper.chatbot.provider }}</p>
+                  {% if chatbot_helper.chatbot.description %}
+                  <p>description: {{ chatbot_helper.chatbot.description }}</p>
+                  {% endif %}
+                  <p>DNS status: {{ chatbot_helper.chatbot.dns_verification_status }}</p>
+                  <p>App assistant: {{ chatbot_helper.chatbot.app_assistant }}</p>
+                  <p>App name: {{ chatbot_helper.chatbot.app_name }}</p>
+                </div>
+                <!--end::Body-->
+              </div>
+            </a>
+            <!--end::Chatbot card-->
+          </div>
+          <!--end::Col Smarter Chatbot Card-->
+          {% endfor %}
+
+        </div>
+        <!--end::Row-->
+
+      </div>
+      <!--end::Col-->
+    </div>
+    <!--end::Row-->
+
+  </div>
+  <!--end::Content container-->
+</div>
+{% endblock %}

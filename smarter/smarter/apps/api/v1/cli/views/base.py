@@ -17,10 +17,10 @@ from smarter.apps.api.signals import api_request_completed, api_request_initiate
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
-from smarter.apps.chatapp.views import SmarterChatappViewError
 from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.docs.views.base import DocsError
 from smarter.apps.plugin.plugin.base import SmarterPluginError
+from smarter.apps.prompt.views import SmarterChatappViewError
 from smarter.common.const import SMARTER_BUG_REPORT_URL, SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
