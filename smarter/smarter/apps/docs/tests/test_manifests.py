@@ -38,7 +38,7 @@ class TestApiDocsManifests(TestAccountMixin):
         """
 
         for kind in ALL_KINDS:
-            reverse_name = f"{namespace}:api_docs_manifest_{kind}".lower()
+            reverse_name = f"{namespace}:manifest_{kind}".lower()
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
@@ -50,7 +50,7 @@ class TestApiDocsManifests(TestAccountMixin):
         """
         self.client.force_login(self.non_admin_user)
         for kind in ALL_KINDS:
-            reverse_name = f"{namespace}:api_docs_manifest_{kind}".lower()
+            reverse_name = f"{namespace}:manifest_{kind}".lower()
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)

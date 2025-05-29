@@ -14,6 +14,6 @@ class TestManifestApiView(ApiV1CliTestBase):
     def test_valid_manifest(self):
         """Test that we get OK responses for post, put, patch, delete when passing a valid manifest"""
 
-        path = reverse(self.namespace + "api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
+        path = reverse(self.namespace + "manifest_view", kwargs={"kind": "plugin"})
         _, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
