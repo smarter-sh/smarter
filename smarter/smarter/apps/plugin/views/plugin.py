@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # Protected Views
 # ------------------------------------------------------------------------------
 class PluginDetailView(SmarterAuthenticatedWebView):
-    """Plugins view"""
+    """Plugin detail view"""
 
     template_path = "plugin/plugin_detail.html"
 
@@ -24,7 +24,7 @@ class PluginDetailView(SmarterAuthenticatedWebView):
         return self.clean_http_response(request, template_path=self.template_path)
 
 
-class PluginsListView(SmarterAuthenticatedWebView):
+class PluginListView(SmarterAuthenticatedWebView):
     """Plugins view"""
 
-    template_path = "plugin/plugins_list.html"
+    template_path = "plugin/plugin_list.html"

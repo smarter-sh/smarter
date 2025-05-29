@@ -24,7 +24,7 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
         self.allowed_patterns = [
             re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
             re.compile(r"^/api/v1/cli(/.*)?$"),
-            re.compile(r"^/admin/journal(/.*)?$"),
+            re.compile(r"^/admin(/.*)?$"),
             re.compile(r"^/docs/manifest(/.*)?$"),
             re.compile(r"^/docs/json-schema(/.*)?$"),
         ]
