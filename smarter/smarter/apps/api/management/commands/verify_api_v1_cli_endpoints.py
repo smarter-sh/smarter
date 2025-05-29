@@ -66,7 +66,7 @@ class Command(BaseCommand):
         user = get_cached_admin_user_for_account(account=account)
         if username != user.get_username():
             try:
-                user_profile = get_cached_user_profile(account=account, user__username=username)
+                user_profile = get_cached_user_profile(account=account, user=user)
                 user = user_profile.user
             except UserProfile.DoesNotExist:
                 self.stdout.write(
@@ -117,7 +117,7 @@ class Command(BaseCommand):
             response = json.dumps(response_json, indent=4) + "\n"
             self.stdout.write("response: " + self.style.SUCCESS(response))
 
-        path = reverse("api_v1_cli_apply_view", kwargs={})
+        path = reverse("api:v1:cli:apply_view", kwargs={})
         get_response(path, manifest=self.data)
 
         # path = reverse("api_v1_cli_deploy_view", kwargs={"kind": "plugin", "name": "PluginVerification"})

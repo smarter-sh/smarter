@@ -42,7 +42,7 @@ class TestApiDocsJsonSchemas(TestAccountMixin):
         """
 
         for kind in ALL_KINDS:
-            reverse_name = f"{namespace}:api_docs_json_schema_{kind}".lower()
+            reverse_name = f"{namespace}:json_schema_{kind}".lower()
             logger.info(
                 "TestApiDocsJsonSchemas().test_get_unauthenticated_json_schemas() reverse_name: %s", reverse_name
             )
@@ -59,7 +59,7 @@ class TestApiDocsJsonSchemas(TestAccountMixin):
         """
         self.client.force_login(self.non_admin_user)
         for kind in ALL_KINDS:
-            reverse_name = f"{namespace}:api_docs_json_schema_{kind}".lower()
+            reverse_name = f"{namespace}:json_schema_{kind}".lower()
             logger.info("TestApiDocsJsonSchemas().test_get_authenticated_json_schemas() reverse_name: %s", reverse_name)
             url = reverse(reverse_name)
             logger.info("TestApiDocsJsonSchemas().test_get_authenticated_json_schemas() Testing URL: %s", url)
