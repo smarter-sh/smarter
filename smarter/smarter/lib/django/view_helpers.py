@@ -133,34 +133,10 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     and forces a 404 response for users without a profile.
     """
 
-    def smarter_init(self, request: WSGIRequest, *args, **kwargs) -> HttpResponse:
-        """Initialize the view with the user profile and account."""
-
-        if request.user.is_anonymous:
-            return redirect_and_expire_cache(path="/login/")
-
-        try:
-            self.user = get_resolved_user(request.user)
-            if not self.user or not self.user.is_authenticated:
-                return redirect_and_expire_cache(path="/login/")
-            self.user_profile = get_cached_user_profile(self.user)
-            self.account = self.user_profile.account
-        except UserProfile.DoesNotExist:
-            if not request.user.is_authenticated:
-                return redirect_and_expire_cache(path="/login/")
-            logger.error("%s.smarter_init(): UserProfile.DoesNotExist", self.formatted_class_name)
-            return SmarterHttpResponseNotFound(request=request, error_message="User profile not found")
-
-        return HttpResponse(status=200)
-
     def dispatch(self, request: WSGIRequest, *args, **kwargs):
 
         if request.user.is_anonymous:
             return redirect_and_expire_cache(path="/login/")
-
-        response = self.smarter_init(request, *args, **kwargs)
-        if response.status_code > 299:
-            return response
 
         response = super().dispatch(request, *args, **kwargs)
         patch_vary_headers(response, ["Cookie"])
