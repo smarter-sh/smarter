@@ -3,11 +3,12 @@ Account utilities. Provides simplified and performance-optimized access to accou
 
 Note that this module uses both LRU in-memory caching and a proprietary
 implementation of Django ORM caching to optimize performance. in-memory caching
-if pre-process and short-lived, while the ORM caching is Redis-based and
-will live for as long as the cache expiration is set in the decorator.
+is per-process and short-lived, while the ORM caching is Redis-based and
+persisted, and will live for as long as the cache expiration is set in the decorator.
 
-LRU caching is used for frequently accessed data such as accounts, user profiles,
-in cases where we can cache based on simple atomic identifiers like account ID or user ID.
+LRU caching is used for frequently accessed in-process data such as User, Account and
+UserProfile in cases where we can cache based on simple atomic identifiers like
+the primary key id value account.id, user.id, etc.
 """
 
 import logging
@@ -29,10 +30,10 @@ from .models import Account, UserProfile
 
 logger = logging.getLogger(__name__)
 
-SMARTER_ACCOUNT_NUMBER_REGEX = r"\b\d{4}-\d{4}-\d{4}\b"
 LRU_CACHE_MAX_SIZE = 128
 
 
+@cache_results()
 def get_cached_account(account_id: int = None, account_number: str = None) -> Account:
     """
     Returns the account for the given account_id or account_number.
@@ -63,6 +64,7 @@ def get_cached_account(account_id: int = None, account_number: str = None) -> Ac
         return _in_memory_account_by_number(account_number)
 
 
+@cache_results()
 def get_cached_smarter_account() -> Account:
     """
     Returns the smarter account.
@@ -81,6 +83,7 @@ def get_cached_default_account() -> Account:
     return account
 
 
+@cache_results()
 def _get_account_for_user(user):
     if not user:
         return None
@@ -248,7 +251,7 @@ def get_cached_smarter_admin_user_profile() -> UserProfile:
     return _in_memory_smarter_admin_user_profile(smarter_account.id)
 
 
-@lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
+@cache_results()
 def account_number_from_url(url: str) -> str:
     """
     Extracts the account number from the URL.
@@ -260,8 +263,7 @@ def account_number_from_url(url: str) -> str:
     if not url:
         return None
     SmarterValidator.validate_url(url)
-    pattern = SMARTER_ACCOUNT_NUMBER_REGEX
-    match = re.search(pattern, url)
+    match = re.search(SmarterValidator.SMARTER_ACCOUNT_NUMBER_REGEX, url)
     retval = match.group(0) if match else None
     if retval is not None:
         logger.info("account_number_from_url() extracted and cached account number %s from URL %s", retval, url)

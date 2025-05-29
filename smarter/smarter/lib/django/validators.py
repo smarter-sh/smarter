@@ -53,6 +53,8 @@ class SmarterValidator:
     VALID_SNAKE_CASE = r"^[a-z0-9]+(?:_[a-z0-9]+)*$"
     VALID_PASCAL_CASE = r"^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)*$"
 
+    SMARTER_ACCOUNT_NUMBER_REGEX = r"\b\d{4}-\d{4}-\d{4}\b"
+
     @staticmethod
     def validate_camel_case(value: str) -> None:
         """Validate camel case format"""
