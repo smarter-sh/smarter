@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.12 Pre-release notes
+
+### Features
+
+- **Secrets**. A new object type for securely managing sensitive data like passwords, api keys and credentials. Works like a Kubernetes secret, where the secret is encrypted using a common key that enables you to drecrypt it real-time, as needed.
+- **ApiPlugin + ApiConnection**. A new Smarter Plugin class that enables user defined, strongly typed, real time data retrieval from remote Api's during LLM prompting via both function calling and traditional single-pass RAG.
+- **SqlPlugin + SqlConnection**. Ditto, but for remote Sql databases.
+
+### Refactoring
+
+- **AccountMixin + SmarterRequestMixin**. We created two new mixins that consolidate handling logic for working with http requests and for account resources like Users and UserProfiles. We retired thousands of lines of redundant code and achieved a 10x performance improvement on api request initializations. This obviously affords us considerable improvement to reliability. high caching levels.
+
+- **Name-spaced url schemes for reverse urls**, so that name spaces now match the actual Python module organizational scheme. For example, `{% url 'api:apply' %}`is now `{% url 'api:v1:cli:apply' %}`, which matches the Python path, `smarter.apps.api.v1.cli`.
+- **Django signals**. Fully migrated to event-driven Django signals to pave the way towards our vision for a more pluggable, extensible platform architecture.
+- **Standardized Casing**. Standardized transformations between Pydantic models and Django ORM. Pydantic fields are now strictly camelCase, while DjangoORM continues to enforce strict snake_case. This greatly simplifies implementation logic in Smarter Broker classes and enabled us to remove copious amounts of transformation logic from legacy Brokers.
+- **Testing**. The entire unit test bank has been completely refactored to use a new family of Classes that provide more consistent setup and teardown of unit tests.
+
+### Performance & reliability
+
+- **Testing Coverages**. Our testing coverage ratio is back to par, with 300+ new unit tests added to the legacy code base.
+- **Enumerations**. More enumerations throughout the codebase enable more consistent and coherent cli error messagages.
+- **Caching**. Caching is now tightly coupled to AccountMixin and SmarterRequestMixin and has been extensively refactored to cover more edge cases.
+- **Logging**. Improved logging, mostly as a result of new Django signals that we've added to all Django apps.
+
 ## [0.11.0](https://github.com/smarter-sh/smarter/compare/v0.10.23...v0.11.0) (2025-04-27)
 
 ### Bug Fixes
