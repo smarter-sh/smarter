@@ -25,15 +25,21 @@ app_name = namespace
 
 # /api/v1/ is the main entry point for the API
 urlpatterns = [
-    # smarter apps:
-    # chatbots: the url is of the form https://example.3141-5926-5359.alpha.api.smarter.sh
+    # for Chatbots of the form https://example.3141-5926-5359.alpha.api.smarter.sh
     path("", include("smarter.apps.chatbot.api.v1.urls")),
+    # -------------------------------------------
+    # for the main API:
+    # /api/v1/account/ is used for user account management CRUD operations
+    # /api/v1/chatbots/ is used for managing chatbot CRUD operations
+    # /api/v1/prompt/ is used for supporting client-side interactions with the chatbots.
+    # /api/v1/plugins/ is used for managing plugins and connections to external services.
+    # /api/v1/cli/ implements Brokered services that support the CLI, and is implemented here, in this module.
+    # /api/v1/tests/ is used for unit tests, and is implemented here, in this module.
+    # -------------------------------------------
     path("account/", include("smarter.apps.account.api.v1.urls")),
     path("chatbots/", include("smarter.apps.chatbot.api.v1.urls")),
     path("prompt/", include("smarter.apps.prompt.api.v1.urls")),
     path("plugins/", include("smarter.apps.plugin.api.v1.urls")),
-    # /api/v1/cli/ is used for the command-line interface
     path("cli/", include("smarter.apps.api.v1.cli.urls", namespace=cli_namespace)),
-    # /api/v1/cli/tests is used for unit tests
     path("tests/", include("smarter.apps.api.v1.tests.urls", namespace="tests")),
 ]
