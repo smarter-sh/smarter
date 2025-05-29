@@ -83,8 +83,6 @@ def user_profile_post_save(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=UserProfile)
 def user_profile_post_delete(sender, instance, **kwargs):
     """Signal receiver for deleted of UserProfile model."""
-    get_cached_account_for_user.invalidate_cache(instance.user)
-    get_cached_user_profile.invalidate_cache(instance.user, instance.account)
     logger.info(
         "%s UserProfile post_delete signal received. instance: %s, id: %s",
         formatted_text("user_profile_post_delete()"),
@@ -108,7 +106,6 @@ def account_post_save(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Account)
 def account_post_delete(sender, instance, **kwargs):
     """Signal receiver for deleted of Account model."""
-    get_cached_account.invalidate_cache(instance.id)
     logger.info(
         "%s Account post_delete signal received. instance: %s, id: %s",
         formatted_text("account_post_delete()"),
