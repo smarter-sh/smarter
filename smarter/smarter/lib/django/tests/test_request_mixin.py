@@ -232,13 +232,13 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def test_api_url(self):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
-        http://localhost:8000/api/v1/workbench/1/chat/
+        http://localhost:8000/api/v1/prompt/1/chat/
         """
         smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/api/v1/workbench/1/chat/"
+        path = "/api/v1/prompt/1/chat/"
         url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
@@ -250,7 +250,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
         self.assertFalse(srm.is_chatbot_cli_api_url)
-        self.assertFalse(srm.is_chatbot_sandbox_url)
+        self.assertTrue(srm.is_chatbot_sandbox_url)
         self.assertTrue(srm.is_smarter_api)
         self.assertEqual(srm.path, path)
 

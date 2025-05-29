@@ -607,6 +607,9 @@ class SmarterRequestMixin(AccountMixin):
         """
         Returns True if the url resolves to a chatbot. Conditions are called in a lazy
         sequence intended to avoid unnecessary processing.
+        examples:
+        - "http://localhost:8000/api/v1/prompt/1/chat/"
+        - "http://localhost:8000/api/v1/cli/chat/example/"
         """
 
         return (
@@ -698,6 +701,9 @@ class SmarterRequestMixin(AccountMixin):
         - https://alpha.platform.smarter.sh/workbench/example/config/
           https://<environment_domain>/workbench/<name>/config/
           path_parts: ['workbench', 'example', 'config']
+
+        - http://localhost:8000/api/v1/prompt/1/chat/
+          http://<environment_domain>/api/v1/prompt/<int:chatbot_id>/chat/
         """
         if not self.smarter_request:
             return False
@@ -709,6 +715,16 @@ class SmarterRequestMixin(AccountMixin):
             return False
 
         path_parts = self.url_path_parts
+        if (
+            len(path_parts) == 5
+            and path_parts[0] == "api"
+            and path_parts[1] == "v1"
+            and path_parts[2] == "prompt"
+            and path_parts[3].isnumeric()
+            and path_parts[4] == "chat"
+        ):
+            return True
+
         # valid path_parts:
         #   ['workbench', '<slug>']
         #   ['workbench', '<slug>', 'config']

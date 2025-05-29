@@ -30,7 +30,7 @@ urlpatterns = [
     path("", include("smarter.apps.chatbot.api.v1.urls")),
     path("account/", include("smarter.apps.account.api.v1.urls")),
     path("chatbots/", include("smarter.apps.chatbot.api.v1.urls")),
-    path("chat/", include("smarter.apps.prompt.api.v1.urls")),
+    path("prompt/", include("smarter.apps.prompt.api.v1.urls")),
     path("plugins/", include("smarter.apps.plugin.api.v1.urls")),
     # /api/v1/cli/ is used for the command-line interface
     path("cli/", include("smarter.apps.api.v1.cli.urls", namespace=cli_namespace)),

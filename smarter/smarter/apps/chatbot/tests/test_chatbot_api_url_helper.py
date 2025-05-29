@@ -116,7 +116,9 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         self.assertEqual(helper.account, self.account)
         self.assertIsNone(helper.chatbot, f"Expected None, but got {helper.chatbot}")
         self.assertEqual(helper.account_number, self.account.account_number)
-        self.assertIsNone(helper.api_host, f"Expected None, but got {helper.api_host}")
+        self.assertEqual(
+            helper.api_host, "api.localhost:8000", f"Expected api.localhost:8000, but got {helper.api_host}"
+        )
         self.assertIsNone(helper.api_subdomain, f"Expected None, but got {helper.api_subdomain}")
 
     def test_custom_domain(self):
