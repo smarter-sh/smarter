@@ -6,7 +6,9 @@ from django.core.handlers.wsgi import WSGIRequest
 
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.lib.django import waffle
 from smarter.lib.django.user import UserType
 
 from .models import Account, UserProfile
@@ -56,16 +58,19 @@ class AccountMixin(SmarterHelperMixin):
         request = request or kwargs.get("request")
 
         if account_number is not None:
-            logger.info("%s.__init__(): received account_number %s", self.formatted_class_name, account_number)
+            if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                logger.info("%s.__init__(): received account_number %s", self.formatted_class_name, account_number)
             self._account = get_cached_account(account_number=account_number) if account_number else account
         if account is not None:
-            logger.info("%s.__init__(): received account %s", self.formatted_class_name, account)
+            if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                logger.info("%s.__init__(): received account %s", self.formatted_class_name, account)
             self._account = account
         if user is not None:
             self._user = user
-            logger.info("%s.__init__(): received user %s", self.formatted_class_name, user)
+            if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                logger.info("%s.__init__(): received user %s", self.formatted_class_name, user)
             self._account = get_cached_account_for_user(user)
-            if self._account:
+            if self._account and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                 logger.info(
                     "%s.__init__(): set account to %s based on user_profile %s",
                     self.formatted_class_name,
@@ -76,14 +81,16 @@ class AccountMixin(SmarterHelperMixin):
         # evaluate these in reverse order, so that the first one wins.
         if request is not None:
             url: str = self.smarter_build_absolute_uri(request)
-            logger.info("%s.__init__(): received a request object: %s", self.formatted_class_name, url)
+            if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                logger.info("%s.__init__(): received a request object: %s", self.formatted_class_name, url)
             if hasattr(request, "user"):
                 self._user = request.user
-                logger.info(
-                    "%s.__init__(): found a user object in the request: %s", self.formatted_class_name, self._user
-                )
+                if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                    logger.info(
+                        "%s.__init__(): found a user object in the request: %s", self.formatted_class_name, self._user
+                    )
                 self._account = get_cached_account_for_user(self._user)
-                if self._account:
+                if self._account and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                     logger.info(
                         "%s.__init__(): set account to %s based on user_profile: %s",
                         self.formatted_class_name,
@@ -96,7 +103,7 @@ class AccountMixin(SmarterHelperMixin):
                 # if the account is not set, then try to get it from the request
                 # by parsing the URL.
                 account_number = account_number_from_url(url)
-                if account_number:
+                if account_number and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                     logger.info(
                         "%s.__init__(): located account number %s from the request url %s",
                         self.formatted_class_name,
@@ -104,7 +111,7 @@ class AccountMixin(SmarterHelperMixin):
                         url,
                     )
                     self._account = get_cached_account(account_number=account_number)
-                    if self._account:
+                    if self._account and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                         logger.info("%s.__init__(): set account to %s", self.formatted_class_name, self._account)
                 else:
                     logger.warning(
@@ -114,18 +121,20 @@ class AccountMixin(SmarterHelperMixin):
                     )
 
         if self._user and self._account:
-            logger.info(
-                "%s.__init__(): is fully initialized with user_profile: %s",
-                self.formatted_class_name,
-                self.user_profile,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                logger.info(
+                    "%s.__init__(): is fully initialized with user_profile: %s",
+                    self.formatted_class_name,
+                    self.user_profile,
+                )
         else:
-            logger.warning(
-                "%s.__init__(): is partially initialized: user %s, account %s",
-                self.formatted_class_name,
-                self._user,
-                self._account,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                logger.warning(
+                    "%s.__init__(): is partially initialized: user %s, account %s",
+                    self.formatted_class_name,
+                    self._user,
+                    self._account,
+                )
 
     @property
     def formatted_class_name(self) -> str:

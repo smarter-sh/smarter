@@ -117,9 +117,10 @@ class SmarterRequestMixin(AccountMixin):
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
         session_key: str = kwargs.pop("session_key", None)
-        logger.info(
-            "SmarterRequestMixin().__init__() - initializing with request=%s, session_key=%s", request, session_key
-        )
+        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+            logger.info(
+                "SmarterRequestMixin().__init__() - initializing with request=%s, session_key=%s", request, session_key
+            )
         request = request or kwargs.pop("request", None)
         if not request and args:
             request = args[0]
@@ -163,7 +164,7 @@ class SmarterRequestMixin(AccountMixin):
             logger.warning("%s - request url is None.", self.formatted_class_name)
 
         # lazy excuses to not do anything...
-        if not self.smarter_request_ready:
+        if not self.smarter_request_ready and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             logger.info(
                 "%s.__init__() - request is not in a ready state. Abandoning initialization. url=%s",
                 self.formatted_class_name,
@@ -180,11 +181,12 @@ class SmarterRequestMixin(AccountMixin):
                     )
 
             if self.account and not self._user:
-                logger.warning(
-                    "%s.__init__() - account (%s) is set but user is not.",
-                    self.formatted_class_name,
-                    self.account,
-                )
+                if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                    logger.warning(
+                        "%s.__init__() - account (%s) is set but user is not.",
+                        self.formatted_class_name,
+                        self.account,
+                    )
 
         self.eval_chatbot_url()
 
@@ -205,13 +207,14 @@ class SmarterRequestMixin(AccountMixin):
                 "%s.__init__() request is not ready. Please check the request object and ensure it is valid.",
                 self.formatted_class_name,
             )
-        logger.info(
-            "SmarterRequestMixin().__init__() - finished with request=%s, session_key=%s ready=%s, user=%s",
-            self.smarter_request,
-            self.session_key,
-            self.smarter_request_ready,
-            self.user_profile,
-        )
+        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+            logger.info(
+                "SmarterRequestMixin().__init__() - finished with request=%s, session_key=%s ready=%s, user=%s",
+                self.smarter_request,
+                self.session_key,
+                self.smarter_request_ready,
+                self.user_profile,
+            )
 
     def invalidate_cached_properties(self):
         """
@@ -398,7 +401,8 @@ class SmarterRequestMixin(AccountMixin):
         SmarterValidator.validate_session_key(value)
         if not self.smarter_request:
             raise SmarterValueError("Session key cannot be set without a valid request object.")
-        logger.info("%s.session_key() - setting session_key to %s", self.formatted_class_name, value)
+        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+            logger.info("%s.session_key() - setting session_key to %s", self.formatted_class_name, value)
         self._session_key = value
 
     @cached_property
@@ -495,22 +499,24 @@ class SmarterRequestMixin(AccountMixin):
                 self.helper_logger(f"request body={body}")
                 body_str = body.decode("utf-8").strip()
                 self._data = json.loads(body_str) if body_str else {}
-                logger.info(
-                    "%s.data() - initialized from parsed request body as json: %s",
-                    self.formatted_class_name,
-                    body_str,
-                )
+                if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                    logger.info(
+                        "%s.data() - initialized from parsed request body as json: %s",
+                        self.formatted_class_name,
+                        body_str,
+                    )
         except json.JSONDecodeError:
             try:
                 body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
                 if body is not None:
                     body_str = body.decode("utf-8").strip()
                     self._data = yaml.safe_load(body_str) if body_str else {}
-                    logger.info(
-                        "%s.data() - initialized from parsed request body as yaml: %s",
-                        self.formatted_class_name,
-                        body_str,
-                    )
+                    if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                        logger.info(
+                            "%s.data() - initialized from parsed request body as yaml: %s",
+                            self.formatted_class_name,
+                            body_str,
+                        )
             except yaml.YAMLError:
                 logger.error(
                     "%s - failed to parse request body as JSON or YAML. request.body=%s",
