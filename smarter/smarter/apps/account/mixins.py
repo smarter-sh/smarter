@@ -156,16 +156,11 @@ class AccountMixin(SmarterHelperMixin):
         Set the account for the current user. Handle
         management of user_profile.
         """
-        self._account = account
-        if not self._account:
-            # unset the user_profile if the account is unset
-            self._user_profile = None
-            return
         if self._user:
             # If the user is already set, then we need to verify that the user is part of the account
             # by attempting to fetch the user_profile.
             try:
-                self._user_profile = get_cached_user_profile(user=self._user, account=self._account)
+                self._user_profile = get_cached_user_profile(user=self._user, account=account)
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {self._account.account_number}."
@@ -173,6 +168,11 @@ class AccountMixin(SmarterHelperMixin):
             except TypeError as e:
                 # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x70f8a5377c20>>.
                 logger.error("%s: account not set, user_profile not found: %s", self.formatted_class_name, str(e))
+        self._account = account
+        if not self._account:
+            # unset the user_profile if the account is unset
+            self._user_profile = None
+            return
 
     @property
     def account_number(self) -> str:

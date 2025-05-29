@@ -51,15 +51,8 @@ def get_cached_default_account() -> Account:
     """
     Returns the default account.
     """
-    try:
-        account = Account.objects.get(is_default_account=True)
-        logger.info("get_cached_default_account() retrieving and caching default account %s", account)
-    except Account.DoesNotExist as e:
-        logger.error("get_cached_default_account() no default account found")
-        raise SmarterConfigurationError("No default account found.") from e
-    except Account.MultipleObjectsReturned as e:
-        logger.error("get_cached_default_account() multiple default accounts found")
-        raise SmarterConfigurationError("Multiple default accounts found.") from e
+    account = Account.objects.get(is_default_account=True)
+    logger.info("get_cached_default_account() retrieving and caching default account %s", account)
     return account
 
 
@@ -67,29 +60,26 @@ def get_cached_default_account() -> Account:
 def _get_account_for_user(user):
     if not user:
         return None
-    try:
-        user_profiles = UserProfile.objects.filter(user=user)
-        if not user_profiles.exists():
-            logger.error("get_cached_account_for_user() no UserProfile found for user %s", user)
-            return None
-        for user_profile in user_profiles:
-            if user_profile.account.is_default_account:
-                logger.info(
-                    "get_cached_account_for_user() retrieving and caching default account %s for user %s",
-                    user_profile.account,
-                    user,
-                )
-                return user_profile.account
-        # If no default account is found, return the first account
-        user_profile = user_profiles.first()
-        logger.info(
-            "get_cached_default_account() retrieving and caching account %s user %s",
-            user_profile.account,
-            user_profile.user,
-        )
-    except UserProfile.DoesNotExist:
-        logger.error("get_cached_default_account() no UserProfile found for user %s", user)
+
+    user_profiles = UserProfile.objects.filter(user=user)
+    if not user_profiles.exists():
+        logger.error("get_cached_account_for_user() no UserProfile found for user %s", user)
         return None
+    for user_profile in user_profiles:
+        if user_profile.account.is_default_account:
+            logger.info(
+                "get_cached_account_for_user() retrieving and caching default account %s for user %s",
+                user_profile.account,
+                user,
+            )
+            return user_profile.account
+    # If no default account is found, return the first account
+    user_profile = user_profiles.first()
+    logger.info(
+        "get_cached_default_account() retrieving and caching account %s user %s",
+        user_profile.account,
+        user_profile.user,
+    )
     return user_profile.account
 
 
@@ -108,13 +98,10 @@ get_cached_account_for_user.invalidate_cache = _get_account_for_user.invalidate_
 
 @cache_results()
 def _get_cached_user_profile(resolved_user, account):
-    try:
-        user_profile = UserProfile.objects.get(user=resolved_user, account=account)
-        logger.info("get_cached_user_profile() retrieving and caching UserProfile %s", user_profile)
-        return user_profile
-    except UserProfile.DoesNotExist:
-        logger.error("get_cached_user_profile() no UserProfile found for user %s", resolved_user)
-        return None
+
+    user_profile = UserProfile.objects.get(user=resolved_user, account=account)
+    logger.info("get_cached_user_profile() retrieving and caching UserProfile %s", user_profile)
+    return user_profile
 
 
 def get_cached_user_profile(user: UserType, account: Account = None) -> UserProfile:
@@ -146,13 +133,9 @@ def get_cached_user_for_user_id(user_id: int) -> AbstractUser:
     """
     Returns the user for the given user_id.
     """
-    try:
-        user = User.objects.get(id=user_id)
-        logger.info("get_cached_user_for_user_id() retrieving and caching user %s", user)
-        return user
-    except User.DoesNotExist:
-        logger.error("get_cached_user_for_user_id() no user found for user_id %s", user_id)
-        return None
+    user = User.objects.get(id=user_id)
+    logger.info("get_cached_user_for_user_id() retrieving and caching user %s", user)
+    return user
 
 
 @cache_results()
@@ -186,37 +169,19 @@ def get_cached_smarter_admin_user_profile() -> UserProfile:
     """
     Returns the smarter admin user.
     """
-    try:
-        smarter_account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
-    except Account.DoesNotExist as e:
-        logger.error("get_cached_smarter_admin_user_profile() no smarter account found")
-        raise SmarterConfigurationError("No smarter account found.") from e
+    smarter_account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
 
-    try:
-        super_user_profile = (
-            UserProfile.objects.filter(account=smarter_account, user__is_superuser=True).order_by("pk").first()
-        )
-        logger.info(
-            "get_cached_smarter_admin_user_profile() retrieving and caching super UserProfile %s", super_user_profile
-        )
-    except UserProfile.DoesNotExist as e:
-        logger.error(
-            "get_cached_smarter_admin_user_profile() no super UserProfile found for account %s", smarter_account
-        )
-        raise SmarterConfigurationError("No super UserProfile found.") from e
+    super_user_profile = (
+        UserProfile.objects.filter(account=smarter_account, user__is_superuser=True).order_by("pk").first()
+    )
+    logger.info(
+        "get_cached_smarter_admin_user_profile() retrieving and caching super UserProfile %s", super_user_profile
+    )
 
-    try:
-        staff_user_profile = (
-            UserProfile.objects.filter(account=smarter_account, user__is_staff=True).order_by("pk").first()
-        )
-        logger.info(
-            "get_cached_smarter_admin_user_profile() retrieving and caching staff UserProfile %s", staff_user_profile
-        )
-    except UserProfile.DoesNotExist as e:
-        logger.error(
-            "get_cached_smarter_admin_user_profile() no staff UserProfile found for account %s", smarter_account
-        )
-        raise SmarterConfigurationError("No staff UserProfile found.") from e
+    staff_user_profile = UserProfile.objects.filter(account=smarter_account, user__is_staff=True).order_by("pk").first()
+    logger.info(
+        "get_cached_smarter_admin_user_profile() retrieving and caching staff UserProfile %s", staff_user_profile
+    )
 
     return super_user_profile or staff_user_profile
 
