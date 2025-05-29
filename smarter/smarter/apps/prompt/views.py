@@ -9,7 +9,7 @@ from http import HTTPStatus
 from urllib.parse import urljoin
 
 from django.conf import settings
-from django.core.handlers.wsgi import WSGIHandler
+from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -87,10 +87,10 @@ class SmarterChatSession(SmarterHelperMixin):
     _chat: Chat = None
     _chat_helper: ChatHelper = None
     _chatbot: ChatBot = None
-    request: WSGIHandler = None
+    request: WSGIRequest = None
     session_key: str = None
 
-    def __init__(self, request: WSGIHandler, session_key: str, *args, chatbot: ChatBot = None, **kwargs):
+    def __init__(self, request: WSGIRequest, session_key: str, *args, chatbot: ChatBot = None, **kwargs):
         logger.info("SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot)
         self.request = request
         self.session_key = session_key
@@ -202,7 +202,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
             if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
                 logger.info("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
 
-    def setup(self, request: WSGIHandler, *args, chatbot_id: int = None, **kwargs):
+    def setup(self, request: WSGIRequest, *args, chatbot_id: int = None, **kwargs):
 
         super().setup(request, *args, **kwargs)
         name = kwargs.pop("name", None)
@@ -291,7 +291,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
         return str(self.chatbot) if self.chatbot else "ChatConfigView"
 
     # pylint: disable=unused-argument
-    def post(self, request: WSGIHandler, *args, **kwargs):
+    def post(self, request: WSGIRequest, *args, **kwargs):
         """
         Get the chatbot configuration.
         """
@@ -301,7 +301,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     # pylint: disable=unused-argument
-    def get(self, request: WSGIHandler, *args, **kwargs):
+    def get(self, request: WSGIRequest, *args, **kwargs):
         """
         Get the chatbot configuration.
         """
@@ -465,7 +465,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         except Exception as e:
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: WSGIRequest, *args, **kwargs):
         """
         Dispatch method to handle the request.
         """
@@ -499,7 +499,7 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
     chatbots: models.QuerySet[ChatBot] = None
     chatbot_helpers: list[ChatBotHelper] = []
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: WSGIRequest, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code >= 300:
             return response

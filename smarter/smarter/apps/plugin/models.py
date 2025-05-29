@@ -30,12 +30,17 @@ from pydantic import ValidationError
 from rest_framework import serializers
 from taggit.managers import TaggableManager
 
-# smarter stuff
 from smarter.apps.account.models import Account, Secret, UserProfile
+from smarter.apps.account.utils import get_cached_account_for_user
+
+# smarter stuff
+from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake
+from smarter.lib.cache import cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
 
 from .manifest.enum import SAMPluginCommonMetadataClassValues
@@ -376,7 +381,78 @@ class PluginDataStatic(PluginDataBase):
         verbose_name_plural = "Plugin Static Data"
 
 
-class SqlConnection(TimestampedModel):
+class ConnectionBase(TimestampedModel):
+    """
+    Base class for connection models.
+    """
+
+    class Meta:
+        abstract = True
+
+    CONNECTION_KIND_CHOICES = [
+        (SAMKinds.SQL_CONNECTION.value, SAMKinds.SQL_CONNECTION.value),
+        (SAMKinds.API_CONNECTION.value, SAMKinds.API_CONNECTION.value),
+    ]
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    name = models.CharField(
+        help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
+        max_length=255,
+        validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
+    )
+    kind = models.CharField(
+        help_text="The kind of connection. Example: 'SQL', 'API'.",
+        max_length=50,
+        choices=CONNECTION_KIND_CHOICES,
+    )
+    description = models.TextField(
+        help_text="A brief description of the connection. Be verbose, but not too verbose.", blank=True, null=True
+    )
+    version = models.CharField(
+        help_text="The version of the connection. Example: '1.0.0'.",
+        max_length=255,
+        default="1.0.0",
+        blank=True,
+        null=True,
+    )
+
+    @classmethod
+    @cache_results()
+    def get_cached_connections_for_user(cls, user: UserType) -> list["ConnectionBase"]:
+        """
+        Return a list of all instances of all concrete subclasses of ConnectionBase.
+        """
+        account = get_cached_account_for_user(user)
+        instances = []
+        for subclass in ConnectionBase.__subclasses__():
+            instances.extend(subclass.objects.filter(account=account).order_by("name"))
+        return instances
+
+    @classmethod
+    @cache_results()
+    def get_cached_connection_by_name_and_kind(
+        cls, user: UserType, kind: str, name: str
+    ) -> Union["ConnectionBase", None]:
+        """
+        Return a single instance of a concrete subclass of ConnectionBase by name.
+        """
+        account = get_cached_account_for_user(user)
+        if not kind or not kind in [SAMKinds.SQL_CONNECTION.value, SAMKinds.API_CONNECTION.value]:
+            raise SmarterValueError(f"Unsupported connection kind: {kind}")
+        if kind == SAMKinds.SQL_CONNECTION.value:
+            try:
+                return SqlConnection.objects.get(account=account, name=name)
+            except SqlConnection.DoesNotExist:
+                pass
+
+        elif kind == SAMKinds.API_CONNECTION.value:
+            try:
+                return ApiConnection.objects.get(account=account, name=name)
+            except ApiConnection.DoesNotExist:
+                pass
+
+
+class SqlConnection(ConnectionBase):
     """
     Stores SQL connection configuration for a Smarter plugin.
 
@@ -421,23 +497,7 @@ class SqlConnection(TimestampedModel):
         (DBMSAuthenticationMethods.TCPIP_SSH.value, "Standard TCP/IP over SSH"),
         (DBMSAuthenticationMethods.LDAP_USER_PWD.value, "LDAP User/Password"),
     ]
-
-    name = models.CharField(
-        help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
-        max_length=255,
-        validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
-    )
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="sql_connections_account")
-    description = models.TextField(
-        help_text="A brief description of the connection. Be verbose, but not too verbose.", blank=True, null=True
-    )
-    version = models.CharField(
-        help_text="The version of the connection. Example: '1.0.0'.",
-        max_length=255,
-        default="1.0.0",
-        blank=True,
-        null=True,
-    )
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="sql_connections")
     db_engine = models.CharField(
         help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
         default=DbEngines.MYSQL.value,
@@ -935,7 +995,7 @@ class PluginDataSql(PluginDataBase):
         return str(self.plugin.account.account_number + " - " + self.plugin.name)
 
 
-class ApiConnection(TimestampedModel):
+class ApiConnection(ConnectionBase):
     """
     Stores API connection configuration for a Smarter plugin.
 
@@ -953,22 +1013,7 @@ class ApiConnection(TimestampedModel):
     ]
     PROXY_PROTOCOL_CHOICES = [("http", "HTTP"), ("https", "HTTPS"), ("socks", "SOCKS")]
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="api_connections_account")
-    name = models.CharField(
-        help_text="The name of the API connection, camelCase, without spaces. Example: 'weatherApi', 'stockApi'.",
-        max_length=255,
-        validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
-    )
-    description = models.TextField(
-        help_text="A brief description of the API connection. Be verbose, but not too verbose.",
-    )
-    version = models.CharField(
-        help_text="The version of the connection. Example: '1.0.0'.",
-        max_length=255,
-        default="1.0.0",
-        blank=True,
-        null=True,
-    )
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="api_connections")
     base_url = models.URLField(
         help_text="The root domain of the API. Example: 'https://api.example.com'.",
     )
