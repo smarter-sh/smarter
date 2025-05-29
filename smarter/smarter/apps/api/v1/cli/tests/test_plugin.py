@@ -9,17 +9,18 @@ from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.enum import SAMKeys, SCLIResponseGet, SCLIResponseGetData
+
+from .base_class import ApiV1CliTestBase
 
 
 KIND = SAMKinds.STATIC_PLUGIN.value
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class TestApiV1CliPlugin(ApiV1TestBase):
+class TestApiV1CliPlugin(ApiV1CliTestBase):
     """Test api/v1/cli endpoints on the Plugin model."""
 
     def setUp(self):
@@ -32,21 +33,21 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
     def test_deploy(self):
 
-        path = f"{reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)}"
+        path = f"{reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
         self.assertIn("not implemented", response["error"]["description"])
 
     def test_logs(self):
-        path = f"{reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)}"
+        path = f"{reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
         self.assertIn("not implemented", response["error"]["description"])
 
     def test_example_manifest(self):
-        path = reverse(ApiV1CliReverseViews.manifest, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         data = response[SCLIResponseGet.DATA.value]
         self.assertEqual(status, HTTPStatus.OK)
@@ -58,7 +59,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         """Test that we get OK response when passing a valid manifest"""
 
         # create a Plugin from a valid manifest
-        path = reverse(ApiV1CliReverseViews.apply, kwargs=None)
+        path = reverse(self.namespace + ApiV1CliReverseViews.apply, kwargs=None)
         response, status = self.get_response(path, manifest=self.good_manifest_text)
 
         self.assertEqual(status, HTTPStatus.OK)
@@ -66,7 +67,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         self.assertIn("applied successfully", response["message"])
 
         # invoke the describe endpoint to verify that the Plugin was created
-        path = f"{reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)}"
+        path = f"{reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
@@ -79,7 +80,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("name", None), "cli_test_plugin")
 
         # we should also be able to get the Plugin by name
-        path = f"{reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)}"
+        path = f"{reverse(self.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=path)
         response = response["data"]
@@ -88,7 +89,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.STATIC_PLUGIN.value)
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
 
-        path = f"{reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)}"
+        path = f"{reverse(self.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)

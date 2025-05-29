@@ -9,7 +9,6 @@ from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthToken
 from smarter.lib.drf.models import SmarterAuthToken
@@ -17,12 +16,14 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 
+from .base_class import ApiV1CliTestBase
+
 
 KIND = SAMKinds.AUTH_TOKEN.value
 logger = getLogger(__name__)
 
 
-class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
+class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
     """
     Test Api v1 CLI commands for SmarterAuthToken
 
@@ -118,7 +119,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         }
 
         kwargs = {"kind": KIND}
-        path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.example_manifest, kwargs=kwargs)
         response, status = self.get_response(path=path)
 
         self.assertEqual(status, HTTPStatus.OK)
@@ -128,7 +129,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
 
     def test_describe(self) -> None:
         """Test describe command"""
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
@@ -175,7 +176,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         manifest_json = json.loads(manifest.model_dump_json())
 
         # retrieve the current manifest by calling "describe"
-        path = reverse(ApiV1CliReverseViews.apply)
+        path = reverse(self.namespace + ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, data=manifest_json)
 
         # pylint: disable=W0612
@@ -232,7 +233,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
 
             return True
 
-        path = reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # pylint: disable=W0612
@@ -310,7 +311,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     def test_deploy(self) -> None:
         """Test deploy command"""
         kwargs = {"kind": KIND}
-        path = reverse(ApiV1CliReverseViews.deploy, kwargs=kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=kwargs)
         query_params = urlencode({"name": self.test_token_record.name})
         url_with_query_params = f"{path}?{query_params}"
         response, status = self.get_response(path=url_with_query_params)
@@ -341,7 +342,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     def test_undeploy(self) -> None:
         """Test undeploy command"""
         kwargs = {"kind": KIND}
-        path = reverse(ApiV1CliReverseViews.undeploy, kwargs=kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=kwargs)
         query_params = urlencode({"name": self.test_token_record.name})
         url_with_query_params = f"{path}?{query_params}"
         response, status = self.get_response(path=url_with_query_params)
@@ -371,7 +372,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
 
     def test_delete(self) -> None:
         """Test delete command"""
-        path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
@@ -399,7 +400,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
 
     def test_logs(self) -> None:
         """Test logs command"""
-        path = reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 

@@ -9,16 +9,17 @@ from django.urls import reverse
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.lib.django.user import User
 from smarter.lib.manifest.enum import SAMKeys
+
+from .base_class import ApiV1CliTestBase
 
 
 KIND = SAMKinds.USER.value
 logger = getLogger(__name__)
 
 
-class TestApiCliV1UserDelete(ApiV1TestBase):
+class TestApiCliV1UserDelete(ApiV1CliTestBase):
     """
     Test Api v1 CLI commands for User
 
@@ -44,7 +45,7 @@ class TestApiCliV1UserDelete(ApiV1TestBase):
         user = User.objects.get(username=username)
         self.assertIsInstance(user, User)
 
-        path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         logger.info("response: %s", response)

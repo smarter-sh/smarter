@@ -43,9 +43,6 @@ logger = logging.getLogger(__name__)
 class ViewBase(SmarterAdminAPIView):
     """Base class for all chatbot detail views."""
 
-    user_profile: UserProfile = None
-    account: Account = None
-
     def dispatch(self, request, *args, **kwargs):
         if isinstance(request.user, User):
             self.user_profile = get_object_or_404(UserProfile, user=request.user)
@@ -55,9 +52,6 @@ class ViewBase(SmarterAdminAPIView):
 
 class ListViewBase(SmarterAdminListAPIView):
     """Base class for all chatbot list views."""
-
-    user_profile: UserProfile = None
-    account: Account = None
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)

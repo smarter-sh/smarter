@@ -7,7 +7,6 @@ import traceback
 from http import HTTPStatus
 from typing import Type
 
-import yaml
 from django.core.handlers.wsgi import WSGIRequest
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated

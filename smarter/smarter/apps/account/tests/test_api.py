@@ -18,6 +18,8 @@ logger = getLogger(__name__)
 class TestUrls(TestAccountMixin):
     """Test Account API end points."""
 
+    namespace = "account:api:v1:"
+
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
@@ -51,7 +53,7 @@ class TestUrls(TestAccountMixin):
 
     def test_account_view(self):
         """test that we can see the account view and that it matches the account data."""
-        response = self.client.get(reverse("account_list_view"))
+        response = self.client.get(reverse(self.namespace + "account_list_view"))
 
         redirect_url = response.get("Location")
         msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
@@ -66,7 +68,7 @@ class TestUrls(TestAccountMixin):
 
     def test_accounts_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
-        response = self.client.get(reverse("account_view", args=[str(self.account.id)]))
+        response = self.client.get(reverse(self.namespace + "account_view", args=[str(self.account.id)]))
 
         redirect_url = response.get("Location")
         msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
@@ -99,7 +101,7 @@ class TestUrls(TestAccountMixin):
 
     def test_account_users_view(self):
         """test that we can see users associated with an account and that one of these matches the account data."""
-        response = self.client.get(reverse("account_users_list_view"))
+        response = self.client.get(reverse(self.namespace + "account_users_list_view"))
 
         redirect_url = response.get("Location")
         msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
@@ -114,7 +116,7 @@ class TestUrls(TestAccountMixin):
 
     def test_account_users_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
-        response = self.client.get(reverse("account_user_view", args=[str(self.admin_user.id)]))
+        response = self.client.get(reverse(self.namespace + "account_user_view", args=[str(self.admin_user.id)]))
 
         redirect_url = response.get("Location")
         msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
@@ -137,7 +139,7 @@ class TestUrls(TestAccountMixin):
 
     def test_account_payment_methods(self):
         """test that we can see the payment methods associated with an account."""
-        response = self.client.get(reverse("account_payment_methods_list_view"))
+        response = self.client.get(reverse(self.namespace + "account_payment_methods_list_view"))
 
         redirect_url = response.get("Location")
         msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
@@ -170,7 +172,9 @@ class TestUrls(TestAccountMixin):
 
     def test_account_payment_methods_index(self):
         """test that we can see the payment methods associated with an account."""
-        response = self.client.get(reverse("account_payment_method_view", args=[str(self.payment_method.id)]))
+        response = self.client.get(
+            reverse(self.namespace + "account_payment_method_view", args=[str(self.payment_method.id)])
+        )
 
         redirect_url = response.get("Location")
         msg = response.content.decode("utf-8") if redirect_url is None else redirect_url

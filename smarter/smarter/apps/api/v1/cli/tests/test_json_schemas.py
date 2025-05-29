@@ -4,15 +4,16 @@ import logging
 from http import HTTPStatus
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+
+from .base_class import ApiV1CliTestBase
 
 
 logger = logging.getLogger(__name__)
 
 
-class TestDocsManifests(ApiV1TestBase):
+class TestDocsManifests(ApiV1CliTestBase):
     """
     Test Manifest pages
     """

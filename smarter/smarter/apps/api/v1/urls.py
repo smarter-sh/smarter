@@ -25,20 +25,15 @@ app_name = namespace
 
 # /api/v1/ is the main entry point for the API
 urlpatterns = [
+    # smarter apps:
     # chatbots: the url is of the form https://example.3141-5926-5359.alpha.api.smarter.sh
-    path("", include("smarter.apps.chatbot.api.v1.urls", namespace="chatbot:api:v1")),
+    path("", include("smarter.apps.chatbot.api.v1.urls")),
+    path("account/", include("smarter.apps.account.api.v1.urls")),
+    path("chatbots/", include("smarter.apps.chatbot.api.v1.urls")),
+    path("chat/", include("smarter.apps.prompt.api.v1.urls")),
+    path("plugins/", include("smarter.apps.plugin.api.v1.urls")),
     # /api/v1/cli/ is used for the command-line interface
     path("cli/", include("smarter.apps.api.v1.cli.urls", namespace=cli_namespace)),
     # /api/v1/cli/tests is used for unit tests
     path("tests/", include("smarter.apps.api.v1.tests.urls", namespace="tests")),
-    # smarter apps:
-    path("account/", include("smarter.apps.account.api.v1.urls", namespace="account:api:v1")),
-    path("chatbots/", include("smarter.apps.chatbot.api.v1.urls", namespace="chatbot:api:v1")),
-    path("chat/", include("smarter.apps.prompt.api.v1.urls", namespace="chat:api:v1")),
-    path("plugins/", include("smarter.apps.plugin.api.v1.urls", namespace="plugin:api:v1")),
-]
-
-# for backward compatibility prior to 0.7.2
-urlpatterns += [
-    path("chatbot/", include("smarter.apps.chatbot.api.v1.urls", namespace="chatbot:api:v1")),
 ]

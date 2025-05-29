@@ -29,6 +29,7 @@ urlpatterns = [
         RedirectView.as_view(url="/dashboard/account/dashboard/", permanent=False),
         name="dashboard_account_dashboard",
     ),
+    path("api/", include("smarter.apps.account.api.urls", namespace=namespace)),
     path("login/", LoginView.as_view(), name="account_login"),
     path("logout/", LogoutView.as_view(), name="account_logout"),
     path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),

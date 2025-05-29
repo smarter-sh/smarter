@@ -37,6 +37,8 @@ app_name = namespace
 class ApiV1CliReverseViews:
     """Reverse views for the CLI commands"""
 
+    namespace = "api:v1:cli:"
+
     manifest = "ApiV1CliManifestApiView".lower()
     apply = "ApiV1CliChatApiView".lower()
     chat = "ApiV1CliChatConfigApiView".lower()
