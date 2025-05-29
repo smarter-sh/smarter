@@ -1,1 +1,1 @@
-namespace = "prompt"
+namespace = "prompt_workbench"

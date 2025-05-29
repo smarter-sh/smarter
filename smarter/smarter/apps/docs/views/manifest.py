@@ -19,12 +19,11 @@ class DocsExampleManifestBaseView(DocsBaseView):
 
     template_path = "docs/manifest.html"
     kind: SAMKinds = None
-    namespace: str = "api:v1:cli:"
 
     def get(self, request, *args, **kwargs):
         view = ApiV1CliManifestApiView.as_view()
         json_response = self.get_brokered_json_response(
-            self.namespace + ApiV1CliReverseViews.manifest, view, request, *args, **kwargs
+            ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.manifest, view, request, *args, **kwargs
         )
 
         yaml_response = yaml.dump(json_response, default_flow_style=False)

@@ -22,6 +22,8 @@ logger = getLogger(__name__)
 class ApiV1TestBase(TestAccountMixin):
     """Test api/v1/ base class."""
 
+    namespace = "api:v1:"
+
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()

@@ -1,9 +1,12 @@
 # pylint: disable=W0707,W0718
 """Account views for smarter api."""
+
+import json
 import logging
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
+from django.core.handlers.wsgi import WSGIRequest
 from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -20,33 +23,30 @@ logger = logging.getLogger(__name__)
 class AccountView(AccountViewBase):
     """Account view for smarter api."""
 
-    def get(self, request, account_id: int):
+    def get(self, request: WSGIRequest, account_id: int):
         if account_id and request.user.is_superuser:
-            account = get_object_or_404(Account, pk=account_id)
+            self.account = get_object_or_404(Account, pk=account_id)
         else:
-            account = self.user_profile.account
-        serializer = self.serializer_class(account)
+            self.account = self.user_profile.account
+        serializer = self.serializer_class(self.account)
         return Response(serializer.data, status=HTTPStatus.OK)
 
-    def post(self, request):
+    def post(self, request: WSGIRequest):
         try:
-            data = request.data
+            data = json.loads(request.body.decode("utf-8"))
             with transaction.atomic():
-                account = Account.objects.create(**data)
-                UserProfile.objects.create(user=request.user, account=account)
+                self.account = Account.objects.create(**data)
+                UserProfile.objects.create(user=request.user, account=self.account)
         except Exception as e:
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
-        return HttpResponseRedirect(request.path_info + str(account.id) + "/")
+        return HttpResponseRedirect(request.path_info + str(self.account.id) + "/")
 
-    def patch(self, request, account_id: int = None):
-        account: Account = None
+    def patch(self, request: WSGIRequest, account_id: int = None):
         data: dict = None
 
         try:
             if account_id and self.is_superuser_or_unauthorized():
-                account = Account.objects.get(id=account_id)
-            else:
-                account = self.user_profile.account
+                self.account = Account.objects.get(id=account_id)
         except UserProfile.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
@@ -62,9 +62,9 @@ class AccountView(AccountViewBase):
 
         try:
             for key, value in data.items():
-                if hasattr(account, key):
-                    setattr(account, key, value)
-            account.save()
+                if hasattr(self.account, key):
+                    setattr(self.account, key, value)
+            self.account.save()
         except ValidationError as e:
             return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
         except Exception as e:
@@ -76,13 +76,11 @@ class AccountView(AccountViewBase):
 
     def delete(self, request, account_id: int = None):
         if account_id and self.is_superuser_or_unauthorized():
-            account = get_object_or_404(Account, pk=account_id)
-        else:
-            account = self.user_profile.account
+            self.account = get_object_or_404(Account, pk=account_id)
 
         try:
             with transaction.atomic():
-                account.delete()
+                self.account.delete()
                 UserProfile.objects.get(user=request.user).delete()
         except Exception as e:
             return JsonResponse(

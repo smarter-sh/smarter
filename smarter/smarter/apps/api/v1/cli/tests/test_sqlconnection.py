@@ -11,7 +11,6 @@ from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.factories import secret_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.plugin.manifest.models.sql_connection.enum import (
     DbEngines,
     DBMSAuthenticationMethods,
@@ -23,12 +22,14 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 
+from .base_class import ApiV1CliTestBase
+
 
 KIND = SAMKinds.SQL_CONNECTION.value
 logger = getLogger(__name__)
 
 
-class TestApiCliV1SqlConnection(ApiV1TestBase):
+class TestApiCliV1SqlConnection(ApiV1CliTestBase):
     """
     Test Api v1 CLI commands for SqlConnection
 
@@ -116,7 +117,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
     def test_example_manifest(self) -> None:
         """Test example-manifest command"""
 
-        path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
@@ -127,7 +128,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         """Test describe command"""
         self.sqlconnection = self.sqlconnection_factory()
 
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
@@ -166,7 +167,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         manifest_json = json.loads(manifest.model_dump_json())
 
         # retrieve the current manifest by calling "describe"
-        path = reverse(ApiV1CliReverseViews.apply)
+        path = reverse(self.namespace + ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, data=manifest_json)
 
         # validate the response and status are both good
@@ -231,7 +232,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         }
 
         self.sqlconnection = self.sqlconnection_factory()
-        path = reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         logger.info("response: %s", response)
@@ -314,7 +315,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         # create a sqlconnection so that we have something to deploy
         self.sqlconnection = self.sqlconnection_factory()
 
-        path = reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
@@ -329,7 +330,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         # create a sqlconnection so that we have something to undeploy
         self.sqlconnection = self.sqlconnection_factory()
 
-        path = reverse(ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
@@ -340,7 +341,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
 
     def test_logs(self) -> None:
         """Test logs command"""
-        path = reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
@@ -354,7 +355,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         # create a sqlconnection so that we have something to delete
         self.sqlconnection = self.sqlconnection_factory()
 
-        path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 

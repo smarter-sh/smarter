@@ -7,7 +7,6 @@ from urllib.parse import urlencode
 from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.api import SmarterApiVersions
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
@@ -18,11 +17,13 @@ from smarter.lib.journal.enum import (
     SmarterJournalThings,
 )
 
+from .base_class import ApiV1CliTestBase
+
 
 logger = getLogger(__name__)
 
 
-class TestApiCliV1ChatConfig(ApiV1TestBase):
+class TestApiCliV1ChatConfig(ApiV1CliTestBase):
     """
     Test Api v1 CLI non-brokered chat_config command
 
@@ -86,7 +87,7 @@ class TestApiCliV1ChatConfig(ApiV1TestBase):
     def test_chat_config(self) -> None:
         """Test chat_config command"""
 
-        path = reverse(ApiV1CliReverseViews.chat_config, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.chat_config, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 

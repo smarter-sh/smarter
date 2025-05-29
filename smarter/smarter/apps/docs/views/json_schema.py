@@ -19,12 +19,11 @@ class DocsJsonSchemaBaseView(DocsBaseView):
 
     template_path = "docs/json-schema.html"
     kind: SAMKinds = None
-    namespace: str = "api:v1:cli:"
 
     def get(self, request, *args, **kwargs):
         view = ApiV1CliSchemaApiView.as_view()
         json_response = self.get_brokered_json_response(
-            self.namespace + ApiV1CliReverseViews.schema, view, request, *args, **kwargs
+            ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.schema, view, request, *args, **kwargs
         )
         json_response = json.dumps(json_response, indent=4)
         self.context["json_schema"] = json_response

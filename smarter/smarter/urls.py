@@ -13,15 +13,19 @@ from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail_transfer import urls as wagtailtransfer_urls
 
+from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.views.authentication import (
     AccountRegisterView,
     LoginView,
     LogoutView,
 )
+from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.chatbot.models import get_cached_chatbot_by_request
 from smarter.apps.dashboard.admin import restricted_site
+from smarter.apps.dashboard.const import namespace as dashboard_namespace
 from smarter.apps.dashboard.views.dashboard import ComingSoon
+from smarter.apps.docs.const import namespace as docs_namespace
 from smarter.apps.docs.views.webserver import (
     FaviconView,
     HealthzView,
@@ -29,6 +33,7 @@ from smarter.apps.docs.views.webserver import (
     RobotsTxtView,
     SitemapXmlView,
 )
+from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
 
 
@@ -106,18 +111,18 @@ urlpatterns = [
     # -----------------------------------
     # namespaced routes for apps
     # -----------------------------------
-    path("account/", include("smarter.apps.account.urls", namespace="account")),
-    path("api/", include("smarter.apps.api.urls", namespace="api")),
+    path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
+    path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
     path(
         "chatbots/",
         RedirectView.as_view(url="dashboard/", permanent=True),
     ),
-    path("workbench/", include("smarter.apps.prompt.urls", namespace="prompt")),
-    path("dashboard/", include("smarter.apps.dashboard.urls", namespace="dashboard")),
+    path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
+    path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
     path("admin/docs/", include("django.contrib.admindocs.urls")),
-    path("admin/", admin.site.urls, name=f"{name_prefix}_django_admin"),
-    path("docs/", include("smarter.apps.docs.urls", namespace="docs")),
-    path("cms/", include("smarter.apps.cms.urls")),
+    path("admin/", admin.site.urls, name="django_admin"),
+    path("docs/", include("smarter.apps.docs.urls", namespace=docs_namespace)),
+    path("cms/", include("smarter.apps.cms.urls", namespace=None)),
     # -----------------------------------
     # authentication routes
     # -----------------------------------
@@ -135,12 +140,14 @@ urlpatterns = [
     # -----------------------------------
     path("documents/", include(wagtaildocs_urls)),
     re_path(r"^wagtail-transfer/", include(wagtailtransfer_urls)),
-    re_path(r"", include(wagtail_urls)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+if not settings.DEBUG:
+    # only serve media files when not running locally in debug mode
+    urlpatterns += [re_path(r"", include(wagtail_urls))]
 
 # if settings.DEBUG:
 #     import debug_toolbar
-
 # urlpatterns += [
 #     path("__debug__/", include(debug_toolbar.urls)),
 # ]
