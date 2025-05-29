@@ -571,16 +571,17 @@ class ChatBotHelper(SmarterRequestMixin):
         self._chatbot_id: int = self._chatbot_id or chatbot_id or self.smarter_request_chatbot_id
         self._name: str = self._name or name or self.smarter_request_chatbot_name
 
-        logger.info(
-            "%s.__init__() initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
-            self.formatted_class_name,
-            self.url,
-            self.name,
-            self.chatbot_id,
-            self.user,
-            self.account,
-            self.session_key,
-        )
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
+            logger.info(
+                "%s.__init__() initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
+                self.formatted_class_name,
+                self.url,
+                self.name,
+                self.chatbot_id,
+                self.user,
+                self.account,
+                self.session_key,
+            )
 
         if self.chatbot:
             self.account = self.chatbot.account

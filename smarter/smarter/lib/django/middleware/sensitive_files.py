@@ -109,12 +109,6 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
     def __call__(self, request):
         request_path = request.path.lower()
 
-        # Allow specific patterns to pass through
-        for pattern in self.allowed_patterns:
-            if pattern.match(request_path):
-                logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
-                return self.get_response(request)
-
         # Check for sensitive files using glob patterns
         path_basename = request_path.rsplit("/", 1)[-1]
         for sensitive_file in self.sensitive_files:
@@ -124,6 +118,12 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
                 or fnmatch.fnmatch(request_path, sensitive_file)
                 or sensitive_file in request_path  # fallback for legacy entries
             ):
+                # Allow specific patterns to pass through
+                for pattern in self.allowed_patterns:
+                    if pattern.match(request_path):
+                        logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
+                        return self.get_response(request)
+
                 logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
                 return HttpResponseForbidden(
                     "Your request has been blocked by Smarter. Contact support@smarter.sh for assistance."
