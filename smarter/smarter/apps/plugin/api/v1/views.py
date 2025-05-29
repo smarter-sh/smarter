@@ -57,7 +57,7 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
         return redirect("/plugins/" + str(new_id) + "/")
 
 
-class PluginsListView(SmarterAuthenticatedListAPIView):
+class PluginListView(SmarterAuthenticatedListAPIView):
     """Plugins list view for smarter api."""
 
     serializer_class = PluginMetaSerializer

@@ -396,7 +396,7 @@ class ConnectionBase(TimestampedModel):
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(
-        help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
+        help_text="The name of the connection, without spaces. Example: 'hr_database', 'sales_db', 'inventory_api'.",
         max_length=255,
         validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
     )
@@ -417,19 +417,19 @@ class ConnectionBase(TimestampedModel):
     )
 
     @classmethod
-    @cache_results()
     def get_cached_connections_for_user(cls, user: UserType) -> list["ConnectionBase"]:
         """
         Return a list of all instances of all concrete subclasses of ConnectionBase.
         """
         account = get_cached_account_for_user(user)
         instances = []
+        logger.info("Fetching connections for user: %s, account: %s", user, account)
         for subclass in ConnectionBase.__subclasses__():
             instances.extend(subclass.objects.filter(account=account).order_by("name"))
-        return instances
+        logger.info("Fetched %d connections for user: %s", len(instances), user.username)
+        return instances or []
 
     @classmethod
-    @cache_results()
     def get_cached_connection_by_name_and_kind(
         cls, user: UserType, kind: str, name: str
     ) -> Union["ConnectionBase", None]:
@@ -625,6 +625,7 @@ class SqlConnection(ConnectionBase):
         """
         Establish a database connection using Standard TCP/IP.
         """
+        logger.info("Connecting to database using Standard TCP/IP: %s", self.get_connection_string())
         try:
             connection_handler = ConnectionHandler({"default": self.django_db_connection})
             connection: BaseDatabaseWrapper = connection_handler["default"]
@@ -710,6 +711,7 @@ class SqlConnection(ConnectionBase):
         """
         Establish a database connection based on the authentication method.
         """
+        logger.info("Connecting to database: %s", self.get_connection_string())
         if self.authentication_method == DBMSAuthenticationMethods.NONE.value:
             return self.connect_tcpip()
         elif self.authentication_method == DBMSAuthenticationMethods.TCPIP.value:
@@ -765,10 +767,13 @@ class SqlConnection(ConnectionBase):
 
     def get_connection_string(self):
         """Return the connection string."""
-        return f"{self.db_engine}://{self.username}@{self.hostname}:{self.port}/{self.database}"
+        password = "smarter"
+        userinfo = f"{self.username}:{password}" if password else self.username
+        return f"{self.db_engine}://{userinfo}@{self.hostname}:{self.port}/{self.database}"
 
     def validate(self) -> bool:
         super().validate()
+        logger.info("Validating SqlConnection: %s", self.name)
         return isinstance(self.connect(), BaseDatabaseWrapper)
 
     def save(self, *args, **kwargs):
