@@ -177,6 +177,36 @@ class PluginMeta(TimestampedModel):
         verbose_name = "Plugin"
         verbose_name_plural = "Plugins"
 
+    @classmethod
+    @cache_results()
+    def get_cached_plugins_for_user(cls, user: UserType) -> list["PluginMeta"]:
+        """
+        Return a list of all instances of PluginMeta for the given user.
+        This method caches the results to improve performance.
+        """
+        account = get_cached_account_for_user(user)
+        if not account:
+            return []
+        logger.info("Fetching plugins for user: %s, account: %s", user, account)
+        plugins = cls.objects.filter(account=account).order_by("name")
+        return list(plugins) or []
+
+    @classmethod
+    def get_cached_plugin_by_name(cls, user: UserType, name: str) -> Union["PluginMeta", None]:
+        """
+        Return a single instance of PluginMeta by name for the given user.
+        This method caches the results to improve performance.
+        """
+        account = get_cached_account_for_user(user)
+        if not account:
+            return None
+        logger.info("Fetching plugin by name: %s for user: %s, account: %s", name, user, account)
+        try:
+            return cls.objects.get(account=account, name=name)
+        except cls.DoesNotExist:
+            logger.warning("PluginMeta.get_cached_plugin_by_name: Plugin not found for name: %s", name)
+            return None
+
 
 class PluginSelector(TimestampedModel):
     """
@@ -416,6 +446,12 @@ class ConnectionBase(TimestampedModel):
         null=True,
     )
 
+    @property
+    @abstractmethod
+    def connection_string(self) -> str:
+        """Return the connection string."""
+        raise NotImplementedError
+
     @classmethod
     def get_cached_connections_for_user(cls, user: UserType) -> list["ConnectionBase"]:
         """
@@ -621,6 +657,10 @@ class SqlConnection(ConnectionBase):
             "OPTIONS": self.db_options,
         }
 
+    @property
+    def connection_string(self) -> str:
+        return self.get_connection_string(masked=True)
+
     def connect_tcpip(self) -> Union[BaseDatabaseWrapper, bool]:
         """
         Establish a database connection using Standard TCP/IP.
@@ -765,9 +805,12 @@ class SqlConnection(ConnectionBase):
             logger.error("proxy test connection failed: %s", e)
             return False
 
-    def get_connection_string(self):
+    def get_connection_string(self, masked: bool = False) -> str:
         """Return the connection string."""
-        password = "smarter"
+        if masked:
+            password = "******"
+        else:
+            password = self.password.get_secret() if self.password else None
         userinfo = f"{self.username}:{password}" if password else self.username
         return f"{self.db_engine}://{userinfo}@{self.hostname}:{self.port}/{self.database}"
 
@@ -1060,6 +1103,10 @@ class ApiConnection(ConnectionBase):
         null=True,
     )
 
+    @property
+    def connection_string(self) -> str:
+        return self.get_connection_string(masked=True)
+
     def test_proxy(self) -> bool:
         proxy_dict = {
             self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
@@ -1080,8 +1127,10 @@ class ApiConnection(ConnectionBase):
         except Exception:
             return False
 
-    def get_connection_string(self):
+    def get_connection_string(self, masked: bool = False) -> str:
         """Return the connection string."""
+        if masked:
+            return f"{self.base_url} (Auth: ******)"
         return f"{self.base_url} (Auth: {self.auth_method})"
 
     def save(self, *args, **kwargs):

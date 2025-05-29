@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """
 smarter.apps.plugin.views.connection
 This module contains views to implement the card-style list view
@@ -51,11 +52,8 @@ class ConnectionListView(SmarterAuthenticatedNeverCachedWebView):
     connections: list[ConnectionBase]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
-        logger.info("Fetching connections for user: %s", self.user.username)
         self.connections = ConnectionBase.get_cached_connections_for_user(self.user)
-        if not self.connections:
-            logger.warning("No connections found for user: %s", self.user.username)
-            return SmarterHttpResponseNotFound(request=request, error_message="No connections found")
-        context = {}
-        logger.info("rendering page connections for user: %s", self.user.username)
+        context = {
+            "connections": self.connections,
+        }
         return self.clean_http_response(request=request, template_path=self.template_path, context=context)
