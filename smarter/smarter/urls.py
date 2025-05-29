@@ -33,6 +33,7 @@ from smarter.apps.docs.views.webserver import (
     RobotsTxtView,
     SitemapXmlView,
 )
+from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
 
@@ -112,17 +113,18 @@ urlpatterns = [
     # namespaced routes for apps
     # -----------------------------------
     path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
+    path("admin/", admin.site.urls, name="django_admin"),
+    path("admin/docs/", include("django.contrib.admindocs.urls")),
     path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
     path(
         "chatbots/",
         RedirectView.as_view(url="dashboard/", permanent=True),
     ),
-    path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
-    path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
-    path("admin/docs/", include("django.contrib.admindocs.urls")),
-    path("admin/", admin.site.urls, name="django_admin"),
-    path("docs/", include("smarter.apps.docs.urls", namespace=docs_namespace)),
     path("cms/", include("smarter.apps.cms.urls", namespace=None)),
+    path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
+    path("docs/", include("smarter.apps.docs.urls", namespace=docs_namespace)),
+    path("plugin/", include("smarter.apps.plugin.urls", namespace=plugin_namespace)),
+    path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
     # -----------------------------------
     # authentication routes
     # -----------------------------------

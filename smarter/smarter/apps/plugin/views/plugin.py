@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 # Protected Views
 # ------------------------------------------------------------------------------
-class PluginView(SmarterAuthenticatedWebView):
+class PluginDetailView(SmarterAuthenticatedWebView):
     """Plugins view"""
 
-    template_path = "plugin/plugin.html"
+    template_path = "plugin/plugin_detail.html"
 
     # pylint: disable=unused-argument
     def get(self, request, *args, **kwargs):
@@ -24,7 +24,7 @@ class PluginView(SmarterAuthenticatedWebView):
         return self.clean_http_response(request, template_path=self.template_path)
 
 
-class PluginsView(SmarterAuthenticatedWebView):
+class PluginsListView(SmarterAuthenticatedWebView):
     """Plugins view"""
 
-    template_path = "plugin/plugins.html"
+    template_path = "plugin/plugins_list.html"
