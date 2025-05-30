@@ -15,3 +15,5 @@ class ApiV1CliTestBase(ApiV1TestBase):
     that we need to implement in order to test the Api v1 CLI commands for
     User.
     """
+
+    namespace = "api:v1:cli:"

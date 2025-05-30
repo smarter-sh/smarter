@@ -75,12 +75,13 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
             value="smarter",
         )
         sqlconnection = SqlConnection.objects.create(
+            account=self.account,
             name=self.name,
+            kind=KIND,
+            description="local mysql test sqlconnection - ",
             db_engine=DbEngines.MYSQL.value,
             authentication_method=DBMSAuthenticationMethods.TCPIP.value,
             timeout=300,
-            account=self.account,
-            description="local mysql test sqlconnection - ",
             hostname="smarter-mysql",
             port=3306,
             database="smarter",

@@ -70,6 +70,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         apiconnection = ApiConnection.objects.create(
             account=self.account,
             name=self.name,
+            kind=KIND,
             description="test apiconnection",
             base_url="http://localhost:8000/api/v1/cli/example_manifest/plugin/",
             api_key=self.api_key,

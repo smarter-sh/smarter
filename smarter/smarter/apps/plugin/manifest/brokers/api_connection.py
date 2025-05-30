@@ -108,6 +108,8 @@ class SAMApiConnectionBroker(AbstractBroker):
         config_dump = self.camel_to_snake(config_dump)
         config_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
         config_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
+        config_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
+        config_dump[SAMKeys.KIND.value] = self.kind
 
         # retrieve the apiKey Secret
         api_key_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
@@ -198,6 +200,7 @@ class SAMApiConnectionBroker(AbstractBroker):
                 model_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
                 model_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
                 model_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
+                model_dump[SAMKeys.KIND.value] = self.kind
                 model_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = self.api_key_secret
 
                 self._api_connection = ApiConnection(**model_dump)

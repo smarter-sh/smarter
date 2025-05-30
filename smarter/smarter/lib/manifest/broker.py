@@ -161,7 +161,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         self._name = kwargs.get("name", None)
         self._kind = kwargs.get("kind", None)
         self._loader = kwargs.get("loader", None)
-        self._manifest = kwargs.get("manifest", None)
+        manifest = kwargs.get("manifest", None)
         file_path = kwargs.get("file_path", None)
         url = kwargs.get("url", None)
 
@@ -172,6 +172,19 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             )
         self._api_version = api_version
 
+        try:
+            self._loader = SAMLoader(
+                api_version=api_version,
+                kind=self.kind,
+                manifest=manifest,
+                file_path=file_path,
+                url=url,
+            )
+            if self._loader:
+                self._validated = True
+        except SAMLoaderError as e:
+            logger.error("%s.__init__() failed to initialize loader: %s", self.formatted_class_name, str(e))
+
         if self.user:
             logger.info("%s.__init__() received user: %s", self.formatted_class_name, self.user_profile)
 
@@ -180,24 +193,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         if self._loader:
             logger.info("%s.__init__() received a %s loader", self.formatted_class_name, self._loader.manifest_kind)
-        else:
-            try:
-                self._loader = SAMLoader(
-                    api_version=api_version,
-                    kind=self._kind,
-                    manifest=self._manifest,
-                    file_path=file_path,
-                    url=url,
-                )
-                if self._loader:
-                    self._validated = True
-                    logger.info(
-                        "%s.__init__() loader initialized with manifest kind: %s",
-                        self.formatted_class_name,
-                        self._loader.manifest_kind,
-                    )
-            except SAMLoaderError as e:
-                logger.error("%s.__init__() failed to initialize loader: %s", self.formatted_class_name, str(e))
+            self._validated = True
+            logger.info(
+                "%s.__init__() loader initialized with manifest kind: %s",
+                self.formatted_class_name,
+                self._loader.manifest_kind,
+            )
 
         self._kind = self._kind or self.loader.manifest_kind if self.loader else None
         self._created = False

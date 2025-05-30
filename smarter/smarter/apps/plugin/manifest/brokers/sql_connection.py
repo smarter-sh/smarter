@@ -112,6 +112,22 @@ class SAMSqlConnectionBroker(AbstractBroker):
         config_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
         config_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
         config_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
+        config_dump[SAMKeys.KIND.value] = self.kind
+
+        # retrieve the password Secret
+        password = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
+        config_dump[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.get_or_create_secret(
+            user_profile=self.user_profile, name=config_dump[password]
+        )
+
+        # retrieve the proxyUsername Secret, if it exists
+        proxy_password_name = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
+        if config_dump.get(proxy_password_name):
+            config_dump[proxy_password_name] = self.get_or_create_secret(
+                user_profile=self.user_profile,
+                name=config_dump[proxy_password_name],
+            )
+
         return config_dump
 
     @property
@@ -188,6 +204,7 @@ class SAMSqlConnectionBroker(AbstractBroker):
                 model_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
                 model_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
                 model_dump[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.password_secret
+                model_dump[SAMKeys.KIND.value] = self.kind
                 self._sql_connection = SqlConnection(**model_dump)
                 self._sql_connection.save()
                 self._created = True
@@ -316,6 +333,9 @@ class SAMSqlConnectionBroker(AbstractBroker):
             password_name = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
             proxy_password_name = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
             data = self.manifest_to_django_orm()
+
+            logger.info("apply() django model dump: %s", data)
+
             for field in readonly_fields:
                 data.pop(field, None)
             for key, value in data.items():
