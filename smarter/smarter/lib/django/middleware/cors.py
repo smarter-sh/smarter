@@ -19,8 +19,8 @@ from django.http.response import HttpResponseBase
 
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)

@@ -9,13 +9,13 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseServerError,
 )
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from ..models import ChatBot, get_cached_chatbot_by_request
 

@@ -6,10 +6,10 @@ from django.core.handlers.wsgi import WSGIRequest
 
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django import waffle
 from smarter.lib.django.user import UserType
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Account, UserProfile
 from .utils import (

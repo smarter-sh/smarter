@@ -15,9 +15,9 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.utils import mask_string
 from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 

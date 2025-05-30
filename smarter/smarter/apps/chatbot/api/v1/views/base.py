@@ -19,10 +19,10 @@ from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.prompt.models import ChatHelper
 from smarter.apps.prompt.providers.providers import chat_providers
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,

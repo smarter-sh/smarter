@@ -9,9 +9,9 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from requests import Response
 
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import (
     ApiConnection,

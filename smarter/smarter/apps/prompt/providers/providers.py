@@ -16,11 +16,11 @@ from django.core.cache import cache
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.prompt.models import Chat
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.user import UserType
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base_classes import OpenAICompatibleChatProvider
 from .googleai.classes import GoogleAIChatProvider
