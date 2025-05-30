@@ -32,12 +32,13 @@ from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.common.utils import hash_factory
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 # Match netloc: chatbot_name.account_number.api.environment_api_domain

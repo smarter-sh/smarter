@@ -3,11 +3,9 @@
 
 import json
 import logging
-import re
 import traceback
 from http import HTTPStatus
 
-import waffle
 from django.core.cache import cache
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest, JsonResponse
@@ -20,8 +18,10 @@ from smarter.apps.prompt.models import Chat, ChatHistory
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,

@@ -24,7 +24,6 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
     SMARTER_DEFAULT_CACHE_TIMEOUT,
-    SmarterWaffleSwitches,
 )
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.lib.cache import cache_request, cache_results
@@ -32,6 +31,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
 
 from .signals import (

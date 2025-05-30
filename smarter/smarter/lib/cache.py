@@ -9,9 +9,10 @@ from urllib.parse import urlparse
 from django.core.cache import cache
 from django.core.handlers.wsgi import WSGIRequest
 
-from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT, SmarterWaffleSwitches
+from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
 from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)
