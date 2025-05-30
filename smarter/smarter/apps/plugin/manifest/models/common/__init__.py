@@ -21,14 +21,14 @@ class UrlParam(BaseModel):
     def validate_name(cls, v):
         v = str(v)
         if not SmarterValidator.is_valid_cleanstring(v):
-            raise ValueError("Key must be a valid cleanstring.")
+            raise SmarterValueError("Key must be a valid cleanstring.")
         return v
 
     @field_validator("value")
     def validate_value(cls, v):
         v = str(v)
         if not SmarterValidator.is_valid_cleanstring(v):
-            raise ValueError("Value must be a valid cleanstring.")
+            raise SmarterValueError("Value must be a valid cleanstring.")
         return v
 
 
@@ -116,5 +116,7 @@ class Parameter(BaseModel):
             return self
         # pylint: disable=E1135
         if self.default not in self.enum:
-            raise ValueError(f"The default value '{self.default}' must be one of the allowed enum values: {self.enum}")
+            raise SmarterValueError(
+                f"The default value '{self.default}' must be one of the allowed enum values: {self.enum}"
+            )
         return self

@@ -281,6 +281,7 @@ class TestApiConnection(TestConnectionBase):
         model_dump["account"] = self.account
         model_dump["name"] = self.model.metadata.name
         model_dump["description"] = self.model.metadata.description
+        model_dump["kind"] = self.model.kind
 
         if self.model.spec.connection.apiKey:
             clear_api_key = model_dump.pop("apiKey")
