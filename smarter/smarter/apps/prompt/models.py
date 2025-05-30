@@ -13,11 +13,12 @@ from rest_framework import serializers
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)

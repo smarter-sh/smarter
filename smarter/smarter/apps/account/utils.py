@@ -18,13 +18,14 @@ from functools import lru_cache
 
 from django.contrib.auth.models import AbstractUser, AnonymousUser
 
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterWaffleSwitches
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.user import User, UserType, get_resolved_user
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Account, UserProfile
 

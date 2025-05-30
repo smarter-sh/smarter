@@ -42,7 +42,7 @@ from smarter.apps.prompt.models import Chat, ChatHelper
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.lib.cache import cache_results
@@ -52,6 +52,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseServerError,
 )
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import (
