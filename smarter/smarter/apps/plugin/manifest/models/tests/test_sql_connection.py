@@ -299,6 +299,7 @@ class TestSqlConnection(TestConnectionBase):
         model_dump["name"] = self.model.metadata.name
         model_dump["account"] = self.account
         model_dump["description"] = self.model.metadata.description
+        model_dump["kind"] = self.model.kind
 
         if self.model.spec.connection.password:
             clear_password = model_dump.pop("password")
@@ -377,6 +378,7 @@ class TestSqlConnection(TestConnectionBase):
         model_dump["account"] = self.account
         model_dump["name"] = self.model.metadata.name
         model_dump["description"] = self.model.metadata.description
+        model_dump["kind"] = self.model.kind
 
         if self.model.spec.connection.password:
             clear_password = model_dump.pop("password")
@@ -463,6 +465,7 @@ class TestSqlConnection(TestConnectionBase):
         model_dump["account"] = self.account
         model_dump["name"] = self.model.metadata.name
         model_dump["description"] = self.model.metadata.description
+        model_dump["kind"] = self.model.kind
 
         if self.model.spec.connection.password:
             clear_password = model_dump.pop("password")

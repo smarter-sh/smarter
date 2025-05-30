@@ -58,6 +58,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         connection_model_dump["account"] = cls.account
         connection_model_dump["name"] = connection_model.metadata.name
         connection_model_dump["description"] = connection_model.metadata.description
+        connection_model_dump["kind"] = connection_model.kind
 
         if connection_model.spec.connection.apiKey:
             clear_api_key = connection_model_dump.pop("apiKey")
@@ -162,6 +163,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_manifest = connection_manifest
         cls.connection_model = connection_model
         connection_model_dump = camel_to_snake_dict(connection_model_dump)
+        connection_model_dump["kind"] = connection_model.kind
         cls.connection_django_model = SqlConnection(**connection_model_dump)
         cls.connection_django_model.save()
 
