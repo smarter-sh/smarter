@@ -400,9 +400,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.info(
+            "%s.describe() called %s with args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs
+        )
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command, *args, **kwargs)
+
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()

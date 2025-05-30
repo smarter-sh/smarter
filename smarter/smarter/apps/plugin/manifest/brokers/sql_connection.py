@@ -8,8 +8,7 @@ from typing import Type
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
-from smarter.apps.account.models import Account, Secret
-from smarter.apps.account.utils import get_cached_account
+from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
     SAMSqlConnectionSpecKeys,
