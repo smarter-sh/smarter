@@ -11,7 +11,10 @@ from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddl
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseBadRequest
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseBadRequest,
+    SmarterHttpResponseServerError,
+)
 from smarter.lib.django.validators import SmarterValidator
 
 from ..models import ChatBot, get_cached_chatbot_by_request
@@ -45,6 +48,12 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # these typically originate from health checks from load balancers.
         # ---------------------------------------------------------------------
         host = request.get_host()
+        if not host:
+            return SmarterHttpResponseServerError(
+                request=request,
+                error_message="Internal error (500) - could not parse request.",
+            )
+
         internal_ip_prefixes = ["192.168."]
         if any(host.startswith(prefix) for prefix in internal_ip_prefixes):
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
@@ -57,6 +66,18 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
         # 2.) If the request is from a local host, allow it to pass through
         # ---------------------------------------------------------------------
+        host_no_port = host.split(":")[0]
+        base_host = host_no_port.split(".")[-1]
+        if base_host in [h.rsplit(".", maxsplit=1)[-1] for h in SmarterValidator.LOCAL_HOSTS]:
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
+                logger.info(
+                    "%s %s base host matched in SmarterValidator.LOCAL_HOSTS: %s",
+                    self.formatted_class_name,
+                    host,
+                    SmarterValidator.LOCAL_HOSTS,
+                )
+            return None
+
         if host in SmarterValidator.LOCAL_HOSTS:
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info(

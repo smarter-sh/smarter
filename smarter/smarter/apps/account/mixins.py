@@ -98,7 +98,10 @@ class AccountMixin(SmarterHelperMixin):
                         self.user_profile,
                     )
             else:
-                logger.warning("%s.__init__(): did not find a user in the request object", self.formatted_class_name)
+                if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                    logger.warning(
+                        "%s.__init__(): did not find a user in the request object", self.formatted_class_name
+                    )
             if not self._account:
                 # if the account is not set, then try to get it from the request
                 # by parsing the URL.
@@ -114,11 +117,12 @@ class AccountMixin(SmarterHelperMixin):
                     if self._account and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                         logger.info("%s.__init__(): set account to %s", self.formatted_class_name, self._account)
                 else:
-                    logger.warning(
-                        "%s.__init__(): unable to locate an account number from the request url %s",
-                        self.formatted_class_name,
-                        url,
-                    )
+                    if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                        logger.warning(
+                            "%s.__init__(): did not find an account number in the request url %s",
+                            self.formatted_class_name,
+                            url,
+                        )
 
         if self._user and self._account:
             if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
