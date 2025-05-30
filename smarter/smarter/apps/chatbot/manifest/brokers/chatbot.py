@@ -241,7 +241,7 @@ class SAMChatbotBroker(AbstractBroker):
     def model_class(self) -> ChatBot:
         return ChatBot
 
-    def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {
@@ -292,7 +292,7 @@ class SAMChatbotBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         # name: str = None, all_objects: bool = False, tags: str = None
@@ -344,7 +344,7 @@ class SAMChatbotBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=data)
 
     # pylint: disable=too-many-branches
-    def apply(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -463,12 +463,12 @@ class SAMChatbotBroker(AbstractBroker):
             # done! return the response. Django will take care of committing the transaction
             return self.json_response_ok(command=command, data={})
 
-    def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         if self.chatbot:
@@ -490,7 +490,7 @@ class SAMChatbotBroker(AbstractBroker):
             f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
         )
 
-    def delete(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.chatbot:
@@ -512,7 +512,7 @@ class SAMChatbotBroker(AbstractBroker):
             f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
         )
 
-    def deploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.chatbot:
@@ -533,7 +533,7 @@ class SAMChatbotBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
-    def undeploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.chatbot:
@@ -554,7 +554,7 @@ class SAMChatbotBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
-    def logs(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         data = {}
