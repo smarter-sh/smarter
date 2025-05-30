@@ -203,10 +203,17 @@ class SAMApiConnectionBroker(AbstractBroker):
                 self._api_connection = ApiConnection(**model_dump)
                 self._api_connection.save()
                 self._created = True
+            else:
+                logger.error(
+                    "%s ApiConnection %s not found for account %s",
+                    self.formatted_class_name,
+                    self.name or "(name is missing)",
+                    self.account or "(account is missing)",
+                )
 
         return self._api_connection
 
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example ApiConnection manifest.
         """
@@ -243,7 +250,7 @@ class SAMApiConnectionBroker(AbstractBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         name: str = kwargs.get(SAMMetadataKeys.NAME.value, None)
@@ -279,7 +286,7 @@ class SAMApiConnectionBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -311,12 +318,12 @@ class SAMApiConnectionBroker(AbstractBroker):
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data={})
 
-    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Return a JSON response with the manifest data."""
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
@@ -362,7 +369,7 @@ class SAMApiConnectionBroker(AbstractBroker):
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.api_connection:
@@ -373,17 +380,17 @@ class SAMApiConnectionBroker(AbstractBroker):
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Logs not implemented", thing=self.kind, command=command)

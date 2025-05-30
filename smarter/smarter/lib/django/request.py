@@ -119,6 +119,7 @@ class SmarterRequestMixin(AccountMixin):
 
     # pylint: disable=W0613
     def __init__(self, request: WSGIRequest, *args, **kwargs):
+        super().__init__(request, *args, **kwargs)
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
@@ -127,7 +128,7 @@ class SmarterRequestMixin(AccountMixin):
             logger.info(
                 "SmarterRequestMixin().__init__() - initializing with request=%s, session_key=%s", request, session_key
             )
-        request = request or kwargs.pop("request", None)
+        request = request or kwargs.get("request", None)
         if not request and args:
             request = args[0]
 
@@ -143,15 +144,6 @@ class SmarterRequestMixin(AccountMixin):
 
         if session_key is not None:
             self.session_key = session_key
-
-        # pop the account, user and user_profile from kwargs, if they exist.
-        # this is to allow the class to be used in a context where these are not
-        # provided, such as in a Django View where the request object is passed
-        # but the account, user and user_profile are not.
-        account = kwargs.pop("account", None)
-        user = kwargs.pop("user", None)
-        user_profile = kwargs.pop("user_profile", None)
-        super().__init__(*args, request=request, account=account, user=user, user_profile=user_profile, **kwargs)
 
         url = self.smarter_build_absolute_uri(self.smarter_request)
         if url:
@@ -207,7 +199,9 @@ class SmarterRequestMixin(AccountMixin):
             self.dump()
 
         if self.smarter_request_ready:
-            self.helper_logger(f"__init__() initialized successfully url={self.url}, session_key={self.session_key}")
+            self.helper_logger(
+                f"__init__() initialized successfully url={self.url}, session_key={self.session_key}, user={self.user_profile}"
+            )
         else:
             logger.error(
                 "%s.__init__() request is not ready. Please check the request object and ensure it is valid.",
@@ -697,6 +691,8 @@ class SmarterRequestMixin(AccountMixin):
         - https://example.3141-5926-5359.api.smarter.sh/
         - http://example.3141-5926-5359.api.localhost:8000/
         """
+        if not self._url_urlunparse_without_params:
+            return False
         if not self.smarter_request:
             return False
         if not smarter_settings.environment_api_domain in self.url:
@@ -704,12 +700,13 @@ class SmarterRequestMixin(AccountMixin):
         if account_number_from_url(self.url):
             return True
 
-        if netloc_pattern_named_url.match(self._url.netloc):
-            return True
-
         # Accept root path or root with trailing slash
         if self._url.path not in ("", "/"):
             return False
+
+        if netloc_pattern_named_url.match(self._url.netloc):
+            return True
+
         return False
 
     @cached_property

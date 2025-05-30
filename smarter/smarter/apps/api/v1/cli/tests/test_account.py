@@ -73,7 +73,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
     def test_example_manifest(self) -> None:
         """Test example-manifest command"""
 
-        path = reverse(self.namespace + ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK.value)
         self.validate_response(response)
@@ -87,7 +87,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
 
     def test_describe(self) -> None:
         """Test describe command"""
-        path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK.value)
         self.validate_response(response)
@@ -99,7 +99,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         """Test apply command"""
 
         # retrieve the current manifest by calling 'describe'
-        path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -127,13 +127,13 @@ class TestApiCliV1Account(ApiV1CliTestBase):
 
         # convert the data back to yaml, since this is what the cli usually sends
         manifest = yaml.dump(data)
-        path = reverse(self.namespace + ApiV1CliReverseViews.apply)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, manifest=manifest)
         self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
 
         # requery and validate our changes
-        path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
@@ -182,7 +182,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
 
             return True
 
-        path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -214,7 +214,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
 
     def test_deploy(self) -> None:
         """Test deploy command"""
-        path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -229,7 +229,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
 
     def test_undeploy(self) -> None:
         """Test undeploy command"""
-        path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -244,7 +244,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
 
     def test_logs(self) -> None:
         """Test logs command"""
-        path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -253,7 +253,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
 
     def test_delete(self) -> None:
         """Test delete command"""
-        path = reverse(self.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good

@@ -1,3 +1,7 @@
+"""
+Base class for Api v1 CLI tests.
+"""
+
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 
 
@@ -11,5 +15,3 @@ class ApiV1CliTestBase(ApiV1TestBase):
     that we need to implement in order to test the Api v1 CLI commands for
     User.
     """
-
-    namespace = "api:v1:cli:"

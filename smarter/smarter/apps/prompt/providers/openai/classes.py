@@ -25,8 +25,9 @@ class OpenAIChatProvider(OpenAICompatibleChatProvider):
     OpenAI chat provider.
     """
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__(
+            *args,
             provider=PROVIDER_NAME,
             base_url=BASE_URL,
             api_key=smarter_settings.openai_api_key.get_secret_value(),
@@ -36,4 +37,5 @@ class OpenAIChatProvider(OpenAICompatibleChatProvider):
             default_max_tokens=smarter_settings.llm_default_max_tokens,
             valid_chat_completion_models=VALID_CHAT_COMPLETION_MODELS,
             add_built_in_tools=True,
+            **kwargs,
         )

@@ -466,22 +466,23 @@ class ConnectionBase(TimestampedModel):
         return instances or []
 
     @classmethod
+    @cache_results()
     def get_cached_connection_by_name_and_kind(
-        cls, user: UserType, kind: str, name: str
+        cls, user: UserType, kind: SAMKinds, name: str
     ) -> Union["ConnectionBase", None]:
         """
         Return a single instance of a concrete subclass of ConnectionBase by name.
         """
         account = get_cached_account_for_user(user)
-        if not kind or not kind in [SAMKinds.SQL_CONNECTION.value, SAMKinds.API_CONNECTION.value]:
+        if not kind or not kind in [SAMKinds.SQL_CONNECTION, SAMKinds.API_CONNECTION]:
             raise SmarterValueError(f"Unsupported connection kind: {kind}")
-        if kind == SAMKinds.SQL_CONNECTION.value:
+        if kind == SAMKinds.SQL_CONNECTION:
             try:
                 return SqlConnection.objects.get(account=account, name=name)
             except SqlConnection.DoesNotExist:
                 pass
 
-        elif kind == SAMKinds.API_CONNECTION.value:
+        elif kind == SAMKinds.API_CONNECTION:
             try:
                 return ApiConnection.objects.get(account=account, name=name)
             except ApiConnection.DoesNotExist:

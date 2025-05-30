@@ -213,7 +213,7 @@ class SAMSecretBroker(AbstractBroker):
     def model_class(self):
         return Secret
 
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         current_date = datetime.now(timezone.utc)
@@ -241,7 +241,7 @@ class SAMSecretBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
@@ -281,7 +281,7 @@ class SAMSecretBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -311,12 +311,12 @@ class SAMSecretBroker(AbstractBroker):
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         param_name = request.GET.get("name", None)
@@ -347,7 +347,7 @@ class SAMSecretBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.secret:
@@ -363,17 +363,17 @@ class SAMSecretBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)

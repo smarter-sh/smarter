@@ -60,8 +60,8 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         :param name: Name of the chat
         :param uid: UID of the client, created from the machine mac address and the hostname
         """
-        uid: str = request.POST.get("uid", None)
-        session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
+        uid: str = request.POST.get("uid")
+        session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
         logger.info("%s Chat config view for chat %s and client %s.", self.formatted_class_name, name, uid)
 
         response = ChatConfigView.as_view()(request, name=name, uid=uid, session_key=session_key)
