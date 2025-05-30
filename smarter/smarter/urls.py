@@ -64,11 +64,9 @@ def root_redirector(request: WSGIRequest) -> RedirectView:
     2. the dashboard if the user is authenticated,
     3. otherwise to the Wagtail docs homepage.
     """
-    logger.info("root_redirector() called with request: %s", request)
     # 1. check if the url is a chatbot endpoint
     chatbot = get_cached_chatbot_by_request(request=request)
     if chatbot:
-        logger.info("root_redirector() Chatbot found: %s - %s", chatbot.id, chatbot.name)
         view = DefaultChatbotApiView.as_view()
         return view(request, chatbot_id=chatbot.id)
 
@@ -84,12 +82,11 @@ def config_redirector(request: WSGIRequest) -> ChatConfigView:
     """
     Handles traffic sent to the config endpoints of the website.
     """
-    logger.info("config_redirector() called with request: %s", request)
     chatbot = get_cached_chatbot_by_request(request=request)
     if chatbot:
-        logger.info("config_redirector() Chatbot found: %s - %s", chatbot.id, chatbot.name)
         view = ChatConfigView.as_view()
         return view(request, chatbot_id=chatbot.id)
+    return redirect("/docs/")
 
 
 urlpatterns = [

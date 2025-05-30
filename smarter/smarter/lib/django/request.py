@@ -14,6 +14,7 @@ known url patterns for Smarter chatbots. key features include:
 import hashlib
 import json
 import logging
+import re
 import warnings
 from datetime import datetime
 from functools import cached_property
@@ -39,6 +40,10 @@ from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 
 
+# Match netloc: chatbot_name.account_number.api.environment_api_domain
+netloc_pattern_named_url = re.compile(
+    rf"^(?P<chatbot_name>[a-zA-Z0-9\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.api\.{re.escape(smarter_settings.environment_domain)}(:\d+)?$"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -419,6 +424,7 @@ class SmarterRequestMixin(AccountMixin):
     def smarter_request_chatbot_name(self) -> str:
         """
         Extract the chatbot name from the URL.
+        http://example.3141-5926-5359.api.localhost:8000/config
         """
         if not self.is_chatbot:
             self.helper_logger("smarter_request_chatbot_name() - not a chatbot")
@@ -686,7 +692,9 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_chatbot_named_url(self) -> bool:
         """
-        Returns True if the url is of the form https://example.3141-5926-5359.api.smarter.sh/
+        Returns True if the url is of the form
+        - https://example.3141-5926-5359.api.smarter.sh/
+        - http://example.3141-5926-5359.api.localhost:8000/
         """
         if not self.smarter_request:
             return False
@@ -694,6 +702,13 @@ class SmarterRequestMixin(AccountMixin):
             return False
         if account_number_from_url(self.url):
             return True
+
+        if netloc_pattern_named_url.match(self._url.netloc):
+            return True
+
+        # Accept root path or root with trailing slash
+        if self._url.path not in ("", "/"):
+            return False
         return False
 
     @cached_property
