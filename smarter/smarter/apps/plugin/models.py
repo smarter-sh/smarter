@@ -130,6 +130,15 @@ class PluginMeta(TimestampedModel):
     per account and validates that the plugin name is in snake_case format.
     """
 
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        unique_together = (
+            "account",
+            "name",
+        )
+        verbose_name = "Plugin"
+        verbose_name_plural = "Plugins"
+
     PLUGIN_CLASSES = [
         (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
         (SAMPluginCommonMetadataClassValues.SQL.value, SAMPluginCommonMetadataClassValues.SQL.value),
@@ -168,14 +177,20 @@ class PluginMeta(TimestampedModel):
         self.validate()
         super().save(*args, **kwargs)
 
-    # pylint: disable=missing-class-docstring
-    class Meta:
-        unique_together = (
-            "account",
-            "name",
-        )
-        verbose_name = "Plugin"
-        verbose_name_plural = "Plugins"
+    @property
+    def kind(self) -> SAMKinds:
+        """
+        Return the kind of the plugin based on its class.
+        This is used to determine how the plugin should be handled.
+        """
+        if self.plugin_class == SAMPluginCommonMetadataClassValues.STATIC.value:
+            return SAMKinds.STATIC_PLUGIN
+        elif self.plugin_class == SAMPluginCommonMetadataClassValues.SQL.value:
+            return SAMKinds.SQL_PLUGIN
+        elif self.plugin_class == SAMPluginCommonMetadataClassValues.API.value:
+            return SAMKinds.API_PLUGIN
+        else:
+            raise SmarterValueError(f"Unsupported plugin class: {self.plugin_class}")
 
     @classmethod
     @cache_results()

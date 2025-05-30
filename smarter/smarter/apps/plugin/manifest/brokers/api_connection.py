@@ -339,6 +339,7 @@ class SAMApiConnectionBroker(AbstractBroker):
                 data = self.snake_to_camel(data)
                 data.pop("id")
                 data.pop(SAMMetadataKeys.NAME.value)
+                data[SAMMetadataKeys.ACCOUNT.value] = self.api_connection.account.account_number
                 data.pop(SAMMetadataKeys.DESCRIPTION.value)
                 data[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = (
                     self.api_key_secret.name if self.api_key_secret else None
@@ -357,7 +358,7 @@ class SAMApiConnectionBroker(AbstractBroker):
                     },
                     SAMKeys.SPEC.value: {SAMApiConnectionSpecKeys.CONNECTION.value: data},
                     SAMKeys.STATUS.value: {
-                        SAMApiConnectionStatusKeys.CONNECTION_STRING.value: self.api_connection.get_connection_string(),
+                        SAMApiConnectionStatusKeys.CONNECTION_STRING.value: self.api_connection.connection_string,
                         SAMApiConnectionStatusKeys.IS_VALID.value: is_valid,
                     },
                 }

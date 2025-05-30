@@ -39,8 +39,6 @@ class ConnectionDetailView(DocsBaseView):
         super().setup(request, *args, **kwargs)
         self.name = kwargs.pop("name", None)
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
-        # kwargs[SAMKeys.KIND.value] = self.kind
-        # self.kwargs = kwargs.copy()
         if self.kind is None:
             logger.error("Connection kind is required but not provided.")
             return SmarterHttpResponseNotFound(request=request, error_message="Connection kind is required")
@@ -77,8 +75,6 @@ class ConnectionDetailView(DocsBaseView):
         context = {
             "manifest": yaml_response,
             "page_title": self.name,
-            "kind": self.kind,
-            "connection": self.connection,
         }
         return render(request, self.template_path, context=context)
 
