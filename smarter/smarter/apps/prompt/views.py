@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """
 Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
@@ -14,11 +15,7 @@ from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
-
-# from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-
-# from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authentication import SessionAuthentication
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
@@ -61,9 +58,6 @@ from smarter.lib.journal.http import (
 )
 
 from .signals import chat_config_invoked, chat_session_invoked
-
-
-# from rest_framework.permissions import IsAuthenticated
 
 
 MAX_RETURNED_PLUGINS = 10
@@ -152,7 +146,7 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
     """
 
     authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
-    # permission_classes = (IsAuthenticated,)
+    # permission_classes = (SmarterAuthenticatedPermissionClass,)
 
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
@@ -206,8 +200,8 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
     def setup(self, request: WSGIRequest, *args, chatbot_id: int = None, **kwargs):
 
         super().setup(request, *args, **kwargs)
-        name = kwargs.pop("name", None)
-        session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
+        name = kwargs.get("name", None)
+        session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
 
         try:
             self._chatbot = get_cached_chatbot_by_request(request=request)

@@ -13,7 +13,6 @@ from django.core.management.base import BaseCommand
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
@@ -26,14 +25,13 @@ from smarter.lib.django.validators import SmarterValidator
 
 
 # pylint: disable=E1101,too-many-instance-attributes
-class Command(BaseCommand, AccountMixin):
+class Command(BaseCommand):
     """Deploy customer APIs from a GitHub repository of plugin YAML files organized by customer API name."""
 
     _url: str = None
 
     def __init__(self, stdout=None, stderr=None, no_color=False, force_color=False):
         super().__init__(stdout, stderr, no_color, force_color)
-        AccountMixin.__init__(self)
         self._url = None
 
     @property

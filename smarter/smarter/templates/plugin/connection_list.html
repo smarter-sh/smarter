@@ -36,7 +36,7 @@
           <!--begin::Col Smarter connection Card-->
           <div class="col-lg-6 mb-4 p-5">
             <!--begin::connection card-->
-            <a href="{% url 'plugin:connection_by_name' connection.kind connection.name %}">
+            <a href="{% url 'plugin:connection_by_name' connection.kind.lower() connection.name %}">
               <div id="connection_id_{{ connection.id }}" class="card card-flush h-xl-100 connection-card {% if connection.account.id == 1 %}smarter-connection-card{% else %}user-connection-card{% endif %}">
                 <!--begin::Header-->
                 <div class="p-5">

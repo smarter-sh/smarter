@@ -9,10 +9,10 @@ from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.drf.view_helpers import SmarterAuthenticatedPermissionClass
 
 from ..token_authentication import SmarterTokenAuthentication
 
@@ -31,7 +31,7 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
     Allows access only to authenticated users.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
     def initial(self, request, *args, **kwargs):
@@ -48,7 +48,7 @@ class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
     Allows access only to authenticated users.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
     def initial(self, request, *args, **kwargs):
@@ -68,7 +68,7 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
     Allows access only to admins.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
     def initial(self, request, *args, **kwargs):
@@ -91,7 +91,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
     Allows access only to admins.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
     def initial(self, request, *args, **kwargs):

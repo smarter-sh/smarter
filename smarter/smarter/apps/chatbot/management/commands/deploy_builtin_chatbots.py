@@ -12,7 +12,6 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 from rest_framework.test import force_authenticate
 
-from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
 from smarter.apps.chatbot.models import ChatBot
@@ -23,7 +22,7 @@ from smarter.lib.django.validators import SmarterValidator
 
 
 # pylint: disable=E1101
-class Command(BaseCommand, AccountMixin):
+class Command(BaseCommand):
     """
     Deploy a customer API. Provide either an account number or a company name.
     Deploys to a URL of the form [chatbot-name].####-####-####.api.smarter.sh/chatbot/
@@ -33,7 +32,6 @@ class Command(BaseCommand, AccountMixin):
 
     def __init__(self, stdout=None, stderr=None, no_color=False, force_color=False):
         super().__init__(stdout, stderr, no_color, force_color)
-        AccountMixin.__init__(self)
         self._url = None
 
     @property

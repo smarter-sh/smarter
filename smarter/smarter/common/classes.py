@@ -32,6 +32,9 @@ class SmarterHelperMixin:
     A generic mixin with helper functions.
     """
 
+    def __init__(self, *args, **kwargs):
+        pass
+
     @property
     def formatted_class_name(self) -> str:
         """
@@ -75,9 +78,11 @@ class SmarterHelperMixin:
                 return url
         except (AttributeError, KeyError):
             logger.warning(
-                "%s.smarter_build_absolute_uri() failed to call request.get_host() or request.get_full_path() with error: %s",
+                "%s.smarter_build_absolute_uri() failed to call request.get_host() or request.get_full_path() with error: %s, request: %s, %s",
                 self.formatted_class_name,
                 formatted_text("AttributeError or KeyError"),
+                request,
+                type(request).__name__,
             )
 
         try:

@@ -14,6 +14,7 @@ from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     get_cached_user_profile,
 )
+from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.lib.drf.models import SmarterAuthToken
@@ -117,7 +118,7 @@ class Command(BaseCommand):
             response = json.dumps(response_json, indent=4) + "\n"
             self.stdout.write("response: " + self.style.SUCCESS(response))
 
-        path = reverse("api:v1:cli:apply_view", kwargs={})
+        path = reverse(ApiV1CliReverseViews.namespace + "apply_view", kwargs={})
         get_response(path, manifest=self.data)
 
         # path = reverse("api:v1:cli:deploy_view", kwargs={"kind": "plugin", "name": "PluginVerification"})

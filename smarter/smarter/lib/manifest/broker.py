@@ -150,17 +150,21 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         self,
         request: WSGIRequest,
         *args,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
         **kwargs,
     ):
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
-        logger.info("AbstractBroker.__init__() initializing")
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        logger.info(
+            "AbstractBroker.__init__() initializing request: %s, args: %s, kwargs: %s", self.request, args, kwargs
+        )
+
+        api_version: str = kwargs.get("api_version", SmarterApiVersions.V1)
+        self._name = kwargs.get("name", None)
+        self._kind = kwargs.get("kind", None)
+        self._loader = kwargs.get("loader", None)
+        self._manifest = kwargs.get("manifest", None)
+        file_path = kwargs.get("file_path", None)
+        url = kwargs.get("url", None)
+
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(
                 message=f"Unsupported apiVersion: {api_version}",
@@ -168,19 +172,20 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             )
         self._api_version = api_version
 
-        if name:
-            self._name = name
+        if self.user:
+            logger.info("%s.__init__() received user: %s", self.formatted_class_name, self.user_profile)
+
+        if self._name:
             logger.info("%s.__init__() set name to %s", self.formatted_class_name, self._name)
 
-        self._loader = loader
         if self._loader:
             logger.info("%s.__init__() received a %s loader", self.formatted_class_name, self._loader.manifest_kind)
         else:
             try:
                 self._loader = SAMLoader(
                     api_version=api_version,
-                    kind=kind,
-                    manifest=manifest,
+                    kind=self._kind,
+                    manifest=self._manifest,
                     file_path=file_path,
                     url=url,
                 )
@@ -194,10 +199,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             except SAMLoaderError as e:
                 logger.error("%s.__init__() failed to initialize loader: %s", self.formatted_class_name, str(e))
 
-        self._kind = kind or self.loader.manifest_kind if self.loader else None
+        self._kind = self._kind or self.loader.manifest_kind if self.loader else None
         self._created = False
         logger.info(
-            "AbstractBroker.__init__() finished initializing %s with api_version: %s", self.kind, self.api_version
+            "AbstractBroker.__init__() finished initializing %s with api_version: %s, user: %s, name: %s",
+            self.kind,
+            self.api_version,
+            self.user_profile,
+            self.name,
         )
 
     ###########################################################################
@@ -374,7 +383,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # Abstract Methods
     ###########################################################################
     # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
-    def apply(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """apply a manifest, which works like a upsert."""
         if self.manifest.status:
             raise SAMBrokerReadOnlyError(
@@ -384,21 +393,21 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             )
 
     @abstractmethod
-    def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """chat with the broker."""
         raise SAMBrokerErrorNotImplemented(
             message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
         )
 
-    def describe(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
-        self.set_and_verify_name_param(command=command)
+        self.set_and_verify_name_param(command, *args, **kwargs)
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
-                data[SAMKeys.METADATA.value].pop(SAMMetadataKeys.ACCOUNT.value)
-                data[SAMKeys.METADATA.value].pop(SAMMetadataKeys.AUTHOR.value)
+                data[SAMKeys.METADATA.value].get(SAMMetadataKeys.ACCOUNT.value)
+                data[SAMKeys.METADATA.value].get(SAMMetadataKeys.AUTHOR.value)
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMBrokerError(
@@ -411,21 +420,21 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     @abstractmethod
-    def delete(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """delete a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="delete() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DELETE
         )
 
     @abstractmethod
-    def deploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """deploy a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="deploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DEPLOY
         )
 
     @abstractmethod
-    def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
         raise SAMBrokerErrorNotImplemented(
             message="example_manifest() not implemented",
@@ -434,27 +443,27 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     @abstractmethod
-    def get(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """get information about specified resources."""
         raise SAMBrokerErrorNotImplemented(
             message="get() not implemented", thing=self.thing, command=SmarterJournalCliCommands.GET
         )
 
     @abstractmethod
-    def logs(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """get logs for a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="logs() not implemented", thing=self.thing, command=SmarterJournalCliCommands.LOGS
         )
 
     @abstractmethod
-    def undeploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """undeploy a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="undeploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.UNDEPLOY
         )
 
-    def schema(self, request: WSGIRequest, kwargs: dict) -> Dict[str, Any]:
+    def schema(self, request: WSGIRequest, *args, **kwargs) -> Dict[str, Any]:
         """Return the published JSON schema for the Pydantic model."""
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
@@ -634,11 +643,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ###########################################################################
     # data transformation helpers
     ###########################################################################
-    def set_and_verify_name_param(self, command: SmarterJournalCliCommands = None):
+    def set_and_verify_name_param(self, *args, command: SmarterJournalCliCommands = None, **kwargs):
         """
         Set self.name from the 'name' query string param and then verify that it
         was actually passed.
         """
+        self._name = kwargs.get("name", None) or self._name
         if not self.manifest and not self.name:
             raise SAMBrokerErrorNotReady(
                 f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",

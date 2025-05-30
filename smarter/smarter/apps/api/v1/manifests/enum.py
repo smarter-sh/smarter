@@ -42,6 +42,7 @@ from smarter.apps.prompt.manifest.models.chat_plugin_usage.const import (
 from smarter.apps.prompt.manifest.models.chat_tool_call.const import (
     MANIFEST_KIND as CHAT_TOOL_CALL_MANIFEST_KIND,
 )
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.drf.manifest.models.auth_token.const import (
     MANIFEST_KIND as AUTH_TOKEN_MANIFEST_KIND,
 )
@@ -68,6 +69,29 @@ class SAMKinds(SmarterEnumAbstract):
     CHAT_TOOL_CALL = CHAT_TOOL_CALL_MANIFEST_KIND
     CHATBOT = CHATBOT_MANIFEST_KIND
     SECRET = SECRET_MANIFEST_KIND
+
+    @classmethod
+    def str_to_kind(cls, kind_str: str) -> "SAMKinds":
+        """
+        Convert a string to a SAMKinds enumeration value.
+        """
+        if isinstance(kind_str, bytes):
+            kind_str = kind_str.decode("utf-8")
+
+        # Try case-insensitive key lookup
+        for _, member in cls.__members__.items():
+            if member.value.lower() == kind_str.lower():
+                return member
+
+        raise SmarterValueError(f"Invalid SAMKinds value: {kind_str}.")
+
+    @classmethod
+    def all_plugins(cls):
+        return [cls.STATIC_PLUGIN, cls.API_PLUGIN, cls.SQL_PLUGIN]
+
+    @classmethod
+    def all_connections(cls):
+        return [cls.API_CONNECTION, cls.SQL_CONNECTION]
 
     @classmethod
     def all_slugs(cls):

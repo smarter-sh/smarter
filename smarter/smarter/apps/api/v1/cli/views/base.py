@@ -9,7 +9,6 @@ from typing import Type
 
 from django.core.handlers.wsgi import WSGIRequest
 from rest_framework.exceptions import NotAuthenticated
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from smarter.apps.api.signals import api_request_completed, api_request_initiated
@@ -20,7 +19,11 @@ from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.docs.views.base import DocsError
 from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.apps.prompt.views import SmarterChatappViewError
-from smarter.common.const import SMARTER_BUG_REPORT_URL, SMARTER_CUSTOMER_SUPPORT_EMAIL
+from smarter.common.const import (
+    SMARTER_BUG_REPORT_URL,
+    SMARTER_CUSTOMER_SUPPORT_EMAIL,
+    SMARTER_IS_INTERNAL_API_REQUEST,
+)
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
@@ -34,6 +37,7 @@ from smarter.common.helpers.k8s_helpers import KubernetesHelperException
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
+from smarter.lib.drf.view_helpers import SmarterAuthenticatedPermissionClass
 from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
     SmarterJournalEnumException,
@@ -116,7 +120,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     """
 
     authentication_classes = (SmarterTokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (SmarterAuthenticatedPermissionClass,)
 
     _BrokerClass: Type[AbstractBroker] = None
     _broker: AbstractBroker = None
@@ -278,6 +282,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         Setup the view. This is called by Django before dispatch() and is used to
         set up the view for the request.
         """
+        logger.info(
+            "CliBaseApiView().setup() - view for request: %s, user: %s",
+            request.build_absolute_uri(),
+            request.user.username if request.user.is_authenticated else "Anonymous",
+        )
         super().setup(request, *args, **kwargs)
         # experiment: we want to ensure that the request object is
         # initialized before we call the SmarterRequestMixin.
@@ -286,12 +295,23 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
+        logger.info(
+            "CliBaseApiView().setup() - finished view for request: %s, user: %s, self.user: %s",
+            request.build_absolute_uri(),
+            request.user.username if request.user.is_authenticated else "Anonymous",
+            self.user_profile,
+        )
 
     def initial(self, request: WSGIRequest, *args, **kwargs):
         """
         Initialize the view. This is called by DRF after setup() but before dispatch().
         """
-
+        logger.info(
+            "CliBaseApiView().initial() - initializing view for request: %s, user: %s, self.user: %s",
+            request.build_absolute_uri(),
+            request.user.username if request.user.is_authenticated else "Anonymous",
+            self.user_profile,
+        )
         # Check if the request is authenticated. If not, raise an
         # authentication error. see SmarterTokenAuthentication for details
         # on how the token is validated.
@@ -300,30 +320,37 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         try:
             super().initial(request, *args, **kwargs)
         except NotAuthenticated as e:
-            # regardless of the authentication error, we still need to
-            # initialize the SmarterRequestMixin so that we can
-            # access the request object, headers, url, etc.
-            SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
-            auth_header = request.headers.get("Authorization")
-            if auth_header:
-                logger.error(
-                    "CliBaseApiView().initial() - Authorization header contains an invalid, inactive or malformed token: %s",
-                    e,
+            internal_api_request = getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False)
+            if internal_api_request:
+                logger.info(
+                    "%s.initial() - internal api request. Skipping authentication: %s",
+                    self.formatted_class_name,
+                    request.build_absolute_uri(),
                 )
             else:
-                logger.error(
-                    "CliBaseApiView().initial() - Authorization header is missing from the http request. Add and http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact support@smarter.sh %s",
-                    e,
-                )
-            raise SmarterAPIV1CLIViewErrorNotAuthenticated(
-                "Smarter api v1 command-line interface error: authentication failed"
-            ) from e
+                # regardless of the authentication error, we still need to
+                # initialize the SmarterRequestMixin so that we can
+                # access the request object, headers, url, etc.
+                auth_header = request.headers.get("Authorization")
+                if auth_header:
+                    logger.error(
+                        "CliBaseApiView().initial() - Authorization header contains an invalid, inactive or malformed token: %s",
+                        e,
+                    )
+                else:
+                    logger.error(
+                        "CliBaseApiView().initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact support@smarter.sh %s",
+                        e,
+                    )
+                raise SmarterAPIV1CLIViewErrorNotAuthenticated(
+                    "Smarter api v1 command-line interface error: authentication failed"
+                ) from e
+        # if we got here, then the request is authenticated, and we need to
+        # restore the user object for the request, which DRF will have set
+        # to an AnonymousUser at the start of its own authentication process.
+        # see: https://www.django-rest-framework.org/api-guide/authentication/#how-authentication-is-determined
+        request.user = self.user
 
-        # allow me to explain: none of the SmarterRequestMixin initialization is
-        # relevant unless/until the request object a.) exists, and b.) is authenticated.
-        # so we necessarily have to defer this call until after the
-        # super().initial() call has been made and has succeeded.
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         if self.smarter_request is None:
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}.smarter_request request object is not set. This should not happen."
@@ -367,6 +394,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     status=HTTPStatus.BAD_REQUEST.value,
                     stack_trace=traceback.format_exc(),
                 )
+        logger.info(
+            "CliBaseApiView().initial() - finished initializing view for request: %s, user: %s",
+            request.build_absolute_uri(),
+            request.user.username if request.user.is_authenticated else "Anonymous",
+        )
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request: WSGIRequest, *args, **kwargs):

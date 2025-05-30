@@ -532,7 +532,7 @@ class ChatBotHelper(SmarterRequestMixin):
         parent_class = super().formatted_class_name
         return f"{parent_class}.ChatBotHelper()"
 
-    def __init__(self, *args, request: WSGIRequest = None, name: str = None, chatbot_id: int = None, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Constructor for ChatBotHelper.
         :param url: The URL to parse.
@@ -544,29 +544,12 @@ class ChatBotHelper(SmarterRequestMixin):
         self._chatbot_id: int = None
         self._name: str = None
         self._err: str = None
+        request = kwargs.pop("request", None)  # Remove 'request' from kwargs
+        super().__init__(request, *args, **kwargs)
+        self.request = request
 
-        # SmarterRequestMixin can receive the request object
-        # and also a session_key.
-        request = request or kwargs.pop("request", None)
-        session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
-
-        # Additionally, SmarterRequestMixin inherits AccountMixin, so we
-        # should consider the possibility that at least some of the
-        # initialization data for AccountMixin might be passed in via kwargs.
-        account = kwargs.pop("account", None)
-        user = kwargs.pop("user", None)
-        user_profile = kwargs.pop("user_profile", None)
-
-        SmarterRequestMixin.__init__(
-            self,
-            *args,
-            request=request,
-            session_key=session_key,
-            account=account,
-            user=user,
-            user_profile=user_profile,
-            **kwargs,
-        )
+        name: str = kwargs.get("name")
+        chatbot_id: int = kwargs.get("chatbot_id")
 
         self._chatbot_id: int = self._chatbot_id or chatbot_id or self.smarter_request_chatbot_id
         self._name: str = self._name or name or self.smarter_request_chatbot_name
@@ -619,7 +602,7 @@ class ChatBotHelper(SmarterRequestMixin):
         self.log_dump()
 
     def __str__(self):
-        return str(self.chatbot) if self.chatbot else "undefined"
+        return str(self.chatbot) if self._chatbot else "undefined"
 
     @property
     def chatbot_id(self) -> int:
@@ -827,7 +810,7 @@ class ChatBotHelper(SmarterRequestMixin):
         if self._chatbot:
             return self._chatbot
 
-        if self.chatbot_id:
+        if self._chatbot_id:
             self._chatbot = get_cached_chatbot(chatbot_id=self.chatbot_id)
             self.helper_logger(f"initialized chatbot {self._chatbot} from chatbot_id {self.chatbot_id}")
             return self._chatbot

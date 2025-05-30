@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """A helper class that provides setters/getters for account and user."""
 
 import logging
@@ -43,19 +44,17 @@ class AccountMixin(SmarterHelperMixin):
     def __init__(
         self,
         *args,
-        user: UserType = None,
-        account: Account = None,
-        account_number: str = None,
-        request: WSGIRequest = None,
         **kwargs,
     ):
+        super().__init__(*args, **kwargs)
         self._account: Account = None
         self._user: UserType = None
         self._user_profile: UserProfile = None
 
-        account = account or kwargs.get("account")
-        user = user or kwargs.get("user")
-        request = request or kwargs.get("request")
+        request: WSGIRequest = kwargs.get("request") or args[0] if args else None
+        account_number: str = kwargs.get("account_number")
+        account = kwargs.get("account")
+        user = kwargs.get("user")
 
         if account_number is not None:
             if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):

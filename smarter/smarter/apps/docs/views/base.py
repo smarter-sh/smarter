@@ -5,9 +5,11 @@ manifest and schema.
 """
 import json
 import os
+from logging import getLogger
 from urllib.parse import urlparse
 
 import markdown
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 from django.http.response import HttpResponse
 from django.shortcuts import render
@@ -16,11 +18,13 @@ from django.urls import reverse
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SmarterEnvironments
+from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST, SmarterEnvironments
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.view_helpers import SmarterWebHtmlView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
+
+logger = getLogger(__name__)
 
 # note: this is the path from the Docker container, not the GitHub repo.
 DOCS_PATH = "/home/smarter_user/data/doc/"
@@ -44,8 +48,14 @@ class DocsBaseView(SmarterWebHtmlView):
     kind: SAMKinds = None
     context: dict = {}
 
-    def get_brokered_json_response(self, reverse_name: str, view, request, *args, **kwargs):
+    def get_brokered_json_response(self, reverse_name: str, view, request: WSGIRequest, *args, **kwargs):
         """Get the JSON response from the brokered smarter.sh/api endpoint."""
+        logger.info(
+            "Getting brokered JSON response for reverse_name=%s, kind=%s, request.user=%s",
+            reverse_name,
+            self.kind,
+            request.user.username if request.user.is_authenticated else "Anonymous",
+        )
         if not self.template_path:
             raise DocsError("self.template_path not set.")
         if not self.kind:
@@ -58,7 +68,17 @@ class DocsBaseView(SmarterWebHtmlView):
         path = reverse(reverse_name, kwargs={"kind": self.kind})
         cli_request = factory.get(path)
         cli_request.user = request.user
+        if hasattr(request, SMARTER_IS_INTERNAL_API_REQUEST):
+            setattr(cli_request, SMARTER_IS_INTERNAL_API_REQUEST, getattr(request, SMARTER_IS_INTERNAL_API_REQUEST))
+        else:
+            setattr(cli_request, SMARTER_IS_INTERNAL_API_REQUEST, False)
 
+        logger.info(
+            "Creating brokered request for reverse_name=%s, kind=%s, request.user=%s",
+            reverse_name,
+            self.kind,
+            cli_request.user.username if cli_request.user.is_authenticated else "Anonymous",
+        )
         response = view(request=cli_request, kind=self.kind.value, *args, **kwargs)
         json_response = json.loads(response.content.decode("utf-8"))
 
@@ -69,6 +89,13 @@ class DocsBaseView(SmarterWebHtmlView):
             # unpack the smarter.sh/api error response payload
             json_response = json_response[SmarterJournalApiResponseKeys.ERROR]
 
+        logger.info(
+            "Brokered JSON response for reverse_name=%s, kind=%s, request.user=%s: %s",
+            reverse_name,
+            self.kind,
+            request.user.username if request.user.is_authenticated else "Anonymous",
+            json_response,
+        )
         return json_response
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:

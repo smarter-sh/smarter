@@ -115,7 +115,7 @@ class PluginExamples:
     HERE = os.path.abspath(os.path.dirname(__file__))
     PLUGINS_PATH = os.path.join(PYTHON_ROOT, "smarter", "apps", "plugin", "data", "sample-plugins")
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """Initialize the class."""
         self._plugin_examples = []
         for file in os.listdir(self.PLUGINS_PATH):

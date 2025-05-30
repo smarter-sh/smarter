@@ -22,15 +22,15 @@ class PluginDetailView(SmarterAuthenticatedNeverCachedWebView):
     detail view for Smarter dashboard.
     """
 
-    template_path = "plugin/plugin_detail.html"
+    template_path = "plugin/manifest_detail.html"
     name: str = None
     kind: str = None
     plugin: PluginMeta = None
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.name = kwargs.pop("name", None)
-        self.kind = kwargs.pop("kind", None)
+        self.name = kwargs.get("name", None)
+        self.kind = kwargs.get("kind", None)
         self.plugin = PluginMeta.get_cached_plugin_by_name(user=self.user, name=self.name)
 
     def get(self, request, *args, **kwargs):
