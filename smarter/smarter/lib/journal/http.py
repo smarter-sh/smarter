@@ -10,12 +10,12 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
 from smarter.lib.django.http.serializers import (
     HttpAnonymousRequestSerializer,
     HttpAuthenticatedRequestSerializer,
 )
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .enum import (
     SCLIResponseMetadata,

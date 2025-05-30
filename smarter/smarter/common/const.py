@@ -31,42 +31,6 @@ SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
 SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 5  # 5 minutes
 
 
-# Smarter Waffle Switches and Flags
-class SmarterWaffleSwitches:
-    """A class representing the fixed set of Waffle switches for the Smarter API."""
-
-    ACCOUNT_MIXIN_LOGGING = "account_mixin_logging"
-    CACHE_LOGGING = "cache_logging"
-    CHAT_LOGGING = "chat_logging"
-    CHATAPP_LOGGING = "chatapp_logging"
-    CHATBOT_LOGGING = "chatbot_logging"
-    CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
-    CSRF_SUPPRESS_FOR_CHATBOTS = "csrf_middleware_suppress_for_chatbots"
-    JOURNAL = "journal"
-    MANIFEST_LOGGING = "manifest_logging"
-    MIDDLEWARE_LOGGING = "middleware_logging"
-    REACTAPP_DEBUG_MODE = "reactapp_debug_mode"
-    REQUEST_MIXIN_LOGGING = "request_mixin_logging"
-
-    @property
-    def all(self):
-        """Return all switches."""
-        return [
-            self.ACCOUNT_MIXIN_LOGGING,
-            self.CACHE_LOGGING,
-            self.CHAT_LOGGING,
-            self.CHATAPP_LOGGING,
-            self.CHATBOT_LOGGING,
-            self.CHATBOT_HELPER_LOGGING,
-            self.CSRF_SUPPRESS_FOR_CHATBOTS,
-            self.JOURNAL,
-            self.MANIFEST_LOGGING,
-            self.MIDDLEWARE_LOGGING,
-            self.REACTAPP_DEBUG_MODE,
-            self.REQUEST_MIXIN_LOGGING,
-        ]
-
-
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)  # smarter

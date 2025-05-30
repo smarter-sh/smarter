@@ -12,8 +12,8 @@ from smarter.apps.account.tests.factories import factory_secret_teardown, secret
 from smarter.apps.plugin.manifest.brokers.api_connection import SAMApiConnectionBroker
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.models import ApiConnection
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented

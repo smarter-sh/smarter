@@ -7,9 +7,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from .signals import (

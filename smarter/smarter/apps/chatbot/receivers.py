@@ -8,9 +8,9 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.http import HttpRequest
 
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import (
     ChatBot,
