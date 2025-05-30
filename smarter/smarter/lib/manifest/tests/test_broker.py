@@ -53,7 +53,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
             raise ValueError("Request does not have a user attribute")
 
         self.broker = SAMTestBroker(
-            request=request,
+            request,
             account=self.account,
             manifest=self.good_manifest_text,
             kind=SmarterJournalThings.STATIC_PLUGIN.value,
