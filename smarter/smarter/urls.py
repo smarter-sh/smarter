@@ -36,6 +36,7 @@ from smarter.apps.docs.views.webserver import (
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
+from smarter.lib.django.request import SmarterRequestMixin
 
 
 logger = getLogger(__name__)
@@ -78,14 +79,14 @@ def root_redirector(request: WSGIRequest) -> RedirectView:
     return redirect("/docs/")
 
 
-def config_redirector(request: WSGIRequest) -> ChatConfigView:
+def config_redirector(request: WSGIRequest) -> RedirectView:
     """
     Handles traffic sent to the config endpoints of the website.
     """
-    chatbot = get_cached_chatbot_by_request(request=request)
-    if chatbot:
+    helper = SmarterRequestMixin(request)
+    if helper.is_config:
         view = ChatConfigView.as_view()
-        return view(request, chatbot_id=chatbot.id)
+        return view(request)
     return redirect("/docs/")
 
 

@@ -202,7 +202,6 @@ class PluginMeta(TimestampedModel):
         account = get_cached_account_for_user(user)
         if not account:
             return []
-        logger.info("Fetching plugins for user: %s, account: %s", user, account)
         plugins = cls.objects.filter(account=account).order_by("name")
         return list(plugins) or []
 
@@ -215,7 +214,6 @@ class PluginMeta(TimestampedModel):
         account = get_cached_account_for_user(user)
         if not account:
             return None
-        logger.info("Fetching plugin by name: %s for user: %s, account: %s", name, user, account)
         try:
             return cls.objects.get(account=account, name=name)
         except cls.DoesNotExist:
@@ -477,10 +475,8 @@ class ConnectionBase(TimestampedModel):
             return []
         account = get_cached_account_for_user(user)
         instances = []
-        logger.info("Fetching connections for user: %s, account: %s", user, account)
         for subclass in ConnectionBase.__subclasses__():
             instances.extend(subclass.objects.filter(account=account).order_by("name"))
-        logger.info("Fetched %d connections for user: %s", len(instances), user.username)
         return instances or []
 
     @classmethod

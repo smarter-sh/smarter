@@ -64,7 +64,7 @@ class ProviderDbMixin(AccountMixin):
         """
         This method returns the ready status.
         """
-        super_ready = super().ready
+        super_ready = bool(super().ready)
         chat_ready = True if self.chat else False
         return super_ready and chat_ready
 

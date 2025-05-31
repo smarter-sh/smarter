@@ -305,4 +305,9 @@ class SAMLoader(SmarterHelperMixin):
         Returns True if the manifest is ready to be used. This means that
         the manifest has been validated and is in a valid state.
         """
-        return self.manifest_api_version and self.manifest_kind and self.manifest_metadata and self.manifest_spec
+        return (
+            bool(self.manifest_api_version)
+            and bool(self.manifest_kind)
+            and bool(self.manifest_metadata)
+            and bool(self.manifest_spec)
+        )

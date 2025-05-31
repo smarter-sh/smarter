@@ -18,9 +18,6 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 # from django.views.decorators.csrf import ensure_csrf_cookie
 from htmlmin.main import minify
 
-from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_user_profile, get_resolved_user
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.request import SmarterRequestMixin
 
 
