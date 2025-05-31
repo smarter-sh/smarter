@@ -392,6 +392,23 @@ class SmarterRequestMixin(AccountMixin):
             path_parts = self.url_path_parts
             return int(path_parts[3])
 
+        if self.is_chatbot_named_url:
+            name = self.smarter_request_chatbot_name
+            account_number = self.smarter_request_chatbot_account_number
+            self.account = get_cached_account(account_number=account_number)
+
+    @cached_property
+    def smarter_request_chatbot_account_number(self) -> str:
+        """
+        http://example.3141-5926-5359.api.localhost:8000/config
+        SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
+        """
+        if self.is_chatbot_named_url:
+            match = re.search(SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN, self.url)
+            if match:
+                return match.group(0)
+        return None
+
     @cached_property
     def smarter_request_chatbot_name(self) -> str:
         """
@@ -399,25 +416,18 @@ class SmarterRequestMixin(AccountMixin):
         http://example.3141-5926-5359.api.localhost:8000/config
         """
         if not self.is_chatbot:
-            self.helper_logger("smarter_request_chatbot_name() - not a chatbot")
             return None
 
         # 1.) http://example.api.localhost:8000/config
         if self.is_chatbot_named_url and self.parsed_url is not None:
             netloc_parts = self.parsed_url.netloc.split(".") if self.parsed_url and self.parsed_url.netloc else None
             retval = netloc_parts[0] if netloc_parts else None
-            self.helper_logger(
-                f"smarter_request_chatbot_name() - is_chatbot_named_url=True netloc_parts={netloc_parts} chatbot_name={retval}"
-            )
             return retval
 
         # 2.) example: http://localhost:8000/workbench/<str:name>/config/
         if self.is_chatbot_sandbox_url:
             try:
                 retval = self.url_path_parts[1]
-                self.helper_logger(
-                    f"smarter_request_chatbot_name() - is_chatbot_sandbox_url=True path_parts={self.url_path_parts} chatbot_name={retval}"
-                )
                 return retval
             # pylint: disable=broad-except
             except Exception:
@@ -429,18 +439,13 @@ class SmarterRequestMixin(AccountMixin):
         # 3.) http://localhost:8000/api/v1/workbench/<int:chatbot_id>
         # no name. nothing to do in this case.
         if self.is_chatbot_smarter_api_url:
-            self.helper_logger(
-                "smarter_request_chatbot_name() - is_chatbot_smarter_api_url=True this url does not include a name"
-            )
+            return None
 
         # 4.) http://localhost:8000/api/v1/cli/chat/config/<str:name>/
-        # http://localhost:8000/api/v1/cli/chat/<str:name>/
+        #     http://localhost:8000/api/v1/cli/chat/<str:name>/
         if self.is_chatbot_cli_api_url:
             try:
                 retval = self.url_path_parts[-1]
-                self.helper_logger(
-                    f"smarter_request_chatbot_name() - is_chatbot_cli_api_url=True path_parts={self.url_path_parts} chatbot_name={retval}"
-                )
                 return retval
             # pylint: disable=broad-except
             except Exception:
@@ -474,15 +479,15 @@ class SmarterRequestMixin(AccountMixin):
         try:
             body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
             if body is not None:
-                self.helper_logger(f"request body={body}")
                 body_str = body.decode("utf-8").strip()
-                self._data = json.loads(body_str) if body_str else {}
-                if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                self._data = json.loads(body_str) if body_str else None
+                if self._data and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
                     logger.info(
                         "%s.data() - initialized from parsed request body as json: %s",
                         self.formatted_class_name,
                         body_str,
                     )
+                self._data = self._data or {}
         except json.JSONDecodeError:
             try:
                 body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
@@ -597,16 +602,15 @@ class SmarterRequestMixin(AccountMixin):
         Returns True if the url resolves to a chatbot. Conditions are called in a lazy
         sequence intended to avoid unnecessary processing.
         examples:
-        - "http://localhost:8000/api/v1/prompt/1/chat/"
-        - "http://localhost:8000/api/v1/cli/chat/example/"
+        - http://localhost:8000/api/v1/prompt/1/chat/
+        - http://localhost:8000/api/v1/cli/chat/example/
+        - http://example.3141-5926-5359.api.localhost:8000/
+        - http://localhost:8000/workbench/<str:name>/chat/
         """
 
         return (
             self.qualified_request
-            and not self.is_environment_root_domain
             and not self.is_config
-            and not self.is_dashboard
-            and not self.is_workbench
             and (
                 self.is_chatbot_named_url
                 or self.is_chatbot_sandbox_url
@@ -689,22 +693,25 @@ class SmarterRequestMixin(AccountMixin):
           https://<environment_domain>/workbench/<name>
           path_parts: ['workbench', 'example']
 
+        - http://localhost:8000/workbench/<str:name>/chat/
         - https://alpha.platform.smarter.sh/workbench/example/config/
           https://<environment_domain>/workbench/<name>/config/
           path_parts: ['workbench', 'example', 'config']
 
         - http://localhost:8000/api/v1/prompt/1/chat/
           http://<environment_domain>/api/v1/prompt/<int:chatbot_id>/chat/
+
         """
         if not self.smarter_request:
             return False
         if not self.qualified_request:
             return False
-        if not self.url:
+        if not self._url:
             return False
         if not self.parsed_url:
             return False
 
+        # smarter api - http://localhost:8000/api/v1/prompt/1/chat/
         path_parts = self.url_path_parts
         if (
             len(path_parts) == 5
@@ -716,48 +723,29 @@ class SmarterRequestMixin(AccountMixin):
         ):
             return True
 
+        # ---------------------------------------------------------------------
+        # workbench urls: http://localhost:8000/workbench/<str:name>/chat/
+        # ---------------------------------------------------------------------
+
         # valid path_parts:
-        #   ['workbench', '<slug>']
+        #   ['workbench', '<slug>', 'chat']
         #   ['workbench', '<slug>', 'config']
         if self.parsed_url.netloc != smarter_settings.environment_domain:
-            self.helper_logger(
-                f"is_chatbot_sandbox_url() - netloc != smarter_settings.environment_domain: {self.parsed_url.netloc} for url: {self.url}"
-            )
             return False
-        if len(path_parts) < 2:
-            self.helper_logger(f"is_chatbot_sandbox_url() - len(path_parts) < 2: {path_parts} for url: {self.url}")
+        if len(path_parts) != 3:
             return False
         if path_parts[0] != "workbench":
-            # expecting this form: ['workbench', '<slug>', 'config']
-            self.helper_logger(
-                f"is_chatbot_sandbox_url() - path_parts[0] != 'workbench': {path_parts} for url: {self.url}"
-            )
             return False
         if not path_parts[1].isalpha():
             # expecting <slug> to be alpha: ['workbench', '<slug>', 'config']
-            self.helper_logger(
-                f"is_chatbot_sandbox_url() - not path_parts[2].isalpha(): {path_parts} for url: {self.url}"
-            )
             return False
-        if len(path_parts) > 3:
-            self.helper_logger(f"is_chatbot_sandbox_url() - len(path_parts) > 3: {path_parts} for url: {self.url}")
-            return False
+        if path_parts[-1] in ["config", "chat"]:
+            # expecting:
+            #   ['workbench', '<slug>', 'chat']
+            #   ['workbench', '<slug>', 'config']
+            return True
 
-        if len(path_parts) == 2 and not path_parts[1].isalpha():
-            # expecting: ['workbench', '<slug>']
-            self.helper_logger(
-                f"is_chatbot_sandbox_url() - not path_parts[1].isalpha(): {path_parts} for url: {self.url}"
-            )
-            return False
-
-        if len(path_parts) == 3 and not self.is_config:
-            # expecting either of:
-            # ['workbench', '<slug>', 'config']
-            # ['workbench', '<slug>']
-            self.helper_logger(f"is_chatbot_sandbox_url() - is not 'config' for url: {self.url}")
-            return False
-
-        return True
+        return False
 
     @cached_property
     def is_default_domain(self) -> bool:
@@ -881,7 +869,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         returns True if the request is ready for processing.
         """
-        retval = super().ready and self._smarter_request is not None
+        retval = bool(super().ready) and bool(self._smarter_request)
         if not retval and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             logger.warning(
                 "%s: SmarterRequestMixin is not ready. super(): %s, request: %s, user: %s, account: %s",

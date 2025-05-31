@@ -316,7 +316,7 @@ class ChatProviderBase(ProviderDbMixin):
 
     @property
     def ready(self) -> bool:
-        return self.chat and self.data and self.account
+        return bool(self.chat) and bool(self.data) and bool(self.account)
 
     @property
     def messages(self) -> List[Dict[str, str]]:

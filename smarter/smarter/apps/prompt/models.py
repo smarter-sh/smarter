@@ -195,7 +195,7 @@ class ChatHelper(SmarterRequestMixin):
         Check if the ChatHelper is ready to use.
         Returns True if the chat instance is available, otherwise False.
         """
-        return super().ready and self._session_key is not None and self._chat is not None and self._chatbot is not None
+        return bool(super().ready) and bool(self._session_key) and bool(self._chat) and bool(self._chatbot)
 
     def to_json(self) -> dict:
         """

@@ -15,7 +15,10 @@ from rest_framework import serializers
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.serializers import AccountMiniSerializer
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import (
+    get_cached_smarter_admin_user_profile,
+    get_cached_user_profile,
+)
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.conf import settings as smarter_settings
@@ -550,6 +553,17 @@ class ChatBotHelper(SmarterRequestMixin):
         self._err: str = None
 
         super().__init__(request, **kwargs)
+        if self.is_config:
+            admin_user = get_cached_smarter_admin_user_profile()
+            self.user = admin_user.user
+            self.account = admin_user.account
+            self.user_profile = admin_user
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
+                logger.info(
+                    "ChatBotHelper.__init__() substituting admin user %s for config url: %s",
+                    self.user.username,
+                    self.url,
+                )
 
         if not self.user or not self.user.is_authenticated:
             logger.warning("ChatBotHelper.__init__() called with unauthenticated request")
@@ -588,7 +602,7 @@ class ChatBotHelper(SmarterRequestMixin):
             return None
 
         self.helper_warning(
-            f"__init__() failed to initialize self.chatbot with url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
+            f"__init__() ChatBotHelper did not find a chatbot for url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
         )
 
     def __str__(self):
@@ -671,7 +685,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @property
     def ready(self) -> bool:
-        retval = super().ready and self._chatbot
+        retval = bool(super().ready) and bool(self._chatbot)
         if not retval:
             self._err = f"ChatBotHelper.ready() returning false because ChatBot is not initialized: {self.url}"
             if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
@@ -859,9 +873,9 @@ def get_cached_chatbot_by_request(request: WSGIRequest) -> ChatBot:
         return None
     url = clean_url(url)
 
-    @cache_results()
     def get_chatbot_by_url(url: str) -> ChatBot:
-        chatbot_helper = ChatBotHelper(request=request)
+        logger.info("get_cached_chatbot_by_request() called with url %s for user %s", url, request.user)
+        chatbot_helper = ChatBotHelper(request)
         if chatbot_helper.is_valid:
             chatbot = chatbot_helper.chatbot
             logging.info("get_cached_chatbot_by_request() caching chatbot %s for %s", chatbot, url)

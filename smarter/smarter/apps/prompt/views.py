@@ -48,9 +48,13 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
-from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.view_helpers import (
+    SmarterAuthenticatedNeverCachedWebView,
+    SmarterNeverCachedWebView,
+)
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
+from smarter.lib.drf.view_helpers import UnauthenticatedPermissionClass
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
@@ -138,7 +142,7 @@ class SmarterChatSession(SmarterHelperMixin):
 
 # pylint: disable=R0902
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
+class ChatConfigView(SmarterNeverCachedWebView):
     """
     Chat config view for smarter web. This view is protected and requires the user
     to be authenticated. It works with any ChatBot instance but is aimed at chatbots
@@ -147,8 +151,8 @@ class ChatConfigView(SmarterAuthenticatedNeverCachedWebView):
     example: https://smarter.3141-5926-5359.alpha.api.smarter.sh/config/
     """
 
-    authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
-    # permission_classes = (SmarterAuthenticatedPermissionClass,)
+    authentication_classes = None
+    permission_classes = (UnauthenticatedPermissionClass,)
 
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
@@ -415,10 +419,6 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
 
     chatbot: ChatBot = None
     chatbot_helper: ChatBotHelper = None
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     SmarterRequestMixin.__init__(self, request=None, *args, **kwargs)
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
