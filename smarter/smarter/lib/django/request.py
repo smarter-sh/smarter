@@ -158,7 +158,7 @@ class SmarterRequestMixin(AccountMixin):
         if session_key is not None:
             self.session_key = session_key
 
-        if self.is_chatbot_named_url:
+        if self._url and self.is_chatbot_named_url:
             account_number = account_number_from_url(self.url)
             if account_number:
                 if self.account and self.account.account_number != account_number:
@@ -351,7 +351,12 @@ class SmarterRequestMixin(AccountMixin):
             return None
 
         uid = self.uid or "unknown_uid"
-        raw_string = self.__class__.__name__ + "_" + self.smarter_request.user.username + "_" + "cache_key()_" + uid
+        username = (
+            self.smarter_request.user.username
+            if self.smarter_request and hasattr(self._smarter_request, "user")
+            else "unknown_user"
+        )
+        raw_string = self.__class__.__name__ + "_" + username + "_" + "cache_key()_" + uid
         hash_object = hashlib.sha256()
         hash_object.update(raw_string.encode())
         hash_string = hash_object.hexdigest()
@@ -393,9 +398,8 @@ class SmarterRequestMixin(AccountMixin):
             return int(path_parts[3])
 
         if self.is_chatbot_named_url:
-            name = self.smarter_request_chatbot_name
-            account_number = self.smarter_request_chatbot_account_number
-            self.account = get_cached_account(account_number=account_number)
+            # can't get from ChatBot bc of circular import
+            return None
 
     @cached_property
     def smarter_request_chatbot_account_number(self) -> str:
@@ -894,6 +898,11 @@ class SmarterRequestMixin(AccountMixin):
         """
         returns True if the request is ready for processing.
         """
+        # cheap and easy way to fail.
+        if not self.smarter_request:
+            return False
+        if not self._url:
+            return False
         retval = bool(super().ready) and bool(self._smarter_request)
         if not retval and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             logger.warning(

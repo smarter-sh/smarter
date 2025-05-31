@@ -27,4 +27,4 @@ class TestAWSInfrastructure(SmarterTestBase):
     # -------------------------------------------------------------------------
     def test_aws_connection_works(self):
         """Test that the AWS connection works."""
-        self.assertTrue(aws_helper.aws.ready(), "AWS connection failed.")
+        self.assertTrue(aws_helper.aws.ready, "AWS connection failed.")

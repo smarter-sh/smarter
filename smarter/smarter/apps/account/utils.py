@@ -115,6 +115,10 @@ def _get_account_for_user(user):
                 return user_profile.account
         # If no default account is found, return the first account
         user_profile = user_profiles.first()
+        if not user_profile:
+            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.error("get_cached_account_for_user_by_id() no UserProfile found for user ID %s", user_id)
+            return None
         account = user_profile.account
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
             logger.info(
