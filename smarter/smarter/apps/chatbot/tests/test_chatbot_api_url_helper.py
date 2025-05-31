@@ -174,7 +174,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         self.assertTrue(helper.chatbot is None, f"Expected None, but got {helper.chatbot}")
         self.assertTrue(helper.account_number is None, f"Expected None, but got {helper.account_number}")
         self.assertTrue(helper.is_custom_domain is False, f"Expected False, but got {helper.is_custom_domain}")
-        self.assertTrue(helper.url is None, f"Expected None, but got {helper.url}")
+        self.assertTrue(helper.smarter_request is None, f"Expected None, but got {helper.smarter_request}")
         self.assertTrue(helper.is_deployed is False, f"Expected False, but got {helper.is_deployed}")
         self.assertTrue(helper.api_host is None, f"Expected None, but got {helper.api_host}")
         self.assertTrue(helper.api_subdomain is None, f"Expected None, but got {helper.api_subdomain}")

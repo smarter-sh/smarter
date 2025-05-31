@@ -553,7 +553,7 @@ class ChatBotHelper(SmarterRequestMixin):
         self._err: str = None
 
         super().__init__(request, **kwargs)
-        if self.is_config:
+        if self.is_config and self.smarter_request:
             admin_user = get_cached_smarter_admin_user_profile()
             self.user = admin_user.user
             self.account = admin_user.account
@@ -567,7 +567,6 @@ class ChatBotHelper(SmarterRequestMixin):
 
         if not self.user or not self.user.is_authenticated:
             logger.warning("ChatBotHelper.__init__() called with unauthenticated request")
-            raise ValueError("ChatBotHelper.__init__() requires an authenticated request with a user.")
 
         name: str = kwargs.get("name")
         chatbot_id: int = kwargs.get("chatbot_id")
@@ -579,7 +578,7 @@ class ChatBotHelper(SmarterRequestMixin):
             logger.info(
                 "%s.__init__() initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
                 self.formatted_class_name,
-                self.url,
+                self.url if self._url else "undefined",
                 self.name,
                 self.chatbot_id,
                 self.user,
@@ -596,13 +595,14 @@ class ChatBotHelper(SmarterRequestMixin):
                 f"__init__() url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
             )
 
-        self._chatbot = self._chatbot or get_cached_chatbot(account=self.account, name=self.name)
+        if self._account and self._name:
+            self._chatbot = self._chatbot or get_cached_chatbot(account=self._account, name=self._name)
         if self.ready:
             self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from account and name")
             return None
 
         self.helper_warning(
-            f"__init__() ChatBotHelper did not find a chatbot for url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
+            f"__init__() ChatBotHelper did not find a chatbot for url={ self._url } name={ self._name } chatbot_id={ self._chatbot_id } user={ self._user } account={ self._account }."
         )
 
     def __str__(self):
@@ -734,6 +734,10 @@ class ChatBotHelper(SmarterRequestMixin):
           return 'hr.smarter.querium.com'
 
         """
+        if not self.smarter_request:
+            return None
+        if not self.qualified_request:
+            return None
         if self.is_smarter_api:
             return self._url.netloc
         if self.is_custom_domain:
@@ -752,7 +756,7 @@ class ChatBotHelper(SmarterRequestMixin):
         and if it is usable for making API calls.
         """
         if not self.ready:
-            self._err = f"is_valid() returning false because ChatBotHelper is not in a ready state: {self.url}"
+            self._err = f"is_valid() returning false because ChatBotHelper is not in a ready state: {self._url}"
             return False
         if self.is_authentication_required:
             if not self.user:
@@ -817,7 +821,7 @@ class ChatBotHelper(SmarterRequestMixin):
         if self._chatbot_custom_domain:
             return self._chatbot_custom_domain
 
-        if not self.url:
+        if not self._url:
             return None
 
         if self.is_chatbot_sandbox_url:
