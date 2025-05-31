@@ -32,7 +32,13 @@ from ..manifest.enum import (
 )
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from ..manifest.models.static_plugin.model import SAMStaticPlugin
-from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
+from ..models import (
+    PluginDataBase,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+    PluginSelectorHistory,
+)
 from ..nlp import does_refer_to
 from ..serializers import (
     PluginMetaSerializer,
@@ -73,6 +79,7 @@ class PluginBase(ABC, SmarterHelperMixin):
     _plugin_meta: PluginMeta = None
     _plugin_selector: PluginSelector = None
     _plugin_prompt: PluginPrompt = None
+    _plugin_selector_history: PluginSelectorHistory = None
 
     _plugin_prompt_serializer: dict = None
     _plugin_selector_serializer: dict = None
@@ -114,9 +121,26 @@ class PluginBase(ABC, SmarterHelperMixin):
                 f"Received: data {bool(data)}, manifest {bool(manifest)}, "
                 f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}."
             )
-        self.api_version = api_version or self.api_version
+        self._api_version = api_version or self.api_version
         self._selected = selected
         self._user_profile = user_profile
+
+        self._metadata_class = None
+        self._manifest = None
+        self._pydantic_model = None
+
+        self._plugin_meta = None
+        self._plugin_selector = None
+        self._plugin_prompt = None
+        self._plugin_selector_history = None
+
+        self._plugin_prompt_serializer = None
+        self._plugin_selector_serializer = None
+        self._plugin_meta_serializer = None
+
+        self._params = None
+        self._plugin_data = None
+        self._plugin_data_serializer = None
 
         #######################################################################
         # identifiers for existing plugins
@@ -277,6 +301,11 @@ class PluginBase(ABC, SmarterHelperMixin):
             raise SmarterPluginError("PluginSelector.DoesNotExist") from e
 
         try:
+            self.plugin_selector_history = PluginSelectorHistory.objects.get(plugin_selector=self.plugin_selector)
+        except PluginSelector.DoesNotExist as e:
+            pass
+
+        try:
             self._plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
         except PluginPrompt.DoesNotExist as e:
             raise SmarterPluginError("PluginPrompt.DoesNotExist") from e
@@ -322,6 +351,11 @@ class PluginBase(ABC, SmarterHelperMixin):
             "author": self.user_profile,
             "tags": self.manifest.metadata.tags,
         }
+
+    @property
+    def plugin_selector_history(self) -> PluginSelectorHistory:
+        """Return the plugin selector history serializer."""
+        return self._plugin_selector_history
 
     @property
     def plugin_selector(self) -> PluginSelector:
