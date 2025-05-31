@@ -13,6 +13,7 @@ from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware as DjangoCsrfViewMiddleware
 from django.utils.functional import cached_property
 
+from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
@@ -41,6 +42,19 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
     @property
     def chatbot(self) -> ChatBot:
         if self._chatbot is None:
+            if not self.request or not hasattr(self.request, "user") or not self.request.user.is_authenticated:
+                # this is the expected case where the request is not yet authenticated
+                # because we are in middleware and authentication has not yet occurred.
+                #
+                # we'll add our own smarter admin user just for initializing
+                # the ChatBotHelper.
+                admin_user_profile = get_cached_smarter_admin_user_profile()
+                self.request.user = admin_user_profile.user
+                logger.info(
+                    "%s: request is not (yet) authenticated. Using admin user as a proxy for evaluating CSRF_TRUSTED_ORIGINS: %s",
+                    self.formatted_class_name,
+                    admin_user_profile,
+                )
             self._chatbot = get_cached_chatbot_by_request(request=self.request)
         return self._chatbot
 

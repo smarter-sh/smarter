@@ -73,7 +73,7 @@ class AccountMixin(SmarterHelperMixin):
             self._account = get_cached_account_for_user(user)
             if self._account and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                 logger.info(
-                    "%s.__init__(): set account to %s based on user_profile %s",
+                    "%s.__init__(): set account to %s based on user %s",
                     self.formatted_class_name,
                     self._account,
                     self.user_profile,
@@ -93,7 +93,7 @@ class AccountMixin(SmarterHelperMixin):
                 self._account = get_cached_account_for_user(self._user)
                 if self._account and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                     logger.info(
-                        "%s.__init__(): set account to %s based on user_profile: %s",
+                        "%s.__init__(): set account to %s based on user: %s",
                         self.formatted_class_name,
                         self._account,
                         self.user_profile,
@@ -128,7 +128,7 @@ class AccountMixin(SmarterHelperMixin):
         if self.ready:
             if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                 logger.info(
-                    "%s.__init__(): is fully initialized with user_profile: %s",
+                    "%s.__init__(): is fully initialized with user: %s",
                     self.formatted_class_name,
                     self.user_profile,
                 )
@@ -225,7 +225,7 @@ class AccountMixin(SmarterHelperMixin):
         """
         if self._user and not user:
             # unset the user_profile and account if the user is unset
-            self.user_profile = None
+            self._user_profile = None
             self.account = None
             self._user = None
             return
@@ -297,12 +297,12 @@ class AccountMixin(SmarterHelperMixin):
         retval = super().ready and self._account and self._user and self.user_profile
         if not retval and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
             logger.warning(
-                "%s: ready() is False, super(): %s, account: %s, user: %s, user_profile: %s",
+                "%s: AccountMixin is not ready. super(): %s, account: %s, user: %s, user_profile: %s",
                 self.formatted_class_name,
                 super().ready,
                 self._account,
                 self._user,
-                self.user_profile,
+                self._user_profile,
             )
         return retval
 
@@ -314,6 +314,6 @@ class AccountMixin(SmarterHelperMixin):
             "ready": self.ready,
             "account": AccountMiniSerializer(self._account).data if self._account else None,
             "user": UserMiniSerializer(self._user).data if self._user else None,
-            "user_profile": UserProfileSerializer(self.user_profile).data if self.user_profile else None,
+            "user_profile": UserProfileSerializer(self.user_profile).data if self._user_profile else None,
             **super().to_json(),
         }

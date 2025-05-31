@@ -551,6 +551,10 @@ class ChatBotHelper(SmarterRequestMixin):
 
         super().__init__(request, **kwargs)
 
+        if not self.user or not self.user.is_authenticated:
+            logger.warning("ChatBotHelper.__init__() called with unauthenticated request")
+            raise ValueError("ChatBotHelper.__init__() requires an authenticated request with a user.")
+
         name: str = kwargs.get("name")
         chatbot_id: int = kwargs.get("chatbot_id")
 

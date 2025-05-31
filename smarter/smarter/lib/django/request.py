@@ -137,11 +137,6 @@ class SmarterRequestMixin(AccountMixin):
         self._cache_key: str = None
         self.invalidate_cached_properties()
 
-        super().__init__(request, **kwargs)
-
-        if session_key is not None:
-            self.session_key = session_key
-
         url = self.smarter_build_absolute_uri(self.smarter_request)
         if url:
             self._url = urlparse(url)
@@ -158,14 +153,10 @@ class SmarterRequestMixin(AccountMixin):
         else:
             logger.warning("%s - request url is None.", self.formatted_class_name)
 
-        # lazy excuses to not do anything...
-        if not self.ready and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-            logger.info(
-                "%s.__init__() - request is not in a ready state. Abandoning initialization. url=%s",
-                self.formatted_class_name,
-                url,
-            )
-            return None
+        super().__init__(request, **kwargs)
+
+        if session_key is not None:
+            self.session_key = session_key
 
         if self.is_chatbot_named_url:
             account_number = account_number_from_url(self.url)
@@ -283,6 +274,7 @@ class SmarterRequestMixin(AccountMixin):
             self.formatted_class_name,
             self.smarter_request,
         )
+        raise SmarterValueError("The URL has not been initialized. Please check the request object.")
 
     @property
     def parsed_url(self) -> ParseResult:
@@ -892,10 +884,12 @@ class SmarterRequestMixin(AccountMixin):
         retval = super().ready and self._smarter_request is not None
         if not retval and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             logger.warning(
-                "%s: ready() is False, super(): %s, request: %s",
+                "%s: SmarterRequestMixin is not ready. super(): %s, request: %s, user: %s, account: %s",
                 self.formatted_class_name,
                 super().ready,
                 self.smarter_request,
+                self.user_profile,
+                self.account,
             )
         return retval
 
@@ -1028,7 +1022,6 @@ class SmarterRequestMixin(AccountMixin):
             "is_dashboard": self.is_dashboard,
             "is_workbench": self.is_workbench,
             "is_environment_root_domain": self.is_environment_root_domain,
-            "formatted_class_name": self.formatted_class_name,
             **super().to_json(),
         }
 
