@@ -602,6 +602,7 @@ class SmarterRequestMixin(AccountMixin):
         - http://localhost:8000/api/v1/cli/chat/example/
         - http://example.3141-5926-5359.api.localhost:8000/
         - http://localhost:8000/workbench/<str:name>/chat/
+        - http://localhost:8000/api/v1/chatbots/1556/chat/
         """
 
         return (
@@ -632,10 +633,38 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_chatbot_smarter_api_url(self) -> bool:
         """
-        Returns True if the url is of the form http://localhost:8000/api/v1/workbench/1/chat/
-        path_parts: ['api', 'v1', 'chatbots', '1', 'chat']
+        Returns True if the url is of the form
+        - http://localhost:8000/api/v1/workbench/1/chat/
+          path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+
+        - http://localhost:8000/api/v1/chatbots/1556/chat/
+          path_parts: ['api', 'v1', 'chatbots', '<int:pk>', 'chat']
+
+
         """
-        return self.is_smarter_api
+        if not self.smarter_request:
+            return False
+        if not self.qualified_request:
+            return False
+        if not self.parsed_url:
+            return False
+
+        if len(self.url_path_parts) != 5:
+            return False
+        if self.url_path_parts[0] != "api":
+            return False
+        if self.url_path_parts[1] != "v1":
+            return False
+        if self.url_path_parts[2] not in ["workbench", "chatbots"]:
+            return False
+        if not self.url_path_parts[3].isnumeric():
+            # expecting <int:pk> to be numeric: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+            return False
+        if self.url_path_parts[4] != "chat":
+            # expecting 'chat' at the end of the path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+            return False
+
+        return True
 
     @cached_property
     def is_chatbot_cli_api_url(self) -> bool:
