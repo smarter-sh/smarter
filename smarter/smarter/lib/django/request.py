@@ -119,11 +119,7 @@ class SmarterRequestMixin(AccountMixin):
 
     # pylint: disable=W0613
     def __init__(self, request: WSGIRequest, *args, **kwargs):
-        request = request or kwargs.pop("request", None) or args[0] if args else None
-        super().__init__(request, **kwargs)
-        # validate, standardize and parse the request url string into a ParseResult.
-        # Note that the setter and getter both work with strings
-        # but we store the private instance variable _url as a ParseResult.
+
         session_key: str = kwargs.pop("session_key", None)
         if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             logger.info(
@@ -138,6 +134,8 @@ class SmarterRequestMixin(AccountMixin):
         self._url_urlunparse_without_params = None
         self._params = None
         self.invalidate_cached_properties()
+
+        super().__init__(request, **kwargs)
 
         if session_key is not None:
             self.session_key = session_key
@@ -201,8 +199,11 @@ class SmarterRequestMixin(AccountMixin):
             )
         else:
             logger.error(
-                "%s.__init__() request is not ready. Please check the request object and ensure it is valid.",
+                "%s.__init__() request is not ready. url=%s, session_key=%s, user=%s",
                 self.formatted_class_name,
+                self.url,
+                self.session_key,
+                self.user_profile,
             )
         if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             logger.info(

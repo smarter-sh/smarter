@@ -470,6 +470,13 @@ class ChatBotSerializer(serializers.ModelSerializer):
         self.Meta.fields += ["url_chatbot", "account"]
 
 
+class ChatBotCustomDomainSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ChatBotCustomDomain
+        fields = "__all__"
+
+
 @cache_results()
 def get_cached_chatbot(chatbot_id: int = None, name: str = None, account: Account = None) -> ChatBot:
     """
@@ -529,20 +536,20 @@ class ChatBotHelper(SmarterRequestMixin):
         parent_class = super().formatted_class_name
         return f"{parent_class}.ChatBotHelper()"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, request: WSGIRequest, *args, **kwargs):
         """
         Constructor for ChatBotHelper.
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
-        super().__init__(*args, **kwargs)
-
         self._chatbot: ChatBot = None
         self._chatbot_custom_domain: ChatBotCustomDomain = None
         self._chatbot_requests: ChatBotRequests = None
         self._chatbot_id: int = None
         self._name: str = None
         self._err: str = None
+
+        super().__init__(request, **kwargs)
 
         name: str = kwargs.get("name")
         chatbot_id: int = kwargs.get("chatbot_id")
@@ -562,23 +569,8 @@ class ChatBotHelper(SmarterRequestMixin):
                 self.session_key,
             )
 
-        if self.chatbot:
-            self.account = self.chatbot.account
+        if self.ready:
             self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot}")
-            self.log_dump()
-            return None
-
-        if not self.is_chatbot and not self.name and not self.chatbot_id:
-            # keep in mind that self.is_chatbot comes from SmartRequestMixin and is
-            # based on an analysis of the url format. we frequently get called
-            # in cases where the url itself is not a chatbot url but we're still
-            # being called with some other identifying information via chatbot_id
-            # and/or name.
-            # example: http://localhost:8000/chatbots/ which yields a list of chatbots
-            # but the url itself is not a chatbot url.
-            self.helper_logger(
-                f"__init__() url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } is not a chatbot."
-            )
             return None
 
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
@@ -589,13 +581,11 @@ class ChatBotHelper(SmarterRequestMixin):
         self._chatbot = self._chatbot or get_cached_chatbot(account=self.account, name=self.name)
         if self.ready:
             self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from account and name")
-            self.log_dump()
             return None
 
         self.helper_warning(
             f"__init__() failed to initialize self.chatbot with url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
         )
-        self.log_dump()
 
     def __str__(self):
         return str(self.chatbot) if self._chatbot else "undefined"
@@ -689,7 +679,9 @@ class ChatBotHelper(SmarterRequestMixin):
             "api_host": self.api_host,
             "chatbot_id": self.chatbot_id,
             "chatbot_name": self.chatbot_name,
-            "chatbot_custom_domain": self.chatbot_custom_domain,
+            "chatbot_custom_domain": (
+                ChatBotCustomDomainSerializer(self.chatbot_custom_domain) if self.chatbot_custom_domain else None
+            ),
             "environment_api_domain": smarter_settings.environment_api_domain,
             "err": self._err,
             "is_custom_domain": self.is_custom_domain,
@@ -788,7 +780,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @property
     def is_custom_domain(self) -> bool:
-        return self.chatbot_custom_domain is not None
+        return self._chatbot_custom_domain is not None
 
     @property
     def chatbot_custom_domain(self) -> ChatBotCustomDomain:

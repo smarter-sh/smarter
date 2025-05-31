@@ -125,7 +125,7 @@ class AccountMixin(SmarterHelperMixin):
                             url,
                         )
 
-        if self._user and self._account:
+        if self.ready:
             if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                 logger.info(
                     "%s.__init__(): is fully initialized with user_profile: %s",
@@ -133,13 +133,14 @@ class AccountMixin(SmarterHelperMixin):
                     self.user_profile,
                 )
         else:
-            if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
-                logger.warning(
-                    "%s.__init__(): is partially initialized: user %s, account %s",
-                    self.formatted_class_name,
-                    self._user,
-                    self._account,
-                )
+            # if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+            logger.warning(
+                "%s.__init__(): is partially initialized: request: %s, user %s, account %s",
+                self.formatted_class_name,
+                request,
+                self._user,
+                self._account,
+            )
 
     def __str__(self):
         """
