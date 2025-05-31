@@ -393,6 +393,11 @@ class SmarterRequestMixin(AccountMixin):
         Extract the chatbot id from the URL.
         example: http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/
         """
+        if not self.smarter_request:
+            return None
+        if not self.qualified_request:
+            return None
+
         if self.is_chatbot_smarter_api_url:
             path_parts = self.url_path_parts
             return int(path_parts[3])
@@ -407,6 +412,10 @@ class SmarterRequestMixin(AccountMixin):
         http://example.3141-5926-5359.api.localhost:8000/config
         SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
         """
+        if not self.smarter_request:
+            return None
+        if not self.qualified_request:
+            return None
         return account_number_from_url(self.url)
 
     @cached_property
@@ -473,6 +482,12 @@ class SmarterRequestMixin(AccountMixin):
         """
         if self._data:
             return self._data
+
+        if not self.smarter_request:
+            return None
+        if not self.qualified_request:
+            return None
+
         if not self.smarter_request:
             logger.warning("%s.data() - request is None or not set.", self.formatted_class_name)
             return {}
