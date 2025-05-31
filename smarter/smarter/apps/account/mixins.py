@@ -9,10 +9,12 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django import waffle
+from smarter.lib.django.serializers import UserSerializer
 from smarter.lib.django.user import UserType
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Account, UserProfile
+from .serializers import AccountSerializer, UserProfileSerializer
 from .utils import (
     account_number_from_url,
     get_cached_account,
@@ -138,6 +140,12 @@ class AccountMixin(SmarterHelperMixin):
                     self._user,
                     self._account,
                 )
+
+    def __str__(self):
+        """
+        Returns a string representation of the class.
+        """
+        return f"{self.__class__.__name__}(user={self._user_profile}, account={self._account})"
 
     @property
     def formatted_class_name(self) -> str:
@@ -281,3 +289,22 @@ class AccountMixin(SmarterHelperMixin):
             return
         self._user = self._user_profile.user
         self._account = self._user_profile.account
+
+    @property
+    def ready(self) -> bool:
+        """
+        Returns True if the account, user, and user_profile are all set.
+        """
+        return super().ready and self._account is not None and self._user is not None and self._user_profile is not None
+
+    def to_json(self):
+        """
+        Returns a JSON representation of the account, user, and user_profile.
+        """
+        return {
+            "ready": self.ready,
+            "account": AccountSerializer(self._account).data if self._account else None,
+            "user": UserSerializer(self._user).data if self._user else None,
+            "user_profile": UserProfileSerializer(self._user_profile).data if self._user_profile else None,
+            **super().to_json(),
+        }

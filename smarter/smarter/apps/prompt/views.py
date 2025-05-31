@@ -98,7 +98,9 @@ class SmarterChatSession(SmarterHelperMixin):
         if not self.session_key and not self.chatbot:
             raise SmarterChatappViewError("Either a session_key or a chatbot instance is required")
 
-        self._chat_helper = ChatHelper(request=request, session_key=self.session_key, chatbot=self.chatbot)
+        self._chat_helper = ChatHelper(
+            *args, request=request, session_key=self.session_key, chatbot=self.chatbot, **kwargs
+        )
         self._chat = self._chat_helper.chat
 
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):

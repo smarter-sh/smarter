@@ -147,7 +147,6 @@ class ChatHelper(SmarterRequestMixin):
 
     _chat: Chat = None
     _chatbot: ChatBot = None
-    _clean_url: str = None
 
     # FIX NOTE: remove session_key
     def __init__(self, request: WSGIRequest, session_key: str, *args, chatbot: ChatBot = None, **kwargs) -> None:
@@ -156,12 +155,11 @@ class ChatHelper(SmarterRequestMixin):
         )
         if not request:
             raise SmarterValueError(f"{self.formatted_class_name} request object is required.")
-        SmarterRequestMixin.__init__(self, request=request, session_key=session_key, *args, **kwargs)
+        super().__init__(request, session_key=session_key, **kwargs)
         if not self.session_key:
             self.session_key = self.generate_session_key()
         self._chat: Chat = None
         self._chatbot: ChatBot = chatbot
-        self._clean_url: str = None
 
         if not session_key and not chatbot:
             raise SmarterValueError(
@@ -181,10 +179,37 @@ class ChatHelper(SmarterRequestMixin):
             logger.info("%s.__init__() received session_key: %s", self.formatted_class_name, session_key)
             self._chat = self.get_cached_chat()
 
-        logger.info("ChatHelper().__init__() - finished with session_key: %s, chat: %s", self.session_key, self._chat)
+        logger.info(
+            "ChatHelper().__init__() - finished %s with session_key: %s, chat: %s",
+            "is ready" if self.ready else "is not ready",
+            self.session_key,
+            self._chat,
+        )
 
     def __str__(self):
         return self.session_key
+
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the ChatHelper is ready to use.
+        Returns True if the chat instance is available, otherwise False.
+        """
+        return super().ready and self._session_key is not None and self._chat is not None and self._chatbot is not None
+
+    def to_json(self) -> dict:
+        """
+        Convert the ChatHelper instance to a JSON serializable dictionary.
+        """
+        return {
+            **super().to_json(),
+            "ready": self.ready,
+            "session_key": self.session_key,
+            "chat": self.chat.id if self.chat else None,
+            "chatbot": self.chatbot.id if self.chatbot else None,
+            "history": self.history,
+            "unique_client_string": self.unique_client_string,
+        }
 
     @property
     def formatted_class_name(self) -> str:
@@ -222,7 +247,7 @@ class ChatHelper(SmarterRequestMixin):
     @property
     def history(self) -> dict:
         """
-        Get the most recent logged history output for the chat session.
+        Serialize the most recent logged history output for the chat session.
         """
         chat_serializer = ChatSerializer(self.chat)
         chat_tool_call_serializer = ChatToolCallSerializer(self.chat_tool_call, many=True)
