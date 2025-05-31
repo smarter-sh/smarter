@@ -13,6 +13,7 @@ from time import sleep
 from typing import Callable
 
 from django.test import Client
+from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
@@ -22,7 +23,7 @@ from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.utils import get_readonly_yaml_file
 
-from ..models import Chat, ChatPluginUsage
+from ..models import Chat, ChatHistory, ChatPluginUsage
 from ..providers.providers import chat_providers
 from ..signals import (
     chat_completion_response,
@@ -319,9 +320,12 @@ class ProviderBaseClass(TestAccountMixin):
         self.assertIsNotNone(chat_histories)
 
         # test url api endpoint for chat history
-        response = self.client.get("/api/v1/chat/history/chat/")
+        chat = ChatHistory.objects.order_by("-id").first()
+        url = reverse("prompt_workbench:api:v1:chathistory", kwargs={"pk": chat.id if chat else 1})
+        response = self.client.get(url)
+
         self.assertEqual(response.status_code, 200)
-        print("/api/v1/chat/history/chat/ response:", response.json())
+        print(f"{url} response:", response.json())
 
         # give celery time to process the chat completion
         time.sleep(CELERY_WAIT)  # Pause execution for 1 second
