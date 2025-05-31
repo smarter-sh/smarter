@@ -149,7 +149,7 @@ class ChatProviderBase(ProviderDbMixin):
         "_messages",
         "_base_url",
         "_api_key",
-        "chat",
+        "_chat",
         "data",
         "plugins",
         "model",
@@ -182,6 +182,7 @@ class ChatProviderBase(ProviderDbMixin):
 
     _base_url: str
     _api_key: str
+    _chat: Chat
 
     data: dict
     plugins: Optional[List[StaticPlugin]]
@@ -236,7 +237,7 @@ class ChatProviderBase(ProviderDbMixin):
         self._base_url = None
         self._api_key = None
 
-        self.chat = None
+        self._chat = None
         self.data = None
         self.plugins = []
 
@@ -266,7 +267,7 @@ class ChatProviderBase(ProviderDbMixin):
 
         # initializations
         self.serialized_tool_calls = None
-        self.chat = kwargs.get("chat")
+        self._chat = kwargs.get("chat")
         self._provider = provider
         self._base_url = base_url
         self._api_key = api_key
@@ -726,7 +727,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             }
         """
         logger.info("%s %s", self.formatted_class_name, formatted_text("handler()"))
-        self.chat = chat
+        self._chat = chat
         if chat:
             self.account = chat.account
         self.data = data
