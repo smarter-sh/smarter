@@ -50,7 +50,7 @@ def handle_chat_session_invoked(sender, instance: SmarterChatSession, request, *
 @receiver(chat_config_invoked, dispatch_uid="chat_config_invoked")
 def handle_chat_config_invoked_(sender, instance: ChatConfigView, request, data: dict, *args, **kwargs):
     """Handle chat config invoked signal."""
-    url: str = sender.url
+    url: str = instance.url
 
     logger.info("%s url=%s", formatted_text("smarter.apps.prompt.receivers.chat_config_invoked"), url)
 
