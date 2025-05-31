@@ -9,12 +9,12 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django import waffle
-from smarter.lib.django.serializers import UserSerializer
+from smarter.lib.django.serializers import UserMiniSerializer
 from smarter.lib.django.user import UserType
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Account, UserProfile
-from .serializers import AccountSerializer, UserProfileSerializer
+from .serializers import AccountMiniSerializer, UserProfileSerializer
 from .utils import (
     account_number_from_url,
     get_cached_account,
@@ -132,21 +132,12 @@ class AccountMixin(SmarterHelperMixin):
                     self.formatted_class_name,
                     self.user_profile,
                 )
-        else:
-            # if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
-            logger.warning(
-                "%s.__init__(): is partially initialized: request: %s, user %s, account %s",
-                self.formatted_class_name,
-                request,
-                self._user,
-                self._account,
-            )
 
     def __str__(self):
         """
         Returns a string representation of the class.
         """
-        return f"{self.__class__.__name__}(user={self._user_profile}, account={self._account})"
+        return f"{self.__class__.__name__}(user={self.user_profile}, account={self._account})"
 
     @property
     def formatted_class_name(self) -> str:
@@ -166,7 +157,7 @@ class AccountMixin(SmarterHelperMixin):
         if self._account:
             return self._account
         if self._user_profile:
-            self._account = self._user_profile.account
+            self._account = self._user_profile.account if self._user_profile else None
         elif self._user:
             self._account = get_cached_account_for_user(self._user)
         return self._account
@@ -274,8 +265,15 @@ class AccountMixin(SmarterHelperMixin):
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {self.account.account_number}."
                 ) from e
-        if self.user:
+        if self._user:
             self._user_profile = get_cached_user_profile(user=self.user)
+        if not self._user_profile:
+            logger.warning(
+                "%s: user_profile() could not initialize _user_profile for user: %s, account: %s",
+                self.formatted_class_name,
+                self._user,
+                self._account,
+            )
         return self._user_profile
 
     @user_profile.setter
@@ -296,7 +294,17 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns True if the account, user, and user_profile are all set.
         """
-        return super().ready and self._account is not None and self._user is not None and self._user_profile is not None
+        retval = super().ready and self._account and self._user and self.user_profile
+        if not retval and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+            logger.warning(
+                "%s: ready() is False, super(): %s, account: %s, user: %s, user_profile: %s",
+                self.formatted_class_name,
+                super().ready,
+                self._account,
+                self._user,
+                self.user_profile,
+            )
+        return retval
 
     def to_json(self):
         """
@@ -304,8 +312,8 @@ class AccountMixin(SmarterHelperMixin):
         """
         return {
             "ready": self.ready,
-            "account": AccountSerializer(self._account).data if self._account else None,
-            "user": UserSerializer(self._user).data if self._user else None,
-            "user_profile": UserProfileSerializer(self._user_profile).data if self._user_profile else None,
+            "account": AccountMiniSerializer(self._account).data if self._account else None,
+            "user": UserMiniSerializer(self._user).data if self._user else None,
+            "user_profile": UserProfileSerializer(self.user_profile).data if self.user_profile else None,
             **super().to_json(),
         }

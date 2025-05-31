@@ -667,7 +667,12 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @property
     def ready(self) -> bool:
-        return super().ready and self._chatbot
+        retval = super().ready and self._chatbot
+        if not retval:
+            self._err = f"ChatBotHelper.ready() returning false because ChatBot is not initialized: {self.url}"
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
+                self.helper_logger(self._err)
+        return retval
 
     def to_json(self):
         """
