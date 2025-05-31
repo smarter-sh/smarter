@@ -200,6 +200,7 @@ def smarter_build_absolute_uri(request: HttpRequest) -> str:
     :return: The request URL.
     """
     if request is None:
+        logger.warning("smarter_build_absolute_uri() called with None request")
         return None
 
     url: str = None
@@ -208,47 +209,38 @@ def smarter_build_absolute_uri(request: HttpRequest) -> str:
     # skip validation bc we trust Django's build_absolute_uri()
     try:
         url = request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else None
-        return url
     except (AttributeError, KeyError):
         logger.warning(
             "smarter_build_absolute_uri() failed to call request.build_absolute_uri() with error: %s",
             formatted_text("AttributeError or KeyError"),
         )
-        url = None
 
     # fallback case: request is a valid HttpRequest object
     # we try to build the URL manually
-    try:
-        url = f"{request.scheme}://{request.get_host()}{request.get_full_path()}"
-        if SmarterValidator.is_valid_url(url):
-            return url
-    except (AttributeError, KeyError):
-        logger.warning(
-            "smarter_build_absolute_uri() failed to call request.get_host() or request.get_full_path() with error: %s, request: %s, %s",
-            formatted_text("AttributeError or KeyError"),
-            request,
-            type(request).__name__,
-        )
+    if not url:
+        try:
+            url = f"{request.scheme}://{request.get_host()}{request.get_full_path()}"
+            if SmarterValidator.is_valid_url(url):
+                return url
+        except (AttributeError, KeyError):
+            logger.warning(
+                "smarter_build_absolute_uri() failed to call request.get_host() or request.get_full_path() with error: %s, request: %s, %s",
+                formatted_text("AttributeError or KeyError"),
+                request,
+                type(request).__name__,
+            )
 
     # final fallback: try to build the URL from request.META
-    try:
-        scheme = request.META.get("wsgi.url_scheme", "http")
-        host = request.META.get("HTTP_HOST", request.META.get("SERVER_NAME"))
-        path = request.get_full_path()
-        url = f"{scheme}://{host}{path}"
-        if SmarterValidator.is_valid_url(url):
-            logger.info(
-                "smarter_build_absolute_uri() generated with request.META parameters: %s",
-                url,
+    if not url:
+        try:
+            scheme = request.META.get("wsgi.url_scheme", "http")
+            host = request.META.get("HTTP_HOST", request.META.get("SERVER_NAME"))
+            path = request.get_full_path()
+            url = f"{scheme}://{host}{path}"
+        except (AttributeError, KeyError):
+            logger.warning(
+                "smarter_build_absolute_uri() failed to build URL from request.META with error: %s",
+                formatted_text("AttributeError or KeyError"),
             )
-            return url
-    except (AttributeError, KeyError):
-        logger.warning(
-            "smarter_build_absolute_uri() failed to build URL from request.META with error: %s",
-            formatted_text("AttributeError or KeyError"),
-        )
 
-    logger.error(
-        "smarter_build_absolute_uri() failed to generate a valid URL from the request object.",
-    )
-    return None
+    return url

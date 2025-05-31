@@ -101,10 +101,10 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
             return None
         try:
             self._chatbot_helper = ChatBotHelper(
+                request=self.smarter_request,
                 name=self.name,
                 chatbot_id=self.chatbot_id,
                 # SmarterRequestMixin should have set these properties
-                request=self.smarter_request,
                 session_key=self.session_key,
                 # and these, for AccountMixin,
                 account=self.account,

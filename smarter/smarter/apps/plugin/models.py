@@ -472,6 +472,9 @@ class ConnectionBase(TimestampedModel):
         """
         Return a list of all instances of all concrete subclasses of ConnectionBase.
         """
+        if user is None:
+            logger.warning("get_cached_connections_for_user: user is None")
+            return []
         account = get_cached_account_for_user(user)
         instances = []
         logger.info("Fetching connections for user: %s, account: %s", user, account)
