@@ -119,7 +119,8 @@ class SmarterRequestMixin(AccountMixin):
 
     # pylint: disable=W0613
     def __init__(self, request: WSGIRequest, *args, **kwargs):
-        super().__init__(request, *args, **kwargs)
+        request = request or kwargs.pop("request", None) or args[0] if args else None
+        super().__init__(request, **kwargs)
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
@@ -128,16 +129,12 @@ class SmarterRequestMixin(AccountMixin):
             logger.info(
                 "SmarterRequestMixin().__init__() - initializing with request=%s, session_key=%s", request, session_key
             )
-        request = request or kwargs.get("request", None)
-        if not request and args:
-            request = args[0]
 
-        # do lazy initialization of the request object first.
         self._smarter_request: WSGIRequest = request
         self._timestamp = datetime.now()
         self._session_key: str = None
         self._data: dict = None
-        self._url = None
+        self._url: ParseResult = None
         self._url_urlunparse_without_params = None
         self._params = None
         self.invalidate_cached_properties()
@@ -162,7 +159,7 @@ class SmarterRequestMixin(AccountMixin):
             logger.warning("%s - request url is None.", self.formatted_class_name)
 
         # lazy excuses to not do anything...
-        if not self.smarter_request_ready and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+        if not self.ready and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             logger.info(
                 "%s.__init__() - request is not in a ready state. Abandoning initialization. url=%s",
                 self.formatted_class_name,
@@ -198,7 +195,7 @@ class SmarterRequestMixin(AccountMixin):
         if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             self.dump()
 
-        if self.smarter_request_ready:
+        if self.ready:
             self.helper_logger(
                 f"__init__() initialized successfully url={self.url}, session_key={self.session_key}, user={self.user_profile}"
             )
@@ -212,7 +209,7 @@ class SmarterRequestMixin(AccountMixin):
                 "SmarterRequestMixin().__init__() - finished with request=%s, session_key=%s ready=%s, user=%s",
                 self.smarter_request,
                 self.session_key,
-                self.smarter_request_ready,
+                self.ready,
                 self.user_profile,
             )
 
@@ -640,7 +637,7 @@ class SmarterRequestMixin(AccountMixin):
         - path_parts: ['api', 'v1', 'chatbots', '1', 'chat']
         - http://api.localhost:8000/
         """
-        if not self.smarter_request:
+        if not self.url:
             return False
         if "api" in self.url_path_parts:
             return True
@@ -691,7 +688,7 @@ class SmarterRequestMixin(AccountMixin):
         - https://example.3141-5926-5359.api.smarter.sh/
         - http://example.3141-5926-5359.api.localhost:8000/
         """
-        if not self._url_urlunparse_without_params:
+        if not self.url:
             return False
         if not self.smarter_request:
             return False
@@ -789,8 +786,10 @@ class SmarterRequestMixin(AccountMixin):
 
     @cached_property
     def is_default_domain(self) -> bool:
-        if not self.smarter_request:
-            return False
+        """
+        Returns True if the URL is the default domain for the environment.
+        example: api.alpha.platform.smarter.sh
+        """
         if not self.url:
             return False
         return smarter_settings.environment_api_domain in self.url
@@ -903,15 +902,11 @@ class SmarterRequestMixin(AccountMixin):
         return f"{parent_class}.SmarterRequestMixin()"
 
     @property
-    def smarter_request_ready(self) -> bool:
+    def ready(self) -> bool:
         """
-        a comprehensive self-check to determine if the request is ready for processing.
+        returns True if the request is ready for processing.
         """
-        try:
-            self.to_json()
-            return True
-        except (SmarterValueError, AttributeError, TypeError):
-            return False
+        return super().ready and self._smarter_request is not None
 
     # --------------------------------------------------------------------------
     # instance methods
@@ -1008,6 +1003,7 @@ class SmarterRequestMixin(AccountMixin):
         serializes the object.
         """
         return {
+            "ready": self.ready,
             "url": self.url,
             "session_key": self.session_key,
             "data": self.data,
@@ -1025,14 +1021,13 @@ class SmarterRequestMixin(AccountMixin):
             "subdomain": self.subdomain,
             "api_subdomain": self.api_subdomain,
             "domain": self.domain,
-            "user": str(self.user) if self.user else None,
-            "account": str(self.account) if self.account else None,
             "timestamp": self.timestamp.isoformat(),
             "unique_client_string": self.unique_client_string,
             "client_key": self.client_key,
             "ip_address": self.ip_address,
             "user_agent": self.user_agent,
             "parsed_url": str(self.parsed_url) if self.parsed_url else None,
+            **super().to_json(),
         }
 
     def eval_chatbot_url(self):

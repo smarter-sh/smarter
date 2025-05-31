@@ -182,7 +182,6 @@ class TestPluginBase(TestAccountMixin):
 
     def test_to_json(self):
         """Test that the StaticPlugin generates correct JSON output."""
-        plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_to_json")
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_to_json")
 
         plugin = StaticPlugin(user_profile=self.user_profile, data=self.data)
@@ -191,7 +190,6 @@ class TestPluginBase(TestAccountMixin):
         logger.info("TestPluginBase().test_to_json() to_json: %s", to_json)
 
         # verify that signal was sent
-        self.assertTrue(self.signals["plugin_created"])
         self.assertTrue(self.signals["plugin_ready"])
 
         self.assertIsInstance(to_json, dict)

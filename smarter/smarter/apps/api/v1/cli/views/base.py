@@ -355,8 +355,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}.smarter_request request object is not set. This should not happen."
             )
-        if not self.smarter_request_ready:
-            raise SmarterValueError(f"{self.formatted_class_name}.smarter_request is not ready. Cannot continue.")
+        if not self.ready:
+            raise SmarterValueError(f"{self.formatted_class_name} is not in a ready state. Cannot continue.")
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data

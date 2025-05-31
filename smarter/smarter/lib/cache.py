@@ -4,13 +4,13 @@ import hashlib
 import logging
 import pickle
 from functools import wraps
-from urllib.parse import urlparse
 
 from django.core.cache import cache
-from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest
 
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
+from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -127,9 +127,15 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
 
     def decorator(func):
         @wraps(func)
-        def wrapper(request: WSGIRequest, *args, **kwargs):
-            parsed_url = urlparse(request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else None)
-            url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+        def wrapper(request: HttpRequest, *args, **kwargs):
+            if request is None or not isinstance(request, HttpRequest):
+                logger.warning(
+                    "%s.cache_request() received an invalid request object: %s",
+                    logger_prefix,
+                    type(request).__name__,
+                )
+                return func(request, *args, **kwargs)
+            url = smarter_build_absolute_uri(request)
             user_identifier = (
                 request.user.username if hasattr(request, "user") and request.user.is_authenticated else "anonymous"
             )
