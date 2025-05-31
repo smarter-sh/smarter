@@ -1,6 +1,8 @@
 # pylint: disable=wrong-import-position
 """Test ChatBotHelper."""
 
+from logging import getLogger
+
 from django.contrib.auth import authenticate
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.handlers.wsgi import WSGIRequest
@@ -9,6 +11,9 @@ from django.test import RequestFactory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain, ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
+
+
+logger = getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -78,6 +83,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
             user_profile=self.user_profile,
         )
 
+        logger.info("dump: %s", helper.dump())
         self.assertTrue(
             helper.is_valid,
             f"Expected a chatbot helper to be valid, but got {helper.is_valid} for url {self.chatbot.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",

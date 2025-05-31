@@ -134,7 +134,7 @@ docker-collectstatic:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "./manage.py test smarter.apps.chatbot"
+	docker exec smarter-app bash -c "./manage.py test smarter.lib.django.middleware.tests.test_csrf_middleware"
 
 docker-prune:
 	make docker-check && \

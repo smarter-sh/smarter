@@ -45,8 +45,8 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         If the request is for a ChatBot, the ChatBot's URL is added to the list.
         """
         retval = settings.CSRF_TRUSTED_ORIGINS
-        if self.smarter_request.is_chatbot:
-            retval += [self.url]
+        if self.smarter_request and self.smarter_request.is_chatbot:
+            retval += [self.smarter_request.url]
         if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             logger.info("%s.CSRF_TRUSTED_ORIGINS: %s", self.formatted_class_name, retval)
         return retval
@@ -94,18 +94,19 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         # SmarterRequestMixin inside of middleware.
         self.smarter_request = SmarterRequestMixin(request)
 
+        url = self.smarter_request.url if self.smarter_request else "unknown"
         if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-            logger.info("%s.__call__(): %s", self.formatted_class_name, self.url)
+            logger.info("%s.__call__(): %s", self.formatted_class_name, url)
 
         if self.smarter_request.is_chatbot:
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-                logger.info("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.url)
+                logger.info("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, url)
             return None
 
         if self.smarter_request.is_chatbot and waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             logger.info("%s.process_request(): csrf_middleware_logging is active", self.formatted_class_name)
             logger.info("=" * 80)
-            logger.info("%s ChatBot: %s", self.formatted_class_name, self.url)
+            logger.info("%s ChatBot: %s", self.formatted_class_name, url)
             for cookie in request.COOKIES:
                 logger.info("CsrfViewMiddleware request.COOKIES: %s", cookie)
             logger.info("%s cookie settings", self.formatted_class_name)
