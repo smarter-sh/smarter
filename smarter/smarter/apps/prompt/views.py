@@ -193,9 +193,11 @@ class ChatConfigView(SmarterNeverCachedWebView):
     @chatbot_helper.setter
     def chatbot_helper(self, value: ChatBotHelper):
         self._chatbot_helper = value
-        if self._chatbot_helper:
+        if self._chatbot_helper and self._chatbot_helper.chatbot:
             self._chatbot = self.chatbot_helper.chatbot
             self.account = self.chatbot_helper.account
+            self.user = self.chatbot_helper.user
+            self.user_profile = self.chatbot_helper.user_profile
             if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
                 logger.info("%s - chatbot_helper() setter chatbot=%s", self.formatted_class_name, self.chatbot)
         else:

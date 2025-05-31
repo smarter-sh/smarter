@@ -874,7 +874,6 @@ def get_cached_chatbot_by_request(request: WSGIRequest) -> ChatBot:
     url = clean_url(url)
 
     def get_chatbot_by_url(url: str) -> ChatBot:
-        logger.info("get_cached_chatbot_by_request() called with url %s for user %s", url, request.user)
         chatbot_helper = ChatBotHelper(request)
         if chatbot_helper.is_valid:
             chatbot = chatbot_helper.chatbot

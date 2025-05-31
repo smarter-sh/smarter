@@ -403,11 +403,7 @@ class SmarterRequestMixin(AccountMixin):
         http://example.3141-5926-5359.api.localhost:8000/config
         SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
         """
-        if self.is_chatbot_named_url:
-            match = re.search(SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN, self.url)
-            if match:
-                return match.group(0)
-        return None
+        return account_number_from_url(self.url)
 
     @cached_property
     def smarter_request_chatbot_name(self) -> str:

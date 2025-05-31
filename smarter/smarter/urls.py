@@ -14,6 +14,10 @@ from wagtail.documents import urls as wagtaildocs_urls
 from wagtail_transfer import urls as wagtailtransfer_urls
 
 from smarter.apps.account.const import namespace as account_namespace
+from smarter.apps.account.utils import (
+    get_cached_account,
+    get_cached_admin_user_for_account,
+)
 from smarter.apps.account.views.authentication import (
     AccountRegisterView,
     LoginView,
@@ -85,6 +89,16 @@ def config_redirector(request: WSGIRequest) -> RedirectView:
     """
     helper = SmarterRequestMixin(request)
     if helper.is_config:
+        account_number = helper.smarter_request_chatbot_account_number
+        account = get_cached_account(account_number=helper.smarter_request_chatbot_account_number)
+        logger.info(
+            "Config redirector: account_number=%s, account=%s, url=%s",
+            account_number,
+            account,
+            request.build_absolute_uri(),
+        )
+        user = get_cached_admin_user_for_account(account)
+        request.user = user
         view = ChatConfigView.as_view()
         return view(request)
     return redirect("/docs/")
