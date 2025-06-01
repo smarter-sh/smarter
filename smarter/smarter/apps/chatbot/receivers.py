@@ -8,6 +8,8 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.http import HttpRequest
 
+from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.signals import plugin_deleting
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -64,6 +66,27 @@ from .tasks import (
 
 logger = logging.getLogger(__name__)
 module_prefix = "smarter.apps.chatbot.receivers"
+
+
+@receiver(plugin_deleting, dispatch_uid="plugin_deleting")
+def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
+    """Handle plugin deleting signal."""
+    logger.info(
+        "%s %s is being deleted. Pruning its usage records.",
+        formatted_text("smarter.apps.chatbot.receivers.plugin_deleting"),
+        plugin_meta.name,
+    )
+    ChatBotPlugin.objects.filter(plugin_meta=plugin_meta).delete()
+    logger.info(
+        "%s %s ChatBotPlugin records deleted.",
+        formatted_text("smarter.apps.chatbot.receivers.plugin_deleting"),
+        plugin_meta.name,
+    )
+    logger.info(
+        "%s %s has been pruned from all chatbot usage records.",
+        formatted_text("smarter.apps.chatbot.receivers.plugin_deleting"),
+        plugin_meta.name,
+    )
 
 
 @receiver(chatbot_deploy_failed, dispatch_uid="chatbot_deploy_failed")

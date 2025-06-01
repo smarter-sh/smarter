@@ -35,24 +35,24 @@ class Command(BaseCommand):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"manage.py retrieve_plugin: User {username} does not exist."))
+            self.stdout.write(self.style.ERROR(f"manage.py delete_plugin: User {username} does not exist."))
             sys.exit(1)
 
         try:
             account = Account.objects.get(account_number=account_number)
         except Account.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"manage.py retrieve_plugin: Account {account_number} does not exist."))
+            self.stdout.write(self.style.ERROR(f"manage.py delete_plugin: Account {account_number} does not exist."))
             sys.exit(1)
 
         try:
             user_profile = get_cached_user_profile(user=user, account=account)
         except UserProfile.DoesNotExist:
             self.stdout.write(
-                self.style.ERROR(f"manage.py retrieve_plugin: UserProfile for {user} and {account} does not exist.")
+                self.style.ERROR(f"manage.py delete_plugin: UserProfile for {user} and {account} does not exist.")
             )
             sys.exit(1)
 
-        self.stdout.write(f"manage.py retrieve_plugin: Retrieving plugin {name} for account {account}")
+        self.stdout.write(f"manage.py delete_plugin: Retrieving plugin {name} for account {account}")
 
         try:
             plugin_meta = PluginMeta.objects.get(name=options["name"], account_id=account.id)
