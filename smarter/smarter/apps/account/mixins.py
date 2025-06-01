@@ -54,14 +54,15 @@ class AccountMixin(SmarterHelperMixin):
         self._user: UserType = None
         self._user_profile: UserProfile = None
 
-        request: WSGIRequest = kwargs.get("request") or args[0] if args else None
-        if request and not isinstance(request, HttpRequest):
-            logger.warning(
-                "%s.__init__(): expected args[0] to be HttpRequest but got %s",
-                self.formatted_class_name,
-                type(request).__name__,
-            )
-            request = None
+        request: WSGIRequest = kwargs.get("request")
+        if not request and args:
+            for arg in args:
+                if isinstance(arg, HttpRequest):
+                    if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                        logger.info("%s.__init__(): received a request object: %s", self.formatted_class_name, arg)
+                    request = arg
+                    break
+
         account_number: str = kwargs.get("account_number")
         account = kwargs.get("account")
         user = kwargs.get("user")
