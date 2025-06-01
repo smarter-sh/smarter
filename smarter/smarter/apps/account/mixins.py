@@ -4,6 +4,7 @@
 import logging
 
 from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest
 
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
@@ -54,6 +55,13 @@ class AccountMixin(SmarterHelperMixin):
         self._user_profile: UserProfile = None
 
         request: WSGIRequest = kwargs.get("request") or args[0] if args else None
+        if request and not isinstance(request, HttpRequest):
+            logger.warning(
+                "%s.__init__(): expected args[0] to be HttpRequest but got %s",
+                self.formatted_class_name,
+                type(request).__name__,
+            )
+            request = None
         account_number: str = kwargs.get("account_number")
         account = kwargs.get("account")
         user = kwargs.get("user")
