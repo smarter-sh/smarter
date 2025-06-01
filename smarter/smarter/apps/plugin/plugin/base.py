@@ -11,6 +11,7 @@ from typing import Any, Type, Union
 # 3rd party stuff
 import yaml
 from django.db import transaction
+from django.db.models.query import QuerySet
 from rest_framework import serializers
 
 # smarter stuff
@@ -79,7 +80,7 @@ class PluginBase(ABC, SmarterHelperMixin):
     _plugin_meta: PluginMeta = None
     _plugin_selector: PluginSelector = None
     _plugin_prompt: PluginPrompt = None
-    _plugin_selector_history: PluginSelectorHistory = None
+    _plugin_selector_history: QuerySet = None
 
     _plugin_prompt_serializer: dict = None
     _plugin_selector_serializer: dict = None
@@ -301,7 +302,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             raise SmarterPluginError("PluginSelector.DoesNotExist") from e
 
         try:
-            self._plugin_selector_history = PluginSelectorHistory.objects.get(plugin_selector=self.plugin_selector)
+            self._plugin_selector_history = PluginSelectorHistory.objects.filter(plugin_selector=self.plugin_selector)
         except PluginSelectorHistory.DoesNotExist as e:
             self._plugin_selector_history = None
 
