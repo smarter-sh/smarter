@@ -7,6 +7,7 @@ plugin_created = Signal()
 plugin_cloned = Signal()
 plugin_updated = Signal()
 plugin_deleted = Signal()
+plugin_deleting = Signal()
 plugin_called = Signal()
 
 plugin_ready = Signal()

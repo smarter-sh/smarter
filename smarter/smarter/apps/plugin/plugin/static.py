@@ -44,7 +44,24 @@ class StaticPlugin(PluginBase):
 
     @property
     def plugin_data(self) -> PluginDataStatic:
-        """Return the plugin data."""
+        """
+        Return the plugin data as a Django ORM instance.
+        """
+        if self._plugin_data:
+            return self._plugin_data
+        # we only want a preexisting manifest ostensibly sourced
+        # from the cli, not a lazy-loaded
+        if self._manifest and self.plugin_meta:
+            # this is an update scenario. the Plugin exists in the database,
+            # AND we've received manifest data from the cli.
+            self._plugin_data = PluginDataStatic(**self.plugin_data_django_model)
+        if self.plugin_meta:
+            # we don't have a Pydantic model but we do have an existing
+            # Django ORM model instance, so we can use that directly.
+            self._plugin_data = PluginDataStatic.objects.get(
+                plugin=self.plugin_meta,
+            )
+        # new Plugin scenario. there's nothing in the database yet.
         return self._plugin_data
 
     @property
@@ -66,13 +83,17 @@ class StaticPlugin(PluginBase):
 
     @property
     def plugin_data_django_model(self) -> dict:
-        """Return the plugin data definition as a json object."""
+        """
+        transform the Pydantic model into a Django ORM model.
+        Return the plugin data definition as a json object.
+        """
         # recast the Pydantic model the the PluginDataStatic Django ORM model
-        return {
-            "plugin": self.plugin_meta,
-            "description": self.manifest.spec.data.description,
-            "static_data": self.manifest.spec.data.staticData,
-        }
+        if self._manifest:
+            return {
+                "plugin": self.plugin_meta,
+                "description": self.manifest.spec.data.description,
+                "static_data": self.manifest.spec.data.staticData,
+            }
 
     @property
     def custom_tool(self) -> dict:

@@ -7,6 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.signals import plugin_deleting
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -32,6 +33,35 @@ from .views import ChatConfigView, SmarterChatSession
 
 
 logger = logging.getLogger(__name__)
+prefix = "smarter.apps.prompt.receivers"
+
+
+@receiver(plugin_deleting, dispatch_uid=prefix + ".plugin_deleting")
+def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
+    """Handle plugin deleting signal."""
+    logger.info(
+        "%s %s is being deleted. Pruning its usage records.",
+        formatted_text(f"{prefix}.plugin_deleting"),
+        plugin_meta.name,
+    )
+
+    ChatPluginUsage.objects.filter(plugin=plugin_meta).delete()
+    logger.info(
+        "%s %s ChatPluginUsage records deleted.",
+        formatted_text(f"{prefix}.plugin_deleting"),
+        plugin_meta.name,
+    )
+    ChatToolCall.objects.filter(plugin=plugin_meta).delete()
+    logger.info(
+        "%s %s ChatToolCall records deleted.",
+        formatted_text(f"{prefix}.plugin_deleting"),
+        plugin_meta.name,
+    )
+    logger.info(
+        "%s %s has been pruned from all prompt usage records.",
+        formatted_text(f"{prefix}.plugin_deleting"),
+        plugin_meta.name,
+    )
 
 
 # chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
@@ -42,9 +72,7 @@ def handle_chat_session_invoked(sender, instance: SmarterChatSession, request, *
     if request is not None:
         url = request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else None
 
-    logger.info(
-        "%s.%s %s - %s", formatted_text("smarter.apps.prompt.receivers.chat_session_invoked"), sender, instance, url
-    )
+    logger.info("%s.%s %s - %s", formatted_text(f"{prefix}.chat_session_invoked"), sender, instance, url)
 
 
 @receiver(chat_config_invoked, dispatch_uid="chat_config_invoked")
@@ -52,7 +80,7 @@ def handle_chat_config_invoked_(sender, instance: ChatConfigView, request, data:
     """Handle chat config invoked signal."""
     url: str = instance.url
 
-    logger.info("%s url=%s", formatted_text("smarter.apps.prompt.receivers.chat_config_invoked"), url)
+    logger.info("%s url=%s", formatted_text(f"{prefix}.chat_config_invoked"), url)
 
 
 def get_sender_name(sender):
