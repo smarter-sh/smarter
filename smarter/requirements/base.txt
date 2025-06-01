@@ -26,7 +26,7 @@ retry-requests==2.0.0                   # HTTP requests retry
 social-auth-app-django==5.4.2           # Social authentication for Django
 tldextract==5.1.3                       # Extracts the top-level domain from a URL
 validators==0.34.0                      # Data validation library
-whitenoise==6.8.2                       # static file serving
+whitenoise==6.9.0                       # static file serving
 
 
 # Django
