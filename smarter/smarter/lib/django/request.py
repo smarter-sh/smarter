@@ -643,6 +643,8 @@ class SmarterRequestMixin(AccountMixin):
         - path_parts: ['api', 'v1', 'chatbots', '1', 'chat']
         - http://api.localhost:8000/
         """
+        if not self.smarter_request:
+            return False
         if not self.url:
             return False
         if "api" in self.url_path_parts:
@@ -711,6 +713,8 @@ class SmarterRequestMixin(AccountMixin):
         - https://example.3141-5926-5359.api.smarter.sh/
         - http://example.3141-5926-5359.api.localhost:8000/
         """
+        if not self.smarter_request:
+            return False
         if not self.url:
             return False
         if not self.smarter_request:
@@ -797,6 +801,8 @@ class SmarterRequestMixin(AccountMixin):
         Returns True if the URL is the default domain for the environment.
         example: api.alpha.platform.smarter.sh
         """
+        if not self.smarter_request:
+            return False
         if not self.url:
             return False
         return smarter_settings.environment_api_domain in self.url

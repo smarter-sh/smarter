@@ -553,17 +553,6 @@ class ChatBotHelper(SmarterRequestMixin):
         self._err: str = None
 
         super().__init__(request, **kwargs)
-        if self.is_config and self.smarter_request:
-            admin_user = get_cached_smarter_admin_user_profile()
-            self.user = admin_user.user
-            self.account = admin_user.account
-            self.user_profile = admin_user
-            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-                logger.info(
-                    "ChatBotHelper.__init__() substituting admin user %s for config url: %s",
-                    self.user.username,
-                    self.url,
-                )
 
         if not self.user or not self.user.is_authenticated:
             logger.warning("ChatBotHelper.__init__() called with unauthenticated request")

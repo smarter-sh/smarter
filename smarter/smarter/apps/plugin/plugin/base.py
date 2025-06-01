@@ -301,9 +301,9 @@ class PluginBase(ABC, SmarterHelperMixin):
             raise SmarterPluginError("PluginSelector.DoesNotExist") from e
 
         try:
-            self.plugin_selector_history = PluginSelectorHistory.objects.get(plugin_selector=self.plugin_selector)
-        except PluginSelector.DoesNotExist as e:
-            pass
+            self._plugin_selector_history = PluginSelectorHistory.objects.get(plugin_selector=self.plugin_selector)
+        except PluginSelectorHistory.DoesNotExist as e:
+            self._plugin_selector_history = None
 
         try:
             self._plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
