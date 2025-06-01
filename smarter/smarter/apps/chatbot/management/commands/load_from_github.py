@@ -14,7 +14,10 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.account.utils import (
+    get_cached_account,
+    get_cached_admin_user_for_account,
+)
 from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
@@ -231,12 +234,14 @@ class Command(BaseCommand):
         if not account_number and not username:
             raise SmarterValueError("username and/or account_number is required.")
 
+        if account_number:
+            self.account = get_cached_account(account_number=account_number)
+
         if username:
             self.user = User.objects.get(username=username)
         else:
             self.user = get_cached_admin_user_for_account(account=self.account)
 
-        self.account = Account.objects.get(account_number=account_number) if account_number else None
         self.user_profile = UserProfile.objects.get(user=self.user, account=self.account) if self.user else None
 
         if repo_version == 2:
