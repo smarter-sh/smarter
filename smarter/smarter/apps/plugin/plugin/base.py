@@ -749,7 +749,9 @@ class PluginBase(ABC, SmarterHelperMixin):
         """Delete a plugin."""
 
         def committed():
-            plugin_deleted.send(sender=self.__class__, plugin=self, plugin_meta=self.plugin_meta)
+            plugin_deleted.send(
+                sender=self.__class__, plugin=self, plugin_meta=self.plugin_meta, plugin_name=plugin_name
+            )
             logger.debug("Deleted plugin %s: %s.", plugin_id, plugin_name)
 
         if not self.ready:

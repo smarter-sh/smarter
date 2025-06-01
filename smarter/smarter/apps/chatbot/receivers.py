@@ -68,7 +68,7 @@ logger = logging.getLogger(__name__)
 module_prefix = "smarter.apps.chatbot.receivers"
 
 
-@receiver(plugin_deleting, dispatch_uid="plugin_deleting")
+@receiver(plugin_deleting, dispatch_uid=module_prefix + ".plugin_deleting")
 def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
     """Handle plugin deleting signal."""
     logger.info(
