@@ -1,0 +1,31 @@
+apiVersion: smarter.sh/v1
+kind: Secret
+metadata:
+  description: A secret for testing purposes
+  name: test_secret
+  tags: []
+  version: 0.1.0
+spec:
+  config:
+    value: test-password
+    expiration_date: "2026-12-31"
+---
+apiVersion: smarter.sh/v1
+kind: ApiConnection
+metadata:
+  description: test apiconnection
+  name: test_apiconnection
+  version: 1.0.0
+spec:
+  connection:
+    account: 6097
+    apiKey: test_secret
+    authMethod: basic
+    baseUrl: http://localhost:8000/api/v1/cli/example_manifest/plugin/
+    proxyHost: null
+    proxyPassword: null
+    proxyPort: null
+    proxyProtocol: http
+    proxyUsername: null
+    timeout: 30
+    version: 1.0.0

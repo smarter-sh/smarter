@@ -2,12 +2,14 @@
 
 from django.apps import AppConfig
 
+from .const import namespace as app_name
+
 
 class ChatbotConfig(AppConfig):
     """Django Config for the ChatBot app."""
 
     default_auto_field = "django.db.models.BigAutoField"
-    name = "smarter.apps.chatbot"
+    name = f"smarter.apps.{app_name}"
     verbose_name = "ChatBot"
 
     # pylint: disable=C0415,W0611

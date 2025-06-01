@@ -1,6 +1,5 @@
 """Test BlockSensitiveFilesMiddleware."""
 
-import unittest
 from http import HTTPStatus
 
 from django.http import HttpResponse
@@ -8,12 +7,14 @@ from django.test import RequestFactory
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.lib.django.middleware.sensitive_files import BlockSensitiveFilesMiddleware
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestBlockSensitiveFilesMiddleware(unittest.TestCase, AccountMixin):
+class TestBlockSensitiveFilesMiddleware(SmarterTestBase, AccountMixin):
     """Test BlockSensitiveFilesMiddleware."""
 
     def setUp(self):
+        super().setUp()
         self.middleware = BlockSensitiveFilesMiddleware(lambda req: HttpResponse())
         self.factory = RequestFactory()
 
@@ -26,4 +27,8 @@ class TestBlockSensitiveFilesMiddleware(unittest.TestCase, AccountMixin):
         for sensitive_file in self.middleware.sensitive_files:
             request = self.factory.get("/" + sensitive_file)
             response = self.middleware(request)
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertEqual(
+                response.status_code,
+                HTTPStatus.FORBIDDEN,
+                f"Expected 403 for {sensitive_file}, got {response.status_code}",
+            )

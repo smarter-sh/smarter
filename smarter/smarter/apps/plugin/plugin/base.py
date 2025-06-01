@@ -1,5 +1,6 @@
 """A Compound Model class for managing plugins."""
 
+# python stuff
 import copy
 import json
 import logging
@@ -7,17 +8,16 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, Type, Union
 
+# 3rd party stuff
 import yaml
 from django.db import transaction
 from rest_framework import serializers
 
-from smarter.apps.account.manifest.models.user_profile import UserProfileModel
+# smarter stuff
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
-from smarter.apps.chat.providers.const import OpenAIMessageKeys
+from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
-
-# FIX NOTE: these imports need to be parameterized by version.
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
@@ -25,10 +25,20 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
-from ..manifest.enum import SAMPluginSpecSelectorKeyDirectiveValues
-from ..manifest.models.plugin.const import MANIFEST_KIND
-from ..manifest.models.plugin.model import SAMPlugin
-from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
+# plugin stuff
+from ..manifest.enum import (
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+    SAMPluginSpecKeys,
+)
+from ..manifest.models.static_plugin.const import MANIFEST_KIND
+from ..manifest.models.static_plugin.model import SAMStaticPlugin
+from ..models import (
+    PluginDataBase,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+    PluginSelectorHistory,
+)
 from ..nlp import does_refer_to
 from ..serializers import (
     PluginMetaSerializer,
@@ -58,17 +68,18 @@ class SmarterPluginError(SmarterExceptionBase):
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class PluginBase(ABC):
+class PluginBase(ABC, SmarterHelperMixin):
     """An abstract base class for working with plugins."""
 
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
     _metadata_class: str = None
-    _manifest: SAMPlugin = None
-    _pydantic_model: Type[SAMPlugin] = SAMPlugin
+    _manifest: SAMStaticPlugin = None
+    _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
 
     _plugin_meta: PluginMeta = None
     _plugin_selector: PluginSelector = None
     _plugin_prompt: PluginPrompt = None
+    _plugin_selector_history: PluginSelectorHistory = None
 
     _plugin_prompt_serializer: dict = None
     _plugin_selector_serializer: dict = None
@@ -77,7 +88,7 @@ class PluginBase(ABC):
     _selected: bool = False
     _params: dict = None
 
-    _session_key: str = None
+    _user_profile: UserProfile = None
 
     # abstract properties
     _plugin_data: Any = TimestampedModel
@@ -86,14 +97,15 @@ class PluginBase(ABC):
     # pylint: disable=too-many-arguments,too-many-branches
     def __init__(
         self,
+        *args,
         user_profile: UserProfile = None,
         selected: bool = False,
         api_version: str = None,
-        manifest: SAMPlugin = None,
+        manifest: SAMStaticPlugin = None,
         plugin_id: int = None,
         plugin_meta: PluginMeta = None,
         data: Union[dict, str] = None,
-        session_key: str = None,
+        **kwargs,
     ):
         """
         Options for initialization are:
@@ -102,16 +114,33 @@ class PluginBase(ABC):
         - yaml manifest or json representation of a yaml manifest
         see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
+        super().__init__(*args, **kwargs)
         if sum([bool(data), bool(manifest), bool(plugin_id), bool(plugin_meta)]) != 1:
             raise SmarterPluginError(
                 f"Must specify one and only one of: manifest, data, plugin_id, or plugin_meta. "
                 f"Received: data {bool(data)}, manifest {bool(manifest)}, "
                 f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}."
             )
-        self.api_version = api_version or self.api_version
+        self._api_version = api_version or self.api_version
         self._selected = selected
         self._user_profile = user_profile
-        self._session_key = session_key
+
+        self._metadata_class = None
+        self._manifest = None
+        self._pydantic_model = None
+
+        self._plugin_meta = None
+        self._plugin_selector = None
+        self._plugin_prompt = None
+        self._plugin_selector_history = None
+
+        self._plugin_prompt_serializer = None
+        self._plugin_selector_serializer = None
+        self._plugin_meta_serializer = None
+
+        self._params = None
+        self._plugin_data = None
+        self._plugin_data_serializer = None
 
         #######################################################################
         # identifiers for existing plugins
@@ -140,7 +169,9 @@ class PluginBase(ABC):
                 kind=self.kind,
                 manifest=data,
             )
-            self._manifest = SAMPlugin(**loader.pydantic_model_dump())
+            if not loader.ready:
+                raise SAMValidationError(f"Loader is not ready. SAMLoader is not ready.")
+            self._manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
             self.create()
 
         if self.ready:
@@ -201,11 +232,6 @@ class PluginBase(ABC):
     # Base class properties
     ###########################################################################
     @property
-    def session_key(self) -> str:
-        """Return the session key."""
-        return self._session_key
-
-    @property
     def metadata_class(self) -> str:
         """Return the metadata class."""
         return self._metadata_class
@@ -241,12 +267,12 @@ class PluginBase(ABC):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPlugin:
+    def manifest(self) -> SAMStaticPlugin:
         """Return the Pydandic model of the plugin."""
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMPlugin(**self.to_json())
+            self._manifest = SAMStaticPlugin(**self.to_json())
         return self._manifest
 
     @property
@@ -275,6 +301,11 @@ class PluginBase(ABC):
             raise SmarterPluginError("PluginSelector.DoesNotExist") from e
 
         try:
+            self._plugin_selector_history = PluginSelectorHistory.objects.get(plugin_selector=self.plugin_selector)
+        except PluginSelectorHistory.DoesNotExist as e:
+            self._plugin_selector_history = None
+
+        try:
             self._plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
         except PluginPrompt.DoesNotExist as e:
             raise SmarterPluginError("PluginPrompt.DoesNotExist") from e
@@ -289,9 +320,10 @@ class PluginBase(ABC):
         """Return the plugin meta."""
         if self._plugin_meta:
             return self._plugin_meta
-        self._plugin_meta = PluginMeta.objects.filter(
-            account=self.user_profile.account, name=self.manifest.metadata.name
-        ).first()
+        if self._user_profile and self._manifest:
+            self._plugin_meta = PluginMeta.objects.filter(
+                account=self.user_profile.account, name=self.manifest.metadata.name
+            ).first()
         return self._plugin_meta
 
     @property
@@ -307,6 +339,8 @@ class PluginBase(ABC):
         """Return a dict for loading the plugin meta Django ORM model."""
         if not self.manifest:
             return None
+        if not self.user_profile:
+            raise SmarterPluginError("UserProfile is not set.")
         return {
             "id": self.id,
             "account": self.user_profile.account,
@@ -317,6 +351,11 @@ class PluginBase(ABC):
             "author": self.user_profile,
             "tags": self.manifest.metadata.tags,
         }
+
+    @property
+    def plugin_selector_history(self) -> PluginSelectorHistory:
+        """Return the plugin selector history serializer."""
+        return self._plugin_selector_history
 
     @property
     def plugin_selector(self) -> PluginSelector:
@@ -372,10 +411,9 @@ class PluginBase(ABC):
     def user_profile(self) -> UserProfile:
         """Return the user profile."""
         if not self._user_profile:
-            self._user_profile = get_cached_smarter_admin_user_profile()
             logger.warning(
-                "PluginBase.user_profile(). session_key=%s UserProfile not set. Falling back to Smarter admin user profile.",
-                self.session_key,
+                "%s.user_profile() was accessed prior to being set.",
+                self.formatted_class_name,
             )
         return self._user_profile
 
@@ -430,13 +468,9 @@ class PluginBase(ABC):
 
         # recast data types from Pydantic models to Django ORM models
         if not isinstance(self.user_profile, UserProfile):
-            # if the user_profile is a Pydantic model, convert it to a Django ORM model.
-            if isinstance(self.user_profile, UserProfileModel):
-                self._user_profile = UserProfile.objects.get(id=self.user_profile.id)
-            else:
-                raise SmarterPluginError(
-                    f"Expected type of {UserProfile} for self.user_profile, but got {type(self.user_profile)}."
-                )
+            raise SmarterPluginError(
+                f"Expected type of {UserProfile} for self.user_profile, but got {type(self.user_profile)}."
+            )
 
         return True
 
@@ -484,7 +518,7 @@ class PluginBase(ABC):
         if self._selected:
             return True
 
-        if self.plugin_selector.directive == SAMPluginSpecSelectorKeyDirectiveValues.ALWAYS.value:
+        if self.plugin_selector.directive == SAMPluginCommonSpecSelectorKeyDirectiveValues.ALWAYS.value:
             self._selected = True
             return self._selected
 
@@ -501,7 +535,6 @@ class PluginBase(ABC):
                         user=self.user_profile.user if self.user_profile else None,
                         input_text=input_text,
                         search_term=search_term,
-                        session_key=self.session_key,
                     )
                     return True
 
@@ -519,7 +552,6 @@ class PluginBase(ABC):
                                 user=user,
                                 messages=messages,
                                 search_term=search_term,
-                                session_key=self.session_key,
                             )
                             return True
 
@@ -559,7 +591,7 @@ class PluginBase(ABC):
             retval = json.dumps(retval)
             plugin_called.send(
                 sender=self.function_calling_plugin,
-                plugin=self.plugin_meta,
+                plugin=self,
                 inquiry_type=inquiry_type,
                 inquiry_return=retval,
             )
@@ -567,7 +599,7 @@ class PluginBase(ABC):
         except KeyError:
             plugin_called.send(
                 sender=self.function_calling_plugin,
-                plugin=self.plugin_meta,
+                plugin=self,
                 inquiry_type=inquiry_type,
                 inquiry_return="KeyError",
             )
@@ -591,11 +623,17 @@ class PluginBase(ABC):
 
     def create(self):
         """Create a plugin from either yaml or a dictionary."""
+        logger.info("%s.create() creating plugin %s", self.formatted_class_name, self.manifest.metadata.name)
 
         def committed(plugin_id: int):
             self.id = plugin_id
             plugin_created.send(sender=self.__class__, plugin=self)
-            logger.debug("Created plugin %s: %s.", self.plugin_meta.name, self.plugin_meta.id)
+            logger.info(
+                "%s.create() created and committed plugin %s: %s.",
+                self.formatted_class_name,
+                self.plugin_meta.name,
+                self.plugin_meta.id,
+            )
 
         if not self.manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
@@ -607,18 +645,26 @@ class PluginBase(ABC):
 
         if self.plugin_meta:
             self.id = self.plugin_meta.id
-            logger.info("Plugin %s already exists. Updating plugin %s.", meta_data["name"], self.plugin_meta.id)
+            logger.info(
+                "%s.create() Plugin %s already exists. Updating plugin %s.",
+                meta_data["name"],
+                self.formatted_class_name,
+                self.plugin_meta.id,
+            )
             return self.update()
 
         with transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
+            logger.info("%s.create() created PluginMeta: %s", self.formatted_class_name, plugin_meta)
 
             selector[PLUGIN_KEY] = plugin_meta
             prompt[PLUGIN_KEY] = plugin_meta
             plugin_data[PLUGIN_KEY] = plugin_meta
 
-            PluginSelector.objects.create(**selector)
-            PluginPrompt.objects.create(**prompt)
+            plugin_selector = PluginSelector.objects.create(**selector)
+            logger.info("%s.create() created PluginSelector: %s", self.formatted_class_name, plugin_selector)
+            plugin_prompt = PluginPrompt.objects.create(**prompt)
+            logger.info("%s.create() created PluginPrompt: %s", self.formatted_class_name, plugin_prompt)
             self.plugin_data_class.objects.create(**plugin_data)
 
         transaction.on_commit(lambda: committed(plugin_id=plugin_meta.id))
@@ -690,7 +736,7 @@ class PluginBase(ABC):
         """Delete a plugin."""
 
         def committed():
-            plugin_deleted.send(sender=self.__class__, plugin_id=plugin_id, plugin_name=plugin_name)
+            plugin_deleted.send(sender=self.__class__, plugin=self)
             logger.debug("Deleted plugin %s: %s.", plugin_id, plugin_name)
 
         if not self.ready:
@@ -721,7 +767,7 @@ class PluginBase(ABC):
         """Clone a plugin."""
 
         def committed(new_plugin_id: int):
-            plugin_cloned.send(sender=self.__class__, plugin_id=new_plugin_id)
+            plugin_cloned.send(sender=self.__class__, plugin=self)
             logger.debug(
                 "Cloned plugin %s: %s to %s: %s", self.id, self.name, plugin_meta_copy.id, plugin_meta_copy.name
             )
@@ -784,19 +830,20 @@ class PluginBase(ABC):
         if self.ready:
             if version == "v1":
                 retval = {
-                    "apiVersion": self.api_version,
-                    "kind": self.kind,
-                    "metadata": self.plugin_meta_serializer.data,
-                    "spec": {
-                        "selector": self.plugin_selector_serializer.data,
-                        "prompt": self.plugin_prompt_serializer.data,
-                        "data": {
+                    SAMKeys.APIVERSION.value: self.api_version,
+                    SAMKeys.KIND.value: self.kind,
+                    SAMKeys.METADATA.value: self.plugin_meta_serializer.data,
+                    SAMKeys.SPEC.value: {
+                        SAMPluginSpecKeys.SELECTOR.value: self.plugin_selector_serializer.data,
+                        SAMPluginSpecKeys.PROMPT.value: self.plugin_prompt_serializer.data,
+                        SAMPluginSpecKeys.DATA.value: {
                             "description": description,
                             f"{self.metadata_class}": self.plugin_data_serializer.data,
                         },
                     },
-                    "status": {
-                        "account_number": self.user_profile.account.account_number,
+                    SAMKeys.STATUS.value: {
+                        "id": self.plugin_meta.id,
+                        "accountNumber": self.user_profile.account.account_number,
                         "username": self.user_profile.user.get_username(),
                         "created": self.plugin_meta.created_at.isoformat(),
                         "modified": self.plugin_meta.updated_at.isoformat(),

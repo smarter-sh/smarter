@@ -1,18 +1,19 @@
 """Test Manifest pages"""
 
-import json
 import logging
 from http import HTTPStatus
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.common.conf import settings as smarter_settings
+from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+
+from .base_class import ApiV1CliTestBase
 
 
 logger = logging.getLogger(__name__)
 
 
-class TestDocsManifests(ApiV1TestBase):
+class TestDocsManifests(ApiV1CliTestBase):
     """
     Test Manifest pages
     """
@@ -27,24 +28,20 @@ class TestDocsManifests(ApiV1TestBase):
             response_body, status = self.get_response(path=url)
             self.assertEqual(status, HTTPStatus.OK.value)
 
-        try:
+            # Verify high-level structure
             self.assertIsInstance(response_body, dict)
 
-            # Verify high-level structure
-            self.assertIn("data", response_body)
-            self.assertIsInstance(response_body["data"], dict)
+            self.assertIn(SmarterJournalApiResponseKeys.DATA, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.DATA], dict)
 
-            self.assertIn("message", response_body)
-            self.assertIsInstance(response_body["message"], str)
+            self.assertIn(SmarterJournalApiResponseKeys.MESSAGE, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.MESSAGE], str)
 
-            self.assertIn("api", response_body)
-            self.assertIsInstance(response_body["api"], str)
+            self.assertIn(SmarterJournalApiResponseKeys.API, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.API], str)
 
-            self.assertIn("thing", response_body)
-            self.assertIsInstance(response_body["thing"], str)
+            self.assertIn(SmarterJournalApiResponseKeys.THING, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.THING], str)
 
-            self.assertIn("metadata", response_body)
-            self.assertIsInstance(response_body["metadata"], dict)
-
-        except json.JSONDecodeError:
-            self.fail("Response body is not valid JSON")
+            self.assertIn(SmarterJournalApiResponseKeys.METADATA, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.METADATA], dict)

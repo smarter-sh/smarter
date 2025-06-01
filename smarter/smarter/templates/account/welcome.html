@@ -14,7 +14,7 @@
 						<div class="card-body py-15 py-lg-20">
 							<!--begin::Logo-->
 							<div class="mb-7">
-								<a href="/" class="">
+								<a href={% url 'root_home' %} class="">
 									<img alt="Logo" src="{% static 'querium/querium-logo-orange-transparent.png' %}" class="h-200px" />
 								</a>
 							</div>
@@ -34,7 +34,7 @@
 							<!--end::Illustration-->
 							<!--begin::Link-->
 							<div class="mb-0">
-								<a href="/" class="btn btn-sm btn-primary">Go To Dashboard</a>
+								<a href={% url 'root_home' %} class="btn btn-sm btn-primary">Go To Dashboard</a>
 							</div>
 							<!--end::Link-->
 						</div>

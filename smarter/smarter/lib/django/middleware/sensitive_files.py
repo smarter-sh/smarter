@@ -1,5 +1,6 @@
 """This module is used to suppress DisallowedHost exception and return HttpResponseForbidden instead."""
 
+import fnmatch
 import logging
 import re
 
@@ -19,12 +20,14 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
         super().__init__(get_response)
         self.get_response = get_response
 
-        # allow password reset links
+        # grant amnesty for specific patterns
         self.allowed_patterns = [
             re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
-            re.compile(r"^/docs/json-schema/sqlconnection/$"),
-            re.compile(r"^/api/v1/cli/schema/sqlconnection/$"),
-            re.compile(r"^/docs/manifest/sqlconnection/$"),
+            re.compile(r"^/api(/.*)?$"),
+            re.compile(r"^/admin(/.*)?$"),
+            re.compile(r"^/plugin(/.*)?$"),
+            re.compile(r"^/docs/manifest(/.*)?$"),
+            re.compile(r"^/docs/json-schema(/.*)?$"),
         ]
         self.sensitive_files = {
             ".env",
@@ -106,15 +109,23 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
     def __call__(self, request):
         request_path = request.path.lower()
 
-        # Allow specific patterns to pass through
-        for pattern in self.allowed_patterns:
-            if pattern.match(request_path):
-                logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
-                return self.get_response(request)
+        # Check for sensitive files using glob patterns
+        path_basename = request_path.rsplit("/", 1)[-1]
+        for sensitive_file in self.sensitive_files:
+            sensitive_file = sensitive_file.lower()
+            if (
+                fnmatch.fnmatch(path_basename, sensitive_file)
+                or fnmatch.fnmatch(request_path, sensitive_file)
+                or sensitive_file in request_path  # fallback for legacy entries
+            ):
+                # Allow specific patterns to pass through
+                for pattern in self.allowed_patterns:
+                    if pattern.match(request_path):
+                        logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
+                        return self.get_response(request)
 
-        if any(sensitive_file in request.path for sensitive_file in self.sensitive_files):
-            logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
-            return HttpResponseForbidden(
-                "Your request has been blocked by Smarter. Contact support@smarter.sh for assistance."
-            )
+                logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
+                return HttpResponseForbidden(
+                    "Your request has been blocked by Smarter. Contact support@smarter.sh for assistance."
+                )
         return self.get_response(request)

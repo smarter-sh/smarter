@@ -32,7 +32,7 @@
 			<!--end::sidebar mobile toggle-->
 			<!--begin::Mobile logo-->
 			<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
-				<a href="/" class="d-lg-none">
+				<a href={% url 'root_home' %} class="d-lg-none">
 					<img alt="Logo" src="{% static 'querium/querium-logo-orange-transparent.png' %}"
 						class="theme-light-show h-60px" />
 					<img alt="Logo" src="{% static 'querium/querium-logo-white-transparent.png' %}"
@@ -262,7 +262,7 @@
 			<!--begin::Logo-->
 			<div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
 				<!--begin::Logo image-->
-				<a href="/">
+				<a href={% url 'root_home' %}>
 					<img alt="Logo" src="{% static 'querium/querium-logo-white-transparent.png' %}"
 						class="h-75px app-sidebar-logo-default" />
 				</a>
@@ -317,7 +317,7 @@
 								<!--begin:Menu item Dashboard-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="/dashboard/" target="_self">
+									<a class="menu-link" href="{% url 'dashboard:dashboard' %}" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-message-programming fs-2">
 												<span class="path1"></span>
@@ -331,10 +331,10 @@
 								</div>
 								<!--end:Menu item-->
 
-                <!--begin:Menu item Chatbots-->
+                <!--begin:Menu item Workbench -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="/chatbots/" target="_self">
+									<a class="menu-link" href="{% url 'prompt_workbench:listview' %}" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-message-text-2 fs-2">
 												<span class="path1"></span>
@@ -342,7 +342,7 @@
 												<span class="path3"></span>
 											</i>
 										</span>
-										<span class="menu-title">Chatbots</span>
+										<span class="menu-title">Workbench</span>
 									</a>
 									<!--end:Menu link-->
 								</div>
@@ -351,7 +351,7 @@
 								<!--begin:Menu item Plugins-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="/admin/plugin/pluginmeta/" target="_self">
+									<a class="menu-link" href="{% url 'plugin:plugin_listview' %}" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-cube-2 fs-2">
 												<span class="path1"></span>
@@ -367,6 +367,24 @@
 											</i>
 										</span>
 										<span class="menu-title">Plugins</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+
+                <!--begin:Menu item Connections -->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'plugin:connection_listview' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-message-text-2 fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Connections</span>
 									</a>
 									<!--end:Menu link-->
 								</div>

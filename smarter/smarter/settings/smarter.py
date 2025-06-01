@@ -8,7 +8,7 @@ from smarter.common.exceptions import SmarterConfigurationError  # pylint: disab
 # SMARTER platform settings
 # -----------------------------------------------------------------------------
 SMARTER_ROOT_DOMAIN = smarter_settings.root_domain
-SMARTER_CACHE_EXPIRATION = 60 * 5  # 5 minutes
+SMARTER_CACHE_EXPIRATION = 60 * 1  # 1 minute
 SMARTER_API_SCHEMA = "http"
 SMARTER_API_NAME = "Smarter API"
 SMARTER_API_DESCRIPTION = "An enterprise class plugin-based AI chatbot platform"

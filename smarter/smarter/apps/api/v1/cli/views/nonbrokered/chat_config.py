@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.http import HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 
-from smarter.apps.chatapp.views import ChatConfigView
+from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
@@ -37,16 +37,21 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
     The cache_key is a combination of the class name, the chat name and a client
     UID created from the machine mac address and its hostname.
 
-    See smarter/apps/chatapp/data/chat_config.json for an example response to
+    See smarter/apps/workbench/data/chat_config.json for an example response to
     this request.
     """
 
-    def dispatch(self, request, *args, **kwargs):
-        self._is_config_view = True
-        return super().dispatch(request, *args, **kwargs)
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliChatConfigApiView()"
 
     @csrf_exempt
-    def post(self, request: HttpRequest, name: str, uid: str, *args, **kwargs):
+    def post(self, request: HttpRequest, name: str, *args, **kwargs):
         """
         Api v1 post method for chat config view. Returns the configuration
         dict used to configure the React chat component.
@@ -55,8 +60,11 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         :param name: Name of the chat
         :param uid: UID of the client, created from the machine mac address and the hostname
         """
+        uid: str = request.POST.get("uid")
+        session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
         logger.info("%s Chat config view for chat %s and client %s.", self.formatted_class_name, name, uid)
-        response = ChatConfigView.as_view()(request, name=name)
+
+        response = ChatConfigView.as_view()(request, name=name, uid=uid, session_key=session_key)
 
         try:
             content = json.loads(response.content)

@@ -9,8 +9,6 @@ from django.db import transaction
 from django.forms.models import model_to_dict
 from rest_framework.serializers import ModelSerializer
 
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
 from smarter.apps.chatbot.manifest.enum import SAMChatbotSpecKeys
 from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
@@ -22,7 +20,6 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
-from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -40,7 +37,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 
 logger = logging.getLogger(__name__)
@@ -64,7 +60,7 @@ class ChatBotSerializer(ModelSerializer):
         fields = ["name", "url", "dns_verification_status", "deployed", "created_at", "updated_at"]
 
 
-class SAMChatbotBroker(AbstractBroker, AccountMixin):
+class SAMChatbotBroker(AbstractBroker):
     """
     Smarter API Chatbot Manifest Broker. This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Chatbot manifests
@@ -83,40 +79,6 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     _chatbot: ChatBot = None
     _chatbot_api_key: ChatBotAPIKey = None
     _name: str = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: WSGIRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        self._name = self.params.get("name", None)
 
     @property
     def name(self) -> str:
@@ -146,6 +108,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             if self.manifest:
                 data = self.manifest_to_django_orm()
                 self._chatbot = ChatBot.objects.create(**data)
+                self._created = True
 
         return self._chatbot
 
@@ -211,7 +174,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 SAMChatbotSpecKeys.CONFIG.value: chatbot_dict,
                 SAMChatbotSpecKeys.PLUGINS.value: plugin_names,
                 SAMChatbotSpecKeys.FUNCTIONS.value: function_names,
-                SAMChatbotSpecKeys.APIKEY.value: api_key.name if api_key else None,
+                SAMChatbotSpecKeys.AUTH_TOKEN.value: api_key.name if api_key else None,
             },
             SAMKeys.STATUS.value: {
                 "created": self.chatbot.created_at.isoformat(),
@@ -236,6 +199,15 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for logging purposes.
+        This is used to provide a more readable class name in logs.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.SAMChatbotBroker()"
+
+    @property
     def kind(self) -> str:
         return MANIFEST_KIND
 
@@ -252,7 +224,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         """
         if self._manifest:
             return self._manifest
-        if self.loader:
+        if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMChatbot(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
@@ -269,7 +241,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     def model_class(self) -> ChatBot:
         return ChatBot
 
-    def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {
@@ -315,18 +287,18 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 },
                 SAMChatbotSpecKeys.PLUGINS.value: get_plugin_examples_by_name(),
                 SAMChatbotSpecKeys.FUNCTIONS.value: ["weather", "datemath", "stockprice"],
-                SAMChatbotSpecKeys.APIKEY.value: "camelCaseNameOfApiKey",
+                SAMChatbotSpecKeys.AUTH_TOKEN.value: "camelCaseNameOfApiKey",
             },
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         # name: str = None, all_objects: bool = False, tags: str = None
         data = []
-        name = kwargs.get("name", None)
-        name = self.clean_cli_param(param=name, param_name="name", url=request.build_absolute_uri())
+        name = kwargs.get(SAMMetadataKeys.NAME.value, None)
+        name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
@@ -372,7 +344,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         return self.json_response_ok(command=command, data=data)
 
     # pylint: disable=too-many-branches
-    def apply(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -459,9 +431,14 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                         ) from e
                     _, created = ChatBotPlugin.objects.get_or_create(chatbot=self.chatbot, plugin_meta=plugin)
                     if created:
-                        logger.info("Attached Plugin %s to ChatBot %s", plugin.name, self.chatbot.name)
+                        logger.info(
+                            "%s attached Plugin %s to ChatBot %s",
+                            self.formatted_class_name,
+                            plugin.name,
+                            self.chatbot.name,
+                        )
 
-            # ChatBotFunctions: add what's missing, remove what in the model but not in the manifest
+            # ChatBotFunctions: add what's missing, remove what's in the model but not in the manifest
             # -------------
             for function in ChatBotFunctions.objects.filter(chatbot=self.chatbot):
                 if function.name not in self.manifest.spec.functions:
@@ -476,17 +453,22 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                         )
                     _, created = ChatBotFunctions.objects.get_or_create(chatbot=self.chatbot, name=function)
                     if created:
-                        logger.info("Attached Function %s to ChatBot %s", function, self.chatbot.name)
+                        logger.info(
+                            "%s attached Function %s to ChatBot %s",
+                            self.formatted_class_name,
+                            function,
+                            self.chatbot.name,
+                        )
 
             # done! return the response. Django will take care of committing the transaction
             return self.json_response_ok(command=command, data={})
 
-    def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         if self.chatbot:
@@ -508,7 +490,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
         )
 
-    def delete(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.chatbot:
@@ -530,7 +512,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
         )
 
-    def deploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.chatbot:
@@ -551,7 +533,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
-    def undeploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.chatbot:
@@ -572,7 +554,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
-    def logs(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         data = {}

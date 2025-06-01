@@ -1,0 +1,3 @@
+"""Docs constants."""
+
+namespace = "docs"

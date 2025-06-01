@@ -2,10 +2,16 @@
 
 from django.urls import path
 
-from .views.plugin import PluginsView, PluginView
+from .const import namespace
+from .views.connection import ConnectionDetailView, ConnectionListView
+from .views.plugin import PluginDetailView, PluginListView
 
+
+app_name = namespace
 
 urlpatterns = [
-    path("", PluginsView.as_view(), name="plugins"),
-    path("<int:plugin_id>", PluginView.as_view(), name="plugin"),
+    path("plugins/", PluginListView.as_view(), name="plugin_listview"),
+    path("plugins/<str:kind>/<str:name>/", PluginDetailView.as_view(), name="plugin_by_name"),
+    path("connections/", ConnectionListView.as_view(), name="connection_listview"),
+    path("connections/<str:kind>/<str:name>/", ConnectionDetailView.as_view(), name="connection_by_name"),
 ]

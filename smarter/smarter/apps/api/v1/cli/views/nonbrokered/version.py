@@ -8,7 +8,7 @@ import requests
 from celery import __version__ as celery_version
 from django import get_version as get_django_version
 from django.http import JsonResponse
-from langchain import __version__ as langchain_version
+from google.generativeai import __version__ as google_genai_version
 from Levenshtein import __version__ as levenshtein_version
 from openai.version import VERSION as openai_version
 from pandas.util._print_versions import show_versions as pandas_version
@@ -51,8 +51,9 @@ class ApiV1CliVersionApiView(CliBaseApiView):
                             "botocore": aws_helper.aws.version,
                             "celery": celery_version,
                             "django": get_django_version(),
-                            "langchain": langchain_version,
                             "levenshtein": levenshtein_version,
+                            "google_genai": google_genai_version,
+                            "llamaai": "unknown",
                             "openai": openai_version,
                             "pandas": pandas_version(),
                             "pydantic": pydantic_version,
@@ -77,4 +78,5 @@ class ApiV1CliVersionApiView(CliBaseApiView):
             return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
 
     def post(self, request):
-        return self.info()
+        response = self.info()
+        return response

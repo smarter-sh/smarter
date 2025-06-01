@@ -1,35 +1,46 @@
 """A PLugin that returns a static json object stored in the Plugin itself."""
 
+import json
 import logging
 
 from smarter.apps.plugin.manifest.enum import (
-    SAMPluginMetadataClass,
-    SAMPluginMetadataClassValues,
-    SAMPluginMetadataKeys,
+    SAMPluginCommonMetadataClass,
+    SAMPluginCommonMetadataClassValues,
+    SAMPluginCommonMetadataKeys,
+    SAMPluginCommonSpecPromptKeys,
+    SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
-    SAMPluginSpecPromptKeys,
-    SAMPluginSpecSelectorKeys,
-    SmartApiPluginSpecDataKeys,
+    SAMStaticPluginSpecDataKeys,
 )
 from smarter.apps.plugin.models import PluginDataStatic
-from smarter.apps.plugin.serializers import PluginDataStaticSerializer
+from smarter.apps.plugin.serializers import PluginStaticSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
-from ..manifest.models.plugin.const import MANIFEST_KIND
+from ..manifest.models.static_plugin.const import MANIFEST_KIND
+from ..manifest.models.static_plugin.model import SAMStaticPlugin
 from .base import PluginBase
 
 
 logger = logging.getLogger(__name__)
 
 
-class PluginStatic(PluginBase):
+class StaticPlugin(PluginBase):
     """A PLugin that returns a static json object stored in the Plugin itself."""
 
-    _metadata_class = SAMPluginMetadataClass.STATIC_DATA.value
+    _metadata_class = SAMPluginCommonMetadataClass.STATIC.value
     _plugin_data: PluginDataStatic = None
-    _plugin_data_serializer: PluginDataStaticSerializer = None
+    _plugin_data_serializer: PluginStaticSerializer = None
+
+    @property
+    def manifest(self) -> SAMStaticPlugin:
+        """Return the Pydandic model of the plugin."""
+        if not self._manifest and self.ready:
+            # if we don't have a manifest but we do have Django ORM data then
+            # we can work backwards to the Pydantic model
+            self._manifest = SAMStaticPlugin(**self.to_json())
+        return self._manifest
 
     @property
     def plugin_data(self) -> PluginDataStatic:
@@ -42,16 +53,16 @@ class PluginStatic(PluginBase):
         return PluginDataStatic
 
     @property
-    def plugin_data_serializer(self) -> PluginDataStaticSerializer:
+    def plugin_data_serializer(self) -> PluginStaticSerializer:
         """Return the plugin data serializer."""
         if not self._plugin_data_serializer:
-            self._plugin_data_serializer = PluginDataStaticSerializer(self.plugin_data)
+            self._plugin_data_serializer = PluginStaticSerializer(self.plugin_data)
         return self._plugin_data_serializer
 
     @property
-    def plugin_data_serializer_class(self) -> PluginDataStaticSerializer:
+    def plugin_data_serializer_class(self) -> PluginStaticSerializer:
         """Return the plugin data serializer class."""
-        return PluginDataStaticSerializer
+        return PluginStaticSerializer
 
     @property
     def plugin_data_django_model(self) -> dict:
@@ -88,20 +99,20 @@ class PluginStatic(PluginBase):
 
     @classmethod
     def example_manifest(cls, kwargs: dict = None) -> dict:
-        return {
+        static_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "EverlastingGobstopper",
-                SAMPluginMetadataKeys.PLUGIN_CLASS.value: SAMPluginMetadataClassValues.STATIC.value,
+                SAMMetadataKeys.NAME.value: "everlasting_gobstopper",
+                SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.STATIC.value,
                 SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
                 SAMMetadataKeys.TAGS.value: ["candy", "treats", "chocolate", "Gobstoppers", "Willy Wonka"],
             },
             SAMKeys.SPEC.value: {
                 SAMPluginSpecKeys.SELECTOR.value: {
-                    SAMPluginSpecSelectorKeys.DIRECTIVE.value: SAMPluginSpecSelectorKeys.SEARCHTERMS.value,
-                    SAMPluginSpecSelectorKeys.SEARCHTERMS.value: [
+                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value,
+                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
                         "Gobstopper",
                         "Gobstoppers",
                         "Gobbstopper",
@@ -109,15 +120,15 @@ class PluginStatic(PluginBase):
                     ],
                 },
                 SAMPluginSpecKeys.PROMPT.value: {
-                    SAMPluginSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
-                    SAMPluginSpecPromptKeys.SYSTEMROLE.value: "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.",
-                    SAMPluginSpecPromptKeys.MODEL.value: SettingsDefaults.LLM_DEFAULT_MODEL,
-                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+                    SAMPluginCommonSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
+                    SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value: "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.",
+                    SAMPluginCommonSpecPromptKeys.MODEL.value: SettingsDefaults.LLM_DEFAULT_MODEL,
+                    SAMPluginCommonSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+                    SAMPluginCommonSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
                 },
                 SAMPluginSpecKeys.DATA.value: {
-                    SmartApiPluginSpecDataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
-                    SmartApiPluginSpecDataKeys.STATIC_DATA.value: {
+                    SAMStaticPluginSpecDataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+                    SAMStaticPluginSpecDataKeys.STATIC.value: {
                         "contact": [
                             {"name": "Willy Wonka"},
                             {"title": "Founder and CEO"},
@@ -150,3 +161,8 @@ class PluginStatic(PluginBase):
                 },
             },
         }
+
+        # recast the Python dict to the Pydantic model
+        # in order to validate our output
+        pydantic_model = SAMStaticPlugin(**static_plugin)
+        return json.loads(pydantic_model.model_dump_json())

@@ -5,7 +5,8 @@ from django.core.management.base import BaseCommand
 from waffle.models import Switch
 
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SmarterEnvironments, SmarterWaffleSwitches
+from smarter.common.const import SmarterEnvironments
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 # pylint: disable=E1101

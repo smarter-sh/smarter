@@ -46,4 +46,4 @@ class SAMSecretStatusKeys(SmarterEnumAbstract):
     ACCOUNT_NUMBER = "accountNumber"
     CREATED = "created"
     UPDATED = "updated"
-    LAST_ACCESSED = "lastAccessed"
+    LAST_ACCESSED = "last_accessed"

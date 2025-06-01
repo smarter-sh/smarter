@@ -127,7 +127,7 @@ class AWSBase(SmarterHelperMixin):
             self._aws_secret_access_key_source = "passed parameter"
 
         logger.debug("initialized settings: %s", self.aws_auth)
-        if not self.ready():
+        if not self.ready:
             msg = f"Unable to initialize AWSBase for environment {self.environment}."
             if self.environment not in SmarterEnvironments.aws_environments:
                 msg += f" Please note AWS classes only work with the following environments: {SmarterEnvironments.aws_environments}"
@@ -293,12 +293,13 @@ class AWSBase(SmarterHelperMixin):
     # --------------------------------------------------------------------------
     # AWS state functions
     # --------------------------------------------------------------------------
+    @property
     def ready(self) -> bool:
         """
         Return True if we're working with a known Smarter environment, and
         we consider it safe to create billable resources in AWS.
         """
-        return self.connected() and smarter_settings.environment in SmarterEnvironments.all
+        return bool(self.connected()) and bool(smarter_settings.environment in SmarterEnvironments.all)
 
     def connected(self):
         """Test that the AWS connection works."""

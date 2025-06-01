@@ -6,8 +6,8 @@ import logging
 import os
 from pathlib import Path
 
+from smarter.common.utils import get_readonly_csv_file
 from smarter.lib.django.view_helpers import SmarterAdminWebView
-from smarter.lib.unittest.utils import get_readonly_csv_file
 
 from .billing_addresses import BillingAddressesView, BillingAddressForm
 from .payment_methods import PaymentMethodForm, PaymentMethodsView

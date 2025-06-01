@@ -20,16 +20,16 @@ class Migration(migrations.Migration):
                 blank=True,
                 choices=[
                     (
-                        smarter.lib.journal.enum.SmarterJournalThings["PLUGIN"],
-                        smarter.lib.journal.enum.SmarterJournalThings["PLUGIN"],
+                        smarter.lib.journal.enum.SmarterJournalThings["STATIC_PLUGIN"],
+                        smarter.lib.journal.enum.SmarterJournalThings["STATIC_PLUGIN"],
                     ),
                     (
                         smarter.lib.journal.enum.SmarterJournalThings["ACCOUNT"],
                         smarter.lib.journal.enum.SmarterJournalThings["ACCOUNT"],
                     ),
                     (
-                        smarter.lib.journal.enum.SmarterJournalThings["APIKEY"],
-                        smarter.lib.journal.enum.SmarterJournalThings["APIKEY"],
+                        smarter.lib.journal.enum.SmarterJournalThings["AUTH_TOKEN"],
+                        smarter.lib.journal.enum.SmarterJournalThings["AUTH_TOKEN"],
                     ),
                     (
                         smarter.lib.journal.enum.SmarterJournalThings["USER"],
@@ -60,8 +60,8 @@ class Migration(migrations.Migration):
                         smarter.lib.journal.enum.SmarterJournalThings["CHATBOT"],
                     ),
                     (
-                        smarter.lib.journal.enum.SmarterJournalThings["SQLCONNECTION"],
-                        smarter.lib.journal.enum.SmarterJournalThings["SQLCONNECTION"],
+                        smarter.lib.journal.enum.SmarterJournalThings["SQL_CONNECTION"],
+                        smarter.lib.journal.enum.SmarterJournalThings["SQL_CONNECTION"],
                     ),
                     (
                         smarter.lib.journal.enum.SmarterJournalThings["SECRET"],

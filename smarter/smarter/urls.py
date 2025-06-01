@@ -1,24 +1,35 @@
 """URL configuration for Smarter Api and web console."""
 
+from logging import getLogger
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.core.handlers.wsgi import WSGIRequest
 from django.shortcuts import redirect
-from django.urls import include, path, re_path
+from django.urls import include, path, re_path, reverse
+from django.views.generic.base import RedirectView
 from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail_transfer import urls as wagtailtransfer_urls
 
+from smarter.apps.account.const import namespace as account_namespace
+from smarter.apps.account.utils import (
+    get_cached_account,
+    get_cached_admin_user_for_account,
+)
 from smarter.apps.account.views.authentication import (
     AccountRegisterView,
     LoginView,
     LogoutView,
 )
-from smarter.apps.chatapp.views import ChatConfigView
-from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
+from smarter.apps.api.const import namespace as api_namespace
+from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.chatbot.models import get_cached_chatbot_by_request
 from smarter.apps.dashboard.admin import restricted_site
+from smarter.apps.dashboard.const import namespace as dashboard_namespace
 from smarter.apps.dashboard.views.dashboard import ComingSoon
+from smarter.apps.docs.const import namespace as docs_namespace
 from smarter.apps.docs.views.webserver import (
     FaviconView,
     HealthzView,
@@ -26,7 +37,13 @@ from smarter.apps.docs.views.webserver import (
     RobotsTxtView,
     SitemapXmlView,
 )
+from smarter.apps.plugin.const import namespace as plugin_namespace
+from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
+from smarter.apps.prompt.views import ChatConfigView
+from smarter.lib.django.request import SmarterRequestMixin
 
+
+logger = getLogger(__name__)
 
 admin.site = restricted_site
 
@@ -34,8 +51,10 @@ admin.site = restricted_site
 # and register their models with the custom admin site
 admin.autodiscover()
 
+name_prefix = "root"
 
-def root_redirector(request):
+
+def root_redirector(request: WSGIRequest) -> RedirectView:
     """
     Handles traffic sent to the root of the website. Requests
     can take the form of:
@@ -43,8 +62,8 @@ def root_redirector(request):
        url is of any of the following forms
        - https://example.3141-5926-5359.api.smarter.sh/
        - https://example.3141-5926-5359.api.smarter.sh/config/
-       - localhost:8000/api/v1/chatbots/1/chat/
-       - localhost:8000/api/v1/chatbots/1/chat/config/
+       - localhost:8000/api/v1/workbench/1/chat/
+       - localhost:8000/api/v1/workbench/1/chat/config/
        - localhost:8000/api/v1/cli/chat/example/
        - localhost:8000/api/v1/cli/chat/example/config/
     2. the dashboard if the user is authenticated,
@@ -53,79 +72,96 @@ def root_redirector(request):
     # 1. check if the url is a chatbot endpoint
     chatbot = get_cached_chatbot_by_request(request=request)
     if chatbot:
-        view = DefaultChatBotApiView.as_view()
+        view = DefaultChatbotApiView.as_view()
         return view(request, chatbot_id=chatbot.id)
 
     # 2. check if the user is authenticated, if so redirect to the dashboard
     if request.user.is_authenticated:
-        return redirect("/dashboard/")
+        return redirect(reverse("dashboard:dashboard"))
 
     # 3. otherwise redirect to the Wagtail docs homepage
     return redirect("/docs/")
 
 
-def config_redirector(request):
+def config_redirector(request: WSGIRequest) -> RedirectView:
     """
     Handles traffic sent to the config endpoints of the website.
     """
-    chatbot = get_cached_chatbot_by_request(request=request)
-    if chatbot:
+    helper = SmarterRequestMixin(request)
+    if helper.is_config:
+        account_number = helper.smarter_request_chatbot_account_number
+        account = get_cached_account(account_number=helper.smarter_request_chatbot_account_number)
+        logger.info(
+            "Config redirector: account_number=%s, account=%s, url=%s",
+            account_number,
+            account,
+            request.build_absolute_uri(),
+        )
+        user = get_cached_admin_user_for_account(account)
+        request.user = user
         view = ChatConfigView.as_view()
-        return view(request, chatbot_id=chatbot.id)
+        return view(request)
+    return redirect("/docs/")
 
 
 urlpatterns = [
-    path("", root_redirector, name="home"),
-    path("config/", config_redirector, name="root_config"),
-    # production smarter platform
     # -----------------------------------
-    path("favicon.ico", FaviconView.as_view(), name="favicon"),
-    path("robots.txt", RobotsTxtView.as_view(), name="robots_txt"),
-    path("sitemap.xml", SitemapXmlView.as_view(), name="sitemap_xml"),
-    path("healthz/", HealthzView.as_view(), name="healthz"),
-    path("readiness/", ReadinessView.as_view(), name="readiness"),
+    # routes for named urls.
+    # https://example.3141-5926-5359.api.smarter.sh/
     # -----------------------------------
-    path("account/dashboard/", include("smarter.apps.account.views.dashboard.urls")),
-    path("api/", include("smarter.apps.api.urls")),
-    path("chatbots/", include("smarter.apps.chatapp.urls")),
-    path("dashboard/", include("smarter.apps.dashboard.urls")),
-    # django admin
+    path("", root_redirector, name=f"{name_prefix}_home"),
+    path("config/", config_redirector, name=f"{name_prefix}_config"),
     # -----------------------------------
-    path("admin/docs/", include("django.contrib.admindocs.urls")),
+    # static routes
+    # -----------------------------------
+    path("favicon.ico", FaviconView.as_view(), name=f"{name_prefix}_favicon"),
+    path("robots.txt", RobotsTxtView.as_view(), name=f"{name_prefix}_robots_txt"),
+    path("sitemap.xml", SitemapXmlView.as_view(), name=f"{name_prefix}_sitemap_xml"),
+    path("healthz/", HealthzView.as_view(), name=f"{name_prefix}_healthz"),
+    path("readiness/", ReadinessView.as_view(), name=f"{name_prefix}_readiness"),
+    path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
+    path("waitlist/", ComingSoon.as_view(), name=f"{name_prefix}_waitlist"),
+    # -----------------------------------
+    # namespaced routes for apps
+    # -----------------------------------
+    path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
     path("admin/", admin.site.urls, name="django_admin"),
-    #
-    # Wagtail root
+    path("admin/docs/", include("django.contrib.admindocs.urls")),
+    path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
+    path(
+        "chatbots/",
+        RedirectView.as_view(url="dashboard/", permanent=True),
+    ),
+    path("cms/", include("smarter.apps.cms.urls", namespace=None)),
+    path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
+    path("docs/", include("smarter.apps.docs.urls", namespace=docs_namespace)),
+    path("plugin/", include("smarter.apps.plugin.urls", namespace=plugin_namespace)),
+    path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
     # -----------------------------------
-    path("docs/", include("smarter.apps.docs.urls")),
-    # -----------------------------------
-    #
-    # shortcuts for authentication views
+    # authentication routes
     # -----------------------------------
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
-    path("register/", AccountRegisterView.as_view(), name="register_view"),
-    path("social-auth/", include("social_django.urls", namespace="social")),
+    path("social-auth/", include("social_django.urls", namespace="social_auth")),
     # -----------------------------------
     # stripe urls
     # see: https://dj-stripe.dev/dj-stripe/
     # -----------------------------------
     # path("stripe/", include("djstripe.urls", namespace="djstripe")),
     # -----------------------------------
-    # Smarter waitlist signup
     # -----------------------------------
-    path("waitlist/", ComingSoon.as_view(), name="waitlist"),
-    # -----------------------------------
-    # wagtail urls
+    # wagtail routes (place these at the end of the urlpatterns)
     # -----------------------------------
     path("documents/", include(wagtaildocs_urls)),
-    path("cms/", include("smarter.apps.cms.urls")),
     re_path(r"^wagtail-transfer/", include(wagtailtransfer_urls)),
-    re_path(r"", include(wagtail_urls)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+if not settings.DEBUG:
+    # only serve media files when not running locally in debug mode
+    urlpatterns += [re_path(r"", include(wagtail_urls))]
 
 # if settings.DEBUG:
 #     import debug_toolbar
-
 # urlpatterns += [
 #     path("__debug__/", include(debug_toolbar.urls)),
 # ]
