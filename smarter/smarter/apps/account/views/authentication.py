@@ -13,10 +13,10 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
-    TokenConversionError,
-    TokenExpiredError,
-    TokenIntegrityError,
-    TokenParseError,
+    SmarterTokenConversionError,
+    SmarterTokenExpiredError,
+    SmarterTokenIntegrityError,
+    SmarterTokenParseError,
 )
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.view_helpers import (
@@ -109,8 +109,14 @@ class AccountRegisterView(SmarterNeverCachedWebView):
         form = AccountRegisterView.SignUpForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data["email"]
+            email = form.cleaned_data["email"]
             password = form.cleaned_data["password"]
-            user = User.objects.create_user(username, password=password)
+            first_name = form.cleaned_data["first_name"]
+            last_name = form.cleaned_data["last_name"]
+            user = User.objects.create_user(
+                username, password=password, email=email, first_name=first_name, last_name=last_name
+            )
+
             login(request, user)
             return redirect_and_expire_cache(path="/welcome/")
         return self.get(request=request)
@@ -161,9 +167,16 @@ class AccountActivateView(SmarterNeverCachedWebView):
             return SmarterHttpResponseNotFound(
                 request=request, error_message="Invalid password reset link. User does not exist."
             )
-        except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
+        except (
+            TypeError,
+            ValueError,
+            OverflowError,
+            SmarterTokenParseError,
+            SmarterTokenConversionError,
+            SmarterTokenIntegrityError,
+        ) as e:
             return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
-        except TokenExpiredError as e:
+        except SmarterTokenExpiredError as e:
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
         return self.clean_http_response(request, template_path=self.template_path)

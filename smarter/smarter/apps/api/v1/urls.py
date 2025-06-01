@@ -1,5 +1,5 @@
 """
-URL configuration for smarter project.
+URL configuration for smarter api.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.0/topics/http/urls/
@@ -17,18 +17,29 @@ Including another URLconf
 
 from django.urls import include, path
 
+from .cli.const import namespace as cli_namespace
+from .const import namespace
 
+
+app_name = namespace
+
+# /api/v1/ is the main entry point for the API
 urlpatterns = [
-    # the url is of the form https://example.3141-5926-5359.alpha.api.smarter.sh
+    # for Chatbots of the form https://example.3141-5926-5359.alpha.api.smarter.sh
     path("", include("smarter.apps.chatbot.api.v1.urls")),
+    # -------------------------------------------
+    # for the main API:
+    # /api/v1/account/ is used for user account management CRUD operations
+    # /api/v1/chatbots/ is used for managing chatbot CRUD operations
+    # /api/v1/prompt/ is used for supporting client-side interactions with the chatbots.
+    # /api/v1/plugins/ is used for managing plugins and connections to external services.
+    # /api/v1/cli/ implements Brokered services that support the CLI, and is implemented here, in this module.
+    # /api/v1/tests/ is used for unit tests, and is implemented here, in this module.
+    # -------------------------------------------
     path("account/", include("smarter.apps.account.api.v1.urls")),
     path("chatbots/", include("smarter.apps.chatbot.api.v1.urls")),
-    path("chat/", include("smarter.apps.chat.api.v1.urls")),
-    path("cli/", include("smarter.apps.api.v1.cli.urls")),
+    path("prompt/", include("smarter.apps.prompt.api.v1.urls")),
     path("plugins/", include("smarter.apps.plugin.api.v1.urls")),
-]
-
-# for backward compatibility prior to 0.7.2
-urlpatterns += [
-    path("chatbot/", include("smarter.apps.chatbot.api.v1.urls")),
+    path("cli/", include("smarter.apps.api.v1.cli.urls", namespace=cli_namespace)),
+    path("tests/", include("smarter.apps.api.v1.tests.urls", namespace="tests")),
 ]

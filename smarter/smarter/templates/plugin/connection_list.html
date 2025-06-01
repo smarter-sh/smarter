@@ -1,0 +1,78 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Connections{% endblock %}
+
+{% block body_class %}
+<style>
+  .connection-card > .card-header {
+    border-bottom: 1px solid #E5E5E5;
+  }
+  .smarter-connection-card {
+    background-color: #D9D9D9;
+  }
+  .user-connection-card {
+    background-color: #FFE5B4;
+  }
+  .card-body > p {
+    margin-bottom: 2px !important;
+  }
+</style>
+{% endblock %}
+
+
+{% block dashboard_content %}
+<div id="kt_app_content" class="app-content flex-column-fluid">
+  <!--begin::Content container-->
+  <div id="kt_app_content_container" class="app-container container-xxl">
+    <!--begin::Row-->
+    <div class="row g-5 g-xl-10">
+      <!--begin::Col-->
+      <div class="col-xl-8 mb-5 mb-xl-10">
+        <!--begin::Row-->
+        <div class="row g-5 g-xl-10 mb-l-10">
+
+          {% for connection in connections %}
+          <!--begin::Col Smarter connection Card-->
+          <div class="col-lg-6 mb-4 p-5">
+            <!--begin::connection card-->
+            <a href="{% url 'plugin:connection_by_name' connection.kind connection.name %}">
+              <div id="connection_id_{{ connection.id }}" class="card card-flush h-xl-100 connection-card {% if connection.account.id == 1 %}smarter-connection-card{% else %}user-connection-card{% endif %}">
+                <!--begin::Header-->
+                <div class="p-5">
+                  <!--begin::Title-->
+                  <h4 class="card-title card-label fw-bold text-gray-800 pb-2 text-center" style="border-bottom: 1px solid red;">{{ connection.name }}{% if connection.version %} v{{ connection.version }}{% endif %}</h4>
+                  <!--end::Title-->
+                </div>
+                <!--end::Header-->
+                <!--begin::Body-->
+                <div class="card-body py-6">
+                  <p>name: {{ connection.name }}</p>
+                  <p>created: {{ connection.created_at }}</p>
+                  <p>last updated: {{ connection.updated_at }}</p>
+                  <p>kind: {{ connection.kind }}</p>
+                  {% if connection.description %}
+                  <p>description: {{ connection.description }}</p>
+                  {% endif %}
+                  <p>connection: {{ connection.connection_string }}</p>
+                </div>
+                <!--end::Body-->
+              </div>
+            </a>
+            <!--end::connection card-->
+          </div>
+          <!--end::Col Smarter connection Card-->
+          {% endfor %}
+
+        </div>
+        <!--end::Row-->
+
+      </div>
+      <!--end::Col-->
+    </div>
+    <!--end::Row-->
+
+  </div>
+  <!--end::Content container-->
+</div>
+{% endblock %}

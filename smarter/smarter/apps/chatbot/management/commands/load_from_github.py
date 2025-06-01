@@ -13,27 +13,32 @@ from django.core.management.base import BaseCommand
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import (
+    get_cached_account,
+    get_cached_admin_user_for_account,
+)
 from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import User
+from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
 
 # pylint: disable=E1101,too-many-instance-attributes
-class Command(BaseCommand, AccountMixin):
+class Command(BaseCommand):
     """Deploy customer APIs from a GitHub repository of plugin YAML files organized by customer API name."""
 
     _url: str = None
+    user: UserType = None
+    account: Account = None
+    user_profile: UserProfile = None
 
     def __init__(self, stdout=None, stderr=None, no_color=False, force_color=False):
         super().__init__(stdout, stderr, no_color, force_color)
-        AccountMixin.__init__(self)
         self._url = None
 
     @property
@@ -97,7 +102,7 @@ class Command(BaseCommand, AccountMixin):
         else:
             raise SmarterValueError("Could not read the file.")
 
-        plugin = PluginStatic(data=data, user_profile=self.user_profile)
+        plugin = StaticPlugin(data=data, user_profile=self.user_profile)
         return plugin
 
     def apply_manifest(self, manifest_data: str) -> HttpResponse:
@@ -217,22 +222,27 @@ class Command(BaseCommand, AccountMixin):
     def handle(self, *args, **options):
         """Process the GitHub repository"""
         self.url = options["url"]
-        self.account_number = options["account_number"]
+        account_number = options["account_number"]
         username = options["username"]
         repo_version = int(options["repo_version"])
 
         self.stdout.write(self.style.NOTICE("=" * 80))
         self.stdout.write(self.style.NOTICE(f"{__file__}"))
-        self.stdout.write(self.style.NOTICE(f"Deploying plugins from {self.url} for account {self.account_number}."))
+        self.stdout.write(self.style.NOTICE(f"Deploying plugins from {self.url} for account {account_number}."))
         self.stdout.write(self.style.NOTICE("=" * 80))
 
-        if not self.account_number and not username:
+        if not account_number and not username:
             raise SmarterValueError("username and/or account_number is required.")
+
+        if account_number:
+            self.account = get_cached_account(account_number=account_number)
 
         if username:
             self.user = User.objects.get(username=username)
         else:
             self.user = get_cached_admin_user_for_account(account=self.account)
+
+        self.user_profile = UserProfile.objects.get(user=self.user, account=self.account) if self.user else None
 
         if repo_version == 2:
             # iterate repo and apply manifests

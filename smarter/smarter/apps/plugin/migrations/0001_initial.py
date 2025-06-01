@@ -76,78 +76,6 @@ class Migration(migrations.Migration):
             bases=("plugin.plugindatabase",),
         ),
         migrations.CreateModel(
-            name="PluginDataSqlConnection",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("created_at", models.DateTimeField(auto_now_add=True, null=True)),
-                ("updated_at", models.DateTimeField(auto_now=True, null=True)),
-                (
-                    "name",
-                    models.CharField(
-                        help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
-                        max_length=255,
-                        validators=[smarter.apps.plugin.models.validate_no_spaces],
-                    ),
-                ),
-                (
-                    "db_engine",
-                    models.CharField(
-                        choices=[
-                            ("django.db.backends.mysql", "MySQL"),
-                            ("django.db.backends.postgresql", "PostgreSQL"),
-                            ("django.db.backends.sqlite3", "SQLite3"),
-                            ("django.db.backends.oracle", "Oracle"),
-                            ("django.db.backends.mssql", "MS SQL Server"),
-                            ("django.db.backends.sybase", "Sybase"),
-                        ],
-                        help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
-                        max_length=255,
-                    ),
-                ),
-                (
-                    "description",
-                    models.TextField(
-                        help_text="A brief description of the connection. Be verbose, but not too verbose."
-                    ),
-                ),
-                ("version", models.CharField(default="1.0.0", max_length=255)),
-                ("hostname", models.CharField(max_length=255)),
-                ("port", models.IntegerField()),
-                ("database", models.CharField(max_length=255)),
-                ("username", models.CharField(max_length=255)),
-                ("password", models.CharField(blank=True, max_length=255, null=True)),
-                ("proxy_host", models.CharField(blank=True, max_length=255, null=True)),
-                ("proxy_port", models.IntegerField(blank=True, null=True)),
-                (
-                    "proxy_username",
-                    models.CharField(blank=True, max_length=255, null=True),
-                ),
-                (
-                    "proxy_password",
-                    models.CharField(blank=True, max_length=255, null=True),
-                ),
-                (
-                    "account",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="plugin_data_sql_connections",
-                        to="account.account",
-                    ),
-                ),
-            ],
-            options={
-                "abstract": False,
-            },
-        ),
-        migrations.CreateModel(
             name="PluginMeta",
             fields=[
                 (
@@ -176,9 +104,9 @@ class Migration(migrations.Migration):
                     "plugin_class",
                     models.CharField(
                         choices=[
-                            ("static", "PluginStatic"),
-                            ("sql", "PluginDataSql"),
-                            ("api", "PluginDataSqlConnection"),
+                            ("static", "StaticPlugin"),
+                            ("sql", "SqlPlugin"),
+                            ("api", "ApiPlugin"),
                         ],
                         default="PluginMeta",
                         help_text="The class name of the plugin",
@@ -375,67 +303,5 @@ class Migration(migrations.Migration):
             options={
                 "verbose_name_plural": "Plugin Selector History",
             },
-        ),
-        migrations.CreateModel(
-            name="PluginDataSql",
-            fields=[
-                (
-                    "plugindatabase_ptr",
-                    models.OneToOneField(
-                        auto_created=True,
-                        on_delete=django.db.models.deletion.CASCADE,
-                        parent_link=True,
-                        primary_key=True,
-                        serialize=False,
-                        to="plugin.plugindatabase",
-                    ),
-                ),
-                (
-                    "parameters",
-                    models.JSONField(
-                        blank=True,
-                        default=dict,
-                        help_text="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use. Infer this from the user's location.'}}",
-                        null=True,
-                    ),
-                ),
-                (
-                    "sql_query",
-                    models.TextField(
-                        help_text="The SQL query that this plugin will execute when invoked by the user prompt."
-                    ),
-                ),
-                (
-                    "test_values",
-                    models.JSONField(
-                        blank=True,
-                        default=dict,
-                        help_text="A JSON dict containing test values for each parameter. Example: {'product_id': 1234}",
-                        null=True,
-                    ),
-                ),
-                (
-                    "limit",
-                    models.IntegerField(
-                        blank=True,
-                        default=100,
-                        help_text="The maximum number of rows to return from the query.",
-                        null=True,
-                        validators=[django.core.validators.MinValueValidator(0)],
-                    ),
-                ),
-                (
-                    "connection",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="plugin_data_sql",
-                        to="plugin.plugindatasqlconnection",
-                    ),
-                ),
-            ],
-            options={
-                "abstract": False,
-            },
-            bases=("plugin.plugindatabase",),
         ),
     ]

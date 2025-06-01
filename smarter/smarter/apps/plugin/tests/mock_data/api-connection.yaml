@@ -1,0 +1,18 @@
+---
+apiVersion: smarter.sh/v1
+kind: ApiConnection
+metadata:
+  name: test_api_connection
+  description: points to smarter api localhost
+  version: 0.1.1
+spec:
+  connection:
+    baseUrl: http://localhost:8000/
+    apiKey: 12345-abcde-67890-fghij
+    authMethod: token
+    timeout: 10
+    proxyProtocol: http
+    proxyHost: proxy.example.com
+    proxyPort: 8080
+    proxyUsername: proxyUser
+    proxyPassword: proxyPass

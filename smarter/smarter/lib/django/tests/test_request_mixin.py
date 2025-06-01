@@ -1,23 +1,24 @@
 """Test SmarterRequestMixin."""
 
-import unittest
-import uuid
 from datetime import datetime
+from logging import getLogger
 from urllib.parse import ParseResult
 
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import Client, RequestFactory
 
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.request import SmarterRequestMixin
 
 
 SMARTER_DEV_ADMIN_PASSWORD = "smarter"
+logger = getLogger(__name__)
 
 
-class TestSmarterRequestMixin(unittest.TestCase):
+class TestSmarterRequestMixin(TestAccountMixin):
     """
     Test SmarterRequestMixin.
     example urls:
@@ -25,29 +26,35 @@ class TestSmarterRequestMixin(unittest.TestCase):
     - http://localhost:8000/
     - http://localhost:8000/docs/
     - http://localhost:8000/dashboard/
-    - https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
+    - https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
     - https://alpha.platform.smarter.sh/api/v1/cli/chat/example/
     - http://example.com/contact/
-    - http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+    - http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
     - https://hr.3141-5926-5359.alpha.api.smarter.sh/
     - https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
     - http://example.3141-5926-5359.api.localhost:8000/
     - http://example.3141-5926-5359.api.localhost:8000/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
     - http://example.3141-5926-5359.api.localhost:8000/config/
     - http://example.3141-5926-5359.api.localhost:8000/config/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
-    - http://localhost:8000/api/v1/chatbots/1/chat/
+    - http://localhost:8000/api/v1/workbench/1/chat/
     - https://hr.smarter.querium.com/
 
     """
 
     def setUp(self):
+        super().setUp()
         self.client = Client()
         self.wsgi_request_factory = RequestFactory()
-        random_username = f"testuser_{uuid.uuid4().hex[:8]}"
-        self.user = User.objects.create_user(username=random_username, password="12345")
+        self.session_key = "1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a"
 
     def tearDown(self):
-        self.user.delete()
+        try:
+            self.client.logout()
+            self.client = None
+            self.wsgi_request_factory = None
+        # pylint: disable=W0718
+        except Exception:
+            pass
 
     def get_smarter_request_mixin(self, url: str) -> SmarterRequestMixin:
         request_factory = RequestFactory()
@@ -68,6 +75,16 @@ class TestSmarterRequestMixin(unittest.TestCase):
         Test that SmarterRequestMixin doesn't identify any kind of resource nor api.
         """
         srm = SmarterRequestMixin(request=None)
+        try:
+            srm.to_json()
+        except SmarterValueError as e:
+            self.assertIsInstance(e, SmarterValueError)
+
+        try:
+            srm.url
+        except SmarterValueError as e:
+            self.assertIsInstance(e, SmarterValueError)
+
         self.assertIsNone(srm.account)
         self.assertIsNone(srm.session_key)
         self.assertIsNone(srm.domain)
@@ -97,7 +114,7 @@ class TestSmarterRequestMixin(unittest.TestCase):
         """
         Test that SmarterRequestMixin can be instantiated with an authenticated request.
         """
-        self.client.login(username=self.user.username, password="12345")
+        self.client.login(username=self.admin_user.username, password="12345")
         response = self.client.get("/")
         request = response.wsgi_request
 
@@ -108,7 +125,7 @@ class TestSmarterRequestMixin(unittest.TestCase):
         """
         Test that SmarterRequestMixin request object is read-only.
         """
-        self.client.login(username=self.user.username, password="12345")
+        self.client.login(username=self.admin_user.username, password="12345")
         response = self.client.get("/")
         request = response.wsgi_request
 
@@ -120,10 +137,10 @@ class TestSmarterRequestMixin(unittest.TestCase):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
         """
-        request = self.wsgi_request_factory.get("/")
+        request = self.wsgi_request_factory.get(f"/?session_key={self.session_key}", SERVER_NAME="testserver")
         srm = SmarterRequestMixin(request)
         self.assertIsNone(srm.account)
-        self.assertIsNotNone(srm.session_key)
+        self.assertIsNone(srm.session_key)
         self.assertEqual(srm.domain, "testserver")
         self.assertEqual(srm.ip_address, "127.0.0.1")
         self.assertFalse(srm.is_smarter_api)
@@ -184,27 +201,26 @@ class TestSmarterRequestMixin(unittest.TestCase):
         self.assertFalse(srm.is_chatbot_cli_api_url)
         self.assertFalse(srm.is_chatbot_sandbox_url)
         self.assertFalse(srm.is_smarter_api)
-        self.assertIsNotNone(srm.session_key)
-        self.assertIsInstance(srm.session_key, str)
+        self.assertIsNone(srm.session_key)
         self.assertEqual(srm.domain, "example.3141-5926-5359.api.localhost:8000")
 
     def test_sandbox_url(self):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
-        http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+        http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
         """
         smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/chatbots/example/"
-        url = "http://localhost:8000" + path
+        path = "/workbench/example/"
+        url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
-        self.assertEqual(srm.url, url)
+        self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNotNone(srm.client_key)
+        self.assertIsNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
@@ -216,25 +232,25 @@ class TestSmarterRequestMixin(unittest.TestCase):
     def test_api_url(self):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
-        http://localhost:8000/api/v1/chatbots/1/chat/
+        http://localhost:8000/api/v1/prompt/1/chat/
         """
         smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/api/v1/chatbots/1/chat/"
-        url = "http://localhost:8000" + path
+        path = "/api/v1/prompt/1/chat/"
+        url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
-        self.assertEqual(srm.url, url)
+        self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNotNone(srm.client_key)
+        self.assertIsNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
         self.assertFalse(srm.is_chatbot_cli_api_url)
-        self.assertFalse(srm.is_chatbot_sandbox_url)
+        self.assertTrue(srm.is_chatbot_sandbox_url)
         self.assertTrue(srm.is_smarter_api)
         self.assertEqual(srm.path, path)
 
@@ -248,13 +264,13 @@ class TestSmarterRequestMixin(unittest.TestCase):
             self.skipTest("Smarter admin user profile is not available")
 
         path = "/api/v1/cli/chat/example/"
-        url = "http://localhost:8000" + path
+        url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
-        self.assertEqual(srm.url, url)
+        self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNotNone(srm.client_key)
+        self.assertIsNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)

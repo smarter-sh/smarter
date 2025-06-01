@@ -31,4 +31,6 @@ class UserMiniSerializer(serializers.ModelSerializer):
         fields = [
             "username",
             "email",
-        ]  # add more fields if needed
+        ]
+
+        read_only_fields = fields

@@ -5,8 +5,9 @@
 # python stuff
 import os
 import sys
-import unittest
 from pathlib import Path
+
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -18,7 +19,7 @@ if PYTHON_ROOT not in sys.path:
 from smarter.common.helpers.aws_helpers import aws_helper
 
 
-class TestAWSInfrastructure(unittest.TestCase):
+class TestAWSInfrastructure(SmarterTestBase):
     """Test AWS infrastructure."""
 
     # -------------------------------------------------------------------------
@@ -26,4 +27,4 @@ class TestAWSInfrastructure(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test_aws_connection_works(self):
         """Test that the AWS connection works."""
-        self.assertTrue(aws_helper.aws.ready(), "AWS connection failed.")
+        self.assertTrue(aws_helper.aws.ready, "AWS connection failed.")

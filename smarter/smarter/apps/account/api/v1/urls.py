@@ -2,10 +2,13 @@
 
 from django.urls import path
 
+from .const import namespace
 from .views.account import AccountListView, AccountView
 from .views.payment_methods import PaymentMethodsListView, PaymentMethodView
 from .views.user import UserListView, UserView
 
+
+app_name = namespace
 
 urlpatterns = [
     path("", AccountListView.as_view(), name="account_list_view"),

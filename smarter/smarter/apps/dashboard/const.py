@@ -1,0 +1,3 @@
+"""Dashboard constants."""
+
+namespace = "dashboard"

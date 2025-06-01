@@ -1,23 +1,17 @@
 # pylint: disable=wrong-import-position
 """Test User."""
 
-# python stuff
-import unittest
-
 from celery import Celery
+
+# python stuff
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 # our stuff
 from smarter.smarter_celery import app
 
 
-class TestCelery(unittest.TestCase):
+class TestCelery(SmarterTestBase):
     """Test Account model"""
-
-    def setUp(self):
-        """Set up test fixtures."""
-
-    def tearDown(self):
-        """Clean up test fixtures."""
 
     def test_celery_is_running(self):
         """Test that Celery is running."""

@@ -4,7 +4,7 @@ metadata:
   description: The example plugin. This is a 'hello world' style plugin. This is an
     example plugin to integrate with OpenAI API Function Calling additional information
     plugin_data, in this module.
-  name: ExampleConfiguration
+  name: example_configuration
   pluginClass: static
   tags: []
   version: 0.2.0

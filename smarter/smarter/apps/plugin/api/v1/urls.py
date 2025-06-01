@@ -3,13 +3,17 @@
 from django.urls import path
 from django.views import View
 
+from .const import namespace
 from .views import (
     AddPluginExamplesView,
     PluginCloneView,
-    PluginsListView,
+    PluginListView,
     PluginUploadView,
     PluginView,
 )
+
+
+app_name = namespace
 
 
 class RequestRouter(View):
@@ -18,7 +22,7 @@ class RequestRouter(View):
     def dispatch(self, request, *args, **kwargs):
         if request.method.lower() == "post":
             return PluginView.as_view()(request, *args, **kwargs)
-        return PluginsListView.as_view()(request, *args, **kwargs)
+        return PluginListView.as_view()(request, *args, **kwargs)
 
 
 urlpatterns = [

@@ -6,8 +6,10 @@ import json
 import logging
 
 from django import forms
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.urls import reverse
 
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
 from smarter.lib.django.view_helpers import (
@@ -39,7 +41,7 @@ class ComingSoon(SmarterWebHtmlView):
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request):
+    def post(self, request: WSGIRequest):
         form = ComingSoon.EmailForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
@@ -70,7 +72,7 @@ class EmailAdded(SmarterWebHtmlView):
 
     template_path = "dashboard/email-added.html"
 
-    def post(self, request):
+    def post(self, request: WSGIRequest):
         context = json.loads(request.body.decode("utf-8"))
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
@@ -95,7 +97,7 @@ class DashboardView(SmarterWebHtmlView):
 
     template_path = "dashboard/authenticated.html"
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: WSGIRequest, *args, **kwargs):
         if request.user.is_authenticated:
             return super().get(request, *args, **kwargs)
-        return redirect("/")
+        return redirect(reverse("login_view"))

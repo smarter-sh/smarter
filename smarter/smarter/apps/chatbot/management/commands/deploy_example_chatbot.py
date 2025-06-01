@@ -46,7 +46,7 @@ class Command(BaseCommand):
         chatbot.app_placeholder = "Ask me anything..."
         chatbot.app_info_url = "https://smarter.sh"
         chatbot.app_background_image_url = None
-        chatbot.app_logo_url = "/static/querium/querium-logo-white-transparent.png"
+        chatbot.app_logo_url = "https://platform.smarter.sh/static/querium/querium-logo-white-transparent.png"
         chatbot.save()
 
         if chatbot.deployed and chatbot.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
@@ -54,7 +54,7 @@ class Command(BaseCommand):
             return
 
         for plugin_meta in PluginMeta.objects.filter(account=user_profile.account):
-            if plugin_meta.name in ["EverlastingGobstopper", "ExampleConfiguration"]:
+            if plugin_meta.name in ["everlasting_gobstopper", "example_configuration"]:
                 if not ChatBotPlugin.objects.filter(chatbot=chatbot, plugin_meta=plugin_meta).exists():
                     ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin_meta)
 

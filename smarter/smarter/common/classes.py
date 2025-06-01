@@ -1,6 +1,17 @@
 """Common classes"""
 
+from logging import getLogger
+
+from django.http import HttpRequest
+
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import (
+    smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
+)
+from smarter.lib.django.validators import SmarterValidator
+
+
+logger = getLogger(__name__)
 
 
 class Singleton(type):
@@ -24,6 +35,36 @@ class SmarterHelperMixin:
     A generic mixin with helper functions.
     """
 
+    def __init__(self, *args, **kwargs):
+        pass
+
     @property
-    def formatted_class_name(self):
+    def formatted_class_name(self) -> str:
+        """
+        For logging. Applies standardized styling to the class name.
+        """
         return formatted_text(self.__class__.__name__)
+
+    @property
+    def ready(self) -> bool:
+        return True
+
+    def to_json(self) -> dict:
+        """
+        A placeholder method for converting the object to JSON.
+        Should be overridden in subclasses.
+        """
+        return {
+            "class_name": self.formatted_class_name,
+        }
+
+    def smarter_build_absolute_uri(self, request: HttpRequest) -> str:
+        """
+        A utility function to attempt to get the request URL from any valid
+        child class of HttpRequest. This mostly protects us from unit tests
+        class mutations that do not implement build_absolute_uri().
+
+        :param request: The request object.
+        :return: The request URL.
+        """
+        return utils_smarter_build_absolute_uri(request)
