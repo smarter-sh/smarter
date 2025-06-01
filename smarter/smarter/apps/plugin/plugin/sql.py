@@ -46,7 +46,24 @@ class SqlPlugin(PluginBase):
 
     @property
     def plugin_data(self) -> PluginDataSql:
-        """Return the plugin data."""
+        """
+        Return the plugin data as a Django ORM instance.
+        """
+        if self._plugin_data:
+            return self._plugin_data
+        # we only want a preexisting manifest ostensibly sourced
+        # from the cli, not a lazy-loaded
+        if self._manifest and self.plugin_meta:
+            # this is an update scenario. the Plugin exists in the database,
+            # AND we've received manifest data from the cli.
+            self._plugin_data = PluginDataSql(**self.plugin_data_django_model)
+        if self.plugin_meta:
+            # we don't have a Pydantic model but we do have an existing
+            # Django ORM model instance, so we can use that directly.
+            self._plugin_data = PluginDataSql.objects.get(
+                plugin=self.plugin_meta,
+            )
+        # new Plugin scenario. there's nothing in the database yet.
         return self._plugin_data
 
     @property
@@ -68,20 +85,23 @@ class SqlPlugin(PluginBase):
 
     @property
     def plugin_data_django_model(self) -> dict:
-        """Return the plugin data definition as a json object."""
-
-        # recast the Pydantic model to the PluginDataSql Django ORM model
-        plugin_data_sqlconnection = SqlConnection.objects.get(
-            account=self.user_profile.account, name=self.manifest.spec.data.sqlData.connection
-        )
-        sql_data = self.manifest.spec.data.sqlData.model_dump()
-        sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
-        sql_data["connection"] = plugin_data_sqlconnection
-        return {
-            "plugin": self.plugin_meta,
-            "description": self.manifest.spec.data.description,
-            **sql_data,
-        }
+        """
+        transform the Pydantic model to the PluginDataSql Django ORM model.
+        Return the plugin data definition as a json object.
+        """
+        if self._manifest:
+            # recast the Pydantic model to the PluginDataSql Django ORM model
+            plugin_data_sqlconnection = SqlConnection.objects.get(
+                account=self.user_profile.account, name=self.manifest.spec.connection
+            )
+            sql_data = self.manifest.spec.sqlData.model_dump()
+            sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
+            sql_data["connection"] = plugin_data_sqlconnection
+            return {
+                "plugin": self.plugin_meta,
+                "description": self.manifest.spec.data.description,
+                **sql_data,
+            }
 
     @property
     def custom_tool(self) -> dict:

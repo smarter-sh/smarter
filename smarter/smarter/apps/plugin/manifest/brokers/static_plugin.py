@@ -87,13 +87,13 @@ class SAMStaticPluginBroker(AbstractBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = StaticPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -144,14 +144,13 @@ class SAMStaticPluginBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
         manifest is loaded and validated before applying the manifest to the
         Django ORM model.
         """
-        super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         try:
@@ -186,12 +185,13 @@ class SAMStaticPluginBroker(AbstractBroker):
             )
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        super().chat(request, kwargs)
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
 
-    def delete(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -209,17 +209,17 @@ class SAMStaticPluginBroker(AbstractBroker):
             f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
         )
 
-    def deploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

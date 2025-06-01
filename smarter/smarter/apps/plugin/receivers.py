@@ -36,6 +36,7 @@ from .signals import (  # plugin signals; sql_connection signals; api_connection
     plugin_cloned,
     plugin_created,
     plugin_deleted,
+    plugin_deleting,
     plugin_ready,
     plugin_selected,
     plugin_sql_connection_attempted,
@@ -88,11 +89,21 @@ def handle_plugin_updated(sender, plugin: PluginBase, **kwargs):
     )
 
 
+@receiver(plugin_deleting, dispatch_uid=prefix + ".plugin_deleting")
+def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
+    """Handle plugin deleting signal."""
+    logger.info(
+        "%s %s is being deleted.",
+        formatted_text("smarter.apps.plugin.receivers.plugin_deleting"),
+        plugin_meta.name,
+    )
+
+
 @receiver(plugin_deleted, dispatch_uid="plugin_deleted")
-def handle_plugin_deleted(sender, plugin: PluginBase, **kwargs):
+def handle_plugin_deleted(sender, plugin: PluginBase, plugin_name: str, **kwargs):
     """Handle plugin deleted signal."""
 
-    logger.info("%s - %s", formatted_text(prefix + "plugin_deleted"), plugin.name)
+    logger.info("%s - %s", formatted_text(prefix + "plugin_deleted"), plugin_name)
 
 
 @receiver(plugin_called, dispatch_uid="plugin_called")

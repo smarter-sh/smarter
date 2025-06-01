@@ -256,7 +256,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
             except PluginMeta.DoesNotExist:
                 logger.info("%s.plugin_meta() called - 4 %s", self.formatted_class_name, self._plugin_meta)
-                pass
         logger.info("%s.plugin_meta() called - 5 %s", self.formatted_class_name, self._plugin_meta)
         return self._plugin_meta
 
