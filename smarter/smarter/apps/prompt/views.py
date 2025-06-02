@@ -16,7 +16,6 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.authentication import SessionAuthentication
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chatbot.models import (
@@ -53,7 +52,6 @@ from smarter.lib.django.view_helpers import (
     SmarterNeverCachedWebView,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.drf.view_helpers import UnauthenticatedPermissionClass
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import (
@@ -100,7 +98,9 @@ class SmarterChatSession(SmarterHelperMixin):
 
         # leaving this in place as a reminder that we need one or the other
         if not self.session_key and not self.chatbot:
-            raise SmarterChatappViewError("Either a session_key or a chatbot instance is required")
+            raise SmarterChatappViewError(
+                f"Either a session_key or a chatbot instance is required. url={request.build_absolute_uri()}"
+            )
 
         self._chat_helper = ChatHelper(
             *args, request=request, session_key=self.session_key, chatbot=self.chatbot, **kwargs
@@ -141,6 +141,7 @@ class SmarterChatSession(SmarterHelperMixin):
 
 
 # pylint: disable=R0902
+@method_decorator(csrf_exempt, name="dispatch")
 class ChatConfigView(SmarterNeverCachedWebView):
     """
     Chat config view for smarter web. This view is protected and requires the user
@@ -170,7 +171,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
         if self.chatbot:
             # throw everything but the kitchen sink at the ChatBotHelper
             self._chatbot_helper = ChatBotHelper(
-                request=self.request,
+                request=self.smarter_request,
                 session_key=self.session.session_key,
                 name=self._chatbot.name,
                 chatbot_id=self._chatbot.id,
@@ -180,7 +181,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
             )
         else:
             self._chatbot_helper = ChatBotHelper(
-                request=self.request,
+                request=self.smarter_request,
                 name=self.smarter_request_chatbot_name,
                 session_key=self.session.session_key,
                 account=self.account,
@@ -218,7 +219,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
                     self.formatted_class_name,
                 )
                 self.chatbot_helper = ChatBotHelper(
-                    request=request,
+                    request=self.smarter_request,
                     session_key=session_key,
                     chatbot_id=chatbot_id,
                     name=name,
@@ -291,10 +292,6 @@ class ChatConfigView(SmarterNeverCachedWebView):
 
     def __str__(self):
         return str(self.chatbot) if self.chatbot else "ChatConfigView"
-
-    @method_decorator(csrf_exempt)
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
 
     # pylint: disable=unused-argument
     def post(self, request: WSGIRequest, *args, **kwargs):
@@ -375,6 +372,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
         return retval
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat app view for smarter web. This view is protected and requires the user
@@ -444,10 +442,10 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                     self.user_profile.user,
                     name,
                 )
-            self.chatbot = get_cached_chatbot_by_request(request=request)
+            self.chatbot = get_cached_chatbot_by_request(request=self.smarter_request)
             if not self.chatbot:
                 self.chatbot_helper = ChatBotHelper(
-                    request=request,
+                    request=self.smarter_request,
                     session_key=self.session_key,
                     name=name,
                     account=self.account,
@@ -467,7 +465,6 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         except Exception as e:
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
-    @method_decorator(csrf_exempt)
     def dispatch(self, request: WSGIRequest, *args, **kwargs):
         """
         Dispatch method to handle the request.
@@ -525,7 +522,7 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
 
         for chatbot in self.chatbots:
             chatbot_helper = ChatBotHelper(
-                request=request,
+                request=self.smarter_request,
                 chatbot_id=chatbot.id,
                 user=self.user,
                 account=self.account,

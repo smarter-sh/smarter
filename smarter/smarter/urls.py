@@ -1,24 +1,17 @@
 """URL configuration for Smarter Api and web console."""
 
 from logging import getLogger
-from urllib.parse import urlparse
 
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.core.handlers.wsgi import WSGIRequest
-from django.shortcuts import redirect
-from django.urls import include, path, re_path, reverse
+from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail_transfer import urls as wagtailtransfer_urls
 
 from smarter.apps.account.const import namespace as account_namespace
-from smarter.apps.account.utils import (
-    get_cached_account,
-    get_cached_admin_user_for_account,
-)
 from smarter.apps.account.views.authentication import (
     AccountRegisterView,
     LoginView,
@@ -26,7 +19,6 @@ from smarter.apps.account.views.authentication import (
 )
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
-from smarter.apps.chatbot.models import get_cached_chatbot_by_request
 from smarter.apps.dashboard.admin import restricted_site
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
 from smarter.apps.dashboard.views.dashboard import ComingSoon
@@ -41,9 +33,6 @@ from smarter.apps.docs.views.webserver import (
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
-from smarter.common.classes import SmarterHelperMixin
-from smarter.common.utils import smarter_build_absolute_uri
-from smarter.lib.django.request import SmarterRequestMixin
 
 
 logger = getLogger(__name__)
@@ -55,74 +44,27 @@ admin.site = restricted_site
 admin.autodiscover()
 
 name_prefix = "root"
-amnesty_urls = SmarterHelperMixin().amnesty_urls
-
-
-def root_redirector(request: WSGIRequest) -> RedirectView:
-    """
-    Handles traffic sent to the root of the website. Requests
-    can take the form of:
-    2. a chatbot endpoint if the user is not authenticated and the
-       url is of any of the following forms
-       - https://example.3141-5926-5359.api.smarter.sh/
-       - https://example.3141-5926-5359.api.smarter.sh/config/
-       - localhost:8000/api/v1/workbench/1/chat/
-       - localhost:8000/api/v1/workbench/1/chat/config/
-       - localhost:8000/api/v1/cli/chat/example/
-       - localhost:8000/api/v1/cli/chat/example/config/
-    3. the dashboard if the user is authenticated,
-    4. otherwise to the Wagtail docs homepage.
-    """
-    url = smarter_build_absolute_uri(request)
-    parsed_url = urlparse(url)
-    path_parts = parsed_url.path.strip("/").split("/")
-
-    # general amnesty cases where we def do not want
-    # instantiate a chatbot
-    if path_parts and parsed_url[0] not in amnesty_urls:
-
-        # 2. check if the url is a chatbot endpoint
-        chatbot = get_cached_chatbot_by_request(request=request)
-        if chatbot:
-            view = DefaultChatbotApiView.as_view()
-            return view(request, chatbot_id=chatbot.id)
-
-    # 3. check if the user is authenticated, if so redirect to the dashboard
-    if request.user.is_authenticated:
-        return redirect(reverse("dashboard:dashboard"))
-
-    # 4. otherwise redirect to the Wagtail docs homepage
-    return redirect("/docs/")
-
-
-def config_redirector(request: WSGIRequest) -> RedirectView:
-    """
-    Handles traffic sent to the config endpoints of the website.
-    """
-    helper = SmarterRequestMixin(request)
-    if helper.is_config:
-        account_number = helper.smarter_request_chatbot_account_number
-        account = get_cached_account(account_number=helper.smarter_request_chatbot_account_number)
-        logger.info(
-            "Config redirector: account_number=%s, account=%s, url=%s",
-            account_number,
-            account,
-            request.build_absolute_uri(),
-        )
-        user = get_cached_admin_user_for_account(account)
-        request.user = user
-        view = ChatConfigView.as_view()
-        return view(request)
-    return redirect("/docs/")
 
 
 urlpatterns = [
+    path("", RedirectView.as_view(pattern_name="dashboard:dashboard"), name=f"{name_prefix}_home"),
     # -----------------------------------
-    # routes for named urls.
-    # https://example.3141-5926-5359.api.smarter.sh/
+    # root paths
     # -----------------------------------
-    path("", root_redirector, name=f"{name_prefix}_home"),
-    path("config/", config_redirector, name=f"{name_prefix}_config"),
+    path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
+    path("admin/", admin.site.urls, name="django_admin"),
+    path("admin/docs/", include("django.contrib.admindocs.urls")),
+    path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
+    path("chat/", DefaultChatbotApiView.as_view(), name=f"{name_prefix}_chat"),
+    path("cms/", include("smarter.apps.cms.urls", namespace=None)),
+    path("config/", ChatConfigView.as_view(), name=f"{name_prefix}_config"),
+    path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
+    path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
+    path("docs/", include("smarter.apps.docs.urls", namespace=docs_namespace)),
+    path("login/", LoginView.as_view(), name="login_view"),
+    path("logout/", LogoutView.as_view(), name="logout_view"),
+    path("plugin/", include("smarter.apps.plugin.urls", namespace=plugin_namespace)),
+    path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
     # -----------------------------------
     # static routes
     # -----------------------------------
@@ -131,29 +73,10 @@ urlpatterns = [
     path("sitemap.xml", SitemapXmlView.as_view(), name=f"{name_prefix}_sitemap_xml"),
     path("healthz/", HealthzView.as_view(), name=f"{name_prefix}_healthz"),
     path("readiness/", ReadinessView.as_view(), name=f"{name_prefix}_readiness"),
-    path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
-    path("waitlist/", ComingSoon.as_view(), name=f"{name_prefix}_waitlist"),
-    # -----------------------------------
-    # namespaced routes for apps
-    # -----------------------------------
-    path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
-    path("admin/", admin.site.urls, name="django_admin"),
-    path("admin/docs/", include("django.contrib.admindocs.urls")),
-    path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
-    path(
-        "chatbots/",
-        RedirectView.as_view(url="dashboard/", permanent=True),
-    ),
-    path("cms/", include("smarter.apps.cms.urls", namespace=None)),
-    path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
-    path("docs/", include("smarter.apps.docs.urls", namespace=docs_namespace)),
-    path("plugin/", include("smarter.apps.plugin.urls", namespace=plugin_namespace)),
-    path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
+    # path("waitlist/", ComingSoon.as_view(), name=f"{name_prefix}_waitlist"),
     # -----------------------------------
     # authentication routes
     # -----------------------------------
-    path("login/", LoginView.as_view(), name="login_view"),
-    path("logout/", LogoutView.as_view(), name="logout_view"),
     path("social-auth/", include("social_django.urls", namespace="social_auth")),
     # -----------------------------------
     # stripe urls
