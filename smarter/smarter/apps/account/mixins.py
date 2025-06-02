@@ -4,6 +4,7 @@
 import logging
 
 from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest
 
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
@@ -53,7 +54,15 @@ class AccountMixin(SmarterHelperMixin):
         self._user: UserType = None
         self._user_profile: UserProfile = None
 
-        request: WSGIRequest = kwargs.get("request") or args[0] if args else None
+        request: WSGIRequest = kwargs.get("request")
+        if not request and args:
+            for arg in args:
+                if isinstance(arg, HttpRequest):
+                    if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                        logger.info("%s.__init__(): received a request object: %s", self.formatted_class_name, arg)
+                    request = arg
+                    break
+
         account_number: str = kwargs.get("account_number")
         account = kwargs.get("account")
         user = kwargs.get("user")
