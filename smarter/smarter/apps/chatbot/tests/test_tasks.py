@@ -163,7 +163,7 @@ class TestChatBotTasks(TestAccountMixin):
         self.assertIsNone(self.chatbot.custom_url)
         print("self.chatbot.sandbox_host", self.chatbot.sandbox_host)
         self.assertTrue(
-            SmarterValidator.is_valid_url(self.chatbot.sandbox_url), f"Invalid URL: {self.chatbot.sandbox_host}"
+            SmarterValidator.is_valid_url(self.chatbot.sandbox_url), f"Invalid URL: {self.chatbot.sandbox_url}"
         )
         print("self.chatbot.sandbox_url", self.chatbot.sandbox_url)
         self.assertTrue(

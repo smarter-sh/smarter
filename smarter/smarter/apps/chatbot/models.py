@@ -237,16 +237,15 @@ class ChatBot(TimestampedModel):
         """
         return 'alpha.api.smarter.sh/api/v1/chatbots/1/'
         """
-        domain = f"{smarter_settings.environment_domain}/api/v1/chatbots/{self.id}/"
-        SmarterValidator.validate_domain(domain)
-        return domain
+        return smarter_settings.environment_domain
 
     @property
     def sandbox_url(self):
         """
         return 'https://alpha.api.smarter.sh/api/v1/chatbots/1/'
         """
-        return SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)
+        url = f"{self.sandbox_host}/api/v1/chatbots/{self.id}/"
+        return SmarterValidator.urlify(url, environment=smarter_settings.environment)
 
     @property
     def hostname(self):
