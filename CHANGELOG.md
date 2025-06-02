@@ -32,6 +32,56 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 0.12 Pre-release notes
+
+### Features
+
+- **Secrets**. A new object type for securely managing sensitive data like passwords, api keys and credentials. Works like a Kubernetes secret, where the secret is encrypted using a common key that enables you to drecrypt it real-time, as needed.
+- **ApiPlugin + ApiConnection**. A new Smarter Plugin class that enables user defined, strongly typed, real time data retrieval from remote Api's during LLM prompting via both function calling and traditional single-pass RAG.
+- **SqlPlugin + SqlConnection**. Ditto, but for remote Sql databases.
+
+### Refactoring
+
+- **AccountMixin + SmarterRequestMixin**. We created two new mixins that consolidate handling logic for working with http requests and for account resources like Users and UserProfiles. We retired thousands of lines of redundant code and achieved a 10x performance improvement on api request initializations. This obviously affords us considerable improvement to reliability. high caching levels.
+
+- **Name-spaced url schemes for reverse urls**, so that name spaces now match the actual Python module organizational scheme. For example, `{% url 'api:apply' %}`is now `{% url 'api:v1:cli:apply' %}`, which matches the Python path, `smarter.apps.api.v1.cli`.
+- **Django signals**. Fully migrated to event-driven Django signals to pave the way towards our vision for a more pluggable, extensible platform architecture.
+- **Standardized Casing**. Standardized transformations between Pydantic models and Django ORM. Pydantic fields are now strictly camelCase, while DjangoORM continues to enforce strict snake_case. This greatly simplifies implementation logic in Smarter Broker classes and enabled us to remove copious amounts of transformation logic from legacy Brokers.
+- **Testing**. The entire unit test bank has been completely refactored to use a new family of Classes that provide more consistent setup and teardown of unit tests.
+
+### Performance & reliability
+
+- **Testing Coverages**. Our testing coverage ratio is back to par, with 300+ new unit tests added to the legacy code base.
+- **Enumerations**. More enumerations throughout the codebase enable more consistent and coherent cli error messagages.
+- **Caching**. Caching is now tightly coupled to AccountMixin and SmarterRequestMixin and has been extensively refactored to cover more edge cases.
+- **Logging**. Improved logging, mostly as a result of new Django signals that we've added to all Django apps.
+
+## [0.11.0](https://github.com/smarter-sh/smarter/compare/v0.10.23...v0.11.0) (2025-04-27)
+
+### Bug Fixes
+
+- cache misses due to AnonymousUser ([80de0e2](https://github.com/smarter-sh/smarter/commit/80de0e266562b61fbf2e1a248a44ff1e079a3e00))
+- cache the base context ([a153da9](https://github.com/smarter-sh/smarter/commit/a153da98e55ecd5cfe9ad15367fc5ecb978f3f94))
+- cache_results() decorator wasn't finding valid cached items ([fc43a1b](https://github.com/smarter-sh/smarter/commit/fc43a1b22339e2d02371bda5a3db70ce53890ccf))
+- cronic cache misses ([23d039d](https://github.com/smarter-sh/smarter/commit/23d039d42292c57e3ed83e6af302e818e21177db))
+- fixup hashkey so that it's still readable ([499bdf5](https://github.com/smarter-sh/smarter/commit/499bdf5c917c1301f9254a0093715e76232c3524))
+- json schema should not require status field ([6868f5c](https://github.com/smarter-sh/smarter/commit/6868f5c5bc2ea2a4c07f97679cbe2d9bc0a5226c))
+- work on dispatch() life cycle execution thread ([0761c57](https://github.com/smarter-sh/smarter/commit/0761c57211fc38185761cb7d1894a0a0d49f6aa5))
+
+### Features
+
+- add console UI components for Secrets ([ccf78d8](https://github.com/smarter-sh/smarter/commit/ccf78d81576b58ec028ff15b34f59c3e57b9d215))
+- add data entry form for new secret ([4797e25](https://github.com/smarter-sh/smarter/commit/4797e25e90f87414626f819f7c0e29d8fe4ee6ed))
+- add django admin form for Secret and created dedicated FERNET_ENCRYPTION_KEY ([65c127f](https://github.com/smarter-sh/smarter/commit/65c127f6d8cc2ed78ef2ec00d3869123656a21df))
+- add Fernet encryption key to CI-CD workflows and Helm chart ([19a7686](https://github.com/smarter-sh/smarter/commit/19a76863a5990feed463d063263ab3bfb7e9a4e2))
+- add Secret unit tests ([b88af41](https://github.com/smarter-sh/smarter/commit/b88af410c383cc06ec0fe9bd4124030cf995d4d9))
+- configure action buttons for data entry form ([c7bb2a0](https://github.com/smarter-sh/smarter/commit/c7bb2a0eb2386b987b2083fa5778675bbae4f211))
+- configure data entry form ([f5c02ae](https://github.com/smarter-sh/smarter/commit/f5c02ae11e018b9696761d871883cc7c5362aace))
+- create account.Secrets model ([d0e0e00](https://github.com/smarter-sh/smarter/commit/d0e0e000f5ff80b60cd06679a42e68fb459b9707))
+- scaffold dashboard UI widgets ([6583ec4](https://github.com/smarter-sh/smarter/commit/6583ec4b562644b613d4591266646de1418e599c))
+- scaffold Secret broker and model ([f9e2850](https://github.com/smarter-sh/smarter/commit/f9e2850302e37de53f8594b13663ed9cea55f8af))
+- scaffold Secret broker and model ([d3904a4](https://github.com/smarter-sh/smarter/commit/d3904a4af406371f0dd1c5896868a96d45bd1e5f))
+
 ## [0.10.23](https://github.com/smarter-sh/smarter/compare/v0.10.22...v0.10.23) (2025-04-11)
 
 ### Bug Fixes
@@ -633,7 +683,7 @@ A refactor of the Django chatbot app.
 
 ## [0.2.0](https://github.com/QueriumCorp/smarter/compare/v0.1.2...v0.2.0) (2024-05-16)
 
-Introduces remote Sql server integration to the Plugin class. New Django ORMs PluginDataSql and PluginDataSqlConnection have been added for persinsting remote sql server connections, and parameterized sql queries. SAMPluginDataSqlConnectionBroker is added to fully integrate these models to /api/v1/cli.
+Introduces remote Sql server integration to the Plugin class. New Django ORMs PluginSql and SqlConnection have been added for persinsting remote sql server connections, and parameterized sql queries. SAMPluginDataSqlConnectionBroker is added to fully integrate these models to /api/v1/cli.
 
 ### Features
 

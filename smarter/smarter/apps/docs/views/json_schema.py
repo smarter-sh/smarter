@@ -22,7 +22,9 @@ class DocsJsonSchemaBaseView(DocsBaseView):
 
     def get(self, request, *args, **kwargs):
         view = ApiV1CliSchemaApiView.as_view()
-        json_response = self.get_brokered_json_response(ApiV1CliReverseViews.schema, view, request, *args, **kwargs)
+        json_response = self.get_brokered_json_response(
+            ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.schema, view, request, *args, **kwargs
+        )
         json_response = json.dumps(json_response, indent=4)
         self.context["json_schema"] = json_response
         return render(request, self.template_path, context=self.context)
@@ -34,16 +36,22 @@ class DocsJsonSchemaAccountView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.ACCOUNT)
 
 
-# class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
-#     """ApiConnection JSON Schema view"""
+class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
+    """ApiConnection JSON Schema view"""
 
-#     kind = SAMKinds(SAMKinds.APICONNECTION)
+    kind = SAMKinds(SAMKinds.API_CONNECTION)
+
+
+class DocsJsonSchemaApiView(DocsJsonSchemaBaseView):
+    """Plugin Api JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.API_PLUGIN)
 
 
 class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
     """ApiKey JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.APIKEY)
+    kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
 class DocsJsonSchemaChatView(DocsJsonSchemaBaseView):
@@ -79,13 +87,19 @@ class DocsJsonSchemaChatBotView(DocsJsonSchemaBaseView):
 class DocsJsonSchemaPluginView(DocsJsonSchemaBaseView):
     """Plugin JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN)
+    kind = SAMKinds(SAMKinds.STATIC_PLUGIN)
 
 
 class DocsJsonSchemaSqlConnectionView(DocsJsonSchemaBaseView):
     """SqlConnection JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.SQLCONNECTION)
+    kind = SAMKinds(SAMKinds.SQL_CONNECTION)
+
+
+class DocsJsonSchemaSqlView(DocsJsonSchemaBaseView):
+    """Plugin Sql JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.SQL_PLUGIN)
 
 
 class DocsJsonSchemaUserView(DocsJsonSchemaBaseView):

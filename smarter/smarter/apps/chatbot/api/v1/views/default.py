@@ -15,7 +15,7 @@ from .base import ChatBotApiBaseViewSet
 logger = logging.getLogger(__name__)
 
 
-class DefaultChatBotApiView(ChatBotApiBaseViewSet):
+class DefaultChatbotApiView(ChatBotApiBaseViewSet):
     """
     Main view for Smarter ChatBot API chat prompts.
     top-level viewset for customer-deployed Plugin-based Chat APIs.
@@ -53,7 +53,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
         # pylint: disable=broad-except
         except Exception as e:
             err_traceback = traceback.format_exc()
-            logger.error("DefaultChatBotApiView.dispatch: %s, %s", e, err_traceback)
+            logger.error("DefaultChatbotApiView.dispatch: %s, %s", e, err_traceback)
             retval = JsonResponse(
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
                 data={

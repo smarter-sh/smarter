@@ -15,7 +15,7 @@ spec:
     - Provide a technical definition for the term "machine learning."
     appFileAttachment: false
     appInfoUrl: https://developers.meta.com/ai/
-    appLogoUrl: /static/querium/querium-logo-white-transparent.png
+    appLogoUrl: https://platform.smarter.sh/static/querium/querium-logo-white-transparent.png
     appName: MetaAI Llama 3.1
     appPlaceholder: Ask me anything...
     appWelcomeMessage: Welcome to Llama 3.1!

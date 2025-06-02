@@ -1,25 +1,35 @@
 """Test Api v1 CLI commands for SqlConnection"""
 
+import json
 from http import HTTPStatus
+from logging import getLogger
 from urllib.parse import urlencode
 
-import yaml
 from django.urls import reverse
 
+from smarter.apps.account.models import Secret
+from smarter.apps.account.tests.factories import secret_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
-from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
-from smarter.apps.plugin.models import PluginDataSqlConnection
+from smarter.apps.plugin.manifest.models.sql_connection.enum import (
+    DbEngines,
+    DBMSAuthenticationMethods,
+)
+from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
+from smarter.apps.plugin.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+from smarter.lib.manifest.loader import SAMLoader
+
+from .base_class import ApiV1CliTestBase
 
 
-KIND = SAMKinds.SQLCONNECTION.value
+KIND = SAMKinds.SQL_CONNECTION.value
+logger = getLogger(__name__)
 
 
-class TestApiCliV1SqlConnection(ApiV1TestBase):
+class TestApiCliV1SqlConnection(ApiV1CliTestBase):
     """
     Test Api v1 CLI commands for SqlConnection
 
@@ -31,30 +41,52 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
     Account.
     """
 
-    sqlconnection: PluginDataSqlConnection = None
+    sqlconnection: SqlConnection = None
 
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.name = "TestSqlConnection"
         self.query_params = urlencode({"name": self.name})
+        self.password: Secret = None
 
     def tearDown(self):
+        if self.sqlconnection is not None:
+            try:
+                if self.sqlconnection.id is not None:
+                    self.sqlconnection.delete()
+            except (SqlConnection.DoesNotExist, ValueError):
+                pass
+        if self.password is not None:
+            try:
+                if self.password.id is not None:
+                    self.password.delete()
+            except (Secret.DoesNotExist, ValueError):
+                pass
         super().tearDown()
-        if self.sqlconnection:
-            self.sqlconnection.delete()
 
     def sqlconnection_factory(self):
-        sqlconnection = PluginDataSqlConnection.objects.create(
+        """
+        Create a sqlconnection for testing purposes.
+        """
+        self.password = secret_factory(
+            user_profile=self.user_profile,
             name=self.name,
-            db_engine=DbEngines.MYSQL.value,
+            description="smarter local dev password",
+            value="smarter",
+        )
+        sqlconnection = SqlConnection.objects.create(
             account=self.account,
-            version="1.0.0",
-            hostname="localhost",
-            port=5432,
-            database=self.name,
-            username="test",
-            password="test",
+            name=self.name,
+            kind=KIND,
+            description="local mysql test sqlconnection - ",
+            db_engine=DbEngines.MYSQL.value,
+            authentication_method=DBMSAuthenticationMethods.TCPIP.value,
+            timeout=300,
+            hostname="smarter-mysql",
+            port=3306,
+            database="smarter",
+            username="smarter",
+            password=self.password,
         )
         return sqlconnection
 
@@ -66,7 +98,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQLCONNECTION.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQL_CONNECTION.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
@@ -79,14 +111,14 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn(SAMKeys.SPEC.value, data.keys())
         spec = data[SAMKeys.SPEC.value]
         connection = spec["connection"]
-        config_fields = ["db_engine", "hostname", "port", "username", "password", "database"]
+        config_fields = ["dbEngine", "hostname", "port", "username", "password", "database"]
         for field in config_fields:
             assert field in connection.keys(), f"{field} not found in config keys: {connection.keys()}"
 
     def test_example_manifest(self) -> None:
         """Test example-manifest command"""
 
-        path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
@@ -97,7 +129,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         """Test describe command"""
         self.sqlconnection = self.sqlconnection_factory()
 
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
@@ -113,108 +145,156 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         )
         self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.VERSION.value], self.sqlconnection.version)
 
+        self.sqlconnection.delete()
+
     def test_apply(self) -> None:
         """Test apply command"""
 
-        self.sqlconnection = self.sqlconnection_factory()
+        password_secret = secret_factory(
+            user_profile=self.user_profile,
+            name="smarter",
+            description="test_apply() smarter local dev password",
+            value="smarter",
+        )
 
-        # retrieve the current manifest by calling 'describe'
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
-        url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(path=url_with_query_params)
+        # load the manifest from the yaml file
+        loader = SAMLoader(file_path="smarter/apps/plugin/tests/mock_data/sql-connection.yaml")
+        self.assertTrue(loader.ready, msg="loader is not ready")
+
+        # use the manifest to creata a new sqlconnection Pydantic model
+        manifest = SAMSqlConnection(**loader.pydantic_model_dump())
+
+        # dump the manifest to json
+        manifest_json = json.loads(manifest.model_dump_json())
+
+        # retrieve the current manifest by calling "describe"
+        path = reverse(self.namespace + ApiV1CliReverseViews.apply)
+        response, status = self.get_response(path=path, data=manifest_json)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
+        logger.info("response: %s", response)
 
-        # muck up the manifest with some test data
-        data = response[SmarterJournalApiResponseKeys.DATA]
-        data[SAMKeys.SPEC.value] = {
-            "connection": {
-                "db_engine": DbEngines.MYSQL.value,
-                "hostname": "newhost",
-                "port": 3307,
-                "username": "newUsername",
-                "password": "newPassword",
-                "database": "newDb",
-            }
-        }
-        data[SAMKeys.METADATA.value]["description"] = "new description"
-
-        # pop the status bc its read-only
-        data.pop(SAMKeys.STATUS.value)
-
-        # convert the data back to yaml, since this is what the cli usually sends
-        manifest = yaml.dump(data)
-        path = reverse(ApiV1CliReverseViews.apply)
-        response, status = self.get_response(path=path, manifest=manifest)
-        self.assertEqual(status, HTTPStatus.OK)
-        self.assertIsInstance(response, dict)
-
-        # requery and validate our changes
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
-        url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(path=url_with_query_params)
-        self.assertEqual(status, HTTPStatus.OK)
-        self.assertIsInstance(response, dict)
-
-        # validate our changes
-        data = response[SmarterJournalApiResponseKeys.DATA]
-        self.assertEqual(data[SAMKeys.METADATA.value]["description"], "new description")
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["db_engine"], DbEngines.MYSQL.value)
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["hostname"], "newhost")
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["port"], 3307)
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["username"], "newUsername")
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["password"], "newPassword")
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["database"], "newDb")
+        # tear down the test results.
+        sql_connection = SqlConnection.objects.get(name=manifest.metadata.name, account=self.account)
+        sql_connection.delete()
+        password_secret.delete()
 
     def test_get(self) -> None:
         """Test get command"""
 
-        # create a sqlconnection so that we have something to get.
+        # this is for reference only, the test will create a new sqlconnection
+        # pylint: disable=W0612
+        expected_output = {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "SqlConnection",
+                "name": None,
+                "metadata": {"count": 1},
+                "kwargs": {},
+                "data": {
+                    "titles": [
+                        {"name": "name", "type": "CharField"},
+                        {"name": "description", "type": "CharField"},
+                        {"name": "hostname", "type": "CharField"},
+                        {"name": "port", "type": "IntegerField"},
+                        {"name": "database", "type": "CharField"},
+                        {"name": "username", "type": "CharField"},
+                        {"name": "password", "type": "PrimaryKeyRelatedField"},
+                        {"name": "proxyProtocol", "type": "ChoiceField"},
+                        {"name": "proxyHost", "type": "CharField"},
+                        {"name": "proxyPort", "type": "IntegerField"},
+                        {"name": "proxyUsername", "type": "CharField"},
+                        {"name": "proxyPassword", "type": "PrimaryKeyRelatedField"},
+                    ],
+                    "items": [
+                        {
+                            "name": "test8cecb5d1d50957c4",
+                            "description": "local mysql test sqlconnection - ",
+                            "hostname": "smarter-mysql",
+                            "port": 3306,
+                            "database": "smarter",
+                            "username": "smarter",
+                            "password": 1004,
+                            "proxyProtocol": "http",
+                            "proxyHost": None,
+                            "proxyPort": None,
+                            "proxyUsername": None,
+                            "proxyPassword": None,
+                        }
+                    ],
+                },
+            },
+            "message": "SqlConnections got successfully",
+            "api": "smarter.sh/v1",
+            "thing": "SqlConnection",
+            "metadata": {"key": "693d98d68199fa8a67e60132007bea249e48fae8fa41a14ae5a16bd4dc039bd6"},
+        }
+
         self.sqlconnection = self.sqlconnection_factory()
+        path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(path=url_with_query_params)
+        logger.info("response: %s", response)
 
-        def validate_titles(data):
-            if "titles" not in data:
-                return False
-
-            for item in data["titles"]:
-                if not isinstance(item, dict):
-                    return False
-                if "name" not in item or "type" not in item:
-                    return False
-
-            return True
-
-        def validate_items(data):
-            if "items" not in data or "titles" not in data:
-                raise ValueError("items not found in data")
-
-            if "titles" not in data:
-                raise ValueError("titles not found in data")
-
-            title_names = {title["name"] for title in data["titles"]}
-
-            for item in data["items"]:
-                if not isinstance(item, dict):
-                    raise ValueError(f"item is not a dict: {item}")
-                if set(item.keys()) != title_names:
-                    difference = list(set(item.keys()).symmetric_difference(title_names))
-                    raise ValueError(f"item keys do not match titles: {difference}")
-
-            return True
-
-        path = reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)
-        response, status = self.get_response(path=path)
+        self.assertEqual(status, HTTPStatus.OK)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
+        # validate top-level keys
+        self.assertIn("message", response)
+        self.assertEqual(response["message"], "SqlConnections got successfully")
+        self.assertIn("thing", response)
+        self.assertEqual(response["thing"], "SqlConnection")
+        self.assertIn("metadata", response)
+        self.assertIn("key", response["metadata"])
+        self.assertIsInstance(response["metadata"]["key"], str)
+
+        # validate titles
+        expected_titles = [
+            {"name": "name", "type": "CharField"},
+            {"name": "description", "type": "CharField"},
+            {"name": "hostname", "type": "CharField"},
+            {"name": "port", "type": "IntegerField"},
+            {"name": "database", "type": "CharField"},
+            {"name": "username", "type": "CharField"},
+            {"name": "password", "type": "PrimaryKeyRelatedField"},
+            {"name": "proxyProtocol", "type": "ChoiceField"},
+            {"name": "proxyHost", "type": "CharField"},
+            {"name": "proxyPort", "type": "IntegerField"},
+            {"name": "proxyUsername", "type": "CharField"},
+            {"name": "proxyPassword", "type": "PrimaryKeyRelatedField"},
+        ]
+
+        # other structural checks
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
+
+        data = response["data"][SmarterJournalApiResponseKeys.DATA]
+        self.assertEqual(data["titles"], expected_titles)
+
+        # validate items
+        self.assertEqual(len(data["items"]), 1)
+        item = data["items"][0]
+        self.assertEqual(item["name"], self.sqlconnection.name)
+        self.assertEqual(item["description"], self.sqlconnection.description)
+        self.assertEqual(item["hostname"], self.sqlconnection.hostname)
+        self.assertEqual(item["port"], self.sqlconnection.port)
+        self.assertEqual(item["database"], self.sqlconnection.database)
+        self.assertEqual(item["username"], self.sqlconnection.username)
+        self.assertEqual(item["password"], self.sqlconnection.password.id)
+        self.assertEqual(item["proxyProtocol"], "http")
+        self.assertIsNone(item["proxyHost"])
+        self.assertIsNone(item["proxyPort"])
+        self.assertIsNone(item["proxyUsername"])
+        self.assertIsNone(item["proxyPassword"])
+
+        # legacy validations, pre May-2025
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQLCONNECTION.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQL_CONNECTION.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
@@ -228,20 +308,19 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn("titles", data.keys())
         self.assertIn("items", data.keys())
 
-        if not validate_titles(data):
-            self.fail(f"Titles are not valid: {data}")
-
-        if not validate_items(data):
-            self.fail(f"Items are not valid: {data}")
+        self.sqlconnection.delete()
+        self.password.delete()
 
     def test_deploy(self) -> None:
         """Test deploy command"""
         # create a sqlconnection so that we have something to deploy
         self.sqlconnection = self.sqlconnection_factory()
 
-        path = reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(path=url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("response: %s", response)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
@@ -252,18 +331,22 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         # create a sqlconnection so that we have something to undeploy
         self.sqlconnection = self.sqlconnection_factory()
 
-        path = reverse(ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(path=url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("response: %s", response)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
 
     def test_logs(self) -> None:
         """Test logs command"""
-        path = reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(path=url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("response: %s", response)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
@@ -273,16 +356,18 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         # create a sqlconnection so that we have something to delete
         self.sqlconnection = self.sqlconnection_factory()
 
-        path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
+        path = reverse(self.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(path=url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("response: %s", response)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
 
         # verify the sqlconnection was deleted
         try:
-            PluginDataSqlConnection.objects.get(name=self.name)
-            self.fail("PluginDataSqlConnection was not deleted")
-        except PluginDataSqlConnection.DoesNotExist:
+            SqlConnection.objects.get(name=self.name)
+            self.fail("SqlConnection was not deleted")
+        except SqlConnection.DoesNotExist:
             pass

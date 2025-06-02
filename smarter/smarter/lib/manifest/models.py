@@ -2,16 +2,22 @@
 
 import abc
 import re
+from logging import getLogger
 from typing import List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.classes import SmarterHelperMixin
+from smarter.common.utils import camel_to_snake
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 
 
-class SmarterBaseModel(BaseModel):
+logger = getLogger(__name__)
+
+
+class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
     """Smarter API Base Pydantic Model."""
 
     model_config = ConfigDict(
@@ -21,7 +27,7 @@ class SmarterBaseModel(BaseModel):
     )
 
 
-class AbstractSAMMetadataBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
 
     name: str = Field(..., description="The camelCase name of the manifest resource")
@@ -47,6 +53,15 @@ class AbstractSAMMetadataBase(SmarterBaseModel, abc.ABC):
             raise SAMValidationError(
                 f"Invalid name: {v}. Ensure that you do not include characters that are not URL friendly."
             )
+        if not SmarterValidator.is_valid_snake_case(v):
+            snake_case_name = camel_to_snake(v)
+            logger.warning(
+                "%s.name '%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
+                cls.__name__,
+                v,
+                snake_case_name,
+            )
+            v = snake_case_name
         return v
 
     @field_validator("description")
@@ -86,15 +101,15 @@ class AbstractSAMMetadataBase(SmarterBaseModel, abc.ABC):
         return v
 
 
-class AbstractSAMSpecBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMSpecBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Spec base class. Expected to be subclassed by specific manifest classes."""
 
 
-class AbstractSAMStatusBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Status base class. Expected to be subclassed by specific manifest classes."""
 
 
-class AbstractSAMBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
     """
     Pydantic Smarter API Manifest ("SAM") base class. This is a base class
     for all Smarter API manifests. It provides methods for validating the
@@ -137,3 +152,6 @@ class AbstractSAMBase(SmarterBaseModel, abc.ABC):
         if isinstance(v, dict):
             return AbstractSAMMetadataBase(**v)
         return v
+
+    def __str__(self) -> str:
+        return f"{self.formatted_class_name}(apiVersion={self.apiVersion}, kind={self.kind})"

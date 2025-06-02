@@ -2,6 +2,7 @@
 """Smarter API User Manifest handler"""
 
 import typing
+from logging import getLogger
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
@@ -9,9 +10,8 @@ from django.http import HttpRequest
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.user.model import SAMUser
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, AccountContact, UserProfile
-from smarter.common.api import SmarterApiVersions
+from smarter.apps.account.models import AccountContact, UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.lib.django.serializers import UserSerializer
 from smarter.lib.django.user import get_user_model
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -29,11 +29,11 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 
 User = get_user_model()
 MAX_RESULTS = 1000
+logger = getLogger(__name__)
 
 
 class SAMUserBrokerError(SAMBrokerError):
@@ -44,7 +44,7 @@ class SAMUserBrokerError(SAMBrokerError):
         return "Smarter API User Manifest Broker Error"
 
 
-class SAMUserBroker(AbstractBroker, AccountMixin):
+class SAMUserBroker(AbstractBroker):
     """
     Smarter API User Manifest Broker. This class is responsible for
     - loading, validating and parsing the Smarter Api yaml User manifests
@@ -61,48 +61,6 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     _manifest: SAMUser = None
     _pydantic_model: typing.Type[SAMUser] = SAMUser
     _account_contact: AccountContact = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: HttpRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        AccountMixin.__init__(self, account=account, user=request.user)
-        username: str = self.params.get("username", self.user.username if self.user else None)
-        if username:
-            try:
-                self.user = User.objects.get(username=username)
-            except User.DoesNotExist as e:
-                raise SAMBrokerErrorNotFound(
-                    f"Failed to load {self.kind} {username}. Not found", thing=self.kind
-                ) from e
 
     @property
     def account_contact(self) -> AccountContact:
@@ -161,6 +119,15 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for logging purposes.
+        This is used to provide a more readable class name in logs.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.SAMUserBroker()"
+
+    @property
     def kind(self) -> str:
         return MANIFEST_KIND
 
@@ -177,7 +144,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
         """
         if self._manifest:
             return self._manifest
-        if self.loader:
+        if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMUser(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
@@ -194,17 +161,17 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     def model_class(self):
         return User
 
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "ExampleUser",
+                SAMMetadataKeys.NAME.value: "example_user",
                 SAMMetadataKeys.DESCRIPTION.value: "an example user manifest for the Smarter API User",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
-                "username": "ExampleUser",
+                "username": "example_user",
             },
             SAMKeys.SPEC.value: {
                 SAMUserSpecKeys.CONFIG.value: {
@@ -218,11 +185,16 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
+        name: str = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
-        user_profiles = UserProfile.objects.filter(account=self.account)
+
+        if name:
+            user_profiles = UserProfile.objects.filter(account=self.account, user__username=name)
+        else:
+            user_profiles = UserProfile.objects.filter(account=self.account)
         users = [user_profile.user for user_profile in user_profiles]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
@@ -251,7 +223,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -278,12 +250,12 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             ) from e
         return self.json_response_ok(command=command, data={})
 
-    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -295,7 +267,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             ) from e
 
         try:
-            self._user_profile = UserProfile.objects.get(user=self._user, account=self.account)
+            self._user_profile = get_cached_user_profile(user=self._user, account=self.account)
         except UserProfile.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {self.username}. User is not associated with your account",
@@ -313,12 +285,23 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
-        if self.user:
+
+        username = self.params.get("username")
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist as e:
+            raise SAMBrokerErrorNotFound(
+                f"Failed to delete {self.kind} {username}. Not found", thing=self.kind, command=command
+            ) from e
+
+        if user:
             try:
-                self.user.delete()
+                logger.info("Deleting user %s", user)
+                user.delete()
+                logger.info("Deleted user %s", username)
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(
@@ -326,7 +309,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.user:
@@ -341,7 +324,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.user:
@@ -356,7 +339,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         data = {}

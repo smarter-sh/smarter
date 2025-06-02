@@ -5,16 +5,20 @@ from taggit.models import Tag
 
 from smarter.apps.account.serializers import (
     AccountMiniSerializer,
+    SecretSerializer,
     UserProfileSerializer,
 )
 from smarter.apps.plugin.models import (
+    ApiConnection,
+    PluginDataApi,
     PluginDataSql,
-    PluginDataSqlConnection,
     PluginDataStatic,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
+    SqlConnection,
 )
+from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 
 class TagListSerializerField(serializers.ListField):
@@ -23,13 +27,17 @@ class TagListSerializerField(serializers.ListField):
     child = serializers.CharField()
 
     def to_representation(self, data):
-        return [tag.name for tag in data.all()]
+        if hasattr(data, "all"):
+            tags = data.all()
+        else:
+            tags = data
+        return [str(tag) for tag in tags]
 
     def to_internal_value(self, data):
         return [Tag.objects.get_or_create(name=name)[0] for name in data]
 
 
-class PluginMetaSerializer(serializers.ModelSerializer):
+class PluginMetaSerializer(SmarterCamelCaseSerializer):
     """PluginMeta model serializer."""
 
     tags = TagListSerializerField()
@@ -41,18 +49,8 @@ class PluginMetaSerializer(serializers.ModelSerializer):
         model = PluginMeta
         fields = ["name", "account", "description", "plugin_class", "version", "author", "tags"]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            new_representation[new_key] = representation[key]
-        return new_representation
 
-
-class PluginSelectorSerializer(serializers.ModelSerializer):
+class PluginSelectorSerializer(SmarterCamelCaseSerializer):
     """PluginSelector model serializer."""
 
     # pylint: disable=missing-class-docstring
@@ -60,14 +58,8 @@ class PluginSelectorSerializer(serializers.ModelSerializer):
         model = PluginSelector
         fields = ["directive", "search_terms"]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        representation["searchTerms"] = representation.pop("search_terms")
-        return representation
 
-
-class PluginPromptSerializer(serializers.ModelSerializer):
+class PluginPromptSerializer(SmarterCamelCaseSerializer):
     """PluginPrompt model serializer."""
 
     # pylint: disable=missing-class-docstring
@@ -75,21 +67,8 @@ class PluginPromptSerializer(serializers.ModelSerializer):
         model = PluginPrompt
         fields = ["provider", "system_role", "model", "temperature", "max_tokens"]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            if isinstance(representation[key], str):
-                new_representation[new_key] = representation[key].strip()
-            else:
-                new_representation[new_key] = representation[key]
-        return new_representation
 
-
-class PluginDataStaticSerializer(serializers.ModelSerializer):
+class PluginStaticSerializer(SmarterCamelCaseSerializer):
     """PluginDataStatic model serializer."""
 
     # pylint: disable=missing-class-docstring
@@ -97,26 +76,13 @@ class PluginDataStaticSerializer(serializers.ModelSerializer):
         model = PluginDataStatic
         fields = ["description", "static_data"]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            if isinstance(representation[key], str):
-                new_representation[new_key] = representation[key].strip()
-            else:
-                new_representation[new_key] = representation[key]
-        return new_representation
 
-
-class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
-    """PluginDataSql model serializer."""
+class SqlConnectionSerializer(SmarterCamelCaseSerializer):
+    """SqlConnection model serializer."""
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        model = PluginDataSqlConnection
+        model = SqlConnection
         fields = [
             "name",
             "description",
@@ -125,30 +91,18 @@ class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
             "database",
             "username",
             "password",
+            "proxy_protocol",
             "proxy_host",
             "proxy_port",
             "proxy_username",
             "proxy_password",
         ]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            if isinstance(representation[key], str):
-                new_representation[new_key] = representation[key].strip()
-            else:
-                new_representation[new_key] = representation[key]
-        return new_representation
 
-
-class PluginDataSqlSerializer(serializers.ModelSerializer):
+class PluginSqlSerializer(SmarterCamelCaseSerializer):
     """PluginDataSql model serializer."""
 
-    connection = serializers.SlugRelatedField(slug_field="name", queryset=PluginDataSqlConnection.objects.all())
+    connection = serializers.SlugRelatedField(slug_field="name", queryset=SqlConnection.objects.all())
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -162,15 +116,51 @@ class PluginDataSqlSerializer(serializers.ModelSerializer):
             "limit",
         ]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            if isinstance(representation[key], str):
-                new_representation[new_key] = representation[key].strip()
-            else:
-                new_representation[new_key] = representation[key]
-        return new_representation
+
+class ApiConnectionSerializer(SmarterCamelCaseSerializer):
+    """ApiConnection model serializer."""
+
+    account = AccountMiniSerializer(read_only=True)
+    api_key = SecretSerializer(read_only=True)
+    proxy_password = SecretSerializer(read_only=True)
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = ApiConnection
+        fields = [
+            "account",
+            "name",
+            "description",
+            "base_url",
+            "api_key",
+            "auth_method",
+            "timeout",
+            "proxy_protocol",
+            "proxy_host",
+            "proxy_port",
+            "proxy_username",
+            "proxy_password",
+        ]
+
+
+class PluginApiSerializer(SmarterCamelCaseSerializer):
+    """PluginDataApi model serializer."""
+
+    connection = serializers.SlugRelatedField(slug_field="name", queryset=ApiConnection.objects.all())
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = PluginDataApi
+        fields = [
+            "connection",
+            "description",
+            "parameters",
+            "url",
+            "method",
+            "headers",
+            "params",
+            "data",
+            "auth_type",
+            "username",
+            "password",
+        ]

@@ -5,8 +5,13 @@ import string
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_COMPANY_NAME
+from smarter.apps.account.models import Account, AccountContact, UserProfile
+from smarter.common.const import (
+    SMARTER_ACCOUNT_NUMBER,
+    SMARTER_COMPANY_NAME,
+    SMARTER_CUSTOMER_SUPPORT_EMAIL,
+    SMARTER_CUSTOMER_SUPPORT_PHONE,
+)
 from smarter.lib.django.user import User
 from smarter.lib.drf.models import SmarterAuthToken
 
@@ -71,9 +76,30 @@ class Command(BaseCommand):
                 )
             )
 
+        account_contact: AccountContact = None
+        try:
+            account_contact = AccountContact.objects.get(
+                account=account,
+                is_primary=True,
+            )
+        except AccountContact.DoesNotExist:
+            account_contact = AccountContact(
+                account=account,
+                first_name="Smarter",
+                last_name="Admin",
+                email=SMARTER_CUSTOMER_SUPPORT_EMAIL,
+                phone=SMARTER_CUSTOMER_SUPPORT_PHONE,
+                is_primary=True,
+            )
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
+                )
+            )
+
         # ensure that the Smarter admin user has at least one auth token (api key)
         if not SmarterAuthToken.objects.filter(user=user).exists():
             _, token_key = SmarterAuthToken.objects.create(
-                name="smarterAdminKey", user=user, description="created by manage.py"
+                name="smarter-admin-key", user=user, description="created by manage.py"
             )
             self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))

@@ -20,6 +20,15 @@ from ..base import CliBaseApiView
 class ApiV1CliWhoamiApiView(CliBaseApiView):
     """Smarter API command-line interface 'apply' view"""
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliWhoamiApiView()"
+
     def whoami(self):
         try:
             data = {
@@ -41,4 +50,5 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
 
     def post(self, request):
         """Get method for PluginManifestView."""
-        return self.whoami()
+        response = self.whoami()
+        return response

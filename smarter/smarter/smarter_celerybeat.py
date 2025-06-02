@@ -20,7 +20,7 @@ app.conf.beat_schedule = {
         "options": {"queue": "beat_tasks"},
     },
     "aggregate-chat-history": {
-        "task": "smarter.apps.chat.tasks.aggregate_chat_history",
+        "task": "smarter.apps.prompt.tasks.aggregate_chat_history",
         "schedule": timedelta(hours=12),
         "options": {"queue": "beat_tasks"},
     },

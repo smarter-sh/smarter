@@ -1,29 +1,36 @@
 # pylint: disable=wrong-import-position
 """Test Account."""
 
-# python stuff
-import os
-import unittest
+from smarter.common.utils import hash_factory
 
 # our stuff
 from smarter.lib.django.user import User
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..models import Account, UserProfile
 
 
-class TestAccount(unittest.TestCase):
+class TestAccount(SmarterTestBase):
     """Test Account model"""
 
     def setUp(self):
         """Set up test fixtures."""
-        username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create_user(username=username, password="12345")
+        super().setUp()
+        hashed_slug = hash_factory()
+        username = self.name
+        email = f"test-{hashed_slug}@mail.com"
+        first_name = f"TestAdminFirstName_{hashed_slug}"
+        last_name = f"TestAdminLastName_{hashed_slug}"
+        self.user = User.objects.create_user(
+            email=email, first_name=first_name, last_name=last_name, username=username, password="12345"
+        )
         self.company_name = "Test Company"
 
     def tearDown(self):
         """Clean up test fixtures."""
         self.user.delete()
         Account.objects.filter(company_name=self.company_name).delete()
+        super().tearDown()
 
     def test_create(self):
         """Test that we can create an account."""

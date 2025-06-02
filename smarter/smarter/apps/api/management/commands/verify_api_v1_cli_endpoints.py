@@ -10,7 +10,11 @@ from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
+    get_cached_user_profile,
+)
+from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.lib.drf.models import SmarterAuthToken
@@ -63,7 +67,7 @@ class Command(BaseCommand):
         user = get_cached_admin_user_for_account(account=account)
         if username != user.get_username():
             try:
-                user_profile = UserProfile.objects.get(account=account, user__username=username)
+                user_profile = get_cached_user_profile(account=account, user=user)
                 user = user_profile.user
             except UserProfile.DoesNotExist:
                 self.stdout.write(
@@ -73,9 +77,9 @@ class Command(BaseCommand):
 
         # generate an auth token (api key) for this job.
         token_record, token_key = SmarterAuthToken.objects.create(
-            name="verify_api_v1_cli_endpoints",
+            name="verify_api:v1:cli:endpoints",
             user=user,
-            description="DELETE ME: single-use key created by manage.py verify_api_v1_cli_endpoints",
+            description="DELETE ME: single-use key created by manage.py verify_api:v1:cli:endpoints",
         )
 
         self.stdout.write(self.style.NOTICE("Running API CLI endpoint verifications."))
@@ -114,31 +118,31 @@ class Command(BaseCommand):
             response = json.dumps(response_json, indent=4) + "\n"
             self.stdout.write("response: " + self.style.SUCCESS(response))
 
-        path = reverse("api_v1_cli_apply_view", kwargs={})
+        path = reverse(ApiV1CliReverseViews.namespace + "apply_view", kwargs={})
         get_response(path, manifest=self.data)
 
-        # path = reverse("api_v1_cli_deploy_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        # path = reverse("api:v1:cli:deploy_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
         # get_response(path)
 
-        # path = reverse("api_v1_cli_describe_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        # path = reverse("api:v1:cli:describe_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
         # get_response(path)
 
-        # path = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        # path = reverse("api:v1:cli:logs_kind_name_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
         # get_response(path)
 
-        # path = reverse("api_v1_cli_get_view", kwargs={"kind": "plugins"})
+        # path = reverse("api:v1:cli:get_view", kwargs={"kind": "plugins"})
         # get_response(path)
 
-        # path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        # path = reverse("api:v1:cli:delete_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
         # get_response(path)
 
-        # path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
+        # path = reverse("api:v1:cli:manifest_view", kwargs={"kind": "plugin"})
         # get_response(path)
 
-        # path = reverse("api_v1_cli_status_view")
+        # path = reverse("api:v1:cli:status_view")
         # get_response(path)
 
-        # path = reverse("api_v1_cli_whoami_view")
+        # path = reverse("api:v1:cli:whoami_view")
         # get_response(path)
 
         token_record.delete()

@@ -1,50 +1,29 @@
 # pylint: disable=wrong-import-position
 """Test Secret."""
 
-import hashlib
-import random
-import unittest
 from datetime import datetime, timedelta
 
 from django.utils.timezone import now
 
 from smarter.apps.account.models import Secret
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.exceptions import SmarterValueError
 
-from .factories import admin_user_factory, admin_user_teardown, mortal_user_factory
+from .mixins import TestAccountMixin
 
 
-class TestSmarterSecretDjangoModel(unittest.TestCase):
+class TestSmarterSecretDjangoModel(TestAccountMixin):
     """Test Secret."""
-
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up the test class with a single account, and admin and non-admin users.
-        using the class setup so that we retain the same user_profile for each test,
-        which is needed so that the django Secret model can be queried.
-        """
-        cls.hash_suffix = "_" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
-        cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
-        cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
-
-    @classmethod
-    def tearDownClass(cls):
-        admin_user_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
-        admin_user_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
 
     def test_create_secret(self):
         """Test create secret and that encryption and decryption work."""
 
-        name = "testSecret" + self.hash_suffix
         description = "testSecret" + self.hash_suffix
         secret_value = "testSecretValue" + self.hash_suffix
         encrypted_value = Secret.encrypt(secret_value)
         expires_at = datetime.now() + timedelta(days=180)  # 6 months from now
         secret = Secret.objects.create(
             user_profile=self.user_profile,
-            name=name,
+            name=self.name,
             description=description,
             encrypted_value=encrypted_value,
             expires_at=expires_at,
@@ -57,7 +36,6 @@ class TestSmarterSecretDjangoModel(unittest.TestCase):
 
     def test_secret_expiration(self):
         """Test that the is_expired method correctly identifies expired and non-expired secrets."""
-        name = "testExpiredSecret" + self.hash_suffix
         description = "testExpiredSecret" + self.hash_suffix
         secret_value = "testExpiredSecretValue" + self.hash_suffix
         encrypted_value = Secret.encrypt(secret_value)
@@ -65,7 +43,7 @@ class TestSmarterSecretDjangoModel(unittest.TestCase):
         # Create a secret that expires in the past
         expired_secret = Secret.objects.create(
             user_profile=self.user_profile,
-            name=name,
+            name=self.name + "_expired",
             description=description,
             encrypted_value=encrypted_value,
             expires_at=now() - timedelta(days=1),  # Expired yesterday
@@ -75,7 +53,7 @@ class TestSmarterSecretDjangoModel(unittest.TestCase):
         # Create a secret that expires in the future
         non_expired_secret = Secret.objects.create(
             user_profile=self.user_profile,
-            name=name + "_future",
+            name=self.name + "_future",
             description=description,
             encrypted_value=encrypted_value,
             expires_at=now() + timedelta(days=1),  # Expires tomorrow

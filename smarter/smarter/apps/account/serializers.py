@@ -1,12 +1,17 @@
 """Account serializers for smarter api"""
 
-from rest_framework import serializers
-
-from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    AccountContact,
+    PaymentMethod,
+    Secret,
+    UserProfile,
+)
 from smarter.lib.django.serializers import UserMiniSerializer
+from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 
-class AccountSerializer(serializers.ModelSerializer):
+class AccountSerializer(SmarterCamelCaseSerializer):
     """Account serializer for smarter api."""
 
     # pylint: disable=missing-class-docstring
@@ -15,7 +20,7 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AccountMiniSerializer(serializers.ModelSerializer):
+class AccountMiniSerializer(SmarterCamelCaseSerializer):
     """Account serializer for smarter api."""
 
     # pylint: disable=missing-class-docstring
@@ -24,7 +29,7 @@ class AccountMiniSerializer(serializers.ModelSerializer):
         fields = ("account_number",)
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(SmarterCamelCaseSerializer):
     """User profile serializer for smarter api."""
 
     user = UserMiniSerializer()
@@ -39,10 +44,41 @@ class UserProfileSerializer(serializers.ModelSerializer):
         )
 
 
-class PaymentMethodSerializer(serializers.ModelSerializer):
+class PaymentMethodSerializer(SmarterCamelCaseSerializer):
     """Payment method serializer for smarter api."""
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PaymentMethod
         fields = "__all__"
+
+
+class SecretSerializer(SmarterCamelCaseSerializer):
+    """Serializer for the Secret model."""
+
+    user_profile = UserProfileSerializer()
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = Secret
+        fields = (
+            "id",
+            "name",
+            "description",
+            "last_accessed",
+            "expires_at",
+            "user_profile",
+        )
+        read_only_fields = fields
+
+
+class AccountContactSerializer(SmarterCamelCaseSerializer):
+    """Serializer for the AccountContact model."""
+
+    account = AccountMiniSerializer()
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = AccountContact
+        fields = "__all__"
+        read_only_fields = fields

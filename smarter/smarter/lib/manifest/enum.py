@@ -23,6 +23,7 @@ class SAMDataFormats(SmarterEnumAbstract):
 
     JSON = "json"
     YAML = "yaml"
+    UNKNOWN = "unknown"
 
 
 class SAMSpecificationKeyOptions(SmarterEnumAbstract):
@@ -46,6 +47,8 @@ class SAMKeys(SmarterEnumAbstract):
 class SAMMetadataKeys(SmarterEnumAbstract):
     """Smarter API Plugin Metadata keys enumeration."""
 
+    ACCOUNT = "account"
+    AUTHOR = "author"
     NAME = "name"
     DESCRIPTION = "description"
     VERSION = "version"
