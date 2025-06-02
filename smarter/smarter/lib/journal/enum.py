@@ -60,9 +60,13 @@ class SmarterJournalThings(SmarterEnumAbstract):
     a SmarterJournalThings value can passed as a strongly typed object.
     """
 
-    PLUGIN = "Plugin"
+    STATIC_PLUGIN = "Plugin"
+    API_PLUGIN = "ApiPlugin"
+    SQL_PLUGIN = "SqlPlugin"
+    API_CONNECTION = "ApiConnection"
+    SQL_CONNECTION = "SqlConnection"
     ACCOUNT = "Account"
-    APIKEY = "SmarterAuthToken"
+    AUTH_TOKEN = "AuthToken"
     USER = "User"
     CHAT = "Chat"
     CHAT_CONFIG = "ChatConfig"
@@ -70,17 +74,19 @@ class SmarterJournalThings(SmarterEnumAbstract):
     CHAT_PLUGIN_USAGE = "ChatPluginUsage"
     CHAT_TOOL_CALL = "ChatToolCall"
     CHATBOT = "Chatbot"
-    SQLCONNECTION = "SqlConnection"
-    # APICONNECTION = "ApiConnection"
     SECRET = "Secret"
 
     @classmethod
     def choices(cls) -> list[(str, str)]:
         """Django model choices for SmarterJournalThings."""
         return [
-            (cls.PLUGIN, cls.PLUGIN),
+            (cls.STATIC_PLUGIN, cls.STATIC_PLUGIN),
+            (cls.API_PLUGIN, cls.API_PLUGIN),
+            (cls.SQL_PLUGIN, cls.SQL_PLUGIN),
+            (cls.API_CONNECTION, cls.API_CONNECTION),
+            (cls.SQL_CONNECTION, cls.SQL_CONNECTION),
             (cls.ACCOUNT, cls.ACCOUNT),
-            (cls.APIKEY, cls.APIKEY),
+            (cls.AUTH_TOKEN, cls.AUTH_TOKEN),
             (cls.USER, cls.USER),
             (cls.CHAT, cls.CHAT),
             (cls.CHAT_CONFIG, cls.CHAT_CONFIG),
@@ -88,8 +94,6 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.CHAT_PLUGIN_USAGE, cls.CHAT_PLUGIN_USAGE),
             (cls.CHAT_TOOL_CALL, cls.CHAT_TOOL_CALL),
             (cls.CHATBOT, cls.CHATBOT),
-            (cls.SQLCONNECTION, cls.SQLCONNECTION),
-            # (cls.APICONNECTION, cls.APICONNECTION),
             (cls.SECRET, cls.SECRET),
         ]
 

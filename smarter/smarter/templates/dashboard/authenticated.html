@@ -66,7 +66,7 @@
                 {% if dashboard.my_resources_pending_deployments > 0 %}
                 <span class="opacity-75">You have</span>
                 <span class="position-relative d-inline-block">
-                  <a href="/chatbots/" class="link-white opacity-75-hover fw-bold d-block mb-1">{{ dashboard.my_resources_pending_deployments }} pending</a>
+                  <a href="{% url 'prompt_workbench:listview' %}" class="link-white opacity-75-hover fw-bold d-block mb-1">{{ dashboard.my_resources_pending_deployments }} pending</a>
                   <!--begin::Separator-->
                   <span class="position-absolute opacity-50 bottom-0 start-0 border-2 border-body border-bottom w-100"></span>
                   <!--end::Separator-->
@@ -91,7 +91,7 @@
                 <!--begin::Col-->
                 <div class="col-6">
                   <!--begin::Items-->
-                  <a href="/chatbots/">
+                  <a href="{% url 'prompt_workbench:listview' %}">
                     <div class="bg-gray-100 bg-opacity-70 rounded-2 px-6 py-5">
                       <!--begin::Symbol-->
                       <div class="symbol symbol-30px me-5 mb-8">
@@ -109,7 +109,7 @@
                         <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_chatbots }}</span>
                         <!--end::Number-->
                         <!--begin::Desc-->
-                        <span class="text-gray-500 fw-semibold fs-6">Chatbots</span>
+                        <span class="text-gray-500 fw-semibold fs-6">Workbench</span>
                         <!--end::Desc-->
                       </div>
                       <!--end::Stats-->
@@ -722,8 +722,8 @@ spec:
   functions:
   - weather
   plugins:
-  - EverlastingGobstopper
-  - ExampleConfiguration
+  - everlasting_gobstopper
+  - example_configuration
             </code>
           </pre>
         </div>
@@ -739,7 +739,7 @@ apiVersion: smarter.sh/v1
 kind: Plugin
 metadata:
 description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
-name: EverlastingGobstopper
+name: everlasting_gobstopper
 pluginClass: static
 tags:
 - candy
@@ -777,7 +777,7 @@ data:
       image: https://m.media-amazon.com/images/I/81E-734cMzL._AC_UF894,1000_QL80_.jpg
       name: Wonka Bar
       price: $1.00
-prompt:
+prompt_workbench:
   maxTokens: 256
   model: gpt-4-turbo
   provider: openai

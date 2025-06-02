@@ -9,12 +9,13 @@ from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys
 
+from .base_class import ApiV1CliTestBase
 
-class TestApiCliV1BaseClass(ApiV1TestBase):
+
+class TestApiCliV1BaseClass(ApiV1CliTestBase):
     """
     Test Api v1 CLI coverage gaps in base class for brokered commands
     41, 85-89, 115, 138, 165, 178, 197-198, 211, 249-252, 260-262, 274, 294-295, 301-305, 326-360
@@ -30,9 +31,9 @@ class TestApiCliV1BaseClass(ApiV1TestBase):
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: SAMKinds.ACCOUNT.value}
-        self.query_params = urlencode({"username": self.user.username})
-        self.public_path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
-        self.private_path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        self.query_params = urlencode({"username": self.non_admin_user.username})
+        self.public_path = reverse(self.namespace + ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
+        self.private_path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
 
     def authentication_scenarios(
         self, path, wrong_key: bool = False, missing_key: bool = False, session_authentication: bool = False
@@ -50,7 +51,7 @@ class TestApiCliV1BaseClass(ApiV1TestBase):
         elif missing_key:
             response = client.post(path=path, data=None, content_type="application/json", **headers_missing_key)
         elif session_authentication:
-            client.force_login(user=self.user)
+            client.force_login(user=self.non_admin_user)
             response = client.post(path=path, data=None, content_type="application/json")
 
         if response is None:

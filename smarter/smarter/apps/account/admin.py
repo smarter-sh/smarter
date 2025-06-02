@@ -5,6 +5,7 @@ from django import forms
 from django.contrib import admin
 from django.core.handlers.wsgi import WSGIRequest
 
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import (
@@ -33,7 +34,7 @@ class AccountAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(request.user)
             return qs.filter(id=user_profile.account.id)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -54,7 +55,7 @@ class AccountContactAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(request.user)
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -124,7 +125,7 @@ class PaymentMethodModelAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(request.user)
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -204,7 +205,7 @@ class SecretAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(request.user)
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()

@@ -17,10 +17,10 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
-    TokenConversionError,
-    TokenExpiredError,
-    TokenIntegrityError,
-    TokenParseError,
+    SmarterTokenConversionError,
+    SmarterTokenExpiredError,
+    SmarterTokenIntegrityError,
+    SmarterTokenParseError,
 )
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
@@ -59,7 +59,7 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
             return HttpResponse("", status=HTTPStatus.OK.value)
 
         password_reset_link = self.expiring_token.encode_link(
-            request=request, user=user, reverse_link="password_reset_link"
+            request=request, user=user, reverse_link="account:password_reset_link"
         )
         context = {"password_reset": {"url": password_reset_link}}
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
@@ -97,9 +97,16 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
             return SmarterHttpResponseNotFound(
                 request=request, error_message="Invalid password reset link. User does not exist."
             )
-        except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
+        except (
+            TypeError,
+            ValueError,
+            OverflowError,
+            SmarterTokenParseError,
+            SmarterTokenConversionError,
+            SmarterTokenIntegrityError,
+        ) as e:
             return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
-        except TokenExpiredError as e:
+        except SmarterTokenExpiredError as e:
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
         logger.info("%s.get() finalizing", self.formatted_class_name)
@@ -125,9 +132,16 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
             return SmarterHttpResponseNotFound(
                 request=request, error_message="Invalid password reset link. User does not exist."
             )
-        except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
+        except (
+            TypeError,
+            ValueError,
+            OverflowError,
+            SmarterTokenParseError,
+            SmarterTokenConversionError,
+            SmarterTokenIntegrityError,
+        ) as e:
             return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
-        except TokenExpiredError as e:
+        except SmarterTokenExpiredError as e:
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
         user.set_password(password)

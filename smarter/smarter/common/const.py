@@ -18,7 +18,9 @@ SMARTER_API_SUBDOMAIN = "api"
 SMARTER_PLATFORM_SUBDOMAIN = "platform"
 SMARTER_COMPANY_NAME = "Smarter"
 SMARTER_EXAMPLE_CHATBOT_NAME = "example"
-SMARTER_CUSTOMER_SUPPORT = "support@smarter.sh"
+SMARTER_CUSTOMER_SUPPORT_EMAIL = "support@smarter.sh"
+SMARTER_CUSTOMER_SUPPORT_PHONE = "+1 (512) 833-6955"
+SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
 
 # The following are used in the React app
 # to store the chatbot chat session key and debug mode settings
@@ -26,41 +28,13 @@ SMARTER_CUSTOMER_SUPPORT = "support@smarter.sh"
 # for these values as well which should be kept in sync.
 SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
 
+# This is a custom attribute that can be added to the request
+# to indicate that the request is an internal API request. This
+# is used to bypass DRF authentication and permission checks in the API views.
+SMARTER_IS_INTERNAL_API_REQUEST = "smarter_is_internal_api_request"
+
+# Default cache expiration expressed in seconds for Redis based Django caching.
 SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 5  # 5 minutes
-
-
-# Smarter Waffle Switches and Flags
-class SmarterWaffleSwitches:
-    """A class representing the fixed set of Waffle switches for the Smarter API."""
-
-    CHATBOT_LOGGING = "chatbot_logging"
-    CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
-    REQUEST_MIXIN_LOGGING = "request_mixin_logging"
-    CHAT_LOGGING = "chat_logging"
-    MIDDLEWARE_LOGGING = "middleware_logging"
-    JOURNAL = "journal"
-    CSRF_SUPPRESS_FOR_CHATBOTS = "csrf_middleware_suppress_for_chatbots"
-    CHATAPP_LOGGING = "chatapp_logging"
-    MANIFEST_LOGGING = "manifest_logging"
-    REACTAPP_DEBUG_MODE = "reactapp_debug_mode"
-    CACHE_LOGGING = "cache_logging"
-
-    @property
-    def all(self):
-        """Return all switches."""
-        return [
-            self.CHATBOT_LOGGING,
-            self.CHATBOT_HELPER_LOGGING,
-            self.REQUEST_MIXIN_LOGGING,
-            self.CHAT_LOGGING,
-            self.MIDDLEWARE_LOGGING,
-            self.JOURNAL,
-            self.CSRF_SUPPRESS_FOR_CHATBOTS,
-            self.CHATAPP_LOGGING,
-            self.MANIFEST_LOGGING,
-            self.REACTAPP_DEBUG_MODE,
-            self.CACHE_LOGGING,
-        ]
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common

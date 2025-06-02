@@ -8,11 +8,12 @@ import re
 import yaml
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.django.user import UserType
 
-from .static import PluginStatic
+from .static import StaticPlugin
 
 
 logger = logging.getLogger(__name__)
@@ -22,16 +23,17 @@ class Plugins:
     """A class for working with multiple plugins."""
 
     account: Account = None
-    plugins: list[PluginStatic] = []
+    user_profile: UserProfile = None
+    plugins: list[StaticPlugin] = []
 
-    def __init__(self, user: UserType = None, account: Account = None):
+    def __init__(self, user: UserType, account: Account):
 
         self.plugins = []
-        if user or account:
-            self.account = account or UserProfile.objects.get(user=user).account
+        self.account = account or get_cached_user_profile(user=user).account
+        self.user_profile = get_cached_user_profile(user=user, account=account)
 
-            for plugin in PluginMeta.objects.filter(account=self.account):
-                self.plugins.append(PluginStatic(plugin_id=plugin.id))
+        for plugin in PluginMeta.objects.filter(account=self.account):
+            self.plugins.append(StaticPlugin(user_profile=self.user_profile, plugin_id=plugin.id))
 
     @property
     def data(self) -> list[dict]:
@@ -113,7 +115,7 @@ class PluginExamples:
     HERE = os.path.abspath(os.path.dirname(__file__))
     PLUGINS_PATH = os.path.join(PYTHON_ROOT, "smarter", "apps", "plugin", "data", "sample-plugins")
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """Initialize the class."""
         self._plugin_examples = []
         for file in os.listdir(self.PLUGINS_PATH):

@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 from smarter.apps.account.serializers import PaymentMethodSerializer
+from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.lib.django.user import User, UserType
 
 from .base import AccountListViewBase, AccountViewBase
@@ -78,14 +79,10 @@ def get_payment_method(request, payment_method_id: int):
         return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     if isinstance(request.user, User):
-        user_profile = UserProfile.objects.get(user=request.user)
+        account = get_cached_account_for_user(user=request.user)
 
     # staff can manage payment methods for their account
-    if (
-        isinstance(request.user, User)
-        and request.user.is_superuser
-        or (user_profile.account == account and request.user.is_staff)
-    ):
+    if isinstance(request.user, User) and request.user.is_superuser or (account == account and request.user.is_staff):
         serializer = PaymentMethodSerializer(payment_method)
         return Response(serializer.data, status=HTTPStatus.OK.value)
 
@@ -138,11 +135,11 @@ def update_payment_method(request):
         return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     if isinstance(request.user, User):
-        user_profile = UserProfile.objects.get(user=request.user)
+        account = get_cached_account_for_user(user=request.user)
 
     # superusers can manage any payment method. staff can manage payment methods for their account
     if isinstance(request.user, User) and not (
-        request.user.is_superuser or (user_profile.account == account and request.user.is_staff)
+        request.user.is_superuser or (account == account and request.user.is_staff)
     ):
         return JsonResponse(
             {"error": "You are not authorized to modify this account."}, status=HTTPStatus.UNAUTHORIZED.value

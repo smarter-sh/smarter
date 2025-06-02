@@ -1,50 +1,70 @@
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
-# python stuff
-import os
-import unittest
-
 from django.test import Client
+from django.urls import reverse
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.tests.mixins import TestAccountMixin
 
-# our stuff
-from smarter.lib.django.user import User
+from ..const import namespace
 
 
-class TestDashboard(unittest.TestCase):
+class TestDashboard(TestAccountMixin):
     """Test dashboard views."""
-
-    user: User
 
     def setUp(self):
         """Set up test fixtures."""
-        username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create_user(
-            username=username, password="12345", is_staff=True, is_active=True, is_superuser=True
-        )
-        self.account = Account.objects.create(
-            company_name="Test Company",
-            phone_number="1234567890",
-            address1="123 Test St",
-            address2="Apt 1",
-            city="Test City",
-            state="TX",
-            postal_code="12345",
-        )
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
+        super().setUp()
         self.client = Client()
-        # self.client.login(username="testuser", password="12345")
-        self.client.force_login(self.user)
+        self.client.force_login(self.non_admin_user)
 
     def tearDown(self):
-        """Clean up test fixtures."""
-        self.user.delete()
-        self.account.delete()
-        self.user_profile.delete()
+        """Tear down test fixtures."""
+        if self.client is not None:
+            self.client.logout()
+        self.client = None
+        return super().tearDown()
 
     def test_dashboard(self):
-        """test that we can see the account view and that it matches the account data."""
+        """Test dashboard root view."""
         response = self.client.get("")
+        self.assertIn(response.status_code, [200, 301, 302])
+
+    def test_account_url(self):
+        """Test account url includes."""
+        response = self.client.get(f"{namespace}/account/")
+        self.assertIn(response.status_code, [200, 301, 302, 404])
+
+    def test_plugins_url(self):
+        """Test plugins url includes."""
+        response = self.client.get(f"{namespace}/plugins/")
+        self.assertIn(response.status_code, [200, 301, 302, 404])
+
+    def test_profile_url(self):
+        """Test profile url includes."""
+        response = self.client.get(f"{namespace}/profile/")
+        self.assertIn(response.status_code, [200, 301, 302, 404])
+
+    def test_help_redirect(self):
+        """Test help url redirects to /docs/."""
+        reverse_url = reverse(f"{namespace}:help")
+        response = self.client.get(reverse_url)
+        self.assertIn(response.status_code, [301, 302])
+
+    def test_support_redirect(self):
+        """Test support url redirects to /docs/."""
+        reverse_url = reverse(f"{namespace}:support")
+        response = self.client.get(reverse_url)
+        self.assertIn(response.status_code, [301, 302])
+
+    def test_changelog(self):
+        """Test changelog view."""
+        reverse_url = reverse(f"{namespace}:changelog")
+        response = self.client.get(reverse_url)
+        self.assertIn(response.status_code, [200, 301, 302])
+
+    def test_notifications(self):
+        """Test notifications view."""
+        reverse_url = reverse(f"{namespace}:notifications")
+        response = self.client.get(reverse_url)
         self.assertIn(response.status_code, [200, 301, 302])

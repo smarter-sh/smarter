@@ -1,41 +1,69 @@
 """A PLugin that uses a remote SQL database server to retrieve its return data"""
 
+import json
 import logging
-import re
 
 from smarter.apps.plugin.manifest.enum import (
-    SAMPluginMetadataClass,
-    SAMPluginMetadataClassValues,
-    SAMPluginMetadataKeys,
+    SAMPluginCommonMetadataClass,
+    SAMPluginCommonMetadataClassValues,
+    SAMPluginCommonMetadataKeys,
+    SAMPluginCommonSpecPromptKeys,
+    SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
-    SAMPluginSpecPromptKeys,
-    SAMPluginSpecSelectorKeys,
 )
-from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
-from smarter.apps.plugin.serializers import PluginDataSqlSerializer
+from smarter.apps.plugin.models import PluginDataSql, SqlConnection
+from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
-from ..manifest.models.plugin.const import MANIFEST_KIND
-from ..models import PluginDataSql
+from ..manifest.models.sql_plugin.const import MANIFEST_KIND
+from ..manifest.models.sql_plugin.enum import SAMSqlPluginSpecSqlData
+from ..manifest.models.sql_plugin.model import SAMSqlPlugin
 from .base import PluginBase
 
 
 logger = logging.getLogger(__name__)
 
 
-class PluginSql(PluginBase):
+class SqlPlugin(PluginBase):
     """A PLugin that uses an SQL query executed on a remote SQL database server to retrieve its return data"""
 
-    _metadata_class = SAMPluginMetadataClass.SQL_DATA.value
+    _metadata_class = SAMPluginCommonMetadataClass.SQL.value
     _plugin_data: PluginDataSql = None
-    _plugin_data_serializer: PluginDataSqlSerializer = None
+    _plugin_data_serializer: PluginSqlSerializer = None
+
+    @property
+    def manifest(self) -> SAMSqlPlugin:
+        """Return the Pydandic model of the plugin."""
+        if not self._manifest and self.ready:
+            # if we don't have a manifest but we do have Django ORM data then
+            # we can work backwards to the Pydantic model
+            self._manifest = SAMSqlPlugin(**self.to_json())
+        return self._manifest
 
     @property
     def plugin_data(self) -> PluginDataSql:
-        """Return the plugin data."""
+        """
+        Return the plugin data as a Django ORM instance.
+        """
+        if self._plugin_data:
+            return self._plugin_data
+        # we only want a preexisting manifest ostensibly sourced
+        # from the cli, not a lazy-loaded
+        if self._manifest and self.plugin_meta:
+            # this is an update scenario. the Plugin exists in the database,
+            # AND we've received manifest data from the cli.
+            self._plugin_data = PluginDataSql(**self.plugin_data_django_model)
+        if self.plugin_meta:
+            # we don't have a Pydantic model but we do have an existing
+            # Django ORM model instance, so we can use that directly.
+            self._plugin_data = PluginDataSql.objects.get(
+                plugin=self.plugin_meta,
+            )
+        # new Plugin scenario. there's nothing in the database yet.
         return self._plugin_data
 
     @property
@@ -44,37 +72,36 @@ class PluginSql(PluginBase):
         return PluginDataSql
 
     @property
-    def plugin_data_serializer(self) -> PluginDataSqlSerializer:
+    def plugin_data_serializer(self) -> PluginSqlSerializer:
         """Return the plugin data serializer."""
         if not self._plugin_data_serializer:
-            self._plugin_data_serializer = PluginDataSqlSerializer(self.plugin_data)
+            self._plugin_data_serializer = PluginSqlSerializer(self.plugin_data)
         return self._plugin_data_serializer
 
     @property
-    def plugin_data_serializer_class(self) -> PluginDataSqlSerializer:
+    def plugin_data_serializer_class(self) -> PluginSqlSerializer:
         """Return the plugin data serializer class."""
-        return PluginDataSqlSerializer
+        return PluginSqlSerializer
 
     @property
     def plugin_data_django_model(self) -> dict:
-        """Return the plugin data definition as a json object."""
-
-        def camel_to_snake(name):
-            name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-            return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
-
-        # recast the Pydantic model to the PluginDataSql Django ORM model
-        plugin_data_sqlconnection = PluginDataSqlConnection.objects.get(
-            account=self.user_profile.account, name=self.manifest.spec.data.sqlData.connection
-        )
-        sql_data = self.manifest.spec.data.sqlData.model_dump()
-        sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
-        sql_data["connection"] = plugin_data_sqlconnection
-        return {
-            "plugin": self.plugin_meta,
-            "description": self.manifest.spec.data.description,
-            **sql_data,
-        }
+        """
+        transform the Pydantic model to the PluginDataSql Django ORM model.
+        Return the plugin data definition as a json object.
+        """
+        if self._manifest:
+            # recast the Pydantic model to the PluginDataSql Django ORM model
+            plugin_data_sqlconnection = SqlConnection.objects.get(
+                account=self.user_profile.account, name=self.manifest.spec.connection
+            )
+            sql_data = self.manifest.spec.sqlData.model_dump()
+            sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
+            sql_data["connection"] = plugin_data_sqlconnection
+            return {
+                "plugin": self.plugin_meta,
+                "description": self.manifest.spec.data.description,
+                **sql_data,
+            }
 
     @property
     def custom_tool(self) -> dict:
@@ -87,17 +114,17 @@ class PluginSql(PluginBase):
                 param_description = param["description"]
             except KeyError as e:
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginSql custom_tool() error: missing required parameter key: {e}"
+                    f"{self.name} PluginDataSql custom_tool() error: missing required parameter key: {e}"
                 ) from e
 
             if param_type not in PluginDataSql.DataTypes.all():
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginSql custom_tool() error: invalid parameter type: {param_type}"
+                    f"{self.name} PluginDataSql custom_tool() error: invalid parameter type: {param_type}"
                 )
 
             if param_enum and not isinstance(param_enum, list):
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginSql custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
+                    f"{self.name} PluginDataSql custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
                 )
 
             return {
@@ -127,42 +154,67 @@ class PluginSql(PluginBase):
 
     @classmethod
     def example_manifest(cls, kwargs: dict = None) -> dict:
-        return {
+        sql_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.name: "SqlExample",
-                SAMPluginMetadataKeys.PLUGIN_CLASS.value: SAMPluginMetadataClassValues.SQL.value,
+                SAMMetadataKeys.NAME.value: "sql_example",
+                SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.SQL.value,
                 SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
                 SAMMetadataKeys.TAGS.value: ["db", "sql", "database"],
             },
             SAMKeys.SPEC.value: {
                 SAMPluginSpecKeys.SELECTOR.value: {
-                    SAMPluginSpecSelectorKeys.DIRECTIVE.value: SAMPluginSpecSelectorKeys.SEARCHTERMS.value,
-                    SAMPluginSpecSelectorKeys.SEARCHTERMS.value: ["admin", "Smarter platform", "admin account"],
+                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value,
+                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
+                        "smarter",
+                        "users",
+                        "admin",
+                    ],
                 },
                 SAMPluginSpecKeys.PROMPT.value: {
-                    SAMPluginSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
-                    SAMPluginSpecPromptKeys.SYSTEMROLE.value: "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
-                    SAMPluginSpecPromptKeys.MODEL.value: SettingsDefaults.LLM_DEFAULT_MODEL,
-                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+                    SAMPluginCommonSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
+                    SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value: "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
+                    SAMPluginCommonSpecPromptKeys.MODEL.value: SettingsDefaults.LLM_DEFAULT_MODEL,
+                    SAMPluginCommonSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+                    SAMPluginCommonSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
                 },
-                SAMPluginSpecKeys.DATA.value: {
+                SAMPluginSpecKeys.CONNECTION.value: "example_connection",
+                SAMPluginSpecKeys.SQL_DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMPluginMetadataClass.SQL_DATA.value: {
-                        "connection": "exampleConnection",
-                        "sqlQuery": "SELECT * FROM auth_user WHERE username = 'admin';\n",
-                        "parameters": None,
-                        "testValues": None,
-                        "limit": 1,
-                    },
+                    SAMSqlPluginSpecSqlData.SQL_QUERY.value: "SELECT * FROM auth_user WHERE username = '{username}';\n",
+                    SAMSqlPluginSpecSqlData.PARAMETERS.value: [
+                        {
+                            "name": "username",
+                            "type": "string",
+                            "description": "The username to query.",
+                            "required": True,
+                            "default": "admin",
+                        },
+                        {
+                            "name": "unit",
+                            "type": "string",
+                            "enum": ["Celsius", "Fahrenheit"],
+                            "description": "The temperature unit to use.",
+                            "required": False,
+                            "default": "Celsius",
+                        },
+                    ],
+                    SAMSqlPluginSpecSqlData.TEST_VALUES.value: [
+                        {"name": "username", "value": "admin"},
+                        {"name": "unit", "value": "Celsius"},
+                    ],
+                    SAMSqlPluginSpecSqlData.LIMIT.value: 1,
                 },
             },
         }
+        # recast the Python dict to the Pydantic model
+        # in order to validate our output
+        pydantic_model = SAMSqlPlugin(**sql_plugin)
+        return json.loads(pydantic_model.model_dump_json())
 
     def create(self):
         super().create()
 
-        logger.info("PluginSql.create() called.")
+        logger.info("PluginDataSql.create() called.")

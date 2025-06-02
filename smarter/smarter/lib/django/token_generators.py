@@ -13,6 +13,7 @@ from django.utils.http import (
 )
 from django.utils.timezone import now as timezone_now
 
+from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.user import User, UserType
 
 
@@ -20,19 +21,23 @@ DEFAULT_LINK_EXPIRATION = 86400
 HFS_EPOCH_UNIX_TIMESTAMP = 2082844800
 
 
-class TokenParseError(Exception):
+class SmarterTokenError(SmarterExceptionBase):
+    """Base class for all token-related exceptions."""
+
+
+class SmarterTokenParseError(SmarterTokenError):
     pass
 
 
-class TokenConversionError(Exception):
+class SmarterTokenConversionError(SmarterTokenError):
     pass
 
 
-class TokenExpiredError(Exception):
+class SmarterTokenExpiredError(SmarterTokenError):
     pass
 
 
-class TokenIntegrityError(Exception):
+class SmarterTokenIntegrityError(SmarterTokenError):
     pass
 
 
@@ -88,23 +93,25 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         """
         Check that a password reset token is correct for a given user.
         """
-        if not self.check_token(user, token):
-            raise TokenIntegrityError("Token is invalid.")
+        # Ensure token contains exactly one dash and two parts
+        parts = token.split("-")
+        if len(parts) != 2:
+            raise SmarterTokenParseError("Token is not properly formed. It should contain one dash and two parts.")
 
-        try:
-            timestamp_b36 = token.split("-")[0]
-        except ValueError as exc:
-            raise TokenParseError("Token is not properly formed.") from exc
+        if not self.check_token(user, token):
+            raise SmarterTokenIntegrityError("Token is invalid.")
+
+        timestamp_b36 = parts[0]
 
         try:
             timestamp = base36_to_int(timestamp_b36)
         except ValueError as exc:
-            raise TokenConversionError("Token is invalid.") from exc
+            raise SmarterTokenConversionError("Token is invalid.") from exc
 
         adjusted_timestamp = self.adjusted_timestamp(timestamp)
         current_time = self.get_timestamp()
 
         if (current_time - adjusted_timestamp) > self.expiration:
-            raise TokenExpiredError("Token has expired.")
+            raise SmarterTokenExpiredError("Token has expired.")
 
         return True

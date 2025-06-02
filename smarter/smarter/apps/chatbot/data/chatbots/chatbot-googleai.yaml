@@ -15,7 +15,7 @@ spec:
     - Provide a technical definition for the term "machine learning."
     appFileAttachment: false
     appInfoUrl: https://cloud.google.com/ai/apis/
-    appLogoUrl: /static/querium/querium-logo-white-transparent.png
+    appLogoUrl: https://platform.smarter.sh/static/querium/querium-logo-white-transparent.png
     appName: GoogleAI Gemini 1.5
     appPlaceholder: Ask me anything...
     appWelcomeMessage: Welcome to Gemini!

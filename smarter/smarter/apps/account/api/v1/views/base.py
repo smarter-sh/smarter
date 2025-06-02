@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 class AccountViewBase(SmarterAdminAPIView):
     """Base class for account views."""
 
-    user_profile: UserProfile = None
     serializer_class = AccountSerializer
 
     def dispatch(self, request, *args, **kwargs):
@@ -32,7 +31,6 @@ class AccountViewBase(SmarterAdminAPIView):
 class AccountListViewBase(SmarterAdminListAPIView):
     """Base class for account list views."""
 
-    user_profile: UserProfile = None
     serializer_class = AccountSerializer
 
     def dispatch(self, request, *args, **kwargs):

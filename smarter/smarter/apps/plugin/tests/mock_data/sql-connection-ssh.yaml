@@ -1,0 +1,24 @@
+---
+apiVersion: smarter.sh/v1
+kind: SqlConnection
+metadata:
+  name: test_sql_connection
+  description: points to the Django mysql database
+  version: 0.1.0
+spec:
+  connection:
+    dbEngine: django.db.backends.mysql
+    hostname: smarter-mysql
+    port: 3306
+    username: smarter
+    password: smarter
+    database: smarter
+    timeout: 30
+    proxyHost: proxy.example.com
+    proxyPort: 8080
+    proxyUsername: proxyUser
+    proxyPassword: proxyPass
+    sshKnownHosts: /path/to/known_hosts
+    poolSize: 5
+    maxOverflow: 10
+    authenticationMethod: tcpip_ssh

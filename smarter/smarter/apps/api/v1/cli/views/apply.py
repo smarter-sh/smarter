@@ -23,6 +23,15 @@ class ApiV1CliApplyApiView(CliBaseApiView):
     This class is a child of the Django Rest Framework View.
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliApplyApiView()"
+
     @swagger_auto_schema(
         operation_description="""
 Executes the 'apply' command for Smarter resources using a YAML manifest in the smarter.sh/v1 format.
@@ -46,4 +55,5 @@ The response from this endpoint is a JSON object.
         Returns:
         Response: A JSON object representing the result of the 'apply' operation.
         """
-        return self.broker.apply(request=request, kwargs=kwargs)
+        response = self.broker.apply(request=request, kwargs=kwargs)
+        return response

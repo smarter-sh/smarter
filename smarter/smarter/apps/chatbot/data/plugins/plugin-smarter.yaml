@@ -3,7 +3,7 @@ kind: Plugin
 metadata:
   description: This tool provides detailed platform, technical, and sales support information about the Smarter platform
     for managing AI resources in the enterprise.
-  name: AboutSmarter
+  name: about_smarter
   pluginClass: static
   tags: []
   version: 1.0.0

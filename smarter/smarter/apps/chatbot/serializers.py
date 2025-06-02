@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from smarter.apps.account.serializers import AccountMiniSerializer
 from smarter.apps.plugin.serializers import PluginMetaSerializer
+from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 from .models import (
     ChatBot,
@@ -14,59 +15,52 @@ from .models import (
 )
 
 
-class ChatBotSerializer(serializers.ModelSerializer):
+class ChatBotSerializer(SmarterCamelCaseSerializer):
     url_chatbot = serializers.ReadOnlyField()
     account = AccountMiniSerializer()
     default_system_role = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatBot
-        fields = [
-            "id",
-            "account",
-            "name",
-            "description",
-            "version",
-            "subdomain",
-            "custom_domain",
-            "deployed",
-            "provider",
-            "default_model",
-            "default_system_role",
-            "default_temperature",
-            "default_max_tokens",
-            "app_name",
-            "app_assistant",
-            "app_welcome_message",
-            "app_example_prompts",
-            "app_placeholder",
-            "app_info_url",
-            "app_background_image_url",
-            "app_logo_url",
-            "app_file_attachment",
-            "dns_verification_status",
-            "url_chatbot",
-        ]
+        fields = "__all__"
 
     def get_default_system_role(self, obj: ChatBot):
         return obj.default_system_role_enhanced
 
 
-class ChatBotAPIKeySerializer(serializers.ModelSerializer):
+class ChatBotConfigSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the smarter.apps.prompt.views.ChatConfigView
+    which should not be camelCased.
+    """
+
+    url_chatbot = serializers.ReadOnlyField()
+    account = AccountMiniSerializer()
+    default_system_role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatBot
+        fields = "__all__"
+
+    def get_default_system_role(self, obj: ChatBot):
+        return obj.default_system_role_enhanced
+
+
+class ChatBotAPIKeySerializer(SmarterCamelCaseSerializer):
 
     class Meta:
         model = ChatBotAPIKey
         fields = "__all__"
 
 
-class ChatBotCustomDomainSerializer(serializers.ModelSerializer):
+class ChatBotCustomDomainSerializer(SmarterCamelCaseSerializer):
 
     class Meta:
         model = ChatBotCustomDomain
         fields = "__all__"
 
 
-class ChatBotPluginSerializer(serializers.ModelSerializer):
+class ChatBotPluginSerializer(SmarterCamelCaseSerializer):
     plugin_meta = PluginMetaSerializer()
 
     class Meta:
@@ -74,7 +68,7 @@ class ChatBotPluginSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ChatBotFunctionsSerializer(serializers.ModelSerializer):
+class ChatBotFunctionsSerializer(SmarterCamelCaseSerializer):
 
     class Meta:
         model = ChatBotFunctions

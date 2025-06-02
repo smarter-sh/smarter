@@ -2,52 +2,57 @@
 
 from django.urls import path
 
-from smarter.apps.chatapp.views import ChatConfigView
+from smarter.apps.prompt.views import ChatConfigView
 
-from .views.default import DefaultChatBotApiView
+from .const import namespace
+from .views.default import DefaultChatbotApiView
 from .views.views import (
-    ChatBotAPIKeyListView,
-    ChatBotAPIKeyView,
-    ChatBotCustomDomainListView,
-    ChatBotCustomDomainView,
+    ChatbotAPIKeyListView,
+    ChatbotAPIKeyView,
+    ChatbotCustomDomainListView,
+    ChatbotCustomDomainView,
     ChatBotFunctionsListView,
-    ChatBotFunctionsView,
-    ChatBotListView,
-    ChatBotPluginListView,
-    ChatBotPluginView,
-    ChatBotView,
+    ChatbotFunctionsView,
+    ChatbotListView,
+    ChatbotPluginListView,
+    ChatbotPluginView,
+    ChatbotView,
 )
+
+
+app_name = namespace
 
 
 urlpatterns = [
     # TO DO: add paths for langchain, openai and other chatbot providers
-    path("", ChatBotListView.as_view(), name="chatbot-api"),
-    path("<int:chatbot_id>/", ChatBotView.as_view(), name="chatbot-api"),
-    path("<int:chatbot_id>/chat/", DefaultChatBotApiView.as_view(), name="chatbot-api-chatbot"),
-    path("<int:chatbot_id>/chat/config/", ChatConfigView.as_view(), name="chatbot-api-chatbot"),
-    path("<int:chatbot_id>/plugins/", ChatBotPluginListView.as_view(), name="chatbot-api-plugins"),
-    path("<int:chatbot_id>/plugins/<int:plugin_id>/", ChatBotPluginView.as_view(), name="chatbot-api-plugin"),
-    path("<int:chatbot_id>/apikeys/", ChatBotAPIKeyListView.as_view(), name="chatbot-api-apikeys"),
-    path("<int:chatbot_id>/apikeys/<int:apikey_id>/", ChatBotAPIKeyView.as_view(), name="chatbot-api-apikey"),
+    path("", ChatbotListView.as_view(), name="chatbot_list_view"),
+    path("<int:chatbot_id>/", ChatbotView.as_view(), name="chatbot_view"),
+    path("<int:chatbot_id>/config/", ChatConfigView.as_view(), name="chat_config_view"),
+    path("<int:chatbot_id>/chat/", DefaultChatbotApiView.as_view(), name="default_chatbot_api_view"),
+    path("<int:chatbot_id>/chat/config/", ChatConfigView.as_view(), name="chat_config_view_legacy"),
+    path("<int:chatbot_id>/plugins/", ChatbotPluginListView.as_view(), name="chatbot_plugin_list_view"),
+    path("<int:chatbot_id>/plugins/<int:plugin_id>/", ChatbotPluginView.as_view(), name="chatbot_plugin_view"),
+    path("<int:chatbot_id>/apikeys/", ChatbotAPIKeyListView.as_view(), name="chatbot_api_key_list_view"),
+    path("<int:chatbot_id>/apikeys/<int:apikey_id>/", ChatbotAPIKeyView.as_view(), name="chatbot_api_key_view"),
     path(
         "<int:chatbot_id>/customdomains",
-        ChatBotCustomDomainListView.as_view(),
-        name="chatbot-api-customdomains",
+        ChatbotCustomDomainListView.as_view(),
+        name="chatbot_custom_domain_list_view",
     ),
     path(
         "<int:chatbot_id>/customdomains/<int:customdomain_id>",
-        ChatBotCustomDomainView.as_view(),
-        name="chatbot-api-customdomain",
+        ChatbotCustomDomainView.as_view(),
+        name="chatbot_custom_domain_view",
     ),
     path("<int:chatbot_id>/functions", ChatBotFunctionsListView.as_view(), name="chatbot-api-functions"),
     path(
         "<int:chatbot_id>/functions/<int:function_id>",
-        ChatBotFunctionsView.as_view(),
-        name="chatbot-api-function",
+        ChatbotFunctionsView.as_view(),
+        name="chatbot_functions_view",
     ),
     path(
         "<int:chatbot_id>/functions/<int:function_id>/plugins",
-        ChatBotPluginListView.as_view(),
-        name="chatbot-api-function-plugins",
+        ChatbotPluginListView.as_view(),
+        name="chatbot_function_plugin_list_view",
     ),
 ]

@@ -19,6 +19,15 @@ class ApiV1CliDeleteApiView(CliBaseApiView):
     This class is a child of the Django Rest Framework View.
     """
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliDeleteApiView()"
+
     @swagger_auto_schema(
         operation_description="""
 Executes the 'delete' command for Smarter resources that are not read-only. The resource name is passed in the url query parameters.
@@ -42,4 +51,5 @@ The response from this endpoint is a JSON object.
         Returns:
         Response: A JSON object representing the result of the 'delete' operation.
         """
-        return self.broker.delete(request=request, kwargs=kwargs)
+        response = self.broker.delete(request=request, kwargs=kwargs)
+        return response

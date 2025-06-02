@@ -2,39 +2,23 @@
 """Test Secret."""
 
 import os
-import unittest
 
 from pydantic_core import ValidationError
 
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
-from .factories import admin_user_factory, admin_user_teardown, mortal_user_factory
+from .mixins import TestAccountMixin
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class TestSmarterSecretPydanticModel(unittest.TestCase):
+class TestSmarterSecretPydanticModel(TestAccountMixin):
     """Test Secret."""
 
     def get_data_full_filepath(self, filename: str) -> str:
         return os.path.join(HERE, "data", filename)
-
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up the test class with a single account, and admin and non-admin users.
-        using the class setup so that we retain the same user_profile for each test,
-        which is needed so that the django Secret model can be queried.
-        """
-        cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
-        cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
-
-    @classmethod
-    def tearDownClass(cls):
-        admin_user_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
-        admin_user_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
 
     def test_manifest_initalization_good(self):
         """
@@ -43,11 +27,12 @@ class TestSmarterSecretPydanticModel(unittest.TestCase):
 
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         pydantic_model = SAMSecret(**loader.pydantic_model_dump())
 
         # dump the pydantic model to a dictionary
         # round_trip_dict = pydantic_model.model_dump()
-        pydantic_model.model_dump()
+        pydantic_model.model_dump_json()
 
         # assert that everything in content is in round_trip_dict
         # self.assertTrue(dict_is_contained_in(content, round_trip_dict))
@@ -60,6 +45,7 @@ class TestSmarterSecretPydanticModel(unittest.TestCase):
 
         filespec = self.get_data_full_filepath("secret-bad.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
 
         with self.assertRaises(ValidationError) as context:
             SAMSecret(**loader.pydantic_model_dump())
@@ -88,11 +74,12 @@ class TestSmarterSecretPydanticModel(unittest.TestCase):
 
         filespec = self.get_data_full_filepath("secret-bad3.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
 
         with self.assertRaises(ValidationError) as context:
             SAMSecret(**loader.pydantic_model_dump())
 
         # Assert that the exception message contains the expected details
         self.assertIn("1 validation error for SAMSecret", str(context.exception))
-        self.assertIn("spec.config.expirationDate", str(context.exception))
+        self.assertIn("spec.config.expiration_date", str(context.exception))
         self.assertIn("Input should be a valid date or datetime", str(context.exception))

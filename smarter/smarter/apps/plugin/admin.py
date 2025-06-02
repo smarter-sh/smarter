@@ -5,9 +5,20 @@ import re
 from django.contrib import admin
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.lib.django.admin import RestrictedModelAdmin
 
-from .models import PluginDataStatic, PluginPrompt, PluginSelector
+from .models import (
+    ApiConnection,
+    PluginDataApi,
+    PluginDataSql,
+    PluginDataStatic,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+    PluginSelectorHistory,
+    SqlConnection,
+)
 
 
 # Register your models here.
@@ -48,8 +59,40 @@ class PluginDataInline(admin.StackedInline):
         return [f.name for f in self.model._meta.fields]
 
 
-class PluginAdmin(RestrictedModelAdmin):
+class PluginDataApiInline(admin.StackedInline):
+    """Inline form for Plugin"""
+
+    model = PluginDataApi
+    extra = 0  # This will not show extra empty forms
+
+    class Meta:
+        verbose_name = "ApiPlugin Data"
+        verbose_name_plural = "ApiPlugin Data"
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+
+class PluginDataSqlInline(admin.StackedInline):
+    """Inline form for Plugin"""
+
+    model = PluginDataSql
+    extra = 0  # This will not show extra empty forms
+
+    class Meta:
+        verbose_name = "SqlPlugin Data"
+        verbose_name_plural = "SqlPlugin Data"
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+
+class PluginStaticAdmin(RestrictedModelAdmin):
     """Plugin model admin."""
+
+    model = PluginMeta
 
     def plugin_name(self, obj):
         name = obj.name
@@ -67,16 +110,109 @@ class PluginAdmin(RestrictedModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
-            return qs
+            return qs.filter(plugindatastatic__isnull=False).distinct()
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            return qs.filter(account=user_profile.account)
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(account=account, plugindatastatic__isnull=False).distinct()
         except UserProfile.DoesNotExist:
             return qs.none()
 
 
-class PluginDataSqlConnectionAdmin(RestrictedModelAdmin):
-    """Plugin Data SQL Connection model admin."""
+class PluginApiAdmin(RestrictedModelAdmin):
+    """Plugin model admin."""
+
+    model = PluginMeta
+
+    def plugin_name(self, obj):
+        name = obj.name
+        formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
+        return formatted_name
+
+    inlines = [PluginSelectorInline, PluginPromptInline, PluginDataApiInline]
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+    list_display = ("id", "author", "plugin_name", "version", "created_at", "updated_at")
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs.filter(plugindataapi__isnull=False).distinct()
+        try:
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(account=account, plugindataapi__isnull=False).distinct()
+        except UserProfile.DoesNotExist:
+            return qs.none()
+
+
+class PluginSqlAdmin(RestrictedModelAdmin):
+    """Plugin model admin."""
+
+    model = PluginMeta
+
+    def plugin_name(self, obj):
+        name = obj.name
+        formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
+        return formatted_name
+
+    inlines = [PluginSelectorInline, PluginPromptInline, PluginDataSqlInline]
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+    list_display = ("id", "author", "plugin_name", "version", "created_at", "updated_at")
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs.filter(plugindatasql__isnull=False).distinct()
+        try:
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(account=account, plugindatasql__isnull=False).distinct()
+        except UserProfile.DoesNotExist:
+            return qs.none()
+
+
+class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
+    """
+    Plugin Selection History model admin.
+    """
+
+    model = PluginSelectorHistory
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    list_display = (
+        "created_at",
+        "updated_at",
+        "plugin_selector",
+        "search_term",
+        "session_key",
+        "messages",
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            account = get_cached_account_for_user(user=request.user)
+            plugins = PluginSelector.objects.filter(plugin__account=account)
+            return qs.filter(plugin_selector__in=plugins)
+        except UserProfile.DoesNotExist:
+            return qs.none()
+
+
+class SqlConnectionAdmin(RestrictedModelAdmin):
+    """PluginDataSql Connection model admin."""
+
+    model = SqlConnection
 
     readonly_fields = (
         "created_at",
@@ -99,16 +235,16 @@ class PluginDataSqlConnectionAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            return qs.filter(account=user_profile.account)
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
 
-class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
-    """
-    Plugin Selection History model admin.
-    """
+class ApiConnectionAdmin(RestrictedModelAdmin):
+    """PluginDataApi Connection model admin."""
+
+    model = ApiConnection
 
     readonly_fields = (
         "created_at",
@@ -117,11 +253,11 @@ class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
 
     list_display = (
         "created_at",
+        "account",
+        "name",
+        "base_url",
+        "api_key",
         "updated_at",
-        "plugin_selector",
-        "search_term",
-        "session_key",
-        "messages",
     )
 
     def get_queryset(self, request):
@@ -129,8 +265,7 @@ class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            plugins = PluginSelector.objects.filter(plugin__account=user_profile.account)
-            return qs.filter(plugin_selector__in=plugins)
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
