@@ -19,8 +19,8 @@ from django.http.response import HttpResponseBase
 
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
         if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-            url = request.build_absolute_uri()
+            url = self.smarter_build_absolute_uri(request)
             logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
         self._url = None
         self._chatbot = None
@@ -114,7 +114,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
     def regex_domain_match(self, origin: str) -> bool:
         if self.chatbot is not None:
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-                logger.info("%s.regex_domain_match() returning True: %s", self.formatted_class_name, url)
+                logger.info("%s.regex_domain_match() returning True: %s", self.formatted_class_name, self.url)
             return True
         return any(re.match(domain_pattern, origin) for domain_pattern in self.CORS_ALLOWED_ORIGIN_REGEXES)
 

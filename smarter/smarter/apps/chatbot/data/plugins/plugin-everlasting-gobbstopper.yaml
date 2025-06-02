@@ -5,7 +5,7 @@ metadata:
     created by Willy Wonka Chocolate Factory. Information includes sales promotions,
     coupon codes, company contact information and biographical background on the company
     founder.
-  name: EverlastingGobstopper
+  name: everlasting_gobstopper
   pluginClass: static
   tags: []
   version: 0.2.0

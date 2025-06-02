@@ -1,14 +1,13 @@
 # pylint: disable=wrong-import-position
 """Test User."""
 
-# python stuff
-import unittest
-
 from django.db import connections
 from django.db.utils import OperationalError
 
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
-class TestMySQL(unittest.TestCase):
+
+class TestMySQL(SmarterTestBase):
     """Test Account model"""
 
     def test_mysql_is_available(self):

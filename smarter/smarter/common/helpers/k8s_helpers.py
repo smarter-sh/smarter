@@ -1,5 +1,7 @@
 """A module for interacting with Kubernetes clusters."""
 
+# pylint: disable=W0613
+
 import json
 import logging
 import os
@@ -7,8 +9,9 @@ import subprocess
 import time
 from typing import Tuple
 
+from smarter.common.exceptions import SmarterExceptionBase
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.unittest.utils import get_readonly_yaml_file
+from smarter.common.utils import get_readonly_yaml_file
 
 from ..classes import Singleton, SmarterHelperMixin
 from ..conf import settings as smarter_settings
@@ -18,11 +21,21 @@ logger = logging.getLogger(__name__)
 module_prefix = "smarter.common.helpers.k8s_helpers"
 
 
+class KubernetesHelperException(SmarterExceptionBase):
+    """Base class for Kubernetes helper exceptions."""
+
+
 class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
     """A helper class for interacting with Kubernetes clusters."""
 
     _kubeconfig: dict = None
     _configured: bool = False
+
+    def __init__(self, kubeconfig: dict = None, configured: bool = False, **kwargs):
+        super().__init__()
+        default_kubeconfig = {"apiVersion": "v1"}
+        self._configured = configured
+        self._kubeconfig = kubeconfig or default_kubeconfig
 
     @property
     def configured(self) -> bool:
@@ -81,7 +94,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             _, stderr = process.communicate(input=manifest.encode())
             if process.returncode != 0:
                 # pylint: disable=W0719
-                raise Exception(f"Failed to apply manifest: {stderr.decode()}")
+                raise KubernetesHelperException(f"Failed to apply manifest: {stderr.decode()}")
 
     def verify_ingress_resources(self, hostname: str, namespace: str) -> Tuple[bool, bool, bool]:
         """

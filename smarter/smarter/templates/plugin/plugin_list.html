@@ -1,0 +1,77 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Plugins{% endblock %}
+
+{% block body_class %}
+<style>
+  .plugin-card > .card-header {
+    border-bottom: 1px solid #E5E5E5;
+  }
+  .smarter-plugin-card {
+    background-color: #D9D9D9;
+  }
+  .user-plugin-card {
+    background-color: #FFE5B4;
+  }
+  .card-body > p {
+    margin-bottom: 2px !important;
+  }
+</style>
+{% endblock %}
+
+
+{% block dashboard_content %}
+<div id="kt_app_content" class="app-content flex-column-fluid">
+  <!--begin::Content container-->
+  <div id="kt_app_content_container" class="app-container container-xxl">
+    <!--begin::Row-->
+    <div class="row g-5 g-xl-10">
+      <!--begin::Col-->
+      <div class="col-xl-8 mb-5 mb-xl-10">
+        <!--begin::Row-->
+        <div class="row g-5 g-xl-10 mb-l-10">
+
+          {% for plugin in plugins %}
+          <!--begin::Col Smarter plugin Card-->
+          <div class="col-lg-6 mb-4 p-5">
+            <!--begin::plugin card-->
+            <a href="{% url 'plugin:plugin_by_name' plugin.kind plugin.name %}">
+              <div id="plugin_id_{{ plugin.id }}" class="card card-flush h-xl-100 plugin-card {% if plugin.user_profile == smarter_admin %}smarter-plugin-card{% else %}user-plugin-card{% endif %}">
+                <!--begin::Header-->
+                <div class="p-5">
+                  <!--begin::Title-->
+                  <h4 class="card-title card-label fw-bold text-gray-800 pb-2 text-center" style="border-bottom: 1px solid red;">{{ plugin.name }}{% if plugin.version %} v{{ plugin.version }}{% endif %}</h4>
+                  <!--end::Title-->
+                </div>
+                <!--end::Header-->
+                <!--begin::Body-->
+                <div class="card-body py-6">
+                  <p>name: {{ plugin.app_name }}</p>
+                  <p>class: {{ plugin.kind }}</p>
+                  <p>created: {{ plugin.created_at }}</p>
+                  <p>last updated: {{ plugin.updated_at }}</p>
+                  {% if plugin.description %}
+                  <p>description: {{ plugin.description }}</p>
+                  {% endif %}
+                </div>
+                <!--end::Body-->
+              </div>
+            </a>
+            <!--end::plugin card-->
+          </div>
+          <!--end::Col Smarter plugin Card-->
+          {% endfor %}
+
+        </div>
+        <!--end::Row-->
+
+      </div>
+      <!--end::Col-->
+    </div>
+    <!--end::Row-->
+
+  </div>
+  <!--end::Content container-->
+</div>
+{% endblock %}

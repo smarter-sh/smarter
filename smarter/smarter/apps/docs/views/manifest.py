@@ -22,7 +22,9 @@ class DocsExampleManifestBaseView(DocsBaseView):
 
     def get(self, request, *args, **kwargs):
         view = ApiV1CliManifestApiView.as_view()
-        json_response = self.get_brokered_json_response(ApiV1CliReverseViews.manifest, view, request, *args, **kwargs)
+        json_response = self.get_brokered_json_response(
+            ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.manifest, view, request, *args, **kwargs
+        )
 
         yaml_response = yaml.dump(json_response, default_flow_style=False)
         self.context["manifest"] = yaml_response
@@ -35,16 +37,22 @@ class DocsExampleManifestAccountView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.ACCOUNT)
 
 
-# class DocsExampleManifestApiConnectionView(DocsExampleManifestBaseView):
-#     """ApiConnection JSON Schema view"""
+class DocsExampleManifestApiConnectionView(DocsExampleManifestBaseView):
+    """ApiConnection JSON Schema view"""
 
-#     kind = SAMKinds(SAMKinds.APICONNECTION)
+    kind = SAMKinds(SAMKinds.API_CONNECTION)
+
+
+class DocsExampleManifestApiView(DocsExampleManifestBaseView):
+    """Plugin Api JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.API_PLUGIN)
 
 
 class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
     """ApiKey JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.APIKEY)
+    kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
 class DocsExampleManifestChatView(DocsExampleManifestBaseView):
@@ -80,13 +88,19 @@ class DocsExampleManifestChatBotView(DocsExampleManifestBaseView):
 class DocsExampleManifestPluginView(DocsExampleManifestBaseView):
     """Plugin JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN)
+    kind = SAMKinds(SAMKinds.STATIC_PLUGIN)
 
 
 class DocsExampleManifestSqlConnectionView(DocsExampleManifestBaseView):
     """SqlConnection JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.SQLCONNECTION)
+    kind = SAMKinds(SAMKinds.SQL_CONNECTION)
+
+
+class DocsExampleManifestSqlView(DocsExampleManifestBaseView):
+    """Plugin Sql JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.SQL_PLUGIN)
 
 
 class DocsExampleManifestUserView(DocsExampleManifestBaseView):

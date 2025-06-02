@@ -3,4 +3,4 @@
 from smarter.lib.journal.enum import SmarterJournalThings
 
 
-MANIFEST_KIND = SmarterJournalThings.APIKEY.value
+MANIFEST_KIND = SmarterJournalThings.AUTH_TOKEN.value

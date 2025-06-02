@@ -9,11 +9,12 @@ import os
 # python stuff
 import re
 import sys
-import unittest
 
 # 3rd party stuff
 from dotenv import load_dotenv
 from pydantic_core import ValidationError as PydanticValidationError
+
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -32,13 +33,14 @@ from ..exceptions import SmarterConfigurationError
 
 
 # pylint: disable=too-many-public-methods
-class TestConfiguration(unittest.TestCase):
+class TestConfiguration(SmarterTestBase):
     """Test configuration."""
 
     # Get the directory of the current script
     here = os.path.dirname(os.path.abspath(__file__))
 
     def setUp(self):
+        super().setUp()
         # Save current environment variables
         self.saved_env = dict(os.environ)
 
@@ -46,6 +48,7 @@ class TestConfiguration(unittest.TestCase):
         # Restore environment variables
         os.environ.clear()
         os.environ.update(self.saved_env)
+        super().tearDown()
 
     def env_path(self, filename):
         """Return the path to the .env file."""

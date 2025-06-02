@@ -7,8 +7,9 @@ from http import HTTPStatus
 from django import forms, http
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
+from smarter.common.utils import get_readonly_csv_file
 from smarter.lib.django.view_helpers import SmarterAdminWebView
-from smarter.lib.unittest.utils import get_readonly_csv_file
 
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class SettingsView(SmarterAdminWebView):
         return False
 
     def _handle_write(self, request):
-        user_profile = UserProfile.objects.get(user=request.user)
+        user_profile = get_cached_user_profile(user=request.user)
         account_form = AccountForm(request.POST, instance=user_profile.account)
         if account_form.is_valid():
             if not self._exists("value", str(account_form.instance.currency), CURRENCIES):
@@ -70,7 +71,7 @@ class SettingsView(SmarterAdminWebView):
     # HTTP override methods
     # -------------------------------------------------------------------------
     def get(self, request):
-        user_profile = UserProfile.objects.get(user=request.user)
+        user_profile = get_cached_user_profile(user=request.user)
         account_form = AccountForm(instance=user_profile.account)
         context = {
             "account_settings": {

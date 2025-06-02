@@ -7,8 +7,8 @@ from bs4 import BeautifulSoup, Comment
 from django.http import FileResponse
 from django.utils.deprecation import MiddlewareMixin
 
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)
@@ -29,8 +29,10 @@ class HTMLMinifyMiddleware(MiddlewareMixin):
             "attachment; filename=sitemap.xml",
         ]:
             return response
-        if hasattr(response, "content") and response.content in ["robots.txt", "favicon.ico", "sitemap.xml"]:
-            return response.content
+        if hasattr(response, "content"):
+            content_str = response.content.decode("utf-8") if isinstance(response.content, bytes) else response.content
+            if content_str in ["robots.txt", "favicon.ico", "sitemap.xml"]:
+                return response.content
         if "text/html" in response["Content-Type"]:
             soup = BeautifulSoup(response.content, "lxml")
 

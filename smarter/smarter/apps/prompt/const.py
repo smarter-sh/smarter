@@ -1,0 +1,1 @@
+namespace = "prompt_workbench"

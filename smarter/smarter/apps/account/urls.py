@@ -6,6 +6,7 @@ from django.views.generic.base import RedirectView
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterEnvironments
 
+from .const import namespace
 from .views.authentication import (
     AccountActivateView,
     AccountActivationEmailView,
@@ -21,12 +22,14 @@ from .views.password_management import (
 )
 
 
+app_name = namespace
 urlpatterns = [
     path(
         "",
         RedirectView.as_view(url="/dashboard/account/dashboard/", permanent=False),
         name="dashboard_account_dashboard",
     ),
+    path("api/", include("smarter.apps.account.api.urls", namespace=namespace)),
     path("login/", LoginView.as_view(), name="account_login"),
     path("logout/", LogoutView.as_view(), name="account_logout"),
     path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),

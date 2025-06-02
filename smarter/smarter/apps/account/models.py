@@ -25,12 +25,7 @@ from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
-from .signals import (
-    new_charge_created,
-    new_user_created,
-    secret_created,
-    secret_edited,
-)
+from .signals import new_charge_created, new_user_created, secret_created, secret_edited
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -216,10 +211,15 @@ class AccountContact(TimestampedModel):
             logger.error("No primary contact found for account %s", account)
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
         if self.is_primary:
-            # ensure that only one primary contact exists
-            AccountContact.objects.filter(account=self.account, is_primary=True).update(is_primary=False)
+            # Check for another primary contact for this account (excluding self if updating)
+            qs = AccountContact.objects.filter(account=self.account, is_primary=True)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                raise SmarterValueError("There is already a primary contact for this account.")
+
+        super().save(*args, **kwargs)
         if not self.welcomed:
             self.send_welcome_email()
             self.welcomed = True
@@ -256,7 +256,11 @@ class UserProfile(TimestampedModel):
     def add_to_account_contacts(self, is_primary: bool = False):
         """Add the user to the account contact list."""
         account_contact, _ = AccountContact.objects.get_or_create(
-            account=self.account, email=self.user.email, is_test=self.is_test
+            account=self.account,
+            email=self.user.email,
+            is_test=self.is_test,
+            first_name=self.user.first_name or "account",
+            last_name=self.user.last_name or "contact",
         )
         if account_contact.is_primary != is_primary:
             account_contact.is_primary = is_primary
@@ -315,7 +319,7 @@ class PaymentMethod(TimestampedModel):
     is_default = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.card_type + " " + self.card_last_4
+        return str(self.card_type) + " " + str(self.card_last_4)
 
 
 class LLMPrices(TimestampedModel):
@@ -459,7 +463,9 @@ class Secret(TimestampedModel):
         """
         is_new = self.pk is None
         if not self.name or not self.encrypted_value:
-            raise SmarterValueError("Name and value cannot be empty")
+            raise SmarterValueError(
+                f"Name and encrypted_value are required fields. Got name: {self.name}, encrypted_value: {self.encrypted_value}"
+            )
         super().save(*args, **kwargs)
         if is_new:
             secret_created.send(sender=self.__class__, secret=self)
@@ -508,7 +514,7 @@ class Secret(TimestampedModel):
     @classmethod
     def encrypt(cls, value: str) -> bytes:
         """
-        Encrypts the provided value and stores it in the `encrypted_value` field.
+        Encrypts the provided value.
         Clears the transient `value` field after encryption to avoid re-encryption issues.
         """
         if not value or not isinstance(value, str):

@@ -8,7 +8,8 @@ import os
 
 # python stuff
 import sys
-import unittest
+
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -20,13 +21,14 @@ from smarter.common.helpers.aws.exceptions import AWSNotReadyError
 
 
 # pylint: disable=too-many-public-methods
-class TestAWSConfiguration(unittest.TestCase):
+class TestAWSConfiguration(SmarterTestBase):
     """Test configuration."""
 
     # Get the directory of the current script
     here = os.path.dirname(os.path.abspath(__file__))
 
     def setUp(self):
+        super().setUp()
         # Save current environment variables
         self.saved_env = dict(os.environ)
 
@@ -34,6 +36,7 @@ class TestAWSConfiguration(unittest.TestCase):
         # Restore environment variables
         os.environ.clear()
         os.environ.update(self.saved_env)
+        super().tearDown()
 
     def env_path(self, filename):
         """Return the path to the .env file."""
