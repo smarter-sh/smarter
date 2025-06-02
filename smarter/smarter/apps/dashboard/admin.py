@@ -11,13 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from smarter.__version__ import __version__
 from smarter.apps.account.admin import SecretAdmin
 from smarter.apps.account.models import Account, PaymentMethod, Secret, UserProfile
-from smarter.apps.chat.admin import (
-    ChatAdmin,
-    ChatHistoryAdmin,
-    ChatPluginUsageAdmin,
-    ChatToolCallHistoryAdmin,
-)
-from smarter.apps.chat.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.chatbot.admin import (
     ChatBotAdmin,
     ChatBotAPIKeyAdmin,
@@ -37,15 +31,26 @@ from smarter.apps.chatbot.models import (
     ChatBotRequests,
 )
 from smarter.apps.plugin.admin import (
-    PluginAdmin,
-    PluginDataSqlConnectionAdmin,
+    ApiConnectionAdmin,
+    PluginApiAdmin,
     PluginSelectionHistoryAdmin,
+    PluginSqlAdmin,
+    PluginStaticAdmin,
+    SqlConnectionAdmin,
 )
 from smarter.apps.plugin.models import (
-    PluginDataSqlConnection,
+    ApiConnection,
     PluginMeta,
     PluginSelectorHistory,
+    SqlConnection,
 )
+from smarter.apps.prompt.admin import (
+    ChatAdmin,
+    ChatHistoryAdmin,
+    ChatPluginUsageAdmin,
+    ChatToolCallHistoryAdmin,
+)
+from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from smarter.lib.django.admin import RestrictedModelAdmin, SuperUserOnlyModelAdmin
 from smarter.lib.django.user import User
 from smarter.lib.drf.admin import SmarterAuthTokenAdmin
@@ -108,7 +113,7 @@ class RestrictedUserAdmin(UserAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -153,10 +158,36 @@ restricted_site.register(ChatBotPlugin, ChatBotPluginAdmin)
 restricted_site.register(ChatBotFunctions, ChatBotFunctionsAdmin)
 restricted_site.register(ChatBotRequests, ChatBotRequestsAdmin)
 
+
 # Plugin Models
-restricted_site.register(PluginMeta, PluginAdmin)
-restricted_site.register(PluginDataSqlConnection, PluginDataSqlConnectionAdmin)
+class PluginMetaStatic(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (Static)"
+        verbose_name_plural = "Plugin Meta (Static)"
+
+
+class PluginMetaApi(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (API)"
+        verbose_name_plural = "Plugin Meta (API)"
+
+
+class PluginMetaSql(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (SQL)"
+        verbose_name_plural = "Plugin Meta (SQL)"
+
+
+restricted_site.register(PluginMetaStatic, PluginStaticAdmin)
+restricted_site.register(PluginMetaApi, PluginApiAdmin)
+restricted_site.register(PluginMetaSql, PluginSqlAdmin)
+restricted_site.register(SqlConnection, SqlConnectionAdmin)
 restricted_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
+restricted_site.register(ApiConnection, ApiConnectionAdmin)
+
 
 # Journal Models
 restricted_site.register(SAMJournal, SAMJournalAdmin)

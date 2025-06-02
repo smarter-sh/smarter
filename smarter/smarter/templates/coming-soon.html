@@ -14,7 +14,7 @@
 						<div class="card-body py-15 py-lg-20">
 							<!--begin::Logo-->
 							<div class="mb-13">
-								<a href="/" class="">
+								<a href={% url 'root_home' %} class="">
 									<img alt="Logo" src="{% static 'querium/querium-logo-orange-transparent.png' %}" class="h-200px" />
 								</a>
 							</div>
@@ -54,7 +54,7 @@
 							<!--end::Text-->
 							<!--begin::Form-->
 							<form class="w-md-350px mb-2 mx-auto "
-                    action="/"
+                    action={% url 'root_home' %}
                     id="kt_coming_soon_form"
                     method="post"
                     data-kt-redirect-url="/email-added/"

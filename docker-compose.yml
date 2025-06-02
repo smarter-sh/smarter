@@ -16,6 +16,8 @@ services:
       MYSQL_DATABASE: smarter
       MYSQL_USER: smarter
       MYSQL_PASSWORD: smarter
+    ports:
+      - 3306:3306
     volumes:
       - ./mysql-data:/var/lib/mysql
 

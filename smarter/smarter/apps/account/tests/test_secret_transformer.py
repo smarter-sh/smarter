@@ -1,10 +1,8 @@
 # pylint: disable=wrong-import-position
 """Test Secret Manager."""
 
-import json
 import logging
 import os
-import unittest
 
 import yaml
 
@@ -15,41 +13,26 @@ from smarter.apps.account.manifest.transformers.secret import (
     SmarterSecretTransformerError,
 )
 from smarter.apps.account.models import Secret, UserProfile
+from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.loader import SAMLoader
 
-from .factories import admin_user_factory, admin_user_teardown, mortal_user_factory
+from .mixins import TestAccountMixin
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
 
 
-class TestSmarterSecretTransformer(unittest.TestCase):
+class TestSmarterSecretTransformer(TestAccountMixin):
     """Test Secret Manager."""
 
     def get_data_full_filepath(self, filename: str) -> str:
         return os.path.join(HERE, "data", filename)
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up the test class with a single account, and admin and non-admin users.
-        using the class setup so that we retain the same user_profile for each test,
-        which is needed so that the django Secret model can be queried.
-        """
-        cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
-        cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
-
-    @classmethod
-    def tearDownClass(cls):
-        admin_user_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
-        admin_user_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
-
     def test_manager_01_empty(self):
         """
-        Test that the SecretTransformer can be initialized without any secret data.
+        Test that the SecretTransformer cannot be initialized without any secret data.
         """
-        logger.info("test_manager_01_empty()")
         with self.assertRaises(SmarterSecretTransformerError):
             SecretTransformer(self.user_profile)
 
@@ -58,7 +41,6 @@ class TestSmarterSecretTransformer(unittest.TestCase):
         Test that the example manifest method returns a dictionary
         from a call to the SecretTransformer class method.
         """
-        logger.info("test_manager_02_example_manifest()")
         example_manifest = SecretTransformer.example_manifest()
         self.assertIsInstance(example_manifest, dict)
 
@@ -66,10 +48,9 @@ class TestSmarterSecretTransformer(unittest.TestCase):
         """
         Test initialization of the SecretTransformer with a good manifest file.
         """
-        logger.info("test_manager_03_manifest_load()")
-
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
 
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
@@ -114,9 +95,9 @@ class TestSmarterSecretTransformer(unittest.TestCase):
         """
         Test creating a Django model instance from the SecretTransformer.
         """
-        logger.info("test_manager_04_create_instance()")
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
 
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
@@ -158,17 +139,17 @@ class TestSmarterSecretTransformer(unittest.TestCase):
         )
         self.assertEqual(
             secret_transformer.secret.expires_at.date(),
-            secret_transformer.manifest.spec.config.expirationDate,
-            "Secret expires_at should match the manifest spec config expirationDate",
+            secret_transformer.manifest.spec.config.expiration_date,
+            "Secret expires_at should match the manifest spec config expiration_date",
         )
 
     def test_manager_05_initialize(self):
         """
         Test initializing from manifest for an existing secret.
         """
-        logger.info("test_manager_05_initialize()")
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
 
@@ -179,9 +160,9 @@ class TestSmarterSecretTransformer(unittest.TestCase):
         """
         Test updating the secret value.
         """
-        logger.info("test_manager_06_update()")
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
 
@@ -225,17 +206,17 @@ class TestSmarterSecretTransformer(unittest.TestCase):
         )
         self.assertEqual(
             secret_transformer.secret.expires_at.date(),
-            secret_transformer.manifest.spec.config.expirationDate,
-            "Secret expires_at should match the manifest spec config expirationDate",
+            secret_transformer.manifest.spec.config.expiration_date,
+            "Secret expires_at should match the manifest spec config expiration_date",
         )
 
     def test_manager_07_update_last_accessed(self):
         """
         Test updating the last accessed time.
         """
-        logger.info("test_manager_07_update_last_accessed()")
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
@@ -256,24 +237,36 @@ class TestSmarterSecretTransformer(unittest.TestCase):
         last_updated_after = secret_transformer.secret.last_accessed
         self.assertEqual(last_updated_before, last_updated_after, "Last accessed time should not be updated")
 
-    def test_manager_08_initialze_by_name(self):
+    def test_manager_08_initialize_by_name(self):
         """
         Test initializing the SecretTransformer with a name.
         """
-        logger.info("test_manager_08_initialze_by_name()")
+        filespec = self.get_data_full_filepath("secret-good-update.yaml")
+        loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest = SAMSecret(**loader.pydantic_model_dump())
+        secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
+        secret_transformer.create()
 
-        secret_transformer = SecretTransformer(name="TestSecret", user_profile=self.user_profile)
+        secret_transformer = SecretTransformer(name=manifest.metadata.name, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
-        self.assertEqual(secret_transformer.name, "TestSecret")
+        self.assertEqual(secret_transformer.name, camel_to_snake(manifest.metadata.name))
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
+        secret_transformer.delete()
 
     def test_manager_09_initialize_by_id(self):
         """
         Test initializing the SecretTransformer with an ID.
         """
-        logger.info("test_manager_09_initialize_by_id()")
-        secret_transformer = SecretTransformer(name="TestSecret", user_profile=self.user_profile)
+        filespec = self.get_data_full_filepath("secret-good-update.yaml")
+        loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest = SAMSecret(**loader.pydantic_model_dump())
+        secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
+        secret_transformer.create()
+
+        secret_transformer = SecretTransformer(name=manifest.metadata.name, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
@@ -284,13 +277,20 @@ class TestSmarterSecretTransformer(unittest.TestCase):
         self.assertEqual(secret_transformer.secret.id, secret_id)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
+        secret_transformer.delete()
 
     def test_manager_10_initialize_by_secret_instance(self):
         """
         Test initializing the SecretTransformer with a Secret instance.
         """
-        logger.info("test_manager_10_initialize_by_secret_instance()")
-        secret_transformer = SecretTransformer(name="TestSecret", user_profile=self.user_profile)
+        filespec = self.get_data_full_filepath("secret-good-update.yaml")
+        loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest = SAMSecret(**loader.pydantic_model_dump())
+        secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
+        secret_transformer.create()
+
+        secret_transformer = SecretTransformer(name=manifest.metadata.name, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
         secret = secret_transformer.secret
         self.assertIsInstance(secret, Secret)
@@ -300,43 +300,65 @@ class TestSmarterSecretTransformer(unittest.TestCase):
         self.assertEqual(secret_transformer.secret.id, secret.id)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
+        secret_transformer.delete()
 
     def test_manager_11_initialize_by_secret_serializer(self):
         """
         Test initializing the SecretTransformer with a Secret serializer.
         """
-        logger.info("test_manager_11_initialize_by_secret_serializer()")
-        secret_transformer = SecretTransformer(name="TestSecret", user_profile=self.user_profile)
+        filespec = self.get_data_full_filepath("secret-good-update.yaml")
+        loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest = SAMSecret(**loader.pydantic_model_dump())
+        secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
+        secret_transformer.create()
+
+        secret_transformer = SecretTransformer(name=manifest.metadata.name, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
         secret_dict = secret_transformer.to_json()
         self.assertIsInstance(secret_dict, dict, msg="Secret serializer data should be a dictionary:")
-        logger.info(
-            "test_manager_11_initialize_by_secret_serializer() secret_dict: %s", json.dumps(secret_dict, indent=4)
-        )
         secret_transformer = SecretTransformer(data=secret_dict, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
         self.assertIsInstance(secret_transformer.secret, Secret)
         self.assertEqual(secret_transformer.secret.id, secret_transformer.id)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
+        secret_transformer.delete()
 
     def test_manager_12_initialize_by_different_user_profile(self):
         """
         Test initializing the SecretTransformer with a different user profile.
         """
-        logger.info("test_manager_12_initialize_by_different_user_profile()")
-        secret_transformer = SecretTransformer(name="TestSecret", user_profile=self.non_admin_user_profile)
-        self.assertIsInstance(secret_transformer, SecretTransformer)
-        self.assertFalse(secret_transformer.ready, "Secret manager should not be ready")
-        self.assertIsNone(secret_transformer.secret, "Secret should not be set")
+        filespec = self.get_data_full_filepath("secret-good-update.yaml")
+        loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest = SAMSecret(**loader.pydantic_model_dump())
+        secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
+        secret_transformer.create()
+
+        # secrets can only be accessed by the user who created them
+        # or an admin from the same account.
+        with self.assertRaises(SmarterSecretTransformerError):
+            secret_transformer = SecretTransformer(
+                name=manifest.metadata.name, user_profile=self.non_admin_user_profile
+            )
+            secret_transformer.secret.get_secret(update_last_accessed=False)
+
+        secret_transformer.delete()
 
     def test_manager_13_delete(self):
         """
         Test deleting the secret.
         """
-        logger.info("test_manager_13_delete()")
-        secret_transformer = SecretTransformer(name="TestSecret", user_profile=self.user_profile)
+        filespec = self.get_data_full_filepath("secret-good-update.yaml")
+        loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest = SAMSecret(**loader.pydantic_model_dump())
+        secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
+        secret_transformer.create()
+
+        secret_transformer = SecretTransformer(name=manifest.metadata.name, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
@@ -345,3 +367,4 @@ class TestSmarterSecretTransformer(unittest.TestCase):
         self.assertIsNone(secret_transformer.secret, "Secret should be None after deletion")
         self.assertIsNone(secret_transformer.secret_serializer, "Secret serializer should be None after deletion")
         self.assertFalse(secret_transformer.ready, "Secret manager should not be ready after deletion")
+        secret_transformer.delete()

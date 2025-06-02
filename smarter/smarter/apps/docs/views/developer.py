@@ -64,7 +64,7 @@ class DeveloperDocsWeatherFunctionView(TxtBaseView):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.text_file = "/home/smarter_user/smarter/smarter/apps/chat/functions/function_weather.py"
+        self.text_file = "/home/smarter_user/smarter/smarter/apps/prompt/functions/function_weather.py"
         self.title = "function_weather.py"
         self.leader = """
         This is Smarter's implementation of the Python function 'get_current_weather()' referenced in

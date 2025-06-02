@@ -2,7 +2,7 @@
 apiVersion: smarter.sh/v1
 kind: Plugin
 metadata:
-  name: PluginVerification
+  name: plugin_verification
   pluginClass: static
   description: A simple plugin used for verification tests of /api/v1/cli/
   version: 1.0.0

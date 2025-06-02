@@ -1,13 +1,12 @@
 """Test Api v1 CLI brokers.py coverage gaps"""
 
-import unittest
-
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestApiCliV1Brokers(unittest.TestCase):
+class TestApiCliV1Brokers(SmarterTestBase):
     """Test Api v1 CLI brokers.py coverage gaps"""
 
     def test_brokers_integrity(self):

@@ -3,20 +3,27 @@
 
 import logging
 import re
-import typing
 from abc import ABC, abstractmethod
+from datetime import datetime
 from http import HTTPStatus
+from typing import Any, Dict, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
-from django.http import HttpRequest, QueryDict
+from django.core.handlers.wsgi import WSGIRequest
+from django.http import QueryDict
 from requests import PreparedRequest
 from rest_framework.serializers import ModelSerializer
 
+from smarter.apps.account.models import Secret, UserProfile
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.api import SmarterApiVersions
-from smarter.common.classes import SmarterHelperMixin
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseErrorKeys,
     SmarterJournalApiResponseKeys,
@@ -27,14 +34,12 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
+from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.manifest.models import AbstractSAMBase
 
 from .exceptions import SAMExceptionBase
 
-
-if typing.TYPE_CHECKING:
-    from smarter.apps.account.models import Account
 
 inflect_engine = inflect.engine()
 
@@ -114,8 +119,7 @@ class SAMBrokerErrorNotFound(SAMBrokerError):
         return msg
 
 
-# pylint: disable=too-many-public-methods,too-many-instance-attributes
-class AbstractBroker(ABC, SmarterHelperMixin):
+class AbstractBroker(ABC, SmarterRequestMixin):
     """
     Smarter API Manifest Broker abstract base class. This class is responsible
     for:
@@ -129,34 +133,38 @@ class AbstractBroker(ABC, SmarterHelperMixin):
     for the manifest: get, post, put, delete, patch.
     """
 
-    _request: HttpRequest = None
     _api_version: str = None
-    _account: "Account" = None
     _loader: SAMLoader = None
     _manifest: AbstractSAMBase = None
-    _pydantic_model: typing.Type[AbstractSAMBase] = AbstractSAMBase
+    _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
     _name: str = None
     _kind: str = None
     _validated: bool = False
     _thing: SmarterJournalThings = None
+    _created: bool = False
+    _plugin: PluginBase = None
+    _plugin_meta: PluginMeta = None
 
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        request: HttpRequest,
-        account: "Account",
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
+        request: WSGIRequest,
+        *args,
+        **kwargs,
     ):
-        self._request = request
-        self._name = self.params.get("name", None) or name
-        self._account = account
-        self._loader = loader
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        logger.info(
+            "AbstractBroker.__init__() initializing request: %s, args: %s, kwargs: %s", self.request, args, kwargs
+        )
+
+        api_version: str = kwargs.get("api_version", SmarterApiVersions.V1)
+        self._name = kwargs.get("name", None)
+        self._kind = kwargs.get("kind", None)
+        self._loader = kwargs.get("loader", None)
+        manifest = kwargs.get("manifest", None)
+        file_path = kwargs.get("file_path", None)
+        url = kwargs.get("url", None)
+
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(
                 message=f"Unsupported apiVersion: {api_version}",
@@ -167,32 +175,101 @@ class AbstractBroker(ABC, SmarterHelperMixin):
         try:
             self._loader = SAMLoader(
                 api_version=api_version,
-                kind=kind,
+                kind=self.kind,
                 manifest=manifest,
                 file_path=file_path,
                 url=url,
             )
             if self._loader:
                 self._validated = True
-        except SAMLoaderError:
-            pass
+        except SAMLoaderError as e:
+            logger.error("%s.__init__() failed to initialize loader: %s", self.formatted_class_name, str(e))
 
-        self._kind = kind or self.loader.manifest_kind if self.loader else None
+        if self.user:
+            logger.info("%s.__init__() received user: %s", self.formatted_class_name, self.user_profile)
+
+        if self._name:
+            logger.info("%s.__init__() set name to %s", self.formatted_class_name, self._name)
+
+        if self._loader:
+            logger.info("%s.__init__() received a %s loader", self.formatted_class_name, self._loader.manifest_kind)
+            self._validated = True
+            logger.info(
+                "%s.__init__() loader initialized with manifest kind: %s",
+                self.formatted_class_name,
+                self._loader.manifest_kind,
+            )
+
+        self._kind = self._kind or self.loader.manifest_kind if self.loader else None
+        self._created = False
+        logger.info(
+            "AbstractBroker.__init__() finished initializing %s with api_version: %s, user: %s, name: %s",
+            self.kind,
+            self.api_version,
+            self.user_profile,
+            self.name,
+        )
 
     ###########################################################################
     # Class Instance Properties
     ###########################################################################
     @property
-    def request(self) -> HttpRequest:
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for logging purposes.
+        This is used to provide a more readable class name in logs.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.AbstractBroker()"
+
+    @property
+    def plugin(self) -> PluginBase:
+        """
+        PluginController() is a helper class to map the manifest model
+        metadata.plugin_class to an instance of the the correct plugin class.
+        """
+        if self._plugin:
+            return self._plugin
+        controller = PluginController(
+            request=self.smarter_request,
+            user=self.user,
+            account=self.account,
+            manifest=self.manifest,
+            plugin_meta=self.plugin_meta,
+            name=self.name,
+        )
+        self._plugin = controller.obj
+        return self._plugin
+
+    @property
+    def plugin_meta(self) -> PluginMeta:
+        # if self.manifest:
+        #     # want the manifest to take precedence over the plugin_meta
+        #     return None
+        logger.info("%s.plugin_meta() called - 1 %s", self.formatted_class_name, self._plugin_meta)
+        if self._plugin_meta:
+            return self._plugin_meta
+        logger.info("%s.plugin_meta() called - 2 %s", self.formatted_class_name, self._plugin_meta)
+        if self.name and self.account:
+            logger.info("%s.plugin_meta() called - 3 %s", self.formatted_class_name, self._plugin_meta)
+            try:
+                self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
+            except PluginMeta.DoesNotExist:
+                logger.info("%s.plugin_meta() called - 4 %s", self.formatted_class_name, self._plugin_meta)
+        logger.info("%s.plugin_meta() called - 5 %s", self.formatted_class_name, self._plugin_meta)
+        return self._plugin_meta
+
+    @property
+    def request(self) -> WSGIRequest:
         """Return the request object."""
-        return self._request
+        return self.smarter_request
 
     @property
     def params(self) -> QueryDict:
         """
         Return the query parameters from the url of the request. there are two
         scenarios to consider:
-        1. the request is a Django HttpRequest object (the expected case)
+        1. the request is a Django WSGIRequest object (the expected case)
         2. the request is a Python PreparedRequest object (the edge case)
         """
         if isinstance(self.request, PreparedRequest):
@@ -222,6 +299,11 @@ class AbstractBroker(ABC, SmarterHelperMixin):
         return url
 
     @property
+    def created(self) -> bool:
+        """Return True if the broker was created successfully."""
+        return self._created
+
+    @property
     def is_valid(self) -> bool:
         return self._validated
 
@@ -244,6 +326,12 @@ class AbstractBroker(ABC, SmarterHelperMixin):
         if not self._name and self.manifest and self.manifest.metadata and self.manifest.metadata.name:
             # assign from the manifest metadata, if we have it
             self._name = self.manifest.metadata.name
+            logger.info("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
+        name_param = self.params.get("name", None)
+        if name_param:
+            self._name = name_param
+            logger.info("%s.__init__() set name to %s from name url param", self.formatted_class_name, self._name)
+
         return self._name
 
     @property
@@ -252,7 +340,8 @@ class AbstractBroker(ABC, SmarterHelperMixin):
 
     @property
     def loader(self) -> SAMLoader:
-        return self._loader
+        if self._loader and self._loader.ready:
+            return self._loader
 
     def __str__(self):
         return f"{self.manifest.apiVersion} {self.kind} Broker"
@@ -261,12 +350,12 @@ class AbstractBroker(ABC, SmarterHelperMixin):
     # Abstract Properties
     ###########################################################################
     @property
-    def model_class(self) -> typing.Type[TimestampedModel]:
+    def model_class(self) -> Type[TimestampedModel]:
         """Return the Django ORM model class for the broker."""
         raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
 
     @property
-    def pydantic_model(self) -> typing.Type[AbstractSAMBase]:
+    def pydantic_model(self) -> Type[AbstractSAMBase]:
         """Return the Pydantic model for the broker."""
         return self._pydantic_model
 
@@ -280,7 +369,7 @@ class AbstractBroker(ABC, SmarterHelperMixin):
         """
         if self._manifest:
             return self._manifest
-        if self.loader:
+        if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = AbstractSAMBase(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
@@ -294,7 +383,7 @@ class AbstractBroker(ABC, SmarterHelperMixin):
     # Abstract Methods
     ###########################################################################
     # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
-    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """apply a manifest, which works like a upsert."""
         if self.manifest.status:
             raise SAMBrokerReadOnlyError(
@@ -304,35 +393,52 @@ class AbstractBroker(ABC, SmarterHelperMixin):
             )
 
     @abstractmethod
-    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """chat with the broker."""
         raise SAMBrokerErrorNotImplemented(
             message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
         )
 
-    @abstractmethod
-    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
-        """print the manifest."""
-        raise SAMBrokerErrorNotImplemented(
-            message="describe() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DESCRIBE
+    def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.info(
+            "%s.describe() called %s with args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs
+        )
+        command = self.describe.__name__
+        command = SmarterJournalCliCommands(command)
+        self.set_and_verify_name_param(command, *args, **kwargs)
+
+        if self.plugin.ready:
+            try:
+                data = self.plugin.to_json()
+                data[SAMKeys.METADATA.value].get(SAMMetadataKeys.ACCOUNT.value)
+                data[SAMKeys.METADATA.value].get(SAMMetadataKeys.AUTHOR.value)
+                return self.json_response_ok(command=command, data=data)
+            except Exception as e:
+                raise SAMBrokerError(
+                    f"{self.formatted_class_name} {self.plugin_meta.name} describe failed",
+                    thing=self.kind,
+                    command=command,
+                ) from e
+        raise SAMBrokerErrorNotReady(
+            f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
         )
 
     @abstractmethod
-    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """delete a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="delete() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DELETE
         )
 
     @abstractmethod
-    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """deploy a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="deploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DEPLOY
         )
 
     @abstractmethod
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
         raise SAMBrokerErrorNotImplemented(
             message="example_manifest() not implemented",
@@ -341,27 +447,27 @@ class AbstractBroker(ABC, SmarterHelperMixin):
         )
 
     @abstractmethod
-    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """get information about specified resources."""
         raise SAMBrokerErrorNotImplemented(
             message="get() not implemented", thing=self.thing, command=SmarterJournalCliCommands.GET
         )
 
     @abstractmethod
-    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """get logs for a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="logs() not implemented", thing=self.thing, command=SmarterJournalCliCommands.LOGS
         )
 
     @abstractmethod
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """undeploy a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="undeploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.UNDEPLOY
         )
 
-    def schema(self, request: HttpRequest, kwargs: dict) -> typing.Dict[str, typing.Any]:
+    def schema(self, request: WSGIRequest, *args, **kwargs) -> Dict[str, Any]:
         """Return the published JSON schema for the Pydantic model."""
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
@@ -372,9 +478,58 @@ class AbstractBroker(ABC, SmarterHelperMixin):
         return self.json_response_ok(command=command, data=data)
 
     ###########################################################################
+    # Smarter object helpers
+    ###########################################################################
+    def get_or_create_secret(
+        self,
+        user_profile: UserProfile,
+        name: str,
+        value: str = None,
+        description: str = None,
+        expiration: datetime = None,
+    ) -> Secret:
+        """
+        Get or create a Smarter Secret in the database. This is used to store
+        secrets that are passed in the manifest.
+        """
+        secret: Secret = None
+        try:
+            secret = Secret.objects.get(name=name, user_profile=user_profile)
+        except Secret.DoesNotExist as e:
+
+            if not value:
+                raise SAMBrokerError(
+                    message=f"Secret {name} not found and no value was provided provided",
+                    thing=self.thing,
+                    command=SmarterJournalCliCommands.GET,
+                ) from e
+
+            if not user_profile:
+                raise SAMBrokerError(
+                    message=f"Secret {name} not found and no user_profile was provided provided",
+                    thing=self.thing,
+                    command=SmarterJournalCliCommands.GET,
+                ) from e
+
+            if not description:
+                description = f"[auto generated] Secret {name} for {user_profile.user.username}"
+
+            encrypted_value = Secret.encrypt(value)
+
+            secret = Secret.objects.create(
+                user_profile=user_profile,
+                name=name,
+                description=description,
+                encrypted_value=encrypted_value,
+                expires_at=expiration,
+            )
+
+        return secret
+
+    ###########################################################################
     # http json response helpers
     ###########################################################################
-    def _retval(self, data: dict = None, error: dict = None, message: str = None) -> dict[str, typing.Any]:
+    def _retval(self, data: dict = None, error: dict = None, message: str = None) -> dict[str, Any]:
         retval = {}
         if data:
             retval[SmarterJournalApiResponseKeys.DATA] = data
@@ -385,7 +540,9 @@ class AbstractBroker(ABC, SmarterHelperMixin):
 
         return retval
 
-    def json_response_ok(self, command: SmarterJournalCliCommands, data: dict = None) -> SmarterJournaledJsonResponse:
+    def json_response_ok(
+        self, command: SmarterJournalCliCommands, data: dict = None, message: str = None
+    ) -> SmarterJournaledJsonResponse:
         """Return a common success response."""
         data = data or {}
 
@@ -393,16 +550,16 @@ class AbstractBroker(ABC, SmarterHelperMixin):
 
         if command == SmarterJournalCliCommands.GET:
             kind = inflect_engine.plural(self.kind)
-            message = f"{kind} {operated} successfully"
+            message = message or f"{kind} {operated} successfully"
         elif command == SmarterJournalCliCommands.LOGS:
             kind = self.kind
-            message = f"{kind} {self.name} successfully retrieved logs"
+            message = message or f"{kind} {self.name} successfully retrieved logs"
         elif command == SmarterJournalCliCommands.MANIFEST_EXAMPLE:
             kind = self.kind
-            message = f"{kind} example manifest successfully generated"
+            message = message or f"{kind} example manifest successfully generated"
         else:
             kind = self.kind
-            message = f"{kind} {self.name} {operated} successfully"
+            message = message or f"{kind} {self.name} {operated} successfully"
         retval = self._retval(data=data, message=message)
         return SmarterJournaledJsonResponse(
             request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.OK, safe=False
@@ -490,11 +647,12 @@ class AbstractBroker(ABC, SmarterHelperMixin):
     ###########################################################################
     # data transformation helpers
     ###########################################################################
-    def set_and_verify_name_param(self, command: SmarterJournalCliCommands = None):
+    def set_and_verify_name_param(self, *args, command: SmarterJournalCliCommands = None, **kwargs):
         """
         Set self.name from the 'name' query string param and then verify that it
         was actually passed.
         """
+        self._name = kwargs.get("name", None) or self._name
         if not self.manifest and not self.name:
             raise SAMBrokerErrorNotReady(
                 f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",
@@ -514,13 +672,20 @@ class AbstractBroker(ABC, SmarterHelperMixin):
         ]
         return fields_and_types
 
-    def camel_to_snake(self, dictionary: dict) -> dict:
+    def camel_to_snake(self, data: Union[str, dict, list]) -> dict:
         """Converts camelCase dict keys to snake_case."""
 
         def convert(name: str):
             s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
             return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
+        if isinstance(data, str):
+            return convert(data)
+        if isinstance(data, list):
+            return [self.camel_to_snake(item) for item in data]
+        if not isinstance(data, dict):
+            raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
+        dictionary: dict = data if isinstance(data, dict) else {}
         retval = {}
         for key, value in dictionary.items():
             if isinstance(value, dict):
@@ -529,17 +694,27 @@ class AbstractBroker(ABC, SmarterHelperMixin):
             retval[new_key] = value
         return retval
 
-    def snake_to_camel(self, dictionary: dict, convert_values: bool = False) -> dict:
+    def snake_to_camel(self, data: Union[str, dict, list], convert_values: bool = False) -> dict:
         """Converts snake_case dict keys to camelCase."""
 
         def convert(name: str):
             components = name.split("_")
             return components[0] + "".join(x.title() for x in components[1:])
 
+        if isinstance(data, str):
+            return convert(data)
+
+        if isinstance(data, list):
+            return [self.snake_to_camel(item, convert_values=convert_values) for item in data]
+
+        if not isinstance(data, dict):
+            raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
+
+        dictionary: dict = data if isinstance(data, dict) else {}
         retval = {}
         for key, value in dictionary.items():
             if isinstance(value, dict):
-                value = self.snake_to_camel(dictionary=value, convert_values=convert_values)
+                value = self.snake_to_camel(data=value, convert_values=convert_values)
             new_key = convert(key)
             if convert_values:
                 new_value = convert(value) if isinstance(value, str) else value

@@ -140,9 +140,8 @@ INSTALLED_APPS = [
     "smarter.lib.journal",
     "smarter.apps.account",
     "smarter.apps.api",
-    "smarter.apps.chat",
     "smarter.apps.chatbot",
-    "smarter.apps.chatapp",
+    "smarter.apps.prompt",
     "smarter.apps.cms",
     "smarter.apps.dashboard",
     "smarter.apps.docs",
@@ -460,6 +459,7 @@ SMTP_USE_SSL = smarter_settings.smtp_use_ssl
 SMTP_USE_TLS = smarter_settings.smtp_use_tls
 SMTP_USERNAME = smarter_settings.smtp_username
 
+WAFFLE_CREATE_MISSING_SWITCHES = True
 
 # Wagtail settings
 # This is the human-readable name of your Wagtail install

@@ -16,10 +16,6 @@ PROJECT_ROOT = str(Path(HERE).parent.parent.parent.parent)
 sys.path.append(PROJECT_ROOT)  # noqa: E402
 
 
-def noop():
-    """Test to ensure that test suite setup works and is importable."""
-
-
 def get_test_file(filename: str):
     """Load a mock lambda_index event."""
     path = os.path.join(HERE, "mock_data", filename)

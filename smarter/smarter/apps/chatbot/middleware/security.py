@@ -9,10 +9,13 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseBadRequest
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseBadRequest,
+    SmarterHttpResponseServerError,
+)
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from ..models import ChatBot, get_cached_chatbot_by_request
 
@@ -45,6 +48,12 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # these typically originate from health checks from load balancers.
         # ---------------------------------------------------------------------
         host = request.get_host()
+        if not host:
+            return SmarterHttpResponseServerError(
+                request=request,
+                error_message="Internal error (500) - could not parse request.",
+            )
+
         internal_ip_prefixes = ["192.168."]
         if any(host.startswith(prefix) for prefix in internal_ip_prefixes):
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
@@ -57,6 +66,18 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
         # 2.) If the request is from a local host, allow it to pass through
         # ---------------------------------------------------------------------
+        host_no_port = host.split(":")[0]
+        base_host = host_no_port.split(".")[-1]
+        if base_host in [h.rsplit(".", maxsplit=1)[-1] for h in SmarterValidator.LOCAL_HOSTS]:
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
+                logger.info(
+                    "%s %s base host matched in SmarterValidator.LOCAL_HOSTS: %s",
+                    self.formatted_class_name,
+                    host,
+                    SmarterValidator.LOCAL_HOSTS,
+                )
+            return None
+
         if host in SmarterValidator.LOCAL_HOSTS:
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info(
@@ -67,17 +88,17 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                 )
             return None
 
-        url = request.build_absolute_uri()
+        url = self.smarter_build_absolute_uri(request)
         parsed_url = urlparse(url)
 
         # 3.) readiness and liveness checks
         # ---------------------------------------------------------------------
         path_parts = list(filter(None, parsed_url.path.split("/")))
         # if the entire path is healthz or readiness then we don't need to check
-        if len(path_parts) == 1 and path_parts[0] in ["healthz", "readiness"]:
+        if len(path_parts) == 1 and path_parts[0] in self.amnesty_urls:
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info(
-                    "%s %s found in health/readiness check: %s",
+                    "%s %s found in amnesty_urls: %s",
                     self.formatted_class_name,
                     host,
                     path_parts,
@@ -112,4 +133,6 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             return None
 
         logger.error("%s %s failed security tests.", self.formatted_class_name, url)
-        return SmarterHttpResponseBadRequest(request=request, error_message="Bad Request (400) - Invalid Hostname.")
+        return SmarterHttpResponseBadRequest(
+            request=request, error_message="SecurityMiddleware() Bad Request (400) - Invalid Hostname."
+        )

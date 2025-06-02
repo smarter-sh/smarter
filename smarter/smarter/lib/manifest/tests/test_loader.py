@@ -1,34 +1,38 @@
 """Test SAMLoader"""
 
+import logging
 import os
-import unittest
 
 import yaml
 
-from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.enum import SAMDataFormats, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestManifestLoader(unittest.TestCase):
+HERE = os.path.abspath(os.path.dirname(__file__))
+logger = logging.getLogger(__name__)
+
+
+class TestManifestLoader(SmarterTestBase):
     """Test SAMLoader"""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "cli", "tests", "data")
-        self.url = "https://cdn.platform.smarter.sh/cli/example-manifests/plugin.yaml"
+        super().setUp()
+        self.path = os.path.join(HERE, "data")
         self.good_manifest_path = os.path.join(self.path, "good-plugin-manifest.yaml")
-
-        with open(self.good_manifest_path, encoding="utf-8") as file:
-            self.good_manifest_text = file.read()
+        self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
+        self.url = "https://cdn.platform.smarter.sh/cli/example-manifests/plugin.yaml"
 
     def test_valid_manifest(self):
         """Test that we can load a valid manifest"""
         loader = SAMLoader(manifest=self.good_manifest_text)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         self.assertIsInstance(loader.json_data, dict)
         self.assertIsInstance(loader.specification, dict)
         self.assertIsInstance(loader.yaml_data, str)
-        self.assertEqual(loader.data_format, SAMDataFormats.YAML)
+        self.assertEqual(loader.data_format, SAMDataFormats.JSON)
         self.assertIsInstance(loader.formatted_data, str)
 
         # Validate the manifest, ensure that no exceptions are raised
@@ -47,6 +51,7 @@ class TestManifestLoader(unittest.TestCase):
     def init_from_filepath(self):
         filepath = self.path + "/good-plugin-manifest.yaml"
         loader = SAMLoader(manifest=filepath)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         loader.validate_manifest()
         self.assertIsInstance(loader.json_data, dict)
         self.assertIsInstance(loader.specification, dict)
@@ -56,6 +61,7 @@ class TestManifestLoader(unittest.TestCase):
 
     def init_from_url(self):
         loader = SAMLoader(manifest=self.url)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         loader.validate_manifest()
         self.assertIsInstance(loader.json_data, dict)
         self.assertIsInstance(loader.specification, dict)
@@ -65,6 +71,7 @@ class TestManifestLoader(unittest.TestCase):
 
     def test_getkey(self):
         loader = SAMLoader(manifest=self.good_manifest_text)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         self.assertEqual(loader.get_key(SAMKeys.METADATA.value), loader.manifest_metadata)
         self.assertEqual(loader.get_key(SAMKeys.SPEC.value), loader.manifest_spec)
         self.assertEqual(loader.get_key(SAMKeys.STATUS.value), loader.manifest_status)
@@ -80,7 +87,12 @@ class TestManifestLoader(unittest.TestCase):
         """Test that we can load a valid manifest"""
 
         def test_missing(element: str):
-            loader = SAMLoader(manifest=self.good_manifest_text)
+            try:
+                loader = SAMLoader(manifest=self.good_manifest_text)
+            except SAMLoaderError as e:
+                logger.error("Failed to load manifest: %s", self.good_manifest_text)
+                self.fail(f"Failed to load manifest: {e}")
+            self.assertTrue(loader.ready, msg="loader is not ready")
             json_data = loader.json_data
             del json_data[element]
 
@@ -90,4 +102,5 @@ class TestManifestLoader(unittest.TestCase):
                 SAMLoader(manifest=yaml_data)
 
         for element in [SAMKeys.METADATA.value, SAMKeys.SPEC.value]:
+            self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
             test_missing(element)

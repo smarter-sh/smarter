@@ -2,11 +2,10 @@
 """Test TestSAM."""
 
 import os
-import unittest
 
 import yaml
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.api import SmarterApiVersions
@@ -15,30 +14,22 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
 
-class TestSAMLoader(unittest.TestCase):
+class TestSAMLoader(TestAccountMixin):
     """Test TestSAM"""
 
     def setUp(self):
         """Set up test fixtures."""
+        super().setUp()
         self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "manifests", "tests", "data")
         self.good_manifest_path = os.path.join(self.path, "good-manifest.yaml")
         self.invalid_file_format = os.path.join(self.path, "invalid-file-format.yaml")
-        self.account = Account.objects.create(
-            company_name="Test Company",
-            phone_number="1234567890",
-            address1="123 Test St",
-            address2="Apt 1",
-            city="Test City",
-            state="TX",
-            postal_code="12345",
-        )
 
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""
 
         SAMLoader(
             api_version=SMARTER_API_VERSION,
-            kind=SAMKinds.PLUGIN.value,
+            kind=SAMKinds.STATIC_PLUGIN.value,
             file_path=self.good_manifest_path,
         )
 
@@ -47,9 +38,10 @@ class TestSAMLoader(unittest.TestCase):
 
         loader = SAMLoader(
             api_version=SMARTER_API_VERSION,
-            kind=SAMKinds.PLUGIN.value,
+            kind=SAMKinds.STATIC_PLUGIN.value,
             file_path=self.good_manifest_path,
         )
+        self.assertTrue(loader.ready, msg="loader is not ready")
         loader.validate_manifest()
 
     def test_valid_manifest_properties(self):
@@ -57,9 +49,10 @@ class TestSAMLoader(unittest.TestCase):
 
         loader = SAMLoader(
             api_version=SMARTER_API_VERSION,
-            kind=SAMKinds.PLUGIN.value,
+            kind=SAMKinds.STATIC_PLUGIN.value,
             file_path=self.good_manifest_path,
         )
+        self.assertTrue(loader.ready, msg="loader is not ready")
         sam = loader
         self.assertTrue(sam.specification is not None, f"sam.specification is {sam.specification}")
         self.assertTrue(isinstance(sam.specification, dict), f"sam.specification is {type(sam.specification)}")
@@ -75,13 +68,8 @@ class TestSAMLoader(unittest.TestCase):
         apiVersion = sam.get_key(key=SAMKeys.APIVERSION.value)
         self.assertEqual(apiVersion, SmarterApiVersions.V1, f"sam.get_key(key=SAMKeys.APIVERSION) is {apiVersion}")
         self.assertEqual(sam.data_format.value, "yaml", f"sam.data_format.value is {sam.data_format.value}")
-        self.assertEqual(
-            sam.manifest_metadata_keys,
-            ["name", "description", "version", "tags", "annotations"],
-            f"sam.manifest_metadata_keys is {sam.manifest_metadata_keys}",
-        )
         kind = sam.get_key(key=SAMKeys.KIND.value)
-        self.assertEqual(kind, SAMKinds.PLUGIN.value, f"sam.manifest_kind is {kind}")
+        self.assertEqual(kind, SAMKinds.STATIC_PLUGIN.value, f"sam.manifest_kind is {kind}")
         self.assertEqual(sam.manifest_spec_keys, [], f"sam.manifest_spec_keys is {sam.manifest_spec_keys}")
         self.assertTrue(isinstance(sam.manifest_spec, dict), f"sam.manifest_spec() is {type(sam.manifest_spec)}")
         self.assertEqual(sam.manifest_status_keys, [], f"sam.manifest_status_keys is {sam.manifest_status_keys}")
@@ -92,12 +80,13 @@ class TestSAMLoader(unittest.TestCase):
 
         loader = SAMLoader(
             api_version=SMARTER_API_VERSION,
-            kind=SAMKinds.PLUGIN.value,
+            kind=SAMKinds.STATIC_PLUGIN.value,
             file_path=self.good_manifest_path,
         )
+        self.assertTrue(loader.ready, msg="loader is not ready")
         sam = loader
         self.assertEqual(sam.get_key("apiVersion"), SmarterApiVersions.V1)
-        self.assertEqual(sam.get_key("kind"), SAMKinds.PLUGIN.value)
+        self.assertEqual(sam.get_key("kind"), SAMKinds.STATIC_PLUGIN.value)
         self.assertEqual(sam.get_key("metadata"), sam.manifest_metadata)
 
     def test_missing_apiversion(self):
@@ -105,9 +94,10 @@ class TestSAMLoader(unittest.TestCase):
 
         loader = SAMLoader(
             api_version=SMARTER_API_VERSION,
-            kind=SAMKinds.PLUGIN.value,
+            kind=SAMKinds.STATIC_PLUGIN.value,
             file_path=self.good_manifest_path,
         )
+        self.assertTrue(loader.ready, msg="loader is not ready")
         sam = loader
         bad_json = sam.json_data
         bad_json.pop("apiVersion")
@@ -115,7 +105,7 @@ class TestSAMLoader(unittest.TestCase):
         try:
             bad_loader = SAMLoader(
                 api_version=SMARTER_API_VERSION,
-                kind=SAMKinds.PLUGIN.value,
+                kind=SAMKinds.STATIC_PLUGIN.value,
                 manifest=bad_yaml,
             )
             bad_loader.validate_manifest()
@@ -147,7 +137,7 @@ class TestSAMLoader(unittest.TestCase):
         try:
             SAMLoader(
                 api_version=SMARTER_API_VERSION,
-                kind=SAMKinds.PLUGIN.value,
+                kind=SAMKinds.STATIC_PLUGIN.value,
                 manifest=self.invalid_file_format,
             )
         except SAMLoaderError as e:

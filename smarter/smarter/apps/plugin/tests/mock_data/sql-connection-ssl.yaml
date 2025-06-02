@@ -1,0 +1,21 @@
+---
+apiVersion: smarter.sh/v1
+kind: SqlConnection
+metadata:
+  name: test_sql_connection
+  description: points to the Django mysql database
+  version: 0.1.0
+spec:
+  connection:
+    dbEngine: django.db.backends.mysql
+    hostname: smarter-mysql
+    port: 3306
+    username: smarter
+    password: smarter
+    database: smarter
+    timeout: 30
+    useSsl: true
+    sslCert: /path/to/cert.pem
+    sslKey: /path/to/key.pem
+    sslCa: /path/to/ca.pem
+    authenticationMethod: tcpip

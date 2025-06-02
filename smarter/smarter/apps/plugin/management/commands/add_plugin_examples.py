@@ -4,6 +4,7 @@
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.lib.django.user import User
 
@@ -14,7 +15,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("username", type=str, nargs="?", default=None, help="A user associated with the account.")
+        parser.add_argument("--username", type=str, required=True, help="The user that will own the new plugin.")
 
     def handle(self, *args, **options):
         """create the plugin."""
@@ -28,7 +29,7 @@ class Command(BaseCommand):
             return
 
         try:
-            user_profile = UserProfile.objects.get(user=user)
+            user_profile = get_cached_user_profile(user=user)
         except UserProfile.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"User profile for {user.username} {user.email} does not exist."))
             return

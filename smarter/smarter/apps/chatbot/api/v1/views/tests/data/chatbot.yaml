@@ -2,7 +2,7 @@
 apiVersion: smarter.sh/v1
 kind: Chatbot
 metadata:
-  name: TestChatbot
+  name: test_chatbot
   description: chatbot for running unit test
   version: 1.0.0
 spec:
@@ -31,7 +31,7 @@ spec:
     subdomain: null
     customDomain: null
   plugins:
-    - ExampleConfiguration
-    - EverlastingGobstopper
+    - example_configuration
+    - everlasting_gobstopper
   functions:
     - weather

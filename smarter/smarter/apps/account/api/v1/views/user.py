@@ -174,7 +174,6 @@ def create_user(request):
     try:
         with transaction.atomic():
             user = User.objects.create_user(**data)
-            user.save()
             UserProfile.objects.create(user=request.user, account=account)
     except Exception as e:
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
@@ -209,19 +208,18 @@ def update_user(request):
 
 
 def delete_user(request, user_id: int = None):
-    """delete a plugin by id."""
+    """delete a user by id."""
+    user: UserType = None
     try:
         if user_id:
-            account = Account.objects.get(id=user_id)
-        else:
-            account = UserProfile.objects.get(user=request.user).account
-    except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+            user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     try:
         with transaction.atomic():
-            account.delete()
-            UserProfile.objects.get(user=request.user).delete()
+            UserProfile.objects.get(user=user).delete()
+            user.delete()
     except Exception as e:
         return JsonResponse(
             {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value
