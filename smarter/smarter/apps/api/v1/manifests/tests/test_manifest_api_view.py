@@ -5,15 +5,19 @@ from http import HTTPStatus
 
 from django.urls import reverse
 
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
+from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+
+from .base_class import ApiV1CliTestBase
 
 
-class TestManifestApiView(ApiV1TestBase):
+class TestManifestApiView(ApiV1CliTestBase):
     """Test ManifestApiView"""
 
     def test_valid_manifest(self):
         """Test that we get OK responses for post, put, patch, delete when passing a valid manifest"""
 
-        path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
+        path = reverse(
+            ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.example_manifest, kwargs={"kind": "plugin"}
+        )
         _, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)

@@ -7,21 +7,12 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
-from smarter.common.api import SmarterApiVersions
+from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.lib.django.user import UserType
-from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import (
-    AbstractBroker,
-    SAMBrokerError,
-    SAMBrokerErrorNotFound,
-)
+from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
-from smarter.lib.manifest.loader import SAMLoader
 
 
 MAX_RESULTS = 1000
@@ -35,58 +26,16 @@ class SAMUserBrokerError(SAMBrokerError):
         return "Smarter API User Manifest Broker Error"
 
 
-class SAMTestBroker(AbstractBroker, AccountMixin):
+class SAMTestBroker(AbstractBroker):
     """Test class for unit tests of the abstract broker class."""
 
     # override the base abstract manifest model with the User model
-    _manifest: SAMPlugin = None
-    _pydantic_model: typing.Type[SAMPlugin] = SAMPlugin
+    # FIX NOTE: We shouldn't be using an implementation of the actual
+    #           manifest model here. We should be using a test model.
+    _manifest: SAMStaticPlugin = None
+    _pydantic_model: typing.Type[SAMStaticPlugin] = SAMStaticPlugin
     _user: UserType = None
     _username: str = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: HttpRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        self._username: str = self.params.get("username", None)
-        if self._username:
-            try:
-                self._user = None
-                self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
-            except UserProfile.DoesNotExist as e:
-                raise SAMBrokerErrorNotFound(
-                    message=f"{self.kind} {self._username} not found in your account.",
-                    thing=self.kind,
-                    command=SmarterJournalCliCommands.GET,
-                ) from e
 
     @property
     def username(self) -> str:
@@ -131,13 +80,24 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for logging purposes.
+        This is used to provide a more readable class name in logs.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.SAMTestBroker()"
+
+    @property
     def kind(self) -> str:
+        # FIX NOTE: WE SHOULD NOT BE USING AN ACTUAL KIND HERE. WE NEED A
+        #           TEST KIND FOR THE TESTS.
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPlugin:
+    def manifest(self) -> SAMStaticPlugin:  # FIX NOTE: This should be a test model
         """
-        SAMPlugin() is a Pydantic model
+        SAMStaticPlugin() is a Pydantic model
         that is used to represent the Smarter API User manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -148,7 +108,7 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMPlugin(
+            self._manifest = SAMStaticPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=self.loader.manifest_metadata,
@@ -161,26 +121,26 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
     # Smarter manifest abstract method implementations
     ###########################################################################
 
-    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         super().chat(request=request, kwargs=kwargs)
 
-    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         super().describe(request=request, kwargs=kwargs)
 
-    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         super().delete(request=request, kwargs=kwargs)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         super().deploy(request=request, kwargs=kwargs)
 
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         super().example_manifest(request=request, kwargs=kwargs)
 
-    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         super().get(request=request, kwargs=kwargs)
 
-    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         super().logs(request=request, kwargs=kwargs)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         super().undeploy(request=request, kwargs=kwargs)

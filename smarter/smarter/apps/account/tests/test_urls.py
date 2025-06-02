@@ -1,55 +1,31 @@
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
-# python stuff
-import os
-import unittest
-
 from django.test import Client
 from django.urls import reverse
 
 # our stuff
-from smarter.lib.django.user import User, UserType
-
-from ..models import Account, UserProfile
+from smarter.apps.account.tests.mixins import TestAccountMixin
 
 
-class TestUrls(unittest.TestCase):
+class TestUrls(TestAccountMixin):
     """Test Account views."""
-
-    user: UserType
 
     def setUp(self):
         """Set up test fixtures."""
-        self.client = None
-        username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create_user(
-            username=username, password="12345", is_staff=True, is_active=True, is_superuser=True
-        )
-        self.account = Account.objects.create(
-            company_name="Test Company",
-            phone_number="1234567890",
-            address1="123 Test St",
-            address2="Apt 1",
-            city="Test City",
-            state="TX",
-            postal_code="12345",
-        )
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            account=self.account,
-            is_test=True,
-        )
+        super().setUp()
+        self.client = Client()
 
     def tearDown(self):
-        """Clean up test fixtures."""
-        self.user.delete()
-        self.account.delete()
-        self.user_profile.delete()
+
+        if self.client is not None:
+            self.client.logout()
+        self.client = None
+        super().tearDown()
 
     def test_account_view(self):
         """test that we can see the account view and that it matches the account data."""
-        self.client = Client()
+        namespace = "account"
 
         def verify_response(reverse_name: str, status_code):
             url = reverse(reverse_name)
@@ -57,11 +33,11 @@ class TestUrls(unittest.TestCase):
             response = self.client.get(url)
             self.assertEqual(response.status_code, status_code)
 
-        verify_response("account_login", 200)
-        verify_response("account_logout", 302)
-        verify_response("account_register", 200)
-        verify_response("account_password_reset_request", 200)
-        verify_response("account_password_confirm", 200)
+        verify_response(f"{namespace}:account_login", 200)
+        verify_response(f"{namespace}:account_logout", 302)
+        verify_response(f"{namespace}:account_register", 200)
+        verify_response(f"{namespace}:account_password_reset_request", 200)
+        verify_response(f"{namespace}:account_password_confirm", 200)
 
-        self.client.force_login(self.user)
-        verify_response("account_deactivate", 200)
+        self.client.force_login(self.non_admin_user)
+        verify_response(f"{namespace}:account_deactivate", 200)

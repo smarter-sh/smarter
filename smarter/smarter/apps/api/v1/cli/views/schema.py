@@ -24,6 +24,15 @@ class ApiV1CliSchemaApiView(CliBaseApiView):
     authentication_classes = ()
     permission_classes = ()
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        inherited_class = super().formatted_class_name
+        return f"{inherited_class}.ApiV1CliSchemaApiView()"
+
     @swagger_auto_schema(
         operation_description="""
 Executes the 'schema' command for all Smarter resources.  The resource name is passed in the url query parameters.
@@ -63,4 +72,5 @@ The response from this endpoint is a JSON object containing the published JSON s
         Returns:
         Response: A JSON object containing the published JSON schema.
         """
-        return self.broker.schema(request=request, kwargs=kwargs)
+        response = self.broker.schema(request=request, kwargs=kwargs)
+        return response

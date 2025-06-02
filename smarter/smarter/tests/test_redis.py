@@ -1,22 +1,23 @@
 # pylint: disable=wrong-import-position
 """Test User."""
 
-# python stuff
-import unittest
-
 from django.core.cache import caches
 
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
-class TestRedis(unittest.TestCase):
+
+class TestRedis(SmarterTestBase):
     """Test Account model"""
 
     def setUp(self):
         """Set up test fixtures."""
+        super().setUp()
         self.cache = caches["default"]
 
     def tearDown(self):
         """Clean up test fixtures."""
         self.cache.clear()
+        super().tearDown()
 
     def test_redis_is_available(self):
         """Test that Redis cache is reachable."""

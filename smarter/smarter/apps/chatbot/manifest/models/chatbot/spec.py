@@ -133,5 +133,5 @@ class SAMChatbotSpec(AbstractSAMSpecBase):
     )
     apiKey: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.api_key[str]. Optional. The name of the API key that this chatbot uses for authentication. Example: 'my_api_key'. API keys are only necessary for chatbots that are not public facing. This is the name of the API key that is used to authenticate the chatbot with the Smarter API. API keys are issued by a Smarter platform administrator and are used to authenticate the chatbot with the Smarter API.",
+        description=f"{class_identifier}.apiKey[str]. Optional. The name of the API key that this chatbot uses for authentication. Example: 'my_api_key'. API keys are only necessary for chatbots that are not public facing. This is the name of the API key that is used to authenticate the chatbot with the Smarter API. API keys are issued by a Smarter platform administrator and are used to authenticate the chatbot with the Smarter API.",
     )

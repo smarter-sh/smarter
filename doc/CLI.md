@@ -55,6 +55,17 @@ Manifest processing depends on a abstract broker service. Brokers are implemente
 - Instantiating the correct Python class for the manifest
 - Implementing the services that back http requests: get, post, patch, put, delete
 
+A brokered entity consists of the following:
+
+- [Pydantic model](../smarter/smarter/apps/account/manifest/models/secret/). This is a Pydantic model that describes the Manifest yaml document. Smarter manifests closely resemble Kubernetes manifests.
+- [Broker](../smarter/smarter/apps/account/manifest/brokers/secret.py). Brokers marshal requests to the correct Broker class and method.
+- [Transformer](../smarter/smarter/apps/account/manifest/transformers/secret.py). Transformers map data to/from a Smarter manifest and a Django object relational model (ORM).
+- [Docs url endpoints](../smarter/smarter/apps/docs/urls.py). Examples: https://platform.smarter.sh/docs/manifest/secret/ and https://platform.smarter.sh/docs/json-schema/secret/
+- [Kind registration](../smarter/smarter/apps/api/v1/manifests/enum.py)
+- [Broker registration](../smarter/smarter/apps/api/v1/cli/brokers.py). The Broker class implements an enumeration of all resource `Kinds`.
+- [Json Schema docs view](../smarter/smarter/apps/docs/views/json_schema.py). Json schemas describe the Pydantic data model for the brokered resource. These are used for data-driven apps and services, such as the VS Code extension for Smarter manifests
+- [Manifest docs view](../smarter/smarter/apps/docs/views/manifest.py). All brokers implement an `example_manifest()` method which, intuitively, generates a valid example Smarter yaml manifest for the `Kind` of resource.
+
 #### Code samples
 
 - Abstract [broker](../smarter/smarter/apps/api/v0/manifests/broker.py)

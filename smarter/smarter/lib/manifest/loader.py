@@ -9,6 +9,7 @@ import requests
 import yaml
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.classes import SmarterHelperMixin
 
 from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
 from .exceptions import SAMExceptionBase
@@ -73,7 +74,7 @@ def validate_key(key: str, key_value: Any, spec: Any):
             raise SAMLoaderError(f"Invalid value for key {key}. Expected {spec} but got {key_value}")
 
 
-class SAMLoader:
+class SAMLoader(SmarterHelperMixin):
     """
     Smarter API Manifest Loader base class.
     """
@@ -141,6 +142,9 @@ class SAMLoader:
         # of the manifest.
         self.validate_manifest()
 
+    def __str__(self):
+        return self.formatted_class_name + f"({self.manifest_api_version}, {self.manifest_kind})"
+
     # -------------------------------------------------------------------------
     # data setters and getters. Sort out whether we received JSON or YAML data
     # -------------------------------------------------------------------------
@@ -172,6 +176,8 @@ class SAMLoader:
     def data_format(self) -> SAMDataFormats:
         if self._data_format:
             return self._data_format
+        if not self.raw_data:
+            return SAMDataFormats.UNKNOWN
         if isinstance(self.raw_data, dict):
             # we are a json dict
             self._data_format = SAMDataFormats.JSON
@@ -188,6 +194,8 @@ class SAMLoader:
                     self._data_format = SAMDataFormats.YAML
                 except yaml.YAMLError as e:
                     raise SAMLoaderError("Invalid data format. Supported formats: json, yaml") from e
+        if not self._data_format:
+            return SAMDataFormats.UNKNOWN
         return self._data_format
 
     @property
@@ -215,7 +223,7 @@ class SAMLoader:
     def get_key(self, key) -> any:
         try:
             return self.json_data[key]
-        except KeyError:
+        except (KeyError, TypeError):
             return None
 
     def validate_manifest(self):
@@ -247,8 +255,9 @@ class SAMLoader:
 
         # top-level validations of the manifest itself.
         if not self.raw_data:
-            raise SAMLoaderError("Received empty or invalid data.")
-        if not self.data_format:
+            logger.warning("%s.validate_manifest() Received empty or invalid data.", self.formatted_class_name)
+            return None
+        if not self.data_format in [SAMDataFormats.JSON, SAMDataFormats.YAML]:
             raise SAMLoaderError("Invalid data format. Supported formats: json, yaml")
         # recursively validate the json representation of the manifest data
         recursive_validator()
@@ -289,3 +298,16 @@ class SAMLoader:
     @property
     def manifest_status(self) -> dict:
         return self.get_key(SAMKeys.STATUS.value)
+
+    @property
+    def ready(self) -> bool:
+        """
+        Returns True if the manifest is ready to be used. This means that
+        the manifest has been validated and is in a valid state.
+        """
+        return (
+            bool(self.manifest_api_version)
+            and bool(self.manifest_kind)
+            and bool(self.manifest_metadata)
+            and bool(self.manifest_spec)
+        )

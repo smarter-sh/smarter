@@ -5,7 +5,6 @@ from http import HTTPStatus
 from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import (
     SCLIResponseMetadata,
@@ -13,8 +12,10 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
 )
 
+from .base_class import ApiV1CliTestBase
 
-class TestApiCliV1Status(ApiV1TestBase):
+
+class TestApiCliV1Status(ApiV1CliTestBase):
     """
     Test Api v1 CLI non-brokered status command
 
@@ -36,7 +37,7 @@ class TestApiCliV1Status(ApiV1TestBase):
     def test_status(self) -> None:
         """Test status command"""
 
-        path = reverse(ApiV1CliReverseViews.status, kwargs=None)
+        path = reverse(self.namespace + ApiV1CliReverseViews.status, kwargs=None)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
