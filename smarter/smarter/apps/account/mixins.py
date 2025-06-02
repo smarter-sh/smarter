@@ -8,7 +8,7 @@ from django.http import HttpRequest
 
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.exceptions import SmarterBusinessRuleViolation, SmarterValueError
+from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django import waffle
 from smarter.lib.django.serializers import UserMiniSerializer
 from smarter.lib.django.user import UserType
@@ -303,19 +303,14 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns True if the account, user, and user_profile are all set.
         """
-        retval = bool(SmarterHelperMixin.ready) and bool(self._account) and bool(self._user) and bool(self.user_profile)
-        if retval is None:
-            raise SmarterValueError(f"{self.formatted_class_name}: super().ready returned None. This is a bug.")
-        if not retval and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
-            logger.warning(
-                "%s: AccountMixin is not ready. super(): %s, account: %s, user: %s, user_profile: %s",
-                self.formatted_class_name,
-                super().ready,
-                self._account,
-                self._user,
-                self._user_profile,
-            )
-        return retval
+        return True
+
+    @property
+    def is_authenticated(self) -> bool:
+        """
+        Returns True if the user is authenticated and is associated with an Account.
+        """
+        return bool(self._user) and self._user.is_authenticated and bool(self._account) and bool(self._user_profile)
 
     def to_json(self):
         """

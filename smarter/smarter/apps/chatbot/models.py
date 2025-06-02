@@ -16,7 +16,11 @@ from rest_framework import serializers
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.serializers import AccountMiniSerializer
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import (
+    account_number_from_url,
+    get_cached_account,
+    get_cached_user_profile,
+)
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.conf import settings as smarter_settings
@@ -187,6 +191,9 @@ class ChatBot(TimestampedModel):
         null=True,
         choices=TlsCertificateIssuanceStatusChoices.choices,
     )
+
+    def __str__(self):
+        return self.url if self.url else "undefined"
 
     @property
     def default_system_role_enhanced(self):
@@ -359,9 +366,6 @@ class ChatBot(TimestampedModel):
                 chatbot_deployed.send(sender=self.__class__, chatbot=self)
             if not self.deployed and orig.deployed:
                 chatbot_undeployed.send(sender=self.__class__, chatbot=self)
-
-    def __str__(self):
-        return self.url if self.url else "undefined"
 
 
 class ChatBotAPIKey(TimestampedModel):
@@ -604,18 +608,33 @@ class ChatBotHelper(SmarterRequestMixin):
                 f"__init__() url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
             )
 
-        if self._account and self._name:
-            self._chatbot = self._chatbot or get_cached_chatbot(account=self._account, name=self._name)
+        if self.account and self._name:
+            self._chatbot = self._chatbot or get_cached_chatbot(account=self.account, name=self._name)
         if self.ready:
             self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from account and name")
             return None
 
         self.helper_warning(
-            f"__init__() ChatBotHelper did not find a chatbot for url={ self._url } name={ self._name } chatbot_id={ self._chatbot_id } user={ self._user } account={ self._account }."
+            f"__init__() ChatBotHelper did not find a chatbot for url={ self._url } name={ self._name } chatbot_id={ self._chatbot_id } user={ self._user } account={ self.account }."
         )
 
     def __str__(self):
         return str(self.chatbot) if self._chatbot else "undefined"
+
+    @property
+    def account(self) -> Account:
+        """
+        Override the account based on the named url, if available.
+        example: http://education.3141-5926-5359.api.localhost:8000/config/
+        """
+        account_number = account_number_from_url(self.url)
+        if account_number:
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
+                self.helper_logger(f"overriding account with account_number from named url: {self.url}")
+            return get_cached_account(account_number=account_number)
+
+        # from the super()
+        return self._account
 
     @property
     def chatbot_id(self) -> int:
