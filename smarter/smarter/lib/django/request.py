@@ -234,7 +234,12 @@ class SmarterRequestMixin(AccountMixin):
         if not path:
             return False
 
-        if path in ["/favicon.ico", "/robots.txt", "/sitemap.xml"]:
+        if self.parsed_url and self.parsed_url.netloc and self.parsed_url.netloc[:7] == "192.168":
+            # internal processes running in a AWS kubernetes internal subnet.
+            # definitely not a chatbot request.
+            return False
+
+        if path in self.amnesty_urls:
             return False
         if path.startswith("/admin/"):
             return False
@@ -340,12 +345,6 @@ class SmarterRequestMixin(AccountMixin):
         if not self.smarter_request:
             logger.warning(
                 "%s.cache_key() - request is None or not set. Cannot generate cache key.",
-                self.formatted_class_name,
-            )
-            return None
-        if not self.user or not self.account:
-            logger.warning(
-                "%s.cache_key() - request is not authenticated. Cannot generate cache key.",
                 self.formatted_class_name,
             )
             return None

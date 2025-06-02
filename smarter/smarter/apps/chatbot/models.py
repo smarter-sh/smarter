@@ -569,6 +569,10 @@ class ChatBotHelper(SmarterRequestMixin):
         self._err: str = None
 
         super().__init__(request, **kwargs)
+        if not self.qualified_request:
+            self._err = f"ChatBotHelper.__init__() not a qualified url. Quitting. {self.url}"
+            logger.warning(self._err)
+            return None
 
         if not self.user or not self.user.is_authenticated:
             logger.warning("ChatBotHelper.__init__() called with unauthenticated request")

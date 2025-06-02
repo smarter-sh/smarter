@@ -56,6 +56,14 @@ class SmarterHelperMixin:
     def ready(self) -> bool:
         return True
 
+    @property
+    def amnesty_urls(self) -> list[str]:
+        """
+        A list of URLs that are exempt from certain checks.
+        This is a placeholder and should be overridden in subclasses.
+        """
+        return ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]
+
     def to_json(self) -> dict:
         """
         A placeholder method for converting the object to JSON.
