@@ -141,7 +141,6 @@ class SmarterChatSession(SmarterHelperMixin):
 
 
 # pylint: disable=R0902
-@method_decorator(csrf_exempt, name="dispatch")
 class ChatConfigView(SmarterNeverCachedWebView):
     """
     Chat config view for smarter web. This view is protected and requires the user
@@ -293,6 +292,10 @@ class ChatConfigView(SmarterNeverCachedWebView):
     def __str__(self):
         return str(self.chatbot) if self.chatbot else "ChatConfigView"
 
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
     # pylint: disable=unused-argument
     def post(self, request: WSGIRequest, *args, **kwargs):
         """
@@ -372,7 +375,6 @@ class ChatConfigView(SmarterNeverCachedWebView):
         return retval
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat app view for smarter web. This view is protected and requires the user
@@ -465,6 +467,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         except Exception as e:
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
+    @method_decorator(csrf_exempt)
     def dispatch(self, request: WSGIRequest, *args, **kwargs):
         """
         Dispatch method to handle the request.
