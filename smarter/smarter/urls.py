@@ -1,6 +1,7 @@
 """URL configuration for Smarter Api and web console."""
 
 from logging import getLogger
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -40,6 +41,7 @@ from smarter.apps.docs.views.webserver import (
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
+from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.django.request import SmarterRequestMixin
 
 
@@ -58,7 +60,7 @@ def root_redirector(request: WSGIRequest) -> RedirectView:
     """
     Handles traffic sent to the root of the website. Requests
     can take the form of:
-    1. a chatbot endpoint if the user is not authenticated and the
+    2. a chatbot endpoint if the user is not authenticated and the
        url is of any of the following forms
        - https://example.3141-5926-5359.api.smarter.sh/
        - https://example.3141-5926-5359.api.smarter.sh/config/
@@ -66,20 +68,28 @@ def root_redirector(request: WSGIRequest) -> RedirectView:
        - localhost:8000/api/v1/workbench/1/chat/config/
        - localhost:8000/api/v1/cli/chat/example/
        - localhost:8000/api/v1/cli/chat/example/config/
-    2. the dashboard if the user is authenticated,
-    3. otherwise to the Wagtail docs homepage.
+    3. the dashboard if the user is authenticated,
+    4. otherwise to the Wagtail docs homepage.
     """
-    # 1. check if the url is a chatbot endpoint
-    chatbot = get_cached_chatbot_by_request(request=request)
-    if chatbot:
-        view = DefaultChatbotApiView.as_view()
-        return view(request, chatbot_id=chatbot.id)
+    url = smarter_build_absolute_uri(request)
+    parsed_url = urlparse(url)
+    path_parts = parsed_url.path.strip("/").split("/")
 
-    # 2. check if the user is authenticated, if so redirect to the dashboard
+    # general amnesty cases where we def do not want
+    # instantiate a chatbot
+    if path_parts and parsed_url[0] not in ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]:
+
+        # 2. check if the url is a chatbot endpoint
+        chatbot = get_cached_chatbot_by_request(request=request)
+        if chatbot:
+            view = DefaultChatbotApiView.as_view()
+            return view(request, chatbot_id=chatbot.id)
+
+    # 3. check if the user is authenticated, if so redirect to the dashboard
     if request.user.is_authenticated:
         return redirect(reverse("dashboard:dashboard"))
 
-    # 3. otherwise redirect to the Wagtail docs homepage
+    # 4. otherwise redirect to the Wagtail docs homepage
     return redirect("/docs/")
 
 
