@@ -293,7 +293,10 @@ class ChatProviderBase(ProviderDbMixin):
 
     def prune_empty_values(self, data: dict) -> dict:
         """
-        Remove empty values from a dictionary.
+        Remove empty values from a dictionary. Some
+        LLM providers, including MetaAI and GoogleAI
+        will break if empty values are present in the
+        completion request body.
         """
         if not isinstance(data, dict):
             raise SmarterValueError(f"{self.formatted_class_name}: data must be a dictionary")
@@ -448,7 +451,7 @@ class ChatProviderBase(ProviderDbMixin):
             prompt_tokens=self.prompt_tokens,
             total_tokens=self.total_tokens,
             model=self.model,
-            reference=self.reference,
+            reference=self.reference or "ChatProviderBase._insert_charge_by_type()",
         )
 
 
