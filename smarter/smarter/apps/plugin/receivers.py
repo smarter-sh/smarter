@@ -4,7 +4,7 @@
 import json
 import logging
 
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from requests import Response
@@ -436,4 +436,108 @@ def handle_plugin_api_connection_query_failed(
         formatted_json(connection.get_connection_string()),
         formatted_json(response.json()) if response else None,
         error,
+    )
+
+
+# ------------------------------------------------------------------------------
+# pre_delete signals for
+#    ApiConnection,
+#    PluginDataApi,
+#    PluginDataSql,
+#    PluginDataStatic,
+#    PluginMeta,
+#    PluginPrompt,
+#    PluginSelector,
+#    PluginSelectorHistory,
+#    SqlConnection,
+# ------------------------------------------------------------------------------
+
+
+@receiver(pre_delete, sender=ApiConnection)
+def handle_api_connection_pre_delete(sender, instance, **kwargs):
+    """Handle pre-delete signal for ApiConnection."""
+    logger.info(
+        "%s - %s deleting.",
+        formatted_text(prefix + "ApiConnection()"),
+        instance,
+    )
+
+
+@receiver(pre_delete, sender=SqlConnection)
+def handle_sql_connection_pre_delete(sender, instance, **kwargs):
+    """Handle pre-delete signal for SqlConnection."""
+    logger.info(
+        "%s - %s deleting.",
+        formatted_text(prefix + "SqlConnection()"),
+        instance,
+    )
+
+
+@receiver(pre_delete, sender=PluginDataApi)
+def handle_plugin_data_api_pre_delete(sender, instance, **kwargs):
+    """Handle pre-delete signal for PluginDataApi."""
+    logger.info(
+        "%s - %s deleting.",
+        formatted_text(prefix + "PluginDataApi()"),
+        instance,
+    )
+
+
+@receiver(pre_delete, sender=PluginDataSql)
+def handle_plugin_data_sql_pre_delete(sender, instance, **kwargs):
+    """Handle pre-delete signal for PluginDataSql."""
+    logger.info(
+        "%s - %s deleting.",
+        formatted_text(prefix + "PluginDataSql()"),
+        instance,
+    )
+
+
+@receiver(pre_delete, sender=PluginDataStatic)
+def handle_plugin_data_static_pre_delete(sender, instance, **kwargs):
+    """Handle pre-delete signal for PluginDataStatic."""
+    logger.info(
+        "%s - %s deleting.",
+        formatted_text(prefix + "PluginDataStatic()"),
+        instance,
+    )
+
+
+@receiver(pre_delete, sender=PluginMeta)
+def handle_plugin_meta_pre_delete(sender, instance, **kwargs):
+    """Handle pre-delete signal for PluginMeta."""
+    logger.info(
+        "%s - %s deleting.",
+        formatted_text(prefix + "PluginMeta()"),
+        instance,
+    )
+
+
+@receiver(pre_delete, sender=PluginPrompt)
+def handle_plugin_prompt_pre_delete(sender, instance, **kwargs):
+    """Handle pre-delete signal for PluginPrompt."""
+    logger.info(
+        "%s - %s deleting.",
+        formatted_text(prefix + "PluginPrompt()"),
+        instance,
+    )
+
+
+@receiver(pre_delete, sender=PluginSelector)
+def handle_plugin_selector_pre_delete(sender, instance, **kwargs):
+    """Handle pre-delete signal for PluginSelector."""
+    logger.info(
+        "%s - %s deleting.",
+        formatted_text(prefix + "PluginSelector()"),
+        instance,
+    )
+
+
+@receiver(pre_delete, sender=PluginSelectorHistory)
+def handle_plugin_selector_history_pre_delete(sender, instance, **kwargs):
+    """Handle pre-delete signal for PluginSelectorHistory."""
+    logger.info(
+        "%s - %s deleting.",
+        formatted_text(prefix + "PluginSelectorHistory()"),
+        instance,
     )

@@ -3,7 +3,7 @@
 # pylint: disable=W0612,W0613,C0115
 import logging
 
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 from smarter.apps.plugin.models import PluginMeta
@@ -305,36 +305,8 @@ def handle_chat_handler_console_output(sender, **kwargs):
 
 
 # ------------------------------------------------------------------------------
-# Django model receivers.
+# Custom function receivers.
 # ------------------------------------------------------------------------------
-
-
-@receiver(post_save, sender=Chat)
-def handle_chat_post_save(sender, instance, created, **kwargs):
-
-    if created:
-        logger.debug("%s", formatted_text("Chat() record created."))
-
-
-@receiver(post_save, sender=ChatHistory)
-def handle_chat_history_post_save(sender, instance, created, **kwargs):
-
-    if created:
-        logger.debug("%s", formatted_text("ChatHistory() record created."))
-
-
-@receiver(post_save, sender=ChatToolCall)
-def handle_chat_tool_call_post_save(sender, instance, created, **kwargs):
-
-    if created:
-        logger.debug("%s", formatted_text("ChatToolCall() record created."))
-
-
-@receiver(post_save, sender=ChatPluginUsage)
-def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
-
-    if created:
-        logger.debug("%s", formatted_text("ChatPluginUsage() record created."))
 
 
 # get_current_weather_request.send(sender=get_current_weather, location=location, unit=unit)
@@ -386,3 +358,46 @@ def handle_get_current_weather_response(sender, **kwargs):
         formatted_json(params),
         formatted_json(geocode_result),
     )
+
+
+# ------------------------------------------------------------------------------
+# Django model receivers.
+# ------------------------------------------------------------------------------
+@receiver(post_save, sender=Chat)
+def handle_chat_post_save(sender, instance, created, **kwargs):
+
+    if created:
+        logger.info("%s", formatted_text("Chat() record created."))
+
+
+@receiver(post_save, sender=ChatHistory)
+def handle_chat_history_post_save(sender, instance, created, **kwargs):
+
+    if created:
+        logger.info("%s", formatted_text("ChatHistory() record created."))
+
+
+@receiver(post_save, sender=ChatToolCall)
+def handle_chat_tool_call_post_save(sender, instance, created, **kwargs):
+
+    if created:
+        logger.info("%s", formatted_text("ChatToolCall() record created."))
+
+
+@receiver(post_save, sender=ChatPluginUsage)
+def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
+
+    if created:
+        logger.info("%s", formatted_text("ChatPluginUsage() record created."))
+
+
+@receiver(pre_delete, sender=ChatToolCall)
+def handle_chat_tool_call_post_delete(sender, instance, **kwargs):
+    """Handle ChatToolCall post delete signal."""
+    logger.info("%s %s deleting", formatted_text("ChatToolCall() record"), instance)
+
+
+@receiver(pre_delete, sender=ChatPluginUsage)
+def handle_chat_plugin_usage_post_delete(sender, instance, **kwargs):
+    """Handle ChatPluginUsage post delete signal."""
+    logger.info("%s %s deleting", formatted_text("ChatPluginUsage() record"), instance)

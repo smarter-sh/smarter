@@ -10,15 +10,13 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
+from django.urls import reverse
 from rest_framework import serializers
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.serializers import AccountMiniSerializer
-from smarter.apps.account.utils import (
-    get_cached_smarter_admin_user_profile,
-    get_cached_user_profile,
-)
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.conf import settings as smarter_settings
@@ -47,6 +45,7 @@ from .signals import (
 
 
 CACHE_PREFIX = "ChatBotHelper_"
+API_VI_CHATBOT_NAMESPACE = "api:v1:chatbot"
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +225,7 @@ class ChatBot(TimestampedModel):
     @property
     def custom_url(self):
         """
-        return 'https://example.example.com'
+        example 'https://example.example.com'
         """
         if self.custom_host:
             return SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)
@@ -235,28 +234,26 @@ class ChatBot(TimestampedModel):
     @property
     def sandbox_host(self):
         """
-        return 'alpha.api.smarter.sh/api/v1/chatbots/1/'
+        example 'alpha.platform.smarter.sh'
         """
-        domain = f"{smarter_settings.environment_domain}/api/v1/chatbots/{self.id}/"
-        SmarterValidator.validate_domain(domain)
-        return domain
+        return smarter_settings.environment_domain
 
     @property
     def sandbox_url(self):
         """
-        return 'https://alpha.api.smarter.sh/api/v1/chatbots/1/'
+        maps to "<int:chatbot_id>/"
+        example: 'https://alpha.platform.smarter.sh/api/v1/chatbots/1/'
         """
-        return SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)
+        path = reverse(f"{API_VI_CHATBOT_NAMESPACE}:chatbot_view", kwargs={"chatbot_id": self.id})
+        url = urljoin(smarter_settings.environment_url, path)
+        url = SmarterValidator.urlify(url, environment=smarter_settings.environment)
+        return url
 
     @property
     def hostname(self):
         if self.deployed:
             return self.custom_host or self.default_host
         return self.sandbox_host
-
-    @property
-    def scheme(self):
-        return ChatBot.Schemes.HTTP if smarter_settings.environment == "local" else ChatBot.Schemes.HTTPS
 
     @property
     def url(self):
@@ -267,13 +264,32 @@ class ChatBot(TimestampedModel):
     @property
     def url_chatbot(self):
         """
-        returned by ChatConfigView.config()
-        consumed by React.js app for http requests on new prompts
-        interpreted by smarter.apps.chatbot.api.v1.urls.py as
-        path("<int:chatbot_id>/chat/", ChatConfigView.as_view(), name="chatbot-api-chatbot")
+        The Smarter Api url returned by ChatConfigView.config() as the
+        key, "url_chatbot". This url is consumed by React.js app for http
+        requests on new prompts.
+
+        maps to "<int:chatbot_id>/chat/"
+        example: "http://localhost:8000/api/v1/chatbots/5174/chat/"
         """
-        base_url = smarter_settings.environment_domain
-        return urljoin(self.scheme + "://" + base_url, f"/api/v1/chatbots/{self.id}/chat/")
+        path = reverse(f"{API_VI_CHATBOT_NAMESPACE}:default_chatbot_api_view", kwargs={"chatbot_id": self.id})
+        url = urljoin(smarter_settings.environment_url, path)
+        url = SmarterValidator.urlify(url, environment=smarter_settings.environment)
+        return url
+
+    @property
+    def url_chat_config(self):
+        """
+        The Smarter Api url for the Chat config json dict.
+        The React.js app requests this url during react app startup
+        to retrieve the UI configuration for the chatbot.
+
+        maps to "<int:chatbot_id>/config/"
+        example: "http://localhost:8000/api/v1/chatbots/5174/config/"
+        """
+        path = reverse(f"{API_VI_CHATBOT_NAMESPACE}:chat_config_view", kwargs={"chatbot_id": self.id})
+        url = urljoin(smarter_settings.environment_url, path)
+        url = SmarterValidator.urlify(url, environment=smarter_settings.environment)
+        return url
 
     @property
     def url_chatapp(self):
