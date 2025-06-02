@@ -89,7 +89,7 @@ def create_charge(*args, **kwargs):
             prompt_tokens=prompt_tokens,
             total_tokens=total_tokens,
             model=model,
-            reference=reference,
+            reference=reference or "undefined charge reference",
         )
     # pylint: disable=W0703
     except Exception as e:
