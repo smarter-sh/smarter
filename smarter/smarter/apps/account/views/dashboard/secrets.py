@@ -124,17 +124,14 @@ class SecretView(SmarterAdminWebView):
             return self._handle_json(request)
         return http.JsonResponse({"error": "Invalid content type"}, status=400)
 
-    def dispatch(self, request: WSGIRequest, *args, **kwargs):
+    def setup(self, request: WSGIRequest, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
 
-        response = self.smarter_init(request, *args, **kwargs)
-        if response.status_code > 299:
-            return response
-
-        logger.info("%s.dispatch() user: %s", self.formatted_class_name, self.user_profile)
+        logger.info("%s.setup() user: %s", self.formatted_class_name, self.user_profile)
 
         secret_id: int = kwargs.get("secret_id")
         if secret_id:
-            logger.info("%s.dispatch() secret_id: %s", self.formatted_class_name, secret_id)
+            logger.info("%s.setup() secret_id: %s", self.formatted_class_name, secret_id)
             try:
                 self.secret = Secret.objects.get(pk=secret_id, user_profile=self.user_profile)
             except Secret.DoesNotExist:
@@ -144,9 +141,7 @@ class SecretView(SmarterAdminWebView):
                     status=HTTPStatus.FORBIDDEN.value, data={"error": "You are not allowed to view this secret"}
                 )
         else:
-            logger.info("%s.dispatch() with no secret_id", self.formatted_class_name)
-
-        return super().dispatch(request, *args, **kwargs)
+            logger.info("%s.setup() with no secret_id", self.formatted_class_name)
 
     def get(self, request: WSGIRequest, secret_id: int = None):
         """

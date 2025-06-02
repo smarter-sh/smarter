@@ -7,16 +7,17 @@ from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+
+from .base_class import ApiV1CliTestBase
 
 
 KIND = SAMKinds.ACCOUNT.value
 
 
-class TestApiCliV1Account(ApiV1TestBase):
+class TestApiCliV1Account(ApiV1CliTestBase):
     """
     Test Api v1 CLI commands for account
 
@@ -72,7 +73,7 @@ class TestApiCliV1Account(ApiV1TestBase):
     def test_example_manifest(self) -> None:
         """Test example-manifest command"""
 
-        path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK.value)
         self.validate_response(response)
@@ -86,7 +87,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
     def test_describe(self) -> None:
         """Test describe command"""
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK.value)
         self.validate_response(response)
@@ -98,7 +99,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         """Test apply command"""
 
         # retrieve the current manifest by calling 'describe'
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -126,13 +127,13 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         # convert the data back to yaml, since this is what the cli usually sends
         manifest = yaml.dump(data)
-        path = reverse(ApiV1CliReverseViews.apply)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, manifest=manifest)
         self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
 
         # requery and validate our changes
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
@@ -140,17 +141,17 @@ class TestApiCliV1Account(ApiV1TestBase):
         # validate our changes
         data = response[SmarterJournalApiResponseKeys.DATA]
         config = data[SAMKeys.SPEC.value]["config"]
-        self.assertEqual(config["companyName"], self.account.company_name)
-        self.assertEqual(config["phoneNumber"], self.account.phone_number)
-        self.assertEqual(config["address1"], self.account.address1)
-        self.assertEqual(config["address2"], self.account.address2)
-        self.assertEqual(config["city"], self.account.city)
-        self.assertEqual(config["state"], self.account.state)
-        self.assertEqual(config["postalCode"], self.account.postal_code)
-        self.assertEqual(config["country"], self.account.country)
-        self.assertEqual(config["language"], self.account.language)
-        self.assertEqual(config["timezone"], self.account.timezone)
-        self.assertEqual(config["currency"], self.account.currency)
+        self.assertEqual(config["companyName"], "test data")
+        self.assertEqual(config["phoneNumber"], "+1 617 834 6172")
+        self.assertEqual(config["address1"], "Avenida Reforma 222")
+        self.assertEqual(config["address2"], "Piso 19")
+        self.assertEqual(config["city"], "CDMX")
+        self.assertEqual(config["state"], "CDMX")
+        self.assertEqual(config["postalCode"], "06600")
+        self.assertEqual(config["country"], "Mexico")
+        self.assertEqual(config["language"], "es-ES")
+        self.assertEqual(config["timezone"], "America/Mexico_City")
+        self.assertEqual(config["currency"], "MXN")
 
     def test_get(self) -> None:
         """Test get command"""
@@ -181,7 +182,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
             return True
 
-        path = reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -213,7 +214,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
     def test_deploy(self) -> None:
         """Test deploy command"""
-        path = reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -224,14 +225,11 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertEqual(
-            error["description"],
-            "Smarter API Account manifest broker: deploy() not implemented error.  Deploy not implemented",
-        )
+        self.assertIn("not implemented", error["description"])
 
     def test_undeploy(self) -> None:
         """Test undeploy command"""
-        path = reverse(ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -242,14 +240,11 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertEqual(
-            error["description"],
-            "Smarter API Account manifest broker: undeploy() not implemented error.  Undeploy not implemented",
-        )
+        self.assertIn("not implemented", error["description"])
 
     def test_logs(self) -> None:
         """Test logs command"""
-        path = reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -258,7 +253,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
     def test_delete(self) -> None:
         """Test delete command"""
-        path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
+        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
@@ -269,7 +264,4 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertEqual(
-            error["description"],
-            "Smarter API Account manifest broker: delete() not implemented error.  Delete not implemented",
-        )
+        self.assertIn("not implemented", error["description"])

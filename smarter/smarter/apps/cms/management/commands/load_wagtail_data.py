@@ -59,6 +59,8 @@ class Command(BaseCommand):
                     user = User.objects.create_user(
                         id=user_id,
                         username=username,
+                        first_name=username,
+                        last_name=username,
                         email=username + "@smarter.sh",
                         is_active=True,
                         is_staff=True,

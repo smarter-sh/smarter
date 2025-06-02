@@ -1,0 +1,10 @@
+apiVersion: smarter.sh/v1
+kind: AuthToken
+metadata:
+  name: test_auth_token
+  description: An example Smarter API manifest for a AuthToken
+  version: 1.0.0
+spec:
+  config:
+    isActive: true
+    username: admin

@@ -1,13 +1,11 @@
 # pylint: disable=wrong-import-position
 """Test User."""
 
-# python stuff
-import unittest
-
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestMailChimp(unittest.TestCase):
+class TestMailChimp(SmarterTestBase):
     """Test Account model"""
 
     def test_mailchimp_is_available(self):

@@ -20,8 +20,10 @@ from smarter.apps.account.signals import (
     secret_created,
     secret_deleted,
     secret_edited,
+    secret_inializing,
     secret_ready,
 )
+from smarter.apps.account.utils import get_user_profiles_for_account
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterExceptionBase
@@ -85,10 +87,12 @@ class SecretTransformer(SmarterHelperMixin):
                 f"Received name: {bool(name)} data: {bool(data)}, manifest: {bool(manifest)}, "
                 f"secret_id: {bool(secret_id)}, secret: {bool(secret)}."
             )
+        secret_inializing.send(sender=self.__class__, secret_name=name, user_profile=user_profile)
         self._user_profile = user_profile
         if not self._user_profile:
             raise SmarterSecretTransformerError("User profile is not set.")
-        self._name = name or self._name
+        if name:
+            self.name = name
         self.api_version = api_version or self.api_version
 
         #######################################################################
@@ -118,6 +122,8 @@ class SecretTransformer(SmarterHelperMixin):
                 kind=self.kind,
                 manifest=data,
             )
+            if not loader.ready:
+                raise SAMValidationError("SAMLoader is not ready.")
             self._manifest = SAMSecret(**loader.pydantic_model_dump())
             self.create()
 
@@ -256,8 +262,8 @@ class SecretTransformer(SmarterHelperMixin):
         retval = None
         if self._manifest:
             retval = (
-                self.manifest.status.lastAccessed.isoformat()
-                if self._manifest.status and self.manifest.status.lastAccessed
+                self.manifest.status.last_accessed.isoformat()
+                if self._manifest.status and self.manifest.status.last_accessed
                 else None
             )
         if self.secret:
@@ -269,8 +275,8 @@ class SecretTransformer(SmarterHelperMixin):
         """Return the expiration date in the format, YYYY-MM-DD"""
         if self._manifest:
             return (
-                self.manifest.spec.config.expirationDate.isoformat()
-                if self._manifest.spec.config.expirationDate
+                self.manifest.spec.config.expiration_date.isoformat()
+                if self._manifest.spec.config.expiration_date
                 else None
             )
         if self.secret:
@@ -293,7 +299,7 @@ class SecretTransformer(SmarterHelperMixin):
             self._secret = None
             return
         try:
-            self._secret = Secret.objects.get(pk=value)
+            self._secret = Secret.objects.get(pk=value, user_profile=self.user_profile)
         except Secret.DoesNotExist as e:
             raise SmarterSecretTransformerError("Secret.DoesNotExist") from e
 
@@ -304,13 +310,20 @@ class SecretTransformer(SmarterHelperMixin):
             return self._secret
         try:
             self._secret = Secret.objects.get(user_profile=self.user_profile, name=self.name)
-        except Secret.DoesNotExist:
-            logger.warning(
-                "%s.secret() Secret %s does not exist for user_profile %s.",
-                self.formatted_class_name,
-                self.name,
-                self.user_profile,
-            )
+        except Secret.DoesNotExist as e:
+            # if the secret does not exist for the user profile, then we still need to check
+            # if the secret exists for the account, and if so, whether self.user_profile
+            # is at least a staff user. otherwise, we raise an error.
+            other_user_profiles = get_user_profiles_for_account(self.user_profile.account)
+            secret = Secret.objects.filter(user_profile__in=other_user_profiles, name=self.name).first()
+            if secret:
+                if not self.user_profile.user.is_staff and not self.user_profile.user.is_superuser:
+                    raise SmarterSecretTransformerError(
+                        f"Secret {self.name} exists for user profile {secret.user_profile.user.username} "
+                        f"but not for user profile {self.user_profile.user.username}."
+                    ) from e
+                self._secret = secret
+
         return self._secret
 
     @property
@@ -358,6 +371,26 @@ class SecretTransformer(SmarterHelperMixin):
                 self._name = self.secret.name
         return self._name
 
+    @name.setter
+    def name(self, value: str):
+        """Set the name of the secret."""
+        if not value:
+            self._name = None
+            self._secret = None
+            return
+        if self._manifest:
+            if self._manifest.metadata.name != value:
+                raise SmarterSecretTransformerError(
+                    f"Cannot set name of secret to {value} when manifest is set to {self._manifest.metadata.name}."
+                )
+        if self._secret:
+            if self._secret.name != value:
+                raise SmarterSecretTransformerError(
+                    f"Cannot set name of secret to {value} when secret is set to {self._secret.name}."
+                )
+
+        self._name = value
+
     @property
     # pylint: disable=too-many-return-statements
     def ready(self) -> bool:
@@ -379,6 +412,9 @@ class SecretTransformer(SmarterHelperMixin):
             if self.secret:
                 return True
 
+        logger.error(
+            "%s.ready() Not in a ready state: No manifest nor secret instance found. ", self.formatted_class_name
+        )
         return False
 
     @property

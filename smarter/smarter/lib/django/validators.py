@@ -7,6 +7,7 @@ TODO: add `import validators` and study this library to see what can be removed 
       see https://python-validators.github.io/validators/
 """
 
+import json
 import logging
 import re
 import warnings
@@ -38,15 +39,147 @@ class SmarterValidator:
     VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
     VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
     VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})?$"
-    VALID_HOSTNAME_PATTERN = r"^(?!-)[A-Z\d-]{1,63}(?<!-)$"
+    VALID_HOSTNAME_PATTERN = r"^(?!-)[A-Za-z0-9_-]{1,63}(?<!-)$"
     VALID_UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     VALID_SESSION_KEY = r"^[a-fA-F0-9]{64}$"
     VALID_SEMANTIC_VERSION = r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$"
     VALID_URL_FRIENDLY_STRING = (
         r"^((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*$"
     )
-    VALID_CLEAN_STRING = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;=%]+$"
+    VALID_CLEAN_STRING = r"^(?!-)[A-Za-z0-9_-]{1,63}(?<!-)(\.[A-Za-z0-9_-]{1,63})*$"
     VALID_CLEAN_STRING_WITH_SPACES = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;= %]+$"
+    VALID_URL_ENDPOINT = r"^/[a-zA-Z0-9/_\-\{\}]+/$"  # NOTE: this allows placeholders like {id} in the url
+    VALID_CAMEL_CASE = r"^[a-zA-Z0-9]+(?:[A-Z][a-z0-9]+)*$"
+    VALID_SNAKE_CASE = r"^[a-z0-9]+(?:_[a-z0-9]+)*$"
+    VALID_PASCAL_CASE = r"^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)*$"
+
+    SMARTER_ACCOUNT_NUMBER_REGEX = r"\b\d{4}-\d{4}-\d{4}\b"
+
+    @staticmethod
+    def validate_camel_case(value: str) -> None:
+        """Validate camel case format"""
+        if not re.match(SmarterValidator.VALID_CAMEL_CASE, value):
+            raise SmarterValueError(f"Invalid camel case {value}")
+        if not value:
+            raise SmarterValueError("Value cannot be empty")
+        if not value[0].islower():
+            raise SmarterValueError(f"Value must start with a lowercase letter: {value}")
+        if not value[0].isalpha():
+            raise SmarterValueError(f"Value must start with a letter: {value}")
+        if not value[1:].isalnum():
+            raise SmarterValueError(f"Value must be in camel case format: {value}")
+        if not value[1:].isalpha():
+            raise SmarterValueError(f"Value must be in camel case format: {value}")
+
+    @staticmethod
+    def is_valid_camel_case(value: str) -> bool:
+        """Check if the value is valid camel case"""
+        try:
+            SmarterValidator.validate_camel_case(value)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def validate_snake_case(value: str) -> None:
+        """Validate snake case format"""
+        if not re.match(SmarterValidator.VALID_SNAKE_CASE, value):
+            raise SmarterValueError(f"Invalid snake case {value}")
+        if not value:
+            raise SmarterValueError("Value cannot be empty")
+        if not value[0].islower():
+            raise SmarterValueError(f"Value must start with a lowercase letter: {value}")
+        if not value[0].isalpha():
+            raise SmarterValueError(f"Value must start with a letter: {value}")
+
+    @staticmethod
+    def is_valid_snake_case(value: str) -> bool:
+        """Check if the value is valid snake case"""
+        try:
+            SmarterValidator.validate_snake_case(value)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def validate_pascal_case(value: str) -> None:
+        """Validate pascal case format"""
+        if not re.match(SmarterValidator.VALID_PASCAL_CASE, value):
+            raise SmarterValueError(f"Invalid pascal case {value}")
+        if not value:
+            raise SmarterValueError("Value cannot be empty")
+        if not value[0].isupper():
+            raise SmarterValueError(f"Value must start with an uppercase letter: {value}")
+        if not value[0].isalpha():
+            raise SmarterValueError(f"Value must start with a letter: {value}")
+        if not value[1:].islower():
+            raise SmarterValueError(f"Value must be in pascal case format: {value}")
+        if not value[1:].isalnum():
+            raise SmarterValueError(f"Value must be in pascal case format: {value}")
+        if not value[1:].isalpha():
+            raise SmarterValueError(f"Value must be in pascal case format: {value}")
+
+    @staticmethod
+    def is_valid_pascal_case(value: str) -> bool:
+        """Check if the value is valid pascal case"""
+        try:
+            SmarterValidator.validate_pascal_case(value)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def validate_json(value: str) -> None:
+        """Validate JSON format"""
+        try:
+            if not isinstance(value, str):
+                raise SmarterValueError("Value must be a string")
+            if not value.strip():
+                return
+            json.loads(value)
+        except (ValueError, TypeError) as e:
+            raise SmarterValueError(f"Invalid JSON value {value}") from e
+
+    @staticmethod
+    def is_valid_json(value: str) -> bool:
+        """Check if the value is valid JSON"""
+        try:
+            SmarterValidator.validate_json(value)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def validate_semantic_version(version: str) -> None:
+        """Validate semantic version format (e.g., 1.12.1)"""
+        if not re.match(SmarterValidator.VALID_SEMANTIC_VERSION, version):
+            raise SmarterValueError(f"Invalid semantic version {version}")
+
+    @staticmethod
+    def is_valid_semantic_version(version: str) -> bool:
+        """Check if the semantic version is valid"""
+        try:
+            SmarterValidator.validate_semantic_version(version)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def validate_is_not_none(value: str) -> None:
+        """Validate that the value is not None"""
+        if value is None:
+            raise SmarterValueError("Value cannot be None")
+        if not value:
+            raise SmarterValueError("Value cannot be empty")
+
+    @staticmethod
+    def is_not_none(value: str) -> bool:
+        """Check if the value is not None"""
+        try:
+            SmarterValidator.validate_is_not_none(value)
+            return True
+        except SmarterValueError:
+            return False
 
     @staticmethod
     def validate_session_key(session_key: str) -> None:
@@ -63,11 +196,9 @@ class SmarterValidator:
     @staticmethod
     def validate_domain(domain: str) -> None:
         """Validate domain format"""
-        try:
-            if domain not in SmarterValidator.LOCAL_HOSTS + [None, ""]:
-                SmarterValidator.validate_url("http://" + domain)
-        except SmarterValueError as e:
-            raise SmarterValueError(f"Invalid domain {domain}") from e
+        if domain not in SmarterValidator.LOCAL_HOSTS + [None, ""]:
+            SmarterValidator.validate_hostname(domain.split(":")[0])
+            SmarterValidator.validate_url("http://" + domain)
 
     @staticmethod
     def validate_email(email: str) -> None:
@@ -90,10 +221,16 @@ class SmarterValidator:
         """Validate port format"""
         if not re.match(SmarterValidator.VALID_PORT_PATTERN, port):
             raise SmarterValueError(f"Invalid port {port}")
+        if not port.isdigit():
+            raise SmarterValueError(f"Port must be numeric: {port}")
+        port_num = int(port)
+        if not (0 <= port_num <= 65535):
+            raise SmarterValueError(f"Port out of range (0-65535): {port}")
 
     @staticmethod
     def validate_url(url: str) -> None:
         """Validate URL format"""
+        valid_protocols = ["http", "https"]
         if not url:
             raise SmarterValueError(f"Invalid url {url}")
         try:
@@ -102,16 +239,23 @@ class SmarterValidator:
         except TypeError:
             pass
         try:
-            validator = URLValidator()
+            validator = URLValidator(schemes=valid_protocols)
             validator(url)
+            parsed = urlparse(url)
+            if parsed.hostname:
+                SmarterValidator.validate_hostname(parsed.hostname)
         except ValidationError as e:
             parsed = urlparse(url)
+            if parsed.scheme not in valid_protocols:
+                raise SmarterValueError(f"Invalid url protocol {parsed.scheme}") from e
             if all([parsed.scheme, parsed.netloc]) or url.startswith("localhost"):
                 return
             if SmarterValidator.is_valid_ip(url):
                 return
             if validators.url(url):
-                return
+                parsed = urlparse(url)
+                if parsed.scheme in valid_protocols:
+                    return
             raise SmarterValueError(f"Invalid url {url}") from e
 
     @staticmethod
@@ -142,9 +286,45 @@ class SmarterValidator:
         if not re.match(SmarterValidator.VALID_CLEAN_STRING, v):
             raise SmarterValueError(f"Invalid clean string {v}")
 
+    @staticmethod
+    def validate_http_request_header_key(key: str) -> None:
+        """
+        Validate HTTP request header key format
+        HTTP header name must be ASCII and cannot contain special characters like ()<>@,;:\"/[]?={} \t
+        """
+        if not key.isascii() or not re.match(r"^[!#$%&'*+\-.^_`|~0-9a-zA-Z]+$", key):
+            raise SmarterValueError("Header name contains invalid characters or is not ASCII.")
+
+    @staticmethod
+    def validate_http_request_header_value(value: str) -> None:
+        """
+        Validate HTTP request header value format
+        HTTP header value must not contain control characters like \n or \r
+        """
+        if not re.match(r"^[\t\x20-\x7E\x80-\xFF]*$", value):
+            raise SmarterValueError("Header value contains invalid characters (e.g., control characters).")
+
     # --------------------------------------------------------------------------
     # boolean helpers
     # --------------------------------------------------------------------------
+    @staticmethod
+    def is_valid_http_request_header_key(key: str) -> bool:
+        """Check if HTTP request header key is valid"""
+        try:
+            SmarterValidator.validate_http_request_header_key(key)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_http_request_header_value(value: str) -> bool:
+        """Check if HTTP request header value is valid"""
+        try:
+            SmarterValidator.validate_http_request_header_value(value)
+            return True
+        except SmarterValueError:
+            return False
+
     @staticmethod
     def is_valid_session_key(session_key: str) -> bool:
         try:
@@ -229,9 +409,31 @@ class SmarterValidator:
         except SmarterValueError:
             return False
 
+    @staticmethod
+    def is_valid_url_endpoint(url: str) -> bool:
+        """
+        Check if the URL is valid and ends with a trailing slash.
+        example: /api/v1/tests/unauthenticated/list/
+        """
+        try:
+            SmarterValidator.validate_url_endpoint(url)
+            return True
+        except SmarterValueError:
+            return False
+
     # --------------------------------------------------------------------------
     # list helpers
     # --------------------------------------------------------------------------
+    @staticmethod
+    def validate_url_endpoint(url: str) -> None:
+        """Validate URL endpoint format"""
+        if not re.match(SmarterValidator.VALID_URL_ENDPOINT, url):
+            raise SmarterValueError(f"URL endpoint '{url}' contains invalid characters.")
+        if not url.startswith("/"):
+            raise SmarterValueError(f"Invalid URL endpoint '{url}'. Should start with a leading slash")
+        if not url.endswith("/"):
+            raise SmarterValueError(f"Invalid URL endpoint '{url}'. Should end with a trailing slash")
+
     @staticmethod
     def validate_list_of_account_numbers(account_numbers: list) -> None:
         """Validate list of account numbers"""

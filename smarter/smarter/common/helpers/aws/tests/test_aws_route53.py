@@ -5,8 +5,9 @@
 # python stuff
 import os
 import sys
-import unittest
 from pathlib import Path
+
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -18,11 +19,12 @@ if PYTHON_ROOT not in sys.path:
 from smarter.common.helpers.aws_helpers import aws_helper  # noqa: E402
 
 
-class TestAWSRoute53(unittest.TestCase):
+class TestAWSRoute53(SmarterTestBase):
     """Test AWS Route53 helper functions."""
 
     def setUp(self):
         """Setup the test."""
+        super().setUp()
         self.root_domain = aws_helper.aws.root_domain
         self.root_hosted_zone = aws_helper.route53.get_hosted_zone(self.root_domain)
         self.root_hosted_zone_id = aws_helper.route53.get_hosted_zone_id(self.root_hosted_zone)

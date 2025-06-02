@@ -19,9 +19,7 @@ from smarter.apps.account.manifest.enum import (
 from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, Secret
-from smarter.common.api import SmarterApiVersions
+from smarter.apps.account.models import Secret
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib.django.user import get_user_model
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -35,10 +33,10 @@ from smarter.lib.manifest.broker import (
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
+    SAMMetadataKeys,
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 
 User = get_user_model()
@@ -64,7 +62,7 @@ class SAMSecretBrokerError(SAMBrokerError):
         return "Smarter API Secret Manifest Broker Error"
 
 
-class SAMSecretBroker(AbstractBroker, AccountMixin):
+class SAMSecretBroker(AbstractBroker):
     """
     Smarter API Secret Manifest Broker. This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Secret manifests
@@ -81,40 +79,6 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     _manifest: SAMSecret = None
     _pydantic_model: typing.Type[SAMSecret] = SAMSecret
     _secret_transformer: SecretTransformer = None
-
-    # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        request: HttpRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
-    ):
-        """
-        Load, validate and parse the manifest. The parent will initialize
-        the generic manifest loader class, SAMLoader(), which can then be used to
-        provide initialization data to any kind of manifest model. the loader
-        also performs cursory high-level validation of the manifest, sufficient
-        to ensure that the manifest is a valid yaml file and that it contains
-        the required top-level keys.
-        """
-        super().__init__(
-            request=request,
-            api_version=api_version,
-            account=account,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        AccountMixin.__init__(self, account=account, user=request.user)
 
     @property
     def secret_transformer(self) -> SecretTransformer:
@@ -173,13 +137,15 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                     SAMSecretMetadataKeys.VERSION.value: "1.0.0",
                     SAMSecretMetadataKeys.USERNAME.value: self.user.username,
                     SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: self.account.account_number,
+                    SAMSecretMetadataKeys.TAGS.value: secret_dict.get(SAMSecretMetadataKeys.TAGS.value),
+                    SAMSecretMetadataKeys.ANNOTATIONS.value: secret_dict.get(SAMSecretMetadataKeys.ANNOTATIONS.value),
                 },
                 SAMKeys.SPEC.value: {
                     SAMSecretSpecKeys.CONFIG.value: {
-                        SAMSecretSpecKeys.VALUE.value: secret_dict.get("encrypted_value"),
+                        SAMSecretSpecKeys.VALUE.value: self.secret.get_secret(),
                         SAMSecretSpecKeys.DESCRIPTION.value: secret_dict.get(SAMSecretSpecKeys.DESCRIPTION.value),
-                        SAMSecretSpecKeys.EXPIRATION_DATE.value: secret_dict.get(
-                            SAMSecretSpecKeys.EXPIRATION_DATE.value
+                        SAMSecretSpecKeys.EXPIRATION_DATE.value: (
+                            self.secret.expires_at.isoformat() if self.secret.expires_at else None
                         ),
                     }
                 },
@@ -205,6 +171,15 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the formatted class name for logging purposes.
+        This is used to provide a more readable class name in logs.
+        """
+        parent_class = super().formatted_class_name
+        return f"{parent_class}.SAMSecretBroker()"
+
+    @property
     def kind(self) -> str:
         return MANIFEST_KIND
 
@@ -221,7 +196,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
         """
         if self._manifest:
             return self._manifest
-        if self.loader:
+        if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMSecret(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
@@ -238,7 +213,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     def model_class(self):
         return Secret
 
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         current_date = datetime.now(timezone.utc)
@@ -248,7 +223,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMSecretMetadataKeys.NAME.value: "ExampleSecret",
+                SAMSecretMetadataKeys.NAME.value: "example_secret",
                 SAMSecretMetadataKeys.DESCRIPTION.value: "an example secret manifest for the Smarter API Secret",
                 SAMSecretMetadataKeys.VERSION.value: "1.0.0",
                 SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: SMARTER_ACCOUNT_NUMBER,
@@ -266,11 +241,16 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
+        name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
-        secrets = Secret.objects.filter(user_profile=self.user_profile)
+
+        if name:
+            secrets = Secret.objects.filter(user_profile=self.user_profile, name=name)
+        else:
+            secrets = Secret.objects.filter(user_profile=self.user_profile)
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for secret in secrets:
@@ -301,7 +281,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -325,22 +305,22 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                 self.secret_transformer.save()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
-            return self.json_response_ok(command=command, data={})
+            return self.json_response_ok(command=command, data=self.secret_transformer.to_json())
         try:
             raise SAMBrokerErrorNotReady(f"Secret {self.name} not ready", thing=self.kind, command=command)
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         param_name = request.GET.get("name", None)
-        kwarg_name = kwargs.get("name", None)
+        kwarg_name = kwargs.get(SAMSecretMetadataKeys.NAME.value, None)
         secret_name = param_name or kwarg_name or self.name
         self._name = secret_name
 
@@ -351,8 +331,6 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                 thing=self.kind,
                 command=command,
             )
-
-        logger.info(f"Describing {self.kind} {secret_name} belonging to {self.user_profile}")
 
         if self.secret:
             try:
@@ -369,7 +347,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.secret:
@@ -385,18 +363,17 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(f"{self.kind} not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(f"{self.kind} not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
-        data = {}
-        return self.json_response_ok(command=command, data=data)
+        raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)

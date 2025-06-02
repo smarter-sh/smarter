@@ -2,7 +2,7 @@
 apiVersion: smarter.sh/v1
 kind: Plugin
 metadata:
-  name: EverlastingGobstopper
+  name: everlasting_gobstopper
   pluginClass: static
   description: MODIFIED
   version: 0.1.1
