@@ -186,10 +186,10 @@ class SAMChatbotBroker(AbstractBroker):
                 "sandboxHost": self.chatbot.sandbox_host,
                 "sandboxUrl": self.chatbot.sandbox_url,
                 "hostname": self.chatbot.hostname,
-                "scheme": self.chatbot.scheme,
                 "url": self.chatbot.url,
                 "urlChatbot": self.chatbot.url_chatbot,
                 "urlChatapp": self.chatbot.url_chatapp,
+                "urlChatConfig": self.chatbot.url_chat_config,
                 "dnsVerificationStatus": self.chatbot.dns_verification_status,
             },
         }
