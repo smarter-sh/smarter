@@ -73,9 +73,9 @@ urlpatterns = [
     path("sitemap.xml", SitemapXmlView.as_view(), name=f"{name_prefix}_sitemap_xml"),
     path("healthz/", HealthzView.as_view(), name=f"{name_prefix}_healthz"),
     path("readiness/", ReadinessView.as_view(), name=f"{name_prefix}_readiness"),
-    # path("waitlist/", ComingSoon.as_view(), name=f"{name_prefix}_waitlist"),
+    path("waitlist/", ComingSoon.as_view(), name=f"{name_prefix}_waitlist"),
     # -----------------------------------
-    # authentication routes
+    # routes for 3rd party apps
     # -----------------------------------
     path("social-auth/", include("social_django.urls", namespace="social_auth")),
     # -----------------------------------
@@ -85,7 +85,7 @@ urlpatterns = [
     # path("stripe/", include("djstripe.urls", namespace="djstripe")),
     # -----------------------------------
     # -----------------------------------
-    # wagtail routes (place these at the end of the urlpatterns)
+    # IMPORTANT: place these wagtail routes at the end of the urlpatterns
     # -----------------------------------
     path("documents/", include(wagtaildocs_urls)),
     re_path(r"^wagtail-transfer/", include(wagtailtransfer_urls)),
