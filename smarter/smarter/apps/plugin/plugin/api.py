@@ -20,9 +20,9 @@ from ..manifest.enum import (
     SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
 )
+from ..manifest.models.api_plugin.const import MANIFEST_KIND
 from ..manifest.models.api_plugin.enum import SAMApiPluginSpecApiData
 from ..manifest.models.api_plugin.model import SAMApiPlugin
-from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from ..models import ApiConnection, PluginDataApi
 from ..serializers import PluginApiSerializer
 from .base import PluginBase
