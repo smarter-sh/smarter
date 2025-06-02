@@ -372,6 +372,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
         return retval
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat app view for smarter web. This view is protected and requires the user

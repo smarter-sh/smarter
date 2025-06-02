@@ -95,10 +95,10 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         path_parts = list(filter(None, parsed_url.path.split("/")))
         # if the entire path is healthz or readiness then we don't need to check
-        if len(path_parts) == 1 and path_parts[0] in ["healthz", "readiness"]:
+        if len(path_parts) == 1 and path_parts[0] in self.amnesty_urls:
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info(
-                    "%s %s found in health/readiness check: %s",
+                    "%s %s found in amnesty_urls: %s",
                     self.formatted_class_name,
                     host,
                     path_parts,
@@ -133,4 +133,6 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             return None
 
         logger.error("%s %s failed security tests.", self.formatted_class_name, url)
-        return SmarterHttpResponseBadRequest(request=request, error_message="Bad Request (400) - Invalid Hostname.")
+        return SmarterHttpResponseBadRequest(
+            request=request, error_message="SecurityMiddleware() Bad Request (400) - Invalid Hostname."
+        )
