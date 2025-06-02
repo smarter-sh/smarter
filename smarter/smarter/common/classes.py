@@ -46,6 +46,13 @@ class SmarterHelperMixin:
         return formatted_text(self.__class__.__name__)
 
     @property
+    def unformatted_class_name(self) -> str:
+        """
+        For logging. Applies standardized styling to the class name.
+        """
+        return self.__class__.__name__
+
+    @property
     def ready(self) -> bool:
         return True
 
@@ -55,7 +62,7 @@ class SmarterHelperMixin:
         Should be overridden in subclasses.
         """
         return {
-            "class_name": self.formatted_class_name,
+            "class_name": self.unformatted_class_name,
         }
 
     def smarter_build_absolute_uri(self, request: HttpRequest) -> str:
