@@ -19,9 +19,9 @@ from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
+from ..manifest.models.sql_plugin.const import MANIFEST_KIND
 from ..manifest.models.sql_plugin.enum import SAMSqlPluginSpecSqlData
 from ..manifest.models.sql_plugin.model import SAMSqlPlugin
-from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from .base import PluginBase
 
 
