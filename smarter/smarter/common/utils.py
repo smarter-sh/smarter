@@ -13,6 +13,7 @@ import yaml
 from django.http import HttpRequest
 from pydantic import SecretStr
 
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.validators import SmarterValidator
 
@@ -202,6 +203,11 @@ def smarter_build_absolute_uri(request: HttpRequest) -> str:
     if request is None:
         logger.warning("smarter_build_absolute_uri() called with None request")
         return None
+    else:
+        if not isinstance(request, HttpRequest):
+            raise SmarterValueError(
+                f"smarter_build_absolute_uri() expects an instance of HttpRequest, got {type(request).__name__}"
+            )
 
     url: str = None
 
