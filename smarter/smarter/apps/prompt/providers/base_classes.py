@@ -107,6 +107,7 @@ class InternalKeys:
     MODEL_KEY = "model"
     TEMPERATURE_KEY = "temperature"
     MAX_TOKENS_KEY = "max_tokens"
+    TOOL_CHOICE = "tool_choice"
 
     SMARTER_PLUGIN_KEY = SMARTER_SYSTEM_KEY_PREFIX + "plugin"
     SMARTER_IS_NEW = SMARTER_SYSTEM_KEY_PREFIX + "is_new"
@@ -279,7 +280,7 @@ class ChatProviderBase(ProviderDbMixin):
         self._valid_chat_completion_models = valid_chat_completion_models
 
         weather_tool = weather_tool_factory()
-        self.tools: list[dict] = [weather_tool] if add_built_in_tools else []
+        self.tools: list[dict] = [weather_tool] if add_built_in_tools else None
         self.available_functions = (
             {
                 "get_current_weather": get_current_weather,
@@ -289,6 +290,23 @@ class ChatProviderBase(ProviderDbMixin):
         )
 
         chat_provider_initialized.send(sender=self)
+
+    def prune_empty_values(self, data: dict) -> dict:
+        """
+        Remove empty values from a dictionary.
+        """
+        if not isinstance(data, dict):
+            raise SmarterValueError(f"{self.formatted_class_name}: data must be a dictionary")
+
+        def _prune(obj):
+            if isinstance(obj, dict):
+                return {k: _prune(v) for k, v in obj.items() if v is not None}
+            elif isinstance(obj, list):
+                return [_prune(item) for item in obj if item is not None]
+            else:
+                return obj
+
+        return _prune(data)
 
     def validate(self):
 
@@ -472,10 +490,10 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self.first_iteration[InternalKeys.REQUEST_KEY] = {
             InternalKeys.MODEL_KEY: self.model,
             InternalKeys.MESSAGES_KEY: self.openai_messages,
-            InternalKeys.TOOLS_KEY: self.tools,
             InternalKeys.TEMPERATURE_KEY: self.temperature,
             InternalKeys.MAX_TOKENS_KEY: self.max_tokens,
-            "tool_choice": tool_choice,
+            InternalKeys.TOOLS_KEY: self.tools,
+            InternalKeys.TOOL_CHOICE: tool_choice,
         }
 
         # create a Smarter UI message with the established configuration
@@ -618,7 +636,18 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         serialized_tool_call = {}
         plugin: StaticPlugin = None
         function_name = tool_call.function.name
-        function_to_call = self.available_functions[function_name]
+        try:
+            function_to_call = self.available_functions[function_name]
+        except KeyError:
+            logger.error(
+                "%s %s - KeyError: '%s' not found in available functions: %s. Tool calls were: %s",
+                self.formatted_class_name,
+                formatted_text("process_tool_call()"),
+                function_name,
+                self.available_functions,
+                tool_call,
+            )
+
         function_args = json.loads(tool_call.function.arguments)
         serialized_tool_call["function_name"] = function_name
         serialized_tool_call["function_args"] = function_args
@@ -676,10 +705,13 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
             "first_iteration": json.loads(json.dumps(self.first_iteration)),
             "second_iteration": json.loads(json.dumps(self.second_iteration)),
-            InternalKeys.TOOLS_KEY: [tool["function"]["name"] for tool in self.tools],
             InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],
             InternalKeys.MESSAGES_KEY: self.new_messages,
         }
+        if self.tools:
+            response_extended = response.get(OpenAIMessageKeys.SMARTER_MESSAGE_KEY).copy() or {}
+            response_extended[InternalKeys.TOOLS_KEY] = [tool["function"]["name"] for tool in self.tools]
+            response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = response_extended
         return response
 
     def request_meta_data_factory(self):
@@ -770,15 +802,24 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                     self.handle_plugin_selected(plugin=plugin)
 
             self.prep_first_request()
+            completions_kwargs = {
+                InternalKeys.MODEL_KEY: self.model,
+                InternalKeys.MESSAGES_KEY: self.openai_messages,
+                InternalKeys.TEMPERATURE_KEY: self.temperature,
+                InternalKeys.MAX_TOKENS_KEY: self.max_tokens,
+                InternalKeys.TOOLS_KEY: self.tools,
+                InternalKeys.TOOL_CHOICE: OPENAI_TOOL_CHOICE,
+            }
+            completions_kwargs = self.prune_empty_values(completions_kwargs)
 
-            self.first_response = openai.chat.completions.create(
-                model=self.model,
-                messages=self.openai_messages,
-                tools=self.tools,
-                tool_choice=OPENAI_TOOL_CHOICE,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
+            logger.info(
+                "%s %s - openai.chat.completions.create() completions_kwargs: %s",
+                self.formatted_class_name,
+                formatted_text("handler()"),
+                completions_kwargs,
             )
+
+            self.first_response = openai.chat.completions.create(**completions_kwargs)
             self.handle_response()
             self.append_openai_response(self.first_response)
             response_message = self.first_response.choices[0].message
