@@ -45,7 +45,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         If the request is for a ChatBot, the ChatBot's URL is added to the list.
         """
         retval = settings.CSRF_TRUSTED_ORIGINS
-        if self.smarter_request and self.smarter_request.is_chatbot:
+        if self.smarter_request and (self.smarter_request.is_chatbot or self.smarter_request.is_config):
             retval += [self.smarter_request.url]
         if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             logger.info("%s.CSRF_TRUSTED_ORIGINS: %s", self.formatted_class_name, retval)

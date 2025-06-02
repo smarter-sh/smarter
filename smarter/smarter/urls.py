@@ -41,6 +41,7 @@ from smarter.apps.docs.views.webserver import (
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.django.request import SmarterRequestMixin
 
@@ -54,6 +55,7 @@ admin.site = restricted_site
 admin.autodiscover()
 
 name_prefix = "root"
+amnesty_urls = SmarterHelperMixin().amnesty_urls
 
 
 def root_redirector(request: WSGIRequest) -> RedirectView:
@@ -77,7 +79,7 @@ def root_redirector(request: WSGIRequest) -> RedirectView:
 
     # general amnesty cases where we def do not want
     # instantiate a chatbot
-    if path_parts and parsed_url[0] not in ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]:
+    if path_parts and parsed_url[0] not in amnesty_urls:
 
         # 2. check if the url is a chatbot endpoint
         chatbot = get_cached_chatbot_by_request(request=request)
