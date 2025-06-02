@@ -121,6 +121,15 @@ def chatbot_deleted(sender, instance: ChatBot, **kwargs):
     delete_default_api.delay(url=chatbot.url, account_number=chatbot.account.account_number, name=chatbot.name)
 
 
+@receiver(pre_delete, sender=ChatBotPlugin)
+def chatbot_plugin_deleted(sender, instance: ChatBotPlugin, **kwargs):
+    """
+    Log deletion of ChatBotPlugin.
+    """
+    prefix = formatted_text(f"{module_prefix}.chatbot_plugin_deleted()")
+    logger.info("%s - deleting plugin %s for chatbot %s", prefix, instance.plugin_meta, instance.chatbot)
+
+
 @receiver(post_save, sender=ChatBotCustomDomain)
 def chatbot_custom_domain_saved(sender, instance: ChatBotCustomDomain, created: bool, **kwargs):
     """
