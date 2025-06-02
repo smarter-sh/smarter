@@ -232,9 +232,17 @@ class ProviderDbMixin(AccountMixin):
         input_text = kwargs.get("input_text", None)
         create_chat_plugin_usage.delay(chat_id=chat_id, plugin_id=plugin_id, input_text=input_text)
 
-    def db_insert_charge(self, *args, **kwargs):
+    def db_insert_charge(self, provider, charge_type, completion_tokens, prompt_tokens, total_tokens, model, reference):
         """
         This method inserts a new charge record.
+            provider=self.provider,
+            charge_type=charge_type,
+            completion_tokens=self.completion_tokens,
+            prompt_tokens=self.prompt_tokens,
+            total_tokens=self.total_tokens,
+            model=self.model,
+            reference=self.reference or "ChatProviderBase._insert_charge_by_type()",
+
         """
         if not self.account:
             raise SmarterValueError("Account is required to create a charge record.")
@@ -247,11 +255,11 @@ class ProviderDbMixin(AccountMixin):
             account_id=self.account.id,
             user_id=self.user.id if self.user else None,
             session_key=self.chat.session_key,
-            provider=kwargs.get("provider", None),
-            charge_type=kwargs.get("charge_type", None),
-            prompt_tokens=kwargs.get("prompt_tokens", None),
-            completion_tokens=kwargs.get("completion_tokens", None),
-            total_tokens=kwargs.get("total_tokens", None),
-            model=kwargs.get("model", None),
-            reference=kwargs.get("reference", None),
+            provider=provider,
+            charge_type=charge_type,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
+            model=model,
+            reference=reference,
         )
