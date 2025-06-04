@@ -545,6 +545,11 @@ class Settings(BaseSettings):
         return f"{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
     @property
+    def platform_url(self) -> str:
+        """Return the platform URL."""
+        return SmarterValidator.urlify(self.platform_domain, environment=self.environment)
+
+    @property
     def environment_domain(self) -> str:
         """Return the complete domain name."""
         if self.environment == SmarterEnvironments.PROD:
