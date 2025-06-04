@@ -540,16 +540,21 @@ class Settings(BaseSettings):
         return SmarterValidator.urlify(self.environment_cdn_domain, environment=self.environment)
 
     @property
+    def platform_domain(self) -> str:
+        """Return the platform domain name. ie platform.smarter.sh"""
+        return f"{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+
+    @property
     def environment_domain(self) -> str:
         """Return the complete domain name."""
         if self.environment == SmarterEnvironments.PROD:
-            return SMARTER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+            return self.platform_domain
         if self.environment in SmarterEnvironments.aws_environments:
-            return self.environment + "." + SMARTER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+            return f"{self.environment}.{self.platform_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
             return "localhost:8000"
         # default domain format
-        return self.environment + "." + SMARTER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+        return f"{self.environment}.{self.platform_domain}"
 
     @property
     def environment_url(self) -> str:
@@ -566,11 +571,6 @@ class Settings(BaseSettings):
         return f"{self.platform_name}-{SMARTER_PLATFORM_SUBDOMAIN}-{settings.environment}"
 
     @property
-    def platform_domain(self) -> str:
-        """Return the platform domain name. ie platform.smarter.sh"""
-        return f"{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
-
-    @property
     def api_domain(self) -> str:
         """Return the root API domain name. ie api.smarter.sh"""
         return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
@@ -579,13 +579,13 @@ class Settings(BaseSettings):
     def environment_api_domain(self) -> str:
         """Return the customer API domain name. ie api.alpha.platform.smarter.sh"""
         if self.environment == SmarterEnvironments.PROD:
-            return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
+            return self.api_domain
         if self.environment in SmarterEnvironments.aws_environments:
-            return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
+            return f"{self.environment}.{self.api_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
             return f"{SMARTER_API_SUBDOMAIN}.localhost:8000"
         # default domain format
-        return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
+        return f"{self.environment}.{self.api_domain}"
 
     @property
     def environment_api_url(self) -> str:
