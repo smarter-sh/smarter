@@ -471,8 +471,11 @@ class Command(BaseCommand):
 
         self.verify_base_dns_config()
 
-        self.verify(domain=smarter_settings.environment_api_domain, parent_domain=smarter_settings.api_domain)
-        self.verify(domain=smarter_settings.environment_domain, parent_domain=smarter_settings.platform_domain)
+        # for non-production environments, we need to verify the environment specific domains
+        if smarter_settings.environment_api_domain != smarter_settings.api_domain:
+            self.verify(domain=smarter_settings.environment_api_domain, parent_domain=smarter_settings.api_domain)
+        if smarter_settings.environment_domain != smarter_settings.platform_domain:
+            self.verify(domain=smarter_settings.environment_domain, parent_domain=smarter_settings.platform_domain)
 
         print("*" * 80)
         self.stdout.write(self.style.SUCCESS(f"{self.log_prefix} completed successfully."))
