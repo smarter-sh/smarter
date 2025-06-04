@@ -202,7 +202,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.NOTICE(
-                f"{log_prefix} verify that an A record exists in hosted zone for {smarter_settings.api_domain}"
+                f"{log_prefix} verify that an A record exists in root hosted zone {smarter_settings.root_domain} for {smarter_settings.api_domain}"
             )
         )
         api_domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=api_domain_hosted_zone)
@@ -216,15 +216,11 @@ class Command(BaseCommand):
         )
         if created:
             self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} created A record for customer api base domain {smarter_settings.api_domain}."
-                )
+                self.style.SUCCESS(f"{log_prefix} created A record for api base domain {smarter_settings.api_domain}.")
             )
         else:
             self.stdout.write(
-                self.style.SUCCESS(
-                    f"{log_prefix} verified A record for customer api base domain {smarter_settings.api_domain}."
-                )
+                self.style.SUCCESS(f"{log_prefix} verified A record for api base domain {smarter_settings.api_domain}.")
             )
         print("-" * 80)
 
@@ -274,20 +270,20 @@ class Command(BaseCommand):
         if created:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"{log_prefix} created AWS Route53 hosted zone for platform base domain: {smarter_settings.platform_domain}"
+                    f"{log_prefix} created AWS Route53 hosted zone for root platform domain: {smarter_settings.platform_domain}"
                 )
             )
         else:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"{log_prefix} verified AWS Route53 hosted zone for platform base domain: {smarter_settings.platform_domain}"
+                    f"{log_prefix} verified AWS Route53 hosted zone for root platform domain: {smarter_settings.platform_domain}"
                 )
             )
         print("-" * 80)
 
         self.stdout.write(
             self.style.NOTICE(
-                f"{log_prefix} verify that an A record exists in hosted zone for {smarter_settings.platform_domain}"
+                f"{log_prefix} verify that an A record exists for hosted zone for {smarter_settings.platform_domain}"
             )
         )
         api_domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=api_domain_hosted_zone)
@@ -302,27 +298,27 @@ class Command(BaseCommand):
         if created:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"{log_prefix} created A record for platform base domain {smarter_settings.platform_domain}."
+                    f"{log_prefix} created A record for root platform domain {smarter_settings.platform_domain}."
                 )
             )
         else:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"{log_prefix} verified A record for platform base domain {smarter_settings.platform_domain}."
+                    f"{log_prefix} verified A record for root platform domain {smarter_settings.platform_domain}."
                 )
             )
         print("-" * 80)
 
-        # verify that the NS records for the api domain are in the root domain hosted zone
+        # verify that the NS records for the platform domain are in the root domain hosted zone
         self.stdout.write(
             self.style.NOTICE(
                 f"{log_prefix} verify that NS records for {smarter_settings.platform_domain} exist in {smarter_settings.root_domain} hosted zone."
             )
         )
-        customer_api_domain_ns_records = self.get_ns_records_for_domain(domain=smarter_settings.platform_domain)
+        platform_domain_ns_records = self.get_ns_records_for_domain(domain=smarter_settings.platform_domain)
         self.stdout.write(
             self.style.NOTICE(
-                f"{log_prefix} NS records that should exist in {smarter_settings.root_domain} hosted zone for {smarter_settings.platform_domain}: {customer_api_domain_ns_records}"
+                f"{log_prefix} NS records that should exist in {smarter_settings.root_domain} hosted zone for {smarter_settings.platform_domain}: {platform_domain_ns_records}"
             )
         )
 
@@ -336,13 +332,13 @@ class Command(BaseCommand):
         if created:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"{log_prefix} created NS record for {smarter_settings.platform_domain} in the root domain hosted zone."
+                    f"{log_prefix} created NS record for {smarter_settings.platform_domain} in the root domain hosted zone {smarter_settings.root_domain}."
                 )
             )
         else:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"{log_prefix} verified NS record for {smarter_settings.platform_domain} in the root domain hosted zone."
+                    f"{log_prefix} verified NS record for {smarter_settings.platform_domain} in the root domain hosted zone {smarter_settings.root_domain}."
                 )
             )
 
@@ -475,8 +471,8 @@ class Command(BaseCommand):
 
         self.verify_base_dns_config()
 
-        self.verify(domain=smarter_settings.environment_api_domain, parent_domain=smarter_settings.root_domain)
-        self.verify(domain=smarter_settings.environment_domain, parent_domain=smarter_settings.root_domain)
+        self.verify(domain=smarter_settings.environment_api_domain, parent_domain=smarter_settings.api_domain)
+        self.verify(domain=smarter_settings.environment_domain, parent_domain=smarter_settings.platform_domain)
 
         print("*" * 80)
         self.stdout.write(self.style.SUCCESS(f"{self.log_prefix} completed successfully."))
