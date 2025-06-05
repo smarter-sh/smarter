@@ -580,10 +580,12 @@ class Settings(BaseSettings):
         domains.add(self.root_api_domain)
         domains.add(self.root_platform_domain)
         # Add environment/subdomain combinations
-        for sub in subdomains:
-            domains.add(f"{sub}.{self.root_domain}")
-            for env in environments[1:]:  # skip None for env-prefixed
-                domains.add(f"{env}.{sub}.{self.root_domain}")
+        for subdomain in subdomains:
+            # example: platform.smarter.sh, api.platform.smarter.sh
+            domains.add(f"{subdomain}.{self.root_domain}")
+            for environment in environments[1:]:  # skip None for env-prefixed
+                # example: alpha.platform.smarter.sh, alpha.api.platform.smarter.sh
+                domains.add(f"{environment}.{subdomain}.{self.root_domain}")
         return sorted(domains)
 
     @property

@@ -1,9 +1,9 @@
 """This module is used to initialize the environment."""
 
-from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand
 
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.aws_helpers import aws_helper
 
 
@@ -11,9 +11,9 @@ from smarter.common.helpers.aws_helpers import aws_helper
 class Command(BaseCommand):
     """
     Verify AWS Route53 resources.
-    - root:     smarter.sh
-    - api:      api.smarter.sh, alpha.api.smarter.sh, beta.api.smarter.sh, etc.
-    - platform: platform.smarter.sh, alpha.platform.smarter.sh, beta.platform.smarter.sh, etc.
+    - root:     example.com
+    - api:      api.example.com, alpha.api.example.com, beta.api.example.com, etc.
+    - platform: platform.example.com, alpha.platform.example.com, beta.platform.example.com, etc.
     """
 
     log_prefix = "manage.py verify_dns_configuration()"
@@ -35,7 +35,7 @@ class Command(BaseCommand):
                 )
                 return a_record
 
-        raise ImproperlyConfigured(
+        raise SmarterConfigurationError(
             f"get_an_A_record() Checked the following domains: {smarter_settings.all_domains} but couldn't find an A record to propagate. Cannot proceed."
         )
 
@@ -54,12 +54,15 @@ class Command(BaseCommand):
         )
         print("-" * 80)
 
-        # 1. Root domain hosted zone verification, ie smarter.sh
-        #    Verify the AWS Route53 hosted zone for the root domain. ie smarter.sh
+        # 1. Root domain hosted zone verification, ie example.com. This needs to exist in AWS Route53
+        #    independent of this code base.
+        #
+        #    Verify the AWS Route53 hosted zone for the root domain. ie example.com
         #     - hosted zone for root domain should exist.
         #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
         #     - hosted zone should contain NS records for the root domain (as is expected for any Hosted Zone).
         # ---------------------------------------------------------------------
+
         # Look for an A record in the root domain hosted zone
         self.stdout.write(
             self.style.NOTICE(f"{log_prefix} (1) root domain DNS verification: {smarter_settings.root_domain}")
@@ -70,7 +73,7 @@ class Command(BaseCommand):
             )
         )
         if not aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=smarter_settings.root_domain):
-            raise ImproperlyConfigured(
+            raise SmarterConfigurationError(
                 f"{self.log_prefix} AWS Route53 hosted zone for root domain: {smarter_settings.root_domain} does not exist. Cannot proceed."
             )
         self.stdout.write(
@@ -86,7 +89,7 @@ class Command(BaseCommand):
         )
         a_record = aws_helper.route53.get_environment_A_record(domain=smarter_settings.root_domain)
         if not a_record:
-            raise ImproperlyConfigured(
+            raise SmarterConfigurationError(
                 f"{log_prefix} Couldn't find an A record in the root domain: "
                 f"{smarter_settings.root_domain}. Expected to find an 'A' record alias to an AWS Route53 "
                 "classic balancer. Cannot proceed."
@@ -107,9 +110,9 @@ class Command(BaseCommand):
             domain_name=smarter_settings.root_domain
         )
         ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=root_domain_hosted_zone_id)
-        # we're expecting three sets of NS records, for root, api, platform.
+        # we're expecting three sets of NS records, for example.com, api.example.com, platform.example.com.
         if not isinstance(ns_records, list):
-            raise ImproperlyConfigured(
+            raise SmarterConfigurationError(
                 f"{log_prefix} Expected to find a list of NS records in the root domain hosted zone but got: {type(ns_records)}. Cannot proceed."
             )
         additional_ns_records = [
@@ -123,9 +126,9 @@ class Command(BaseCommand):
             )
         )
 
-        # 2. Api domain hosted zone verification. ie api.smarter.sh
-        #    Verify the AWS Route53 hosted zone for the root api domain. example: api.smarter.sh
-        #     - hosted zone for 'api.smarter.sh' should exist.
+        # 2. Api domain hosted zone verification. ie api.example.com
+        #    Verify the AWS Route53 hosted zone for the root api domain. example: api.example.com
+        #     - hosted zone for 'api.example.com' should exist.
         #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
         #     - NS records for this hosted zone should exist in the root domain hosted zone.
         # ---------------------------------------------------------------------
@@ -214,8 +217,8 @@ class Command(BaseCommand):
                 )
             )
 
-        # 3. root platform domain hosted zone verification. ie platform.smarter.sh
-        #    Verify the AWS Route53 hosted zone for the root platform domain. ie platform.smarter.sh
+        # 3. root platform domain hosted zone verification. ie platform.example.com
+        #    Verify the AWS Route53 hosted zone for the root platform domain. ie platform.example.com
         #     - hosted zone for the root platform domain should exist.
         #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
         #     - NS records for this hosted zone should exist in the root domain hosted zone.
@@ -322,7 +325,7 @@ class Command(BaseCommand):
     def verify(self, domain: str, parent_domain: str):
         """
         Verify the AWS Route53 hosted zone for the environment platform domain
-        ie alpha.platform.smarter.sh, beta.platform.smarter.sh, etc.
+        ie alpha.platform.example.com, beta.platform.example.com, etc.
         1. hosted zone for 'domain' should exist. if not, create it.
         2. NS records for 'domain' should exist in hosted zone of parent_domain. if not, create them
         3. environment hosted zone should contain A record alias to the AWS Classic Load Balancer.
@@ -339,7 +342,7 @@ class Command(BaseCommand):
         parent_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=parent_domain)
 
         # 1. Verify that the AWS Route53 hosted zone exists for the environment platform
-        #    example: alpha.platform.smarter.sh, beta.platform.smarter.sh, etc.
+        #    example: alpha.platform.example.com, beta.platform.example.com, etc.
         # ---------------------------------------------------------------------
         _, created = aws_helper.route53.get_or_create_hosted_zone(domain_name=domain)
         if created:
