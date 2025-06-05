@@ -322,14 +322,25 @@ class Command(BaseCommand):
         )
         print("-" * 80)
 
-    def verify(self, domain: str, parent_domain: str):
+    def verify(self, domain: str):
         """
         Verify the AWS Route53 hosted zone for the environment platform domain
         ie alpha.platform.example.com, beta.platform.example.com, etc.
         1. hosted zone for 'domain' should exist. if not, create it.
         2. NS records for 'domain' should exist in hosted zone of parent_domain. if not, create them
-        3. environment hosted zone should contain A record alias to the AWS Classic Load Balancer.
+        3. environment hosted zone should contain A record alias to the AWS Classic Load Balancer. If not, create it.
         """
+
+        def get_parent_domain(domain: str) -> str:
+            """
+            Given a domain like 'alpha.platform.example.com', return its parent domain 'platform.example.com'.
+            """
+            parts = domain.strip(".").split(".")
+            if len(parts) < 3:
+                raise ValueError(f"Cannot determine parent domain for: {domain}")
+            return ".".join(parts[1:])
+
+        parent_domain = get_parent_domain(domain)
         log_prefix = self.log_prefix + " - " + f"verify() - domain: {domain}, parent_domain: {parent_domain}"
         print("-" * 80)
         self.stdout.write(
@@ -417,9 +428,11 @@ class Command(BaseCommand):
 
         # for non-production environments, we need to verify the environment specific domains
         if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
-            self.verify(domain=smarter_settings.environment_api_domain, parent_domain=smarter_settings.root_api_domain)
+            # example: domain=alpha.api.example.com
+            self.verify(domain=smarter_settings.environment_api_domain)
         if smarter_settings.environment_domain != smarter_settings.root_platform_domain:
-            self.verify(domain=smarter_settings.environment_domain, parent_domain=smarter_settings.root_platform_domain)
+            # example: domain=alpha.platform.example.com
+            self.verify(domain=smarter_settings.environment_domain)
 
         print("*" * 80)
         self.stdout.write(self.style.SUCCESS(f"{self.log_prefix} completed successfully."))
