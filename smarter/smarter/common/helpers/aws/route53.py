@@ -99,6 +99,38 @@ class AWSRoute53(AWSBase):
         hosted_zone, _ = self.get_or_create_hosted_zone(domain_name)
         return self.get_hosted_zone_id(hosted_zone)
 
+    def get_ns_records_for_domain(self, domain: str) -> dict:
+        """
+        helper to find NS records for a hosted zone.
+
+        returns a dict of this form:
+            {
+                "Name": "example.com.",
+                "Type": "NS",
+                "TTL": 600,
+                "ResourceRecords": [
+                    {
+                        "Value": "ns-2048.awsdns-64.com"
+                    },
+                    {
+                        "Value": "ns-2049.awsdns-65.net"
+                    },
+                    {
+                        "Value": "ns-2050.awsdns-66.org"
+                    },
+                    {
+                        "Value": "ns-2051.awsdns-67.co.uk"
+                    }
+                ]
+            }
+        """
+        domain = self.domain_resolver(domain)
+        hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name=domain)
+        ns_records = self.get_ns_records(hosted_zone_id=hosted_zone_id)
+        # noting that a hosted zone can have multiple NS records, we need to find
+        # the NS records for the domain of the hosted zone itself.
+        return next((item for item in ns_records if item["Name"] in [domain, f"{domain}."]), None)
+
     def delete_hosted_zone(self, domain_name):
         # Get the hosted zone id
         logger.info("%s.delete_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)

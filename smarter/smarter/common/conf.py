@@ -562,6 +562,31 @@ class Settings(BaseSettings):
         return f"{self.environment}.{self.root_platform_domain}"
 
     @property
+    def all_domains(self) -> List[str]:
+        """Return all domains for the environment."""
+        environments = [
+            None,  # for root domains (no environment prefix)
+            SmarterEnvironments.ALPHA,
+            SmarterEnvironments.BETA,
+            SmarterEnvironments.NEXT,
+        ]
+        subdomains = [
+            SMARTER_PLATFORM_SUBDOMAIN,
+            SMARTER_API_SUBDOMAIN,
+        ]
+        domains = set()
+        # Add root domains
+        domains.add(self.root_domain)
+        domains.add(self.root_api_domain)
+        domains.add(self.root_platform_domain)
+        # Add environment/subdomain combinations
+        for sub in subdomains:
+            domains.add(f"{sub}.{self.root_domain}")
+            for env in environments[1:]:  # skip None for env-prefixed
+                domains.add(f"{env}.{sub}.{self.root_domain}")
+        return sorted(domains)
+
+    @property
     def environment_url(self) -> str:
         return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
 

@@ -4,27 +4,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand
 
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import (
-    SMARTER_API_SUBDOMAIN,
-    SMARTER_PLATFORM_SUBDOMAIN,
-    SmarterEnvironments,
-)
 from smarter.common.helpers.aws_helpers import aws_helper
-
-
-ALL_DOMAINS = [
-    smarter_settings.root_domain,
-    smarter_settings.root_api_domain,
-    smarter_settings.root_platform_domain,
-    f"{SMARTER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.ALPHA}.{SMARTER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.BETA}.{SMARTER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.NEXT}.{SMARTER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SMARTER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.ALPHA}.{SMARTER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.BETA}.{SMARTER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.NEXT}.{SMARTER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
-]
 
 
 # pylint: disable=E1101
@@ -38,40 +18,13 @@ class Command(BaseCommand):
 
     log_prefix = "manage.py verify_dns_configuration()"
 
-    def get_ns_records_for_domain(self, domain: str) -> dict:
-        """
-        helper to find NS records for a hosted zone.
-
-        returns a dict of this form:
-            {
-                "Name": "example.com.",
-                "Type": "NS",
-                "TTL": 600,
-                "ResourceRecords": [
-                    {
-                        "Value": "ns-2048.awsdns-64.com"
-                    },
-                    {
-                        "Value": "ns-2049.awsdns-65.net"
-                    },
-                    {
-                        "Value": "ns-2050.awsdns-66.org"
-                    },
-                    {
-                        "Value": "ns-2051.awsdns-67.co.uk"
-                    }
-                ]
-            }
-        """
-        domain = aws_helper.aws.domain_resolver(domain)
-        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=domain)
-        ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=hosted_zone_id)
-        # noting that a hosted zone can have multiple NS records, we need to find
-        # the NS records for the domain of the hosted zone itself.
-        return next((item for item in ns_records if item["Name"] in [domain, f"{domain}."]), None)
-
     def get_an_A_record(self) -> dict:
-        for some_domain in ALL_DOMAINS:
+        """
+        A records all resolve to the same AWS Classic Load Balancer.
+        This is a simple traversal method to look for and retrieve an A record
+        from the AWS Route53 hosted zone for any of the existing domains.
+        """
+        for some_domain in smarter_settings.all_domains:
             print(f"looking for an A record in {some_domain}...")
             a_record = aws_helper.route53.get_environment_A_record(domain=some_domain)
             if a_record:
@@ -83,24 +36,13 @@ class Command(BaseCommand):
                 return a_record
 
         raise ImproperlyConfigured(
-            f"get_an_A_record() Checked the following domains: {ALL_DOMAINS} but couldn't find an A record to propagate. Cannot proceed."
+            f"get_an_A_record() Checked the following domains: {smarter_settings.all_domains} but couldn't find an A record to propagate. Cannot proceed."
         )
 
     # pylint: disable=R0912,R0915
     def verify_base_dns_config(self):
         """
-        1. Verify the AWS Route53 hosted zone for the root domain. ie smarter.sh
-            - hosted zone for root domain should exist.
-            - hosted zone should contain A record alias to the AWS Classic Load Balancer.
-            - hosted zone should contain NS records for the root domain (as is expected for any Hosted Zone).
-        2. Verify the AWS Route53 hosted zone for the root api domain. example: api.smarter.sh
-            - hosted zone for 'api.smarter.sh' should exist.
-            - hosted zone should contain A record alias to the AWS Classic Load Balancer.
-            - NS records for this hosted zone should exist in the root domain hosted zone.
-        3. Verify the AWS Route53 hosted zone for the root platform domain. ie platform.smarter.sh
-            - hosted zone for the root platform domain should exist.
-            - hosted zone should contain A record alias to the AWS Classic Load Balancer.
-            - NS records for this hosted zone should exist in the root domain hosted zone.
+        Verify the AWS Route53 hosted zones for the root domain, api domain and platform domain.
         """
 
         log_prefix = self.log_prefix + " - " + "verify_base_dns_config()"
@@ -113,6 +55,10 @@ class Command(BaseCommand):
         print("-" * 80)
 
         # 1. Root domain hosted zone verification, ie smarter.sh
+        #    Verify the AWS Route53 hosted zone for the root domain. ie smarter.sh
+        #     - hosted zone for root domain should exist.
+        #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
+        #     - hosted zone should contain NS records for the root domain (as is expected for any Hosted Zone).
         # ---------------------------------------------------------------------
         # Look for an A record in the root domain hosted zone
         self.stdout.write(
@@ -178,6 +124,10 @@ class Command(BaseCommand):
         )
 
         # 2. Api domain hosted zone verification. ie api.smarter.sh
+        #    Verify the AWS Route53 hosted zone for the root api domain. example: api.smarter.sh
+        #     - hosted zone for 'api.smarter.sh' should exist.
+        #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
+        #     - NS records for this hosted zone should exist in the root domain hosted zone.
         # ---------------------------------------------------------------------
         print("-" * 80)
         self.stdout.write(
@@ -235,7 +185,9 @@ class Command(BaseCommand):
                 f"{log_prefix} verify that NS records for {smarter_settings.root_api_domain} exist in {smarter_settings.root_domain} hosted zone."
             )
         )
-        customer_api_domain_ns_records = self.get_ns_records_for_domain(domain=smarter_settings.root_api_domain)
+        customer_api_domain_ns_records = aws_helper.route53.get_ns_records_for_domain(
+            domain=smarter_settings.root_api_domain
+        )
         self.stdout.write(
             self.style.NOTICE(
                 f"{log_prefix} NS records that should exist in {smarter_settings.root_domain} hosted zone for {smarter_settings.root_api_domain}: {customer_api_domain_ns_records}"
@@ -263,6 +215,10 @@ class Command(BaseCommand):
             )
 
         # 3. root platform domain hosted zone verification. ie platform.smarter.sh
+        #    Verify the AWS Route53 hosted zone for the root platform domain. ie platform.smarter.sh
+        #     - hosted zone for the root platform domain should exist.
+        #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
+        #     - NS records for this hosted zone should exist in the root domain hosted zone.
         # ---------------------------------------------------------------------
         print("-" * 80)
         self.stdout.write(
@@ -326,7 +282,9 @@ class Command(BaseCommand):
                 f"{log_prefix} verify that NS records for {smarter_settings.root_platform_domain} exist in {smarter_settings.root_domain} hosted zone."
             )
         )
-        root_platform_domain_ns_records = self.get_ns_records_for_domain(domain=smarter_settings.root_platform_domain)
+        root_platform_domain_ns_records = aws_helper.route53.get_ns_records_for_domain(
+            domain=smarter_settings.root_platform_domain
+        )
         self.stdout.write(
             self.style.NOTICE(
                 f"{log_prefix} NS records that should exist in {smarter_settings.root_domain} hosted zone for {smarter_settings.root_platform_domain}: {root_platform_domain_ns_records}"
@@ -395,7 +353,7 @@ class Command(BaseCommand):
 
         # 2. Verify that the NS records for the domain exist in the parent domain's hosted zone
         # ---------------------------------------------------------------------
-        domain_ns_records = self.get_ns_records_for_domain(domain=domain)
+        domain_ns_records = aws_helper.route53.get_ns_records_for_domain(domain=domain)
         self.stdout.write(
             self.style.NOTICE(
                 f"{log_prefix} NS records for {domain} exist in the hosted zone for {parent_domain}. HostedZoneID: {domain_hosted_zone_id} NS records: {domain_ns_records}"
