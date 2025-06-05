@@ -30,10 +30,10 @@ ALL_DOMAINS = [
 # pylint: disable=E1101
 class Command(BaseCommand):
     """
-    Verify AWS resources for hosting customer api's.
-    - api.smarter.sh, alpha.api.smarter.sh, beta.api.smarter.sh, etc.
-    - platform.smarter.sh, alpha.platform.smarter.sh, beta.platform.smarter.sh, etc.
-
+    Verify AWS Route53 resources.
+    - root:     smarter.sh
+    - api:      api.smarter.sh, alpha.api.smarter.sh, beta.api.smarter.sh, etc.
+    - platform: platform.smarter.sh, alpha.platform.smarter.sh, beta.platform.smarter.sh, etc.
     """
 
     log_prefix = "manage.py verify_dns_configuration()"
@@ -92,14 +92,15 @@ class Command(BaseCommand):
         1. Verify the AWS Route53 hosted zone for the root domain. ie smarter.sh
             - hosted zone for root domain should exist.
             - hosted zone should contain A record alias to the AWS Classic Load Balancer.
-            - hosted zone should contain NS records for 'domain'.
-            - hosted zone should contain CNAME record for _acme-challenge pointing to 'domain'.
-        2. Verify the AWS Route53 hosted zone for 'api'. ie api.smarter.sh
+            - hosted zone should contain NS records for the root domain (as is expected for any Hosted Zone).
+        2. Verify the AWS Route53 hosted zone for the root api domain. example: api.smarter.sh
             - hosted zone for 'api.smarter.sh' should exist.
             - hosted zone should contain A record alias to the AWS Classic Load Balancer.
-        3. Verify the AWS Route53 hosted zone for 'platform'. ie platform.smarter.sh
-            - hosted zone for 'platform.smarter.sh' should exist.
+            - NS records for this hosted zone should exist in the root domain hosted zone.
+        3. Verify the AWS Route53 hosted zone for the root platform domain. ie platform.smarter.sh
+            - hosted zone for the root platform domain should exist.
             - hosted zone should contain A record alias to the AWS Classic Load Balancer.
+            - NS records for this hosted zone should exist in the root domain hosted zone.
         """
 
         log_prefix = self.log_prefix + " - " + "verify_base_dns_config()"
@@ -367,7 +368,6 @@ class Command(BaseCommand):
         1. hosted zone for 'domain' should exist. if not, create it.
         2. NS records for 'domain' should exist in hosted zone of parent_domain. if not, create them
         3. environment hosted zone should contain A record alias to the AWS Classic Load Balancer.
-        4. platform hosted zone should contain CNAME record for _acme-challenge pointing to 'domain'.
         """
         log_prefix = self.log_prefix + " - " + f"verify() - domain: {domain}, parent_domain: {parent_domain}"
         print("-" * 80)
