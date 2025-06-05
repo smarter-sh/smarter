@@ -35,7 +35,7 @@ class Testk8sHelpers(SmarterTestBase):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        self.environment = SmarterEnvironments.ALPHA
+        self.environment = SmarterEnvironments.LOCAL
         self.api_domain = f"{self.environment}.api.{smarter_settings.root_domain}"
         self.cluster_issuer = self.api_domain
         self.account_number = SMARTER_ACCOUNT_NUMBER
@@ -43,10 +43,6 @@ class Testk8sHelpers(SmarterTestBase):
         self.namespace = f"{smarter_settings.platform_name}-platform-{self.environment}"
         self.helper = KubernetesHelper()
 
-        # get-or-create the top-level api domain: alpha.api.smarter.sh
-        aws_helper.route53.create_domain_a_record(
-            hostname=self.api_domain, api_host_domain=smarter_settings.root_domain
-        )
         # get-or-create the subdomain for the test: ty7xlk2i.alpha.api.smarter.sh
         aws_helper.route53.create_domain_a_record(hostname=self.hostname, api_host_domain=self.api_domain)
 
