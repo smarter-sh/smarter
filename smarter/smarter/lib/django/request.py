@@ -43,7 +43,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 # Match netloc: chatbot_name.account_number.api.environment_api_domain
 netloc_pattern_named_url = re.compile(
-    rf"^(?P<chatbot_name>[a-zA-Z0-9\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.api\.{re.escape(smarter_settings.environment_domain)}(:\d+)?$"
+    rf"^(?P<chatbot_name>[a-zA-Z0-9\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.api\.{re.escape(smarter_settings.environment_platform_domain)}(:\d+)?$"
 )
 logger = logging.getLogger(__name__)
 
@@ -608,7 +608,7 @@ class SmarterRequestMixin(AccountMixin):
             return False
         if not self.parsed_url:
             return False
-        return self.parsed_url.netloc == smarter_settings.environment_domain and self.parsed_url.path == "/"
+        return self.parsed_url.netloc == smarter_settings.environment_platform_domain and self.parsed_url.path == "/"
 
     @property
     def is_chatbot(self) -> bool:
@@ -777,7 +777,7 @@ class SmarterRequestMixin(AccountMixin):
         # valid path_parts:
         #   ['workbench', '<slug>', 'chat']
         #   ['workbench', '<slug>', 'config']
-        if self.parsed_url.netloc != smarter_settings.environment_domain:
+        if self.parsed_url.netloc != smarter_settings.environment_platform_domain:
             return False
         if len(path_parts) != 3:
             return False
