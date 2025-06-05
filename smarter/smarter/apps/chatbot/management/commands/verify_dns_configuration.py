@@ -430,9 +430,9 @@ class Command(BaseCommand):
         if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
             # example: domain=alpha.api.example.com
             self.verify(domain=smarter_settings.environment_api_domain)
-        if smarter_settings.environment_domain != smarter_settings.root_platform_domain:
+        if smarter_settings.environment_platform_domain != smarter_settings.root_platform_domain:
             # example: domain=alpha.platform.example.com
-            self.verify(domain=smarter_settings.environment_domain)
+            self.verify(domain=smarter_settings.environment_platform_domain)
 
         print("*" * 80)
         self.stdout.write(self.style.SUCCESS(f"{self.log_prefix} completed successfully."))

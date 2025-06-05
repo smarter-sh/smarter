@@ -23,7 +23,7 @@ class TestDocsManifests(ApiV1CliTestBase):
     def test_json_schemas(self) -> None:
         """Test example-manifest command"""
         for kind in SAMKinds.singular_slugs():
-            url = f"{smarter_settings.protocol}://{smarter_settings.environment_domain}{self.base_path}{kind}/"
+            url = f"{smarter_settings.protocol}://{smarter_settings.environment_platform_domain}{self.base_path}{kind}/"
             logger.info("test_json_schemas() Testing path: %s", url)
             response_body, status = self.get_response(path=url)
             self.assertEqual(status, HTTPStatus.OK.value)

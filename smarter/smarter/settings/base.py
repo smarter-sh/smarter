@@ -59,12 +59,12 @@ CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_SAMESITE = "lax"
 CSRF_COOKIE_AGE = 60 * 60 * 24
-CSRF_COOKIE_DOMAIN = smarter_settings.environment_domain
+CSRF_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
 CSRF_COOKIE_PATH = "/"
 CSRF_COOKIE_HTTPONLY = False
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 CSRF_TRUSTED_ORIGINS = [
-    smarter_settings.environment_domain,
+    smarter_settings.environment_platform_domain,
     smarter_settings.environment_api_domain,
 ]
 CSRF_USE_SESSIONS = False
@@ -82,7 +82,7 @@ SESSION_COOKIE_NAME = "sessionid"
 # Age of cookie, in seconds
 SESSION_COOKIE_AGE = CSRF_COOKIE_AGE
 # A string like "alpha.platform.smarter.sh", or None for standard domain cookie.
-SESSION_COOKIE_DOMAIN = smarter_settings.environment_domain
+SESSION_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
 # The path of the session cookie.
 SESSION_COOKIE_PATH = "/"
 # Whether to use the HttpOnly flag.

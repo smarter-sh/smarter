@@ -530,7 +530,7 @@ class Settings(BaseSettings):
         """Return the CDN domain."""
         if self.environment == SmarterEnvironments.LOCAL:
             return f"cdn.{SmarterEnvironments.ALPHA}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
-        return f"cdn.{self.environment_domain}"
+        return f"cdn.{self.environment_platform_domain}"
 
     @property
     def environment_cdn_url(self) -> str:
@@ -550,7 +550,7 @@ class Settings(BaseSettings):
         return SmarterValidator.urlify(self.root_platform_domain, environment=self.environment)
 
     @property
-    def environment_domain(self) -> str:
+    def environment_platform_domain(self) -> str:
         """Return the complete domain name."""
         if self.environment == SmarterEnvironments.PROD:
             return self.root_platform_domain
@@ -590,7 +590,7 @@ class Settings(BaseSettings):
 
     @property
     def environment_url(self) -> str:
-        return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
+        return SmarterValidator.urlify(self.environment_platform_domain, environment=self.environment)
 
     @property
     def platform_name(self) -> str:
@@ -628,7 +628,7 @@ class Settings(BaseSettings):
     @property
     def aws_s3_bucket_name(self) -> str:
         """Return the S3 bucket name."""
-        return self.environment_domain
+        return self.environment_platform_domain
 
     @property
     def is_using_dotenv_file(self) -> bool:

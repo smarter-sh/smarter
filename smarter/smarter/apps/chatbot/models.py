@@ -243,7 +243,7 @@ class ChatBot(TimestampedModel):
         """
         example 'alpha.platform.smarter.sh'
         """
-        return smarter_settings.environment_domain
+        return smarter_settings.environment_platform_domain
 
     @property
     def sandbox_url(self):

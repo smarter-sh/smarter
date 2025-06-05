@@ -168,7 +168,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
     @property
     def is_web_platform(self):
         host = self.smarter_request.get_host()
-        if host in smarter_settings.environment_domain:
+        if host in smarter_settings.environment_platform_domain:
             return True
         return False
 

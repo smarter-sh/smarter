@@ -80,7 +80,7 @@ class AWSBase(SmarterHelperMixin):
         self._environment = environment or smarter_settings.environment
 
         self._root_domain = root_domain or smarter_settings.root_domain
-        self._environment_domain = environment_domain or smarter_settings.environment_domain
+        self._environment_domain = environment_domain or smarter_settings.environment_platform_domain
         self._debug_mode = debug_mode or smarter_settings.debug_mode
 
         if self.debug_mode:
@@ -270,8 +270,8 @@ class AWSBase(SmarterHelperMixin):
         """Validate the domain and swap out localhost for the proxy domain."""
         if self.environment == SmarterEnvironments.LOCAL:
             proxy_domain: str = None
-            if smarter_settings.environment_domain in domain:
-                proxy_domain = domain.replace(smarter_settings.environment_domain, self.environment_domain)
+            if smarter_settings.environment_platform_domain in domain:
+                proxy_domain = domain.replace(smarter_settings.environment_platform_domain, self.environment_domain)
             if smarter_settings.environment_api_domain in domain:
                 proxy_domain = domain.replace(smarter_settings.environment_api_domain, self.environment_api_domain)
             if proxy_domain:

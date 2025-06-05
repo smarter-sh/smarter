@@ -100,13 +100,13 @@ class Command(BaseCommand):
             client.force_login(user)
 
             headers = {"Authorization": f"Token {token_key}"}
-            http_host = smarter_settings.environment_domain
+            http_host = smarter_settings.environment_platform_domain
 
             if smarter_settings.environment in SmarterEnvironments.aws_environments:
                 response = client.post(
                     path=path, data=manifest, content_type="application/json", HTTP_HOST=http_host, extra=headers
                 )
-                url = f"https://{smarter_settings.environment_domain}{path}"
+                url = f"https://{smarter_settings.environment_platform_domain}{path}"
             else:
                 response = client.post(path=path, data=manifest, content_type="application/json", extra=headers)
                 url = f"http://localhost:8000{path}"
