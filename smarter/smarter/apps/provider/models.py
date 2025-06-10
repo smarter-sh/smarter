@@ -2,10 +2,12 @@
 """All models for the Provider app."""
 
 import logging
+import urllib.parse
 
+import requests
 from django.db import models
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User
@@ -77,6 +79,21 @@ class Provider(TimestampedModel):
     is_flagged = models.BooleanField(default=False, blank=False, null=False)
     is_suspended = models.BooleanField(default=False, blank=False, null=False)
     api_url = models.URLField(max_length=255, blank=True, null=True, help_text="The base URL for the provider's API.")
+    api_key = models.ForeignKey(
+        Secret,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="provider_api_key",
+        help_text="The API key for the provider.",
+    )
+    connectivity_test_path = models.CharField(
+        max_length=255,
+        default="",
+        blank=True,
+        null=True,
+        help_text="The URL to test connectivity with the provider's API.",
+    )
     logo = models.ImageField(
         upload_to="provider_logos/",
         blank=True,
@@ -93,8 +110,18 @@ class Provider(TimestampedModel):
     contact_email = models.EmailField(
         max_length=255, blank=True, null=True, help_text="The contact email of the provider."
     )
+    contact_email_verified = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="The date and time when the contact email was verified.",
+    )
     support_email = models.EmailField(
         max_length=255, blank=True, null=True, help_text="The support email of the provider."
+    )
+    support_email_verified = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="The date and time when the support email was verified.",
     )
     terms_of_service = models.URLField(
         max_length=255, blank=True, null=True, help_text="The terms of service URL of the provider."
@@ -118,6 +145,13 @@ class Provider(TimestampedModel):
     )
 
     @property
+    def authorization_header(self) -> dict:
+        """Return the authorization header for the provider."""
+        if self.api_key:
+            return {"Authorization": f"Bearer {self.api_key.secret}"}
+        return {}
+
+    @property
     def can_activate(self) -> bool:
         """Check if the provider can be activated."""
         return (
@@ -129,6 +163,28 @@ class Provider(TimestampedModel):
             and self.tos_accepted_at is not None
             and self.tos_accepted_by is not None
         )
+
+    def test_connectivity(self) -> bool:
+        """
+        Test connectivity to the provider's API.
+        This method should be overridden by subclasses to implement specific connectivity tests.
+        """
+        if not self.connectivity_test_path:
+            raise SmarterValueError("Connectivity test path is not set for this provider.")
+        if self.api_url and self.api_key:
+            url = urllib.parse.urljoin(self.api_url, self.connectivity_test_path)
+            try:
+                # verify the API URL and key
+                response = requests.get(url, headers=self.authorization_header, timeout=10)
+                if response.status_code == 200:
+                    return True
+                else:
+                    return False
+            except Exception as exc:
+                logger.error(
+                    "Got an unexpected error testing API URL and key verification for %s failed: %s", self.name, exc
+                )
+                return False
 
     def verify(self):
         """
@@ -261,6 +317,7 @@ class ProviderModels(TimestampedModel):
     class Meta:
         verbose_name = "Provider Model"
         verbose_name_plural = "Provider Models"
+        unique_together = (("provider", "name"),)
 
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, blank=False, null=False)
     name = models.CharField(max_length=255, blank=False, null=False)
