@@ -17,8 +17,8 @@ from smarter.smarter_celery import app
 
 from .models import (
     Provider,
-    ProviderModels,
-    ProviderModelVerifications,
+    ProviderModel,
+    ProviderModelVerification,
     ProviderModelVerificationTypes,
     ProviderStatus,
 )
@@ -37,15 +37,15 @@ module_prefix = "smarter.apps.provider.tasks."
 
 
 def get_model_verification_for_type(
-    provider_model: ProviderModels, verification_type: ProviderModelVerificationTypes
-) -> ProviderModelVerifications:
+    provider_model: ProviderModel, verification_type: ProviderModelVerificationTypes
+) -> ProviderModelVerification:
     """
     Get the model verification for a specific type.
     """
     prefix = formatted_text(module_prefix + "get_model_verification_for_type()")
     logger.info("%s Getting model verification for %s of type %s", prefix, provider_model.name, verification_type)
 
-    instance, _ = ProviderModelVerifications.objects.get_or_create(
+    instance, _ = ProviderModelVerification.objects.get_or_create(
         provider_model=provider_model, verification_type=verification_type
     )
     if instance.is_valid:
@@ -54,7 +54,7 @@ def get_model_verification_for_type(
 
 
 def set_model_verification(
-    provider_model_verification: ProviderModelVerifications, is_successful: bool, **kwargs
+    provider_model_verification: ProviderModelVerification, is_successful: bool, **kwargs
 ) -> None:
     """
     Set the model verification status.
@@ -70,9 +70,9 @@ def set_model_verification(
     provider_model_verification.is_successful = is_successful
     provider_model_verification.save()
     if is_successful:
-        model_verification_success.send(sender=ProviderModelVerifications, instance=provider_model_verification)
+        model_verification_success.send(sender=ProviderModelVerification, instance=provider_model_verification)
     else:
-        model_verification_failure.send(sender=ProviderModelVerifications, instance=provider_model_verification)
+        model_verification_failure.send(sender=ProviderModelVerification, instance=provider_model_verification)
 
 
 def test_web_page(url: str, test_str: str) -> bool:
@@ -104,7 +104,7 @@ def test_web_page(url: str, test_str: str) -> bool:
 # ------------------------------------------------------------------------------
 
 
-def verify_model_streaming(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify streaming capabilities of the provider model.
     """
@@ -122,7 +122,7 @@ def verify_model_streaming(provider_model: ProviderModels, **kwargs) -> bool:
     return success
 
 
-def verify_model_tools(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify tools capabilities of the provider model.
     """
@@ -140,7 +140,7 @@ def verify_model_tools(provider_model: ProviderModels, **kwargs) -> bool:
     return success
 
 
-def verify_model_text_input(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify text input capabilities of the provider model.
     """
@@ -158,7 +158,7 @@ def verify_model_text_input(provider_model: ProviderModels, **kwargs) -> bool:
     return success
 
 
-def verify_model_image_input(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify image input capabilities of the provider model.
     """
@@ -176,7 +176,7 @@ def verify_model_image_input(provider_model: ProviderModels, **kwargs) -> bool:
     return success
 
 
-def verify_model_audio_input(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify audio input capabilities of the provider model.
     """
@@ -194,7 +194,7 @@ def verify_model_audio_input(provider_model: ProviderModels, **kwargs) -> bool:
     return success
 
 
-def verify_model_fine_tuning(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_fine_tuning(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify fine-tuning capabilities of the provider model.
     """
@@ -212,7 +212,7 @@ def verify_model_fine_tuning(provider_model: ProviderModels, **kwargs) -> bool:
     return success
 
 
-def verify_model_search(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_search(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify search capabilities of the provider model.
     """
@@ -230,7 +230,7 @@ def verify_model_search(provider_model: ProviderModels, **kwargs) -> bool:
     return success
 
 
-def verify_model_code_interpreter(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_code_interpreter(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify code interpreter capabilities of the provider model.
     """
@@ -248,7 +248,7 @@ def verify_model_code_interpreter(provider_model: ProviderModels, **kwargs) -> b
     return success
 
 
-def verify_model_text_to_image(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_text_to_image(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify text to image capabilities of the provider model.
     """
@@ -266,7 +266,7 @@ def verify_model_text_to_image(provider_model: ProviderModels, **kwargs) -> bool
     return success
 
 
-def verify_model_text_to_audio(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_text_to_audio(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify text to audio capabilities of the provider model.
     """
@@ -284,7 +284,7 @@ def verify_model_text_to_audio(provider_model: ProviderModels, **kwargs) -> bool
     return success
 
 
-def verify_model_text_to_text(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_text_to_text(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify text to text capabilities of the provider model.
     """
@@ -302,7 +302,7 @@ def verify_model_text_to_text(provider_model: ProviderModels, **kwargs) -> bool:
     return success
 
 
-def verify_model_translation(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify translation capabilities of the provider model.
     """
@@ -320,7 +320,7 @@ def verify_model_translation(provider_model: ProviderModels, **kwargs) -> bool:
     return success
 
 
-def verify_model_summarization(provider_model: ProviderModels, **kwargs) -> bool:
+def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
     """
     Verify summarization capabilities of the provider model.
     """
@@ -349,8 +349,8 @@ def verify_provider_model(provider_model_id, **kwargs):
     Run test bank on provider model.
     """
     try:
-        provider_model = ProviderModels.objects.get(id=provider_model_id)
-    except ProviderModels.DoesNotExist:
+        provider_model = ProviderModel.objects.get(id=provider_model_id)
+    except ProviderModel.DoesNotExist:
         logger.error(
             "%s Provider model with id %s does not exist",
             formatted_text(module_prefix + "verify_provider_model()"),
@@ -391,12 +391,12 @@ def verify_provider_model(provider_model_id, **kwargs):
     if success:
         provider_model.is_active = True
         provider_model.save(update_fields=["is_active"])
-        model_verification_success.send(sender=ProviderModels, instance=provider_model)
+        model_verification_success.send(sender=ProviderModel, instance=provider_model)
         logger.info("Verification tests succeeded for provider model: %s", provider_model.name)
     else:
         provider_model.is_active = False
         provider_model.save(update_fields=["is_active"])
-        model_verification_failure.send(sender=ProviderModels, instance=provider_model)
+        model_verification_failure.send(sender=ProviderModel, instance=provider_model)
         logger.error("Some verification failed for provider model: %s", provider_model.name)
 
 

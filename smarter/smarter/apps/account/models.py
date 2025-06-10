@@ -98,6 +98,10 @@ class Account(TimestampedModel):
     language = models.CharField(max_length=255, default="EN", blank=True, null=True)
     timezone = models.CharField(max_length=255, blank=True, null=True)
     currency = models.CharField(max_length=255, default="USD", blank=True, null=True)
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Indicates whether the account is active. Inactive accounts cannot be used for billing or resource management, nor hosting Provider apis.",
+    )
 
     @classmethod
     def randomized_account_number(cls):
