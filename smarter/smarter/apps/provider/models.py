@@ -2,6 +2,7 @@
 """All models for the Provider app."""
 
 import logging
+import os
 import urllib.parse
 
 import requests
@@ -9,11 +10,17 @@ from django.db import models
 
 from smarter.apps.account.models import Account, Secret
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.exceptions import SmarterValueError
+from smarter.common.exceptions import (
+    SmarterBusinessRuleViolation,
+    SmarterConfigurationError,
+    SmarterValueError,
+)
+from smarter.lib.cache import cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User
 
 from .const import VERIFICATION_LIFETIME
+from .enum import ProviderModelEnum
 from .signals import (
     provider_activated,
     provider_deactivated,
@@ -28,6 +35,7 @@ from .signals import (
 
 
 logger = logging.getLogger(__name__)
+CACHE_TIMEOUT = 60 / 2  # 30 seconds
 
 
 class ProviderStatus(models.TextChoices):
@@ -73,12 +81,17 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         blank=False,
         null=False,
     )
+    # good things
     is_active = models.BooleanField(default=False, blank=False, null=False)
     is_verified = models.BooleanField(default=False, blank=False, null=False)
     is_featured = models.BooleanField(default=False, blank=False, null=False)
+
+    # bad things
     is_deprecated = models.BooleanField(default=False, blank=False, null=False)
     is_flagged = models.BooleanField(default=False, blank=False, null=False)
     is_suspended = models.BooleanField(default=False, blank=False, null=False)
+
+    # connectivity
     api_url = models.URLField(max_length=255, blank=True, null=True, help_text="The base URL for the provider's API.")
     api_key = models.ForeignKey(
         Secret,
@@ -95,6 +108,8 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         null=True,
         help_text="The URL to test connectivity with the provider's API.",
     )
+
+    # Provider metadata
     logo = models.ImageField(
         upload_to="provider_logos/",
         blank=True,
@@ -331,7 +346,7 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         return f"{self.name} ({self.account.account_number}) - {self.status}"
 
 
-class ProviderModels(TimestampedModel):
+class ProviderModel(TimestampedModel):
     """Provider completion models for a provider."""
 
     class Meta:
@@ -342,16 +357,22 @@ class ProviderModels(TimestampedModel):
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, blank=False, null=False)
     name = models.CharField(max_length=255, blank=False, null=False)
     description = models.TextField(blank=True, null=True)
+
+    # good things
     is_default = models.BooleanField(default=False, blank=False, null=False)
     is_active = models.BooleanField(default=True, blank=False, null=False)
+
+    # bad things
     is_deprecated = models.BooleanField(default=False, blank=False, null=False)
     is_flagged = models.BooleanField(default=False, blank=False, null=False)
     is_suspended = models.BooleanField(default=False, blank=False, null=False)
 
+    # model configuration
     max_tokens = models.PositiveIntegerField(default=4096, blank=False, null=False)
     temperature = models.FloatField(default=0.7, blank=False, null=False)
     top_p = models.FloatField(default=1.0, blank=False, null=False)
 
+    # verifiable features
     supports_streaming = models.BooleanField(default=False, blank=False, null=False)
     supports_tools = models.BooleanField(default=False, blank=False, null=False)
     supports_text_input = models.BooleanField(default=True, blank=False, null=False)
@@ -372,7 +393,7 @@ class ProviderModels(TimestampedModel):
         return f"{self.provider.name} - {self.name}"
 
 
-class ProviderModelVerifications(TimestampedModel):
+class ProviderModelVerification(TimestampedModel):
     """Provider completion model verifications for a provider."""
 
     class Meta:
@@ -380,7 +401,7 @@ class ProviderModelVerifications(TimestampedModel):
         verbose_name_plural = "Provider Model Verifications"
         unique_together = (("provider_model", "verification_type"),)
 
-    provider_model = models.ForeignKey(ProviderModels, on_delete=models.CASCADE, blank=False, null=False)
+    provider_model = models.ForeignKey(ProviderModel, on_delete=models.CASCADE, blank=False, null=False)
     verification_type = models.CharField(
         max_length=32,
         choices=ProviderModelVerificationTypes.choices,
@@ -399,3 +420,73 @@ class ProviderModelVerifications(TimestampedModel):
     def __str__(self):
         """String representation of the verification."""
         return f"{self.provider_model.name} - {self.verification_type}: {'Success' if self.is_successful else 'Failed'}"
+
+
+@cache_results(timeout=CACHE_TIMEOUT)
+def get_model_for_provider(account_number: str, provider_name: str, model_name: str = None) -> dict:
+    """
+    Get the model for a provider by name and account number. This is the
+    primary way to retrieve a model for a provider. Raises a Smarter error if
+    anything goes wrong.
+    """
+
+    # get the account that owns the provider. Long term this is envisioned to be
+    # OpenAI, GoogleAI et al. But for now, assume that Smarter owns all of the
+    # Providers.
+    try:
+        account = Account.objects.get(account_number=account_number)
+    except Account.DoesNotExist as e:
+        raise SmarterValueError(f"Account with number {account_number} does not exist.") from e
+
+    # check if the account is active.
+    if not account.is_active:
+        raise SmarterBusinessRuleViolation(f"Account {account_number} is not active.")
+
+    # get the provider master record
+    try:
+        provider = Provider.objects.get(account=account, name=provider_name)
+    except Provider.DoesNotExist as e:
+        raise SmarterValueError(f"Provider {provider_name} does not exist for account {account.account_number}.") from e
+
+    # the Provider might be inactive for a variety of reasons: suspended, flagged, deprecated, or something else.
+    # We don't care why we just want to know if it is active or not.
+    if not provider.is_active:
+        raise SmarterBusinessRuleViolation(f"Provider {provider_name} is not active.")
+
+    # get the model for the provider
+    if model_name is not None:
+        try:
+            model = ProviderModel.objects.get(provider=provider, name=model_name)
+        except ProviderModel.DoesNotExist as e:
+            raise SmarterValueError(f"Model {model_name} for provider {provider_name} does not exist.") from e
+    else:
+        try:
+            model = ProviderModel.objects.get(provider=provider, is_default=True)
+        except ProviderModel.DoesNotExist as e:
+            raise SmarterValueError(f"No default model found for provider {provider_name}.") from e
+
+    # The model is periodically re-verified and is therefore subject to being inactived if any of
+    # it's verification tests fail.
+    # Again, we don't care why it is inactive, we just want to know if it is active or not.
+    if not model.is_active:
+        raise SmarterBusinessRuleViolation(f"Model {model_name} for provider {provider_name} is not active.")
+
+    # get the production api key
+    api_key_name = f"{provider.name.upper()}_API_KEY"
+    api_key = os.environ.get(api_key_name)
+    if not api_key:
+        raise SmarterConfigurationError(
+            f"Production API key for provider {provider_name} is not set in environment variables."
+        )
+
+    return {
+        ProviderModelEnum.API_KEY.value: api_key,
+        ProviderModelEnum.PROVIDER_NAME.value: provider.name,
+        ProviderModelEnum.PROVIDER_ID.value: provider.id,
+        ProviderModelEnum.BASE_URL.value: provider.api_url,
+        ProviderModelEnum.DEFAULT_MODEL.value: model.name,
+        ProviderModelEnum.MAX_TOKENS.value: model.max_tokens,
+        ProviderModelEnum.TEMPERATURE.value: model.temperature,
+        ProviderModelEnum.TOP_P.value: model.top_p,
+        ProviderModelEnum.VALID_CHAT_COMPLETION_MODELS.value: [model.name],
+    }

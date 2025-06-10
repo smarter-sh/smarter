@@ -9,7 +9,7 @@ from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_text
 
-from .models import Provider, ProviderModels, ProviderModelVerifications
+from .models import Provider, ProviderModel, ProviderModelVerification
 from .signals import (
     model_verification_failure,
     model_verification_requested,
@@ -42,7 +42,7 @@ def get_prefix(function_name: str = "") -> str:
 # ------------------------------------------------------------------------------
 # Model verification handlers
 @receiver(model_verification_requested, dispatch_uid="model_verification_requested_receiver")
-def handle_model_verification_requested(sender, instance: ProviderModels, **kwargs):
+def handle_model_verification_requested(sender, instance: ProviderModel, **kwargs):
     """Handle model verification requested signal."""
     prefix = get_prefix("handle_model_verification_requested")
     logger.info("%s Model verification requested for model: %s", prefix, instance.name)
@@ -54,14 +54,14 @@ def handle_model_verification_requested(sender, instance: ProviderModels, **kwar
 
 
 @receiver(model_verification_success, dispatch_uid="model_verification_success_receiver")
-def handle_model_verification_success(sender, instance: ProviderModels, **kwargs):
+def handle_model_verification_success(sender, instance: ProviderModel, **kwargs):
     """Handle model verification success signal."""
     prefix = get_prefix("handle_model_verification_success")
     logger.info("%s Model verification successful for model: %s", prefix, instance.name)
 
 
 @receiver(model_verification_failure, dispatch_uid="model_verification_failure_receiver")
-def handle_model_verification_failure(sender, instance: ProviderModels, **kwargs):
+def handle_model_verification_failure(sender, instance: ProviderModel, **kwargs):
     """Handle model verification failure signal."""
     prefix = get_prefix("handle_model_verification_failure")
     logger.error("%s Model verification failed for model: %s", prefix, instance.name)
@@ -178,8 +178,8 @@ def log_provider_save(sender, instance: Provider, created: bool, **kwargs):
 # ------------------------------------------------------------------------------
 
 
-@receiver(post_save, sender=ProviderModels)
-def provider_model_save(sender, instance: ProviderModels, created: bool, **kwargs):
+@receiver(post_save, sender=ProviderModel)
+def provider_model_save(sender, instance: ProviderModel, created: bool, **kwargs):
     """Log when a completion model is saved."""
     prefix = get_prefix("provider_model_save")
     # pylint: disable=W0212
@@ -189,7 +189,7 @@ def provider_model_save(sender, instance: ProviderModels, created: bool, **kwarg
     if created:
         logger.info("%s Created Completion Model: %s for Provider: %s", prefix, instance.name, instance.provider.name)
         model_verification_requested.send(
-            sender=ProviderModels,
+            sender=ProviderModel,
             instance=instance,
             provider=instance.provider,
         )
@@ -202,7 +202,7 @@ def provider_model_save(sender, instance: ProviderModels, created: bool, **kwarg
                 new_value = getattr(instance, field)
                 if not old_value and new_value:
                     model_verification_requested.send(
-                        sender=ProviderModels,
+                        sender=ProviderModel,
                         instance=instance,
                         provider=instance.provider,
                     )
@@ -216,8 +216,8 @@ def provider_model_save(sender, instance: ProviderModels, created: bool, **kwarg
 # ------------------------------------------------------------------------------
 
 
-@receiver(post_save, sender=ProviderModelVerifications)
-def provider_model_verification_save(sender, instance: ProviderModelVerifications, created: bool, **kwargs):
+@receiver(post_save, sender=ProviderModelVerification)
+def provider_model_verification_save(sender, instance: ProviderModelVerification, created: bool, **kwargs):
     """Log when a provider model verification is saved."""
     prefix = get_prefix("provider_model_verification_save")
     if created:
