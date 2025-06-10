@@ -7,7 +7,6 @@ Celery workers in order to avoid blocking the main app thread. This is advance w
 future high-traffic scenarios.
 """
 import logging
-import urllib.parse
 
 import requests
 from django.conf import settings

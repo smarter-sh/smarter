@@ -8,6 +8,7 @@ import requests
 from django.db import models
 
 from smarter.apps.account.models import Account, Secret
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User
@@ -54,7 +55,7 @@ class ProviderModelVerificationTypes(models.TextChoices):
     SUMMARIZATION = "summarization", "Summarization"
 
 
-class Provider(TimestampedModel):
+class Provider(TimestampedModel, SmarterHelperMixin):
     """Chat model."""
 
     class Meta:
@@ -169,22 +170,41 @@ class Provider(TimestampedModel):
         Test connectivity to the provider's API.
         This method should be overridden by subclasses to implement specific connectivity tests.
         """
-        if not self.connectivity_test_path:
-            raise SmarterValueError("Connectivity test path is not set for this provider.")
-        if self.api_url and self.api_key:
-            url = urllib.parse.urljoin(self.api_url, self.connectivity_test_path)
-            try:
-                # verify the API URL and key
+        if not self.api_url:
+            raise SmarterValueError("api_url is not set for this provider.")
+        url = urllib.parse.urljoin(self.api_url, self.connectivity_test_path)
+        try:
+            if self.api_key is not None:
+                logger.info(
+                    "%s verifying API connectivity and key for %s with URL: %s",
+                    self.formatted_class_name,
+                    self.name,
+                    url,
+                )
                 response = requests.get(url, headers=self.authorization_header, timeout=10)
-                if response.status_code == 200:
-                    return True
-                else:
-                    return False
-            except Exception as exc:
+            else:
+                logger.info(
+                    "%s verifying API connectivity for %s with URL: %s", self.formatted_class_name, self.name, url
+                )
+                response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                return True
+            else:
                 logger.error(
-                    "Got an unexpected error testing API URL and key verification for %s failed: %s", self.name, exc
+                    "%s API URL and key verification for %s failed with status code: %s",
+                    self.formatted_class_name,
+                    self.name,
+                    response.status_code,
                 )
                 return False
+        except requests.RequestException as exc:
+            logger.error(
+                "%s Got an unexpected error testing API URL and key verification for %s failed: %s",
+                self.formatted_class_name,
+                self.name,
+                exc,
+            )
+            return False
 
     def verify(self):
         """
