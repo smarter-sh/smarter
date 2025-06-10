@@ -7,7 +7,9 @@ Celery workers in order to avoid blocking the main app thread. This is advance w
 future high-traffic scenarios.
 """
 import logging
+import urllib.parse
 
+import requests
 from django.conf import settings
 
 from smarter.common.exceptions import SmarterValueError
@@ -72,6 +74,30 @@ def set_model_verification(
         model_verification_success.send(sender=ProviderModelVerifications, instance=provider_model_verification)
     else:
         model_verification_failure.send(sender=ProviderModelVerifications, instance=provider_model_verification)
+
+
+def test_web_page(url: str, test_str: str) -> bool:
+    """
+    Test a web page to see if it is valid.
+    """
+    prefix = formatted_text(module_prefix + "test_web_page()")
+    logger.info("%s Testing web page %s", prefix, url)
+
+    try:
+        response = requests.get(url, timeout=10)
+        if (
+            response.status_code == 200
+            and ("<html" in response.text.lower() or "<!doctype html" in response.text.lower())
+            and test_str.lower() in response.text.lower()
+        ):
+            logger.info("%s Web page test succeeded.", prefix)
+            return True
+        else:
+            logger.error("%s Web page test failed: Non-200 status or missing documentation HTML.", prefix)
+            return False
+    except Exception as exc:
+        logger.error("%s Web page test failed: %s", prefix, exc)
+        return False
 
 
 # ------------------------------------------------------------------------------
@@ -393,8 +419,78 @@ def verify_provider(provider_id, **kwargs):
         return
 
     logger.info("%s Testing provider: %s", prefix, provider.name)
-    # testy test test test
+    if provider.is_active:
+        logger.warning("%s Provider %s is already active.", prefix, provider.name)
+
+    # blackball method
     success = True
+
+    if provider.is_deprecated:
+        logger.warning("%s Provider %s is deprecated, cannot verify.", prefix, provider.name)
+        success = False
+
+    if provider.is_suspended:
+        logger.warning("%s Provider %s is suspended, cannot verify.", prefix, provider.name)
+        success = False
+
+    if provider.is_flagged:
+        logger.warning("%s Provider %s is flagged, cannot verify.", prefix, provider.name)
+        success = False
+
+    # verify api_url with api_key
+    if not provider.test_connectivity():
+        logger.warning("%s Provider %s connectivity test failed, skipping verification.", prefix, provider.name)
+        success = False
+
+    # verify that logo exists and is an image file
+    if provider.logo:
+        if not provider.logo.name.endswith((".png", ".jpg", ".jpeg", ".svg")):
+            logger.error("%s Provider %s logo is not a valid image file.", prefix, provider.name)
+            success = False
+        else:
+            logger.info("%s Provider %s logo verification succeeded.", prefix, provider.name)
+    else:
+        logger.warning("%s Provider %s has no logo, skipping verification.", prefix, provider.name)
+
+    if not provider.contact_email_verified:
+        logger.error("%s Provider %s contact email is not verified.", prefix, provider.name)
+        success = False
+
+    if not provider.support_email_verified:
+        logger.error("%s Provider %s support email is not verified.", prefix, provider.name)
+        success = False
+
+    # verify website URL
+    if provider.website:
+        success = success and test_web_page(provider.website, test_str="")
+    else:
+        logger.warning("%s Provider %s has no website URL, skipping verification.", prefix, provider.name)
+        success = False
+
+    # verify terms of service URL
+    if provider.terms_of_service:
+        success = success and test_web_page(provider.terms_of_service, test_str="Terms of Service")
+    else:
+        logger.warning("%s Provider %s has no terms of service URL, skipping verification.", prefix, provider.name)
+        success = False
+
+    # verify privacy policy URL
+    if provider.privacy_policy:
+        success = success and test_web_page(provider.privacy_policy, test_str="Privacy Policy")
+    else:
+        logger.warning("%s Provider %s has no privacy policy URL, skipping verification.", prefix, provider.name)
+        success = False
+
+    # verify tos_accepted
+    if not provider.tos_accepted:
+        logger.error("%s Provider %s has not accepted the Smarter terms of service.", prefix, provider.name)
+        success = False
+    else:
+        logger.info("%s Provider %s has accepted the Smarter terms of service.", prefix, provider.name)
+
+    if not provider.can_activate:
+        logger.error("%s Provider %s cannot be activated.", prefix, provider.name)
+        success = False
 
     if success:
         provider_verification_success.send(sender=Provider, instance=provider)
