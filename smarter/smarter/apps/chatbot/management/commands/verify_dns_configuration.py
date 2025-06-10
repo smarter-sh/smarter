@@ -3,7 +3,7 @@
 from django.core.management.base import BaseCommand
 
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.aws_helpers import aws_helper
 
 
@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
     log_prefix = "manage.py verify_dns_configuration()"
 
-    def get_an_A_record(self) -> dict:
+    def get_any_A_record(self) -> dict:
         """
         A records all resolve to the same AWS Classic Load Balancer.
         This is a simple traversal method to look for and retrieve an A record
@@ -30,13 +30,13 @@ class Command(BaseCommand):
             if a_record:
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"get_an_A_record() found an A record in the hosted zone for domain: {a_record['Name']}"
+                        f"get_any_A_record() found an A record in the hosted zone for domain: {a_record['Name']}"
                     )
                 )
                 return a_record
 
         raise SmarterConfigurationError(
-            f"get_an_A_record() Checked the following domains: {smarter_settings.all_domains} but couldn't find an A record to propagate. Cannot proceed."
+            f"get_any_A_record() Checked the following domains: {smarter_settings.all_domains} but couldn't find an A record to propagate. Cannot proceed."
         )
 
     # pylint: disable=R0912,R0915
@@ -337,8 +337,9 @@ class Command(BaseCommand):
             """
             parts = domain.strip(".").split(".")
             if len(parts) < 3:
-                raise ValueError(f"Cannot determine parent domain for: {domain}")
-            return ".".join(parts[1:])
+                raise SmarterValueError(f"Cannot determine parent domain for: {domain}")
+            parent_domain = ".".join(parts[1:])
+            return aws_helper.aws.domain_resolver(parent_domain)
 
         parent_domain = get_parent_domain(domain)
         log_prefix = self.log_prefix + " - " + f"verify() - domain: {domain}, parent_domain: {parent_domain}"
@@ -349,8 +350,6 @@ class Command(BaseCommand):
         print("-" * 80)
 
         domain = aws_helper.aws.domain_resolver(domain)
-        parent_domain = aws_helper.aws.domain_resolver(parent_domain)
-        parent_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=parent_domain)
 
         # 1. Verify that the AWS Route53 hosted zone exists for the environment platform
         #    example: alpha.platform.example.com, beta.platform.example.com, etc.
@@ -374,6 +373,7 @@ class Command(BaseCommand):
             )
         )
 
+        parent_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=parent_domain)
         ns_record, created = aws_helper.route53.get_or_create_dns_record(
             hosted_zone_id=parent_hosted_zone_id,
             record_name=domain,
@@ -396,7 +396,7 @@ class Command(BaseCommand):
 
         # 3. Verify that an A record exists for the domain in its environment hosted zone
         # ---------------------------------------------------------------------
-        a_record = self.get_an_A_record()
+        a_record = self.get_any_A_record()
 
         domain_a_record, create = aws_helper.route53.get_or_create_dns_record(
             hosted_zone_id=domain_hosted_zone_id,
