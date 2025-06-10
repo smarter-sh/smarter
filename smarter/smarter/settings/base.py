@@ -146,6 +146,7 @@ INSTALLED_APPS = [
     "smarter.apps.dashboard",
     "smarter.apps.docs",
     "smarter.apps.plugin",
+    "smarter.apps.provider",
     # 3rd party apps
     # -------------------------------
     "rest_framework",

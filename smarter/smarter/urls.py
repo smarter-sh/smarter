@@ -33,6 +33,7 @@ from smarter.apps.docs.views.webserver import (
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
+from smarter.apps.provider.const import namespace as provider_namespace
 
 
 logger = getLogger(__name__)
@@ -64,6 +65,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
     path("plugin/", include("smarter.apps.plugin.urls", namespace=plugin_namespace)),
+    path("provider/", include("smarter.apps.provider.urls", namespace=provider_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
     # -----------------------------------
     # static routes
