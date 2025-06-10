@@ -10,6 +10,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User
 
+from .const import VERIFICATION_LIFETIME
 from .signals import (
     provider_activated,
     provider_deactivated,
@@ -19,7 +20,7 @@ from .signals import (
     provider_undeprecated,
     provider_unflagged,
     provider_unsuspended,
-    verification_requested,
+    provider_verification_requested,
 )
 
 
@@ -33,6 +34,22 @@ class ProviderStatus(models.TextChoices):
     VERIFIED = "verified", "Verified"
     SUSPENDED = "suspended", "Suspended"
     DEPRECATED = "deprecated", "Deprecated"
+
+
+class ProviderModelVerificationTypes(models.TextChoices):
+    STREAMING = "streaming", "Streaming"
+    TOOLS = "tools", "Tools"
+    TEXT_INPUT = "text_input", "Text Input"
+    IMAGE_INPUT = "image_input", "Image Input"
+    AUDIO_INPUT = "audio_input", "Audio Input"
+    FINE_TUNING = "fine_tuning", "Fine Tuning"
+    SEARCH = "search", "Search"
+    CODE_INTERPRETER = "code_interpreter", "Code Interpreter"
+    TEXT_TO_IMAGE = "text_to_image", "Text to Image"
+    TEXT_TO_AUDIO = "text_to_audio", "Text to Audio"
+    TEXT_TO_TEXT = "text_to_text", "Text to Text"
+    TRANSLATION = "translation", "Translation"
+    SUMMARIZATION = "summarization", "Summarization"
 
 
 class Provider(TimestampedModel):
@@ -67,6 +84,12 @@ class Provider(TimestampedModel):
         help_text="The logo of the provider.",
     )
     website = models.URLField(max_length=255, blank=True, null=True, help_text="The website URL of the provider.")
+    ownership_requested = models.EmailField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="The email address of an alternative contact who has requested to take ownership of the provider.",
+    )
     contact_email = models.EmailField(
         max_length=255, blank=True, null=True, help_text="The contact email of the provider."
     )
@@ -115,7 +138,7 @@ class Provider(TimestampedModel):
         """
         self.status = ProviderStatus.VERIFYING
         self.save()
-        verification_requested.send(
+        provider_verification_requested.send(
             sender=self.__class__,
             instance=self,
         )
@@ -227,22 +250,30 @@ class Provider(TimestampedModel):
         self.is_suspended = False
         self.save()
 
+    def __str__(self):
+        """String representation of the provider."""
+        return f"{self.name} ({self.account.account_number}) - {self.status}"
 
-class ProviderCompletionModels(TimestampedModel):
+
+class ProviderModels(TimestampedModel):
     """Provider completion models for a provider."""
 
     class Meta:
-        verbose_name = "Provider Completion Model"
-        verbose_name_plural = "Provider Completion Models"
+        verbose_name = "Provider Model"
+        verbose_name_plural = "Provider Models"
 
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, blank=False, null=False)
-    model_name = models.CharField(max_length=255, blank=False, null=False)
+    name = models.CharField(max_length=255, blank=False, null=False)
     description = models.TextField(blank=True, null=True)
     is_default = models.BooleanField(default=False, blank=False, null=False)
     is_active = models.BooleanField(default=True, blank=False, null=False)
     is_deprecated = models.BooleanField(default=False, blank=False, null=False)
     is_flagged = models.BooleanField(default=False, blank=False, null=False)
     is_suspended = models.BooleanField(default=False, blank=False, null=False)
+
+    max_tokens = models.PositiveIntegerField(default=4096, blank=False, null=False)
+    temperature = models.FloatField(default=0.7, blank=False, null=False)
+    top_p = models.FloatField(default=1.0, blank=False, null=False)
 
     supports_streaming = models.BooleanField(default=False, blank=False, null=False)
     supports_tools = models.BooleanField(default=False, blank=False, null=False)
@@ -259,10 +290,35 @@ class ProviderCompletionModels(TimestampedModel):
     supports_translation = models.BooleanField(default=False, blank=False, null=False)
     supports_summarization = models.BooleanField(default=False, blank=False, null=False)
 
-    max_tokens = models.PositiveIntegerField(default=4096, blank=False, null=False)
-    temperature = models.FloatField(default=0.7, blank=False, null=False)
-    top_p = models.FloatField(default=1.0, blank=False, null=False)
-
     def __str__(self):
         """String representation of the model."""
-        return f"{self.provider.name} - {self.model_name}"
+        return f"{self.provider.name} - {self.name}"
+
+
+class ProviderModelVerifications(TimestampedModel):
+    """Provider completion model verifications for a provider."""
+
+    class Meta:
+        verbose_name = "Provider Model Verification"
+        verbose_name_plural = "Provider Model Verifications"
+        unique_together = (("provider_model", "verification_type"),)
+
+    provider_model = models.ForeignKey(ProviderModels, on_delete=models.CASCADE, blank=False, null=False)
+    verification_type = models.CharField(
+        max_length=32,
+        choices=ProviderModelVerificationTypes.choices,
+        default=ProviderModelVerificationTypes.TEXT_INPUT,
+        blank=False,
+        null=False,
+    )
+    is_successful = models.BooleanField(default=False, blank=False, null=False)
+    error_message = models.TextField(blank=True, null=True)
+
+    @property
+    def is_valid(self) -> bool:
+        """Check if the verification is valid."""
+        return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
+
+    def __str__(self):
+        """String representation of the verification."""
+        return f"{self.provider_model.name} - {self.verification_type}: {'Success' if self.is_successful else 'Failed'}"
