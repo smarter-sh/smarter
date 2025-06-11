@@ -20,7 +20,7 @@ from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User
 
 from .const import VERIFICATION_LIFETIME
-from .enum import ProviderModelEnum
+from .enum import ProviderModelEnum, ProviderModelTypedDict
 from .signals import (
     provider_activated,
     provider_deactivated,
@@ -177,7 +177,7 @@ class Provider(TimestampedModel, SmarterHelperMixin):
     )
 
     @property
-    def production_api_key(self) -> str:
+    def production_api_key(self, mask: bool = True) -> str:
         """Return the production API key for the provider."""
         api_key_name = f"{self.name.upper()}_API_KEY"
         api_key = os.environ.get(api_key_name)
@@ -185,6 +185,7 @@ class Provider(TimestampedModel, SmarterHelperMixin):
             raise SmarterConfigurationError(
                 f"Production API key for provider {self.name} was accessed but is not set in environment variables."
             )
+        return api_key if not mask else "********"
 
     @property
     def authorization_header(self) -> dict:
@@ -518,17 +519,11 @@ def get_providers() -> list[Provider]:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_model_for_provider(provider_name: str, model_name: str = None) -> dict:
+def get_model_for_provider(provider_name: str, model_name: str = None) -> ProviderModelTypedDict:
     """
     Get the model for a provider by name and account number. This is the
     primary way to retrieve a model for a provider. Raises a Smarter error if
     anything goes wrong.
-
-    usage:
-    >>> try:
-    >>>     model = get_model_for_provider("123456789", "OpenAI", "gpt-3.5-turbo")
-    >>> except SmarterException:
-    >>>     pass
     """
     provider = get_provider(provider_name=provider_name)
 
@@ -556,20 +551,33 @@ def get_model_for_provider(provider_name: str, model_name: str = None) -> dict:
         raise SmarterBusinessRuleViolation(f"Model {model_name} for provider {provider_name} is not active.")
 
     return {
-        ProviderModelEnum.API_KEY.value: provider.production_api_key,
+        ProviderModelEnum.API_KEY.value: provider.production_api_key(mask=False),
         ProviderModelEnum.PROVIDER_NAME.value: provider.name,
         ProviderModelEnum.PROVIDER_ID.value: provider.id,
         ProviderModelEnum.BASE_URL.value: provider.api_url,
-        ProviderModelEnum.DEFAULT_MODEL.value: model.name,
+        ProviderModelEnum.MODEL.value: model.name,
         ProviderModelEnum.MAX_TOKENS.value: model.max_tokens,
         ProviderModelEnum.TEMPERATURE.value: model.temperature,
         ProviderModelEnum.TOP_P.value: model.top_p,
-        ProviderModelEnum.VALID_CHAT_COMPLETION_MODELS.value: [model.name],
+        ProviderModelEnum.SUPPORTS_STREAMING.value: model.supports_streaming,
+        ProviderModelEnum.SUPPORTS_TOOLS.value: model.supports_tools,
+        ProviderModelEnum.SUPPORTS_TEXT_INPUT.value: model.supports_text_input,
+        ProviderModelEnum.SUPPORTS_IMAGE_INPUT.value: model.supports_image_input,
+        ProviderModelEnum.SUPPORTS_AUDIO_INPUT.value: model.supports_audio_input,
+        ProviderModelEnum.SUPPORTS_EMBEDDING.value: model.supports_embedding,
+        ProviderModelEnum.SUPPORTS_FINE_TUNING.value: model.supports_fine_tuning,
+        ProviderModelEnum.SUPPORTS_SEARCH.value: model.supports_search,
+        ProviderModelEnum.SUPPORTS_CODE_INTERPRETER.value: model.supports_code_interpreter,
+        ProviderModelEnum.SUPPORTS_IMAGE_GENERATION.value: model.supports_image_generation,
+        ProviderModelEnum.SUPPORTS_AUDIO_GENERATION.value: model.supports_audio_generation,
+        ProviderModelEnum.SUPPORTS_TEXT_GENERATION.value: model.supports_text_generation,
+        ProviderModelEnum.SUPPORTS_TRANSLATION.value: model.supports_translation,
+        ProviderModelEnum.SUPPORTS_SUMMARIZATION.value: model.supports_summarization,
     }
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_models_for_provider(provider_name: str) -> list[dict]:
+def get_models_for_provider(provider_name: str) -> list[ProviderModelTypedDict]:
     """
     Get all models for a provider by name and account number. This is the
     primary way to retrieve all models for a provider. Raises a Smarter error if

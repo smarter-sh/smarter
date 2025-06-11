@@ -1,3 +1,4 @@
+# pylint: disable=C0115
 """
 Serializer classes for the Provider app.
 """
@@ -24,7 +25,6 @@ class ProviderSerializer(SmarterCamelCaseSerializer):
     account = AccountMiniSerializer(read_only=True)
     api_key = SecretSerializer(read_only=True)
 
-    # pylint: disable=missing-class-docstring
     class Meta:
         model = Provider
         fields = "__all__"
@@ -36,7 +36,6 @@ class ProviderModelSerializer(SmarterCamelCaseSerializer):
 
     provider = ProviderSerializer(read_only=True)
 
-    # pylint: disable=missing-class-docstring
     class Meta:
         model = ProviderModel
         fields = "__all__"
@@ -48,7 +47,6 @@ class ProviderVerificationSerializer(SmarterCamelCaseSerializer):
 
     provider = ProviderSerializer(read_only=True)
 
-    # pylint: disable=missing-class-docstring
     class Meta:
         model = ProviderVerification
         fields = "__all__"
@@ -60,7 +58,6 @@ class ProviderModelVerificationSerializer(SmarterCamelCaseSerializer):
 
     provider_model = ProviderModelSerializer(read_only=True)
 
-    # pylint: disable=missing-class-docstring
     class Meta:
         model = ProviderModelVerification
         fields = "__all__"
