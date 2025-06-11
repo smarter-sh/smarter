@@ -74,6 +74,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
     CHAT_PLUGIN_USAGE = "ChatPluginUsage"
     CHAT_TOOL_CALL = "ChatToolCall"
     CHATBOT = "Chatbot"
+    PROVIDER = "Provider"
     SECRET = "Secret"
 
     @classmethod
@@ -94,6 +95,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.CHAT_PLUGIN_USAGE, cls.CHAT_PLUGIN_USAGE),
             (cls.CHAT_TOOL_CALL, cls.CHAT_TOOL_CALL),
             (cls.CHATBOT, cls.CHATBOT),
+            (cls.PROVIDER, cls.PROVIDER),
             (cls.SECRET, cls.SECRET),
         ]
 

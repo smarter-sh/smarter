@@ -4,6 +4,7 @@
 import logging
 import os
 import urllib.parse
+from typing import TypedDict
 
 import requests
 from django.db import models
@@ -20,7 +21,7 @@ from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User
 
 from .const import VERIFICATION_LIFETIME
-from .enum import ProviderModelEnum, ProviderModelTypedDict
+from .manifest.enum import ProviderModelEnum
 from .signals import (
     provider_activated,
     provider_deactivated,
@@ -36,6 +37,33 @@ from .signals import (
 
 logger = logging.getLogger(__name__)
 CACHE_TIMEOUT = 60 / 2  # 30 seconds
+
+
+class ProviderModelTypedDict(TypedDict):
+    """TypedDict for provider model information."""
+
+    api_key: str
+    provider_name: str
+    provider_id: int
+    base_url: str
+    model: str
+    max_tokens: int
+    temperature: float
+    top_p: float
+    supports_streaming: bool
+    supports_tools: bool
+    supports_text_input: bool
+    supports_image_input: bool
+    supports_audio_input: bool
+    supports_embedding: bool
+    supports_fine_tuning: bool
+    supports_search: bool
+    supports_code_interpreter: bool
+    supports_image_generation: bool
+    supports_audio_generation: bool
+    supports_text_generation: bool
+    supports_translation: bool
+    supports_summarization: bool
 
 
 class ProviderStatus(models.TextChoices):
@@ -161,9 +189,6 @@ class Provider(TimestampedModel, SmarterHelperMixin):
     privacy_policy_url = models.URLField(
         max_length=255, blank=True, null=True, help_text="The privacy policy URL of the provider."
     )
-    tos_accepted = models.BooleanField(
-        default=False, blank=False, null=False, help_text="Whether the terms of service have been accepted."
-    )
     tos_accepted_at = models.DateTimeField(
         blank=True, null=True, help_text="The date and time when the terms of service were accepted."
     )
@@ -175,6 +200,11 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         related_name="tos_accepted_by",
         help_text="The user who accepted the terms of service.",
     )
+
+    @property
+    def tos_accepted(self) -> bool:
+        """Check if the terms of service have been accepted."""
+        return self.tos_accepted_at is not None and self.tos_accepted_by is not None
 
     @property
     def production_api_key(self, mask: bool = True) -> str:
