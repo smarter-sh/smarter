@@ -16,12 +16,18 @@ from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT
 
 
 HERE = Path(__file__).resolve().parent
+
 OPENAI_API = "OpenAI"
 OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
+OPENAI_API_KEY_NAME = "openai_api_key"
+
 GOOGLE_API = "GoogleAI"
 GOOGLE_DEFAULT_MODEL = "gemini-2.0-flash"
+GOOGLE_API_KEY_NAME = "google_ai_api_key"
+
 META_API = "MetaAI"
 META_DEFAULT_MODEL = "llama3.1-70b"
+META_API_KEY_NAME = "meta_ai_api_key"
 
 
 class Command(BaseCommand):
@@ -38,6 +44,7 @@ class Command(BaseCommand):
     def initialize_provider_models(self, provider: Provider, default_model: str):
         """
         Initialize models by fetching them from the OpenAI compatible API end point.
+        example response:
         {
             "object": "list",
             "data": [
@@ -47,12 +54,6 @@ class Command(BaseCommand):
                     "created": 1686588896,
                     "owned_by": "openai"
                 },
-                {
-                    "id": "gpt-3.5-turbo",
-                    "object": "model",
-                    "created": 1677649962,
-                    "owned_by": "openai"
-                }
             ]
         """
         end_point = "v1/models"
@@ -98,6 +99,9 @@ class Command(BaseCommand):
         )
 
     def initialize_provider_model(self, provider: Provider, model_name: str, is_default: bool = False):
+        """
+        helper function to initialize a single provider model.
+        """
 
         ProviderModel.objects.update_or_create(
             provider=provider,
@@ -111,8 +115,11 @@ class Command(BaseCommand):
         )
 
     def initialize_openai(self):
+        """
+        Initialize OpenAI provider and its models.
+        """
         Secret.objects.update_or_create(
-            name="openai_api_key",
+            name=OPENAI_API_KEY_NAME,
             defaults={
                 "description": "API key for OpenAI services.",
                 "user_profile": self.user_profile,
@@ -153,8 +160,11 @@ class Command(BaseCommand):
             self.initialize_provider_models(provider=provider, default_model=OPENAI_DEFAULT_MODEL)
 
     def initialize_googleai(self):
+        """
+        Initialize Google AI provider and its models.
+        """
         Secret.objects.update_or_create(
-            name="google_ai_api_key",
+            name=GOOGLE_API_KEY_NAME,
             defaults={
                 "description": "API key for Google AI services.",
                 "user_profile": self.user_profile,
@@ -194,8 +204,11 @@ class Command(BaseCommand):
             self.initialize_provider_models(provider=provider, default_model=GOOGLE_DEFAULT_MODEL)
 
     def initialize_metaai(self):
+        """
+        Initialize Meta AI provider and its models.
+        """
         Secret.objects.update_or_create(
-            name="meta_ai_api_key",
+            name=META_API_KEY_NAME,
             defaults={
                 "description": "API key for Meta AI services.",
                 "user_profile": self.user_profile,
@@ -203,6 +216,7 @@ class Command(BaseCommand):
             },
         )
         meta_logo = HERE / "data" / "logos" / "metaai" / "mono_white" / "Meta_lockup_mono_white_RGB.svg"
+
         with open(meta_logo, "rb") as logo_file:
             provider, _ = Provider.objects.update_or_create(
                 name=META_API,
@@ -235,7 +249,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        Handle the command.
+        Initialize all built-in providers.
         """
         self.stdout.write("initialize_providers: Initializing providers...")
 
