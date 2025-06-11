@@ -9,7 +9,12 @@ from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_text
 
-from .models import Provider, ProviderModel, ProviderModelVerification
+from .models import (
+    Provider,
+    ProviderModel,
+    ProviderModelVerification,
+    ProviderVerification,
+)
 from .signals import (
     model_verification_failure,
     model_verification_requested,
@@ -54,17 +59,47 @@ def handle_model_verification_requested(sender, instance: ProviderModel, **kwarg
 
 
 @receiver(model_verification_success, dispatch_uid="model_verification_success_receiver")
-def handle_model_verification_success(sender, instance: ProviderModel, **kwargs):
+def handle_model_verification_success(
+    sender,
+    provider_model: ProviderModel = None,
+    provider_model_verification: ProviderModelVerification = None,
+    **kwargs,
+):
     """Handle model verification success signal."""
     prefix = get_prefix("handle_model_verification_success")
-    logger.info("%s Model verification successful for model: %s", prefix, instance.name)
+    if provider_model_verification:
+        logger.info(
+            "%s Model verification successful for model: %s with verification: %s",
+            prefix,
+            provider_model.name,
+            provider_model_verification.verification_type,
+        )
+    elif provider_model:
+        logger.info("%s Model verification successful for model: %s", prefix, provider_model.name)
+    else:
+        logger.info("%s Model verification successful for an unknown model for an unknown reason", prefix)
 
 
 @receiver(model_verification_failure, dispatch_uid="model_verification_failure_receiver")
-def handle_model_verification_failure(sender, instance: ProviderModel, **kwargs):
+def handle_model_verification_failure(
+    sender,
+    provider_model: ProviderModel = None,
+    provider_model_verification: ProviderModelVerification = None,
+    **kwargs,
+):
     """Handle model verification failure signal."""
     prefix = get_prefix("handle_model_verification_failure")
-    logger.error("%s Model verification failed for model: %s", prefix, instance.name)
+    if provider_model_verification:
+        logger.error(
+            "%s Model verification failed for model: %s with verification: %s",
+            prefix,
+            provider_model.name,
+            provider_model_verification.verification_type,
+        )
+    elif provider_model:
+        logger.error("%s Model verification failed for model: %s", prefix, provider_model.name)
+    else:
+        logger.error("%s Model verification failed for an unknown model for an unknown reason", prefix)
 
 
 # ------------------------------------------------------------------------------
@@ -87,17 +122,41 @@ def handle_provider_verification_requested(sender, instance: Provider, **kwargs)
 
 
 @receiver(provider_verification_success, dispatch_uid="verification_success_receiver")
-def handle_provider_verification_success(sender, instance: Provider, **kwargs):
+def handle_provider_verification_success(
+    sender, provider: Provider = None, provider_verification: ProviderVerification = None, **kwargs
+):
     """Handle test passed signal."""
     prefix = get_prefix("handle_provider_verification_success")
-    logger.info("%s Test passed for provider: %s", prefix, instance.name)
+    if provider_verification:
+        logger.info(
+            "%s Test passed for provider: %s with verification: %s",
+            prefix,
+            provider.name,
+            provider_verification.verification_type,
+        )
+    elif provider:
+        logger.info("%s Test passed for provider: %s", prefix, provider.name)
+    else:
+        logger.info("%s Test passed for an unknown provider for an unknown reason", prefix)
 
 
 @receiver(provider_verification_failure, dispatch_uid="verification_failure_receiver")
-def handle_provider_verification_failure(sender, instance: Provider, **kwargs):
+def handle_provider_verification_failure(
+    sender, provider: Provider = None, provider_verification: ProviderVerification = None, **kwargs
+):
     """Handle test failed signal."""
     prefix = get_prefix("handle_provider_verification_failure")
-    logger.error("%s Test failed for provider: %s", prefix, instance.name)
+    if provider_verification:
+        logger.error(
+            "%s Test failed for provider: %s with verification: %s",
+            prefix,
+            provider.name,
+            provider_verification.verification_type,
+        )
+    elif provider:
+        logger.error("%s Test failed for provider: %s", prefix, provider.name)
+    else:
+        logger.error("%s Test failed for an unknown provider for an unknown reason", prefix)
 
 
 @receiver(provider_deactivated, dispatch_uid="provider_deactivated_receiver")

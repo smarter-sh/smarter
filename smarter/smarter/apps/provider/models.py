@@ -47,6 +47,18 @@ class ProviderStatus(models.TextChoices):
     DEPRECATED = "deprecated", "Deprecated"
 
 
+class ProviderVerificationTypes(models.TextChoices):
+    API_CONNECTIVITY = "api_connectivity", "Api Connectivity"
+    LOGO = "logo", "Logo"
+    CONTACT_EMAIL = "contact_email", "Contact Email"
+    SUPPORT_EMAIL = "support_email", "Support Email"
+    WEBSITE_URL = "website_url", "Website URL"
+    TOS_URL = "tos_url", "Terms of Service URL"
+    PRIVACY_POLICY_URL = "privacy_policy_url", "Privacy Policy URL"
+    TOS_ACCEPTANCE = "tos_acceptance", "Terms of Service Acceptance"
+    PRODUCTION_API_KEY = "production_api_key", "Production API Key"
+
+
 class ProviderModelVerificationTypes(models.TextChoices):
     STREAMING = "streaming", "Streaming"
     TOOLS = "tools", "Tools"
@@ -139,10 +151,10 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         null=True,
         help_text="The date and time when the support email was verified.",
     )
-    terms_of_service = models.URLField(
+    terms_of_service_url = models.URLField(
         max_length=255, blank=True, null=True, help_text="The terms of service URL of the provider."
     )
-    privacy_policy = models.URLField(
+    privacy_policy_url = models.URLField(
         max_length=255, blank=True, null=True, help_text="The privacy policy URL of the provider."
     )
     tos_accepted = models.BooleanField(
@@ -161,10 +173,20 @@ class Provider(TimestampedModel, SmarterHelperMixin):
     )
 
     @property
+    def production_api_key(self) -> str:
+        """Return the production API key for the provider."""
+        api_key_name = f"{self.name.upper()}_API_KEY"
+        api_key = os.environ.get(api_key_name)
+        if api_key is None:
+            raise SmarterConfigurationError(
+                f"Production API key for provider {self.name} was accessed but is not set in environment variables."
+            )
+
+    @property
     def authorization_header(self) -> dict:
         """Return the authorization header for the provider."""
         if self.api_key:
-            return {"Authorization": f"Bearer {self.api_key.secret}"}
+            return {"Authorization": f"Bearer {self.api_key.get_secret()}"}
         return {}
 
     @property
@@ -393,6 +415,35 @@ class ProviderModel(TimestampedModel):
         return f"{self.provider.name} - {self.name}"
 
 
+class ProviderVerification(TimestampedModel):
+    """Provider completion model verifications for a provider."""
+
+    class Meta:
+        verbose_name = "Provider Verification"
+        verbose_name_plural = "Provider Verifications"
+        unique_together = (("provider", "verification_type"),)
+
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, blank=False, null=False)
+    verification_type = models.CharField(
+        max_length=32,
+        choices=ProviderVerificationTypes.choices,
+        default=ProviderVerificationTypes.API_CONNECTIVITY,
+        blank=False,
+        null=False,
+    )
+    is_successful = models.BooleanField(default=False, blank=False, null=False)
+    error_message = models.TextField(blank=True, null=True)
+
+    @property
+    def is_valid(self) -> bool:
+        """Check if the verification is valid."""
+        return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
+
+    def __str__(self):
+        """String representation of the verification."""
+        return f"{self.provider.name} - {self.verification_type}: {'Success' if self.is_successful else 'Failed'}"
+
+
 class ProviderModelVerification(TimestampedModel):
     """Provider completion model verifications for a provider."""
 
@@ -471,16 +522,8 @@ def get_model_for_provider(account_number: str, provider_name: str, model_name: 
     if not model.is_active:
         raise SmarterBusinessRuleViolation(f"Model {model_name} for provider {provider_name} is not active.")
 
-    # 4.) get the production api key
-    api_key_name = f"{provider.name.upper()}_API_KEY"
-    api_key = os.environ.get(api_key_name)
-    if not api_key:
-        raise SmarterConfigurationError(
-            f"Production API key for provider {provider_name} is not set in environment variables."
-        )
-
     return {
-        ProviderModelEnum.API_KEY.value: api_key,
+        ProviderModelEnum.API_KEY.value: provider.production_api_key,
         ProviderModelEnum.PROVIDER_NAME.value: provider.name,
         ProviderModelEnum.PROVIDER_ID.value: provider.id,
         ProviderModelEnum.BASE_URL.value: provider.api_url,
