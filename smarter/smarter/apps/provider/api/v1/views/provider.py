@@ -1,6 +1,8 @@
 # pylint: disable=R0801,W0613
 """Customer API views."""
 
+from http import HTTPStatus
+
 from rest_framework.response import Response
 
 from smarter.apps.provider.models import (
@@ -26,7 +28,7 @@ class ProvidersApiViewSet(SmarterAuthenticatedAPIView):
         except SmarterException:
             return SmarterHttpResponseNotFound(request=request, error_message="No providers found")
 
-        return Response(providers)
+        return Response(data=providers, status=HTTPStatus.OK)
 
 
 class ProviderApiViewSet(SmarterAuthenticatedAPIView):
@@ -39,7 +41,7 @@ class ProviderApiViewSet(SmarterAuthenticatedAPIView):
         except SmarterException:
             return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
 
-        return Response(provider)
+        return Response(data=provider, status=HTTPStatus.OK)
 
 
 class ProviderModelsApiViewSet(SmarterAuthenticatedAPIView):
@@ -52,7 +54,7 @@ class ProviderModelsApiViewSet(SmarterAuthenticatedAPIView):
         except SmarterException:
             return SmarterHttpResponseNotFound(request=request, error_message="No models found for this provider")
 
-        return Response(models)
+        return Response(data=models, status=HTTPStatus.OK)
 
 
 class ProviderModelApiViewSet(SmarterAuthenticatedAPIView):
@@ -65,4 +67,4 @@ class ProviderModelApiViewSet(SmarterAuthenticatedAPIView):
         except SmarterException:
             return SmarterHttpResponseNotFound(request=request, error_message="Model not found for this provider")
 
-        return Response(model)
+        return Response(data=model, status=HTTPStatus.OK)
