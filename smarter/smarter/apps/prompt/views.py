@@ -39,7 +39,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
-from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
+from smarter.common.exceptions import SmarterException, SmarterValueError
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -68,7 +68,7 @@ MAX_RETURNED_PLUGINS = 10
 logger = logging.getLogger(__name__)
 
 
-class SmarterChatappViewError(SmarterExceptionBase):
+class SmarterChatappViewError(SmarterException):
     """Base class for all SmarterChatapp errors."""
 
     @property

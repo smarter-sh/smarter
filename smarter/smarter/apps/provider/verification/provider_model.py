@@ -1,6 +1,11 @@
 # pylint: disable=W0613,C0115,R0913
 """
 Verification functions for provider models in the Smarter app.
+These functions are responsible for verifying various capabilities of provider models,
+such as streaming, tools, text input, image input, audio input, fine-tuning, search, code interpreter,
+text to image, text to audio, text to text, translation, and summarization.
+Each verification function checks if the capability is already verified and valid.
+If not, it performs a test to verify the capability and updates the verification status accordingly.
 """
 
 import logging

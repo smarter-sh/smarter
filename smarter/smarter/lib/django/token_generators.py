@@ -13,7 +13,7 @@ from django.utils.http import (
 )
 from django.utils.timezone import now as timezone_now
 
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 from smarter.lib.django.user import User, UserType
 
 
@@ -21,7 +21,7 @@ DEFAULT_LINK_EXPIRATION = 86400
 HFS_EPOCH_UNIX_TIMESTAMP = 2082844800
 
 
-class SmarterTokenError(SmarterExceptionBase):
+class SmarterTokenError(SmarterException):
     """Base class for all token-related exceptions."""
 
 

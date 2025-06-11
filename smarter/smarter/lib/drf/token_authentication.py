@@ -7,7 +7,7 @@ from knox.auth import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 from smarter.common.utils import mask_string
 
 from .models import SmarterAuthToken
@@ -21,7 +21,7 @@ from .signals import (
 logger = logging.getLogger(__name__)
 
 
-class SmarterTokenAuthenticationError(SmarterExceptionBase):
+class SmarterTokenAuthenticationError(SmarterException):
     """Base class for all SmarterTokenAuthentication errors."""
 
     @property

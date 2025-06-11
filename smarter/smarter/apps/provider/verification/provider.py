@@ -1,10 +1,8 @@
 # pylint: disable=W0613,C0115,R0913
 """
-Celery tasks for chat app.
-
-These tasks are i/o intensive operations for creating chat and plugin history records with
-Celery workers in order to avoid blocking the main app thread. This is advance work to lay groundwork for
-future high-traffic scenarios.
+Verification functions for the Provider model.
+This module contains functions to verify various aspects of a provider, such as API connectivity,
+logo, contact email, support email, website URL, terms of service URL, privacy policy URL, TOS acceptance, and production API key.
 """
 import logging
 

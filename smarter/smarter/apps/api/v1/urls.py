@@ -21,6 +21,7 @@ from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.chatbot.const import namespace as chatbot_namespace
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.const import namespace as prompt_namespace
+from smarter.apps.provider.const import namespace as provider_namespace
 
 from .cli.const import namespace as cli_namespace
 from .const import namespace
@@ -41,10 +42,11 @@ urlpatterns = [
     # /api/v1/cli/ implements Brokered services that support the CLI, and is implemented here, in this module.
     # /api/v1/tests/ is used for unit tests, and is implemented here, in this module.
     # -------------------------------------------
-    path("account/", include("smarter.apps.account.api.v1.urls", namespace=account_namespace)),
+    path("accounts/", include("smarter.apps.account.api.v1.urls", namespace=account_namespace)),
     path("chatbots/", include("smarter.apps.chatbot.api.v1.urls", namespace=chatbot_namespace)),
-    path("prompt/", include("smarter.apps.prompt.api.v1.urls", namespace=prompt_namespace)),
+    path("prompts/", include("smarter.apps.prompt.api.v1.urls", namespace=prompt_namespace)),
     path("plugins/", include("smarter.apps.plugin.api.v1.urls", namespace=plugin_namespace)),
+    path("providers/", include("smarter.apps.provider.api.v1.urls", namespace=provider_namespace)),
     path("cli/", include("smarter.apps.api.v1.cli.urls", namespace=cli_namespace)),
     path("tests/", include("smarter.apps.api.v1.tests.urls", namespace="tests")),
 ]

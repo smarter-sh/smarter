@@ -4,13 +4,13 @@ import logging
 from urllib.parse import urlparse
 
 from smarter.common.enum import SmarterEnumAbstract
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 
 
 logger = logging.getLogger(__name__)
 
 
-class SmarterJournalEnumException(SmarterExceptionBase):
+class SmarterJournalEnumException(SmarterException):
     """Base exception for Smarter API Manifest enumerations."""
 
     @property

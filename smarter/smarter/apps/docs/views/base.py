@@ -19,7 +19,7 @@ from django.urls import reverse
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST, SmarterEnvironments
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 from smarter.lib.django.view_helpers import SmarterWebHtmlView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
@@ -30,7 +30,7 @@ logger = getLogger(__name__)
 DOCS_PATH = "/home/smarter_user/data/doc/"
 
 
-class DocsError(SmarterExceptionBase):
+class DocsError(SmarterException):
     """Base class for all /docs/ errors."""
 
     @property

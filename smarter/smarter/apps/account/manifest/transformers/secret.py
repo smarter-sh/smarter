@@ -26,7 +26,7 @@ from smarter.apps.account.signals import (
 from smarter.apps.account.utils import get_user_profiles_for_account
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
@@ -39,7 +39,7 @@ SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1
 READ_ONLY_FIELDS = ["id", "user_profile", "last_accessed", "created_at", "modified_at"]
 
 
-class SmarterSecretTransformerError(SmarterExceptionBase):
+class SmarterSecretTransformerError(SmarterException):
     """Base exception for Smarter API Secret handling."""
 
 

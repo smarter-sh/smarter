@@ -12,10 +12,8 @@ from django.conf import settings
 
 from smarter.smarter_celery import app
 
-from .verification.provider import verify_provider as verification_verify_provider
-from .verification.provider_model import (
-    verify_provider_model as verification_verify_provider_model,
-)
+from .verification import verify_provider as verification_verify_provider
+from .verification import verify_provider_model as verification_verify_provider_model
 
 
 logger = logging.getLogger(__name__)
