@@ -51,6 +51,18 @@ from smarter.apps.prompt.admin import (
     ChatToolCallHistoryAdmin,
 )
 from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from smarter.apps.provider.admin import (
+    ProviderAdmin,
+    ProviderModelAdmin,
+    ProviderModelVerificationAdmin,
+    ProviderVerificationAdmin,
+)
+from smarter.apps.provider.models import (
+    Provider,
+    ProviderModel,
+    ProviderModelVerification,
+    ProviderVerification,
+)
 from smarter.lib.django.admin import RestrictedModelAdmin, SuperUserOnlyModelAdmin
 from smarter.lib.django.user import User
 from smarter.lib.drf.admin import SmarterAuthTokenAdmin
@@ -157,6 +169,12 @@ restricted_site.register(ChatBotAPIKey, ChatBotAPIKeyAdmin)
 restricted_site.register(ChatBotPlugin, ChatBotPluginAdmin)
 restricted_site.register(ChatBotFunctions, ChatBotFunctionsAdmin)
 restricted_site.register(ChatBotRequests, ChatBotRequestsAdmin)
+
+# Provider Models
+restricted_site.register(Provider, ProviderAdmin)
+restricted_site.register(ProviderModel, ProviderModelAdmin)
+restricted_site.register(ProviderVerification, ProviderVerificationAdmin)
+restricted_site.register(ProviderModelVerification, ProviderModelVerificationAdmin)
 
 
 # Plugin Models
