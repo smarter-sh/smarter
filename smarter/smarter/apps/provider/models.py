@@ -82,9 +82,13 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         verbose_name = "Provider"
         verbose_name_plural = "Providers"
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=False, null=False)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
-    name = models.CharField(max_length=255, blank=False, null=False)
+    account = models.ForeignKey(
+        Account, on_delete=models.CASCADE, blank=False, null=False, help_text="The account that owns the provider."
+    )
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, blank=False, null=False, help_text="The users that owns the provider."
+    )
+    name = models.CharField(max_length=255, blank=False, null=False, unique=True, help_text="The name of the provider.")
     description = models.TextField(blank=True, null=True)
     status = models.CharField(
         max_length=32,
@@ -415,6 +419,9 @@ class ProviderModel(TimestampedModel):
         return f"{self.provider.name} - {self.name}"
 
 
+# ------------------------------------------------------------------------------
+# Verification history for providers and provider models
+# ------------------------------------------------------------------------------
 class ProviderVerification(TimestampedModel):
     """Provider completion model verifications for a provider."""
 
@@ -474,30 +481,56 @@ class ProviderModelVerification(TimestampedModel):
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_model_for_provider(account_number: str, provider_name: str, model_name: str = None) -> dict:
+def get_provider(provider_name: str) -> Provider:
+    """
+    Get the provider by name and account number. This is the primary way to
+    retrieve a provider. Raises a Smarter error if anything goes wrong.
+    """
+
+    try:
+        provider = Provider.objects.get(name=provider_name)
+    except Provider.DoesNotExist as e:
+        raise SmarterValueError(f"Provider {provider_name} does not exist.") from e
+
+    if not provider.account.is_active:
+        raise SmarterBusinessRuleViolation(f"Provider account {provider.account.account_number} is not active.")
+
+    # the Provider might be inactive for a variety of reasons: suspended, flagged, deprecated, or something else.
+    # We don't care why we just want to know if it is active or not.
+    if not provider.is_active:
+        raise SmarterBusinessRuleViolation(f"Provider {provider_name} is not active.")
+
+    return provider
+
+
+@cache_results(timeout=CACHE_TIMEOUT)
+def get_providers() -> list[Provider]:
+    """
+    Get all active providers. This is the primary way to retrieve all providers.
+    Raises a Smarter error if anything goes wrong.
+    """
+    try:
+        providers = Provider.objects.filter(is_active=True)
+    except Provider.DoesNotExist as e:
+        raise SmarterValueError("No active providers found.") from e
+
+    return list(providers)
+
+
+@cache_results(timeout=CACHE_TIMEOUT)
+def get_model_for_provider(provider_name: str, model_name: str = None) -> dict:
     """
     Get the model for a provider by name and account number. This is the
     primary way to retrieve a model for a provider. Raises a Smarter error if
     anything goes wrong.
+
+    usage:
+    >>> try:
+    >>>     model = get_model_for_provider("123456789", "OpenAI", "gpt-3.5-turbo")
+    >>> except SmarterException:
+    >>>     pass
     """
-
-    # 1.) get the account that owns the provider. Long term this is envisioned to be
-    # OpenAI, GoogleAI et al. But for now, assume that Smarter owns all of the
-    # Providers.
-    try:
-        account = Account.objects.get(account_number=account_number)
-    except Account.DoesNotExist as e:
-        raise SmarterValueError(f"Account with number {account_number} does not exist.") from e
-
-    # check if the account is active.
-    if not account.is_active:
-        raise SmarterBusinessRuleViolation(f"Account {account_number} is not active.")
-
-    # 2.) get the provider master record
-    try:
-        provider = Provider.objects.get(account=account, name=provider_name)
-    except Provider.DoesNotExist as e:
-        raise SmarterValueError(f"Provider {provider_name} does not exist for account {account.account_number}.") from e
+    provider = get_provider(provider_name=provider_name)
 
     # the Provider might be inactive for a variety of reasons: suspended, flagged, deprecated, or something else.
     # We don't care why we just want to know if it is active or not.
@@ -533,3 +566,21 @@ def get_model_for_provider(account_number: str, provider_name: str, model_name: 
         ProviderModelEnum.TOP_P.value: model.top_p,
         ProviderModelEnum.VALID_CHAT_COMPLETION_MODELS.value: [model.name],
     }
+
+
+@cache_results(timeout=CACHE_TIMEOUT)
+def get_models_for_provider(provider_name: str) -> list[dict]:
+    """
+    Get all models for a provider by name and account number. This is the
+    primary way to retrieve all models for a provider. Raises a Smarter error if
+    anything goes wrong.
+    """
+    provider = get_provider(provider_name=provider_name)
+    provider_models = ProviderModel.objects.filter(provider=provider, is_active=True)
+
+    return [
+        get_model_for_provider(
+            account_number=provider.account.account_number, provider_name=provider_name, model_name=provider_model.name
+        )
+        for provider_model in provider_models
+    ]

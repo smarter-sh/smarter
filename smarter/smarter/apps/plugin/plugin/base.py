@@ -19,7 +19,7 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
+from smarter.common.exceptions import SmarterException, SmarterValueError
 from smarter.lib.django.user import UserType
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
@@ -64,7 +64,7 @@ SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1
 PLUGIN_KEY = "plugin"
 
 
-class SmarterPluginError(SmarterExceptionBase):
+class SmarterPluginError(SmarterException):
     """Base exception for Smarter API Plugin handling."""
 
 

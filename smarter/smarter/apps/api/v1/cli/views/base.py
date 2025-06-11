@@ -27,7 +27,7 @@ from smarter.common.const import (
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
-    SmarterExceptionBase,
+    SmarterException,
     SmarterIlligalInvocationError,
     SmarterInvalidApiKeyError,
     SmarterValueError,
@@ -64,7 +64,7 @@ BUG_REPORT = (
 )
 
 
-class APIV1CLIViewError(SmarterExceptionBase):
+class APIV1CLIViewError(SmarterException):
     """Base class for all APIV1CLIView errors."""
 
     @property
@@ -456,7 +456,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 SmarterAWSError,
                 KubernetesHelperException,
                 SmarterJournalEnumException,
-                SmarterExceptionBase,
+                SmarterException,
             ):
                 status = HTTPStatus.INTERNAL_SERVER_ERROR.value
 
