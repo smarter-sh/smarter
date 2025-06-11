@@ -430,7 +430,7 @@ def get_model_for_provider(account_number: str, provider_name: str, model_name: 
     anything goes wrong.
     """
 
-    # get the account that owns the provider. Long term this is envisioned to be
+    # 1.) get the account that owns the provider. Long term this is envisioned to be
     # OpenAI, GoogleAI et al. But for now, assume that Smarter owns all of the
     # Providers.
     try:
@@ -442,7 +442,7 @@ def get_model_for_provider(account_number: str, provider_name: str, model_name: 
     if not account.is_active:
         raise SmarterBusinessRuleViolation(f"Account {account_number} is not active.")
 
-    # get the provider master record
+    # 2.) get the provider master record
     try:
         provider = Provider.objects.get(account=account, name=provider_name)
     except Provider.DoesNotExist as e:
@@ -453,7 +453,7 @@ def get_model_for_provider(account_number: str, provider_name: str, model_name: 
     if not provider.is_active:
         raise SmarterBusinessRuleViolation(f"Provider {provider_name} is not active.")
 
-    # get the model for the provider
+    # 3.) get the model for the provider
     if model_name is not None:
         try:
             model = ProviderModel.objects.get(provider=provider, name=model_name)
@@ -471,7 +471,7 @@ def get_model_for_provider(account_number: str, provider_name: str, model_name: 
     if not model.is_active:
         raise SmarterBusinessRuleViolation(f"Model {model_name} for provider {provider_name} is not active.")
 
-    # get the production api key
+    # 4.) get the production api key
     api_key_name = f"{provider.name.upper()}_API_KEY"
     api_key = os.environ.get(api_key_name)
     if not api_key:
