@@ -1,5 +1,6 @@
 """Account serializers for smarter api"""
 
+from django.core.handlers.wsgi import WSGIRequest
 from rest_framework import serializers
 
 from smarter.lib.django.serializers import UserMiniSerializer
@@ -31,6 +32,13 @@ class SmarterAuthTokenSerializer(serializers.ModelSerializer):
 
 class SmarterCamelCaseSerializer(serializers.ModelSerializer):
     """Base serializer to convert field names to camelCase."""
+
+    request: WSGIRequest
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the serializer and set the request context."""
+        super().__init__(*args, **kwargs)
+        self.request = self.context.get("request", None)
 
     def to_representation(self, instance):
         """Convert field names to camelCase."""
