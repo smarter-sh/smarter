@@ -155,7 +155,7 @@ class StaticPlugin(PluginBase):
                             {"title": "Founder and CEO"},
                             {"location": "1234 Chocolate Factory Way, Chocolate City, Chocolate State, USA"},
                             {"phone": "+1 123-456-7890"},
-                            {"website": "https://wwcf.com"},
+                            {"website_url": "https://wwcf.com"},
                             {"whatsapp": 11234567890},
                             {"email": "ww@wwcf.com"},
                         ],

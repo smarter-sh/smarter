@@ -57,6 +57,7 @@ spec:
               python manage.py deploy_builtin_chatbots --account_number 3141-5926-5359
               python manage.py deploy_builtin_chatbots --account_number 4386-2072-3294
               python manage.py deploy_builtin_chatbots --account_number 5680-6558-6577
+              python manage.py initialize_providers
           command:
             - /bin/sh
             - -c

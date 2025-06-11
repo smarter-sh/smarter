@@ -74,3 +74,7 @@ class SAMProviderStatus(AbstractSAMStatusBase):
         None,
         description=f"{class_identifier}.tos_accepted_by: The Smarter user that accepted the Terms of Service for this {MANIFEST_KIND}. Read only.",
     )
+    can_activate: bool = Field(
+        True,
+        description=f"{class_identifier}.can_activate: Indicates whether this {MANIFEST_KIND} can be activated. Read only.",
+    )
