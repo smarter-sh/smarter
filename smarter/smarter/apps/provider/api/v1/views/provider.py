@@ -9,10 +9,7 @@ from smarter.apps.provider.serializers import (
     ProviderModelSerializer,
     ProviderSerializer,
 )
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseNotFound,
-    SmarterHttpResponseServerError,
-)
+from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
 )
@@ -34,15 +31,10 @@ class ProviderApiViewSet(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, name: str, **kwargs):
         """Get a specific provider by name."""
-        serializer = ProviderSerializer(many=True, context={"request": request})
-        if not serializer.data or len(serializer.data) == 0:
-            return SmarterHttpResponseNotFound(f"Provider with name '{name}' not found.")
-        if len(serializer.data) > 1:
-            # If multiple providers are found, return a 500 error
-            return SmarterHttpResponseServerError(
-                "Multiple providers found with the same name. Please check your request."
-            )
-        return Response(data=serializer.data[0], status=HTTPStatus.OK)
+        serializer = ProviderSerializer(many=False, context={"request": request})
+        if not serializer.data:
+            return SmarterHttpResponseNotFound(f"Provider '{name}' not found.")
+        return Response(data=serializer.data, status=HTTPStatus.OK)
 
 
 class ProviderModelsApiViewSet(SmarterAuthenticatedAPIView):
@@ -61,12 +53,7 @@ class ProviderModelApiViewSet(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, name: str, model_name: str, **kwargs):
         """Get a specific model for a specific provider."""
-        serializer = ProviderModelSerializer(many=True, context={"request": request})
-        if not serializer.data or len(serializer.data) == 0:
+        serializer = ProviderModelSerializer(many=False, context={"request": request})
+        if not serializer.data:
             return SmarterHttpResponseNotFound(f"Model '{model_name}' for provider '{name}' not found.")
-        if len(serializer.data) > 1:
-            # If multiple models are found, return a 500 error
-            return SmarterHttpResponseServerError(
-                "Multiple models found with the same name for the provider. Please check your request."
-            )
-        return Response(data=serializer.data[0], status=HTTPStatus.OK)
+        return Response(data=serializer.data, status=HTTPStatus.OK)
