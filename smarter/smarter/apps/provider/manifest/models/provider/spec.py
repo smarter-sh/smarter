@@ -44,9 +44,9 @@ class Provider(SmarterBasePydanticModel):
         None,
         description="The logo of the Provider.",
     )
-    website: Optional[str] = Field(
+    website_url: Optional[str] = Field(
         None,
-        description="The website URL of the Provider.",
+        description="The website_url URL of the Provider.",
     )
     contact_email: Optional[EmailStr] = Field(
         None,
@@ -97,11 +97,11 @@ class Provider(SmarterBasePydanticModel):
             return v
         raise SAMValidationError(f"Invalid logo URL: {v}. Must be a valid URL.")
 
-    @field_validator("website")
+    @field_validator("website_url")
     def validate_website(cls, v):
         if v is None or SmarterValidator.is_valid_url(v):
             return v
-        raise SAMValidationError(f"Invalid website URL: {v}. Must be a valid URL.")
+        raise SAMValidationError(f"Invalid website_url URL: {v}. Must be a valid URL.")
 
     @field_validator("contact_email")
     def validate_contact_email(cls, v):

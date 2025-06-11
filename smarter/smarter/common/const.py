@@ -19,6 +19,7 @@ SMARTER_PLATFORM_SUBDOMAIN = "platform"
 SMARTER_COMPANY_NAME = "Smarter"
 SMARTER_EXAMPLE_CHATBOT_NAME = "example"
 SMARTER_CUSTOMER_SUPPORT_EMAIL = "support@smarter.sh"
+SMARTER_CONTACT_EMAIL = "contact@smarter.sh"
 SMARTER_CUSTOMER_SUPPORT_PHONE = "+1 (512) 833-6955"
 SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
 

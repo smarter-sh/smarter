@@ -114,6 +114,7 @@ docker-init:
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo && \
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2 && \
 		python manage.py initialize_wagtail" && \
+		python manage.py initialize_providers && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 

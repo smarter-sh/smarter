@@ -160,7 +160,9 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         null=True,
         help_text="The logo of the provider.",
     )
-    website = models.URLField(max_length=255, blank=True, null=True, help_text="The website URL of the provider.")
+    website_url = models.URLField(
+        max_length=255, blank=True, null=True, help_text="The website_url URL of the provider."
+    )
     ownership_requested = models.EmailField(
         max_length=255,
         blank=True,
@@ -206,7 +208,6 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         """Check if the terms of service have been accepted."""
         return self.tos_accepted_at is not None and self.tos_accepted_by is not None
 
-    @property
     def production_api_key(self, mask: bool = True) -> str:
         """Return the production API key for the provider."""
         api_key_name = f"{self.name.upper()}_API_KEY"
@@ -220,6 +221,8 @@ class Provider(TimestampedModel, SmarterHelperMixin):
     @property
     def authorization_header(self) -> dict:
         """Return the authorization header for the provider."""
+        if self.production_api_key(mask=False) is not None:
+            return {"Authorization": f"Bearer {self.production_api_key(mask=False)}"}
         if self.api_key:
             return {"Authorization": f"Bearer {self.api_key.get_secret()}"}
         return {}
@@ -417,7 +420,7 @@ class ProviderModel(TimestampedModel):
 
     # good things
     is_default = models.BooleanField(default=False, blank=False, null=False)
-    is_active = models.BooleanField(default=True, blank=False, null=False)
+    is_active = models.BooleanField(default=False, blank=False, null=False)
 
     # bad things
     is_deprecated = models.BooleanField(default=False, blank=False, null=False)
@@ -429,10 +432,15 @@ class ProviderModel(TimestampedModel):
     temperature = models.FloatField(default=0.7, blank=False, null=False)
     top_p = models.FloatField(default=1.0, blank=False, null=False)
 
-    # verifiable features
+    # verifiable features - defaults to True
+    supports_text_input = models.BooleanField(default=True, blank=False, null=False)
+    supports_text_generation = models.BooleanField(default=True, blank=False, null=False)
+    supports_translation = models.BooleanField(default=True, blank=False, null=False)
+    supports_summarization = models.BooleanField(default=True, blank=False, null=False)
+
+    # verifiable features - defaults to False
     supports_streaming = models.BooleanField(default=False, blank=False, null=False)
     supports_tools = models.BooleanField(default=False, blank=False, null=False)
-    supports_text_input = models.BooleanField(default=True, blank=False, null=False)
     supports_image_input = models.BooleanField(default=False, blank=False, null=False)
     supports_audio_input = models.BooleanField(default=False, blank=False, null=False)
     supports_embedding = models.BooleanField(default=False, blank=False, null=False)
@@ -441,9 +449,6 @@ class ProviderModel(TimestampedModel):
     supports_code_interpreter = models.BooleanField(default=False, blank=False, null=False)
     supports_image_generation = models.BooleanField(default=False, blank=False, null=False)
     supports_audio_generation = models.BooleanField(default=False, blank=False, null=False)
-    supports_text_generation = models.BooleanField(default=True, blank=False, null=False)
-    supports_translation = models.BooleanField(default=False, blank=False, null=False)
-    supports_summarization = models.BooleanField(default=False, blank=False, null=False)
 
     def __str__(self):
         """String representation of the model."""

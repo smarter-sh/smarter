@@ -2,7 +2,7 @@
 """
 Verification functions for the Provider model.
 This module contains functions to verify various aspects of a provider, such as API connectivity,
-logo, contact email, support email, website URL, terms of service URL, privacy policy URL, TOS acceptance, and production API key.
+logo, contact email, support email, website_url URL, terms of service URL, privacy policy URL, TOS acceptance, and production API key.
 """
 import logging
 
@@ -98,7 +98,7 @@ def verify_provider_support_email(provider: Provider, **kwargs) -> bool:
 
 def verify_provider_website_url(provider: Provider, **kwargs) -> bool:
     """
-    Verify the website URL of the provider.
+    Verify the website_url URL of the provider.
     """
     provider_verification = get_provider_verification_for_type(
         provider=provider, verification_type=ProviderVerificationTypes.WEBSITE_URL
@@ -106,7 +106,7 @@ def verify_provider_website_url(provider: Provider, **kwargs) -> bool:
     if provider_verification.is_valid:
         return True
 
-    success = provider.website is not None and test_web_page(provider.website, test_str="")
+    success = provider.website_url is not None and test_web_page(provider.website_url, test_str="")
     set_provider_verification(provider_verification=provider_verification, is_successful=success)
     return success
 
@@ -170,7 +170,7 @@ def verify_provider_production_api_key(provider: Provider, **kwargs) -> bool:
     if provider_verification.is_valid:
         return True
 
-    success = provider.production_api_key is not None and len(provider.production_api_key) > 0
+    success = provider.production_api_key() is not None and len(provider.production_api_key()) > 0
     set_provider_verification(provider_verification=provider_verification, is_successful=success)
     return success
 
