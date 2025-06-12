@@ -57,7 +57,7 @@ class Command(BaseCommand):
             ]
         """
         end_point = "v1/models"
-        url = urljoin(provider.api_url, end_point)
+        url = urljoin(provider.base_url, end_point)
         headers = {"Authorization": f"Bearer {smarter_settings.openai_api_key.get_secret_value()}"}
 
         try:
@@ -141,7 +141,7 @@ class Command(BaseCommand):
                     "is_deprecated": False,
                     "is_flagged": False,
                     "is_suspended": False,
-                    "api_url": "https://api.openai.com/v1/",
+                    "base_url": "https://api.openai.com/v1/",
                     "api_key": "openai_api_key",
                     "connectivity_test_path": "chat/completions",
                     "logo": logo_file.read(),
@@ -152,6 +152,7 @@ class Command(BaseCommand):
                     "support_email_verified": timezone.now(),
                     "terms_of_service_url": "https://openai.com/policies/terms-of-use/",
                     "privacy_policy_url": "https://openai.com/policies/privacy-policy/",
+                    "docs_url": "https://platform.openai.com/docs/api-reference",
                     "tos_accepted_at": timezone.now(),
                     "tos_accepted_by": self.user_profile.user,
                 },
@@ -186,7 +187,7 @@ class Command(BaseCommand):
                     "is_deprecated": False,
                     "is_flagged": False,
                     "is_suspended": False,
-                    "api_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+                    "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
                     "api_key": "google_ai_api_key",
                     "connectivity_test_path": "chat/completions",
                     "logo": logo_file.read(),
@@ -197,6 +198,7 @@ class Command(BaseCommand):
                     "support_email_verified": timezone.now(),
                     "terms_of_service_url": "https://cloud.google.com/terms/",
                     "privacy_policy_url": "https://policies.google.com/privacy",
+                    "docs_url": "https://developers.generativeai.google/learn/api",
                     "tos_accepted_at": timezone.now(),
                     "tos_accepted_by": self.user_profile.user,
                 },
@@ -230,7 +232,7 @@ class Command(BaseCommand):
                     "is_deprecated": False,
                     "is_flagged": False,
                     "is_suspended": False,
-                    "api_url": "https://metaai.com/api/",
+                    "base_url": "https://metaai.com/api/",
                     "api_key": "meta_ai_api_key",
                     "connectivity_test_path": "chat/completions",
                     "logo": logo_file.read(),
@@ -241,6 +243,7 @@ class Command(BaseCommand):
                     "support_email_verified": timezone.now(),
                     "terms_of_service_url": "https://ai.meta.com/terms/",
                     "privacy_policy_url": "https://ai.meta.com/privacy/",
+                    "docs_url": "https://ai.meta.com/docs/",
                     "tos_accepted_at": timezone.now(),
                     "tos_accepted_by": self.user_profile.user,
                 },
