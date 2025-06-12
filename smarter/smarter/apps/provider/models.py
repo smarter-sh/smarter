@@ -1,6 +1,7 @@
 # pylint: disable=W0613,C0115
 """All models for the Provider app."""
 
+import datetime
 import logging
 import os
 import urllib.parse
@@ -20,7 +21,7 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User
 
-from .const import VERIFICATION_LIFETIME
+from .const import VERIFICATION_LEAD_TIME, VERIFICATION_LIFETIME
 from .manifest.enum import ProviderModelEnum
 from .signals import (
     provider_activated,
@@ -136,7 +137,7 @@ class Provider(TimestampedModel, SmarterHelperMixin):
     is_suspended = models.BooleanField(default=False, blank=False, null=False)
 
     # connectivity
-    api_url = models.URLField(max_length=255, blank=True, null=True, help_text="The base URL for the provider's API.")
+    base_url = models.URLField(max_length=255, blank=True, null=True, help_text="The base URL for the provider's API.")
     api_key = models.ForeignKey(
         Secret,
         on_delete=models.SET_NULL,
@@ -184,6 +185,9 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         blank=True,
         null=True,
         help_text="The date and time when the support email was verified.",
+    )
+    docs_url = models.URLField(
+        max_length=255, blank=True, null=True, help_text="The documentation URL of the provider."
     )
     terms_of_service_url = models.URLField(
         max_length=255, blank=True, null=True, help_text="The terms of service URL of the provider."
@@ -245,9 +249,9 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         Test connectivity to the provider's API.
         This method should be overridden by subclasses to implement specific connectivity tests.
         """
-        if not self.api_url:
-            raise SmarterValueError("api_url is not set for this provider.")
-        url = urllib.parse.urljoin(self.api_url, self.connectivity_test_path)
+        if not self.base_url:
+            raise SmarterValueError("base_url is not set for this provider.")
+        url = urllib.parse.urljoin(self.base_url, self.connectivity_test_path)
         try:
             if self.api_key is not None:
                 logger.info(
@@ -482,6 +486,11 @@ class ProviderVerification(TimestampedModel):
         """Check if the verification is valid."""
         return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
 
+    @property
+    def next_verification(self) -> datetime.datetime:
+        """Get the next verification time."""
+        return self.updated_at + VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME
+
     def __str__(self):
         """String representation of the verification."""
         return f"{self.provider.name} - {self.verification_type}: {'Success' if self.is_successful else 'Failed'}"
@@ -510,6 +519,11 @@ class ProviderModelVerification(TimestampedModel):
     def is_valid(self) -> bool:
         """Check if the verification is valid."""
         return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
+
+    @property
+    def next_verification(self) -> datetime.datetime:
+        """Get the next verification time."""
+        return self.updated_at + VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME
 
     def __str__(self):
         """String representation of the verification."""
@@ -589,7 +603,7 @@ def get_model_for_provider(provider_name: str, model_name: str = None) -> Provid
         ProviderModelEnum.API_KEY.value: provider.production_api_key(mask=False),
         ProviderModelEnum.PROVIDER_NAME.value: provider.name,
         ProviderModelEnum.PROVIDER_ID.value: provider.id,
-        ProviderModelEnum.BASE_URL.value: provider.api_url,
+        ProviderModelEnum.BASE_URL.value: provider.base_url,
         ProviderModelEnum.MODEL.value: model.name,
         ProviderModelEnum.MAX_TOKENS.value: model.max_tokens,
         ProviderModelEnum.TEMPERATURE.value: model.temperature,

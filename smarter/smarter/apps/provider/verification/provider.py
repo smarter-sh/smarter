@@ -128,6 +128,21 @@ def verify_provider_terms_of_service_url(provider: Provider, **kwargs) -> bool:
     return success
 
 
+def verify_provider_docs_url(provider: Provider, **kwargs) -> bool:
+    """
+    Verify the documentation URL of the provider.
+    """
+    provider_verification = get_provider_verification_for_type(
+        provider=provider, verification_type=ProviderVerificationTypes.DOCS_URL
+    )
+    if provider_verification.is_valid:
+        return True
+
+    success = provider.docs_url is not None and test_web_page(provider.docs_url, test_str="Documentation")
+    set_provider_verification(provider_verification=provider_verification, is_successful=success)
+    return success
+
+
 def verify_provider_privacy_policy_url(provider: Provider, **kwargs) -> bool:
     """
     Verify the privacy policy URL of the provider.
@@ -205,13 +220,14 @@ def verify_provider(provider_id, **kwargs):
         logger.warning("%s Provider %s is flagged, cannot verify.", prefix, provider.name)
         success = False
 
-    # verify api_url with api_key
+    # verify base_url with api_key
     success = success and verify_provider_api_connectivity(provider=provider)
     success = success and verify_provider_logo(provider=provider)
     success = success and verify_provider_contact_email(provider=provider)
     success = success and verify_provider_support_email(provider=provider)
     success = success and verify_provider_website_url(provider=provider)
     success = success and verify_provider_terms_of_service_url(provider=provider)
+    success = success and verify_provider_docs_url(provider=provider)
     success = success and verify_provider_privacy_policy_url(provider=provider)
     success = success and verify_provider_tos_accepted(provider=provider)
     success = success and verify_provider_production_api_key(provider=provider)

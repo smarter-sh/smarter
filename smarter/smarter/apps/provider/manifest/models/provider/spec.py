@@ -28,7 +28,7 @@ class Provider(SmarterBasePydanticModel):
         None,
         description="A brief description of the Provider.",
     )
-    api_url: Optional[str] = Field(
+    base_url: Optional[str] = Field(
         None,
         description="The base URL for the Provider's API.",
     )
@@ -60,6 +60,10 @@ class Provider(SmarterBasePydanticModel):
         None,
         description="The terms of service URL of the Provider.",
     )
+    docs_url: Optional[str] = Field(
+        None,
+        description="The documentation URL of the Provider.",
+    )
     privacy_policy_url: Optional[str] = Field(
         None,
         description="The privacy policy URL of the Provider.",
@@ -73,7 +77,7 @@ class Provider(SmarterBasePydanticModel):
             f"Invalid name: {v}. Must be a valid clean string. Case sensitive. Must be unique and not empty, with no leading or trailing whitespace and no special characters. example: 'OpenAI', 'GoogleAI', 'MetaAI'."
         )
 
-    @field_validator("api_url")
+    @field_validator("base_url")
     def validate_api_url(cls, v):
         if v is None or SmarterValidator.is_valid_url(v):
             return v
@@ -120,6 +124,12 @@ class Provider(SmarterBasePydanticModel):
         if v is None or SmarterValidator.is_valid_url(v):
             return v
         raise SAMValidationError(f"Invalid terms of service URL: {v}. Must be a valid URL.")
+
+    @field_validator("docs_url")
+    def validate_docs_url(cls, v):
+        if v is None or SmarterValidator.is_valid_url(v):
+            return v
+        raise SAMValidationError(f"Invalid documentation URL: {v}. Must be a valid URL.")
 
     @field_validator("privacy_policy_url")
     def validate_privacy_policy_url(cls, v):
