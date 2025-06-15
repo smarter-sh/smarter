@@ -2,6 +2,7 @@
 """This module is used to update an existing plugin using manage.py"""
 
 import sys
+from typing import Optional
 
 from django.core.management.base import BaseCommand
 
@@ -30,12 +31,12 @@ class Command(BaseCommand):
         username = options["username"]
         file_path = options["file_path"]
 
-        account: Account = None
-        user: UserType = None
-        user_profile: UserProfile = None
+        account: Optional[Account] = None
+        user: Optional[UserType] = None
+        user_profile: Optional[UserProfile] = None
 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(username=username)  # type: ignore
         except User.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"manage.py retrieve_plugin: User {username} does not exist."))
             sys.exit(1)
@@ -47,7 +48,7 @@ class Command(BaseCommand):
             sys.exit(1)
 
         try:
-            user_profile = get_cached_user_profile(user=user, account=account)
+            user_profile = get_cached_user_profile(user=user, account=account)  # type: ignore
         except UserProfile.DoesNotExist:
             self.stdout.write(
                 self.style.ERROR(f"manage.py retrieve_plugin: UserProfile for {user} and {account} does not exist.")
@@ -62,7 +63,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("manage.py update_plugin: SAMLoader is not ready."))
             return
         manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
-        controller = PluginController(account=account, user=user, user_profile=user_profile, manifest=manifest)
+        controller = PluginController(account=account, user=user, user_profile=user_profile, manifest=manifest)  # type: ignore
         plugin = controller.obj
 
         if plugin.ready:

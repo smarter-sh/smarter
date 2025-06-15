@@ -15,6 +15,7 @@ import logging
 import re
 import uuid
 from functools import lru_cache
+from typing import Optional
 
 from django.contrib.auth.models import AbstractUser, AnonymousUser
 
@@ -36,7 +37,7 @@ LRU_CACHE_MAX_SIZE = 128
 
 
 @cache_results()
-def get_cached_account(account_id: int = None, account_number: str = None) -> Account:
+def get_cached_account(account_id: Optional[int] = None, account_number: Optional[str] = None) -> Optional[Account]:
     """
     Returns the account for the given account_id or account_number.
     """
@@ -69,7 +70,7 @@ def get_cached_account(account_id: int = None, account_number: str = None) -> Ac
 
 
 @cache_results()
-def get_cached_smarter_account() -> Account:
+def get_cached_smarter_account() -> Optional[Account]:
     """
     Returns the smarter account.
     """
@@ -131,7 +132,7 @@ def _get_account_for_user(user):
     return _get_account_for_user_by_id(user_id)
 
 
-def get_cached_account_for_user(user) -> Account:
+def get_cached_account_for_user(user) -> Optional[Account]:
     """
     Locates the account for a given user, or None if no account exists.
     """
@@ -156,7 +157,7 @@ def _get_cached_user_profile(resolved_user, account):
     return user_profile
 
 
-def get_cached_user_profile(user: UserType, account: Account = None) -> UserProfile:
+def get_cached_user_profile(user: UserType, account: Optional[Account] = None) -> Optional[UserProfile]:
     """
     Locates the user_profile for a given user, or None.
     """
@@ -191,7 +192,7 @@ def get_cached_user_for_user_id(user_id: int) -> UserType:
         user = User.objects.get(id=user_id)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
             logger.info("_in_memory_user() retrieving and caching user %s", user)
-        return user
+        return user  # type: ignore[return-value]
 
     user = _in_memory_user(user_id)
     if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
@@ -218,14 +219,15 @@ def get_cached_admin_user_for_account(account: Account) -> AbstractUser:
     else:
         # Create a new admin user and UserProfile
         random_email = f"{uuid.uuid4().hex[:8]}@mail.com"
-        admin_user = User.objects.create_user(username=account.account_number, email=random_email, is_staff=True)
-        logger.info("%s created new admin User %s for account %s", console_prefix, admin_user, account)
-        user_profile = UserProfile.objects.create(user=admin_user, account=account)
-        logger.info("%s created new admin UserProfile for user %s", console_prefix, user_profile)
+        if account and isinstance(account.account_number, str):
+            admin_user = User.objects.create_user(username=account.account_number, email=random_email, is_staff=True)
+            logger.info("%s created new admin User %s for account %s", console_prefix, admin_user, account)
+            user_profile = UserProfile.objects.create(user=admin_user, account=account)
+            logger.info("%s created new admin UserProfile for user %s", console_prefix, user_profile)
     if not user_profile:
         logger.error("%s failed to query nor create admin UserProfile for account %s", console_prefix, account)
         raise SmarterConfigurationError("Failed to create admin UserProfile")
-    return user_profile.user if user_profile else None
+    return user_profile.user if user_profile else None  # type: ignore[return-value]
 
 
 @cache_results()
@@ -267,11 +269,11 @@ def get_cached_smarter_admin_user_profile() -> UserProfile:
             "Failed to retrieve smarter admin user profile. Please ensure the account has a superuser or staff user."
         )
 
-    return _in_memory_smarter_admin_user_profile(smarter_account.id)
+    return _in_memory_smarter_admin_user_profile(smarter_account.id)  # type: ignore[return-value]
 
 
 @cache_results()
-def account_number_from_url(url: str) -> str:
+def account_number_from_url(url: str) -> Optional[str]:
     """
     Extracts the account number from the URL.
     :return: The account number or None if not found.
@@ -296,10 +298,10 @@ def get_users_for_account(account: Account) -> list[UserType]:
     if not account:
         raise SmarterValueError("Account is required")
     users = User.objects.filter(userprofile__account=account)
-    return list[users]
+    return list[users]  # type: ignore[list-item,return-value]
 
 
-def get_user_profiles_for_account(account: Account) -> list[UserProfile]:
+def get_user_profiles_for_account(account: Account) -> Optional[list[UserProfile]]:
     """
     Returns a list of user profiles for the given account.
     """
@@ -307,4 +309,4 @@ def get_user_profiles_for_account(account: Account) -> list[UserProfile]:
         raise SmarterValueError("Account is required")
 
     user_profiles = UserProfile.objects.filter(account=account)
-    return user_profiles
+    return user_profiles  # type: ignore[list-item,return-value]

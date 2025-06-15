@@ -1,6 +1,7 @@
 """This module deletes a plugin using manage.py on the command line."""
 
 import sys
+from typing import Optional
 
 from django.core.management.base import BaseCommand
 
@@ -27,13 +28,13 @@ class Command(BaseCommand):
         username = options["username"]
         name = options["name"]
 
-        account: Account = None
-        plugin_meta: PluginMeta = None
-        user: UserType = None
-        user_profile: UserProfile = None
+        account: Optional[Account] = None
+        plugin_meta: Optional[PluginMeta] = None
+        user: Optional[UserType] = None
+        user_profile: Optional[UserProfile] = None
 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(username=username)  # type: ignore
         except User.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"manage.py delete_plugin: User {username} does not exist."))
             sys.exit(1)
@@ -45,7 +46,7 @@ class Command(BaseCommand):
             sys.exit(1)
 
         try:
-            user_profile = get_cached_user_profile(user=user, account=account)
+            user_profile = get_cached_user_profile(user=user, account=account)  # type: ignore
         except UserProfile.DoesNotExist:
             self.stdout.write(
                 self.style.ERROR(f"manage.py delete_plugin: UserProfile for {user} and {account} does not exist.")
@@ -55,12 +56,12 @@ class Command(BaseCommand):
         self.stdout.write(f"manage.py delete_plugin: Retrieving plugin {name} for account {account}")
 
         try:
-            plugin_meta = PluginMeta.objects.get(name=options["name"], account_id=account.id)
+            plugin_meta = PluginMeta.objects.get(name=options["name"], account_id=account.id)  # type: ignore
         except PluginMeta.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Plugin {name} does not exist."))
             sys.exit(1)
 
-        controller = PluginController(account=account, user=user, user_profile=user_profile, plugin_meta=plugin_meta)
+        controller = PluginController(account=account, user=user, user_profile=user_profile, plugin_meta=plugin_meta)  # type: ignore
         plugin = controller.obj
         plugin.delete()
         self.stdout.write(self.style.SUCCESS(f"Plugin {name} has been deleted."))

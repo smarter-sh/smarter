@@ -3,6 +3,7 @@
 
 import json
 from http import HTTPStatus
+from typing import Optional
 from urllib.parse import urljoin
 
 import yaml
@@ -73,7 +74,7 @@ class AddPluginExamplesView(SmarterAuthenticatedAPIView):
     def post(self, request, user_id=None):
         try:
             user = User.objects.get(id=user_id) if user_id else request.user
-            user_profile = get_cached_user_profile(user=user)
+            user_profile = get_cached_user_profile(user=user)  # type: ignore
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -129,7 +130,7 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 # -----------------------------------------------------------------------
 def get_plugin(request, plugin_id):
     """Get a plugin json representation by id."""
-    plugin: StaticPlugin = None
+    plugin: Optional[StaticPlugin] = None
 
     try:
         user_profile = get_cached_user_profile(user=request.user)
@@ -150,7 +151,7 @@ def get_plugin(request, plugin_id):
     return JsonResponse({"error": "Internal plugin error."}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
-def create_plugin(request, data: dict = None):
+def create_plugin(request, data: Optional[dict] = None):
     """Create a plugin from a json representation in the body of the request."""
     try:
         user_profile = get_cached_user_profile(user=request.user)

@@ -2,6 +2,7 @@
 """This module is used to create a new plugin using manage.py"""
 
 import sys
+from typing import Optional
 
 from django.core.management.base import BaseCommand
 
@@ -30,15 +31,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the plugin."""
-        account: Account = None
-        user: UserType = None
+        account: Optional[Account] = None
+        user: Optional[UserType] = None
         account_number = options["account_number"]
         file_path = options["file_path"]
         username = options["username"]
         self.stdout.write(f"manage.py create_plugin: account_number: {account_number} file_path: {file_path}")
 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(username=username)  # type: ignore
         except User.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"manage.py create_plugin: User {username} does not exist."))
             sys.exit(1)
@@ -50,7 +51,7 @@ class Command(BaseCommand):
             sys.exit(1)
 
         try:
-            user_profile = get_cached_user_profile(user=user, account=account)
+            user_profile = get_cached_user_profile(user=user, account=account)  # type: ignore
         except UserProfile.DoesNotExist:
             self.stdout.write(
                 self.style.ERROR(f"manage.py create_plugin: UserProfile for {user} and {account} does not exist.")
@@ -67,7 +68,7 @@ class Command(BaseCommand):
         manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
 
         self.stdout.write(f"Creating plugin {manifest.metadata.name} for account {account}...")
-        controller = PluginController(account=account, user=user, user_profile=user_profile, manifest=manifest)
+        controller = PluginController(account=account, user=user, user_profile=user_profile, manifest=manifest)  # type: ignore
         plugin = controller.obj
 
         if plugin.ready:
