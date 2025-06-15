@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+from typing import Optional, Union
 
 import yaml
 
@@ -22,8 +23,8 @@ logger = logging.getLogger(__name__)
 class Plugins:
     """A class for working with multiple plugins."""
 
-    account: Account = None
-    user_profile: UserProfile = None
+    account: Optional[Account] = None
+    user_profile: Optional[UserProfile] = None
     plugins: list[StaticPlugin] = []
 
     def __init__(self, user: UserType, account: Account):
@@ -33,7 +34,7 @@ class Plugins:
         self.user_profile = get_cached_user_profile(user=user, account=account)
 
         for plugin in PluginMeta.objects.filter(account=self.account):
-            self.plugins.append(StaticPlugin(user_profile=self.user_profile, plugin_id=plugin.id))
+            self.plugins.append(StaticPlugin(user_profile=self.user_profile, plugin_id=plugin.id))  # type: ignore[attr-defined]
 
     @property
     def data(self) -> list[dict]:
@@ -56,9 +57,9 @@ class Plugins:
 class PluginExample:
     """A class for working with built-in yaml-based plugin examples."""
 
-    _filename: str = None
-    _json: json = None
-    _yaml: str = None
+    _filename: Optional[str] = None
+    _json: Optional[Union[list, dict]] = None
+    _yaml: Optional[str] = None
 
     def __init__(self, filepath: str, filename: str):
         """Initialize the class from a yaml file"""
@@ -69,31 +70,31 @@ class PluginExample:
         self._filename = filename
 
     @property
-    def filename(self) -> str:
+    def filename(self) -> Optional[str]:
         """Return the name of the plugin."""
         return self._filename
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """Return the name of the plugin."""
         try:
-            retval = self._json["metadata"]["name"]
+            retval = self._json["metadata"]["name"] if isinstance(self._json, dict) else None
         except KeyError:
             logger.warning("PluginExample: %d is malformed and has no metadata.name", self.filename)
             retval = self.convert_filename()
         return retval
 
-    def to_yaml(self) -> str:
+    def to_yaml(self) -> Optional[str]:
         """Return the plugin as a yaml string."""
         return self._yaml
 
     # FIX NOTE: this fails on Plugin.create() due to missing tags
     # django.core.exceptions.ValidationError: ["Invalid data: missing meta_data['tags']"]
-    def to_json(self) -> dict:
+    def to_json(self) -> Optional[Union[dict, list]]:
         """Return the plugin as a dictionary."""
         return self._json
 
-    def convert_filename(self) -> str:
+    def convert_filename(self) -> Optional[str]:
         """Convert the filename to the desired format."""
         if not isinstance(self.filename, str):
             return self.filename
