@@ -74,7 +74,7 @@ class PluginBase(ABC, SmarterHelperMixin):
 
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
     _metadata_class: Optional[str] = None
-    _manifest: Optional[SAMStaticPlugin] = None
+    _manifest: Optional[SAMPluginCommon] = None
     _pydantic_model: Optional[Type[SAMStaticPlugin]] = SAMStaticPlugin
 
     _plugin_meta: Optional[PluginMeta] = None

@@ -1277,6 +1277,19 @@ class PluginDataApi(PluginDataBase):
     the structure of parameters, headers, and test values.
     """
 
+    class DataTypes:
+        INT = "int"
+        FLOAT = "float"
+        STR = "str"
+        BOOL = "bool"
+        LIST = "list"
+        DICT = "dict"
+        NULL = "null"
+
+        @classmethod
+        def all(cls) -> list:
+            return [cls.INT, cls.FLOAT, cls.STR, cls.BOOL, cls.LIST, cls.DICT, cls.NULL]
+
     connection = models.ForeignKey(
         ApiConnection,
         on_delete=models.CASCADE,

@@ -3,6 +3,7 @@
 # python stuff
 import json
 import logging
+from typing import Any, Optional, Type, Union
 
 # smarter stuff
 from smarter.common.api import SmarterApiVersions
@@ -35,20 +36,20 @@ class ApiPlugin(PluginBase):
     """A Plugin that uses an http request to a REST API to retrieve its return data"""
 
     _metadata_class = SAMPluginCommonMetadataClass.API.value
-    _plugin_data: PluginDataApi = None
-    _plugin_data_serializer: PluginApiSerializer = None
+    _plugin_data: Optional[PluginDataApi] = None
+    _plugin_data_serializer: Optional[PluginApiSerializer] = None
 
     @property
-    def manifest(self) -> SAMApiPlugin:
+    def manifest(self) -> Optional[SAMApiPlugin]:
         """Return the Pydandic model of the plugin."""
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMApiPlugin(**self.to_json())
-        return self._manifest
+            self._manifest = SAMApiPlugin(**self.to_json())  # type: ignore[call-arg]
+        return self._manifest if isinstance(self._manifest, SAMApiPlugin) else None
 
     @property
-    def plugin_data(self) -> PluginDataApi:
+    def plugin_data(self) -> Optional[PluginDataApi]:
         """
         Return the plugin data as a Django ORM instance.
         """
@@ -60,7 +61,7 @@ class ApiPlugin(PluginBase):
         if self._manifest and self.plugin_meta:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
-            self._plugin_data = PluginDataApi(**self.plugin_data_django_model)
+            self._plugin_data = PluginDataApi(**self.plugin_data_django_model)  # type: ignore[call-arg]
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
@@ -68,44 +69,49 @@ class ApiPlugin(PluginBase):
                 plugin=self.plugin_meta,
             )
         # new Plugin scenario. there's nothing in the database yet.
-        return self._plugin_data
+        return self._plugin_data if isinstance(self._plugin_data, PluginDataApi) else None
 
     @property
-    def plugin_data_class(self) -> type:
+    def plugin_data_class(self) -> Type[PluginDataApi]:
         """Return the plugin data class."""
         return PluginDataApi
 
     @property
-    def plugin_data_serializer(self) -> PluginApiSerializer:
+    def plugin_data_serializer(self) -> Optional[PluginApiSerializer]:
         """Return the plugin data serializer."""
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginApiSerializer(self.plugin_data)
-        return self._plugin_data_serializer
+        return self._plugin_data_serializer if isinstance(self._plugin_data_serializer, PluginApiSerializer) else None
 
     @property
-    def plugin_data_serializer_class(self) -> PluginApiSerializer:
+    def plugin_data_serializer_class(self) -> Type[PluginApiSerializer]:
         """Return the plugin data serializer class."""
         return PluginApiSerializer
 
     @property
-    def plugin_data_django_model(self) -> dict:
+    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
         """Return the plugin data definition as a json object."""
         if self._manifest:
             # recast the Pydantic model to the PluginDataApi Django ORM model
             api_connection = ApiConnection.objects.get(
-                account=self.user_profile.account, name=self.manifest.spec.connection
+                account=self.user_profile.account if self.user_profile else None,
+                name=self.manifest.spec.connection if self.manifest else None,
             )
-            api_data = self.manifest.spec.apiData.model_dump()
+            api_data = self.manifest.spec.apiData.model_dump() if self.manifest and self.manifest.spec.apiData else None
+            if not api_data:
+                raise SmarterConfigurationError(
+                    f"{self.name} PluginDataApi plugin_data_django_model() error: missing required apiData in manifest spec."
+                )
             api_data = {camel_to_snake(key): value for key, value in api_data.items()}
             api_data["connection"] = api_connection
             return {
                 "plugin": self.plugin_meta,
-                "description": self.manifest.spec.data.description,
+                "description": self.plugin_meta.description if self.plugin_meta else None,
                 **api_data,
             }
 
     @property
-    def custom_tool(self) -> dict:
+    def custom_tool(self) -> Optional[dict]:
         """Return the plugin tool. see https://platform.openai.com/docs/assistants/tools/function-calling/quickstart"""
 
         def property_factory(param) -> dict:
@@ -135,15 +141,16 @@ class ApiPlugin(PluginBase):
             }
 
         properties = {}
-        for key in self.plugin_data.parameters.keys() if self.plugin_data.parameters else {}:
-            properties[key] = property_factory(param=self.plugin_data.parameters[key])
+        if self.plugin_data and isinstance(self.plugin_data.parameters, dict):
+            for key in self.plugin_data.parameters.keys() if self.plugin_data.parameters else {}:
+                properties[key] = property_factory(param=self.plugin_data.parameters[key])
 
         if self.ready:
             return {
                 "type": "function",
                 "function": {
                     "name": self.function_calling_identifier,
-                    "description": self.plugin_data.description,
+                    "description": self.plugin_meta.description if self.plugin_meta else "No description provided.",
                     "parameters": {
                         "type": "object",
                         "properties": properties,
@@ -154,7 +161,7 @@ class ApiPlugin(PluginBase):
         return None
 
     @classmethod
-    def example_manifest(cls, kwargs: dict = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[dict] = None) -> dict:
 
         api_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
