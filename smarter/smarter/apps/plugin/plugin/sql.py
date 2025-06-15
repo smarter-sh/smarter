@@ -2,6 +2,7 @@
 
 import json
 import logging
+from typing import Any, Optional, Type
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -37,16 +38,16 @@ class SqlPlugin(PluginBase):
     _manifest: SAMSqlPlugin | None = None
 
     @property
-    def manifest(self) -> SAMSqlPlugin:
+    def manifest(self) -> Optional[SAMSqlPlugin]:
         """Return the Pydandic model of the plugin."""
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMSqlPlugin(**self.to_json())
+            self._manifest = SAMSqlPlugin(**self.to_json())  # type: ignore[call-arg]
         return self._manifest
 
     @property
-    def plugin_data(self) -> PluginDataSql:
+    def plugin_data(self) -> Optional[PluginDataSql]:
         """
         Return the plugin data as a Django ORM instance.
         """
@@ -73,19 +74,19 @@ class SqlPlugin(PluginBase):
         return PluginDataSql
 
     @property
-    def plugin_data_serializer(self) -> PluginSqlSerializer:
+    def plugin_data_serializer(self) -> Optional[PluginSqlSerializer]:
         """Return the plugin data serializer."""
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginSqlSerializer(self.plugin_data)
         return self._plugin_data_serializer
 
     @property
-    def plugin_data_serializer_class(self) -> PluginSqlSerializer:
+    def plugin_data_serializer_class(self) -> Type[PluginSqlSerializer]:
         """Return the plugin data serializer class."""
         return PluginSqlSerializer
 
     @property
-    def plugin_data_django_model(self) -> dict:
+    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
         """
         transform the Pydantic model to the PluginDataSql Django ORM model.
         Return the plugin data definition as a json object.
@@ -93,14 +94,19 @@ class SqlPlugin(PluginBase):
         if self._manifest:
             # recast the Pydantic model to the PluginDataSql Django ORM model
             plugin_data_sqlconnection = SqlConnection.objects.get(
-                account=self.user_profile.account, name=self.manifest.spec.connection
+                account=self.user_profile.account if self.user_profile else None,
+                name=self.manifest.spec.connection if self.manifest else None,
             )
-            sql_data = self.manifest.spec.sqlData.model_dump()
+            sql_data = self.manifest.spec.sqlData.model_dump() if self.manifest else None
+            if not sql_data:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required SQL data."
+                )
             sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
             sql_data["connection"] = plugin_data_sqlconnection
             return {
                 "plugin": self.plugin_meta,
-                "description": self.manifest.spec.data.description,
+                "description": self.plugin_meta.description if self.plugin_meta else None,
                 **sql_data,
             }
 
@@ -158,7 +164,7 @@ class SqlPlugin(PluginBase):
         #   }
         # }
         properties = {}
-        parameters: dict = self.plugin_data.parameters
+        parameters: dict = self.plugin_data.parameters if self.plugin_data else None
         for key in parameters.keys() if parameters else {}:
             properties[key] = property_factory(param=self.plugin_data.parameters[key])
 

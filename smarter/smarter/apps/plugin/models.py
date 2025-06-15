@@ -7,16 +7,16 @@ import io
 import json
 import logging
 import re
+import tempfile
 from abc import abstractmethod
 from functools import lru_cache
 from http import HTTPStatus
 from socket import socket
-from typing import Any, Union, Optional
+from typing import Any, Dict, List, Optional, Union, cast
 from urllib.parse import urljoin
 
 import paramiko
 import requests
-import yaml
 from django.core.exceptions import ImproperlyConfigured
 
 # django stuff
@@ -96,7 +96,7 @@ def dict_keys_to_list(data: dict, keys=None) -> list[str]:
     return keys
 
 
-def list_of_dicts_to_list(data: list[dict]) -> list[str]:
+def list_of_dicts_to_list(data: list[dict]) -> Optional[list[str]]:
     """Convert a list of dictionaries into a single dict with keys extracted
     from the first key in the first dict."""
     if not data or not isinstance(data[0], dict):
@@ -111,7 +111,7 @@ def list_of_dicts_to_list(data: list[dict]) -> list[str]:
     return retval
 
 
-def list_of_dicts_to_dict(data: list[dict]) -> dict:
+def list_of_dicts_to_dict(data: list[dict]) -> Optional[dict]:
     """Convert a list of dictionaries into a single dict with keys extracted
     from the first key in the first dict."""
     if not data or not isinstance(data[0], dict):
@@ -374,9 +374,9 @@ class PluginDataStatic(PluginDataBase):
         help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.", default=dict
     )
 
-    def sanitized_return_data(self, params: dict = None) -> dict:
-        """Returns a dict of self.static_data."""
-        retval: dict = {}
+    def sanitized_return_data(self, params: Optional[dict] = None) -> Optional[Union[dict, list]]:
+        """Returns a dict or list of self.static_data."""
+        retval: Union[dict, list, None] = None
         if isinstance(self.static_data, dict):
             return self.static_data
         if isinstance(self.static_data, list):
@@ -396,10 +396,10 @@ class PluginDataStatic(PluginDataBase):
 
     @property
     @lru_cache(maxsize=128)
-    def return_data_keys(self) -> list:
+    def return_data_keys(self) -> Optional[list[str]]:
         """Return all keys in the static_data."""
 
-        retval: list = []
+        retval: Optional[list[Any]] = []
         if isinstance(self.static_data, dict):
             retval = dict_keys_to_list(data=self.static_data)
             retval = list(retval)
@@ -416,10 +416,18 @@ class PluginDataStatic(PluginDataBase):
         else:
             raise SmarterValueError("static_data must be a dict or a list or None")
 
-        return retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+        return retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS] if isinstance(retval, list) else retval
 
-    def data(self, params: dict = None) -> dict:
-        return yaml.dump(self.static_data)
+    def data(self, params: Optional[dict] = None) -> Optional[dict]:
+        try:
+            data = json.loads(self.static_data)
+            if not isinstance(data, dict):
+                logger.warning("PluginDataStatic.data: static_data is not a dict, returning None.")
+                return None
+            return data
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.error("PluginDataStatic.data: Failed to decode static_data JSON: %s", e)
+            return None
 
     def __str__(self) -> str:
         return str(self.plugin.name)
@@ -518,7 +526,7 @@ class SqlConnection(ConnectionBase):
     authentication methods (TCP/IP, SSH, LDAP), executing queries, and validating the connection.
     """
 
-    _connection: BaseDatabaseWrapper = None
+    _connection: Optional[BaseDatabaseWrapper] = None
 
     def __del__(self):
         """Close the database connection when the object instance is destroyed."""
@@ -528,13 +536,14 @@ class SqlConnection(ConnectionBase):
         def __init__(self, sql_connection: "SqlConnection"):
             self.sql_connection = sql_connection
 
+        # pylint: disable=W0613
         def missing_host_key(self, client, hostname, key):
             # Add the new host key to the known_hosts field
             new_entry = f"{hostname} {key.get_name()} {key.get_base64()}\n"
-            if self.sql_connection.known_hosts:
-                self.sql_connection.known_hosts += new_entry
+            if self.sql_connection.ssh_known_hosts:
+                self.sql_connection.ssh_known_hosts += new_entry
             else:
-                self.sql_connection.known_hosts = new_entry
+                self.sql_connection.ssh_known_hosts = new_entry
             self.sql_connection.save()
             logger.warning("Unknown host key for %s. Key added to known_hosts.", hostname)
 
@@ -645,9 +654,11 @@ class SqlConnection(ConnectionBase):
     )
 
     @property
-    def connection(self) -> BaseDatabaseWrapper:
+    def connection(self) -> Optional[BaseDatabaseWrapper]:
         if not self._connection:
-            self._connection = self.connect()
+            connection = self.connect()
+            if isinstance(connection, BaseDatabaseWrapper):
+                self._connection = connection
         return self._connection
 
     @property
@@ -688,15 +699,28 @@ class SqlConnection(ConnectionBase):
         logger.info("Connecting to database using Standard TCP/IP: %s", self.get_connection_string())
         try:
             connection_handler = ConnectionHandler({"default": self.django_db_connection})
-            connection: BaseDatabaseWrapper = connection_handler["default"]
-            plugin_sql_connection_attempted.send(sender=self.__class__, connection=self)
-            connection.ensure_connection()
-            plugin_sql_connection_success.send(sender=self.__class__, connection=self)
-            return connection
+            tcp_ip_connection: Optional[BaseDatabaseWrapper] = connection_handler["default"].connection
+            if tcp_ip_connection and tcp_ip_connection.is_usable():
+                logger.info("TCP/IP connection is already established.")
+                return tcp_ip_connection
+            if tcp_ip_connection:
+                plugin_sql_connection_attempted.send(sender=self.__class__, connection=self)
+                tcp_ip_connection.ensure_connection()
+                plugin_sql_connection_success.send(sender=self.__class__, connection=self)
+                return tcp_ip_connection
+            else:
+                logger.error("Failed to establish TCP/IP connection: No connection object found.")
+                plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
+                return False
         except (DatabaseError, ImproperlyConfigured) as e:
             plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
             logger.error("db test connection failed: %s", e)
             return False
+
+    def transport_handler(self, channel, src_addr, dest_addr):
+        logger.info(
+            "Transport handler called with channel: %s, src_addr: %s, dest_addr: %s", channel, src_addr, dest_addr
+        )
 
     def connect_tcpip_ssh(self) -> Union[BaseDatabaseWrapper, bool]:
         """
@@ -708,6 +732,9 @@ class SqlConnection(ConnectionBase):
             ssh_client = paramiko.SSHClient()
             if self.ssh_known_hosts:
                 known_hosts_file = io.StringIO(self.ssh_known_hosts)
+                with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                    temp_file.write(self.ssh_known_hosts.encode())
+                    known_hosts_file = temp_file.name
                 ssh_client.load_host_keys(known_hosts_file)
             else:
                 ssh_client.load_system_host_keys()
@@ -717,7 +744,7 @@ class SqlConnection(ConnectionBase):
 
             ssh_client.connect(
                 hostname=self.hostname,
-                port=self.port,
+                port=self.port if self.port else 22,  # Default SSH port is 22
                 username=self.proxy_username,
                 password=self.proxy_password.get_secret() if self.proxy_password else None,
                 timeout=self.timeout,
@@ -731,16 +758,17 @@ class SqlConnection(ConnectionBase):
             local_port = local_socket.getsockname()[1]
 
             # Forward the remote database port to the local port
-            transport.request_port_forward("127.0.0.1", local_port, self.hostname, self.port)
+            if isinstance(transport, paramiko.Transport):
+                transport.request_port_forward(address="127.0.0.1", port=local_port, handler=self.transport_handler)
 
             connection_handler = ConnectionHandler(self.django_db_connection)
-            connection: BaseDatabaseWrapper = connection_handler["default"]
-            connection.ensure_connection()
+            tcpip_ssh_connection: BaseDatabaseWrapper = connection_handler["default"].connection
+            tcpip_ssh_connection.ensure_connection()
 
             # Close the SSH connection after ensuring the database connection
             ssh_client.close()
             plugin_sql_connection_success.send(sender=self.__class__, connection=self)
-            return connection
+            return tcpip_ssh_connection
 
         # pylint: disable=W0718
         except Exception as e:
@@ -757,10 +785,10 @@ class SqlConnection(ConnectionBase):
             plugin_sql_connection_attempted.send(sender=self.__class__, connection=self)
             databases = self.django_db_connection
             connection_handler = ConnectionHandler(databases)
-            connection: BaseDatabaseWrapper = connection_handler["default"]
-            connection.ensure_connection()
+            ldap_user_pwd_connection: BaseDatabaseWrapper = connection_handler["default"].connection
+            ldap_user_pwd_connection.ensure_connection()
             plugin_sql_connection_success.send(sender=self.__class__, connection=self)
-            return connection
+            return ldap_user_pwd_connection
         # pylint: disable=W0718
         except Exception as e:
             plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
@@ -793,16 +821,16 @@ class SqlConnection(ConnectionBase):
                 logger.error("Failed to close the database connection: %s", e)
             self._connection = None
 
-    def execute_query(self, sql: str, limit: int = None) -> Union[list[tuple[Any, ...]], bool]:
-        connection = self.connect()
-        if not connection:
+    def execute_query(self, sql: str, limit: Optional[int] = None) -> Union[list[tuple[Any, ...]], bool]:
+        query_connection = self.connect()
+        if not isinstance(query_connection, BaseDatabaseWrapper):
             return False
         plugin_sql_connection_query_attempted.send(sender=self.__class__, connection=self)
         try:
             if limit is not None:
                 sql = sql.rstrip(";")  # Remove any trailing semicolon
                 sql += f" LIMIT {limit};"
-            with connection.cursor() as cursor:
+            with query_connection.cursor() as cursor:
                 cursor.execute(sql)
                 rows = cursor.fetchall()
                 plugin_sql_connection_query_success.send(sender=self.__class__, connection=self)
@@ -815,9 +843,13 @@ class SqlConnection(ConnectionBase):
             self.close()
 
     def test_proxy(self) -> bool:
-        proxy_dict = {
-            self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
-        }
+        proxy_dict: Optional[dict] = (
+            {
+                self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
+            }
+            if self.proxy_protocol is not None and self.proxy_host is not None
+            else None
+        )
         try:
             response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
@@ -892,7 +924,7 @@ class PluginDataSql(PluginDataBase):
     sql_query = models.TextField(
         help_text="The SQL query that this plugin will execute when invoked by the user prompt.",
     )
-    test_values = models.JSONField(
+    test_values: Any = models.JSONField(
         help_text="A JSON dict containing test values for each parameter. Example: {'product_id': 1234}",
         default=dict,
         blank=True,
@@ -905,14 +937,16 @@ class PluginDataSql(PluginDataBase):
         null=True,
     )
 
-    def data(self, params: dict = None) -> dict:
+    def data(self, params: Optional[dict] = None) -> dict:
         return {
             "parameters": self.parameters,
             "sql_query": self.prepare_sql(params=params),
         }
 
     def are_test_values_pydantic(self) -> bool:
-        pass
+        if not isinstance(self.test_values, list):
+            return False
+        return all(isinstance(tv, dict) and "name" in tv and "value" in tv for tv in self.test_values)  # type: ignore  # pylint: disable=not-an-iterable
 
     def validate_parameters(self) -> None:
         """
@@ -1019,10 +1053,10 @@ class PluginDataSql(PluginDataBase):
 
         return True
 
-    def prepare_sql(self, params: dict) -> str:
+    def prepare_sql(self, params: Optional[dict]) -> str:
         """Prepare the SQL query by replacing placeholders with values."""
         params = params or {}
-        self.validate_params(params)
+        self.validate_parameters()
         sql = self.sql_query
         for key, value in params.items():
             placeholder = "{" + key + "}"
@@ -1041,7 +1075,7 @@ class PluginDataSql(PluginDataBase):
 
         return sql
 
-    def execute_query(self, params: dict) -> Union[list, bool]:
+    def execute_query(self, params: Optional[dict]) -> Union[list, bool]:
         """Execute the SQL query and return the results."""
         sql = self.prepare_sql(params)
         return self.connection.execute_query(sql, self.limit)
@@ -1050,7 +1084,7 @@ class PluginDataSql(PluginDataBase):
         """Test the SQL query using the test_values in the record."""
         return self.execute_query(self.test_values)
 
-    def sanitized_return_data(self, params: dict = None) -> dict:
+    def sanitized_return_data(self, params: Optional[dict] = None) -> Union[dict, list, bool]:
         """Return a dict by executing the query with the provided params."""
         logger.info("{self.__class__.__name__}.sanitized_return_data called. - %s", params)
         return self.execute_query(params)
@@ -1061,7 +1095,11 @@ class PluginDataSql(PluginDataBase):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return str(self.plugin.account.account_number + " - " + self.plugin.name)
+        account_number: Optional[str] = (
+            self.plugin.account.account_number if self.plugin and self.plugin.account else "No Account"
+        )
+        account_number = cast(str, account_number)
+        return str(account_number + " - " + self.plugin.name)
 
 
 class ApiConnection(ConnectionBase):
@@ -1173,8 +1211,8 @@ class ApiConnection(ConnectionBase):
         return self.test_connection()
 
     def execute_query(
-        self, endpoint: str, params: dict = None, limit: int = None
-    ) -> Union[list[tuple[Any, ...]], bool]:
+        self, endpoint: str, params: Optional[dict] = None, limit: Optional[int] = None
+    ) -> Union[dict[str, Any], list[Any], bool]:
         """
         Execute the API query and return the results.
         This method constructs the full URL by combining the base URL and the endpoint,
@@ -1208,6 +1246,7 @@ class ApiConnection(ConnectionBase):
                     elif isinstance(response_data, dict):
                         response_data = {k: v[:limit] for k, v in response_data.items() if isinstance(v, list)}
                     return response_data
+                return response.json()
             else:
                 # we connected, but the query failed.
                 plugin_api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
@@ -1268,11 +1307,11 @@ class PluginDataApi(PluginDataBase):
         blank=True,
         null=True,
     )
-    test_values = models.JSONField(
+    test_values: models.JSONField(
         help_text="A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}",
         blank=True,
         null=True,
-    )
+    )  # type: ignore
     limit = models.IntegerField(
         help_text="The maximum number of rows to return from the API response.",
         validators=[MinValueValidator(0)],
@@ -1285,7 +1324,7 @@ class PluginDataApi(PluginDataBase):
         """Return the full URL for the API endpoint."""
         return urljoin(self.connection.base_url, self.endpoint)
 
-    def data(self, params: dict = None) -> dict:
+    def data(self, params: Optional[dict] = None) -> dict:
         return {
             "parameters": self.parameters,
             "endpoint": self.endpoint,
@@ -1293,7 +1332,7 @@ class PluginDataApi(PluginDataBase):
             "body": self.body,
         }
 
-    def prepare_request(self, params: dict) -> dict:
+    def prepare_request(self, params: Optional[dict]) -> dict:
         """Prepare the API request by merging parameters, headers, and body."""
         params = params or {}
         self.validate_url_params()
@@ -1306,7 +1345,7 @@ class PluginDataApi(PluginDataBase):
         }
         return request_data
 
-    def execute_request(self, params: dict) -> Union[dict, bool]:
+    def execute_request(self, params: Optional[dict]) -> Union[dict, bool]:
         """Execute the API request and return the results."""
         request_data = self.prepare_request(params)
         try:
@@ -1321,7 +1360,7 @@ class PluginDataApi(PluginDataBase):
         """Test the API request using the test_values in the record."""
         return self.execute_request(self.test_values)
 
-    def sanitized_return_data(self, params: dict = None) -> dict:
+    def sanitized_return_data(self, params: Optional[dict] = None) -> Union[dict, bool]:
         """Return a dict by executing the API request with the provided params."""
         logger.info("{self.__class__.__name__}.sanitized_return_data called. - %s", params)
         return self.execute_request(params)
@@ -1338,8 +1377,7 @@ class PluginDataApi(PluginDataBase):
         if not isinstance(self.url_params, list):
             raise SmarterValueError(f"url_params must be a list of dictionaries but got: {type(self.url_params)}")
 
-        # pylint: disable=E1133
-        for url_param in self.url_params:
+        for url_param in self.url_params:  # type: ignore  # pylint: disable=not-an-iterable
             try:
                 # pylint: disable=E1134
                 UrlParam(**url_param)
@@ -1356,7 +1394,7 @@ class PluginDataApi(PluginDataBase):
             raise SmarterValueError(f"parameters must be a list of dictionaries but got: {type(self.parameters)}")
 
         # pylint: disable=E1133
-        for param_dict in self.parameters:
+        for param_dict in self.parameters:  # type: ignore  # pylint: disable=not-an-iterable
             try:
                 # pylint: disable=E1134
                 Parameter(**param_dict)
@@ -1373,7 +1411,7 @@ class PluginDataApi(PluginDataBase):
             raise SmarterValueError(f"headers must be a list of dictionaries but got: {type(self.headers)}")
 
         # pylint: disable=E1133
-        for header_dict in self.headers:
+        for header_dict in self.headers:  # type: ignore  # pylint: disable=not-an-iterable
             try:
                 # pylint: disable=E1134
                 RequestHeader(**header_dict)
@@ -1416,7 +1454,7 @@ class PluginDataApi(PluginDataBase):
             return None
 
         # pylint: disable=E1133
-        for param_dict in self.parameters:
+        for param_dict in self.parameters:  # type: ignore  # pylint: disable=not-an-iterable
             param_name = param_dict.get("name")
             if not any(test_value.get("name") == param_name for test_value in self.test_values):
                 raise SmarterValueError(f"Test value for parameter '{param_name}' is missing.")
@@ -1450,4 +1488,8 @@ class PluginDataApi(PluginDataBase):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return str(self.plugin.account.account_number + " - " + self.plugin.name)
+        account_number: Optional[str] = (
+            self.connection.account.account_number if self.connection and self.connection.account else "No Account"
+        )
+        account_number = cast(str, account_number)
+        return str(account_number + " - " + self.plugin.name)
