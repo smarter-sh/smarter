@@ -6,7 +6,7 @@ import json
 import logging
 import re
 from abc import ABC, abstractmethod
-from typing import Type, Union
+from typing import Any, Type, Union, Optional
 
 # 3rd party stuff
 import yaml
@@ -31,7 +31,7 @@ from ..manifest.enum import (
     SAMPluginSpecKeys,
 )
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
-from ..manifest.models.static_plugin.model import SAMStaticPlugin
+from ..manifest.models.static_plugin.model import SAMStaticPlugin, SAMPluginCommon
 from ..models import (
     PluginDataBase,
     PluginMeta,
@@ -73,37 +73,37 @@ class PluginBase(ABC, SmarterHelperMixin):
     """An abstract base class for working with plugins."""
 
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
-    _metadata_class: str = None
-    _manifest: SAMStaticPlugin = None
-    _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
+    _metadata_class: Optional[str] = None
+    _manifest: Optional[SAMStaticPlugin] = None
+    _pydantic_model: Optional[Type[SAMStaticPlugin]] = SAMStaticPlugin
 
-    _plugin_meta: PluginMeta = None
-    _plugin_selector: PluginSelector = None
-    _plugin_prompt: PluginPrompt = None
-    _plugin_selector_history: QuerySet = None
-    _plugin_data: PluginDataBase = None
+    _plugin_meta: Optional[PluginMeta] = None
+    _plugin_selector: Optional[PluginSelector] = None
+    _plugin_prompt: Optional[PluginPrompt] = None
+    _plugin_selector_history: Optional[QuerySet] = None
+    _plugin_data: Optional[PluginDataBase] = None
 
-    _plugin_prompt_serializer: dict = None
-    _plugin_selector_serializer: dict = None
-    _plugin_meta_serializer: dict = None
-    _plugin_data_serializer: serializers = None
+    _plugin_prompt_serializer: Optional[PluginPromptSerializer] = None
+    _plugin_selector_serializer: Optional[PluginSelectorSerializer] = None
+    _plugin_meta_serializer: Optional[PluginMetaSerializer] = None
+    _plugin_data_serializer: Optional[serializers.Serializer] = None
 
     _selected: bool = False
-    _params: dict = None
+    _params: Optional[dict] = None
 
-    _user_profile: UserProfile = None
+    _user_profile: Optional[UserProfile] = None
 
     # pylint: disable=too-many-arguments,too-many-branches
     def __init__(
         self,
         *args,
-        user_profile: UserProfile = None,
+        user_profile: Optional[UserProfile] = None,
         selected: bool = False,
-        api_version: str = None,
-        manifest: SAMStaticPlugin = None,
-        plugin_id: int = None,
-        plugin_meta: PluginMeta = None,
-        data: Union[dict, str] = None,
+        api_version: Optional[str] = None,
+        manifest: Optional[SAMStaticPlugin] = None,
+        plugin_id: Optional[int] = None,
+        plugin_meta: Optional[PluginMeta] = None,
+        data: Union[dict[str, Any], str, None] = None,
         **kwargs,
     ):
         """
@@ -141,7 +141,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             self.id = plugin_id
 
         if plugin_meta:
-            self.id = plugin_meta.id
+            self.id = plugin_meta.id # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
 
         #######################################################################
         # Smarter API Manifest based initialization
@@ -151,15 +151,16 @@ class PluginBase(ABC, SmarterHelperMixin):
             self._manifest = manifest
             self.create()
 
-        if data:
+        if data is not None:
             # we received a yaml or json string representation of a manifest.
+            data = self.data_to_dict(data)
             self.api_version = data.get("apiVersion", self.api_version)
             if data.get(SAMKeys.KIND.value) != self.kind:
                 raise SAMValidationError(f"Expected kind of {self.kind}, but got {data.get('kind')}.")
             loader = SAMLoader(
                 api_version=data[SAMKeys.APIVERSION.value],
                 kind=self.kind,
-                manifest=data,
+                manifest=json.dumps(data) if isinstance(data, dict) else data,
             )
             if not loader.ready:
                 raise SAMValidationError("Loader is not ready. SAMLoader is not ready.")
@@ -233,19 +234,19 @@ class PluginBase(ABC, SmarterHelperMixin):
         raise NotImplementedError()
 
     @classmethod
-    def example_manifest(cls, kwargs: dict = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[dict] = None) -> dict:
         raise NotImplementedError()
 
     ###########################################################################
     # Base class properties
     ###########################################################################
     @property
-    def metadata_class(self) -> str:
+    def metadata_class(self) -> Optional[str]:
         """Return the metadata class."""
         return self._metadata_class
 
     @property
-    def params(self) -> dict:
+    def params(self) -> Optional[dict]:
         """Return the plugin parameters."""
         return self._params
 
@@ -275,20 +276,14 @@ class PluginBase(ABC, SmarterHelperMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMStaticPlugin:
+    def manifest(self) -> SAMPluginCommon:
         """Return the Pydandic model of the plugin."""
-        if not self._manifest and self.ready:
-            # if we don't have a manifest but we do have Django ORM data then
-            # we can work backwards to the Pydantic model
-            self._manifest = SAMStaticPlugin(**self.to_json())
-        return self._manifest
+        raise NotImplementedError
 
     @property
-    def id(self) -> int:
+    def id(self) -> Optional[int]:
         """Return the id of the plugin."""
-        if self.plugin_meta:
-            return self.plugin_meta.id
-        return None
+        return self._plugin_meta.id if self._plugin_meta else None # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
 
     @id.setter
     def id(self, value: int):
@@ -304,7 +299,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             raise SmarterPluginError("PluginMeta.DoesNotExist") from e
 
     @property
-    def plugin_meta(self) -> PluginMeta:
+    def plugin_meta(self) -> Optional[PluginMeta]:
         """Return the plugin meta."""
         if self._plugin_meta:
             return self._plugin_meta
@@ -324,7 +319,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         return self._plugin_meta
 
     @property
-    def plugin_meta_serializer(self) -> PluginMetaSerializer:
+    def plugin_meta_serializer(self) -> Optional[PluginMetaSerializer]:
         """Return the plugin meta serializer."""
         if not self._plugin_meta_serializer:
 
@@ -332,7 +327,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         return self._plugin_meta_serializer
 
     @property
-    def plugin_meta_django_model(self) -> dict:
+    def plugin_meta_django_model(self) -> Optional[dict[str, Any]]:
         """Return a dict for loading the plugin meta Django ORM model."""
         if self.user_profile and self._manifest:
             return {
@@ -347,7 +342,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             }
 
     @property
-    def plugin_selector_history(self) -> QuerySet:
+    def plugin_selector_history(self) -> Optional[QuerySet]:
         """Return the plugin selector history serializer."""
         if self._plugin_selector_history:
             return self._plugin_selector_history
@@ -370,7 +365,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             raise SmarterPluginError("PluginSelector.DoesNotExist") from e
 
     @property
-    def plugin_selector_serializer(self) -> PluginSelectorSerializer:
+    def plugin_selector_serializer(self) -> Optional[PluginSelectorSerializer]:
         """Return the plugin selector serializer."""
         if not self._plugin_selector_serializer:
 
@@ -378,13 +373,14 @@ class PluginBase(ABC, SmarterHelperMixin):
         return self._plugin_selector_serializer
 
     @property
-    def plugin_selector_django_model(self) -> dict:
+    def plugin_selector_django_model(self) -> Optional[dict[str, Any]]:
         """Return the plugin selector definition as a json object."""
         if self._manifest:
             return {
                 PLUGIN_KEY: self.plugin_meta,
-                "directive": self.manifest.spec.selector.directive,
-                "search_terms": self.manifest.spec.selector.searchTerms,
+                # FIX NOTE: self.manifest.spec points to 'never'
+                "directive": self.manifest.spec.selector.directive if self.manifest and self.manifest.spec else None,
+                "search_terms": self.manifest.spec.selector.searchTerms if self.manifest and self.manifest.spec else None,
             }
 
     @property
@@ -399,7 +395,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             raise SmarterPluginError("PluginPrompt.DoesNotExist") from e
 
     @property
-    def plugin_prompt_serializer(self) -> PluginPromptSerializer:
+    def plugin_prompt_serializer(self) -> Optional[PluginPromptSerializer]:
         """Return the plugin prompt serializer."""
         if not self._plugin_prompt_serializer:
 
@@ -407,19 +403,19 @@ class PluginBase(ABC, SmarterHelperMixin):
         return self._plugin_prompt_serializer
 
     @property
-    def plugin_prompt_django_model(self) -> dict:
+    def plugin_prompt_django_model(self) -> Optional[dict[str, Any]]:
         """Return the plugin prompt definition as a json object."""
         if self._manifest:
             return {
                 PLUGIN_KEY: self.plugin_meta,
-                "system_role": self.manifest.spec.prompt.systemRole,
-                "model": self.manifest.spec.prompt.model,
-                "temperature": self.manifest.spec.prompt.temperature,
-                "max_tokens": self.manifest.spec.prompt.maxTokens,
+                "system_role": self.manifest.spec.prompt.systemRole if self.manifest and self.manifest.spec else None,
+                "model": self.manifest.spec.prompt.model if self.manifest and self.manifest.spec else None,
+                "temperature": self.manifest.spec.prompt.temperature if self.manifest and self.manifest.spec else None,
+                "max_tokens": self.manifest.spec.prompt.maxTokens if self.manifest and self.manifest.spec else None,
             }
 
     @property
-    def user_profile(self) -> UserProfile:
+    def user_profile(self) -> Optional[UserProfile]:
         """Return the user profile."""
         if not self._user_profile:
             logger.warning(
@@ -429,7 +425,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         return self._user_profile
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """Return the name of the plugin."""
         if self.plugin_meta:
             return self.plugin_meta.name
@@ -462,8 +458,9 @@ class PluginBase(ABC, SmarterHelperMixin):
             raise SmarterPluginError(
                 f"Expected type of {PluginMeta} for self.plugin_meta, but got {type(self.plugin_meta)}."
             )
-        if self._plugin_meta:
-            self.plugin_meta.validate()
+        plugin_meta = self._plugin_meta
+        if plugin_meta is not None:
+           plugin_meta.validate()
         else:
             # Plugin doesn't exist in Django ORM, so we're done.
             return True
@@ -489,21 +486,21 @@ class PluginBase(ABC, SmarterHelperMixin):
         return True
 
     @property
-    def data(self) -> dict:
+    def data(self) -> Optional[dict]:
         """Return the plugin as a dictionary."""
         if self.ready:
             return self.to_json()
         return None
 
     @property
-    def yaml(self) -> str:
+    def yaml(self) -> Optional[str]:
         """Return the plugin as a yaml string."""
         if self.ready:
             return yaml.dump(self.to_json())
         return None
 
     @property
-    def function_calling_identifier(self) -> str:
+    def function_calling_identifier(self) -> Optional[str]:
         """Return the function calling plugin."""
         if self.ready:
             suffix = str(self.id).zfill(4)
@@ -512,12 +509,12 @@ class PluginBase(ABC, SmarterHelperMixin):
 
     def refresh(self):
         """Refresh the plugin."""
-        if self.ready:
+        if self.ready and self.id is not None:
             self.id = self.id
             return self.ready
         return False
 
-    def selected(self, user: UserType, input_text: str = None, messages: list[dict] = None) -> bool:
+    def selected(self, user: UserType, input_text: Optional[str] = None, messages: Optional[list[dict]] = None) -> bool:
         """
         Return True the user has mentioned Lawrence McDaniel or FullStackWithLawrence
         at any point in the history of the conversation.
@@ -536,7 +533,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             self._selected = True
             return self._selected
 
-        search_terms = self.plugin_selector.search_terms
+        search_terms = self.plugin_selector.search_terms or []
 
         # check the input text
         if input_text:
@@ -582,7 +579,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         messages_copy = messages.copy()
         for i, message in enumerate(messages_copy):
             if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
-                system_role = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
+                system_role = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY, "")
                 custom_prompt = {
                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
                     OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role
@@ -594,7 +591,7 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         return messages_copy
 
-    def function_calling_plugin(self, inquiry_type: str) -> str:
+    def function_calling_plugin(self, inquiry_type: str) -> Optional[str]:
         """Return select info from custom plugin object"""
         if not self.ready:
             return None
@@ -641,14 +638,16 @@ class PluginBase(ABC, SmarterHelperMixin):
             raise SmarterPluginError("Plugin manifest is not set.")
         logger.info("%s.create() creating plugin %s", self.formatted_class_name, self.manifest.metadata.name)
 
-        def committed(plugin_id: int):
+        def committed(plugin: PluginMeta):
+            plugin_id: int = plugin.id if isinstance(plugin, PluginMeta) else None # type: ignore[reportOptionalMemberAccess]
             self.id = plugin_id
             plugin_created.send(sender=self.__class__, plugin=self)
+            plugin_meta = self._plugin_meta
             logger.info(
                 "%s.create() created and committed plugin %s: %s.",
                 self.formatted_class_name,
-                self.plugin_meta.name,
-                self.plugin_meta.id,
+                self.plugin_meta.name if self.plugin_meta else "Unknown",
+                plugin_meta.id if isinstance(plugin_meta, PluginMeta) else "Unknown", # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             )
 
         meta_data = self.plugin_meta_django_model
@@ -657,30 +656,37 @@ class PluginBase(ABC, SmarterHelperMixin):
         plugin_data = self.plugin_data_django_model
 
         if self.plugin_meta:
-            self.id = self.plugin_meta.id
+            self.id = self.plugin_meta.id # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             logger.info(
                 "%s.create() Plugin %s already exists. Updating plugin %s.",
-                meta_data["name"],
+                meta_data["name"] if meta_data else "Unknown",
                 self.formatted_class_name,
-                self.plugin_meta.id,
+                self.plugin_meta.id if self._plugin_meta else "Unknown",  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             )
             return self.update()
 
         with transaction.atomic():
-            plugin_meta = PluginMeta.objects.create(**meta_data)
-            logger.info("%s.create() created PluginMeta: %s", self.formatted_class_name, plugin_meta)
+            if meta_data:
+                plugin_meta = PluginMeta.objects.create(**meta_data)
+                logger.info("%s.create() created PluginMeta: %s", self.formatted_class_name, plugin_meta)
 
-            selector[PLUGIN_KEY] = plugin_meta
-            prompt[PLUGIN_KEY] = plugin_meta
-            plugin_data[PLUGIN_KEY] = plugin_meta
+                if selector is not None:
+                    selector[PLUGIN_KEY] = plugin_meta
+                if prompt is not None:
+                    prompt[PLUGIN_KEY] = plugin_meta
+                if plugin_data is not None:
+                    plugin_data[PLUGIN_KEY] = plugin_meta
 
-            plugin_selector = PluginSelector.objects.create(**selector)
-            logger.info("%s.create() created PluginSelector: %s", self.formatted_class_name, plugin_selector)
-            plugin_prompt = PluginPrompt.objects.create(**prompt)
-            logger.info("%s.create() created PluginPrompt: %s", self.formatted_class_name, plugin_prompt)
-            self.plugin_data_class.objects.create(**plugin_data)
+                if selector is not None:
+                    plugin_selector = PluginSelector.objects.create(**selector)
+                    logger.info("%s.create() created PluginSelector: %s", self.formatted_class_name, plugin_selector)
+                if prompt is not None:
+                    plugin_prompt = PluginPrompt.objects.create(**prompt)
+                    logger.info("%s.create() created PluginPrompt: %s", self.formatted_class_name, plugin_prompt)
+                if plugin_data is not None:
+                    self.plugin_data_class.objects.create(**plugin_data)
 
-        transaction.on_commit(lambda: committed(plugin_id=plugin_meta.id))
+        transaction.on_commit(lambda: committed(plugin=plugin_meta))
 
         return True
 
@@ -689,7 +695,8 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         def committed():
             plugin_updated.send(sender=self.__class__, plugin=self)
-            self.id = self.plugin_meta.id
+            plugin_id: Optional[int] = self.plugin_meta.id if isinstance(self.plugin_meta, PluginMeta) else None # type: ignore[reportOptionalMemberAccess]
+            self.id = plugin_id # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             logger.debug("Updated plugin %s: %s.", self.name, self.id)
 
         if not self.manifest:
@@ -697,8 +704,9 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         plugin_meta_django_model = self.plugin_meta_django_model
         if not plugin_meta_django_model:
+            account_number = self.user_profile.account.account_number if self.user_profile else "Unknown"
             raise SmarterPluginError(
-                f"Plugin {self.manifest.metadata.name} for account {self.user_profile.account.account_number} does not exist."
+                f"Plugin {self.manifest.metadata.name} for account {account_number} does not exist."
             )
 
         plugin_selector_django_model = self.plugin_selector_django_model
@@ -706,21 +714,33 @@ class PluginBase(ABC, SmarterHelperMixin):
         plugin_data_django_model = self.plugin_data_django_model
 
         with transaction.atomic():
-            for attr, value in plugin_meta_django_model.items():
-                setattr(self.plugin_meta, attr, value)
-            self.plugin_meta.save()
+            if isinstance(self.plugin_meta, PluginMeta):
+                for attr, value in plugin_meta_django_model.items():
+                    setattr(self.plugin_meta, attr, value)
+                self.plugin_meta.save()
+            else:
+                raise SmarterPluginError("PluginMeta is not set or is not a PluginMeta instance.")
 
-            for attr, value in plugin_selector_django_model.items():
-                setattr(self.plugin_selector, attr, value)
-            self.plugin_selector.save()
+            if isinstance(plugin_selector_django_model, dict) and isinstance(self.plugin_selector, PluginSelector):
+                for attr, value in plugin_selector_django_model.items():
+                    setattr(self.plugin_selector, attr, value)
+                self.plugin_selector.save()
+            else:
+                raise SmarterPluginError("PluginSelector is not set or is not a PluginSelector instance.")
 
-            for attr, value in plugin_prompt_django_model.items():
-                setattr(self.plugin_prompt, attr, value)
-            self.plugin_prompt.save()
+            if isinstance(plugin_prompt_django_model, dict) and isinstance(self.plugin_prompt, PluginPrompt):
+                for attr, value in plugin_prompt_django_model.items():
+                    setattr(self.plugin_prompt, attr, value)
+                self.plugin_prompt.save()
+            else:
+                raise SmarterPluginError("PluginPrompt is not set or is not a PluginPrompt instance.")
 
-            for attr, value in plugin_data_django_model.items():
-                setattr(self.plugin_data, attr, value)
-            self.plugin_data.save()
+            if isinstance(plugin_data_django_model, dict) and isinstance(self.plugin_data, self.plugin_data_class):
+                for attr, value in plugin_data_django_model.items():
+                    setattr(self.plugin_data, attr, value)
+                self.plugin_data.save()
+            else:
+                raise SmarterPluginError("PluginData is not set or is not a PluginData instance.")
 
         transaction.on_commit(committed)
 
@@ -737,10 +757,25 @@ class PluginBase(ABC, SmarterHelperMixin):
             return False
 
         with transaction.atomic():
-            self.plugin_meta.save()
-            self.plugin_selector.save()
-            self.plugin_prompt.save()
-            self.plugin_data.save()
+            if isinstance(self.plugin_meta, PluginMeta):
+                self.plugin_meta.save()
+            else:
+                raise SmarterPluginError("PluginMeta is not set or is not a PluginMeta instance.")
+
+            if isinstance(self.plugin_selector, PluginSelector):
+                self.plugin_selector.save()
+            else:
+                raise SmarterPluginError("PluginSelector is not set or is not a PluginSelector instance.")
+
+            if isinstance(self.plugin_prompt, PluginPrompt):
+                self.plugin_prompt.save()
+            else:
+                raise SmarterPluginError("PluginPrompt is not set or is not a PluginPrompt instance.")
+
+            if isinstance(self.plugin_data, self.plugin_data_class):
+                self.plugin_data.save()
+            else:
+                raise SmarterPluginError("PluginData is not set or is not a PluginData instance.")
 
         transaction.on_commit(committed)
         return True
@@ -761,13 +796,20 @@ class PluginBase(ABC, SmarterHelperMixin):
         plugin_name = self.name
         with transaction.atomic():
             plugin_deleting.send(sender=self.__class__, plugin=self, plugin_meta=self.plugin_meta)
-            self.plugin_selector_history.delete()
+            if isinstance(self.plugin_selector_history, QuerySet):
+                self.plugin_selector_history.delete()
 
-            # plugin data
-            self.plugin_data.delete()
-            self.plugin_prompt.delete()
-            self.plugin_selector.delete()
-            self.plugin_meta.delete()
+            if isinstance(self.plugin_data, self.plugin_data_class):
+                self.plugin_data.delete()
+
+            if isinstance(self.plugin_prompt, PluginPrompt):
+                self.plugin_prompt.delete()
+
+            if isinstance(self.plugin_selector, PluginSelector):
+                self.plugin_selector.delete()
+
+            if isinstance(self.plugin_meta, PluginMeta):
+                self.plugin_meta.delete()
 
             self._plugin_data = None
             self._plugin_prompt = None
@@ -782,14 +824,14 @@ class PluginBase(ABC, SmarterHelperMixin):
         transaction.on_commit(committed)
         return True
 
-    def clone(self, new_name: str = None):
+    def clone(self, new_name: Optional[str] = None):
         """Clone a plugin."""
 
         # pylint: disable=W0613
-        def committed(new_plugin_id: int):
+        def committed(new_plugin: Optional[PluginMeta]):
             plugin_cloned.send(sender=self.__class__, plugin=self)
-            logger.debug(
-                "Cloned plugin %s: %s to %s: %s", self.id, self.name, plugin_meta_copy.id, plugin_meta_copy.name
+            logger.info(
+                "Cloned plugin %s: %s to %s: %s", self.id, self.name, new_plugin, new_plugin.name if new_plugin else "Unknown"
             )
 
         def get_new_name(plugin_name, new_name=None):
@@ -811,62 +853,67 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         with transaction.atomic():
             plugin_meta_copy = copy.deepcopy(self.plugin_meta)
-            plugin_meta_copy.id = None
-            plugin_meta_copy.name = new_name or get_new_name(plugin_name=self.name)
-            plugin_meta_copy.save()
-            plugin_meta_copy.tags.set(self.plugin_meta.tags.all())
-            plugin_meta_copy.refresh_from_db()
+            if isinstance(plugin_meta_copy, PluginMeta):
+                plugin_meta_copy.id = None # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                plugin_meta_copy.name = new_name or get_new_name(plugin_name=self.name)
+                plugin_meta_copy.save()
+                if isinstance(self.plugin_meta, PluginMeta):
+                    plugin_meta_copy.tags.set(self.plugin_meta.tags.all())
+                plugin_meta_copy.refresh_from_db()
 
             # for each 1:1 relationship, create a new instance
             # setting the pk to None so that the new isn't
             # simply the old instance re-assigned to a new plugin_meta.
             # also, set the fk plugin_id to the new plugin_meta id.
             plugin_selector_copy = copy.deepcopy(self.plugin_selector)
-            plugin_selector_copy.id = None
-            plugin_selector_copy.plugin_id = plugin_meta_copy.id
-            plugin_selector_copy.save()
+            if isinstance(plugin_selector_copy, PluginSelector) and isinstance(plugin_meta_copy, PluginMeta):
+                plugin_selector_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                plugin_selector_copy.plugin = plugin_meta_copy
+                plugin_selector_copy.save()
 
             plugin_prompt_copy = copy.deepcopy(self.plugin_prompt)
-            plugin_prompt_copy.id = None
-            plugin_prompt_copy.plugin_id = plugin_meta_copy.id
-            plugin_prompt_copy.save()
+            if isinstance(plugin_prompt_copy, PluginPrompt) and isinstance(plugin_meta_copy, PluginMeta):
+                plugin_prompt_copy.id = None # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                plugin_prompt_copy.plugin = plugin_meta_copy
+                plugin_prompt_copy.save()
 
             plugin_data_copy = copy.deepcopy(self.plugin_data)
-            plugin_data_copy.id = None
-            plugin_data_copy.plugin_id = plugin_meta_copy.id
-            plugin_data_copy.save()
+            if isinstance(plugin_data_copy, self.plugin_data_class) and isinstance(plugin_meta_copy, PluginMeta):
+                plugin_data_copy.id = None # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                plugin_data_copy.plugin = plugin_meta_copy
+                plugin_data_copy.save()
 
-        transaction.on_commit(lambda: committed(new_plugin_id=plugin_meta_copy.id))
-        return plugin_meta_copy.id
+        transaction.on_commit(lambda: committed(new_plugin=plugin_meta_copy))
+        return plugin_meta_copy.id if plugin_meta_copy else None # type: ignore[reportOptionalMemberAccess]
 
-    def to_json(self, version: str = "v1") -> dict:
+    def to_json(self, version: str = "v1") -> Optional[dict]:
         """
         Serialize a plugin in JSON format that is importable by Pydantic. This
         is used to create a Pydantic model from a Django ORM model
         for purposes of rendering a Plugin manifest for the Smarter API.
         """
-        data = {**self.plugin_data_serializer.data, "id": self.plugin_data.id}
+        data = {**self.plugin_data_serializer.data, "id": self.plugin_data.id if self.plugin_data else None} # type: ignore[reportOptionalMemberAccess]
         description = data.pop("description")
         if self.ready:
             if version == "v1":
                 retval = {
                     SAMKeys.APIVERSION.value: self.api_version,
                     SAMKeys.KIND.value: self.kind,
-                    SAMKeys.METADATA.value: self.plugin_meta_serializer.data,
+                    SAMKeys.METADATA.value: self.plugin_meta_serializer.data if self.plugin_meta_serializer else None,
                     SAMKeys.SPEC.value: {
-                        SAMPluginSpecKeys.SELECTOR.value: self.plugin_selector_serializer.data,
-                        SAMPluginSpecKeys.PROMPT.value: self.plugin_prompt_serializer.data,
+                        SAMPluginSpecKeys.SELECTOR.value: self.plugin_selector_serializer.data if self.plugin_selector_serializer else None,
+                        SAMPluginSpecKeys.PROMPT.value: self.plugin_prompt_serializer.data if self.plugin_prompt_serializer else None,
                         SAMPluginSpecKeys.DATA.value: {
                             "description": description,
                             f"{self.metadata_class}": self.plugin_data_serializer.data,
                         },
                     },
                     SAMKeys.STATUS.value: {
-                        "id": self.plugin_meta.id,
-                        "accountNumber": self.user_profile.account.account_number,
-                        "username": self.user_profile.user.get_username(),
-                        "created": self.plugin_meta.created_at.isoformat(),
-                        "modified": self.plugin_meta.updated_at.isoformat(),
+                        "id": self.plugin_meta.id if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
+                        "accountNumber": self.user_profile.account.account_number if self.user_profile else None,
+                        "username": self.user_profile.user.get_username() if self.user_profile else None,
+                        "created": self.plugin_meta.created_at.isoformat() if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
+                        "modified": self.plugin_meta.updated_at.isoformat() if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
                     },
                 }
                 return json.loads(json.dumps(retval))

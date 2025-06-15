@@ -2,6 +2,7 @@
 
 import json
 import logging
+from typing import Type, Any, Union, Optional
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -29,12 +30,12 @@ logger = logging.getLogger(__name__)
 class StaticPlugin(PluginBase):
     """A PLugin that returns a static json object stored in the Plugin itself."""
 
-    _metadata_class = SAMPluginCommonMetadataClass.STATIC.value
-    _plugin_data: PluginDataStatic = None
-    _plugin_data_serializer: PluginStaticSerializer = None
+    _metadata_class: str = SAMPluginCommonMetadataClass.STATIC.value
+    _plugin_data: Optional[PluginDataStatic] = None
+    _plugin_data_serializer: Optional[PluginStaticSerializer] = None
 
     @property
-    def manifest(self) -> SAMStaticPlugin:
+    def manifest(self) -> Optional[SAMStaticPlugin]:
         """Return the Pydandic model of the plugin."""
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
@@ -43,7 +44,7 @@ class StaticPlugin(PluginBase):
         return self._manifest
 
     @property
-    def plugin_data(self) -> PluginDataStatic:
+    def plugin_data(self) -> Optional[PluginDataStatic]:
         """
         Return the plugin data as a Django ORM instance.
         """
@@ -54,7 +55,7 @@ class StaticPlugin(PluginBase):
         if self._manifest and self.plugin_meta:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
-            self._plugin_data = PluginDataStatic(**self.plugin_data_django_model)
+            self._plugin_data = PluginDataStatic(**self.plugin_data_django_model) if self.plugin_data_django_model else None
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
@@ -70,19 +71,19 @@ class StaticPlugin(PluginBase):
         return PluginDataStatic
 
     @property
-    def plugin_data_serializer(self) -> PluginStaticSerializer:
+    def plugin_data_serializer(self) -> Optional[PluginStaticSerializer]:
         """Return the plugin data serializer."""
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginStaticSerializer(self.plugin_data)
         return self._plugin_data_serializer
 
     @property
-    def plugin_data_serializer_class(self) -> PluginStaticSerializer:
+    def plugin_data_serializer_class(self) -> Type[PluginStaticSerializer]:
         """Return the plugin data serializer class."""
         return PluginStaticSerializer
 
     @property
-    def plugin_data_django_model(self) -> dict:
+    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
         """
         transform the Pydantic model into a Django ORM model.
         Return the plugin data definition as a json object.
@@ -91,25 +92,25 @@ class StaticPlugin(PluginBase):
         if self._manifest:
             return {
                 "plugin": self.plugin_meta,
-                "description": self.manifest.spec.data.description,
-                "static_data": self.manifest.spec.data.staticData,
+                "description": self.manifest.spec.data.description if self.manifest and self.manifest.spec else None,
+                "static_data": self.manifest.spec.data.staticData if self.manifest and self.manifest.spec else None,
             }
 
     @property
-    def custom_tool(self) -> dict:
+    def custom_tool(self) -> Optional[dict]:
         """Return the plugin tool."""
         if self.ready:
             return {
                 "type": "function",
                 "function": {
                     "name": self.function_calling_identifier,
-                    "description": self.plugin_data.description,
+                    "description": self.plugin_data.description if self.plugin_data else "Static Plugin",
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "inquiry_type": {
                                 "type": "string",
-                                "enum": self.plugin_data.return_data_keys,
+                                "enum": self.plugin_data.return_data_keys if self.plugin_data else None,
                             },
                         },
                         "required": ["inquiry_type"],
@@ -119,7 +120,7 @@ class StaticPlugin(PluginBase):
         return None
 
     @classmethod
-    def example_manifest(cls, kwargs: dict = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[dict] = None) -> Optional[dict]:
         static_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
