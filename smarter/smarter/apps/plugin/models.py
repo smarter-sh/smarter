@@ -75,6 +75,11 @@ def validate_no_spaces(value) -> None:
         raise SmarterValueError(f"Value must not contain spaces: {value}")
 
 
+def validate_dict(value):
+    if not isinstance(value, dict):
+        raise SmarterValueError("This field must be a dict.")
+
+
 def dict_key_cleaner(key: str) -> str:
     """Clean a key by replacing spaces with underscores."""
     return str(key).replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", "_")
@@ -882,6 +887,7 @@ class PluginDataSql(PluginDataBase):
         default=dict,
         blank=True,
         null=True,
+        validators=[validate_dict],
     )
     sql_query = models.TextField(
         help_text="The SQL query that this plugin will execute when invoked by the user prompt.",

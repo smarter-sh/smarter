@@ -1,52 +1,14 @@
 # pylint: disable=W0212
 """Django admin configuration for the chat app."""
 
+from django.contrib import admin
+
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.lib.django.admin import RestrictedModelAdmin
 
 
-class ProviderAdmin(RestrictedModelAdmin):
-    """Provider admin."""
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
-    list_display = ["created_at", "account", "name", "status", "is_active"]
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
-
-
-class ProviderModelAdmin(RestrictedModelAdmin):
-    """Provider model admin."""
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
-    list_display = ["created_at", "provider", "name", "is_active"]
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(provider_model__provider__account=account)
-        except UserProfile.DoesNotExist:
-            return qs.none()
-
-
-class ProviderModelVerificationAdmin(RestrictedModelAdmin):
+class ProviderModelVerificationAdmin(admin.StackedInline):
     """provider model verification admin."""
 
     readonly_fields = (
@@ -66,7 +28,7 @@ class ProviderModelVerificationAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class ProviderVerificationAdmin(RestrictedModelAdmin):
+class ProviderVerificationAdmin(admin.StackedInline):
     """provider verification admin."""
 
     readonly_fields = (
@@ -82,5 +44,50 @@ class ProviderVerificationAdmin(RestrictedModelAdmin):
         try:
             account = get_cached_account_for_user(user=request.user)
             return qs.filter(provider__account=account)
+        except UserProfile.DoesNotExist:
+            return qs.none()
+
+
+class ProviderAdmin(RestrictedModelAdmin):
+    """Provider admin."""
+
+    inlines = [ProviderVerificationAdmin]
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    list_display = ["created_at", "account", "name", "status", "is_active"]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(account=account)
+        except UserProfile.DoesNotExist:
+            return qs.none()
+
+
+class ProviderModelAdmin(RestrictedModelAdmin):
+    """Provider model admin."""
+
+    inlines = [ProviderModelVerificationAdmin]
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = ["created_at", "provider", "name", "is_active"]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(provider_model__provider__account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
