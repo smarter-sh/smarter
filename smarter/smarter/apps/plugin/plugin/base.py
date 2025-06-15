@@ -460,7 +460,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             )
         plugin_meta = self._plugin_meta
         if plugin_meta is not None:
-           plugin_meta.validate()
+            plugin_meta.validate()
         else:
             # Plugin doesn't exist in Django ORM, so we're done.
             return True
