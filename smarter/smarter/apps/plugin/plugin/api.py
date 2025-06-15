@@ -3,7 +3,7 @@
 # python stuff
 import json
 import logging
-from typing import Any, Optional, Type, Union
+from typing import Any, Optional, Type
 
 # smarter stuff
 from smarter.common.api import SmarterApiVersions
@@ -11,6 +11,7 @@ from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+from smarter.lib.openai.enum import OpenAIToolCallType
 
 # smarter plugin stuff
 from ..manifest.enum import (
@@ -147,14 +148,16 @@ class ApiPlugin(PluginBase):
 
         if self.ready:
             return {
-                "type": "function",
-                "function": {
-                    "name": self.function_calling_identifier,
-                    "description": self.plugin_meta.description if self.plugin_meta else "No description provided.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": properties,
-                        "required": [],
+                OpenAIToolCallType.TYPE.value: OpenAIToolCallType.FUNCTION.value,
+                OpenAIToolCallType.FUNCTION.value: {
+                    OpenAIToolCallType.NAME.value: self.function_calling_identifier,
+                    OpenAIToolCallType.DESCRIPTION.value: (
+                        self.plugin_meta.description if self.plugin_meta else "No description provided."
+                    ),
+                    OpenAIToolCallType.PARAMETERS.value: {
+                        OpenAIToolCallType.TYPE.value: OpenAIToolCallType.OBJECT.value,
+                        OpenAIToolCallType.PROPERTIES.value: properties,
+                        OpenAIToolCallType.REQUIRED.value: [],
                     },
                 },
             }
@@ -197,18 +200,18 @@ class ApiPlugin(PluginBase):
                     SAMApiPluginSpecApiData.HEADERS.value: None,
                     SAMApiPluginSpecApiData.BODY.value: [
                         {
-                            "name": "test",
-                            "type": "string",
-                            "description": "The test to run.",
-                            "required": True,
-                            "default": "test",
+                            OpenAIToolCallType.NAME.value: "test",
+                            OpenAIToolCallType.TYPE.value: "string",
+                            OpenAIToolCallType.DESCRIPTION.value: "The test to run.",
+                            OpenAIToolCallType.REQUIRED.value: True,
+                            OpenAIToolCallType.DEFAULT.value: "test",
                         },
                         {
-                            "name": "test2",
-                            "type": "string",
-                            "description": "The second test to run.",
-                            "required": False,
-                            "default": "test2",
+                            OpenAIToolCallType.NAME.value: "test2",
+                            OpenAIToolCallType.TYPE.value: "string",
+                            OpenAIToolCallType.DESCRIPTION.value: "The second test to run.",
+                            OpenAIToolCallType.REQUIRED.value: False,
+                            OpenAIToolCallType.DEFAULT.value: "test2",
                         },
                     ],
                     SAMApiPluginSpecApiData.TEST_VALUES.value: [

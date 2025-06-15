@@ -1,10 +1,12 @@
 """Ultility functions for plugins."""
 
 import os
+from typing import Optional
 
 import yaml
 
 from smarter.apps.account.models import UserProfile
+from smarter.common.exceptions import SmarterValueError
 
 from .plugin.static import StaticPlugin
 from .plugin.utils import PluginExamples
@@ -14,19 +16,24 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 # pylint: disable=W0613,C0415
-def add_example_plugins(user_profile: UserProfile) -> bool:
+def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
     """Create example plugins for a new user."""
 
     plugin_examples = PluginExamples()
-    data: dict = None
+    data: Optional[dict] = None
 
     for plugin in plugin_examples.plugins:
-        data = plugin.to_yaml()
-        data = yaml.safe_load(data)
-        StaticPlugin(user_profile=user_profile, data=data)
+        yaml_data = plugin.to_yaml()
+        if isinstance(yaml_data, str):
+            yaml_data = yaml_data.encode("utf-8")
+            data = yaml.safe_load(yaml_data)
+            StaticPlugin(user_profile=user_profile, data=data)
+        else:
+            raise SmarterValueError(f"Plugin {plugin.name} does not have a valid YAML representation.")
+    return True
 
 
-def get_plugin_examples_by_name() -> list[str]:
+def get_plugin_examples_by_name() -> Optional[list[str]]:
     """Get the names of all example plugins."""
     plugin_examples = PluginExamples()
-    return [plugin.name for plugin in plugin_examples.plugins]
+    return [plugin.name for plugin in plugin_examples.plugins if plugin.name is not None]

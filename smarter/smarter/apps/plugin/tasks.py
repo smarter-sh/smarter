@@ -1,6 +1,7 @@
 # pylint: disable=unused-argument
 
 import logging
+from typing import Optional
 
 from django.conf import settings
 
@@ -57,10 +58,10 @@ def create_plugin_selector_history(*args, **kwargs):
         plugin.id,
         user_profile,
     )
-    input_text: str = kwargs.get("input_text")
-    messages: list[dict] = kwargs.get("messages")
-    search_term: str = kwargs.get("search_term")
-    session_key: str = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
+    input_text: Optional[str] = kwargs.get("input_text")
+    messages: Optional[list[dict]] = kwargs.get("messages")
+    search_term: Optional[str] = kwargs.get("search_term")
+    session_key: Optional[str] = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
 
     PluginSelectorHistory.objects.create(
         plugin_selector=plugin.plugin_selector,

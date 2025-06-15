@@ -1,6 +1,8 @@
 # pylint: disable=W0613
 """Add plugin examples to a user account."""
 
+from typing import Optional
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import UserProfile
@@ -19,7 +21,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the plugin."""
-        user_profile: UserProfile = None
+        user_profile: Optional[UserProfile] = None
         username = options["username"]
 
         try:
@@ -29,7 +31,7 @@ class Command(BaseCommand):
             return
 
         try:
-            user_profile = get_cached_user_profile(user=user)
+            user_profile = get_cached_user_profile(user=user)  # type: ignore
         except UserProfile.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"User profile for {user.username} {user.email} does not exist."))
             return

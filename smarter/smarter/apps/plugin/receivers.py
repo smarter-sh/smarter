@@ -3,6 +3,7 @@
 
 import json
 import logging
+from typing import Optional, Union
 
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -61,10 +62,10 @@ def handle_plugin_created(sender, plugin: PluginBase, **kwargs):
     logger.info(
         "%s - account: %s - user: %s - name: %s data: %s",
         formatted_text(prefix + "plugin_created"),
-        plugin.user_profile.account,
-        plugin.user_profile.user,
+        plugin.user_profile.account if plugin.user_profile else None,
+        plugin.user_profile.user if plugin.user_profile else None,
         plugin.name,
-        formatted_json(plugin.data),
+        formatted_json(plugin.data) if plugin.data else None,
     )
 
 
@@ -82,10 +83,10 @@ def handle_plugin_updated(sender, plugin: PluginBase, **kwargs):
     logger.info(
         "%s - account: %s - user: %s - name: %s data: %s",
         formatted_text(prefix + "plugin_updated"),
-        plugin.user_profile.account,
-        plugin.user_profile.user,
+        plugin.user_profile.account if plugin.user_profile else None,
+        plugin.user_profile.user if plugin.user_profile else None,
         plugin.name,
-        formatted_json(plugin.data),
+        formatted_json(plugin.data) if plugin.data else None,
     )
 
 
@@ -110,11 +111,11 @@ def handle_plugin_deleted(sender, plugin: PluginBase, plugin_name: str, **kwargs
 def handle_plugin_called(sender, plugin: PluginBase, **kwargs):
     """Handle plugin called signal."""
 
-    inquiry_type = kwargs.get("inquiry_type")
-    inquiry_return = kwargs.get("inquiry_return")
+    inquiry_type: Optional[str] = kwargs.get("inquiry_type")
+    inquiry_return: Optional[Union[dict, list, str]] = kwargs.get("inquiry_return")
 
     try:
-        inquiry_return = json.loads(inquiry_return)
+        inquiry_return = json.loads(inquiry_return) if isinstance(inquiry_return, str) else inquiry_return
     except (TypeError, json.JSONDecodeError):
         pass
 
@@ -124,7 +125,7 @@ def handle_plugin_called(sender, plugin: PluginBase, **kwargs):
             formatted_text(prefix + "plugin_called"),
             plugin.name,
             inquiry_type,
-            formatted_json(inquiry_return) if inquiry_return else None,
+            formatted_json(inquiry_return) if isinstance(inquiry_return, (dict, list)) else inquiry_return,
         )
     else:
         logger.info(
@@ -146,24 +147,24 @@ def handle_plugin_ready(sender, plugin: PluginBase, **kwargs):
 def handle_plugin_selected(sender, *args, **kwargs):
     """Handle plugin selected signal."""
     # plugin: PluginBase, user, messages: list[dict], search_term: str, messages: list[dict] = None
-    input_text: str = kwargs.get("input_text")
-    plugin: PluginBase = kwargs.get("plugin")
+    input_text: Optional[str] = kwargs.get("input_text")
+    plugin: Optional[PluginBase] = kwargs.get("plugin")
     user = kwargs.get("user")
     messages: list[dict] = kwargs.get("messages", [])
     search_term: str = kwargs.get("search_term", "")
-    user_id: int = user.id if user else None
+    user_id: int = user.id if user else None  # type: ignore
 
     prompt = input_text if input_text else formatted_json(messages)
     logger.info(
         "signal received for %s - %s search_term: %s prompt(s): %s",
         formatted_text(prefix + "plugin_selected"),
-        plugin.name,
+        plugin.name if plugin else "Unknown Plugin",
         search_term,
         prompt,
     )
 
     create_plugin_selector_history.delay(
-        plugin_id=plugin.id,
+        plugin_id=plugin.id,  # type: ignore
         user_id=user_id,
         input_text=input_text,
         messages=messages,
@@ -309,7 +310,7 @@ def handle_plugin_sql_connection_attempted(sender, connection: SqlConnection, **
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_attempted"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
     )
 
 
@@ -320,7 +321,7 @@ def handle_plugin_sql_connection_success(sender, connection: SqlConnection, **kw
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_success"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
     )
 
 
@@ -331,7 +332,7 @@ def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, **kwa
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_failed"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
     )
 
 
@@ -342,7 +343,7 @@ def handle_plugin_sql_connection_query_attempted(sender, connection: SqlConnecti
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_query_attempted"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
     )
 
 
@@ -353,7 +354,7 @@ def handle_plugin_sql_connection_query_success(sender, connection: SqlConnection
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_query_success"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
     )
 
 
@@ -364,7 +365,7 @@ def handle_plugin_sql_connection_query_failed(sender, connection: SqlConnection,
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_query_failed"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
     )
 
 
@@ -375,7 +376,7 @@ def handle_plugin_api_connection_attempted(sender, connection: ApiConnection, **
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_api_connection_attempted"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
     )
 
 
@@ -386,18 +387,18 @@ def handle_plugin_api_connection_success(sender, connection: ApiConnection, **kw
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_api_connection_success"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
     )
 
 
 @receiver(plugin_api_connection_failed, dispatch_uid="plugin_api_connection_failed")
-def handle_plugin_api_connection_failed(sender, connection: ApiConnection, error: Exception = None, **kwargs):
+def handle_plugin_api_connection_failed(sender, connection: ApiConnection, error: Optional[Exception] = None, **kwargs):
     """Handle plugin API connection failed signal."""
 
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_api_connection_failed"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
     )
 
 
@@ -408,12 +409,14 @@ def handle_plugin_api_connection_query_attempted(sender, connection: ApiConnecti
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_api_connection_query_attempted"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
     )
 
 
 @receiver(plugin_api_connection_query_success, dispatch_uid="plugin_api_connection_query_success")
-def handle_plugin_api_connection_query_success(sender, connection: ApiConnection, response: Response = None, **kwargs):
+def handle_plugin_api_connection_query_success(
+    sender, connection: ApiConnection, response: Optional[Response] = None, **kwargs
+):
     """Handle plugin API connection query success signal."""
 
     logger.info(
@@ -426,14 +429,14 @@ def handle_plugin_api_connection_query_success(sender, connection: ApiConnection
 
 @receiver(plugin_api_connection_query_failed, dispatch_uid="plugin_api_connection_query_failed")
 def handle_plugin_api_connection_query_failed(
-    sender, connection: ApiConnection, response: Response = None, error: Exception = None, **kwargs
+    sender, connection: ApiConnection, response: Optional[Response] = None, error: Optional[Exception] = None, **kwargs
 ):
     """Handle plugin API connection query failed signal."""
 
     logger.info(
         "%s - %s - response: %s - error: %s",
         formatted_text(prefix + "plugin_api_connection_query_failed"),
-        formatted_json(connection.get_connection_string()),
+        connection.get_connection_string(),
         formatted_json(response.json()) if response else None,
         error,
     )
