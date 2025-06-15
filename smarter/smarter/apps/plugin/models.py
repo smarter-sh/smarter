@@ -11,7 +11,7 @@ from abc import abstractmethod
 from functools import lru_cache
 from http import HTTPStatus
 from socket import socket
-from typing import Any, Union
+from typing import Any, Union, Optional
 from urllib.parse import urljoin
 
 import paramiko
@@ -349,12 +349,12 @@ class PluginDataBase(TimestampedModel):
     )
 
     @abstractmethod
-    def sanitized_return_data(self, params: dict = None) -> dict:
+    def sanitized_return_data(self, params: Optional[dict] = None) -> dict:
         """Returns a dict of custom data return results."""
         raise NotImplementedError
 
     @abstractmethod
-    def data(self, params: dict = None) -> dict:
+    def data(self, params: Optional[dict] = None) -> dict:
         """Returns a dict of custom data return results."""
         raise NotImplementedError
 

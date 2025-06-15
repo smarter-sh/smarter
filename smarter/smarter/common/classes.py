@@ -1,13 +1,17 @@
 """Common classes"""
 
+import json
+from typing import Union
 from logging import getLogger
 
+import yaml
 from django.http import HttpRequest
 
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -83,3 +87,20 @@ class SmarterHelperMixin:
         :return: The request URL.
         """
         return utils_smarter_build_absolute_uri(request)
+
+    def data_to_dict(self, data: Union[dict, str]) -> dict:
+        """
+        Converts data to a dictionary, handling different types of input.
+        """
+        if isinstance(data, dict):
+            return data
+        elif isinstance(data, str):
+            try:
+                return json.loads(data)
+            except json.JSONDecodeError:
+                try:
+                    return yaml.safe_load(data)
+                except yaml.YAMLError as yaml_error:
+                    raise SmarterValueError("String data is neither valid JSON nor YAML.") from yaml_error
+        else:
+            raise SmarterValueError("Unsupported data type for conversion to dict.")

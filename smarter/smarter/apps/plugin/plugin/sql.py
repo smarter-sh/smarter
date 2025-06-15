@@ -32,8 +32,9 @@ class SqlPlugin(PluginBase):
     """A PLugin that uses an SQL query executed on a remote SQL database server to retrieve its return data"""
 
     _metadata_class = SAMPluginCommonMetadataClass.SQL.value
-    _plugin_data: PluginDataSql = None
-    _plugin_data_serializer: PluginSqlSerializer = None
+    _plugin_data: PluginDataSql | None = None
+    _plugin_data_serializer: PluginSqlSerializer | None = None
+    _manifest: SAMSqlPlugin | None = None
 
     @property
     def manifest(self) -> SAMSqlPlugin:
