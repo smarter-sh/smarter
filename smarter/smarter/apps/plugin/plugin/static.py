@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Type, Any, Union, Optional
+from typing import Any, Optional, Type, Union
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -55,7 +55,9 @@ class StaticPlugin(PluginBase):
         if self._manifest and self.plugin_meta:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
-            self._plugin_data = PluginDataStatic(**self.plugin_data_django_model) if self.plugin_data_django_model else None
+            self._plugin_data = (
+                PluginDataStatic(**self.plugin_data_django_model) if self.plugin_data_django_model else None
+            )
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.

@@ -6,7 +6,7 @@ import json
 import logging
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Type, Union, Optional
+from typing import Any, Optional, Type, Union
 
 # 3rd party stuff
 import yaml
@@ -31,7 +31,7 @@ from ..manifest.enum import (
     SAMPluginSpecKeys,
 )
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
-from ..manifest.models.static_plugin.model import SAMStaticPlugin, SAMPluginCommon
+from ..manifest.models.static_plugin.model import SAMPluginCommon, SAMStaticPlugin
 from ..models import (
     PluginDataBase,
     PluginMeta,
@@ -141,7 +141,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             self.id = plugin_id
 
         if plugin_meta:
-            self.id = plugin_meta.id # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+            self.id = plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
 
         #######################################################################
         # Smarter API Manifest based initialization
@@ -283,7 +283,7 @@ class PluginBase(ABC, SmarterHelperMixin):
     @property
     def id(self) -> Optional[int]:
         """Return the id of the plugin."""
-        return self._plugin_meta.id if self._plugin_meta else None # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+        return self._plugin_meta.id if self._plugin_meta else None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
 
     @id.setter
     def id(self, value: int):
@@ -380,7 +380,9 @@ class PluginBase(ABC, SmarterHelperMixin):
                 PLUGIN_KEY: self.plugin_meta,
                 # FIX NOTE: self.manifest.spec points to 'never'
                 "directive": self.manifest.spec.selector.directive if self.manifest and self.manifest.spec else None,
-                "search_terms": self.manifest.spec.selector.searchTerms if self.manifest and self.manifest.spec else None,
+                "search_terms": (
+                    self.manifest.spec.selector.searchTerms if self.manifest and self.manifest.spec else None
+                ),
             }
 
     @property
@@ -639,7 +641,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         logger.info("%s.create() creating plugin %s", self.formatted_class_name, self.manifest.metadata.name)
 
         def committed(plugin: PluginMeta):
-            plugin_id: int = plugin.id if isinstance(plugin, PluginMeta) else None # type: ignore[reportOptionalMemberAccess]
+            plugin_id: int = plugin.id if isinstance(plugin, PluginMeta) else None  # type: ignore[reportOptionalMemberAccess]
             self.id = plugin_id
             plugin_created.send(sender=self.__class__, plugin=self)
             plugin_meta = self._plugin_meta
@@ -647,7 +649,7 @@ class PluginBase(ABC, SmarterHelperMixin):
                 "%s.create() created and committed plugin %s: %s.",
                 self.formatted_class_name,
                 self.plugin_meta.name if self.plugin_meta else "Unknown",
-                plugin_meta.id if isinstance(plugin_meta, PluginMeta) else "Unknown", # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                plugin_meta.id if isinstance(plugin_meta, PluginMeta) else "Unknown",  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             )
 
         meta_data = self.plugin_meta_django_model
@@ -656,7 +658,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         plugin_data = self.plugin_data_django_model
 
         if self.plugin_meta:
-            self.id = self.plugin_meta.id # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+            self.id = self.plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             logger.info(
                 "%s.create() Plugin %s already exists. Updating plugin %s.",
                 meta_data["name"] if meta_data else "Unknown",
@@ -695,8 +697,8 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         def committed():
             plugin_updated.send(sender=self.__class__, plugin=self)
-            plugin_id: Optional[int] = self.plugin_meta.id if isinstance(self.plugin_meta, PluginMeta) else None # type: ignore[reportOptionalMemberAccess]
-            self.id = plugin_id # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+            plugin_id: Optional[int] = self.plugin_meta.id if isinstance(self.plugin_meta, PluginMeta) else None  # type: ignore[reportOptionalMemberAccess]
+            self.id = plugin_id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             logger.debug("Updated plugin %s: %s.", self.name, self.id)
 
         if not self.manifest:
@@ -831,7 +833,11 @@ class PluginBase(ABC, SmarterHelperMixin):
         def committed(new_plugin: Optional[PluginMeta]):
             plugin_cloned.send(sender=self.__class__, plugin=self)
             logger.info(
-                "Cloned plugin %s: %s to %s: %s", self.id, self.name, new_plugin, new_plugin.name if new_plugin else "Unknown"
+                "Cloned plugin %s: %s to %s: %s",
+                self.id,
+                self.name,
+                new_plugin,
+                new_plugin.name if new_plugin else "Unknown",
             )
 
         def get_new_name(plugin_name, new_name=None):
@@ -854,7 +860,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         with transaction.atomic():
             plugin_meta_copy = copy.deepcopy(self.plugin_meta)
             if isinstance(plugin_meta_copy, PluginMeta):
-                plugin_meta_copy.id = None # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                plugin_meta_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
                 plugin_meta_copy.name = new_name or get_new_name(plugin_name=self.name)
                 plugin_meta_copy.save()
                 if isinstance(self.plugin_meta, PluginMeta):
@@ -873,18 +879,18 @@ class PluginBase(ABC, SmarterHelperMixin):
 
             plugin_prompt_copy = copy.deepcopy(self.plugin_prompt)
             if isinstance(plugin_prompt_copy, PluginPrompt) and isinstance(plugin_meta_copy, PluginMeta):
-                plugin_prompt_copy.id = None # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                plugin_prompt_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
                 plugin_prompt_copy.plugin = plugin_meta_copy
                 plugin_prompt_copy.save()
 
             plugin_data_copy = copy.deepcopy(self.plugin_data)
             if isinstance(plugin_data_copy, self.plugin_data_class) and isinstance(plugin_meta_copy, PluginMeta):
-                plugin_data_copy.id = None # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                plugin_data_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
                 plugin_data_copy.plugin = plugin_meta_copy
                 plugin_data_copy.save()
 
         transaction.on_commit(lambda: committed(new_plugin=plugin_meta_copy))
-        return plugin_meta_copy.id if plugin_meta_copy else None # type: ignore[reportOptionalMemberAccess]
+        return plugin_meta_copy.id if plugin_meta_copy else None  # type: ignore[reportOptionalMemberAccess]
 
     def to_json(self, version: str = "v1") -> Optional[dict]:
         """
@@ -892,7 +898,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         is used to create a Pydantic model from a Django ORM model
         for purposes of rendering a Plugin manifest for the Smarter API.
         """
-        data = {**self.plugin_data_serializer.data, "id": self.plugin_data.id if self.plugin_data else None} # type: ignore[reportOptionalMemberAccess]
+        data = {**self.plugin_data_serializer.data, "id": self.plugin_data.id if self.plugin_data else None}  # type: ignore[reportOptionalMemberAccess]
         description = data.pop("description")
         if self.ready:
             if version == "v1":
@@ -901,8 +907,12 @@ class PluginBase(ABC, SmarterHelperMixin):
                     SAMKeys.KIND.value: self.kind,
                     SAMKeys.METADATA.value: self.plugin_meta_serializer.data if self.plugin_meta_serializer else None,
                     SAMKeys.SPEC.value: {
-                        SAMPluginSpecKeys.SELECTOR.value: self.plugin_selector_serializer.data if self.plugin_selector_serializer else None,
-                        SAMPluginSpecKeys.PROMPT.value: self.plugin_prompt_serializer.data if self.plugin_prompt_serializer else None,
+                        SAMPluginSpecKeys.SELECTOR.value: (
+                            self.plugin_selector_serializer.data if self.plugin_selector_serializer else None
+                        ),
+                        SAMPluginSpecKeys.PROMPT.value: (
+                            self.plugin_prompt_serializer.data if self.plugin_prompt_serializer else None
+                        ),
                         SAMPluginSpecKeys.DATA.value: {
                             "description": description,
                             f"{self.metadata_class}": self.plugin_data_serializer.data,
