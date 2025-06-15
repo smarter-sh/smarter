@@ -162,7 +162,7 @@ class PluginBase(ABC, SmarterHelperMixin):
                 manifest=data,
             )
             if not loader.ready:
-                raise SAMValidationError(f"Loader is not ready. SAMLoader is not ready.")
+                raise SAMValidationError("Loader is not ready. SAMLoader is not ready.")
             self._manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
             self.create()
 
@@ -785,6 +785,7 @@ class PluginBase(ABC, SmarterHelperMixin):
     def clone(self, new_name: str = None):
         """Clone a plugin."""
 
+        # pylint: disable=W0613
         def committed(new_plugin_id: int):
             plugin_cloned.send(sender=self.__class__, plugin=self)
             logger.debug(

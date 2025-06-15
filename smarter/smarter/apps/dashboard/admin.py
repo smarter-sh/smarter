@@ -54,8 +54,6 @@ from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatT
 from smarter.apps.provider.admin import (
     ProviderAdmin,
     ProviderModelAdmin,
-    ProviderModelVerificationAdmin,
-    ProviderVerificationAdmin,
 )
 from smarter.apps.provider.models import (
     Provider,
@@ -173,8 +171,6 @@ restricted_site.register(ChatBotRequests, ChatBotRequestsAdmin)
 # Provider Models
 restricted_site.register(Provider, ProviderAdmin)
 restricted_site.register(ProviderModel, ProviderModelAdmin)
-restricted_site.register(ProviderVerification, ProviderVerificationAdmin)
-restricted_site.register(ProviderModelVerification, ProviderModelVerificationAdmin)
 
 
 # Plugin Models

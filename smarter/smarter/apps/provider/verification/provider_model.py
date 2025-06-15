@@ -8,7 +8,6 @@ Each verification function checks if the capability is already verified and vali
 If not, it performs a test to verify the capability and updates the verification status accordingly.
 """
 
-import base64
 import io
 import logging
 import wave
@@ -20,7 +19,6 @@ from smarter.apps.provider.signals import (
     model_verification_failure,
     model_verification_success,
 )
-from smarter.apps.provider.tests.utils import mock_test_provider_verification
 from smarter.apps.provider.utils import (
     get_model_verification_for_type,
     set_model_verification,

@@ -114,27 +114,51 @@ class SqlPlugin(PluginBase):
                 param_description = param["description"]
             except KeyError as e:
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginDataSql custom_tool() error: missing required parameter key: {e}"
+                    f"{self.formatted_class_name}.custom_tool() error: {self.name} missing required parameter key: {e}"
                 ) from e
+
+            param_required = param.get("required", False)
+            param_default = param.get("default", None)
 
             if param_type not in PluginDataSql.DataTypes.all():
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginDataSql custom_tool() error: invalid parameter type: {param_type}"
+                    f"{self.formatted_class_name}.custom_tool() error: {self.name} invalid parameter type: {param_type}"
                 )
 
             if param_enum and not isinstance(param_enum, list):
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginDataSql custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
+                    f"{self.formatted_class_name}.custom_tool() error: {self.name} invalid parameter enum: {param_enum}. Must be a list."
                 )
 
-            return {
+            retval = {
                 "type": param_type,
                 "enum": param_enum,
                 "description": param_description,
+                "required": param_required,
             }
+            if param_default is not None:
+                retval["default"] = param_default
+            return retval
 
+        # parameters Example:
+        # {
+        #   'unit': {
+        #       'type': 'string',
+        #       'enum': ['Celsius', 'Fahrenheit'],
+        #       'required': False,
+        #       'default': 'Celsius',
+        #       'description': 'The temperature unit to use. Infer this from the user's location.'
+        #   },
+        #   'username': {
+        #       'type': 'string',
+        #       'description': 'The username to query.',
+        #       'required': True,
+        #       'default': 'admin'
+        #   }
+        # }
         properties = {}
-        for key in self.plugin_data.parameters.keys() if self.plugin_data.parameters else {}:
+        parameters: dict = self.plugin_data.parameters
+        for key in parameters.keys() if parameters else {}:
             properties[key] = property_factory(param=self.plugin_data.parameters[key])
 
         if self.ready:

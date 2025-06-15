@@ -657,6 +657,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self.append_message_tool_called(function_name=function_name, function_args=function_args)
 
         function_response = None
+        # FIX NOTE: instead of a big switch, we should be attempting to call the
+        #
         if function_name == "get_current_weather":
             function_response = function_to_call(
                 location=function_args.get("location"),
@@ -667,6 +669,10 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             # FIX NOTE: we should revisit this. technically, we're supposed to be calling
             # function_to_call, assigned above. but just to play it safe,
             # we're directly invoking the plugin's function_calling_plugin() method.
+
+            # FIX NOTE CONTINUED: june-2025. What we REALLY should do is work with the
+            # plugin's JSON tool_calling function definition that's passed to the LLM.
+
             plugin_id = int(function_name[-4:])
             plugin = StaticPlugin(plugin_id=plugin_id, user_profile=self.user_profile)
             plugin.params = function_args
