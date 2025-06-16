@@ -3,7 +3,7 @@
 import json
 import logging
 from enum import Enum
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import requests
 import yaml
@@ -79,9 +79,9 @@ class SAMLoader(SmarterHelperMixin):
     Smarter API Manifest Loader base class.
     """
 
-    _raw_data: str = None
-    _dict_data: dict = None
-    _data_format: SAMDataFormats = None
+    _raw_data: Optional[str] = None
+    _dict_data: Optional[dict] = None
+    _data_format: Optional[SAMDataFormats] = None
     _specification: dict = {
         SAMKeys.APIVERSION: SmarterApiVersions.V1,
         SAMKeys.KIND: "PLACEHOLDER",
@@ -103,10 +103,10 @@ class SAMLoader(SmarterHelperMixin):
     def __init__(
         self,
         api_version: str = SmarterApiVersions.V1,
-        kind: str = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
+        kind: Optional[str] = None,
+        manifest: Optional[str] = None,
+        file_path: Optional[str] = None,
+        url: Optional[str] = None,
     ):
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMLoaderError(f"Unsupported API version: {api_version}")
@@ -153,21 +153,21 @@ class SAMLoader(SmarterHelperMixin):
         return self._specification
 
     @property
-    def raw_data(self) -> Union[str, dict]:
+    def raw_data(self) -> Optional[Union[str, dict]]:
         return self._raw_data
 
     @property
-    def json_data(self) -> dict:
+    def json_data(self) -> Optional[dict]:
         if self.data_format == SAMDataFormats.JSON:
-            return self.raw_data
+            return json.loads(self.raw_data) if isinstance(self.raw_data, str) else self.raw_data
         if self.data_format == SAMDataFormats.YAML:
-            return yaml.safe_load(self.raw_data)
+            return yaml.safe_load(self.raw_data) if isinstance(self.raw_data, str) else self.raw_data
         return None
 
     @property
-    def yaml_data(self) -> str:
+    def yaml_data(self) -> Optional[str]:
         if self.data_format == SAMDataFormats.YAML:
-            return self.raw_data
+            return self.raw_data if isinstance(self.raw_data, str) else yaml.dump(self.json_data)
         if self.data_format == SAMDataFormats.JSON:
             return yaml.dump(self.json_data)
         return None
@@ -220,9 +220,9 @@ class SAMLoader(SmarterHelperMixin):
     # -------------------------------------------------------------------------
     # class methods
     # -------------------------------------------------------------------------
-    def get_key(self, key) -> any:
+    def get_key(self, key) -> Any:
         try:
-            return self.json_data[key]
+            return self.json_data[key] if isinstance(self.json_data, dict) else None
         except (KeyError, TypeError):
             return None
 
@@ -232,7 +232,7 @@ class SAMLoader(SmarterHelperMixin):
         contents of spec.
         """
 
-        def recursive_validator(recursed_data: dict = None, recursed_spec: dict = None):
+        def recursive_validator(recursed_data: Optional[dict] = None, recursed_spec: Optional[dict] = None):
             this_overall_spec = recursed_spec or self.specification
             this_data = recursed_data or self.json_data
             if not this_data:
