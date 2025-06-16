@@ -89,7 +89,7 @@ class PluginBase(ABC, SmarterHelperMixin):
     _plugin_data_serializer: Optional[serializers.Serializer] = None
 
     _selected: bool = False
-    _params: Optional[dict] = None
+    _params: Optional[dict[str, Any]] = None
 
     _user_profile: Optional[UserProfile] = None
 
@@ -234,7 +234,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         raise NotImplementedError()
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict] = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
         raise NotImplementedError()
 
     ###########################################################################
@@ -246,7 +246,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         return self._metadata_class
 
     @property
-    def params(self) -> Optional[dict]:
+    def params(self) -> Optional[dict[str, Any]]:
         """Return the plugin parameters."""
         return self._params
 

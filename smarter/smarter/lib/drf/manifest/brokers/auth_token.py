@@ -143,7 +143,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         if self.created and self._token_key:
             return self._token_key
 
-    def manifest_to_django_orm(self) -> Optional[dict]:
+    def manifest_to_django_orm(self) -> Optional[dict[str, Any]]:
         """
         Transform the Smarter API SAMSmarterAuthToken manifest into a Django ORM model.
         """

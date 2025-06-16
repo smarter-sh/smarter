@@ -112,7 +112,7 @@ class ApiPlugin(PluginBase):
             }
 
     @property
-    def custom_tool(self) -> Optional[dict]:
+    def custom_tool(self) -> Optional[dict[str, Any]]:
         """Return the plugin tool. see https://platform.openai.com/docs/assistants/tools/function-calling/quickstart"""
 
         def property_factory(param) -> dict:
@@ -164,7 +164,7 @@ class ApiPlugin(PluginBase):
         return None
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict] = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
 
         api_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,

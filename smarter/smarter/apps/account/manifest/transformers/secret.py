@@ -143,7 +143,7 @@ class SecretTransformer(SmarterHelperMixin):
     ###########################################################################
     # pylint: disable=W0613
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict] = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
         return {
             SAMKeys.APIVERSION.value: SMARTER_API_MANIFEST_DEFAULT_VERSION,
             SAMKeys.KIND.value: MANIFEST_KIND,
@@ -346,7 +346,7 @@ class SecretTransformer(SmarterHelperMixin):
         return self._secret_serializer
 
     @property
-    def secret_django_model(self) -> Optional[dict]:
+    def secret_django_model(self) -> Optional[dict[str, Any]]:
         """Return a dict for loading the secret Django ORM model."""
         if not self.manifest:
             return None
@@ -519,7 +519,7 @@ class SecretTransformer(SmarterHelperMixin):
 
         return True
 
-    def save(self):
+    def save(self) -> bool:
         """Save a secret."""
 
         if not self.ready:
@@ -531,7 +531,7 @@ class SecretTransformer(SmarterHelperMixin):
         logger.info("%s.save()) secret %s: %s.", self.formatted_class_name, self.name, self.id)
         return True
 
-    def delete(self):
+    def delete(self) -> bool:
         """Delete a secret."""
 
         if not self.ready:
