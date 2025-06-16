@@ -99,7 +99,7 @@ class StaticPlugin(PluginBase):
             }
 
     @property
-    def custom_tool(self) -> Optional[dict]:
+    def custom_tool(self) -> Optional[dict[str, Any]]:
         """Return the plugin tool."""
         if self.ready:
             return {
@@ -122,7 +122,7 @@ class StaticPlugin(PluginBase):
         return None
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[dict] = None) -> Optional[dict]:
+    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
         static_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,

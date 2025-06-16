@@ -157,7 +157,7 @@ class SAMLoader(SmarterHelperMixin):
         return self._raw_data
 
     @property
-    def json_data(self) -> Optional[dict]:
+    def json_data(self) -> Optional[dict[str, Any]]:
         if self.data_format == SAMDataFormats.JSON:
             return json.loads(self.raw_data) if isinstance(self.raw_data, str) else self.raw_data
         if self.data_format == SAMDataFormats.YAML:
