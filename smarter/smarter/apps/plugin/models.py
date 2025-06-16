@@ -68,7 +68,7 @@ logger = logging.getLogger(__name__)
 SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
 
 
-class PluginDataSqlValueError(SmarterValueError):
+class PluginDataValueError(SmarterValueError):
     """Custom exception for PluginData SQL errors."""
 
 
@@ -98,84 +98,98 @@ def validate_openai_parameters_dict(value):
     }
     """
     if not isinstance(value, dict):
-        raise PluginDataSqlValueError("This field must be a dict.")
+        raise PluginDataValueError("This field must be a dict.")
 
     if not isinstance(value, dict):
-        raise PluginDataSqlValueError(f"data parameters must be a dictionary, not {type(value).__name__}.")
+        raise PluginDataValueError(f"data parameters must be a dictionary, not {type(value).__name__}.")
 
     # validations
     if not isinstance(value, dict):
-        raise PluginDataSqlValueError("data parameters must be a dictionary.")
+        raise PluginDataValueError("data parameters must be a dictionary.")
     if "type" not in value.keys():
-        raise PluginDataSqlValueError("data parameters missing 'type' key.")
+        raise PluginDataValueError("data parameters missing 'type' key.")
     if value["type"] != "object":  # type: ignore[index]
-        raise PluginDataSqlValueError("data parameters 'type' must be 'object'.")
+        raise PluginDataValueError("data parameters 'type' must be 'object'.")
     if "properties" not in value.keys():
-        raise PluginDataSqlValueError("data parameters missing 'properties' key.")
+        raise PluginDataValueError("data parameters missing 'properties' key.")
 
     # validate each property
     properties = value.get("properties", {})
     if not isinstance(properties, dict):
-        raise PluginDataSqlValueError("data parameters 'properties' must be a dictionary.")
+        raise PluginDataValueError("data parameters 'properties' must be a dictionary.")
 
     for key, value in properties.items():
+
         if not isinstance(key, str):
-            raise PluginDataSqlValueError("data parameters 'properties' keys must be strings.")
+            raise PluginDataValueError("data parameters 'properties' keys must be strings.")
+
+        if key not in ["name", "type", "enum", "description", "required", "default"]:
+            raise PluginDataValueError(
+                f"data parameters 'properties' key '{key}' is not a valid key. Valid keys are: "
+                "'name', 'type', 'enum', 'description', 'required', 'default'."
+            )
+
+        # validate the value against our own internal Parameter Pydantic model
+        try:
+            Parameter(**value)
+        except (ValidationError, SmarterValueError) as e:
+            raise PluginDataValueError(
+                f"Invalid parameter structure. Should match the Pydantic model structure, Parameter {e}"
+            ) from e
+
         if not isinstance(value, dict):
-            raise PluginDataSqlValueError(f"data parameters 'properties' value for key '{key}' must be a dictionary.")
+            raise PluginDataValueError(f"data parameters 'properties' value for key '{key}' must be a dictionary.")
         if "type" not in value:
-            raise PluginDataSqlValueError(f"data parameters 'properties' value for key '{key}' missing 'type' key.")
+            raise PluginDataValueError(f"data parameters 'properties' value for key '{key}' missing 'type' key.")
         if value["type"] not in PluginDataSql.DataTypes.all():
-            raise PluginDataSqlValueError(
+            raise PluginDataValueError(
                 f"data parameters 'properties' value for key '{key}' invalid 'type': {value['type']}"
             )
         if "description" not in value:
-            raise PluginDataSqlValueError(
-                f"data parameters 'properties' value for key '{key}' missing 'description' key."
-            )
+            raise PluginDataValueError(f"data parameters 'properties' value for key '{key}' missing 'description' key.")
         if "required" not in value:
             value["required"] = False
         if not isinstance(value["required"], bool):
-            raise PluginDataSqlValueError(
+            raise PluginDataValueError(
                 f"data parameters 'properties' value for key '{key}' 'required' must be a boolean."
             )
         if "default" in value and value["default"] is not None:
             if value["type"] == "string" and not isinstance(value["default"], str):
-                raise PluginDataSqlValueError(
+                raise PluginDataValueError(
                     f"data parameters 'properties' value for key '{key}' 'default' must be a string."
                 )
             if value["type"] == "number" and not isinstance(value["default"], (int, float)):
-                raise PluginDataSqlValueError(
+                raise PluginDataValueError(
                     f"data parameters 'properties' value for key '{key}' 'default' must be a number."
                 )
             if value["type"] == "boolean" and not isinstance(value["default"], bool):
-                raise PluginDataSqlValueError(
+                raise PluginDataValueError(
                     f"data parameters 'properties' value for key '{key}' 'default' must be a boolean."
                 )
             if value["type"] == "array" and not isinstance(value["default"], list):
-                raise PluginDataSqlValueError(
+                raise PluginDataValueError(
                     f"data parameters 'properties' value for key '{key}' 'default' must be an array."
                 )
             if value["type"] == "object" and not isinstance(value["default"], dict):
-                raise PluginDataSqlValueError(
+                raise PluginDataValueError(
                     f"data parameters 'properties' value for key '{key}' 'default' must be an object."
                 )
 
     # if we have an enum, validate it
     if "enum" in value.keys():
         if not isinstance(value["enum"], list):  # type: ignore[index]
-            raise PluginDataSqlValueError("data parameters 'enum' must be a list.")
+            raise PluginDataValueError("data parameters 'enum' must be a list.")
         for item in value["enum"]:  # type: ignore[index]
             if not isinstance(item, str):
-                raise PluginDataSqlValueError("data parameters 'enum' items must be strings.")
+                raise PluginDataValueError("data parameters 'enum' items must be strings.")
 
     # if we have a required list, validate it
     if "required" in value.keys():
         if not isinstance(value["required"], list):  # type: ignore[index]
-            raise PluginDataSqlValueError("data parameters 'required' must be a list.")
+            raise PluginDataValueError("data parameters 'required' must be a list.")
         for item in value["required"]:  # type: ignore[index]
             if not isinstance(item, str):
-                raise PluginDataSqlValueError("data parameters 'required' items must be strings.")
+                raise PluginDataValueError("data parameters 'required' items must be strings.")
     else:
         value["required"] = []  # type: ignore[index]
 
@@ -756,7 +770,7 @@ class SqlConnection(ConnectionBase):
     @property
     def connection(self) -> Optional[BaseDatabaseWrapper]:
         if not self._connection:
-            connection = self.connect()
+            connection = self.test_connection()
             if isinstance(connection, BaseDatabaseWrapper):
                 self._connection = connection
         return self._connection
@@ -778,7 +792,7 @@ class SqlConnection(ConnectionBase):
     @property
     def django_db_connection(self) -> dict:
         """Return the database connection settings for Django."""
-        return {
+        retval = {
             "ENGINE": self.db_engine,
             "NAME": self.database,
             "USER": self.username,
@@ -787,34 +801,32 @@ class SqlConnection(ConnectionBase):
             "PORT": str(self.port),
             "OPTIONS": self.db_options,
         }
+        return retval
 
     @property
     def connection_string(self) -> str:
-        return self.get_connection_string(masked=True)
+        return self.get_connection_string()
 
-    def connect_tcpip(self) -> Union[BaseDatabaseWrapper, bool]:
+    def connect_tcpip(self) -> bool:
         """
-        Establish a database connection using Standard TCP/IP.
+        Establish a test database connection using Standard TCP/IP.
         """
         logger.info("Connecting to database using Standard TCP/IP: %s", self.get_connection_string())
+        plugin_sql_connection_attempted.send(sender=self.__class__, connection=self)
         try:
             connection_handler = ConnectionHandler({"default": self.django_db_connection})
-            tcp_ip_connection: Optional[BaseDatabaseWrapper] = connection_handler["default"].connection
-            if tcp_ip_connection and tcp_ip_connection.is_usable():
-                logger.info("TCP/IP connection is already established.")
-                return tcp_ip_connection
-            if tcp_ip_connection:
-                plugin_sql_connection_attempted.send(sender=self.__class__, connection=self)
-                tcp_ip_connection.ensure_connection()
+            db_wrapper = connection_handler["default"]
+            db_wrapper.ensure_connection()
+            if db_wrapper.is_usable():
                 plugin_sql_connection_success.send(sender=self.__class__, connection=self)
-                return tcp_ip_connection
+                db_wrapper.close()
+                return True
             else:
-                logger.error("Failed to establish TCP/IP connection: No connection object found.")
-                plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
+                msg = "Failed to establish TCP/IP connection: No connection object found."
+                plugin_sql_connection_failed.send(sender=self.__class__, connection=self, error=msg)
                 return False
         except (DatabaseError, ImproperlyConfigured) as e:
-            plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
-            logger.error("db test connection failed: %s", e)
+            plugin_sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
             return False
 
     def transport_handler(self, channel, src_addr, dest_addr):
@@ -822,7 +834,7 @@ class SqlConnection(ConnectionBase):
             "Transport handler called with channel: %s, src_addr: %s, dest_addr: %s", channel, src_addr, dest_addr
         )
 
-    def connect_tcpip_ssh(self) -> Union[BaseDatabaseWrapper, bool]:
+    def connect_tcpip_ssh(self) -> bool:
         """
         Establish a database connection using Standard TCP/IP over SSH with Paramiko.
         """
@@ -846,7 +858,7 @@ class SqlConnection(ConnectionBase):
                 hostname=self.hostname,
                 port=self.port if self.port else 22,  # Default SSH port is 22
                 username=self.proxy_username,
-                password=self.proxy_password.get_secret() if self.proxy_password else None,
+                password=self.proxy_password.get_secret(update_last_accessed=False) if self.proxy_password else None,
                 timeout=self.timeout,
             )
 
@@ -868,7 +880,7 @@ class SqlConnection(ConnectionBase):
             # Close the SSH connection after ensuring the database connection
             ssh_client.close()
             plugin_sql_connection_success.send(sender=self.__class__, connection=self)
-            return tcpip_ssh_connection
+            return True
 
         # pylint: disable=W0718
         except Exception as e:
@@ -876,7 +888,7 @@ class SqlConnection(ConnectionBase):
             logger.error("TCP/IP over SSH connection failed: %s", e)
             return False
 
-    def connect_ldap_user_pwd(self) -> Union[BaseDatabaseWrapper, bool]:
+    def connect_ldap_user_pwd(self) -> bool:
         """
         Establish a database connection using LDAP User/Password authentication.
         """
@@ -888,18 +900,17 @@ class SqlConnection(ConnectionBase):
             ldap_user_pwd_connection: BaseDatabaseWrapper = connection_handler["default"].connection
             ldap_user_pwd_connection.ensure_connection()
             plugin_sql_connection_success.send(sender=self.__class__, connection=self)
-            return ldap_user_pwd_connection
+            return True
         # pylint: disable=W0718
         except Exception as e:
             plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
             logger.error("LDAP User/Password connection failed: %s", e)
             return False
 
-    def connect(self) -> Union[BaseDatabaseWrapper, bool]:
+    def test_connection(self) -> bool:
         """
         Establish a database connection based on the authentication method.
         """
-        logger.info("Connecting to database: %s", self.get_connection_string())
         if self.authentication_method == DBMSAuthenticationMethods.NONE.value:
             return self.connect_tcpip()
         elif self.authentication_method == DBMSAuthenticationMethods.TCPIP.value:
@@ -922,7 +933,7 @@ class SqlConnection(ConnectionBase):
             self._connection = None
 
     def execute_query(self, sql: str, limit: Optional[int] = None) -> Union[list[tuple[Any, ...]], bool]:
-        query_connection = self.connect()
+        query_connection = self.connection
         if not isinstance(query_connection, BaseDatabaseWrapper):
             return False
         plugin_sql_connection_query_attempted.send(sender=self.__class__, connection=self)
@@ -957,7 +968,7 @@ class SqlConnection(ConnectionBase):
             logger.error("proxy test connection failed: %s", e)
             return False
 
-    def get_connection_string(self, masked: bool = False) -> str:
+    def get_connection_string(self, masked: bool = True) -> str:
         """Return the connection string."""
         if masked:
             password = "******"
@@ -969,7 +980,7 @@ class SqlConnection(ConnectionBase):
     def validate(self) -> bool:
         super().validate()
         logger.info("Validating SqlConnection: %s", self.name)
-        return isinstance(self.connect(), BaseDatabaseWrapper)
+        return self.test_connection()
 
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
@@ -1048,51 +1059,6 @@ class PluginDataSql(PluginDataBase):
             return False
         return all(isinstance(tv, dict) and "name" in tv and "value" in tv for tv in self.test_values)  # type: ignore  # pylint: disable=not-an-iterable
 
-    def validate_parameters(self) -> None:
-        """
-        Validate if the structure of self.parameters matches the expected Json representation
-        by attempting to instantiate each item in the list as a Pydantic Parameter model.
-            "parameters": [
-                {
-                "name": "username",
-                "type": "string",
-                "description": "The username to query.",
-                "required": true,
-                "default": "admin"
-                },
-                {
-                "name": "unit",
-                "type": "string",
-                "enum": [
-                    "Celsius",
-                    "Fahrenheit"
-                ],
-                "description": "The temperature unit to use.",
-                "required": false,
-                "default": "Celsius"
-                }
-            ],
-
-        """
-        if self.parameters is None:
-            return None
-        if not isinstance(self.parameters, list):
-            if isinstance(self.parameters, dict):
-                self.parameters = [self.parameters]
-                logger.warning(
-                    "PluginDataSql().parameters was a dict. converted to a list: %s", json.dumps(self.parameters)
-                )
-            else:
-                raise SmarterValueError(f"parameters must be a list of dictionaries but got: {type(self.parameters)}")
-
-        # pylint: disable=E1133
-        for param_dict in self.parameters:
-            try:
-                # pylint: disable=E1134
-                Parameter(**param_dict)
-            except (ValidationError, SmarterValueError) as e:
-                raise SmarterValueError(f"Invalid parameter structure: {e}") from e
-
     def validate_test_values(self) -> None:
         """
         Validate if the structure of self.test_values matches the expected Json representation
@@ -1129,7 +1095,7 @@ class PluginDataSql(PluginDataBase):
             return None
 
         # pylint: disable=E1133
-        for param_dict in self.parameters:
+        for param_dict in self.parameters:  # type: ignore[not-an-iterable]
             param_name = param_dict.get("name")
             if not any(test_value.get("name") == param_name for test_value in self.test_values):
                 raise SmarterValueError(f"Test value for parameter '{param_name}' is missing.")
@@ -1139,14 +1105,13 @@ class PluginDataSql(PluginDataBase):
         Validate that all placeholders in the SQL query string are present in the parameters.
         """
         placeholders = re.findall(r"{(.*?)}", self.sql_query)
-        parameters = self.parameters or []
+        parameters = self.parameters or {}
         for placeholder in placeholders:
-            if self.parameters is None or not any(param.get("name") == placeholder for param in parameters):
+            if self.parameters is None or not any(placeholder in inner_dict for inner_dict in parameters.values()):
                 raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters.")
 
     def validate(self) -> bool:
         super().validate()
-        self.validate_parameters()
         self.validate_test_values()
         self.validate_all_parameters_in_test_values()
         self.valdate_all_placeholders_in_parameters()
@@ -1156,7 +1121,6 @@ class PluginDataSql(PluginDataBase):
     def prepare_sql(self, params: Optional[dict]) -> str:
         """Prepare the SQL query by replacing placeholders with values."""
         params = params or {}
-        self.validate_parameters()
         sql = self.sql_query
         for key, value in params.items():
             placeholder = "{" + key + "}"
@@ -1264,7 +1228,7 @@ class ApiConnection(ConnectionBase):
 
     @property
     def connection_string(self) -> str:
-        return self.get_connection_string(masked=True)
+        return self.get_connection_string()
 
     def test_proxy(self) -> bool:
         proxy_dict = {
@@ -1286,7 +1250,7 @@ class ApiConnection(ConnectionBase):
         except Exception:
             return False
 
-    def get_connection_string(self, masked: bool = False) -> str:
+    def get_connection_string(self, masked: bool = True) -> str:
         """Return the connection string."""
         if masked:
             return f"{self.base_url} (Auth: ******)"
@@ -1409,6 +1373,7 @@ class PluginDataApi(PluginDataBase):
         help_text="A JSON dict containing parameter names and data types. Example: {'city': {'type': 'string', 'description': 'City name'}}",
         blank=True,
         null=True,
+        validators=[validate_openai_parameters_dict],
     )
     headers = models.JSONField(
         help_text="A JSON dict containing headers to be sent with the API request. Example: {'Authorization': 'Bearer <token>'}",

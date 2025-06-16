@@ -3,6 +3,7 @@
 import json
 from http import HTTPStatus
 from logging import getLogger
+from typing import Optional
 from urllib.parse import urlencode
 
 from django.urls import reverse
@@ -41,24 +42,24 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
     Account.
     """
 
-    sqlconnection: SqlConnection = None
+    sqlconnection: SqlConnection
 
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
         self.query_params = urlencode({"name": self.name})
-        self.password: Secret = None
+        self.password: Optional[Secret] = None
 
     def tearDown(self):
         if self.sqlconnection is not None:
             try:
-                if self.sqlconnection.id is not None:
+                if self.sqlconnection.id is not None:  # type: ignore
                     self.sqlconnection.delete()
             except (SqlConnection.DoesNotExist, ValueError):
                 pass
         if self.password is not None:
             try:
-                if self.password.id is not None:
+                if self.password.id is not None:  # type: ignore
                     self.password.delete()
             except (Secret.DoesNotExist, ValueError):
                 pass
@@ -284,7 +285,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertEqual(item["port"], self.sqlconnection.port)
         self.assertEqual(item["database"], self.sqlconnection.database)
         self.assertEqual(item["username"], self.sqlconnection.username)
-        self.assertEqual(item["password"], self.sqlconnection.password.id)
+        self.assertEqual(item["password"], self.sqlconnection.password.id)  # type: ignore
         self.assertEqual(item["proxyProtocol"], "http")
         self.assertIsNone(item["proxyHost"])
         self.assertIsNone(item["proxyPort"])
@@ -309,7 +310,8 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertIn("items", data.keys())
 
         self.sqlconnection.delete()
-        self.password.delete()
+        if isinstance(self.password, Secret):
+            self.password.delete()
 
     def test_deploy(self) -> None:
         """Test deploy command"""
