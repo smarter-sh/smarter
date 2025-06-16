@@ -1,4 +1,3 @@
-# pylint: disable=missing-docstring,missing-module-docstring,missing-class-docstring,missing-function-docstring
 # pylint: disable=C0114,C0115
 """PluginMeta app models."""
 
@@ -12,7 +11,7 @@ from abc import abstractmethod
 from functools import lru_cache
 from http import HTTPStatus
 from socket import socket
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 from urllib.parse import urljoin
 
 import paramiko
@@ -69,15 +68,116 @@ logger = logging.getLogger(__name__)
 SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
 
 
+class PluginDataSqlValueError(SmarterValueError):
+    """Custom exception for PluginData SQL errors."""
+
+
 def validate_no_spaces(value) -> None:
     """Validate that the string does not contain spaces."""
     if " " in value:
         raise SmarterValueError(f"Value must not contain spaces: {value}")
 
 
-def validate_dict(value):
+def validate_openai_parameters_dict(value):
+    """
+    example:
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "location": {
+                "type": "string",
+                "description": "The city and state, e.g., San Francisco, CA"
+            },
+            "unit": {
+                "type": "string",
+                "enum": ["Celsius", "Fahrenheit"],
+                "description": "The temperature unit to use. Infer this from the user's location."
+            }
+        },
+        "required": ["location", "unit"]
+    }
+    """
     if not isinstance(value, dict):
-        raise SmarterValueError("This field must be a dict.")
+        raise PluginDataSqlValueError("This field must be a dict.")
+
+    if not isinstance(value, dict):
+        raise PluginDataSqlValueError(f"data parameters must be a dictionary, not {type(value).__name__}.")
+
+    # validations
+    if not isinstance(value, dict):
+        raise PluginDataSqlValueError("data parameters must be a dictionary.")
+    if "type" not in value.keys():
+        raise PluginDataSqlValueError("data parameters missing 'type' key.")
+    if value["type"] != "object":  # type: ignore[index]
+        raise PluginDataSqlValueError("data parameters 'type' must be 'object'.")
+    if "properties" not in value.keys():
+        raise PluginDataSqlValueError("data parameters missing 'properties' key.")
+
+    # validate each property
+    properties = value.get("properties", {})
+    if not isinstance(properties, dict):
+        raise PluginDataSqlValueError("data parameters 'properties' must be a dictionary.")
+
+    for key, value in properties.items():
+        if not isinstance(key, str):
+            raise PluginDataSqlValueError("data parameters 'properties' keys must be strings.")
+        if not isinstance(value, dict):
+            raise PluginDataSqlValueError(f"data parameters 'properties' value for key '{key}' must be a dictionary.")
+        if "type" not in value:
+            raise PluginDataSqlValueError(f"data parameters 'properties' value for key '{key}' missing 'type' key.")
+        if value["type"] not in PluginDataSql.DataTypes.all():
+            raise PluginDataSqlValueError(
+                f"data parameters 'properties' value for key '{key}' invalid 'type': {value['type']}"
+            )
+        if "description" not in value:
+            raise PluginDataSqlValueError(
+                f"data parameters 'properties' value for key '{key}' missing 'description' key."
+            )
+        if "required" not in value:
+            value["required"] = False
+        if not isinstance(value["required"], bool):
+            raise PluginDataSqlValueError(
+                f"data parameters 'properties' value for key '{key}' 'required' must be a boolean."
+            )
+        if "default" in value and value["default"] is not None:
+            if value["type"] == "string" and not isinstance(value["default"], str):
+                raise PluginDataSqlValueError(
+                    f"data parameters 'properties' value for key '{key}' 'default' must be a string."
+                )
+            if value["type"] == "number" and not isinstance(value["default"], (int, float)):
+                raise PluginDataSqlValueError(
+                    f"data parameters 'properties' value for key '{key}' 'default' must be a number."
+                )
+            if value["type"] == "boolean" and not isinstance(value["default"], bool):
+                raise PluginDataSqlValueError(
+                    f"data parameters 'properties' value for key '{key}' 'default' must be a boolean."
+                )
+            if value["type"] == "array" and not isinstance(value["default"], list):
+                raise PluginDataSqlValueError(
+                    f"data parameters 'properties' value for key '{key}' 'default' must be an array."
+                )
+            if value["type"] == "object" and not isinstance(value["default"], dict):
+                raise PluginDataSqlValueError(
+                    f"data parameters 'properties' value for key '{key}' 'default' must be an object."
+                )
+
+    # if we have an enum, validate it
+    if "enum" in value.keys():
+        if not isinstance(value["enum"], list):  # type: ignore[index]
+            raise PluginDataSqlValueError("data parameters 'enum' must be a list.")
+        for item in value["enum"]:  # type: ignore[index]
+            if not isinstance(item, str):
+                raise PluginDataSqlValueError("data parameters 'enum' items must be strings.")
+
+    # if we have a required list, validate it
+    if "required" in value.keys():
+        if not isinstance(value["required"], list):  # type: ignore[index]
+            raise PluginDataSqlValueError("data parameters 'required' must be a list.")
+        for item in value["required"]:  # type: ignore[index]
+            if not isinstance(item, str):
+                raise PluginDataSqlValueError("data parameters 'required' items must be strings.")
+    else:
+        value["required"] = []  # type: ignore[index]
 
 
 def dict_key_cleaner(key: str) -> str:
@@ -910,7 +1010,7 @@ class PluginDataSql(PluginDataBase):
         NULL = "null"
 
         @classmethod
-        def all(cls) -> list:
+        def all(cls) -> list[str]:
             return [cls.INT, cls.FLOAT, cls.STR, cls.BOOL, cls.LIST, cls.DICT, cls.NULL]
 
     connection = models.ForeignKey(SqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql_connection")
@@ -919,7 +1019,7 @@ class PluginDataSql(PluginDataBase):
         default=dict,
         blank=True,
         null=True,
-        validators=[validate_dict],
+        validators=[validate_openai_parameters_dict],
     )
     sql_query = models.TextField(
         help_text="The SQL query that this plugin will execute when invoked by the user prompt.",

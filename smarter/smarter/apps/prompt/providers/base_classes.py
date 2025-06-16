@@ -759,7 +759,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: function_response must be a string, got {type(function_response)}"
             )
-        message_content = f"{str(plugin.__class__.__name__)} {plugin.name} response: " + function_response
+        message_content = f"{str(plugin.__class__.__name__)} {plugin.name} response: " + function_response  # type: ignore[call-arg]
         self.append_message(role=OpenAIMessageKeys.TOOL_MESSAGE_KEY, content=message_content, message=tool_call_message)
         if not isinstance(self.serialized_tool_calls, list):
             raise SmarterValueError(
