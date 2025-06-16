@@ -127,9 +127,7 @@ class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
         ...,
         description="kind[String]: Required. The kind of resource described by the manifest.",
     )
-    metadata: Union[AbstractSAMMetadataBase, dict] = Field(
-        ..., description="metadata[obj]: Required. The manifest metadata."
-    )
+    metadata: AbstractSAMMetadataBase = Field(..., description="metadata[obj]: Required. The manifest metadata.")
     spec: AbstractSAMSpecBase = Field(..., description="spec[obj]: Required. The manifest specification.")
     status: Optional[AbstractSAMStatusBase] = Field(
         default=None,

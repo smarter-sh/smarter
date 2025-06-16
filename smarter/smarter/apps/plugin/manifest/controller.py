@@ -2,8 +2,9 @@
 Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models.
 """
 
+import json
 from logging import getLogger
-from typing import Dict, Type, Union
+from typing import Dict, Optional, Type
 
 from smarter.apps.account.models import Account, UserProfile
 
@@ -20,13 +21,11 @@ from ..plugin.sql import SqlPlugin
 from ..plugin.static import StaticPlugin
 from .enum import SAMPluginCommonMetadataClassValues
 from .models.api_plugin.const import MANIFEST_KIND as API_MANIFEST_KIND
-from .models.api_plugin.model import SAMApiPlugin
+from .models.common.plugin.model import SAMPluginCommon
 from .models.sql_plugin.const import MANIFEST_KIND as SQL_MANIFEST_KIND
-from .models.sql_plugin.model import SAMSqlPlugin
 
 # plugin manifest
 from .models.static_plugin.const import MANIFEST_KIND as STATIC_MANIFEST_KIND
-from .models.static_plugin.model import SAMStaticPlugin
 
 
 VALID_MANIFEST_KINDS = [STATIC_MANIFEST_KIND, SQL_MANIFEST_KIND, API_MANIFEST_KIND]
@@ -40,20 +39,20 @@ class SAMPluginControllerError(SAMExceptionBase):
 class PluginController(AbstractController):
     """Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
-    _manifest: Union[SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin] = None
-    _plugin: PluginBase = None
-    _plugin_meta: PluginMeta = None
-    _name: str = None
+    _manifest: Optional[SAMPluginCommon] = None
+    _plugin: Optional[PluginBase] = None
+    _plugin_meta: Optional[PluginMeta] = None
+    _name: Optional[str] = None
 
     def __init__(
         self,
         account: Account,
         user: UserType,
         *args,
-        user_profile: UserProfile = None,
-        manifest: Union[SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin] = None,
-        plugin_meta: PluginMeta = None,
-        name: str = None,
+        user_profile: Optional[UserProfile] = None,
+        manifest: Optional[SAMPluginCommon] = None,
+        plugin_meta: Optional[PluginMeta] = None,
+        name: Optional[str] = None,
         **kwargs,
     ):
         super().__init__(account, user, *args, user_profile, **kwargs)
@@ -61,11 +60,11 @@ class PluginController(AbstractController):
             raise SAMPluginControllerError(
                 f"One and only one of manifest or plugin_meta should be provided. Received? manifest: {bool(manifest)}, plugin_meta: {bool(plugin_meta)}, name: {bool(name)}."
             )
-        if manifest and not isinstance(manifest, (SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin)):
+        if manifest and not isinstance(manifest, SAMPluginCommon):
             raise SAMPluginControllerError(
-                f"Manifest should be one of {SAMStaticPlugin}, {SAMSqlPlugin}, {SAMApiPlugin}. Received? {type(manifest)}."
+                f"Manifest should descend from {SAMPluginCommon}. Received? {type(manifest)}."
             )
-        if manifest:
+        if manifest and self.manifest and self.manifest.kind is not None:
             self._manifest = manifest
             logger.info("%s received manifest: %s", self.formatted_class_name, self._manifest.metadata.name)
             if self.manifest.kind not in VALID_MANIFEST_KINDS:
@@ -85,11 +84,11 @@ class PluginController(AbstractController):
     # Abstract property implementations
     ###########################################################################
     @property
-    def manifest(self) -> Union[SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin]:
+    def manifest(self) -> Optional[SAMPluginCommon]:
         return self._manifest
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         if self._name:
             return self._name
         if self.manifest:
@@ -97,7 +96,7 @@ class PluginController(AbstractController):
         return self._name
 
     @property
-    def plugin_meta(self) -> PluginMeta:
+    def plugin_meta(self) -> Optional[PluginMeta]:
         if not self._plugin_meta and self.account and self.name:
             try:
                 self._plugin_meta = PluginMeta(
@@ -105,11 +104,12 @@ class PluginController(AbstractController):
                     name=self.name,
                 )
             except PluginMeta.DoesNotExist as e:
-                raise SAMPluginControllerError(f"{self.manifest.kind} {self.name} does not exist.") from e
+                kind = self.manifest.kind if self.manifest else "Unknown"
+                raise SAMPluginControllerError(f"{kind} {self.name} does not exist.") from e
         return self._plugin_meta
 
     @property
-    def plugin(self) -> PluginBase:
+    def plugin(self) -> Optional[PluginBase]:
         return self.obj
 
     @property
@@ -121,21 +121,33 @@ class PluginController(AbstractController):
         }
 
     @property
-    def obj(self) -> PluginBase:
+    def obj(self) -> Optional[PluginBase]:
         if self._plugin:
             return self._plugin
         if self._plugin_meta:
-            Plugin = self.map[self.plugin_meta.plugin_class]
-            self._plugin = Plugin(plugin_meta=self.plugin_meta, user_profile=self.user_profile)
-            self._manifest = self._plugin.manifest
+            Plugin = (
+                self.map[self.plugin_meta.plugin_class]
+                if self.plugin_meta and self.plugin_meta.plugin_class in self.map
+                else None
+            )
+            if not Plugin:
+                plugin_class = self.plugin_meta.plugin_class if self.plugin_meta else "Unknown"
+                raise SAMPluginControllerError(f"Plugin class {plugin_class} is not supported.")
+            self._plugin = (
+                Plugin(plugin_meta=self.plugin_meta, user_profile=self.user_profile)
+                if self.plugin_meta and self.user_profile
+                else None
+            )
+            if isinstance(self._plugin, SAMPluginCommon) or self._plugin is None:
+                self._manifest = self._plugin.manifest if self._plugin else None
         elif self.manifest:
             Plugin = self.map[self.manifest.metadata.pluginClass]
             self._plugin = Plugin(manifest=self.manifest, user_profile=self.user_profile)
         return self._plugin
 
-    def model_dump_json(self) -> dict:
+    def model_dump_json(self) -> Optional[dict]:
         if self.plugin:
-            return self.plugin.manifest.model_dump_json()
+            return json.loads(self.plugin.manifest.model_dump_json()) if self.plugin and self.plugin.manifest else None
         return None
 
     def get_model_titles(self) -> list[dict[str, str]]:
