@@ -193,7 +193,6 @@ class StaticPlugin(PluginBase):
         pydantic_model = SAMStaticPlugin(**static_plugin)
         return json.loads(pydantic_model.model_dump_json())
 
-    # pylint: disable=W0221
     def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> str:
         """
         Fetch the inquiry_type from a StaticPlugin.

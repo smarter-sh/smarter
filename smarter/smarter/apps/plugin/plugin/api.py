@@ -231,3 +231,9 @@ class ApiPlugin(PluginBase):
         super().create()
 
         logger.info("PluginDataApi.create() called.")
+
+    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[str]:
+        """
+        Fetch information from a Plugin object.
+        """
+        raise NotImplementedError("tool_call_fetch_plugin_response() must be implemented in a subclass of PluginBase.")

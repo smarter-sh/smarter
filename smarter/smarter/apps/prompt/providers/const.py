@@ -28,12 +28,12 @@ class OpenAIEndPoint:
         endpoint (str): The URL of the OpenAI API endpoint.
     """
 
-    Embedding = openai.Embedding.__name__
+    Embedding = openai.Embedding.__name__  # type: ignore[assignment]
     ChatCompletion = "chat/completions"
-    Moderation = openai.Moderation.__name__
-    Image = openai.Image.__name__
-    Audio = openai.Audio.__name__
-    Models = openai.Model.__name__
+    Moderation = openai.Moderation.__name__  # type: ignore[assignment]
+    Image = openai.Image.__name__  # type: ignore[assignment]
+    Audio = openai.Audio.__name__  # type: ignore[assignment]
+    Models = openai.Model.__name__  # type: ignore[assignment]
     all_endpoints = [Embedding, ChatCompletion, Moderation, Image, Audio, Models]
 
 
