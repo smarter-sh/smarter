@@ -18,6 +18,7 @@ import re
 import warnings
 from datetime import datetime
 from functools import cached_property
+from typing import Any, Optional
 from urllib.parse import ParseResult, urlparse, urlunsplit
 
 import tldextract
@@ -129,12 +130,12 @@ class SmarterRequestMixin(AccountMixin):
 
         self._smarter_request: WSGIRequest = request
         self._timestamp = datetime.now()
-        self._session_key: str = None
-        self._data: dict = None
-        self._url: ParseResult = None
+        self._session_key: Optional[str] = None
+        self._data: Optional[dict] = None
+        self._url: Optional[ParseResult] = None
         self._url_urlunparse_without_params = None
         self._params = None
-        self._cache_key: str = None
+        self._cache_key: Optional[str] = None
         self.invalidate_cached_properties()
 
         url = self.smarter_build_absolute_uri(self.smarter_request)
@@ -282,7 +283,7 @@ class SmarterRequestMixin(AccountMixin):
         raise SmarterValueError("The URL has not been initialized. Please check the request object.")
 
     @property
-    def parsed_url(self) -> ParseResult:
+    def parsed_url(self) -> Optional[ParseResult]:
         """
         expose our private _url
         """
@@ -298,7 +299,7 @@ class SmarterRequestMixin(AccountMixin):
         return [None, None, None, None]
 
     @property
-    def params(self) -> dict[str, any]:
+    def params(self) -> Optional[QueryDict]:
         """
         The query string parameters from the Django request object. This extracts
         the query string parameters from the request object and converts them to a
@@ -307,26 +308,26 @@ class SmarterRequestMixin(AccountMixin):
         """
         if not self._params:
             try:
-                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", "")) or {}
+                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", ""))
             except AttributeError as e:
                 logger.error(
                     "%s.params() internal error. Could not parse query string parameters: %s",
                     self.formatted_class_name,
                     e,
                 )
-                return {}
+                return None
         return self._params
 
     @property
-    def uid(self) -> str:
+    def uid(self) -> Optional[str]:
         """
         Unique identifier for the client. This is assumed to be a
         combination of the machine mac address and the hostname.
         """
-        return self.params.get("uid", None)
+        return self.params.get("uid") if isinstance(self.params, QueryDict) else None
 
     @property
-    def cache_key(self) -> str:
+    def cache_key(self) -> Optional[str]:
         """
         Returns a cache key for the request.
         This is used to cache the chat request thread.
@@ -387,7 +388,7 @@ class SmarterRequestMixin(AccountMixin):
         self._session_key = value
 
     @cached_property
-    def smarter_request_chatbot_id(self) -> int:
+    def smarter_request_chatbot_id(self) -> Optional[int]:
         """
         Extract the chatbot id from the URL.
         example: http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/
@@ -406,7 +407,7 @@ class SmarterRequestMixin(AccountMixin):
             return None
 
     @cached_property
-    def smarter_request_chatbot_account_number(self) -> str:
+    def smarter_request_chatbot_account_number(self) -> Optional[str]:
         """
         http://example.3141-5926-5359.api.localhost:8000/config
         SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
@@ -418,7 +419,7 @@ class SmarterRequestMixin(AccountMixin):
         return account_number_from_url(self.url)
 
     @cached_property
-    def smarter_request_chatbot_name(self) -> str:
+    def smarter_request_chatbot_name(self) -> Optional[str]:
         """
         Extract the chatbot name from the URL.
         http://example.3141-5926-5359.api.localhost:8000/config
@@ -474,7 +475,7 @@ class SmarterRequestMixin(AccountMixin):
         return self._timestamp
 
     @property
-    def data(self) -> dict:
+    def data(self) -> Optional[dict]:
         """
         Get the request body data as a dictionary.
         used for setting the session_key.
@@ -528,7 +529,7 @@ class SmarterRequestMixin(AccountMixin):
         return self._data
 
     @cached_property
-    def unique_client_string(self) -> str:
+    def unique_client_string(self) -> Optional[str]:
         """
         Generate a unique string based on:
          - account number
@@ -546,7 +547,7 @@ class SmarterRequestMixin(AccountMixin):
         return f"{account_number}.{url}.{self.user_agent}.{self.ip_address}.{timestamp}"
 
     @cached_property
-    def client_key(self) -> str:
+    def client_key(self) -> Optional[str]:
         """
         for smarter.sh/v1 api endpoints, the client_key is used to identify the client.
         Generate a unique client key based on the client's IP address, user agent, and the current datetime.
@@ -559,13 +560,13 @@ class SmarterRequestMixin(AccountMixin):
         return self.session_key
 
     @cached_property
-    def ip_address(self) -> str:
+    def ip_address(self) -> Optional[str]:
         if self.smarter_request:
             return self.smarter_request.META.get("REMOTE_ADDR", "") or "ip_address"
         return None
 
     @cached_property
-    def user_agent(self) -> str:
+    def user_agent(self) -> Optional[str]:
         if self.smarter_request:
             return self.smarter_request.META.get("HTTP_USER_AGENT", "") or "user_agent"
         return None
@@ -724,10 +725,10 @@ class SmarterRequestMixin(AccountMixin):
             return True
 
         # Accept root path or root with trailing slash
-        if self._url.path not in ("", "/"):
+        if isinstance(self._url, ParseResult) and self._url.path not in ("", "/"):
             return False
 
-        if netloc_pattern_named_url.match(self._url.netloc):
+        if isinstance(self._url, ParseResult) and netloc_pattern_named_url.match(self._url.netloc):
             return True
 
         return False
@@ -807,7 +808,7 @@ class SmarterRequestMixin(AccountMixin):
         return smarter_settings.environment_api_domain in self.url
 
     @cached_property
-    def path(self) -> str:
+    def path(self) -> Optional[str]:
         """
         Extracts the path from the URL.
         :return: The path or None if not found.
@@ -827,7 +828,7 @@ class SmarterRequestMixin(AccountMixin):
         return self.parsed_url.path
 
     @cached_property
-    def root_domain(self) -> str:
+    def root_domain(self) -> Optional[str]:
         """
         Extracts the root domain from the URL.
         :return: The root domain or None if not found.
@@ -843,7 +844,7 @@ class SmarterRequestMixin(AccountMixin):
             return None
         if not self.url:
             return None
-        url = SmarterValidator.urlify(self.url, environment=smarter_settings.environment)
+        url = SmarterValidator.urlify(self.url, environment=smarter_settings.environment)  # type: ignore
         if url:
             extracted = tldextract.extract(url)
             if extracted.domain and extracted.suffix:
@@ -853,7 +854,7 @@ class SmarterRequestMixin(AccountMixin):
         return None
 
     @cached_property
-    def subdomain(self) -> str:
+    def subdomain(self) -> Optional[str]:
         """
         Extracts the subdomain from the URL.
         :return: The subdomain or None if not found.
@@ -870,7 +871,7 @@ class SmarterRequestMixin(AccountMixin):
         return extracted.subdomain
 
     @cached_property
-    def api_subdomain(self) -> str:
+    def api_subdomain(self) -> Optional[str]:
         """
         Extracts the API subdomain from the URL.
 
@@ -889,7 +890,7 @@ class SmarterRequestMixin(AccountMixin):
             return None
 
     @cached_property
-    def domain(self) -> str:
+    def domain(self) -> Optional[str]:
         """
         Extracts the domain from the URL.
         :return: The domain or None if not found.
@@ -949,7 +950,7 @@ class SmarterRequestMixin(AccountMixin):
         if self.smarter_request and self.smarter_request.COOKIES:
             return self.smarter_request.COOKIES.get(cookie_name)
 
-    def generate_session_key(self) -> str:
+    def generate_session_key(self) -> Optional[str]:
         """
         Generate a session_key based on a unique string and the current datetime.
         """
@@ -959,7 +960,7 @@ class SmarterRequestMixin(AccountMixin):
             self.helper_logger(f"Generated new session key: {session_key}")
             return session_key
 
-    def find_session_key(self) -> str:
+    def find_session_key(self) -> Optional[str]:
         """
         returns the unique chat session key value for this request.
         session_key is managed by the /config/ endpoint for the chatbot
@@ -984,7 +985,7 @@ class SmarterRequestMixin(AccountMixin):
         if self._session_key:
             return self._session_key
 
-        session_key: str = None
+        session_key: Optional[str]
 
         # this is our expected case. we look for the session key in the parsed url.
         session_key = session_key_from_url(self.url)
@@ -996,14 +997,15 @@ class SmarterRequestMixin(AccountMixin):
             return session_key
 
         # next, we look for it in the request body data.
-        session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        session_key = session_key.strip() if isinstance(session_key, str) else None
-        if session_key:
-            SmarterValidator.validate_session_key(session_key)
-            self.helper_logger(
-                f"session_key() - initialized from request body: {session_key}",
-            )
-            return session_key
+        if isinstance(self.data, dict):
+            session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
+            session_key = session_key.strip() if isinstance(session_key, str) else None
+            if session_key:
+                SmarterValidator.validate_session_key(session_key)
+                self.helper_logger(
+                    f"session_key() - initialized from request body: {session_key}",
+                )
+                return session_key
 
         # next, we look for it in the cookie data.
         session_key = self.get_cookie_value(SMARTER_CHAT_SESSION_KEY_NAME)
@@ -1025,7 +1027,7 @@ class SmarterRequestMixin(AccountMixin):
             )
             return session_key
 
-    def to_json(self) -> dict:
+    def to_json(self) -> dict[str, Any]:
         """
         serializes the object.
         """
@@ -1079,9 +1081,9 @@ class SmarterRequestMixin(AccountMixin):
             if not self.account:
                 account_number = account_number_from_url(self.url)
                 if account_number:
-                    self.account = get_cached_account(account_number=account_number)
+                    self.account = get_cached_account(account_number=account_number)  # type: ignore
             if self.account and not self.user:
-                self.user = get_cached_admin_user_for_account(account=self.account)
+                self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
         if self.is_chatbot_smarter_api_url:
             # https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
             pass

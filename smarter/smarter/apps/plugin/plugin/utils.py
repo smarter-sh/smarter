@@ -1,10 +1,9 @@
 """Plugin utils module."""
 
-import json
 import logging
 import os
 import re
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import yaml
 
@@ -45,7 +44,7 @@ class Plugins:
                 retval.append(plugin.data)
         return retval
 
-    def to_json(self) -> list[dict]:
+    def to_json(self) -> list[dict[str, Any]]:
         """Return a list of plugins in JSON format."""
         retval = []
         for plugin in self.plugins:
@@ -57,9 +56,9 @@ class Plugins:
 class PluginExample:
     """A class for working with built-in yaml-based plugin examples."""
 
-    _filename: Optional[str] = None
-    _json: Optional[Union[list, dict]] = None
-    _yaml: Optional[str] = None
+    _filename: Optional[str]
+    _json: Optional[Union[list, dict]]
+    _yaml: Optional[str]
 
     def __init__(self, filepath: str, filename: str):
         """Initialize the class from a yaml file"""
