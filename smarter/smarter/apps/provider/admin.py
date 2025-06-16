@@ -7,6 +7,13 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.lib.django.admin import RestrictedModelAdmin
 
+from .models import (
+    Provider,
+    ProviderModel,
+    ProviderModelVerification,
+    ProviderVerification,
+)
+
 
 class ProviderModelVerificationAdmin(admin.StackedInline):
     """provider model verification admin."""
@@ -16,6 +23,7 @@ class ProviderModelVerificationAdmin(admin.StackedInline):
         "updated_at",
     )
     list_display = ["created_at", "provider_model", "verification_type", "is_successful", "is_valid"]
+    model = ProviderModelVerification
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -36,6 +44,7 @@ class ProviderVerificationAdmin(admin.StackedInline):
         "updated_at",
     )
     list_display = ["created_at", "provider", "verification_type", "is_successful", "is_valid"]
+    model = ProviderVerification
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -59,6 +68,7 @@ class ProviderAdmin(RestrictedModelAdmin):
     )
 
     list_display = ["created_at", "account", "name", "status", "is_active"]
+    model = Provider
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -81,6 +91,7 @@ class ProviderModelAdmin(RestrictedModelAdmin):
         "updated_at",
     )
     list_display = ["created_at", "provider", "name", "is_active"]
+    model = ProviderModel
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

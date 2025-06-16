@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, Optional, Type, Union
+from typing import Any, Optional, Type
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -33,6 +33,7 @@ class StaticPlugin(PluginBase):
     _metadata_class: str = SAMPluginCommonMetadataClass.STATIC.value
     _plugin_data: Optional[PluginDataStatic] = None
     _plugin_data_serializer: Optional[PluginStaticSerializer] = None
+    _manifest: Optional[SAMStaticPlugin] = None
 
     @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
@@ -40,7 +41,7 @@ class StaticPlugin(PluginBase):
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMStaticPlugin(**self.to_json())
+            self._manifest = SAMStaticPlugin(**self.to_json())  # type: ignore[call-arg]
         return self._manifest
 
     @property
