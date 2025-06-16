@@ -71,7 +71,7 @@ class ChatProviders(SmarterHelperMixin):
     def default(self) -> Type[OpenAICompatibleChatProvider]:
         if self._default is None:
             self._default = OpenAIChatProvider()
-        return self._default
+        return self._default  # type: ignore[return-value]
 
     def get_cache_key(self, chat: Chat) -> str:
         """
@@ -106,7 +106,7 @@ class ChatProviders(SmarterHelperMixin):
                 logger.info(
                     "%s.openai_handler() returning cached OpenAIChatProvider for chat %s",
                     self.formatted_class_name,
-                    chat.id,
+                    chat.id,  # type: ignore[arg-type]
                 )
 
             # if we have a cached provider, we can use it to invoke the handler
