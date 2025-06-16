@@ -892,7 +892,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         transaction.on_commit(lambda: committed(new_plugin=plugin_meta_copy))
         return plugin_meta_copy.id if plugin_meta_copy else None  # type: ignore[reportOptionalMemberAccess]
 
-    def to_json(self, version: str = "v1") -> Optional[dict]:
+    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
         """
         Serialize a plugin in JSON format that is importable by Pydantic. This
         is used to create a Pydantic model from a Django ORM model

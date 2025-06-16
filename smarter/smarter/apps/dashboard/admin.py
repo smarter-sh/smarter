@@ -51,10 +51,7 @@ from smarter.apps.prompt.admin import (
     ChatToolCallHistoryAdmin,
 )
 from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
-from smarter.apps.provider.admin import (
-    ProviderAdmin,
-    ProviderModelAdmin,
-)
+from smarter.apps.provider.admin import ProviderAdmin, ProviderModelAdmin
 from smarter.apps.provider.models import (
     Provider,
     ProviderModel,

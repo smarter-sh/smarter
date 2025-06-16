@@ -1,18 +1,17 @@
 """Common classes"""
 
 import json
-from typing import Union
 from logging import getLogger
+from typing import Any, Optional, Union
 
 import yaml
 from django.http import HttpRequest
 
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
-from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.validators import SmarterValidator
 
 
 logger = getLogger(__name__)
@@ -68,7 +67,7 @@ class SmarterHelperMixin:
         """
         return ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]
 
-    def to_json(self) -> dict:
+    def to_json(self) -> dict[str, Any]:
         """
         A placeholder method for converting the object to JSON.
         Should be overridden in subclasses.
