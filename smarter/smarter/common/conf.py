@@ -335,7 +335,7 @@ class Settings(BaseSettings):
 
     _aws_access_key_id_source: str = "unset"
     _aws_secret_access_key_source: str = "unset"
-    _dump: dict = None
+    _dump: dict
 
     # pylint: disable=too-many-branches,too-many-statements
     def __init__(self, **data: Any):  # noqa: C901
@@ -347,153 +347,117 @@ class Settings(BaseSettings):
         # pylint: disable=logging-fstring-interpolation
         logger.debug("Settings initialized")
 
-    shared_resource_identifier: Optional[str] = Field(
-        SettingsDefaults.SHARED_RESOURCE_IDENTIFIER, env="SHARED_RESOURCE_IDENTIFIER"
-    )
+    shared_resource_identifier: str = Field(SettingsDefaults.SHARED_RESOURCE_IDENTIFIER)
     debug_mode: Optional[bool] = Field(
         SettingsDefaults.DEBUG_MODE,
-        env="DEBUG_MODE",
         pre=True,
         getter=lambda v: empty_str_to_bool_default(v, SettingsDefaults.DEBUG_MODE),
     )
     dump_defaults: Optional[bool] = Field(
         SettingsDefaults.DUMP_DEFAULTS,
-        env="DUMP_DEFAULTS",
         pre=True,
         getter=lambda v: empty_str_to_bool_default(v, SettingsDefaults.DUMP_DEFAULTS),
     )
     aws_profile: Optional[str] = Field(
         SettingsDefaults.AWS_PROFILE,
-        env="AWS_PROFILE",
     )
     aws_access_key_id: Optional[SecretStr] = Field(
         SettingsDefaults.AWS_ACCESS_KEY_ID,
-        env="AWS_ACCESS_KEY_ID",
     )
     aws_secret_access_key: Optional[SecretStr] = Field(
         SettingsDefaults.AWS_SECRET_ACCESS_KEY,
-        env="AWS_SECRET_ACCESS_KEY",
     )
     aws_regions: Optional[List[str]] = Field(AWS_REGIONS, description="The list of AWS regions")
     aws_region: Optional[str] = Field(
         SettingsDefaults.AWS_REGION,
-        env="AWS_REGION",
     )
     aws_apigateway_create_custom_domaim: Optional[bool] = Field(
         SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN,
-        env="AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN",
         pre=True,
         getter=lambda v: empty_str_to_bool_default(v, SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN),
     )
     aws_eks_cluster_name: Optional[str] = Field(
         SettingsDefaults.AWS_EKS_CLUSTER_NAME,
-        env="AWS_EKS_CLUSTER_NAME",
     )
     aws_db_instance_identifier: Optional[str] = Field(
         SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
-        env="AWS_RDS_DB_INSTANCE_IDENTIFIER",
     )
     anthropic_api_key: Optional[str] = Field(
         SettingsDefaults.ANTHROPIC_API_KEY,
-        env="ANTHROPIC_API_KEY",
     )
-    environment: Optional[str] = Field(
+    environment: str = Field(
         SettingsDefaults.ENVIRONMENT,
-        env="ENVIRONMENT",
     )
     fernet_encryption_key: Optional[str] = Field(
         SettingsDefaults.FERNET_ENCRYPTION_KEY,
-        env="FERNET_ENCRYPTION_KEY",
     )
     local_hosts: Optional[List[str]] = Field(
         SettingsDefaults.LOCAL_HOSTS,
-        env="LOCAL_HOSTS",
     )
-    root_domain: Optional[str] = Field(
+    root_domain: str = Field(
         SettingsDefaults.ROOT_DOMAIN,
-        env="ROOT_DOMAIN",
     )
     init_info: Optional[str] = Field(
         None,
-        env="INIT_INFO",
     )
     google_maps_api_key: Optional[SecretStr] = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
-        env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
     )
     gemini_api_key: Optional[SecretStr] = Field(
         SettingsDefaults.GEMINI_API_KEY,
-        env="GEMINI_API_KEY",
     )
     llama_api_key: Optional[SecretStr] = Field(
         SettingsDefaults.LLAMA_API_KEY,
-        env="LLAMA_API_KEY",
     )
     social_auth_google_oauth2_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
-        env=["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"],
     )
     social_auth_google_oauth2_secret: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
-        env=["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"],
     )
     social_auth_github_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY,
-        env=["SOCIAL_AUTH_GITHUB_KEY"],
     )
     social_auth_github_secret: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET,
-        env=["SOCIAL_AUTH_GITHUB_SECRET"],
     )
     social_auth_linkedin_oauth2_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY,
-        env=["SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY"],
     )
     social_auth_linkedin_oauth2_secret: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET,
-        env=["SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET"],
     )
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
-    logo: Optional[str] = Field(SettingsDefaults.LOGO, env="LOGO")
-    mailchimp_api_key: Optional[SecretStr] = Field(SettingsDefaults.MAILCHIMP_API_KEY, env="MAILCHIMP_API_KEY")
-    mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID, env="MAILCHIMP_LIST_ID")
-    marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL, env="MARKETING_SITE_URL")
-    openai_api_organization: Optional[str] = Field(
-        SettingsDefaults.OPENAI_API_ORGANIZATION, env="OPENAI_API_ORGANIZATION"
-    )
-    openai_api_key: Optional[SecretStr] = Field(SettingsDefaults.OPENAI_API_KEY, env="OPENAI_API_KEY")
-    openai_endpoint_image_n: Optional[int] = Field(
-        SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N, env="OPENAI_ENDPOINT_IMAGE_N"
-    )
-    openai_endpoint_image_size: Optional[str] = Field(
-        SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE, env="OPENAI_ENDPOINT_IMAGE_SIZE"
-    )
-    llm_default_provider: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_PROVIDER, env="LLM_DEFAULT_PROVIDER")
-    llm_default_model: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_MODEL, env="LLM_DEFAULT_MODEL")
-    llm_default_system_role: Optional[str] = Field(
-        SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE, env="LLM_DEFAULT_SYSTEM_ROLE"
-    )
-    llm_default_temperature: Optional[float] = Field(
-        SettingsDefaults.LLM_DEFAULT_TEMPERATURE, env="LLM_DEFAULT_TEMPERATURE"
-    )
-    llm_default_max_tokens: Optional[int] = Field(SettingsDefaults.LLM_DEFAULT_MAX_TOKENS, env="LLM_DEFAULT_MAX_TOKENS")
-    pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY, env="PINECONE_API_KEY")
-    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
-    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
+    logo: Optional[str] = Field(SettingsDefaults.LOGO)
+    mailchimp_api_key: Optional[SecretStr] = Field(SettingsDefaults.MAILCHIMP_API_KEY)
+    mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID)
+    marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL)
+    openai_api_organization: Optional[str] = Field(SettingsDefaults.OPENAI_API_ORGANIZATION)
+    openai_api_key: Optional[SecretStr] = Field(SettingsDefaults.OPENAI_API_KEY)
+    openai_endpoint_image_n: Optional[int] = Field(SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N)
+    openai_endpoint_image_size: Optional[str] = Field(SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
+    llm_default_provider: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_PROVIDER)
+    llm_default_model: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_MODEL)
+    llm_default_system_role: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE)
+    llm_default_temperature: Optional[float] = Field(SettingsDefaults.LLM_DEFAULT_TEMPERATURE)
+    llm_default_max_tokens: Optional[int] = Field(SettingsDefaults.LLM_DEFAULT_MAX_TOKENS)
+    pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY)
+    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY)
+    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY)
 
-    secret_key: Optional[str] = Field(SettingsDefaults.SECRET_KEY, env="SECRET_KEY")
+    secret_key: Optional[str] = Field(SettingsDefaults.SECRET_KEY)
 
-    smtp_sender: Optional[str] = Field(SettingsDefaults.SMTP_SENDER, env="SMTP_SENDER")
-    smtp_from_email: Optional[str] = Field(SettingsDefaults.SMTP_FROM_EMAIL, env="SMTP_FROM_EMAIL")
-    smtp_host: Optional[str] = Field(SettingsDefaults.SMTP_HOST, env="SMTP_HOST")
-    smtp_password: Optional[str] = Field(SettingsDefaults.SMTP_PASSWORD, env="SMTP_PASSWORD")
-    smtp_port: Optional[int] = Field(SettingsDefaults.SMTP_PORT, env="SMTP_PORT")
-    smtp_use_ssl: Optional[bool] = Field(SettingsDefaults.SMTP_USE_SSL, env="SMTP_USE_SSL")
-    smtp_use_tls: Optional[bool] = Field(SettingsDefaults.SMTP_USE_TLS, env="SMTP_USE_TLS")
-    smtp_username: Optional[str] = Field(SettingsDefaults.SMTP_USERNAME, env="SMTP_USERNAME")
+    smtp_sender: Optional[str] = Field(SettingsDefaults.SMTP_SENDER)
+    smtp_from_email: Optional[str] = Field(SettingsDefaults.SMTP_FROM_EMAIL)
+    smtp_host: Optional[str] = Field(SettingsDefaults.SMTP_HOST)
+    smtp_password: Optional[str] = Field(SettingsDefaults.SMTP_PASSWORD)
+    smtp_port: Optional[int] = Field(SettingsDefaults.SMTP_PORT)
+    smtp_use_ssl: Optional[bool] = Field(SettingsDefaults.SMTP_USE_SSL)
+    smtp_use_tls: Optional[bool] = Field(SettingsDefaults.SMTP_USE_TLS)
+    smtp_username: Optional[str] = Field(SettingsDefaults.SMTP_USERNAME)
 
-    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
-    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
+    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY)
+    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY)
 
     @property
     def protocol(self) -> str:
@@ -513,7 +477,7 @@ class Settings(BaseSettings):
         return self.shared_resource_identifier + "-api"
 
     @property
-    def aws_apigateway_domain_name(self) -> str:
+    def aws_apigateway_domain_name(self) -> Optional[str]:
         """Return the API domain."""
         if self.aws_apigateway_create_custom_domaim:
             return "api." + self.shared_resource_identifier + "." + self.root_domain
@@ -596,6 +560,11 @@ class Settings(BaseSettings):
     def platform_name(self) -> str:
         """Return the platform name."""
         return self.root_domain.split(".")[0]
+
+    @property
+    def function_calling_identifier_prefix(self) -> str:
+        """Return the prefix for function calling identifiers."""
+        return f"{self.platform_name}_plugin"
 
     @property
     def environment_namespace(self) -> str:

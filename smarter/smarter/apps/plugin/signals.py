@@ -9,6 +9,7 @@ plugin_updated = Signal()
 plugin_deleted = Signal()
 plugin_deleting = Signal()
 plugin_called = Signal()
+plugin_responded = Signal()
 
 plugin_ready = Signal()
 plugin_selected = Signal()
