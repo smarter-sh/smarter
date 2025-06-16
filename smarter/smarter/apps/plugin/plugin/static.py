@@ -21,7 +21,8 @@ from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from ..manifest.models.static_plugin.model import SAMStaticPlugin
-from .base import PluginBase
+from ..signals import plugin_called, plugin_responded
+from .base import PluginBase, SmarterPluginError
 
 
 logger = logging.getLogger(__name__)
@@ -191,3 +192,58 @@ class StaticPlugin(PluginBase):
         # in order to validate our output
         pydantic_model = SAMStaticPlugin(**static_plugin)
         return json.loads(pydantic_model.model_dump_json())
+
+    # pylint: disable=W0221
+    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> str:
+        """
+        Fetch the inquiry_type from a StaticPlugin.
+        """
+        inquiry_type = function_args.get("inquiry_type")
+        if not isinstance(inquiry_type, str):
+            raise SmarterPluginError(
+                f"Plugin {self.name} invalid inquiry_type. Expected a string, got {type(inquiry_type)}.",
+            )
+
+        if not self.ready:
+            raise SmarterPluginError(
+                f"Plugin {self.name} is not in a ready state.",
+            )
+
+        if not self.plugin_data:
+            raise SmarterPluginError(
+                f"Plugin {self.name} is not ready. Plugin data is not available.",
+            )
+
+        plugin_called.send(
+            sender=self.tool_call_fetch_plugin_response,
+            plugin=self,
+            inquiry_type=inquiry_type,
+        )
+
+        try:
+            return_data = self.plugin_data.sanitized_return_data(self.params)
+            if not isinstance(return_data, dict):
+                raise SmarterPluginError(
+                    f"Plugin {self.name} return data is not a dictionary.",
+                )
+            retval = return_data[inquiry_type]
+            retval = json.dumps(retval)
+            if not isinstance(retval, str):
+                raise SmarterPluginError(
+                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is not a string. Expected a string, got {type(retval)}.",
+                )
+            plugin_responded.send(
+                sender=self.tool_call_fetch_plugin_response,
+                plugin=self,
+                inquiry_type=inquiry_type,
+                response=retval,
+            )
+            return retval
+        except KeyError as e:
+            raise SmarterPluginError(
+                f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}.",
+            ) from e
+        except json.JSONDecodeError as e:
+            raise SmarterPluginError(
+                f"Plugin {self.name} contains Json data that could not be decoded: {e}.",
+            ) from e

@@ -47,6 +47,7 @@ from smarter.apps.prompt.signals import (
     chat_response_failure,
     chat_started,
 )
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,
@@ -717,10 +718,11 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 unit=function_args.get("unit"),
             )
             self.handle_tool_called(function_name=function_name, function_args=function_args)
-        elif function_name.startswith("function_calling_plugin"):
+
+        elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             # FIX NOTE: we should revisit this. technically, we're supposed to be calling
             # function_to_call, assigned above. but just to play it safe,
-            # we're directly invoking the plugin's function_calling_plugin() method.
+            # we're directly invoking the plugin's tool_call_fetch_plugin_response() method.
 
             # FIX NOTE CONTINUED: june-2025. What we REALLY should do is work with the
             # plugin's JSON tool_calling function definition that's passed to the LLM.
@@ -728,9 +730,13 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             plugin_id = int(function_name[-4:])
             plugin = StaticPlugin(plugin_id=plugin_id, user_profile=self.user_profile)
             plugin.params = function_args
-            function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
+            function_response = plugin.tool_call_fetch_plugin_response(function_args)
             serialized_tool_call[InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
             self.handle_plugin_called(plugin=plugin)
+        else:
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}: function '{function_name}' not recognized. Available functions: {self.available_functions}"
+            )
         tool_call_message = {
             "tool_call_id": tool_call.id,
             OpenAIMessageKeys.MESSAGE_NAME_KEY: function_name,
@@ -766,7 +772,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.tools.append(plugin.custom_tool)
         else:
             raise SmarterValueError(f"{self.formatted_class_name}: tools must be a list, got {type(self.tools)}")
-        self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
+        self.available_functions[plugin.function_calling_identifier] = plugin.tool_call_fetch_plugin_response
         self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)  # type: ignore[call-arg]
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
 
@@ -831,7 +837,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                         'content': "Welcome to Smarter!. Following are some example prompts: blah blah blah"
                     },
                     {   "role": "smarter",
-                        "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"}
+                        "content": "Tool call: smarter_plugin_0002({\"inquiry_type\":\"about\"})"}
                     {
                         'role': 'user',
                         'content': 'Hello, World!'

@@ -19,6 +19,7 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterException, SmarterValueError
 from smarter.lib.django.user import UserType
 from smarter.lib.manifest.enum import SAMKeys
@@ -46,7 +47,6 @@ from ..serializers import (
     PluginSelectorSerializer,
 )
 from ..signals import (
-    plugin_called,
     plugin_cloned,
     plugin_created,
     plugin_deleted,
@@ -495,19 +495,19 @@ class PluginBase(ABC, SmarterHelperMixin):
         return None
 
     @property
-    def yaml(self) -> Optional[str]:
+    def yaml(self) -> str:
         """Return the plugin as a yaml string."""
-        if self.ready:
-            return yaml.dump(self.to_json())
-        return None
+        if not self.ready:
+            raise SmarterPluginError("Plugin is not ready.")
+        return yaml.dump(self.to_json())
 
     @property
-    def function_calling_identifier(self) -> Optional[str]:
+    def function_calling_identifier(self) -> str:
         """Return the function calling plugin."""
-        if self.ready:
-            suffix = str(self.id).zfill(4)
-            return f"function_calling_plugin_{suffix}"
-        return None
+        if not self.ready:
+            raise SmarterPluginError("Plugin is not ready.")
+        suffix = str(self.id).zfill(10)
+        return f"{smarter_settings.function_calling_identifier_prefix}_{suffix}"
 
     def refresh(self):
         """Refresh the plugin."""
@@ -593,31 +593,12 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         return messages_copy
 
-    def function_calling_plugin(self, inquiry_type: str) -> Optional[str]:
-        """Return select info from custom plugin object"""
-        if not self.ready:
-            return None
-
-        try:
-            return_data = self.plugin_data.sanitized_return_data(self.params)
-            retval = return_data[inquiry_type]
-            retval = json.dumps(retval)
-            plugin_called.send(
-                sender=self.function_calling_plugin,
-                plugin=self,
-                inquiry_type=inquiry_type,
-                inquiry_return=retval,
-            )
-            return retval
-        except KeyError:
-            plugin_called.send(
-                sender=self.function_calling_plugin,
-                plugin=self,
-                inquiry_type=inquiry_type,
-                inquiry_return="KeyError",
-            )
-
-        raise KeyError(f"Invalid inquiry_type: {inquiry_type}")
+    @abstractmethod
+    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[str]:
+        """
+        Fetch information from a Plugin object.
+        """
+        raise NotImplementedError("tool_call_fetch_plugin_response() must be implemented in a subclass of PluginBase.")
 
     def yaml_to_json(self, yaml_string: str) -> dict:
         """Convert a yaml string to a dictionary."""

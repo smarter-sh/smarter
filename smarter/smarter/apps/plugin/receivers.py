@@ -39,6 +39,7 @@ from .signals import (  # plugin signals; sql_connection signals; api_connection
     plugin_deleted,
     plugin_deleting,
     plugin_ready,
+    plugin_responded,
     plugin_selected,
     plugin_sql_connection_attempted,
     plugin_sql_connection_failed,
@@ -110,6 +111,23 @@ def handle_plugin_deleted(sender, plugin: PluginBase, plugin_name: str, **kwargs
 @receiver(plugin_called, dispatch_uid="plugin_called")
 def handle_plugin_called(sender, plugin: PluginBase, **kwargs):
     """Handle plugin called signal."""
+
+    inquiry_type: Optional[str] = kwargs.get("inquiry_type")
+
+    if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+        logger.info("%s - %s inquiry_type: %s", formatted_text(prefix + "plugin_called"), plugin.name, inquiry_type)
+    else:
+        logger.info(
+            "%s - %s inquiry_type: %s",
+            formatted_text(prefix + "plugin_called"),
+            plugin.name,
+            inquiry_type,
+        )
+
+
+@receiver(plugin_responded, dispatch_uid="plugin_responded")
+def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
+    """Handle plugin responded signal."""
 
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
     inquiry_return: Optional[Union[dict, list, str]] = kwargs.get("inquiry_return")

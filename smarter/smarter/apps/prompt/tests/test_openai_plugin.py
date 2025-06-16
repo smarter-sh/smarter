@@ -28,12 +28,12 @@ class TestStaticPlugin(TestAccountMixin):
 
     # pylint: disable=broad-exception-caught
     def test_get_additional_info(self):
-        """Test default return value of function_calling_plugin()"""
+        """Test default return value of tool_call_fetch_plugin_response()"""
         try:
             inquiry_type = inquiry_type = self.plugin.plugin_data.return_data_keys[0]
-            return_data = self.plugin.function_calling_plugin(inquiry_type=inquiry_type)
+            return_data = self.plugin.tool_call_fetch_plugin_response(inquiry_type=inquiry_type)
         except Exception:
-            self.fail("function_calling_plugin() raised ExceptionType")
+            self.fail("tool_call_fetch_plugin_response() raised ExceptionType")
 
         self.assertTrue(return_data is not None)
 
