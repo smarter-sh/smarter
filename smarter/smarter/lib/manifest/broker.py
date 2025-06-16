@@ -6,7 +6,7 @@ import re
 from abc import ABC, abstractmethod
 from datetime import datetime
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Type, Union
+from typing import Any, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
@@ -142,8 +142,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _loader: Optional[SAMLoader] = None
     _manifest: Optional[AbstractSAMBase] = None
     _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
-    _name: Optional[str] = None
-    _kind: Optional[str] = None
+    _name: str
+    _kind: str
     _validated: bool = False
     _thing: Optional[SmarterJournalThings] = None
     _created: bool = False
@@ -163,7 +163,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
         api_version: Optional[str] = kwargs.get("api_version", SmarterApiVersions.V1)
-        self._name: Optional[str] = kwargs.get("name", None)
+        self._name: str = kwargs.get("name", "MissingName")
         self._kind: str = kwargs.get("kind", "UnknownKind")
         self._loader: Optional[SAMLoader] = kwargs.get("loader", None)
         manifest: Optional[str] = kwargs.get("manifest", None)
@@ -205,7 +205,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 self._loader.manifest_kind,
             )
 
-        self._kind = self._kind or self.loader.manifest_kind if self.loader else None
+        self._kind = self._kind or self.loader.manifest_kind if self.loader else ""
+        if self._kind == "":
+            raise SAMBrokerError(message="Manifest kind is required")
         self._created = False
         logger.info(
             "AbstractBroker.__init__() finished initializing %s with api_version: %s, user: %s, name: %s",
@@ -239,7 +241,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             request=self.smarter_request,
             user=self.user,
             account=self.account,
-            manifest=self.manifest,
+            manifest=self.manifest,  # type: ignore
             plugin_meta=self.plugin_meta,
             name=self.name,
         )

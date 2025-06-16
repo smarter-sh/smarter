@@ -142,7 +142,7 @@ class PluginController(AbstractController):
                 self._manifest = self._plugin.manifest if self._plugin else None
         elif self.manifest:
             Plugin = self.map[self.manifest.metadata.pluginClass]
-            self._plugin = Plugin(manifest=self.manifest, user_profile=self.user_profile)
+            self._plugin = Plugin(manifest=self.manifest, user_profile=self.user_profile)  # type: ignore[call-arg]
         return self._plugin
 
     def model_dump_json(self) -> Optional[dict]:
