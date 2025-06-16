@@ -140,7 +140,7 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
     if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
         logger.info(
             "%s - %s inquiry_type: %s inquiry_return: %s",
-            formatted_text(prefix + "plugin_called"),
+            formatted_text(prefix + "plugin_responded"),
             plugin.name,
             inquiry_type,
             formatted_json(inquiry_return) if isinstance(inquiry_return, (dict, list)) else inquiry_return,
@@ -148,7 +148,7 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
     else:
         logger.info(
             "%s - %s inquiry_type: %s",
-            formatted_text(prefix + "plugin_called"),
+            formatted_text(prefix + "plugin_responded"),
             plugin.name,
             inquiry_type,
         )
