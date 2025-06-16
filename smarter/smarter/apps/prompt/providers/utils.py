@@ -97,12 +97,13 @@ def get_request_body(data) -> dict:
     else:
         request_body = data
 
-    try:
-        request_body = json.loads(request_body)
-    except json.JSONDecodeError as exc:
-        raise SmarterValueError(f"Invalid JSON request body: {exc}") from exc
-    except TypeError as exc:
-        raise SmarterValueError(f"Invalid request body type: {exc}") from exc
+    if not isinstance(request_body, dict):
+        try:
+            request_body = json.loads(request_body)
+        except json.JSONDecodeError as exc:
+            raise SmarterValueError(f"Invalid JSON request body: {exc}") from exc
+        except TypeError as exc:
+            raise SmarterValueError(f"Invalid request body type: {exc}") from exc
 
     validate_request_body(request_body=request_body)
 
@@ -134,18 +135,19 @@ def parse_request(request_body: dict):
 
     if not messages and not input_text:
         raise SmarterValueError("A value for either messages or input_text is required")
-    if messages is not None:
+    if messages is not None and not isinstance(messages, list):
         try:
             messages = json.loads(messages)
-            if not isinstance(messages, list):
-                raise SmarterValueError("Messages must be a list")
-            for message in messages:
-                if not isinstance(message, dict):
-                    raise SmarterValueError("Each message must be a dictionary")
-                if "role" not in message or "content" not in message:
-                    raise SmarterValueError("Each message must contain 'role' and 'content' keys")
         except json.JSONDecodeError as exc:
             raise SmarterValueError(f"Invalid JSON messages: {exc}") from exc
+
+    if not isinstance(messages, list):
+        raise SmarterValueError("Messages must be a list")
+    for message in messages:
+        if not isinstance(message, dict):
+            raise SmarterValueError("Each message must be a dictionary")
+        if "role" not in message or "content" not in message:
+            raise SmarterValueError("Each message must contain 'role' and 'content' keys")
 
     if chat_history and input_text:
         # memory-enabled request assumed to be destined for langchain_passthrough
