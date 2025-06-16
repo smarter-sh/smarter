@@ -59,6 +59,12 @@ class OpenAIMessageKeys:
         USER_MESSAGE_KEY,
         TOOL_MESSAGE_KEY,
     ]
+    # on first completions openai does not allow requests that include tool responses
+    no_tools = [
+        SYSTEM_MESSAGE_KEY,
+        ASSISTANT_MESSAGE_KEY,
+        USER_MESSAGE_KEY,
+    ]
     all_openai_roles = [SYSTEM_MESSAGE_KEY, ASSISTANT_MESSAGE_KEY, USER_MESSAGE_KEY, TOOL_MESSAGE_KEY]
     all_roles = [SYSTEM_MESSAGE_KEY, ASSISTANT_MESSAGE_KEY, USER_MESSAGE_KEY, TOOL_MESSAGE_KEY, SMARTER_MESSAGE_KEY]
 
