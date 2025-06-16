@@ -344,13 +344,14 @@ def handle_plugin_sql_connection_success(sender, connection: SqlConnection, **kw
 
 
 @receiver(plugin_sql_connection_failed, dispatch_uid="plugin_sql_connection_failed")
-def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, **kwargs):
+def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, error: str, **kwargs):
     """Handle plugin SQL connection failed signal."""
 
-    logger.info(
-        "%s - %s",
+    logger.error(
+        "%s - %s - error: %s",
         formatted_text(prefix + "plugin_sql_connection_failed"),
         connection.get_connection_string(),
+        error,
     )
 
 

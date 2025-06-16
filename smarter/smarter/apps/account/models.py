@@ -5,6 +5,7 @@
 import logging
 import os
 import random
+from typing import Optional
 
 # 3rd party stuff
 from cryptography.fernet import Fernet
@@ -476,7 +477,7 @@ class Secret(TimestampedModel):
         else:
             secret_edited.send(sender=self.__class__, secret=self)
 
-    def get_secret(self, update_last_accessed=True) -> str:
+    def get_secret(self, update_last_accessed=True) -> Optional[str]:
         """
         Decrypts and returns the original value of the secret. Optionally updates the `last_accessed` timestamp.
         """
