@@ -432,7 +432,7 @@ class ChatProviderBase(ProviderDbMixin):
             raise SmarterValueError(f"{self.formatted_class_name}: input_text must be a string")
         return input_text
 
-    def append_message(self, role: str, content: str, message: Optional[dict] = None) -> None:
+    def append_message(self, role: str, content: Optional[str], message: Optional[dict] = None) -> None:
         if role not in OpenAIMessageKeys.all_roles:
             raise SmarterValueError(
                 f"Internal error. Invalid message role: {role} not found in list of valid {self.provider} message roles {OpenAIMessageKeys.all_roles}."
@@ -487,9 +487,20 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         if not isinstance(self.messages, list):
             raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
 
-        filtered_messages = [
-            message for message in self.messages if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all
-        ]
+        if self.iteration == 1:
+            # ensure that we're not passing any tool call responses to the first request.
+            filtered_messages = [
+                message
+                for message in self.messages
+                if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.no_tools
+            ]
+        else:
+            filtered_messages = [
+                message
+                for message in self.messages
+                if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all
+            ]
+
         retval = []
         for message in filtered_messages:
             message_copy = message.copy()
@@ -728,7 +739,10 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             # plugin's JSON tool_calling function definition that's passed to the LLM.
 
             plugin_id = int(function_name[-4:])
+
+            # FIX NOTE: THIS HAS TO BE INSTANTIATED BY the plugin_controller.
             plugin = StaticPlugin(plugin_id=plugin_id, user_profile=self.user_profile)
+
             plugin.params = function_args
             function_response = plugin.tool_call_fetch_plugin_response(function_args)
             serialized_tool_call[InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
@@ -745,9 +759,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: function_response must be a string, got {type(function_response)}"
             )
-        self.append_message(
-            role=OpenAIMessageKeys.TOOL_MESSAGE_KEY, content=function_response, message=tool_call_message
-        )
+        message_content = f"{str(plugin.__class__.__name__)} {plugin.name} response: " + function_response
+        self.append_message(role=OpenAIMessageKeys.TOOL_MESSAGE_KEY, content=message_content, message=tool_call_message)
         if not isinstance(self.serialized_tool_calls, list):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: serialized_tool_calls must be a list, got {type(self.serialized_tool_calls)}"
@@ -920,9 +933,6 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 )
             tool_calls: Optional[list[ChatCompletionMessageToolCall]] = response_message.tool_calls
             if tool_calls:
-                # extend conversation with assistant's reply
-                response = json.loads(response_message.model_dump_json())
-                response[InternalKeys.SMARTER_IS_NEW] = True
                 self.iteration = 2
                 self.serialized_tool_calls = []
 
