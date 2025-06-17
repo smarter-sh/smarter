@@ -15,8 +15,8 @@ from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
+from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.nlp import does_refer_to
-from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.utils import get_readonly_yaml_file
@@ -96,7 +96,17 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
         plugin_data = get_readonly_yaml_file(config_path)
 
-        self.plugin = StaticPlugin(user_profile=self.user_profile, data=plugin_data)
+        plugin_controller = PluginController(
+            user_profile=self.user_profile,
+            account=self.account,
+            user=self.admin_user,
+            manifest=plugin_data,
+        )
+        if not plugin_controller or not plugin_controller.plugin:
+            raise ValueError(
+                f"Plugin could not be created for plugin_id: {plugin_data['id']}, user_profile: {self.user_profile}"
+            )
+        self.plugin = plugin_controller.plugin
         self.plugins = [self.plugin]
 
         self.chatbot = self.chatbot_factory()

@@ -76,9 +76,12 @@ class ParameterType(str, Enum):
     """Enum for parameter types."""
 
     STRING = "string"
+    NUMBER = "number"  # Used for both float and double
     INTEGER = "integer"
-    FLOAT = "float"
     BOOLEAN = "boolean"
+    OBJECT = "object"
+    ARRAY = "array"
+    NULL = "null"
 
 
 class Parameter(BaseModel):
@@ -94,7 +97,10 @@ class Parameter(BaseModel):
         use_enum_values = True
 
     name: str = Field(..., description="The name of the parameter.")
-    type: ParameterType = Field(..., description="The data type of the parameter (e.g., string, integer).")
+    type: ParameterType = Field(
+        ...,
+        description="The data type of the parameter (one of: string, number, integer, boolean, object, array, null).",
+    )
     description: Optional[str] = Field(default=None, description="A description of the parameter.")
     required: bool = Field(default=False, description="Whether the parameter is required.")
     enum: Optional[List[str]] = Field(

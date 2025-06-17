@@ -43,7 +43,7 @@ spec:
       enum: null
       name: max_cost
       required: false
-      type: float
+      type: number
     - description: areas of specialization for courses in the catalogue.
       enum:
       - AI
@@ -65,4 +65,4 @@ spec:
     - name: description
       value: AI
     - name: max_cost
-      value: 500.00
+      value: 500

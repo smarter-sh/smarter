@@ -21,7 +21,7 @@ from smarter.apps.account.utils import (
 from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import User, UserType
@@ -102,7 +102,13 @@ class Command(BaseCommand):
         else:
             raise SmarterValueError("Could not read the file.")
 
-        plugin = StaticPlugin(data=data, user_profile=self.user_profile)
+        plugin_controller = PluginController(
+            user=self.user,
+            account=self.account,
+            manifest_data=data,
+            user_profile=self.user_profile,
+        )
+        plugin = plugin_controller.plugin
         return plugin
 
     def apply_manifest(self, manifest_data: str) -> HttpResponse:

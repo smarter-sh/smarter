@@ -17,8 +17,9 @@ from rest_framework.response import Response
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
+from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.exceptions import SmarterValueError
@@ -30,7 +31,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
 
 
 class PluginView(SmarterAuthenticatedAPIView):
-    """StaticPlugin view for smarter api."""
+    """Plugin view for smarter api."""
 
     def get(self, request, plugin_id):
         return get_plugin(request, plugin_id)
@@ -49,11 +50,24 @@ class PluginView(SmarterAuthenticatedAPIView):
 
 
 class PluginCloneView(SmarterAuthenticatedAPIView):
-    """StaticPlugin clone view for smarter api."""
+    """Plugin clone view for smarter api."""
 
     def post(self, request, plugin_id, new_name):
         user_profile = get_cached_user_profile(user=request.user)
-        plugin = StaticPlugin(plugin_id=plugin_id, user_profile=user_profile)
+        plugin_controller = PluginController(
+            user_profile=user_profile,
+            account=user_profile.account,  # type: ignore[arg-type]
+            user=user_profile.user,  # type: ignore[arg-type]
+            plugin_meta=PluginMeta.objects.get(id=plugin_id),
+        )
+        if not plugin_controller or not plugin_controller.plugin:
+            return JsonResponse(
+                {
+                    "error": f"PluginController could not be created for plugin_id: {plugin_id}, user_profile: {user_profile}"
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        plugin = plugin_controller.plugin
         new_id = plugin.clone(new_name)
         return redirect("/plugins/" + str(new_id) + "/")
 
@@ -89,7 +103,7 @@ class AddPluginExamplesView(SmarterAuthenticatedAPIView):
 
 
 class PluginUploadView(SmarterAuthenticatedAPIView):
-    """StaticPlugin view for smarter api."""
+    """Plugin view for smarter api."""
 
     parser_class = (FileUploadParser,)
 
@@ -130,7 +144,7 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 # -----------------------------------------------------------------------
 def get_plugin(request, plugin_id):
     """Get a plugin json representation by id."""
-    plugin: Optional[StaticPlugin] = None
+    plugin: Optional[PluginBase] = None
 
     try:
         user_profile = get_cached_user_profile(user=request.user)
@@ -138,9 +152,19 @@ def get_plugin(request, plugin_id):
         return JsonResponse({"error": "User not found"}, status=404)
 
     try:
-        plugin = StaticPlugin(plugin_id=plugin_id, user_profile=user_profile)
+        plugin_controller = PluginController(
+            user_profile=user_profile,
+            account=user_profile.account,  # type: ignore[arg-type]
+            user=user_profile.user,  # type: ignore[arg-type]
+            plugin_meta=PluginMeta.objects.get(id=plugin_id),
+        )
+        if not plugin_controller or not plugin_controller.plugin:
+            raise PluginDataValueError(
+                f"PluginController could not be created for plugin_id: {plugin_id}, user_profile: {user_profile}"
+            )
+        plugin = plugin_controller.plugin
     except PluginMeta.DoesNotExist:
-        return JsonResponse({"error": "StaticPlugin not found"}, status=HTTPStatus.NOT_FOUND)
+        return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
@@ -173,7 +197,17 @@ def create_plugin(request, data: Optional[dict] = None):
         data["user_profile"] = user_profile
 
     try:
-        plugin = StaticPlugin(data=data)
+        plugin_controller = PluginController(
+            user_profile=user_profile,
+            account=user_profile.account,  # type: ignore[arg-type]
+            user=user_profile.user,  # type: ignore[arg-type]
+            manifest=data,  # type: ignore[arg-type]
+        )
+        if not plugin_controller or not plugin_controller.plugin:
+            raise PluginDataValueError(
+                f"PluginController could not be created for data: {data}, user_profile: {user_profile}"
+            )
+        plugin = plugin_controller.plugin
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
@@ -206,7 +240,18 @@ def update_plugin(request):
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
     try:
-        StaticPlugin(data=data)
+        plugin_controller = PluginController(
+            user_profile=user_profile,
+            account=user_profile.account,  # type: ignore[arg-type]
+            user=user_profile.user,  # type: ignore[arg-type]
+            manifest=data,  # type: ignore[arg-type]
+        )
+        if not plugin_controller or not plugin_controller.plugin:
+            raise PluginDataValueError(
+                f"PluginController could not be created for data: {data}, user_profile: {user_profile}"
+            )
+        plugin = plugin_controller.plugin
+        plugin.update(data)
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
@@ -223,9 +268,19 @@ def delete_plugin(request, plugin_id):
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
     try:
-        plugin = StaticPlugin(plugin_id=plugin_id, user_profile=user_profile)
+        plugin_controller = PluginController(
+            user_profile=user_profile,
+            account=user_profile.account,  # type: ignore[arg-type]
+            user=user_profile.user,  # type: ignore[arg-type]
+            plugin_meta=PluginMeta.objects.get(id=plugin_id),
+        )
+        if not plugin_controller or not plugin_controller.plugin:
+            raise PluginDataValueError(
+                f"PluginController could not be created for plugin_id: {plugin_id}, user_profile: {user_profile}"
+            )
+        plugin = plugin_controller.plugin
     except PluginMeta.DoesNotExist:
-        return JsonResponse({"error": "StaticPlugin not found"}, status=HTTPStatus.NOT_FOUND)
+        return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 

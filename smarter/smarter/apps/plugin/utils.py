@@ -6,9 +6,9 @@ from typing import Optional
 import yaml
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.exceptions import SmarterValueError
 
-from .plugin.static import StaticPlugin
 from .plugin.utils import PluginExamples
 
 
@@ -27,7 +27,13 @@ def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
         if isinstance(yaml_data, str):
             yaml_data = yaml_data.encode("utf-8")
             data = yaml.safe_load(yaml_data)
-            StaticPlugin(user_profile=user_profile, data=data)
+            plugin_controller = PluginController(
+                user_profile=user_profile,
+                account=user_profile.account,  # type: ignore[arg-type]
+                user=user_profile.user,  # type: ignore[arg-type]
+                manifest=data,  # type: ignore[arg-type]
+            )
+            plugin_controller.plugin
         else:
             raise SmarterValueError(f"Plugin {plugin.name} does not have a valid YAML representation.")
     return True

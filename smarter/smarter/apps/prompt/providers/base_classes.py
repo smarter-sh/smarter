@@ -20,8 +20,8 @@ from smarter.apps.account.models import (
     CHARGE_TYPE_PROMPT_COMPLETION,
     CHARGE_TYPE_TOOL,
 )
+from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.prompt.functions.function_weather import (
     get_current_weather,
@@ -738,11 +738,21 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             # FIX NOTE CONTINUED: june-2025. What we REALLY should do is work with the
             # plugin's JSON tool_calling function definition that's passed to the LLM.
 
+            # mcdaniel June-2025: fixed?
+
             plugin_id = int(function_name[-4:])
 
-            # FIX NOTE: THIS HAS TO BE INSTANTIATED BY the plugin_controller.
-            plugin = StaticPlugin(plugin_id=plugin_id, user_profile=self.user_profile)
-
+            plugin_controller = PluginController(
+                account=self.account,
+                user=self.user,
+                user_profile=self.user_profile,
+                plugin_id=plugin_id,
+            )
+            if not plugin_controller or not plugin_controller.plugin:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: plugin with id {plugin_id} not found or not initialized."
+                )
+            plugin = plugin_controller.plugin
             plugin.params = function_args
             function_response = plugin.tool_call_fetch_plugin_response(function_args)
             serialized_tool_call[InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
@@ -898,6 +908,13 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 self.messages = self.get_message_thread(data=self.data)
 
             for plugin in self.plugins:
+                logger.info(
+                    "%s %s - handler() plugin: %s, type: %s",
+                    self.formatted_class_name,
+                    formatted_text("handler()"),
+                    plugin.name,
+                    type(plugin).__name__,
+                )
                 if plugin.selected(user=self.user, input_text=self.input_text, messages=self.messages):
                     self.handle_plugin_selected(plugin=plugin)
 

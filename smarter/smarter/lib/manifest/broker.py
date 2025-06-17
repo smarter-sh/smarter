@@ -241,7 +241,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             user=self.user,
             account=self.account,
             manifest=self.manifest,  # type: ignore
-            plugin_meta=self.plugin_meta,
+            plugin_meta=self.plugin_meta if not self.manifest else None,
             name=self.name,
         )
         self._plugin = controller.obj
