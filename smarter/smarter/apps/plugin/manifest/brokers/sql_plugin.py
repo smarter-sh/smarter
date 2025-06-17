@@ -90,7 +90,11 @@ class SAMSqlPluginBroker(AbstractBroker):
                 kind=self.loader.manifest_kind,
                 metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
                 spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
-                status=SAMPluginCommonStatus(**self.loader.manifest_status),
+                status=(
+                    SAMPluginCommonStatus(**self.loader.manifest_status)
+                    if self.loader and self.loader.manifest_status
+                    else None
+                ),
             )
         return self._manifest
 
@@ -166,24 +170,10 @@ class SAMSqlPluginBroker(AbstractBroker):
         manifest is loaded and validated before applying the manifest to the
         Django ORM model.
         """
-        if not isinstance(self.plugin, SqlPlugin):
-            raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.plugin_meta.name if self.plugin_meta else "<-- Missing Name -->"} apply() not implemented for {self.kind}",
-                thing=self.kind,
-                command=SmarterJournalCliCommands(self.apply.__name__),
-            )
-        if not isinstance(self.plugin_meta, PluginMeta):
-            raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} <-- Missing Name --> apply() not implemented for {self.kind}",
-                thing=self.kind,
-                command=SmarterJournalCliCommands(self.apply.__name__),
-            )
-
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         try:
-
             self.plugin.create()
         except Exception as e:
             return self.json_response_err(command=command, e=e)

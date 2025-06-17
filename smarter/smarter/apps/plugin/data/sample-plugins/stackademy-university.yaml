@@ -1,0 +1,43 @@
+apiVersion: smarter.sh/v1
+kind: SqlPlugin
+metadata:
+  description: Online course catalogue inquiries for fictional Stackademy University that only offers computer science degrees programs.
+  name: stackademy_university
+  pluginClass: sql
+  tags:
+  - db
+  - sql
+  - database
+  version: 0.1.0
+spec:
+  connection: smarter_test_db
+  sqlData:
+    limit: 10
+    parameters:
+    - description: the maximum cost that a student is willing to pay for a course.
+      enum: null
+      name: max_cost
+      required: false
+      type: float
+    - description: areas of specialization for courses in the catalogue.
+      enum:
+      - AI
+      - mobile
+      - web
+      - database
+      - network
+      - neural networks
+      name: description
+      required: false
+      type: string
+    sqlQuery: SELECT c.course_code, c.course_name, c.description, prerequisite.course_code AS prerequisite_course_code
+      FROM courses c
+      LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id
+      WHERE ((description LIKE '%' || {description}) OR ({description} IS NULL))
+        AND (c.cost <= {max_cost} OR {max_cost} IS NULL)
+      ORDER BY c.prerequisite_id;
+    testValues:
+    - name: description
+      value: AI
+    - name: max_cost
+      value: 500.00

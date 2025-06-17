@@ -249,20 +249,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:
-        # if self.manifest:
-        #     # want the manifest to take precedence over the plugin_meta
-        #     return None
-        logger.info("%s.plugin_meta() called - 1 %s", self.formatted_class_name, self._plugin_meta)
         if self._plugin_meta:
             return self._plugin_meta
-        logger.info("%s.plugin_meta() called - 2 %s", self.formatted_class_name, self._plugin_meta)
         if self.name and self.account:
-            logger.info("%s.plugin_meta() called - 3 %s", self.formatted_class_name, self._plugin_meta)
             try:
                 self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
             except PluginMeta.DoesNotExist:
-                logger.info("%s.plugin_meta() called - 4 %s", self.formatted_class_name, self._plugin_meta)
-        logger.info("%s.plugin_meta() called - 5 %s", self.formatted_class_name, self._plugin_meta)
+                pass
         return self._plugin_meta
 
     @property
