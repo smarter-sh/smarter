@@ -8,10 +8,12 @@ import logging
 import random
 import re
 from datetime import datetime
+from typing import Optional
 
 import yaml
 from django.http import HttpRequest
 from pydantic import SecretStr
+from rest_framework.request import Request
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -188,7 +190,7 @@ def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_
     return masked_string
 
 
-def smarter_build_absolute_uri(request: HttpRequest) -> str:
+def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
     """
     A utility function to attempt to get the request URL from any valid
     child class of HttpRequest. This mostly protects us from unit tests
@@ -204,12 +206,17 @@ def smarter_build_absolute_uri(request: HttpRequest) -> str:
         logger.warning("smarter_build_absolute_uri() called with None request")
         return None
     else:
+        if isinstance(request, Request):
+            # recast DRF Request to Django HttpRequest
+            # pylint: disable=W0212
+            request = request._request
+
         if not isinstance(request, HttpRequest):
             raise SmarterValueError(
                 f"smarter_build_absolute_uri() expects an instance of HttpRequest, got {type(request).__name__}"
             )
 
-    url: str = None
+    url: Optional[str] = None
 
     # expected case: request is an instance of HttpRequest
     # skip validation bc we trust Django's build_absolute_uri()
