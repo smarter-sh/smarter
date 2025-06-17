@@ -10,8 +10,33 @@ metadata:
   - database
   version: 0.1.0
 spec:
+  selector:
+    directive: searchTerms
+    # Complete search terms that will trigger the chatbot to use your customized system prompt.
+    searchTerms:
+      - stackademy
+      - course
+      - courses
+      - classes
+      - class
+      - online
+      - teach
+      - teaching
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful student advisor at the fictional Stackademy University that only offers computer science
+      degrees programs. Whenever possible you should defer to the tool calls provided for additional information
+      about the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University
+      should be answered with "I am sorry, but I can only provide information about the courses offered by Stackademy University."
+    model: gpt-4-turbo
+    temperature: 0.5
+    maxTokens: 4096
   connection: smarter_test_db
   sqlData:
+    description: >
+      returns up to 10 rows of course detail data, filtered by the maximum cost a student is willing
+      to pay for a course and the area of specialization.
     limit: 10
     parameters:
     - description: the maximum cost that a student is willing to pay for a course.

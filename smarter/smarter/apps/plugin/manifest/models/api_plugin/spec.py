@@ -13,10 +13,11 @@ from smarter.apps.plugin.manifest.models.common import (
     TestValue,
     UrlParam,
 )
+from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
+from smarter.lib.manifest.models import SmarterBasePydanticModel
 
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ class ApiData(SmarterBasePydanticModel):
         return v
 
 
-class SAMApiPluginSpec(AbstractSAMSpecBase):
+class SAMApiPluginSpec(SAMPluginCommonSpec):
     """Smarter API Manifest ApiConnection.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

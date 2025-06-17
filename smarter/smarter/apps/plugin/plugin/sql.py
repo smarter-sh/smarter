@@ -12,6 +12,7 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
 )
+from smarter.apps.plugin.manifest.models.common import Parameter
 from smarter.apps.plugin.models import PluginDataSql, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
@@ -94,6 +95,48 @@ class SqlPlugin(PluginBase):
         """
         transform the Pydantic model to the PluginDataSql Django ORM model.
         Return the plugin data definition as a json object.
+
+        Pydantic 'Parameters' model is not directly compatible with OpenAI's function calling schema,
+        and our Django ORM model expects a dictionary format for the parameters.
+        Therefore, we need to convert the Pydantic model to a dictionary that can be
+        used to create a Django ORM model instance.
+
+        example of a correctly formatted dictionary:
+        {
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "The city and state, e.g., San Francisco, CA"
+                },
+                "unit": {
+                    "type": "string",
+                    "enum": ["Celsius", "Fahrenheit"],
+                    "description": "The temperature unit to use. Infer this from the user's location."
+                }
+            },
+            "required": ["location", "unit"]
+        }
+
+
+        example of a Pydantic model:
+        [
+            {
+                'name': 'max_cost',
+                'type': 'float',
+                'description': 'the maximum cost that a student is willing to pay for a course.',
+                'required': False,
+                'enum': None,
+                'default': None
+            },
+            {
+                'name': 'description',
+                'type': 'string',
+                'description': 'areas of specialization for courses in the catalogue.',
+                'required': False,
+                'enum': ['AI', 'mobile', 'web', 'database', 'network', 'neural networks'],
+                'default': None
+            }
+        ]
         """
         if self._manifest:
             # recast the Pydantic model to the PluginDataSql Django ORM model
@@ -108,6 +151,49 @@ class SqlPlugin(PluginBase):
                 )
             sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
             sql_data["connection"] = plugin_data_sqlconnection
+
+            # recast the Pydantic model's parameters field
+            # to conform to openai's function calling schema.
+            recasted_parameters = {
+                "properties": {},
+                "required": [],
+            }
+            parameters = self.manifest.spec.sqlData.parameters if self.manifest and self.manifest.spec else None
+            logger.info("plugin_data_django_model() recasting parameters: %s", parameters)
+            if isinstance(parameters, list):
+                for parameter in parameters:
+                    if isinstance(parameter, Parameter):
+                        # if the parameter is a Pydantic model, we need to convert it to a
+                        # standard json dict.
+                        parameter = parameter.model_dump()
+                    logger.info("plugin_data_django_model() processing parameter: %s %s", type(parameter), parameter)
+                    if not isinstance(parameter, dict):
+                        raise SmarterConfigurationError(
+                            f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a valid json dict. Received: {parameter} {type(parameter)}"
+                        )
+                    if "name" not in parameter or "type" not in parameter:
+                        raise SmarterConfigurationError(
+                            f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must have a 'name' and 'type' field. Received: {parameter}"
+                        )
+                    recasted_parameters["properties"][parameter["name"]] = {
+                        "type": parameter["type"],
+                        "description": parameter.get("description", ""),
+                    }
+                    if "enum" in parameter and parameter["enum"]:
+                        if not isinstance(parameter["enum"], list):
+                            raise SmarterConfigurationError(
+                                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameter 'enum' must be a list. Received: {parameter['enum']} {type(parameter['enum'])}"
+                            )
+                        recasted_parameters["properties"][parameter["name"]]["enum"] = parameter["enum"]
+                    if parameter.get("required", False):
+                        recasted_parameters["required"].append(parameter["name"])
+
+                sql_data["parameters"] = recasted_parameters
+            else:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
+                )
+
             return {
                 "plugin": self.plugin_meta,
                 "description": self.plugin_meta.description if self.plugin_meta else None,
@@ -278,9 +364,8 @@ class SqlPlugin(PluginBase):
         return json.loads(pydantic_model.model_dump_json())
 
     def create(self):
-        super().create()
-
         logger.info("PluginDataSql.create() called.")
+        super().create()
 
     def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[str]:
         """

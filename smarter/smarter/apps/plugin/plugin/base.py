@@ -667,6 +667,7 @@ class PluginBase(ABC, SmarterHelperMixin):
                     plugin_prompt = PluginPrompt.objects.create(**prompt)
                     logger.info("%s.create() created PluginPrompt: %s", self.formatted_class_name, plugin_prompt)
                 if plugin_data is not None:
+                    logger.info("%s.create() creating PluginData: %s", self.formatted_class_name, plugin_data)
                     self.plugin_data_class.objects.create(**plugin_data)
 
         transaction.on_commit(lambda: committed(plugin=plugin_meta))

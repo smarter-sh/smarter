@@ -2,6 +2,7 @@
 """PluginMeta app models."""
 
 # python stuff
+import ast
 import io
 import json
 import logging
@@ -82,37 +83,50 @@ def validate_no_spaces(value) -> None:
 def validate_openai_parameters_dict(value):
     """
     example:
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "location": {
-                "type": "string",
-                "description": "The city and state, e.g., San Francisco, CA"
+    {
+        'properties': {
+            'max_cost': {
+                'type': 'float',
+                'description': 'the maximum cost that a student is willing to pay for a course.'
             },
-            "unit": {
-                "type": "string",
-                "enum": ["Celsius", "Fahrenheit"],
-                "description": "The temperature unit to use. Infer this from the user's location."
+            'description': {
+                'type': 'string',
+                'description': 'areas of specialization for courses in the catalogue.',
+                'enum': ['AI', 'mobile', 'web', 'database', 'network', 'neural networks']
             }
         },
-        "required": ["location", "unit"]
+        'required': ['max_cost']
     }
     """
-    if not isinstance(value, dict):
-        raise PluginDataValueError("This field must be a dict.")
+    logger.info("validate_openai_parameters_dict() %s", value)
+    if value is None:
+        return None
+    if isinstance(value, str):
+        try:
+            value = ast.literal_eval(value)
+        except (SyntaxError, ValueError) as e:
+            raise PluginDataValueError(f"This field must be a valid dict. received: {value}") from e
 
     if not isinstance(value, dict):
-        raise PluginDataValueError(f"data parameters must be a dictionary, not {type(value).__name__}.")
+        raise PluginDataValueError(f"This field must contain valid dicts. received: {value}")
 
     # validations
     if not isinstance(value, dict):
         raise PluginDataValueError("data parameters must be a dictionary.")
-    if "type" not in value.keys():
-        raise PluginDataValueError("data parameters missing 'type' key.")
-    if value["type"] != "object":  # type: ignore[index]
-        raise PluginDataValueError("data parameters 'type' must be 'object'.")
     if "properties" not in value.keys():
         raise PluginDataValueError("data parameters missing 'properties' key.")
+    if "required" not in value.keys():
+        raise PluginDataValueError("data parameters missing 'required' key.")
+    else:
+        if not isinstance(value["required"], list):
+            raise PluginDataValueError("data parameters 'required' must be a list.")
+        for item in value["required"]:
+            if not isinstance(item, str):
+                raise PluginDataValueError("data parameters 'required' items must be strings.")
+            if not value["properties"].get(item):
+                raise PluginDataValueError(
+                    f"data parameters 'required' item '{item}' does not exist as a 'properties' dict."
+                )
 
     # validate each property
     properties = value.get("properties", {})
@@ -123,23 +137,16 @@ def validate_openai_parameters_dict(value):
 
         if not isinstance(key, str):
             raise PluginDataValueError("data parameters 'properties' keys must be strings.")
-
-        if key not in ["name", "type", "enum", "description", "required", "default"]:
-            raise PluginDataValueError(
-                f"data parameters 'properties' key '{key}' is not a valid key. Valid keys are: "
-                "'name', 'type', 'enum', 'description', 'required', 'default'."
-            )
-
-        # validate the value against our own internal Parameter Pydantic model
-        try:
-            Parameter(**value)
-        except (ValidationError, SmarterValueError) as e:
-            raise PluginDataValueError(
-                f"Invalid parameter structure. Should match the Pydantic model structure, Parameter {e}"
-            ) from e
-
         if not isinstance(value, dict):
             raise PluginDataValueError(f"data parameters 'properties' value for key '{key}' must be a dictionary.")
+
+        for k, _ in value.items():
+            valid_keys = ["type", "enum", "description", "default"]
+            if k not in valid_keys:
+                raise PluginDataValueError(
+                    f"data parameters 'properties' key '{k}' is not a valid key. Valid keys are: {valid_keys}"
+                )
+
         if "type" not in value:
             raise PluginDataValueError(f"data parameters 'properties' value for key '{key}' missing 'type' key.")
         if value["type"] not in PluginDataSql.DataTypes.all():
@@ -148,12 +155,6 @@ def validate_openai_parameters_dict(value):
             )
         if "description" not in value:
             raise PluginDataValueError(f"data parameters 'properties' value for key '{key}' missing 'description' key.")
-        if "required" not in value:
-            value["required"] = False
-        if not isinstance(value["required"], bool):
-            raise PluginDataValueError(
-                f"data parameters 'properties' value for key '{key}' 'required' must be a boolean."
-            )
         if "default" in value and value["default"] is not None:
             if value["type"] == "string" and not isinstance(value["default"], str):
                 raise PluginDataValueError(
@@ -175,24 +176,6 @@ def validate_openai_parameters_dict(value):
                 raise PluginDataValueError(
                     f"data parameters 'properties' value for key '{key}' 'default' must be an object."
                 )
-
-    # if we have an enum, validate it
-    if "enum" in value.keys():
-        if not isinstance(value["enum"], list):  # type: ignore[index]
-            raise PluginDataValueError("data parameters 'enum' must be a list.")
-        for item in value["enum"]:  # type: ignore[index]
-            if not isinstance(item, str):
-                raise PluginDataValueError("data parameters 'enum' items must be strings.")
-
-    # if we have a required list, validate it
-    if "required" in value.keys():
-        if not isinstance(value["required"], list):  # type: ignore[index]
-            raise PluginDataValueError("data parameters 'required' must be a list.")
-        for item in value["required"]:  # type: ignore[index]
-            if not isinstance(item, str):
-                raise PluginDataValueError("data parameters 'required' items must be strings.")
-    else:
-        value["required"] = []  # type: ignore[index]
 
 
 def dict_key_cleaner(key: str) -> str:
@@ -1027,9 +1010,9 @@ class PluginDataSql(PluginDataBase):
     """
 
     class DataTypes:
-        INT = "int"
+        INT = "integer"
         FLOAT = "float"
-        STR = "str"
+        STR = "string"
         BOOL = "bool"
         LIST = "list"
         DICT = "dict"
@@ -1105,15 +1088,48 @@ class PluginDataSql(PluginDataBase):
     def validate_all_parameters_in_test_values(self) -> None:
         """
         Validate if all parameters are present in the test values.
+        'test_values': [{'name': 'description', 'value': 'AI'}, {'name': 'max_cost', 'value': '500.0'}]
         """
         if self.parameters is None or self.test_values is None:
             return None
+        parameters: dict[str, Any] = {}
 
-        # pylint: disable=E1133
-        for param_dict in self.parameters:  # type: ignore[not-an-iterable]
-            param_name = param_dict.get("name")
-            if not any(test_value.get("name") == param_name for test_value in self.test_values):
-                raise SmarterValueError(f"Test value for parameter '{param_name}' is missing.")
+        try:
+            if not isinstance(self.parameters, dict):
+                parameters = json.loads(self.parameters)
+            else:
+                parameters = self.parameters
+        except json.JSONDecodeError as e:
+            raise SmarterValueError(f"Invalid JSON in parameters. This is a bug: {e}") from e
+        if "properties" not in parameters or not isinstance(parameters["properties"], dict):
+            raise SmarterValueError(
+                "Parameters must be a dict with a 'properties' key containing parameter definitions."
+            )
+        try:
+            if not isinstance(self.test_values, list):
+                test_values = json.loads(self.test_values)
+            else:
+                test_values = self.test_values
+        except json.JSONDecodeError as e:
+            raise SmarterValueError(f"Invalid JSON in test_values. This is a bug: {e}") from e
+        if not isinstance(test_values, list):
+            raise SmarterValueError(f"test_values must be a list but got: {type(test_values)}")
+
+        properties = parameters["properties"]
+
+        if isinstance(test_values, list):
+            test_values_names = [tv["name"] for tv in test_values if isinstance(tv, dict) and "name" in tv]
+            for param_name in properties:
+                if param_name not in test_values_names:
+                    raise SmarterValueError(
+                        f"Parameter '{param_name}' is defined in parameters but not in test_values. "
+                        "Ensure all parameters have corresponding test values."
+                    )
+                if not any(tv["name"] == param_name for tv in test_values):
+                    raise SmarterValueError(
+                        f"Test value for parameter '{param_name}' is missing. "
+                        "Ensure all parameters have corresponding test values."
+                    )
 
     def valdate_all_placeholders_in_parameters(self) -> None:
         """

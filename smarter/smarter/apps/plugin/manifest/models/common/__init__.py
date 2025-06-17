@@ -90,6 +90,9 @@ class Parameter(BaseModel):
     and also for creating the function calling prompt api.
     """
 
+    class Config:
+        use_enum_values = True
+
     name: str = Field(..., description="The name of the parameter.")
     type: ParameterType = Field(..., description="The data type of the parameter (e.g., string, integer).")
     description: Optional[str] = Field(default=None, description="A description of the parameter.")

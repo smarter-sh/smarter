@@ -7,9 +7,10 @@ from typing import ClassVar, List, Optional
 from pydantic import Field, field_validator
 
 from smarter.apps.plugin.manifest.models.common import Parameter, TestValue
+from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
+from smarter.lib.manifest.models import SmarterBasePydanticModel
 
 from .const import MANIFEST_KIND
 
@@ -23,6 +24,10 @@ SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 class SqlData(SmarterBasePydanticModel):
     """Smarter API - generic API Connection class."""
 
+    description: Optional[str] = Field(
+        default=None,
+        description="A brief description what the Sql query returns.",
+    )
     sqlQuery: str = Field(
         ...,
         description="The SQL query that this plugin will execute when invoked by the user prompt.",
@@ -42,7 +47,7 @@ class SqlData(SmarterBasePydanticModel):
     )
 
 
-class SAMSqlPluginSpec(AbstractSAMSpecBase):
+class SAMSqlPluginSpec(SAMPluginCommonSpec):
     """Smarter API SqlData Connection Manifest SqlConnection.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
