@@ -64,12 +64,12 @@ class PluginController(AbstractController):
             raise SAMPluginControllerError(
                 f"Manifest should descend from {SAMPluginCommon}. Received? {type(manifest)}."
             )
-        if manifest and self.manifest and self.manifest.kind is not None:
+        if manifest:
             self._manifest = manifest
             logger.info("%s received manifest: %s", self.formatted_class_name, self._manifest.metadata.name)
-            if self.manifest.kind not in VALID_MANIFEST_KINDS:
+            if self._manifest.kind not in VALID_MANIFEST_KINDS:
                 raise SAMPluginControllerError(
-                    f"Manifest kind {self.manifest.kind} should be one of: {VALID_MANIFEST_KINDS}."
+                    f"Manifest kind {self._manifest.kind} should be one of: {VALID_MANIFEST_KINDS}."
                 )
 
         if plugin_meta:
@@ -79,6 +79,17 @@ class PluginController(AbstractController):
         if name:
             self._name = name
             logger.info("%s received name: %s", self.formatted_class_name, self._name)
+
+        logger.info(
+            "%s initialized with account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
+            self.formatted_class_name,
+            self.account,
+            self.user,
+            self.user_profile,
+            self.manifest,
+            self.plugin_meta,
+            self.name,
+        )
 
     ###########################################################################
     # Abstract property implementations
@@ -103,6 +114,7 @@ class PluginController(AbstractController):
                     account=self.account,
                     name=self.name,
                 )
+                logger.info("%s retrieved plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
             except PluginMeta.DoesNotExist as e:
                 kind = self.manifest.kind if self.manifest else "Unknown"
                 raise SAMPluginControllerError(f"{kind} {self.name} does not exist.") from e
