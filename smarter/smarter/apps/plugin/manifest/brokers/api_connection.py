@@ -103,7 +103,11 @@ class SAMApiConnectionBroker(AbstractBroker):
                 kind=self.loader.manifest_kind,
                 metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata) if self.loader else None,
                 spec=SAMApiConnectionSpec(**self.loader.manifest_spec) if self.loader else None,
-                status=SAMConnectionCommonStatus(**self.loader.manifest_status),
+                status=(
+                    SAMConnectionCommonStatus(**self.loader.manifest_status)
+                    if self.loader and self.loader.manifest_status
+                    else None
+                ),
             )
         return self._manifest
 
@@ -116,10 +120,14 @@ class SAMApiConnectionBroker(AbstractBroker):
             raise SAMConnectionBrokerError(
                 f"Manifest spec.connection is not a dict: {type(config_dump)}",
                 thing=self.kind,
-                command=SmarterJournalCliCommands(self.manifest_to_django_orm.__name__),
             )
 
         config_dump = self.camel_to_snake(config_dump)
+        if not isinstance(config_dump, dict):
+            raise SAMConnectionBrokerError(
+                f"Manifest spec.connection is not a dict: {type(config_dump)}",
+                thing=self.kind,
+            )
         config_dump[SAMMetadataKeys.NAME.value] = (
             self.manifest.metadata.name if self.manifest and self.manifest.metadata else None
         )
@@ -216,14 +224,12 @@ class SAMApiConnectionBroker(AbstractBroker):
                 model_dump = (
                     self.manifest.spec.connection.model_dump() if self.manifest and self.manifest.spec else None
                 )
+                model_dump = self.camel_to_snake(model_dump) if isinstance(model_dump, dict) else model_dump
                 if not isinstance(model_dump, dict):
                     raise SAMConnectionBrokerError(
                         f"Manifest spec.connection is not a dict: {type(model_dump)}",
                         thing=self.kind,
-                        command=SmarterJournalCliCommands(self.api_connection.__name__),  # type: ignore[call-arg]
                     ) from e
-                model_dump = self.camel_to_snake(model_dump)
-
                 model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
                 model_dump[SAMMetadataKeys.NAME.value] = (
                     self.manifest.metadata.name if self.manifest and self.manifest.metadata else None
@@ -376,6 +382,12 @@ class SAMApiConnectionBroker(AbstractBroker):
             try:
                 data = model_to_dict(self.api_connection)
                 data = self.snake_to_camel(data)
+                if not isinstance(data, dict):
+                    raise SAMConnectionBrokerError(
+                        f"Model dump failed for {self.kind} {self.api_connection.name}",
+                        thing=self.kind,
+                        command=command,
+                    )
                 data.pop("id")
                 data.pop(SAMMetadataKeys.NAME.value)
                 data[SAMMetadataKeys.ACCOUNT.value] = self.api_connection.account.account_number
