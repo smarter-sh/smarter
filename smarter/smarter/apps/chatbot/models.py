@@ -3,7 +3,7 @@
 import json
 import logging
 from functools import cached_property
-from typing import Any, List, Optional, Type, Union
+from typing import Any, List, Optional, Type
 from urllib.parse import ParseResult, urljoin
 
 from django.core.cache import cache
@@ -21,10 +21,13 @@ from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_user_profile,
 )
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.common.utils import smarter_build_absolute_uri
@@ -35,6 +38,7 @@ from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.manifest.loader import SAMLoader
 
 from .signals import (
     chatbot_deploy_failed,
@@ -392,12 +396,16 @@ class ChatBotPlugin(TimestampedModel):
         return f"{str(self.chatbot.url)} - {str(self.plugin_meta.name)}"
 
     @property
-    def plugin(self) -> Optional[StaticPlugin]:
+    def plugin(self) -> Optional[PluginBase]:
         if not self.chatbot:
             return None
         admin_user = UserProfile.admin_for_account(self.chatbot.account)
         user_profile = get_cached_user_profile(admin_user)
-        return StaticPlugin(plugin_meta=self.plugin_meta, user_profile=user_profile)
+        plugin_controller = PluginController(
+            account=self.chatbot.account, user=admin_user, plugin_meta=self.plugin_meta, user_profile=user_profile
+        )
+        this_plugin = plugin_controller.plugin
+        return this_plugin
 
     @classmethod
     def load(cls: Type["ChatBotPlugin"], chatbot: ChatBot, data) -> "ChatBotPlugin":
@@ -406,11 +414,18 @@ class ChatBotPlugin(TimestampedModel):
             return None
         admin_user = UserProfile.admin_for_account(chatbot.account)
         user_profile = get_cached_user_profile(admin_user)
-        plugin = StaticPlugin(data=data, user_profile=user_profile)
+        loader = SAMLoader(manifest=data)
+        manifest = SAMPluginCommon(**loader.json_data)  # type: ignore[call-arg]
+        plugin_controller = PluginController(
+            account=chatbot.account, user=admin_user, user_profile=user_profile, manifest=manifest
+        )
+        plugin = plugin_controller.plugin
+        if not plugin or plugin.plugin_meta is None:
+            raise SmarterValueError("ChatBotPlugin.load() failed to load plugin from data file")
         return cls.objects.create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
 
     @classmethod
-    def plugins(cls, chatbot: ChatBot) -> List[StaticPlugin]:
+    def plugins(cls, chatbot: ChatBot) -> List[PluginBase]:
         if not chatbot:
             return []
         chatbot_plugins = cls.objects.filter(chatbot=chatbot)
@@ -418,7 +433,17 @@ class ChatBotPlugin(TimestampedModel):
         user_profile = get_cached_user_profile(admin_user)
         retval = []
         for chatbot_plugin in chatbot_plugins:
-            retval.append(StaticPlugin(plugin_meta=chatbot_plugin.plugin_meta, user_profile=user_profile))
+            plugin_controller = PluginController(
+                account=chatbot.account,
+                user=admin_user,
+                plugin_meta=chatbot_plugin.plugin_meta,
+                user_profile=user_profile,
+            )
+            if not plugin_controller or not plugin_controller.plugin:
+                raise SmarterValueError(
+                    f"ChatBotPlugin.plugins() failed to load plugin for {chatbot_plugin.plugin_meta.name}"
+                )
+            retval.append(plugin_controller.plugin)
         return retval
 
     @classmethod
@@ -671,7 +696,7 @@ class ChatBotHelper(SmarterRequestMixin):
         self._chatbot_id = chatbot_id
         chatbot = get_cached_chatbot(chatbot_id=self.chatbot_id)
         if chatbot and chatbot.account != self.account:
-            raise ValueError("ChatBotHelper.chatbot_id setter: chatbot.account does not match self.account")
+            raise SmarterValueError("ChatBotHelper.chatbot_id setter: chatbot.account does not match self.account")
         self._chatbot = chatbot
         if self._chatbot:
             self.helper_logger(f"@chatbot_id.setter initialized self.chatbot_id={self.chatbot_id} from chatbot_id")

@@ -100,13 +100,12 @@ class SAMSqlPluginBroker(AbstractBroker):
 
     @property
     def plugin(self) -> Optional[SqlPlugin]:
-        """
-        PluginController() is a helper class to map the manifest model
-        metadata.plugin_class to an instance of the the correct plugin class.
-        """
         if self._plugin:
             return self._plugin
-        self._plugin = super().plugin  # type: ignore[return-value]
+        self._plugin = SqlPlugin(
+            user_profile=self.user_profile,
+            manifest=self.manifest,
+        )
         return self._plugin
 
     ###########################################################################
@@ -184,13 +183,23 @@ class SAMSqlPluginBroker(AbstractBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
-        if not isinstance(self.plugin, SqlPlugin):
+        if not isinstance(self.manifest, SAMSqlPlugin):
             raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.plugin_meta.name if self.plugin_meta else '<-- Missing Name -->'} {self.kind} class instance is {self.plugin}. cannot apply()",
+                f"{self.formatted_class_name} {self.plugin_meta.name if self.plugin_meta else '<-- Missing Name -->'} manifest is not set",
                 thing=self.kind,
                 command=command,
             )
         try:
+            self._plugin = SqlPlugin(
+                user_profile=self.user_profile,
+                manifest=self.manifest,
+            )
+            if not isinstance(self.plugin, SqlPlugin):
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name} {self.plugin_meta.name if self.plugin_meta else '<-- Missing Name -->'} is not a SqlPlugin",
+                    thing=self.kind,
+                    command=command,
+                )
             self.plugin.create()
         except Exception as e:
             return self.json_response_err(command=command, e=e)

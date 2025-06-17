@@ -2,8 +2,9 @@
 
 import json
 import logging
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Union
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.manifest.enum import (
     SAMApiConnectionSpecKeys,
     SAMPluginCommonMetadataClass,
@@ -14,7 +15,7 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecKeys,
 )
 from smarter.apps.plugin.manifest.models.common import Parameter
-from smarter.apps.plugin.models import PluginDataSql, SqlConnection
+from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
@@ -42,6 +43,38 @@ class SqlPlugin(PluginBase):
     _plugin_data: PluginDataSql | None = None
     _plugin_data_serializer: PluginSqlSerializer | None = None
     _manifest: SAMSqlPlugin | None = None
+
+    def __init__(
+        self,
+        *args,
+        user_profile: Optional[UserProfile] = None,
+        selected: bool = False,
+        api_version: Optional[str] = None,
+        manifest: Optional[SAMSqlPlugin] = None,
+        plugin_id: Optional[int] = None,
+        plugin_meta: Optional[PluginMeta] = None,
+        data: Union[dict[str, Any], str, None] = None,
+        **kwargs,
+    ):
+        self._manifest = manifest
+        self._plugin_data = None
+        self._plugin_data_serializer = None
+        super().__init__(
+            *args,
+            user_profile=user_profile,
+            selected=selected,
+            api_version=api_version,
+            plugin_id=plugin_id,
+            plugin_meta=plugin_meta,
+            manifest=manifest,
+            data=data,
+            **kwargs,
+        )
+
+    @property
+    def kind(self) -> str:
+        """Return the kind of the plugin."""
+        return MANIFEST_KIND
 
     @property
     def manifest(self) -> Optional[SAMSqlPlugin]:

@@ -9,11 +9,12 @@ import yaml
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.django.user import UserType
 
-from .static import StaticPlugin
+from .base import PluginBase
 
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class Plugins:
 
     account: Optional[Account] = None
     user_profile: Optional[UserProfile] = None
-    plugins: list[StaticPlugin] = []
+    plugins: list[PluginBase] = []
 
     def __init__(self, user: UserType, account: Account):
 
@@ -33,7 +34,17 @@ class Plugins:
         self.user_profile = get_cached_user_profile(user=user, account=account)
 
         for plugin in PluginMeta.objects.filter(account=self.account):
-            self.plugins.append(StaticPlugin(user_profile=self.user_profile, plugin_id=plugin.id))  # type: ignore[attr-defined]
+            plugin_controller = PluginController(
+                user_profile=self.user_profile,
+                account=self.account,
+                user=user,
+                plugin_meta=plugin,
+            )
+            if not plugin_controller or not plugin_controller.plugin:
+                raise PluginDataValueError(
+                    f"PluginController could not be created for plugin_id: {plugin.id}, user_profile: {self.user_profile}"  # type: ignore[arg-type]
+                )
+            self.plugins.append(plugin_controller.plugin)
 
     @property
     def data(self) -> list[dict]:

@@ -13,7 +13,7 @@ from typing import Callable, Dict, List, Optional, Type
 
 from django.core.cache import cache
 
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterValueError
@@ -92,7 +92,7 @@ class ChatProviders(SmarterHelperMixin):
     # all handlers
     # -------------------------------------------------------------------------
     def openai_handler(
-        self, chat: Chat, data: dict, plugins: Optional[List[StaticPlugin]] = None, user: Optional[UserType] = None
+        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[UserType] = None
     ) -> Callable:
         """Expose the handler method of the default provider"""
         self.validate_chat(chat)
@@ -129,7 +129,7 @@ class ChatProviders(SmarterHelperMixin):
         return result
 
     def googleai_handler(
-        self, chat: Chat, data: dict, plugins: Optional[List[StaticPlugin]] = None, user: Optional[UserType] = None
+        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[UserType] = None
     ) -> Callable:
         """Expose the handler method of the googleai provider"""
         self.validate_chat(chat)
@@ -159,7 +159,7 @@ class ChatProviders(SmarterHelperMixin):
         return result
 
     def metaai_handler(
-        self, chat: Chat, data: dict, plugins: Optional[List[StaticPlugin]] = None, user: Optional[UserType] = None
+        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[UserType] = None
     ) -> Callable:
         """Expose the handler method of the metaai provider"""
         self.validate_chat(chat)
@@ -187,7 +187,7 @@ class ChatProviders(SmarterHelperMixin):
         return result
 
     def default_handler(
-        self, chat: Chat, data: dict, plugins: Optional[List[StaticPlugin]] = None, user: Optional[UserType] = None
+        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[UserType] = None
     ) -> Callable:
         """Expose the handler method of the default provider"""
         return self.openai_handler(chat=chat, data=data, plugins=plugins, user=user)

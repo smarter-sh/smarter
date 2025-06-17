@@ -1010,17 +1010,17 @@ class PluginDataSql(PluginDataBase):
     """
 
     class DataTypes:
-        INT = "integer"
-        FLOAT = "float"
         STR = "string"
+        NUMBER = "number"
+        INT = "integer"
         BOOL = "bool"
-        LIST = "list"
-        DICT = "dict"
+        OBJECT = "object"
+        ARRAY = "array"
         NULL = "null"
 
         @classmethod
         def all(cls) -> list[str]:
-            return [cls.INT, cls.FLOAT, cls.STR, cls.BOOL, cls.LIST, cls.DICT, cls.NULL]
+            return [cls.STR, cls.NUMBER, cls.INT, cls.BOOL, cls.OBJECT, cls.ARRAY, cls.NULL]
 
     connection = models.ForeignKey(SqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql_connection")
     parameters = models.JSONField(

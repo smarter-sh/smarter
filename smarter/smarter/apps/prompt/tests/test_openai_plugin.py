@@ -3,7 +3,7 @@
 """Test lambda_openai_v2 function."""
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.utils import get_readonly_yaml_file
 
 from .test_setup import get_test_file_path
@@ -19,7 +19,15 @@ class TestStaticPlugin(TestAccountMixin):
         plugin_json = get_readonly_yaml_file(config_path)
         plugin_json["user_profile"] = self.user_profile
 
-        self.plugin = StaticPlugin(user_profile=self.user_profile, data=plugin_json)
+        plugin_controller = PluginController(
+            user_profile=self.user_profile,
+            account=self.account,
+            user=self.user_profile.user,  # type: ignore
+            manifest=plugin_json,
+        )
+        if not plugin_controller or not plugin_controller.plugin:
+            raise ValueError("PluginController could not be created or plugin is None")
+        self.plugin = plugin_controller.plugin
 
     def tearDown(self):
         """Tear down test fixtures."""

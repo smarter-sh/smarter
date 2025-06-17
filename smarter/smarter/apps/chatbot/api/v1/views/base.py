@@ -15,7 +15,7 @@ from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import ChatHelper
 from smarter.apps.prompt.providers.providers import chat_providers
 from smarter.common.conf import settings as smarter_settings
@@ -59,7 +59,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
     _name: str = None
 
     http_method_names: list[str] = ["get", "post", "options"]
-    plugins: List[StaticPlugin] = None
+    plugins: List[PluginBase] = None
 
     @property
     def chatbot_id(self):

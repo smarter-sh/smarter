@@ -10,15 +10,17 @@ import sys
 import time
 from pathlib import Path
 from time import sleep
-from typing import Callable
+from typing import Callable, Optional
 
 from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.models import PluginDataValueError
 from smarter.apps.plugin.nlp import does_refer_to
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.utils import get_readonly_yaml_file
@@ -45,13 +47,13 @@ CELERY_WAIT = 1
 class ProviderBaseClass(TestAccountMixin):
     """Test Index Lambda function."""
 
-    _provider: str = None
-    handler: Callable
-    plugin: StaticPlugin
-    plugins: list[StaticPlugin]
-    chatbot: ChatBot
-    client: Client
-    chat: Chat
+    _provider: Optional[str] = None
+    handler: Optional[Callable]
+    plugin: Optional[PluginBase]
+    plugins: Optional[list[PluginBase]]
+    chatbot: Optional[ChatBot]
+    client: Optional[Client]
+    chat: Optional[Chat]
 
     _plugin_called = False
     _plugin_selected = False
@@ -139,7 +141,18 @@ class ProviderBaseClass(TestAccountMixin):
 
         print("Setting up plugin")
         if not self.plugin:
-            self.plugin = StaticPlugin(user_profile=self.user_profile, data=plugin_data)
+            plugin_controller = PluginController(
+                user_profile=self.user_profile,
+                account=self.account,
+                user=self.admin_user,
+                manifest=plugin_data,
+            )
+            if not plugin_controller or not plugin_controller.plugin:
+                raise PluginDataValueError(
+                    f"PluginController could not be created for plugin_id: {plugin_data.get('id')}, "
+                    f"user_profile: {self.user_profile}"
+                )
+            self.plugin = plugin_controller.plugin
             self.plugins = [self.plugin]
         print(f"plugin: {self.plugin}")
 
@@ -150,7 +163,7 @@ class ProviderBaseClass(TestAccountMixin):
         print(f"provider {self.provider} is setup")
 
         self.client = Client()
-        self.client.force_login(self.admin_user)
+        self.client.force_login(self.admin_user)  # type: ignore[call-arg]
 
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
@@ -298,6 +311,9 @@ class ProviderBaseClass(TestAccountMixin):
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
         try:
+            if not self.handler:
+                raise ValueError("Handler is not set. Did you call chat_providers.get_handler(provider=...) ?")
+
             response = self.handler(
                 chat=self.chat, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user
             )
@@ -343,6 +359,9 @@ class ProviderBaseClass(TestAccountMixin):
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
         try:
+            if not self.handler:
+                raise ValueError("Handler is not set. Did you call chat_providers.get_handler(provider=...) ?")
+
             response = self.handler(
                 chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_weather
             )
@@ -356,6 +375,9 @@ class ProviderBaseClass(TestAccountMixin):
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
         try:
+            if not self.handler:
+                raise ValueError("Handler is not set. Did you call chat_providers.get_handler(provider=...) ?")
+
             response = self.handler(
                 chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_recipes
             )
