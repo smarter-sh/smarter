@@ -26,7 +26,13 @@ from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
-from .signals import new_charge_created, new_user_created, secret_created, secret_edited
+from .signals import (
+    new_charge_created,
+    new_user_created,
+    secret_accessed,
+    secret_created,
+    secret_edited,
+)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -485,7 +491,7 @@ class Secret(TimestampedModel):
             if update_last_accessed:
                 self.last_accessed = timezone.now()
                 self.save(update_fields=["last_accessed"])
-            logger.info("Secret '%s' accessed by user %s", self.name, self.user_profile.user.username)
+            secret_accessed.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
             fernet = self.get_fernet()
             if self.encrypted_value:
                 return fernet.decrypt(self.encrypted_value).decode()

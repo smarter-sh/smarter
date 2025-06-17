@@ -60,6 +60,7 @@ from .signals import (
     plugin_sql_connection_query_failed,
     plugin_sql_connection_query_success,
     plugin_sql_connection_success,
+    plugin_sql_connection_validated,
 )
 
 
@@ -813,7 +814,6 @@ class SqlConnection(ConnectionBase):
         """
         Establish a test database connection using Standard TCP/IP.
         """
-        logger.info("Connecting to database using Standard TCP/IP: %s", self.get_connection_string())
         plugin_sql_connection_attempted.send(sender=self.__class__, connection=self)
         try:
             connection_handler = ConnectionHandler({"default": self.django_db_connection})
@@ -996,8 +996,9 @@ class SqlConnection(ConnectionBase):
 
     def validate(self) -> bool:
         super().validate()
-        logger.info("Validating SqlConnection: %s", self.name)
-        return self.test_connection()
+        retval = self.test_connection()
+        plugin_sql_connection_validated.send(sender=self.__class__, connection=self)
+        return retval
 
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
