@@ -10,6 +10,7 @@ from smarter.apps.account.models import Account, UserProfile
 
 # lib manifest
 from smarter.lib.django.user import UserType
+from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.controller import AbstractController
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 
@@ -108,17 +109,31 @@ class PluginController(AbstractController):
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:
-        if not self._plugin_meta and self.account and self.name:
+        if not self._plugin_meta and self.account and self.name and self.manifest:
             try:
-                self._plugin_meta = PluginMeta(
+                self._plugin_meta = PluginMeta.objects.get(
                     account=self.account,
                     name=self.name,
+                    plugin_class=self.plugin_class,
                 )
                 logger.info("%s retrieved plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
-            except PluginMeta.DoesNotExist as e:
-                kind = self.manifest.kind if self.manifest else "Unknown"
-                raise SAMPluginControllerError(f"{kind} {self.name} does not exist.") from e
+            except PluginMeta.DoesNotExist:
+                pass
         return self._plugin_meta
+
+    @property
+    def plugin_class(self) -> Optional[str]:
+        """Returns the plugin class based on the manifest kind."""
+        if not self.manifest or not self.manifest.kind:
+            return None
+
+        if self.manifest.kind == SmarterJournalThings.API_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.API.value
+        if self.manifest.kind == SmarterJournalThings.SQL_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.SQL.value
+        if self.manifest.kind == SmarterJournalThings.STATIC_PLUGIN.value:
+            return SAMPluginCommonMetadataClassValues.STATIC.value
+        return None
 
     @property
     def plugin(self) -> Optional[PluginBase]:

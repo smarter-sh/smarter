@@ -52,7 +52,7 @@ class SAMSqlPluginBroker(AbstractBroker):
     # override the base abstract manifest model with the Plugin model
     _manifest: Optional[SAMSqlPlugin] = None
     _pydantic_model: Type[SAMSqlPlugin] = SAMSqlPlugin
-    _plugin: Optional[PluginBase] = None
+    _plugin: Optional[SqlPlugin] = None
     _plugin_meta: Optional[PluginMeta] = None
 
     ###########################################################################
@@ -97,6 +97,17 @@ class SAMSqlPluginBroker(AbstractBroker):
                 ),
             )
         return self._manifest
+
+    @property
+    def plugin(self) -> Optional[SqlPlugin]:
+        """
+        PluginController() is a helper class to map the manifest model
+        metadata.plugin_class to an instance of the the correct plugin class.
+        """
+        if self._plugin:
+            return self._plugin
+        self._plugin = super().plugin  # type: ignore[return-value]
+        return self._plugin
 
     ###########################################################################
     # Smarter manifest abstract method implementations
@@ -173,6 +184,12 @@ class SAMSqlPluginBroker(AbstractBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+        if not isinstance(self.plugin, SqlPlugin):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.plugin_meta.name if self.plugin_meta else '<-- Missing Name -->'} {self.kind} class instance is {self.plugin}. cannot apply()",
+                thing=self.kind,
+                command=command,
+            )
         try:
             self.plugin.create()
         except Exception as e:
@@ -186,7 +203,9 @@ class SAMSqlPluginBroker(AbstractBroker):
             return self.json_response_ok(command=command, data={})
         try:
             raise SAMBrokerErrorNotReady(
-                f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
+                f"{self.formatted_class_name} {self.plugin_meta.name if self.plugin_meta else self.kind or "SqlPlugin"} not ready",
+                thing=self.kind,
+                command=command,
             )
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
