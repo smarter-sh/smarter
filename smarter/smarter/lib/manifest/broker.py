@@ -3,6 +3,7 @@
 
 import logging
 import re
+import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
 from http import HTTPStatus
@@ -581,6 +582,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     def json_response_err_readonly(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
         """Return a common read-only response."""
         message = f"{self.kind} {self.name} is read-only"
+
         error = {
             SmarterJournalApiResponseErrorKeys.ERROR_CLASS: SAMBrokerReadOnlyError.__name__,
             SmarterJournalApiResponseErrorKeys.STACK_TRACE: None,
@@ -653,8 +655,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         Return a structured error response that can be unpacked and rendered
         by the cli in a variety of formats.
         """
+        stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
         return SmarterJournaledJsonErrorResponse(
-            request=self.request, thing=self.thing, command=command, e=e, status=HTTPStatus.INTERNAL_SERVER_ERROR
+            request=self.request,
+            thing=self.thing,
+            command=command,
+            e=e,
+            stack_trace=stack_trace,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
     ###########################################################################
