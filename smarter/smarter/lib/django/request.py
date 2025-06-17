@@ -18,7 +18,7 @@ import re
 import warnings
 from datetime import datetime
 from functools import cached_property
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from urllib.parse import ParseResult, urlparse, urlunsplit
 
 import tldextract
@@ -475,9 +475,9 @@ class SmarterRequestMixin(AccountMixin):
         return self._timestamp
 
     @property
-    def data(self) -> Optional[dict]:
+    def data(self) -> Optional[Union[dict, list, str]]:
         """
-        Get the request body data as a dictionary.
+        Get the request body data as a dictionary, list or str.
         used for setting the session_key.
         """
         if self._data:

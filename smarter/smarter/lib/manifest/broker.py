@@ -142,8 +142,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _loader: Optional[SAMLoader] = None
     _manifest: Optional[AbstractSAMBase] = None
     _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
-    _name: str
-    _kind: str
+    _name: Optional[str]
+    _kind: Optional[str]
     _validated: bool = False
     _thing: Optional[SmarterJournalThings] = None
     _created: bool = False
@@ -162,13 +162,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             "AbstractBroker.__init__() initializing request: %s, args: %s, kwargs: %s", self.request, args, kwargs
         )
 
+        self._name = kwargs.get("name")
+        self._kind = kwargs.get("kind")
+        self._loader = kwargs.get("loader")
         api_version: Optional[str] = kwargs.get("api_version", SmarterApiVersions.V1)
-        self._name: str = kwargs.get("name", "MissingName")
-        self._kind: str = kwargs.get("kind", "UnknownKind")
-        self._loader: Optional[SAMLoader] = kwargs.get("loader", None)
-        manifest: Optional[str] = kwargs.get("manifest", None)
-        file_path: Optional[str] = kwargs.get("file_path", None)
-        url: Optional[str] = kwargs.get("url", None)
+        manifest: Optional[str] = kwargs.get("manifest")
+        file_path: Optional[str] = kwargs.get("file_path")
+        url: Optional[str] = kwargs.get("url")
 
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(
@@ -205,9 +205,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 self._loader.manifest_kind,
             )
 
-        self._kind = self._kind or self.loader.manifest_kind if self.loader else ""
-        if self._kind == "":
-            raise SAMBrokerError(message="Manifest kind is required")
+        self._kind = self._kind or self.loader.manifest_kind if self.loader else None
         self._created = False
         logger.info(
             "AbstractBroker.__init__() finished initializing %s with api_version: %s, user: %s, name: %s",
