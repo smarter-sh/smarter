@@ -20,6 +20,7 @@ plugin_sql_connection_failed = Signal()
 plugin_sql_connection_query_attempted = Signal()
 plugin_sql_connection_query_success = Signal()
 plugin_sql_connection_query_failed = Signal()
+plugin_sql_connection_validated = Signal()
 
 plugin_api_connection_attempted = Signal()
 plugin_api_connection_success = Signal()

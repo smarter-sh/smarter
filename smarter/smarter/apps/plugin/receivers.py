@@ -47,6 +47,7 @@ from .signals import (  # plugin signals; sql_connection signals; api_connection
     plugin_sql_connection_query_failed,
     plugin_sql_connection_query_success,
     plugin_sql_connection_success,
+    plugin_sql_connection_validated,
     plugin_updated,
 )
 from .tasks import create_plugin_selector_history
@@ -339,6 +340,17 @@ def handle_plugin_sql_connection_success(sender, connection: SqlConnection, **kw
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_success"),
+        connection.get_connection_string(),
+    )
+
+
+@receiver(plugin_sql_connection_validated, dispatch_uid="plugin_sql_connection_validated")
+def handle_plugin_sql_connection_validated(sender, connection: SqlConnection, **kwargs):
+    """Handle plugin SQL connection validated signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text(prefix + "plugin_sql_connection_validated"),
         connection.get_connection_string(),
     )
 

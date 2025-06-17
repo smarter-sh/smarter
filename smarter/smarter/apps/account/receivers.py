@@ -13,6 +13,7 @@ from smarter.common.helpers.console_helpers import formatted_text
 from .manifest.transformers.secret import SecretTransformer
 from .models import Account, Charge, DailyBillingRecord, Secret, UserProfile
 from .signals import (
+    secret_accessed,
     secret_created,
     secret_deleted,
     secret_inializing,
@@ -153,14 +154,6 @@ def secret_post_save(sender, instance, created, **kwargs):
             instance.id,
             created,
         )
-    else:
-        logger.info(
-            "%s Secret post_save signal received. instance: %s, id: %s created: %s",
-            formatted_text("secret_post_save()"),
-            instance,
-            instance.id,
-            created,
-        )
 
 
 @receiver(post_delete, sender=Secret)
@@ -207,6 +200,19 @@ def secret_ready_receiver(sender, secret: SecretTransformer, **kwargs):
         sender,
         str(secret),
         secret.id,
+    )
+
+
+@receiver(secret_accessed)
+def secret_accessed_receiver(sender, secret: Secret, user_profile: UserProfile, **kwargs):
+    """Signal receiver for secret_accessed signal."""
+    logger.info(
+        "%s.%s secret_accessed signal received. instance: %s, id: %s, user_profile: %s",
+        formatted_text("secret_accessed_receiver()"),
+        sender,
+        str(secret),
+        secret.id,  # type: ignore
+        user_profile,
     )
 
 
