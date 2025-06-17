@@ -15,7 +15,6 @@ from .models import Account, Charge, DailyBillingRecord, Secret, UserProfile
 from .signals import (
     secret_created,
     secret_deleted,
-    secret_edited,
     secret_inializing,
     secret_ready,
 )
@@ -154,7 +153,6 @@ def secret_post_save(sender, instance, created, **kwargs):
             instance.id,
             created,
         )
-        secret_created.send(sender=Secret, secret=instance)
     else:
         logger.info(
             "%s Secret post_save signal received. instance: %s, id: %s created: %s",
@@ -163,7 +161,6 @@ def secret_post_save(sender, instance, created, **kwargs):
             instance.id,
             created,
         )
-        secret_edited.send(sender=Secret, secret=instance)
 
 
 @receiver(post_delete, sender=Secret)
@@ -185,19 +182,7 @@ def secret_created_receiver(sender, secret: Secret, **kwargs):
         formatted_text("secret_created_receiver()"),
         sender,
         str(secret),
-        secret.id,
-    )
-
-
-@receiver(secret_edited)
-def secret_edited_receiver(sender, secret, **kwargs):
-    """Signal receiver for secret_edited signal."""
-    logger.info(
-        "%s.%s secret_edited signal received. instance: %s, id: %s",
-        formatted_text("secret_edited_receiver()"),
-        sender,
-        str(secret),
-        secret.id,
+        secret.id,  # type: ignore
     )
 
 

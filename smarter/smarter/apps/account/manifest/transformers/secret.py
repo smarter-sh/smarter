@@ -513,7 +513,6 @@ class SecretTransformer(SmarterHelperMixin):
             if attr not in READ_ONLY_FIELDS:
                 setattr(self._secret, attr, value)
         self.secret.save()
-        secret_edited.send(sender=self.__class__, secret=self)
         self.id = self.secret.id  # type: ignore[assignment]
         logger.info("%s.update() secret %s: %s.", self.formatted_class_name, self.name, self.id)
 
@@ -527,7 +526,6 @@ class SecretTransformer(SmarterHelperMixin):
 
         if isinstance(self.secret, Secret):
             self.secret.save()
-        secret_edited.send(sender=self.__class__, secret=self)
         logger.info("%s.save()) secret %s: %s.", self.formatted_class_name, self.name, self.id)
         return True
 
