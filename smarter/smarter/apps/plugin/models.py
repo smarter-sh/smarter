@@ -769,10 +769,12 @@ class SqlConnection(ConnectionBase):
 
     @property
     def connection(self) -> Optional[BaseDatabaseWrapper]:
-        if not self._connection:
-            connection = self.test_connection()
-            if isinstance(connection, BaseDatabaseWrapper):
-                self._connection = connection
+        """
+        Return the database connection if it exists, otherwise create a new one.
+        """
+        if self._connection:
+            return self._connection
+        self._connection = self.get_connection()
         return self._connection
 
     @property
@@ -807,7 +809,7 @@ class SqlConnection(ConnectionBase):
     def connection_string(self) -> str:
         return self.get_connection_string()
 
-    def connect_tcpip(self) -> bool:
+    def connect_tcpip(self) -> Optional[BaseDatabaseWrapper]:
         """
         Establish a test database connection using Standard TCP/IP.
         """
@@ -819,22 +821,21 @@ class SqlConnection(ConnectionBase):
             db_wrapper.ensure_connection()
             if db_wrapper.is_usable():
                 plugin_sql_connection_success.send(sender=self.__class__, connection=self)
-                db_wrapper.close()
-                return True
+                return db_wrapper  # type: ignore[return-value]
             else:
                 msg = "Failed to establish TCP/IP connection: No connection object found."
                 plugin_sql_connection_failed.send(sender=self.__class__, connection=self, error=msg)
-                return False
+                return None
         except (DatabaseError, ImproperlyConfigured) as e:
             plugin_sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
-            return False
+            return None
 
     def transport_handler(self, channel, src_addr, dest_addr):
         logger.info(
             "Transport handler called with channel: %s, src_addr: %s, dest_addr: %s", channel, src_addr, dest_addr
         )
 
-    def connect_tcpip_ssh(self) -> bool:
+    def connect_tcpip_ssh(self) -> Optional[BaseDatabaseWrapper]:
         """
         Establish a database connection using Standard TCP/IP over SSH with Paramiko.
         """
@@ -878,17 +879,16 @@ class SqlConnection(ConnectionBase):
             tcpip_ssh_connection.ensure_connection()
 
             # Close the SSH connection after ensuring the database connection
-            ssh_client.close()
             plugin_sql_connection_success.send(sender=self.__class__, connection=self)
-            return True
+            return connection_handler
 
         # pylint: disable=W0718
         except Exception as e:
             plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
             logger.error("TCP/IP over SSH connection failed: %s", e)
-            return False
+            return None
 
-    def connect_ldap_user_pwd(self) -> bool:
+    def connect_ldap_user_pwd(self) -> Optional[BaseDatabaseWrapper]:
         """
         Establish a database connection using LDAP User/Password authentication.
         """
@@ -900,27 +900,44 @@ class SqlConnection(ConnectionBase):
             ldap_user_pwd_connection: BaseDatabaseWrapper = connection_handler["default"].connection
             ldap_user_pwd_connection.ensure_connection()
             plugin_sql_connection_success.send(sender=self.__class__, connection=self)
-            return True
+            return ldap_user_pwd_connection
         # pylint: disable=W0718
         except Exception as e:
             plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
             logger.error("LDAP User/Password connection failed: %s", e)
-            return False
+            return None
 
     def test_connection(self) -> bool:
         """
         Establish a database connection based on the authentication method.
         """
+        connection = self.get_connection()
+        return connection is not None
+
+    def get_connection(self) -> Optional[BaseDatabaseWrapper]:
+        """
+        Establish a database connection based on the authentication method.
+        """
         if self.authentication_method == DBMSAuthenticationMethods.NONE.value:
-            return self.connect_tcpip()
+            retval = self.connect_tcpip()
         elif self.authentication_method == DBMSAuthenticationMethods.TCPIP.value:
-            return self.connect_tcpip()
+            retval = self.connect_tcpip()
         elif self.authentication_method == DBMSAuthenticationMethods.TCPIP_SSH.value:
-            return self.connect_tcpip_ssh()
+            retval = self.connect_tcpip_ssh()
         elif self.authentication_method == DBMSAuthenticationMethods.LDAP_USER_PWD.value:
-            return self.connect_ldap_user_pwd()
+            retval = self.connect_ldap_user_pwd()
         else:
             raise SmarterValueError(f"Unsupported authentication method: {self.authentication_method}")
+
+        if isinstance(retval, BaseDatabaseWrapper):
+            return retval
+        else:
+            logger.error(
+                "Failed to establish a database connection using method: %s. Got return type of %s",
+                self.authentication_method,
+                type(retval),
+            )
+            return None
 
     def close(self):
         """Close the database connection."""
@@ -933,9 +950,9 @@ class SqlConnection(ConnectionBase):
             self._connection = None
 
     def execute_query(self, sql: str, limit: Optional[int] = None) -> Union[list[tuple[Any, ...]], bool]:
-        query_connection = self.connection
-        if not isinstance(query_connection, BaseDatabaseWrapper):
+        if not isinstance(self.connection, BaseDatabaseWrapper):
             return False
+        query_connection = self.connection
         plugin_sql_connection_query_attempted.send(sender=self.__class__, connection=self)
         try:
             if limit is not None:
@@ -992,10 +1009,7 @@ class SqlConnection(ConnectionBase):
                 snake_case_name,
             )
             self.name = snake_case_name
-        if self.validate():
-            super().save(*args, **kwargs)
-        else:
-            raise SmarterValueError(f"SqlConnection.save(): connection {self.name} is not valid.")
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return self.name + " - " + self.get_connection_string()

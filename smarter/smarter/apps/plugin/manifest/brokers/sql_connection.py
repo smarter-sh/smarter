@@ -3,7 +3,7 @@
 
 import json
 from logging import getLogger
-from typing import Type
+from typing import Optional, Type
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
@@ -54,11 +54,11 @@ class SAMSqlConnectionBroker(AbstractBroker):
     """
 
     # override the base abstract manifest model with the SqlConnection model
-    _manifest: SAMSqlConnection = None
+    _manifest: SAMSqlConnection
     _pydantic_model: Type[SAMSqlConnection] = SAMSqlConnection
-    _sql_connection: SqlConnection = None
-    _password_secret: Secret = None
-    _proxy_password_secret: Secret = None
+    _sql_connection: SqlConnection
+    _password_secret: Secret
+    _proxy_password_secret: Secret
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -73,7 +73,7 @@ class SAMSqlConnectionBroker(AbstractBroker):
         return f"{parent_class}.SAMSqlConnectionBroker()"
 
     @property
-    def model_class(self) -> SqlConnection:
+    def model_class(self) -> Type[SqlConnection]:
         return SqlConnection
 
     @property

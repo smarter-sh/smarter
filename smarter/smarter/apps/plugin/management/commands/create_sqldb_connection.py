@@ -100,20 +100,20 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Secret '{name}' created successfully."))
 
         try:
-            sql_connectin = SqlConnection.objects.get(
+            sql_connection = SqlConnection.objects.get(
                 account=user_profile.account,
                 name=name,
             )
-            sql_connectin.kind = KIND
-            sql_connectin.db_engine = DbEngines.MYSQL.value
-            sql_connectin.authentication_method = DBMSAuthenticationMethods.TCPIP.value
-            sql_connectin.timeout = 300
-            sql_connectin.hostname = host
-            sql_connectin.port = port
-            sql_connectin.database = db
-            sql_connectin.username = username
-            sql_connectin.password = secret
-            sql_connectin.save()
+            sql_connection.kind = KIND
+            sql_connection.db_engine = DbEngines.MYSQL.value
+            sql_connection.authentication_method = DBMSAuthenticationMethods.TCPIP.value
+            sql_connection.timeout = 300
+            sql_connection.hostname = host
+            sql_connection.port = port
+            sql_connection.database = db
+            sql_connection.username = username
+            sql_connection.password = secret
+            sql_connection.save()
             self.stdout.write(self.style.SUCCESS(f"SQL database connection '{name}' updated."))
             return
         except SqlConnection.DoesNotExist:
