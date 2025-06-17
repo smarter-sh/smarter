@@ -29,6 +29,8 @@ from .utils import (
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
+module_prefix = "smarter.apps.account.receivers"
+
 
 @receiver(user_logged_in)
 def user_logged_in_receiver(sender, request, user, **kwargs):
@@ -37,7 +39,9 @@ def user_logged_in_receiver(sender, request, user, **kwargs):
     - verify that a UserProfile record exists for the user.
       if not, create one with the default account.
     """
-    logger.info("%s User logged in signal received. user: %s", formatted_text("user_logged_in_receiver()"), user)
+    logger.info(
+        "%s User logged in signal received. user: %s", formatted_text(f"{module_prefix}.user_logged_in()"), user
+    )
     if not get_cached_user_profile(user=user):
         logger.warning("User profile not found for user: %s", user)
         account = get_cached_default_account()
@@ -50,7 +54,7 @@ def user_post_save(sender, instance, created, **kwargs):
     if created:
         logger.info(
             "%s User post_save signal received. instance: %s, created: %s",
-            formatted_text("user_post_save()"),
+            formatted_text(f"{module_prefix}.user_post_save()"),
             instance,
             created,
         )
@@ -61,7 +65,7 @@ def user_post_delete(sender, instance, **kwargs):
     """Signal receiver for deleted of User model."""
     logger.info(
         "%s User post_delete signal received. instance: %s, id: %s",
-        formatted_text("user_post_delete()"),
+        formatted_text(f"{module_prefix}.user_post_delete()"),
         instance,
         instance.id,
     )
@@ -73,7 +77,7 @@ def user_profile_post_save(sender, instance, created, **kwargs):
     if created:
         logger.info(
             "%s UserProfile post_save signal received. instance: %s, created: %s",
-            formatted_text("user_profile_post_save()"),
+            formatted_text(f"{module_prefix}.user_profile_post_save()"),
             instance,
             created,
         )
@@ -84,7 +88,7 @@ def user_profile_post_delete(sender, instance, **kwargs):
     """Signal receiver for deleted of UserProfile model."""
     logger.info(
         "%s UserProfile post_delete signal received. instance: %s, id: %s",
-        formatted_text("user_profile_post_delete()"),
+        formatted_text(f"{module_prefix}.user_profile_post_delete()"),
         instance,
         instance.id,
     )
@@ -96,7 +100,7 @@ def account_post_save(sender, instance, created, **kwargs):
     if created:
         logger.info(
             "%s Account post_save signal received. instance: %s, created: %s",
-            formatted_text("account_post_save()"),
+            formatted_text(f"{module_prefix}.account_post_save()"),
             instance,
             created,
         )
@@ -113,7 +117,7 @@ def account_post_delete(sender, instance, **kwargs):
     """Signal receiver for deleted of Account model."""
     logger.info(
         "%s Account post_delete signal received. instance: %s, id: %s",
-        formatted_text("account_post_delete()"),
+        formatted_text(f"{module_prefix}.account_post_delete()"),
         instance,
         instance.id,
     )
@@ -125,7 +129,7 @@ def charge_post_save(sender, instance, created, **kwargs):
     if created:
         logger.info(
             "%s Charge post_save signal received. instance: %s, created: %s",
-            formatted_text("charge_post_save()"),
+            formatted_text(f"{module_prefix}.charge_post_save()"),
             instance,
             created,
         )
@@ -137,7 +141,7 @@ def daily_billing_record_post_save(sender, instance, created, **kwargs):
     if created:
         logger.info(
             "%s DailyBillingRecord post_save signal received. instance: %s, created: %s",
-            formatted_text("daily_billing_record_post_save()"),
+            formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
             instance,
             created,
         )
@@ -149,7 +153,7 @@ def secret_post_save(sender, instance, created, **kwargs):
     if created:
         logger.info(
             "%s Secret post_save signal received. instance: %s, id: %s created: %s",
-            formatted_text("secret_post_save()"),
+            formatted_text(f"{module_prefix}.secret_post_save()"),
             instance,
             instance.id,
             created,
@@ -161,7 +165,7 @@ def secret_post_delete(sender, instance, **kwargs):
     """Signal receiver for deleted of Secret model."""
     logger.info(
         "%s Secret post_delete signal received. instance: %s, id: %s",
-        formatted_text("secret_post_delete()"),
+        formatted_text(f"{module_prefix}.secret_post_delete()"),
         instance,
         instance.id,
     )
@@ -172,7 +176,7 @@ def secret_created_receiver(sender, secret: Secret, **kwargs):
     """Signal receiver for secret_created signal."""
     logger.info(
         "%s.%s secret_created signal received. instance: %s id: %s",
-        formatted_text("secret_created_receiver()"),
+        formatted_text(f"{module_prefix}.secret_created()"),
         sender,
         str(secret),
         secret.id,  # type: ignore
@@ -184,7 +188,7 @@ def secret_deleted_receiver(sender, secret_id, secret_name, **kwargs):
     """Signal receiver for secret_deleted signal."""
     logger.info(
         "%s.%s secret_deleted signal received. instance: %s, name: %s",
-        formatted_text("secret_deleted_receiver()"),
+        formatted_text(f"{module_prefix}.secret_deleted()"),
         sender,
         secret_id,
         secret_name,
@@ -196,7 +200,7 @@ def secret_ready_receiver(sender, secret: SecretTransformer, **kwargs):
     """Signal receiver for secret_ready signal."""
     logger.info(
         "%s.%s secret_ready signal received. instance: %s, id: %s",
-        formatted_text("secret_ready_receiver()"),
+        formatted_text(f"{module_prefix}.secret_ready()"),
         sender,
         str(secret),
         secret.id,
@@ -208,7 +212,7 @@ def secret_accessed_receiver(sender, secret: Secret, user_profile: UserProfile, 
     """Signal receiver for secret_accessed signal."""
     logger.info(
         "%s.%s secret_accessed signal received. instance: %s, id: %s, user_profile: %s",
-        formatted_text("secret_accessed_receiver()"),
+        formatted_text(f"{module_prefix}.secret_accessed()"),
         sender,
         str(secret),
         secret.id,  # type: ignore
@@ -221,7 +225,7 @@ def secret_inializing_receiver(sender, secret_name: str, user_profile: UserProfi
     """Signal receiver for secret_inializing signal."""
     logger.info(
         "%s.%s secret_inializing signal received. name: %s, user_profile: %s",
-        formatted_text("secret_inializing_receiver()"),
+        formatted_text(f"{module_prefix}.secret_inializing()"),
         sender,
         secret_name,
         user_profile,
