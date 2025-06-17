@@ -175,7 +175,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             if self.manifest_kind:
                 self._BrokerClass = Brokers.get_broker(self.manifest_kind)
             if not self._BrokerClass:
-                raise APIV1CLIViewError(f"Could not find broker for {self.manifest_kind} manifest.")
+                raise APIV1CLIViewError(
+                    f"Could not find broker for {self.manifest_kind or "<-- Missing -->"} manifest."
+                )
         return self._BrokerClass
 
     @property
