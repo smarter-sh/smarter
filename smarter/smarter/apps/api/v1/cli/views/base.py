@@ -5,7 +5,7 @@ import logging
 import re
 import traceback
 from http import HTTPStatus
-from typing import Type
+from typing import Any, Optional, Type
 
 from django.core.handlers.wsgi import WSGIRequest
 from rest_framework.exceptions import NotAuthenticated
@@ -122,15 +122,15 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     authentication_classes = (SmarterTokenAuthentication,)
     permission_classes = (SmarterAuthenticatedPermissionClass,)
 
-    _BrokerClass: Type[AbstractBroker] = None
-    _broker: AbstractBroker = None
-    _loader: SAMLoader = None
-    _manifest_data: json = None
-    _manifest_kind: str = None
-    _manifest_name: str = None
+    _BrokerClass: Optional[Type[AbstractBroker]] = None
+    _broker: Optional[AbstractBroker] = None
+    _loader: Optional[SAMLoader] = None
+    _manifest_data: Optional[dict] = None
+    _manifest_kind: Optional[str] = None
+    _manifest_name: Optional[str] = None
     _manifest_load_failed: bool = False
-    _params: dict[str, any] = None
-    _prompt: str = None
+    _params: Optional[dict[str, Any]] = None
+    _prompt: Optional[str] = None
 
     @property
     def formatted_class_name(self) -> str:
@@ -142,7 +142,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         return f"{parent_class}.CliBaseApiView()"
 
     @property
-    def loader(self) -> SAMLoader:
+    def loader(self) -> Optional[SAMLoader]:
         """
         Get the SAMLoader instance. a SAMLoader instance is used to load
         raw manifest text into a Pydantic model. It performs cursory validations
@@ -154,7 +154,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 self._loader = SAMLoader(
                     api_version=SMARTER_API_VERSION,
                     kind=self.manifest_kind,
-                    manifest=self.manifest_data,
+                    manifest=json.dumps(self.manifest_data),
                 )
                 if not self._loader or not self._loader.ready:
                     raise APIV1CLIViewError("SAMLoader is not ready.")
@@ -186,7 +186,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         that 'brokers' the http request for the underlying object that provides
         the object-specific service (create, update, get, delete, etc).
         """
-        if self.BrokerClass and not self._broker:
+        if not self._broker:
             BrokerClass = self.BrokerClass
             self._broker = BrokerClass(
                 request=self.smarter_request,
@@ -203,7 +203,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         return self._broker
 
     @property
-    def manifest_data(self) -> json:
+    def manifest_data(self) -> Optional[dict]:
         """
         The raw manifest data from the request body. The manifest data is a json object
         which needs to be rendered into a Pydantic model. The Pydantic model is then
@@ -216,7 +216,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         return self._manifest_data
 
     @property
-    def manifest_name(self) -> str:
+    def manifest_name(self) -> Optional[str]:
         """
         The name of the manifest. The manifest name is used to identify the resource
         within a Kind. For example, the manifest name for a ChatBot resource is the
@@ -349,7 +349,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # restore the user object for the request, which DRF will have set
         # to an AnonymousUser at the start of its own authentication process.
         # see: https://www.django-rest-framework.org/api-guide/authentication/#how-authentication-is-determined
-        request.user = self.user
+        request.user = self.user  # type: ignore[assignment]
 
         if self.smarter_request is None:
             raise SmarterConfigurationError(
@@ -367,14 +367,14 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # or the encoded file attachment data will be in the request body.
         # otherwise, the request body should contain manifest text.
         if self.command == SmarterJournalCliCommands.CHAT:
-            self._prompt = self.data
+            self._prompt = self.data if isinstance(self.data, str) else None
             self._manifest_kind = SAMKinds.CHAT.value
         else:
-            self._manifest_data = self.data
+            self._manifest_data = self.data if isinstance(self.data, dict) else None
 
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
-        self._manifest_name = self.params.get("name", None)
+        self._manifest_name = self.params.get("name", None) if self.params else None
 
         user_agent = request.headers.get("User-Agent", "")
         if "Go-http-client" not in user_agent:
@@ -423,8 +423,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return response
         # pylint: disable=broad-except
         except Exception as e:
-            status: str = HTTPStatus.INTERNAL_SERVER_ERROR.value
-            description_override: str = None
+            status: int = HTTPStatus.INTERNAL_SERVER_ERROR.value
+            description_override: Optional[str] = None
 
             if type(e) in (SAMBrokerErrorNotImplemented,):
                 status = HTTPStatus.NOT_IMPLEMENTED.value
