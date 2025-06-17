@@ -323,7 +323,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return self._thing
 
     @property
-    def kind(self) -> str:
+    def kind(self) -> Optional[str]:
         """The kind of manifest."""
         return self._kind
 
