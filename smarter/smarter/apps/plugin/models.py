@@ -1024,7 +1024,7 @@ class PluginDataSql(PluginDataBase):
 
     connection = models.ForeignKey(SqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql_connection")
     parameters = models.JSONField(
-        help_text="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use. Infer this from the user's location.'}}",
+        help_text="A JSON dict containing parameter names and data types. Example: {'required': [], 'properties': {'max_cost': {'type': 'float', 'description': 'the maximum cost that a student is willing to pay for a course.'}, 'description': {'enum': ['AI', 'mobile', 'web', 'database', 'network', 'neural networks'], 'type': 'string', 'description': 'areas of specialization for courses in the catalogue.'}}}",
         default=dict,
         blank=True,
         null=True,
@@ -1034,7 +1034,7 @@ class PluginDataSql(PluginDataBase):
         help_text="The SQL query that this plugin will execute when invoked by the user prompt.",
     )
     test_values: Any = models.JSONField(
-        help_text="A JSON dict containing test values for each parameter. Example: {'product_id': 1234}",
+        help_text="A JSON list containing test values for each parameter. Example: [{'name': 'description', 'value': 'AI'}, {'name': 'max_cost', 'value': '500.0'}]",
         default=dict,
         blank=True,
         null=True,

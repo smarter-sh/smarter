@@ -128,20 +128,20 @@ class SAMSqlPluginBroker(AbstractBroker):
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
-            chatbots = PluginMeta.objects.filter(account=self.account, name=name)
+            plugins = PluginMeta.objects.filter(account=self.account, name=name)
         else:
-            chatbots = PluginMeta.objects.filter(account=self.account)
+            plugins = PluginMeta.objects.filter(account=self.account)
         logger.info(
-            "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, chatbots.count(), self.account
+            "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
         )
 
         # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
-        for chatbot in chatbots:
+        for plugin in plugins:
             try:
-                model_dump = PluginSerializer(chatbot).data
+                model_dump = PluginSerializer(plugin).data
                 if not model_dump:
                     raise SAMPluginBrokerError(
-                        f"Model dump failed for {self.kind} {chatbot.name}", thing=self.kind, command=command
+                        f"Model dump failed for {self.kind} {plugin.name}", thing=self.kind, command=command
                     )
 
                 # round-trip the model dump through the Pydantic model to ensure that
@@ -155,11 +155,11 @@ class SAMSqlPluginBroker(AbstractBroker):
                     "%s.get() failed to serialize %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    chatbot.name,
+                    plugin.name,
                     exc_info=True,
                 )
                 raise SAMPluginBrokerError(
-                    f"Failed to serialize {self.kind} {chatbot.name}", thing=self.kind, command=command
+                    f"Failed to serialize {self.kind} {plugin.name}", thing=self.kind, command=command
                 ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,

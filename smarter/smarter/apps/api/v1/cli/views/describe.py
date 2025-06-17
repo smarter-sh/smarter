@@ -1,6 +1,8 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'describe' view"""
 
+from logging import getLogger
+
 from drf_yasg.utils import swagger_auto_schema
 
 from .base import CliBaseApiView
@@ -78,7 +80,6 @@ The response from this endpoint is a JSON object containing a representation of 
         Returns:
         Response: a JSON object containing the resource manifest.
         """
-        from logging import getLogger
 
         logger = getLogger(__name__)
         logger.info(

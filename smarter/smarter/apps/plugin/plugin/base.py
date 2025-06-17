@@ -73,7 +73,6 @@ class PluginBase(ABC, SmarterHelperMixin):
     """An abstract base class for working with plugins."""
 
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
-    _metadata_class: Optional[str] = None
     _manifest: Optional[SAMPluginCommon] = None
     _pydantic_model: Optional[Type[SAMStaticPlugin]] = SAMStaticPlugin
 
@@ -243,7 +242,7 @@ class PluginBase(ABC, SmarterHelperMixin):
     @property
     def metadata_class(self) -> Optional[str]:
         """Return the metadata class."""
-        return self._metadata_class
+        return self.plugin_meta.plugin_class if self.plugin_meta else None
 
     @property
     def params(self) -> Optional[dict[str, Any]]:
@@ -881,7 +880,6 @@ class PluginBase(ABC, SmarterHelperMixin):
         for purposes of rendering a Plugin manifest for the Smarter API.
         """
         data = {**self.plugin_data_serializer.data, "id": self.plugin_data.id if self.plugin_data else None}  # type: ignore[reportOptionalMemberAccess]
-        description = data.pop("description")
         if self.ready:
             if version == "v1":
                 retval = {
@@ -895,10 +893,7 @@ class PluginBase(ABC, SmarterHelperMixin):
                         SAMPluginSpecKeys.PROMPT.value: (
                             self.plugin_prompt_serializer.data if self.plugin_prompt_serializer else None
                         ),
-                        SAMPluginSpecKeys.DATA.value: {
-                            "description": description,
-                            f"{self.metadata_class}": self.plugin_data_serializer.data,
-                        },
+                        SAMPluginSpecKeys.DATA.value: self.plugin_data_serializer.data,
                     },
                     SAMKeys.STATUS.value: {
                         "id": self.plugin_meta.id if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
