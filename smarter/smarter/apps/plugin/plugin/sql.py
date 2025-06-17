@@ -5,6 +5,7 @@ import logging
 from typing import Any, Optional, Type
 
 from smarter.apps.plugin.manifest.enum import (
+    SAMApiConnectionSpecKeys,
     SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
     SAMPluginCommonMetadataKeys,
@@ -372,3 +373,43 @@ class SqlPlugin(PluginBase):
         Fetch information from a Plugin object.
         """
         raise NotImplementedError("tool_call_fetch_plugin_response() must be implemented in a subclass of PluginBase.")
+
+    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
+        """
+        Serialize a SqlPlugin in JSON format that is importable by Pydantic. This
+        is used to create a Pydantic model from a Django ORM model
+        for purposes of rendering a Plugin manifest for the Smarter API.
+        """
+        if self.ready:
+            if version == "v1":
+                retval = {
+                    SAMKeys.APIVERSION.value: self.api_version,
+                    SAMKeys.KIND.value: self.kind,
+                    SAMKeys.METADATA.value: self.plugin_meta_serializer.data if self.plugin_meta_serializer else None,
+                    SAMKeys.SPEC.value: {
+                        SAMPluginSpecKeys.SELECTOR.value: (
+                            self.plugin_selector_serializer.data if self.plugin_selector_serializer else None
+                        ),
+                        SAMPluginSpecKeys.PROMPT.value: (
+                            self.plugin_prompt_serializer.data if self.plugin_prompt_serializer else None
+                        ),
+                        SAMApiConnectionSpecKeys.CONNECTION.value: (
+                            self.plugin_data.connection.name
+                            if self.plugin_data and self.plugin_data.connection
+                            else None
+                        ),
+                        SAMPluginSpecKeys.SQL_DATA.value: (
+                            self.plugin_data_serializer.data if self.plugin_data_serializer else None
+                        ),
+                    },
+                    SAMKeys.STATUS.value: {
+                        "id": self.plugin_meta.id if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
+                        "accountNumber": self.user_profile.account.account_number if self.user_profile else None,
+                        "username": self.user_profile.user.get_username() if self.user_profile else None,
+                        "created": self.plugin_meta.created_at.isoformat() if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
+                        "modified": self.plugin_meta.updated_at.isoformat() if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
+                    },
+                }
+                return json.loads(json.dumps(retval))
+            raise SmarterPluginError(f"Invalid version: {version}")
+        return None

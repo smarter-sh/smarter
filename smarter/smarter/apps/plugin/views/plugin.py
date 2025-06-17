@@ -5,6 +5,7 @@ This module contains views to implement the card-style list view
 in the Smarter Dashboard.
 """
 import logging
+from typing import Optional
 
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
@@ -29,9 +30,9 @@ class PluginDetailView(DocsBaseView):
     """
 
     template_path = "plugin/manifest_detail.html"
-    name: str = None
-    kwargs: dict = None
-    plugin: PluginMeta = None
+    name: Optional[str] = None
+    kwargs: Optional[dict] = None
+    plugin: Optional[PluginMeta] = None
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
@@ -45,6 +46,9 @@ class PluginDetailView(DocsBaseView):
             return SmarterHttpResponseNotFound(
                 request=request, error_message=f"Plugin kind {self.kind} is not supported"
             )
+        if not self.name:
+            logger.error("Plugin name is required but not provided.")
+            return SmarterHttpResponseNotFound(request=request, error_message="Plugin name is required")
         self.plugin = PluginMeta.get_cached_plugin_by_name(user=self.user, name=self.name)
 
     def get(self, request, *args, **kwargs):
@@ -72,6 +76,9 @@ class PluginDetailView(DocsBaseView):
             "manifest": yaml_response,
             "page_title": self.name,
         }
+        if not self.template_path:
+            logger.error("self.template_path is not set.")
+            return SmarterHttpResponseNotFound(request=request, error_message="Template path not set")
         return render(request, self.template_path, context=context)
 
 

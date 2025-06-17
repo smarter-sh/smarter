@@ -6,6 +6,7 @@ manifest and schema.
 import json
 import os
 from logging import getLogger
+from typing import Optional
 from urllib.parse import urlparse
 
 import markdown
@@ -44,8 +45,8 @@ class DocsError(SmarterException):
 class DocsBaseView(SmarterWebHtmlView):
     """JSON Schema base view"""
 
-    template_path: str = None
-    kind: SAMKinds = None
+    template_path: Optional[str] = None
+    kind: Optional[SAMKinds] = None
     context: dict = {}
 
     def get_brokered_json_response(self, reverse_name: str, view, request: WSGIRequest, *args, **kwargs):
@@ -114,12 +115,15 @@ class TxtBaseView(SmarterWebHtmlView):
     """Text base view"""
 
     template_path = "docs/txt_file.html"
-    text_file: str = None
-    title: str = None
-    leader: str = None
+    text_file: Optional[str] = None
+    title: Optional[str] = None
+    leader: Optional[str] = None
 
     def get(self, request, *args, **kwargs):
         file_path = self.text_file
+        if not file_path:
+            raise DocsError("self.text_file not set.")
+
         with open(file_path, encoding="utf-8") as text_file:
             text_content = text_file.read()
 
@@ -135,9 +139,11 @@ class MarkdownBaseView(SmarterWebHtmlView):
     """Markdown base view"""
 
     template_path = "docs/markdown.html"
-    markdown_file: str = None
+    markdown_file: Optional[str] = None
 
     def get(self, request, *args, **kwargs):
+        if not self.markdown_file:
+            raise DocsError("self.markdown_file not set.")
         file_path = os.path.join(DOCS_PATH, self.markdown_file)
         with open(file_path, encoding="utf-8") as markdown_file:
             md_text = markdown_file.read()
