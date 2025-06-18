@@ -21,6 +21,7 @@ from smarter.apps.account.models import (
     CHARGE_TYPE_TOOL,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.prompt.functions.function_weather import (
@@ -741,12 +742,18 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             # mcdaniel June-2025: fixed?
 
             plugin_id = int(function_name[-4:])
+            try:
+                plugin_meta = PluginMeta.objects.get(id=plugin_id)
+            except PluginMeta.DoesNotExist as e:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: plugin with id {plugin_id} not found. This is a bug."
+                ) from e
 
             plugin_controller = PluginController(
                 account=self.account,
                 user=self.user,
                 user_profile=self.user_profile,
-                plugin_id=plugin_id,
+                plugin_meta=plugin_meta,
             )
             if not plugin_controller or not plugin_controller.plugin:
                 raise SmarterConfigurationError(

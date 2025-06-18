@@ -127,6 +127,7 @@ class SqlPlugin(PluginBase):
     @property
     def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
         """
+        see: https://platform.openai.com/docs/guides/function-calling?api-mode=chat
         transform the Pydantic model to the PluginDataSql Django ORM model.
         Return the plugin data definition as a json object.
 
@@ -188,10 +189,7 @@ class SqlPlugin(PluginBase):
 
             # recast the Pydantic model's parameters field
             # to conform to openai's function calling schema.
-            recasted_parameters = {
-                "properties": {},
-                "required": [],
-            }
+            recasted_parameters = {"type": "object", "properties": {}, "required": [], "additionalProperties": False}
             parameters = self.manifest.spec.sqlData.parameters if self.manifest and self.manifest.spec else None
             logger.info("plugin_data_django_model() recasting parameters: %s", parameters)
             if isinstance(parameters, list):
