@@ -58,7 +58,7 @@ spec:
     sqlQuery: SELECT c.course_code, c.course_name, c.description, prerequisite.course_code AS prerequisite_course_code
       FROM courses c
       LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id
-      WHERE ((description LIKE '%' || {description}) OR ({description} IS NULL))
+      WHERE ((c.description LIKE '%' || {description}) OR ({description} IS NULL))
         AND (c.cost <= {max_cost} OR {max_cost} IS NULL)
       ORDER BY c.prerequisite_id;
     testValues:

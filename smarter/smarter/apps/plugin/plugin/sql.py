@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 from typing import Any, Optional, Type, Union
 
 from smarter.apps.account.models import UserProfile
@@ -30,6 +31,7 @@ from .base import PluginBase, SmarterPluginError
 
 
 logger = logging.getLogger(__name__)
+MAX_SQL_QUERY_LENGTH = 1000  # Maximum length of SQL query to prevent excessive load on the database
 
 
 class SmarterSqlPluginError(SmarterPluginError):
@@ -56,7 +58,7 @@ class SqlPlugin(PluginBase):
         data: Union[dict[str, Any], str, None] = None,
         **kwargs,
     ):
-        self._manifest = manifest
+        self._manifest = manifest  # note: this is redundant and can probably be removed.
         self._plugin_data = None
         self._plugin_data_serializer = None
         super().__init__(
@@ -66,7 +68,7 @@ class SqlPlugin(PluginBase):
             api_version=api_version,
             plugin_id=plugin_id,
             plugin_meta=plugin_meta,
-            manifest=manifest,
+            manifest=manifest,  # type: ignore[arg-type]
             data=data,
             **kwargs,
         )
@@ -108,7 +110,7 @@ class SqlPlugin(PluginBase):
         return self._plugin_data
 
     @property
-    def plugin_data_class(self) -> type:
+    def plugin_data_class(self) -> Type[PluginDataSql]:
         """Return the plugin data class."""
         return PluginDataSql
 
@@ -399,11 +401,128 @@ class SqlPlugin(PluginBase):
         logger.info("PluginDataSql.create() called.")
         super().create()
 
-    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[str]:
+    def tool_call_fetch_plugin_response(self, function_args: Union[dict[str, Any], list]) -> Optional[str]:
         """
-        Fetch information from a Plugin object.
+        Fetch information from a Plugin object. We're resonding to an iteration 1 request
+        from openai api to fetch the plugin response for a tool call.
+
+        example:
+        "tool_calls": [
+            {
+                "id": "call_1Ucn2R5WmBh7TtoE197SsP3p",
+                "function": {
+                    "arguments": "{\"description\":\"AI\"}",          <--- these are the function_args
+                    "name": "smarter_plugin_0000004468"
+                },
+                "type": "function"
+            }
+        ],
+
         """
-        raise NotImplementedError("tool_call_fetch_plugin_response() must be implemented in a subclass of PluginBase.")
+
+        def sql_value(val):
+            if val is None:
+                return "NULL"
+            if isinstance(val, str):
+                # Escape single quotes for SQL
+                return "'" + val.replace("'", "''") + "'"
+            return str(val)
+
+        def interpolate(sql, params):
+            def repl(match):
+                key = match.group(1)
+                return sql_value(params.get(key))
+
+            return re.sub(r"\{(\w+)\}", repl, sql)
+
+        if not self.plugin_data:
+            raise SmarterSqlPluginError(
+                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
+            )
+        sql_connection = self.plugin_data.connection
+        if not isinstance(sql_connection, SqlConnection):
+            raise SmarterSqlPluginError(
+                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data SqlConnection is not a valid SqlConnection instance."
+            )
+
+        function_args = function_args or []
+        if isinstance(function_args, str):
+            try:
+                function_args = json.loads(function_args)
+            except json.JSONDecodeError as e:
+                raise SmarterSqlPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args is not a valid JSON string. Error: {e}"
+                ) from e
+        if isinstance(function_args, dict):
+            function_args = [function_args]
+
+        if not isinstance(function_args, list):
+            raise SmarterSqlPluginError(
+                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a dict or a JSON string."
+            )
+
+        # combine the list of dictionaries into a single dictionary
+        params = {}
+        for d in function_args:
+            params.update(d)
+
+        # example sql query:
+        # SELECT c.course_code, c.course_name, c.description, prerequisite.course_code AS prerequisite_course_code
+        # FROM courses c
+        #      LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id
+        # WHERE ((description LIKE '%' || {description}) OR ({description} IS NULL))
+        #   AND (c.cost <= {max_cost} OR {max_cost} IS NULL)
+        # ORDER BY c.prerequisite_id;
+        sql = self.plugin_data.sql_query
+        if not isinstance(sql, str):
+            raise SmarterSqlPluginError(
+                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} sql_query must be a string."
+            )
+
+        # function_args example: [{"description":"AI"}]
+        # iterate the list and replace the placeholders in the SQL query
+        # for arg in function_args:
+        #     if not isinstance(arg, dict):
+        #         raise SmarterSqlPluginError(
+        #             f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args must be a list of dictionaries."
+        #         )
+        #     for key, value in arg.items():
+        #         if not isinstance(key, str):
+        #             raise SmarterSqlPluginError(
+        #                 f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} function_args keys must be strings."
+        #             )
+        #         sql = sql.replace(f"{{{key}}}", str(value))
+
+        sql = interpolate(sql, params)
+        sql = sql.strip()
+        sql = sql.replace("\n", " ")
+        sql = re.sub(r"\\.", "", sql)
+        if not sql.endswith(";"):
+            sql += ";"
+
+        retval = sql_connection.execute_query(
+            sql=sql,
+            limit=(
+                self.plugin_data.limit
+                if self.plugin_data.limit and self.plugin_data.limit < MAX_SQL_QUERY_LENGTH
+                else MAX_SQL_QUERY_LENGTH
+            ),
+        )
+
+        if not retval:
+            logger.warning(
+                "%s.tool_call_fetch_plugin_response() SQL query returned no results. Returning empty string.",
+                self.formatted_class_name,
+            )
+            return ""
+        if isinstance(retval, list) or isinstance(retval, dict):
+            # convert the result to a JSON string
+            retval = json.dumps(retval, indent=2)
+        elif not isinstance(retval, str):
+            raise SmarterSqlPluginError(
+                f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query returned an unexpected type: {type(retval)}. Expected str, list, or dict."
+            )
+        return retval
 
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
         """

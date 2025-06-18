@@ -932,22 +932,34 @@ class SqlConnection(ConnectionBase):
                 logger.error("Failed to close the database connection: %s", e)
             self._connection = None
 
-    def execute_query(self, sql: str, limit: Optional[int] = None) -> Union[list[tuple[Any, ...]], bool]:
+    def execute_query(self, sql: str, limit: Optional[int] = None) -> Union[str, bool]:
+        def query_result_to_json(cursor) -> str:
+            # Get column names from cursor description
+            columns = [col[0] for col in cursor.description]
+            # Fetch all rows
+            rows = cursor.fetchall()
+            # Convert each row to a dict
+            result = [dict(zip(columns, row)) for row in rows]
+            # Convert to JSON string (optional)
+            return json.dumps(result)
+
         if not isinstance(self.connection, BaseDatabaseWrapper):
             return False
         query_connection = self.connection
-        plugin_sql_connection_query_attempted.send(sender=self.__class__, connection=self)
+        plugin_sql_connection_query_attempted.send(sender=self.__class__, connection=self, sql=sql, limit=limit)
         try:
             if limit is not None:
                 sql = sql.rstrip(";")  # Remove any trailing semicolon
                 sql += f" LIMIT {limit};"
             with query_connection.cursor() as cursor:
                 cursor.execute(sql)
-                rows = cursor.fetchall()
-                plugin_sql_connection_query_success.send(sender=self.__class__, connection=self)
-                return rows
+                json_str = query_result_to_json(cursor)
+                plugin_sql_connection_query_success.send(sender=self.__class__, connection=self, sql=sql, limit=limit)
+                return json_str
         except (DatabaseError, ImproperlyConfigured) as e:
-            plugin_sql_connection_query_failed.send(sender=self.__class__, connection=self)
+            plugin_sql_connection_query_failed.send(
+                sender=self.__class__, connection=self, sql=sql, limit=limit, error=str(e)
+            )
             logger.error("SQL query execution failed: %s", e)
             return False
         finally:
