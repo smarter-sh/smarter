@@ -368,35 +368,44 @@ def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, error
 
 
 @receiver(plugin_sql_connection_query_attempted, dispatch_uid="plugin_sql_connection_query_attempted")
-def handle_plugin_sql_connection_query_attempted(sender, connection: SqlConnection, **kwargs):
+def handle_plugin_sql_connection_query_attempted(sender, connection: SqlConnection, sql: str, limit: int, **kwargs):
     """Handle plugin SQL connection query attempted signal."""
 
     logger.info(
-        "%s - %s",
+        "%s - %s - sql: %s - limit: %s",
         formatted_text(prefix + "plugin_sql_connection_query_attempted"),
         connection.get_connection_string(),
+        sql,
+        limit,
     )
 
 
 @receiver(plugin_sql_connection_query_success, dispatch_uid="plugin_sql_connection_query_success")
-def handle_plugin_sql_connection_query_success(sender, connection: SqlConnection, **kwargs):
+def handle_plugin_sql_connection_query_success(sender, connection: SqlConnection, sql: str, limit: int, **kwargs):
     """Handle plugin SQL connection query success signal."""
 
     logger.info(
-        "%s - %s",
+        "%s - %s - sql: %s - limit: %s",
         formatted_text(prefix + "plugin_sql_connection_query_success"),
         connection.get_connection_string(),
+        sql,
+        limit,
     )
 
 
 @receiver(plugin_sql_connection_query_failed, dispatch_uid="plugin_sql_connection_query_failed")
-def handle_plugin_sql_connection_query_failed(sender, connection: SqlConnection, **kwargs):
+def handle_plugin_sql_connection_query_failed(
+    sender, connection: SqlConnection, sql: str, limit: int, error: str, **kwargs
+):
     """Handle plugin SQL connection query failed signal."""
 
     logger.info(
-        "%s - %s",
+        "%s - %s - sql: %s - limit: %s - error: %s",
         formatted_text(prefix + "plugin_sql_connection_query_failed"),
         connection.get_connection_string(),
+        sql,
+        limit,
+        error,
     )
 
 

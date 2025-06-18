@@ -732,15 +732,6 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.handle_tool_called(function_name=function_name, function_args=function_args)
 
         elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
-            # FIX NOTE: we should revisit this. technically, we're supposed to be calling
-            # function_to_call, assigned above. but just to play it safe,
-            # we're directly invoking the plugin's tool_call_fetch_plugin_response() method.
-
-            # FIX NOTE CONTINUED: june-2025. What we REALLY should do is work with the
-            # plugin's JSON tool_calling function definition that's passed to the LLM.
-
-            # mcdaniel June-2025: fixed?
-
             plugin_id = int(function_name[-4:])
             try:
                 plugin_meta = PluginMeta.objects.get(id=plugin_id)
