@@ -20,8 +20,9 @@ chat_completion_plugin_called = Signal()
 chat_provider_initialized = Signal()
 chat_handler_console_output = Signal()
 
-get_current_weather_request = Signal()
-get_current_weather_response = Signal()
+llm_tool_presented = Signal()
+llm_tool_requested = Signal()
+llm_tool_responded = Signal()
 
 chat_session_invoked = Signal()
 chat_config_invoked = Signal()

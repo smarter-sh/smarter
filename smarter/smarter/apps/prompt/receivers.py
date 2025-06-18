@@ -1,8 +1,11 @@
 """Django Signal Receivers for chat app."""
 
 # pylint: disable=W0612,W0613,C0115
+import json
 import logging
+from typing import Union
 
+from django.core.handlers.wsgi import WSGIRequest
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
@@ -25,8 +28,9 @@ from .signals import (
     chat_response_failure,
     chat_session_invoked,
     chat_started,
-    get_current_weather_request,
-    get_current_weather_response,
+    llm_tool_presented,
+    llm_tool_requested,
+    llm_tool_responded,
 )
 from .tasks import create_chat_history
 from .views import ChatConfigView, SmarterChatSession
@@ -66,11 +70,12 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 
 # chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
 @receiver(chat_session_invoked, dispatch_uid="chat_session_invoked")
-def handle_chat_session_invoked(sender, instance: SmarterChatSession, request, *args, **kwargs):
+def handle_chat_session_invoked(sender, instance: SmarterChatSession, request: WSGIRequest, *args, **kwargs):
     """Handle chat session invoked signal."""
-    url: str = None
-    if request is not None:
-        url = request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else None
+    if isinstance(request, WSGIRequest):
+        url: str = request.build_absolute_uri()
+    else:
+        url = "missing request object"
 
     logger.info("%s.%s %s - %s", formatted_text(f"{prefix}.chat_session_invoked"), sender, instance, url)
 
@@ -88,11 +93,8 @@ def get_sender_name(sender):
 
 
 @receiver(chat_started, dispatch_uid="chat_started")
-def handle_chat_started(sender, **kwargs):
+def handle_chat_started(sender, chat: Chat, data: dict, **kwargs):
     """Handle chat started signal."""
-
-    chat: Chat = kwargs.get("chat")
-    data = kwargs.get("data")
 
     sender_name = get_sender_name(sender)
     logger.info(
@@ -104,12 +106,9 @@ def handle_chat_started(sender, **kwargs):
 
 
 @receiver(chat_completion_request, dispatch_uid="chat_completion_request")
-def handle_chat_completion_request_sent(sender, **kwargs):
+def handle_chat_completion_request_sent(sender, chat: Chat, iteration: int, request: dict, **kwargs):
     """Handle chat completion request sent signal."""
 
-    chat: Chat = kwargs.get("chat")
-    iteration: int = kwargs.get("iteration")
-    request: dict = kwargs.get("request")
     sender_name = get_sender_name(sender)
     prefix = formatted_text(f"chat_completion_request for iteration {iteration}")
 
@@ -136,21 +135,25 @@ def handle_chat_completion_request_sent(sender, **kwargs):
 
 
 @receiver(chat_completion_response, dispatch_uid="chat_completion_response")
-def handle_chat_completion_response_received(sender, **kwargs):
+def handle_chat_completion_response_received(
+    sender,
+    chat: Chat,
+    iteration: int,
+    request: Union[dict, list],
+    response: Union[dict, list],
+    messages: list,
+    **kwargs,
+):
     """Handle chat completion called signal."""
 
-    chat: Chat = kwargs.get("chat")
-    chat_id = chat.id if chat else None
-    iteration: int = kwargs.get("iteration")
-    request: dict = kwargs.get("request")
-    response: dict = kwargs.get("response")
-    messages: list[dict] = kwargs.get("messages")
-    prefix = formatted_text(f"chat_completion_response for iteration {iteration}")
+    this_prefix = formatted_text(f"chat_completion_response for iteration {iteration}")
     sender_name = get_sender_name(sender)
 
     if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
         logger.info(
-            "signal received from %s %s for chat %s, \nrequest: %s, \nresponse: %s",
+            "%s %s signal received from %s %s for chat %s, \nrequest: %s, \nresponse: %s",
+            prefix,
+            this_prefix,
             sender_name,
             formatted_text("chat_completion_response"),
             chat,
@@ -166,11 +169,8 @@ def handle_chat_completion_response_received(sender, **kwargs):
 
 
 @receiver(chat_completion_plugin_called, dispatch_uid="chat_completion_plugin_called")
-def handle_chat_completion_plugin_called(sender, **kwargs):
+def handle_chat_completion_plugin_called(sender, chat: Chat, plugin: PluginMeta, input_text: str, **kwargs):
     """Handle chat completion plugin call signal."""
-    chat: Chat = kwargs.get("chat")
-    plugin: PluginMeta = kwargs.get("plugin")
-    input_text: str = kwargs.get("input_text")
     sender_name = get_sender_name(sender)
 
     logger.info(
@@ -184,36 +184,40 @@ def handle_chat_completion_plugin_called(sender, **kwargs):
 
 
 @receiver(chat_completion_tool_called, dispatch_uid="chat_completion_tool_called")
-def handle_chat_completion_tool_called(sender, **kwargs):
+def handle_chat_completion_tool_called(
+    sender,
+    chat: Chat,
+    plugin: PluginMeta,
+    function_name: str,
+    function_args: str,
+    request: Union[dict, list],
+    response: Union[dict, list],
+    **kwargs,
+):
     """Handle chat completion tool call signal."""
 
-    chat: Chat = kwargs.get("chat")
-    chat_id = chat.id if chat else None
-    plugin_meta_id = None
-    function_name: str = kwargs.get("function_name")
-    function_args: str = kwargs.get("function_args")
-    request: dict = kwargs.get("request")
-    response: dict = kwargs.get("response")
-    prefix = formatted_text("handle_chat_completion_tool_called()")
+    chat_id = chat.id if chat else None  # type: ignore
+    this_prefix = formatted_text("handle_chat_completion_tool_called()")
     sender_name = get_sender_name(sender)
 
     logger.info(
-        "signal received from %s %s for chat: %s",
+        "signal received from %s %s %s %s %s for chat: %s",
         sender_name,
         prefix,
+        this_prefix,
+        function_name,
+        function_args,
         chat_id,
     )
 
 
 # pylint: disable=W0612
 @receiver(chat_finished, dispatch_uid="chat_finished")
-def handle_chat_response_success(sender, **kwargs):
+def handle_chat_response_success(
+    sender, chat: Chat, request: Union[dict, list], response: Union[dict, list], messages: list, **kwargs
+):
     """Handle chat completion returned signal."""
 
-    chat: Chat = kwargs.get("chat")
-    request: dict = kwargs.get("request")
-    response: dict = kwargs.get("response")
-    messages: list[dict] = kwargs.get("messages")
     sender_name = get_sender_name(sender)
 
     if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
@@ -232,30 +236,35 @@ def handle_chat_response_success(sender, **kwargs):
             formatted_text("chat_finished"),
             chat,
         )
-    create_chat_history.delay(chat.id, request, response, messages)
+    create_chat_history.delay(chat.id, request, response, messages)  # type: ignore
 
 
 @receiver(chat_response_failure, dispatch_uid="chat_response_failure")
-def handle_chat_response_failure(sender, **kwargs):
+def handle_chat_response_failure(
+    sender,
+    iteration: int,
+    chat: Chat,
+    request_meta_data: dict,
+    exception: Exception,
+    first_iteration: dict,
+    second_iteration: dict,
+    messages: list,
+    stack_trace: str,
+    **kwargs,
+):
     """Handle chat completion failed signal."""
 
-    iteration: int = kwargs.get("iteration")
-    exception = kwargs.get("exception")
-    chat: Chat = kwargs.get("chat")
-    request_meta_data = kwargs.get("request_meta_data")
-    first_iteration = kwargs.get("first_iteration")
-    second_iteration = kwargs.get("second_iteration")
-    messages = kwargs.get("messages")
     sender_name = get_sender_name(sender)
 
     logger.error(
-        "%s signal received from %s during iteration %s for chat: %s, request_meta_data: %s, exception: %s",
+        "%s signal received from %s during iteration %s for chat: %s, request_meta_data: %s, exception: %s %s",
         formatted_text("chat_response_failure"),
         sender_name,
         iteration,
         chat if chat else None,
         formatted_json(request_meta_data),
         exception,
+        stack_trace if stack_trace else "",
     )
     logger.error("chat_response_failure %s %s", formatted_text("messages dump:"), formatted_json(messages))
     if iteration == 1 and first_iteration:
@@ -290,11 +299,8 @@ def handle_chat_provider_initialized(sender, **kwargs):
 
 
 @receiver(chat_handler_console_output, dispatch_uid="chat_handler_console_output")
-def handle_chat_handler_console_output(sender, **kwargs):
+def handle_chat_handler_console_output(sender, message, json_obj, **kwargs):
     """Handle chat handler() console output signal."""
-
-    message = kwargs.get("message")
-    json_obj = kwargs.get("json_obj")
 
     logger.info(
         "%s: %s\n%s",
@@ -309,8 +315,22 @@ def handle_chat_handler_console_output(sender, **kwargs):
 # ------------------------------------------------------------------------------
 
 
-# get_current_weather_request.send(sender=get_current_weather, location=location, unit=unit)
-@receiver(get_current_weather_request, dispatch_uid="get_current_weather_request")
+@receiver(llm_tool_presented, dispatch_uid="llm_tool_presented")
+def handle_llm_tool_presented(sender, tool: dict, **kwargs):
+    """Handle llm_tool_presented() signal."""
+
+    sender_name = sender.__name__
+
+    logger.info(
+        "signal received from %s %s: %s",
+        sender_name,
+        formatted_text("llm_tool_presented"),
+        formatted_json(tool),
+    )
+
+
+# llm_tool_requested.send(sender=get_current_weather, location=location, unit=unit)
+@receiver(llm_tool_requested, dispatch_uid="llm_tool_requested")
 def handle_get_current_weather_request(sender, **kwargs):
     """Handle get_current_weather() request signal."""
 
@@ -321,14 +341,14 @@ def handle_get_current_weather_request(sender, **kwargs):
     logger.info(
         "signal received from %s %s for location: %s, unit: %s",
         sender_name,
-        formatted_text("get_current_weather_request"),
+        formatted_text("llm_tool_requested"),
         location,
         unit,
     )
 
 
-@receiver(get_current_weather_response, dispatch_uid="get_current_weather_response")
-def handle_get_current_weather_response(sender, **kwargs):
+@receiver(llm_tool_responded, dispatch_uid="llm_tool_responded")
+def handle_llm_tool_responded(sender, **kwargs):
     """Handle get_current_weather() response signal."""
 
     location = kwargs.get("location")
@@ -339,13 +359,14 @@ def handle_get_current_weather_response(sender, **kwargs):
     params = kwargs.get("params")
     geocode_result = kwargs.get("geocode_result")
     hourly_json = kwargs.get("hourly_json")
+    hourly_json = json.loads(hourly_json) if isinstance(hourly_json, str) else hourly_json
 
     sender_name = sender.__name__
 
     logger.info(
         "signal received from %s %s for location: %s, unit: %s, latitude: %s, longitude: %s, address: %s",
         sender_name,
-        formatted_text("get_current_weather_response"),
+        formatted_text("llm_tool_responded"),
         location,
         unit,
         latitude,
@@ -354,9 +375,9 @@ def handle_get_current_weather_response(sender, **kwargs):
     )
     logger.info(
         "response: %s, params: %s, geocode_result: %s",
-        formatted_json(hourly_json),
-        formatted_json(params),
-        formatted_json(geocode_result),
+        formatted_json(hourly_json),  # type: ignore
+        formatted_json(params),  # type: ignore
+        formatted_json(geocode_result),  # type: ignore
     )
 
 

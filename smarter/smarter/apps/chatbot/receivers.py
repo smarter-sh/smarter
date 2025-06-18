@@ -3,6 +3,7 @@
 # pylint: disable=W0613,C0115
 import json
 import logging
+from typing import Optional
 
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -10,7 +11,7 @@ from django.http import HttpRequest
 
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import plugin_deleting
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -93,9 +94,10 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 def handle_chatbot_deploy_failed(sender, **kwargs):
     """Handle chatbot_deploy_failed signal."""
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_deploy_failed()")
-    chatbot: ChatBot = kwargs.get("chatbot")
-    logger.error("%s - %s", prefix, chatbot.hostname)
-    undeploy_default_api.delay(chatbot_id=chatbot.id)
+    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
+    logger.error("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
+    if chatbot:
+        undeploy_default_api.delay(chatbot_id=chatbot.id)
 
 
 @receiver(post_save, sender=ChatBot)
@@ -212,12 +214,12 @@ def handle_chatbot_deploy_status_changed(sender, **kwargs):
     """Handle chatbot_deploy_status_changed signal."""
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_deploy_status_changed()")
 
-    chatbot: ChatBot = kwargs.get("chatbot")
+    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info(
         "%s - %s: %s",
         prefix,
-        chatbot.url,
-        chatbot.dns_verification_status,
+        chatbot.url if chatbot else "No chatbot instance provided",
+        chatbot.dns_verification_status if chatbot else "N/A",
     )
 
 
@@ -226,9 +228,10 @@ def handle_chatbot_undeployed(sender, **kwargs):
     """Handle chatbot_undeployed signal."""
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_undeployed()")
 
-    chatbot: ChatBot = kwargs.get("chatbot")
-    logger.info("%s - %s", prefix, chatbot.hostname)
-    undeploy_default_api.delay(chatbot_id=chatbot.id)
+    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
+    logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
+    if chatbot:
+        undeploy_default_api.delay(chatbot_id=chatbot.id)
 
 
 @receiver(chatbot_deployed, dispatch_uid="chatbot_deployed")
@@ -236,9 +239,10 @@ def handle_chatbot_deployed(sender, **kwargs):
     """Handle chatbot_deployed signal."""
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_deployed()")
 
-    chatbot: ChatBot = kwargs.get("chatbot")
-    logger.info("%s signal received - %s", prefix, chatbot.hostname)
-    deploy_default_api.delay(chatbot_id=chatbot.id)
+    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
+    logger.info("%s signal received - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
+    if chatbot:
+        deploy_default_api.delay(chatbot_id=chatbot.id)
 
 
 @receiver(chatbot_dns_verification_status_changed, dispatch_uid="chatbot_dns_verification_status_changed")
@@ -246,12 +250,12 @@ def handle_chatbot_dns_verification_status_changed(sender, **kwargs):
     """Handle chatbot_dns_verification_status_changed signal."""
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_deployed()")
 
-    chatbot: ChatBot = kwargs.get("chatbot")
+    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info(
         "%s - %s: %s",
         prefix,
-        chatbot.hostname,
-        chatbot.dns_verification_status,
+        chatbot.hostname if chatbot else "No chatbot instance provided",
+        chatbot.dns_verification_status if chatbot else "N/A",
     )
 
 
@@ -260,8 +264,8 @@ def handle_chatbot_dns_verification_initiated(sender, **kwargs):
     """Handle chatbot_dns_verification_initiated signal."""
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_dns_verification_initiated()")
 
-    chatbot: ChatBot = kwargs.get("chatbot")
-    logger.info("%s - %s", prefix, chatbot.hostname)
+    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
+    logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
 
 
 @receiver(chatbot_dns_verified, dispatch_uid="chatbot_dns_verified")
@@ -269,8 +273,8 @@ def handle_chatbot_dns_verified(sender, **kwargs):
     """Handle chatbot_dns_verified signal."""
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_dns_verified()")
 
-    chatbot: ChatBot = kwargs.get("chatbot")
-    logger.info("%s - %s", prefix, chatbot.hostname)
+    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
+    logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
 
 
 @receiver(chatbot_dns_failed, dispatch_uid="chatbot_dns_failed")
@@ -278,8 +282,8 @@ def handle_chatbot_dns_failed(sender, **kwargs):
     """Handle chatbot_dns_failed signal."""
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_dns_failed()")
 
-    chatbot: ChatBot = kwargs.get("chatbot")
-    logger.info("%s - %s", prefix, chatbot.hostname)
+    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
+    logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
 
 
 @receiver(chatbot_called, dispatch_uid="chatbot_called")
@@ -287,16 +291,21 @@ def handle_chatbot_called(sender, **kwargs):
     """Handle chatbot_called signal."""
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_called()")
 
-    chatbot: ChatBot = kwargs.get("chatbot")
+    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-        logger.info("%s - %s", prefix, chatbot.hostname)
+        logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
 
-    request: HttpRequest = kwargs.get("request")
+    request: Optional[HttpRequest] = kwargs.get("request")
     try:
-        request_data = json.loads(request.body)
-        create_chatbot_request.delay(chatbot.id, request_data)
+        request_data = json.loads(request.body) if request and request.body else None
+        if chatbot and request_data:
+            create_chatbot_request.delay(chatbot.id, request_data)
     except json.JSONDecodeError:
-        logger.warning("%s received an empty or invalid request body from %s", prefix, chatbot.hostname)
+        logger.warning(
+            "%s received an empty or invalid request body from %s",
+            prefix,
+            chatbot.hostname if chatbot else "No chatbot instance provided",
+        )
         request_data = {
             "JSONDecodeError": "received an empty or invalid request body",
         }
@@ -329,7 +338,8 @@ def handle_pre_create_chatbot_request(sender, **kwargs):
     prefix = formatted_text(f"{module_prefix}.handle_pre_create_chatbot_request()")
     chatbot_id = kwargs.get("chatbot_id")
     request_data = kwargs.get("request_data")
-    logger.info("%s - chatbot_id: %s, request_data: %s", prefix, chatbot_id, request_data)
+    request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
+    logger.info("%s - chatbot_id: %s, request_data: %s", prefix, chatbot_id, formatted_json(request_data))
 
 
 @receiver(post_create_chatbot_request, dispatch_uid="post_create_chatbot_request")
@@ -338,7 +348,8 @@ def handle_post_create_chatbot_request(sender, **kwargs):
     prefix = formatted_text(f"{module_prefix}.handle_post_create_chatbot_request()")
     chatbot_id = kwargs.get("chatbot_id")
     request_data = kwargs.get("request_data")
-    logger.info("%s - chatbot_id: %s, request_data: %s", prefix, chatbot_id, request_data)
+    request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
+    logger.info("%s - chatbot_id: %s, request_data: %s", prefix, chatbot_id, formatted_json(request_data))
 
 
 @receiver(pre_register_custom_domain, dispatch_uid="pre_register_custom_domain")
