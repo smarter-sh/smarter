@@ -30,7 +30,7 @@ from retry_requests import retry
 
 from smarter.common.conf import settings
 
-from ..signals import get_current_weather_request, get_current_weather_response
+from ..signals import llm_tool_presented, llm_tool_requested, llm_tool_responded
 
 
 logger = getLogger(__name__)
@@ -58,7 +58,7 @@ openmeteo = openmeteo_requests.Client(session=WEATHER_API_RETRY_SESSION)
 # pylint: disable=too-many-locals
 def get_current_weather(location, unit="METRIC") -> str:
     """Get the current weather in a given location as a 24-hour forecast"""
-    get_current_weather_request.send(sender=get_current_weather, location=location, unit=unit)
+    llm_tool_requested.send(sender=get_current_weather, location=location, unit=unit)
     if gmaps is None:
         retval = {
             "error": "Google Maps Geolocation service is not initialized. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview, and add your GOOGLE_MAPS_API_KEY to .env"
@@ -113,7 +113,7 @@ def get_current_weather(location, unit="METRIC") -> str:
     hourly_dataframe = pd.DataFrame(data=hourly_data).head(24)  # Only return the first 24 hours
     hourly_dataframe["date"] = hourly_dataframe["date"].dt.strftime("%Y-%m-%d %H:%M")
     hourly_json = hourly_dataframe.to_json(orient="records")
-    get_current_weather_response.send(
+    llm_tool_responded.send(
         sender=get_current_weather,
         location=location,
         unit=unit,
@@ -147,4 +147,5 @@ def weather_tool_factory() -> dict:
             },
         },
     }
+    llm_tool_presented.send(sender=weather_tool_factory, tool=tool)
     return tool

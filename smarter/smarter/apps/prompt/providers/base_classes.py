@@ -4,6 +4,7 @@ Base class for chat providers.
 
 import json
 import logging
+import traceback
 from http import HTTPStatus
 from typing import Any, Dict, List, Optional, Union
 
@@ -767,7 +768,10 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: function_response must be a string, got {type(function_response)}"
             )
-        message_content = f"{str(plugin.__class__.__name__)} {plugin.name} response: " + function_response  # type: ignore[call-arg]
+        message_content = (
+            f"{str(plugin.__class__.__name__)} {plugin.name if plugin else function_name} response: "
+            + function_response
+        )
         self.append_message(role=OpenAIMessageKeys.TOOL_MESSAGE_KEY, content=message_content, message=tool_call_message)
         if not isinstance(self.serialized_tool_calls, list):
             raise SmarterValueError(
@@ -984,6 +988,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         # handle anything that went wrong
         # pylint: disable=broad-exception-caught
         except Exception as e:
+            stack_trace = traceback.format_exc()
             chat_response_failure.send(
                 sender=self.handler,
                 iteration=self.iteration,
@@ -993,6 +998,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 first_iteration=self.first_iteration,
                 second_iteration=self.second_iteration,
                 messages=self.messages,
+                stack_trace=stack_trace,
             )
             status_code, _message = EXCEPTION_MAP.get(
                 type(e), (HTTPStatus.INTERNAL_SERVER_ERROR.value, "Internal server error")
