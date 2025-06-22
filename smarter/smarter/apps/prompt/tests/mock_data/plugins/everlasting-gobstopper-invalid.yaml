@@ -14,7 +14,7 @@ metadata:
     - Willy Wonka
 spec:
   selector:
-    directive: searchTerms
+    directive: search_terms
     # Complete search terms that will trigger the chatbot to use your customized system prompt.
     searchTerms:
       - Gobstopper

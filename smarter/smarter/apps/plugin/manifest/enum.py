@@ -25,7 +25,7 @@ class SAMPluginCommonSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
     """Smarter API Plugin Spec Selector keys enumeration."""
 
     # Smarter handler applied key word search
-    SEARCHTERMS = "searchTerms"
+    SEARCHTERMS = "search_terms"
 
     # Plugin is always selected, for every prompt request
     ALWAYS = "always"

@@ -11,7 +11,7 @@ metadata:
   version: 0.1.0
 spec:
   selector:
-    directive: searchTerms
+    directive: search_terms
     # Complete search terms that will trigger the chatbot to use your customized system prompt.
     searchTerms:
       - stackademy

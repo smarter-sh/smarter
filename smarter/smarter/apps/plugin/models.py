@@ -43,7 +43,10 @@ from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
 
-from .manifest.enum import SAMPluginCommonMetadataClassValues
+from .manifest.enum import (
+    SAMPluginCommonMetadataClassValues,
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+)
 
 # plugin stuff
 from .manifest.models.common import Parameter, RequestHeader, TestValue, UrlParam
@@ -336,9 +339,27 @@ class PluginSelector(TimestampedModel):
 
     """
 
+    SELECT_DIRECTIVES = [
+        (
+            SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
+            SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
+        ),
+        (
+            SAMPluginCommonSpecSelectorKeyDirectiveValues.ALWAYS.value,
+            SAMPluginCommonSpecSelectorKeyDirectiveValues.ALWAYS.value,
+        ),
+        (
+            SAMPluginCommonSpecSelectorKeyDirectiveValues.LLM.value,
+            SAMPluginCommonSpecSelectorKeyDirectiveValues.LLM.value,
+        ),
+    ]
+
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_selector_plugin")
     directive = models.CharField(
-        help_text="The selection strategy to use for this plugin.", max_length=255, default="search_terms"
+        help_text="The selection strategy to use for this plugin.",
+        max_length=255,
+        default="search_terms",
+        choices=SELECT_DIRECTIVES,
     )
     search_terms = models.JSONField(
         help_text="search terms in JSON format that, if detected in the user prompt, will incentivize Smarter to load this plugin.",

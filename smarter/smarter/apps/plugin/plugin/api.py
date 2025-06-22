@@ -19,6 +19,7 @@ from ..manifest.enum import (
     SAMPluginCommonMetadataClassValues,
     SAMPluginCommonMetadataKeys,
     SAMPluginCommonSpecPromptKeys,
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
     SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
 )
@@ -178,7 +179,7 @@ class ApiPlugin(PluginBase):
             },
             SAMKeys.SPEC.value: {
                 SAMPluginSpecKeys.SELECTOR.value: {
-                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value,
+                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
                     SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
                         "admin",
                         "Smarter",

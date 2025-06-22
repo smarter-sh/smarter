@@ -12,7 +12,7 @@ metadata:
     - blue
 spec:
   selector:
-    directive: searchTerms
+    directive: search_terms
     searchTerms:
       - example function calling configuration
       - Example configuration
