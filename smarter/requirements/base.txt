@@ -37,6 +37,7 @@ django-debug-toolbar==5.2.0
 django-redis==5.4.0                     # object caching
 django-celery-beat==2.7.0               # scheduled asynchronous tasks
 djangorestframework==3.15.2             # for creating REST APIs on top of Django
+djangorestframework-stubs==3.16.0       # type annotations for djangorestframework
 django-filter==24.1                     # REST API filtering
 django-taggit==6.1.0                    # Smarter Plugin tagging
 django-rest-knox==5.0.2                 # Token authentication for REST APIs
