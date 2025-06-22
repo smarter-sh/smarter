@@ -33,4 +33,4 @@ spec:
     subdomain: null
   functions: []
   plugins:
-  - stackademy_university
+  - stackademy_sql

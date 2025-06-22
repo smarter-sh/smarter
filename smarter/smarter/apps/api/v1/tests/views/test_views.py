@@ -2,7 +2,6 @@
 """Views for unit tests."""
 import json
 import logging
-from typing import Union
 
 from rest_framework import serializers, status
 from rest_framework.request import Request
