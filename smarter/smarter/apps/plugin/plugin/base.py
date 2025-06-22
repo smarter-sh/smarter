@@ -377,7 +377,6 @@ class PluginBase(ABC, SmarterHelperMixin):
         if self._manifest:
             return {
                 PLUGIN_KEY: self.plugin_meta,
-                # FIX NOTE: self.manifest.spec points to 'never'
                 "directive": self.manifest.spec.selector.directive if self.manifest and self.manifest.spec else None,
                 "search_terms": (
                     self.manifest.spec.selector.searchTerms if self.manifest and self.manifest.spec else None

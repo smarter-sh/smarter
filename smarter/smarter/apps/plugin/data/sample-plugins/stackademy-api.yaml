@@ -11,7 +11,7 @@ metadata:
   version: 0.1.0
 spec:
   selector:
-    directive: searchTerms
+    directive: search_terms
     # Complete search terms that will trigger the chatbot to use your customized system prompt.
     searchTerms:
       - stackademy
@@ -31,7 +31,7 @@ spec:
       should be answered with "I am sorry, but I can only provide information about the courses offered by Stackademy University."
     model: gpt-4o-mini
     temperature: 0.5
-    maxTokens: 4096
+    maxTokens: 1024
   connection: smarter_test_api
   apiData:
     description: >
