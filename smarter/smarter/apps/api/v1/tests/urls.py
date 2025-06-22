@@ -10,6 +10,7 @@ from .views.test_views import (
     TestJsonDictViewAuthenticated,
     TestJsonListView,
     TestJsonListViewAuthenticated,
+    TestStackademyCourseCatalogueView,
 )
 
 
@@ -21,4 +22,7 @@ urlpatterns = [
     path("unauthenticated/list/", TestJsonListView.as_view(), name="test_json_list_unauthenticated"),
     path("authenticated/dict/", TestJsonDictViewAuthenticated.as_view(), name="test_json_dict_authenticated"),
     path("authenticated/list/", TestJsonListViewAuthenticated.as_view(), name="test_json_list_authenticated"),
+    path(
+        "stackademy/course-catalogue/", TestStackademyCourseCatalogueView.as_view(), name="stackademy_course_catalogue"
+    ),
 ]

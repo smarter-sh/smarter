@@ -1182,16 +1182,16 @@ class PluginDataSql(PluginDataBase):
 
         return sql
 
-    def execute_query(self, params: Optional[dict]) -> Union[list, bool]:
+    def execute_query(self, params: Optional[dict]) -> Union[str, bool]:
         """Execute the SQL query and return the results."""
         sql = self.prepare_sql(params)
         return self.connection.execute_query(sql, self.limit)
 
-    def test(self) -> Union[list, bool]:
+    def test(self) -> Union[str, bool]:
         """Test the SQL query using the test_values in the record."""
         return self.execute_query(self.test_values)
 
-    def sanitized_return_data(self, params: Optional[dict] = None) -> Union[dict, list, bool]:
+    def sanitized_return_data(self, params: Optional[dict] = None) -> Union[str, bool]:
         """Return a dict by executing the query with the provided params."""
         logger.info("{self.__class__.__name__}.sanitized_return_data called. - %s", params)
         return self.execute_query(params)
