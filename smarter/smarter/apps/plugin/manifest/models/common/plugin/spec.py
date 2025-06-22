@@ -128,8 +128,8 @@ class SAMPluginCommonSpecPrompt(BaseModel):
     )
     temperature: float = Field(
         DEFAULT_TEMPERATURE,
-        gte=0,
-        lte=1.0,
+        ge=0,
+        le=1.0,
         description=(
             f"{class_identifier}.temperature[float] Optional. The temperature of the {MANIFEST_KIND}. "
             f"Defaults to {DEFAULT_TEMPERATURE}. "
@@ -183,7 +183,7 @@ class SAMPluginCommonSpecPrompt(BaseModel):
             return v
         err_desc_me_name = SAMPluginCommonSpecPromptKeys.MODEL.value
         raise SAMValidationError(
-            f"Invalid value found in {cls.err_desc_manifest_kind}.{err_desc_me_name}: '{v}'. Must be one of {VALID_CHAT_COMPLETION_MODELS}"
+            f"Invalid value found in {err_desc_me_name}: '{v}'. Must be one of {VALID_CHAT_COMPLETION_MODELS}"
         )
 
 

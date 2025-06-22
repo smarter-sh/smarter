@@ -8,6 +8,7 @@ from pydantic import Field
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
+from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
 from smarter.apps.plugin.manifest.models.common.plugin.status import (
     SAMPluginCommonStatus,
 )
@@ -30,10 +31,10 @@ class SAMPluginCommon(AbstractSAMBase):
         description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {MANIFEST_KIND} metadata.",
     )
 
-    @property
-    @abstractmethod
-    def spec(self):
-        """Abstract property for spec."""
+    spec: SAMPluginCommonSpec = Field(
+        ...,
+        description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {MANIFEST_KIND} specification.",
+    )
 
     status: Optional[SAMPluginCommonStatus] = Field(
         default=None,
