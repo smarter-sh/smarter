@@ -11,7 +11,7 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -32,7 +32,7 @@ class Command(BaseCommand):
         file_path = options["file_path"]
 
         account: Optional[Account] = None
-        user: Optional[UserType] = None
+        user: Optional[UserClass] = None
         user_profile: Optional[UserProfile] = None
 
         try:

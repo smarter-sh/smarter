@@ -25,7 +25,7 @@ class Command(BaseCommand):
         username = options["username"]
 
         try:
-            user = User.objects.get(username=username)
+            user: User = User.objects.get(username=username)
         except User.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"User {username} does not exist."))
             return
@@ -33,7 +33,7 @@ class Command(BaseCommand):
         try:
             user_profile = get_cached_user_profile(user=user)  # type: ignore
         except UserProfile.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"User profile for {user.username} {user.email} does not exist."))
+            self.stdout.write(self.style.ERROR(f"User profile for {user.username} {user.email} does not exist."))  # type: ignore
             return
 
         add_example_plugins(user_profile=user_profile)

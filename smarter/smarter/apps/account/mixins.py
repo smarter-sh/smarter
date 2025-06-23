@@ -2,16 +2,18 @@
 """A helper class that provides setters/getters for account and user."""
 
 import logging
+from typing import Optional, Union
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
+from rest_framework.request import Request
 
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django import waffle
 from smarter.lib.django.serializers import UserMiniSerializer
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import User, get_resolved_user
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Account, UserProfile
@@ -39,7 +41,7 @@ class AccountMixin(SmarterHelperMixin):
     account: Account - the account to which the user belongs.
     account_number: str - a string of the format ####-####-#### that uniquely
        identifies an account and can be passed as a proxy to the account object.
-    user: UserType - the Django user for the current user.
+    user: User - the Django user for the current user.
     """
 
     __slots__ = ("_account", "_user", "_user_profile")
@@ -50,11 +52,11 @@ class AccountMixin(SmarterHelperMixin):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self._account: Account = None
-        self._user: UserType = None
-        self._user_profile: UserProfile = None
+        self._account: Optional[Account] = None
+        self._user: Optional[User] = None
+        self._user_profile: Optional[UserProfile] = None
 
-        request: WSGIRequest = kwargs.get("request")
+        request: Optional[Union[WSGIRequest, HttpRequest, Request]] = kwargs.get("request")
         if not request and args:
             for arg in args:
                 if isinstance(arg, HttpRequest):
@@ -63,7 +65,7 @@ class AccountMixin(SmarterHelperMixin):
                     request = arg
                     break
 
-        account_number: str = kwargs.get("account_number")
+        account_number: Optional[str] = kwargs.get("account_number")
         account = kwargs.get("account")
         user = kwargs.get("user")
 
@@ -94,7 +96,7 @@ class AccountMixin(SmarterHelperMixin):
             if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                 logger.info("%s.__init__(): received a request object: %s", self.formatted_class_name, url)
             if hasattr(request, "user"):
-                self._user = request.user
+                self._user = get_resolved_user(request.user)
                 if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                     logger.info(
                         "%s.__init__(): found a user object in the request: %s", self.formatted_class_name, self._user
@@ -158,7 +160,7 @@ class AccountMixin(SmarterHelperMixin):
         return f"{inherited_class} AccountMixin()"
 
     @property
-    def account(self) -> Account:
+    def account(self) -> Optional[Account]:
         """
         Returns the account for the current user. Handle
         lazy instantiation from user or user_profile.
@@ -184,7 +186,7 @@ class AccountMixin(SmarterHelperMixin):
                 self._user_profile = get_cached_user_profile(user=self._user, account=account)
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
-                    f"User {self._user} does not belong to the account {self._account.account_number}."
+                    f"User {self._user} does not belong to the account {self._account.account_number if isinstance(self._account, Account) else "unknown account"}."
                 ) from e
             except TypeError as e:
                 # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x70f8a5377c20>>.
@@ -196,7 +198,7 @@ class AccountMixin(SmarterHelperMixin):
             return
 
     @property
-    def account_number(self) -> str:
+    def account_number(self) -> Optional[str]:
         """
         A helper function to get the account number from the account.
         """
@@ -211,10 +213,19 @@ class AccountMixin(SmarterHelperMixin):
             self._account = None
             self._user_profile = None
             return
-        self.account = get_cached_account(account_number=account_number)
+        account = get_cached_account(account_number=account_number)
+        if isinstance(account, Account):
+            self._account = account
+            if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
+                logger.info(
+                    "%s: set account to %s based on account_number %s",
+                    self.formatted_class_name,
+                    self._account,
+                    account_number,
+                )
 
     @property
-    def user(self) -> UserType:
+    def user(self) -> Optional[User]:
         """
         Returns the user for the current user. Handle
         lazy instantiation from user_profile or account.
@@ -226,7 +237,7 @@ class AccountMixin(SmarterHelperMixin):
         return self._user
 
     @user.setter
-    def user(self, user: UserType):
+    def user(self, user: User):
         """
         Set the user for the current user. Handle
         management of user_profile, if the user is unset.
@@ -257,7 +268,7 @@ class AccountMixin(SmarterHelperMixin):
             self._user_profile = None
 
     @property
-    def user_profile(self) -> UserProfile:
+    def user_profile(self) -> Optional[UserProfile]:
         """
         Returns the user_profile for the current user. Handle
         lazy instantiation from user or account.
@@ -272,10 +283,10 @@ class AccountMixin(SmarterHelperMixin):
                 return self._user_profile
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
-                    f"User {self._user} does not belong to the account {self.account.account_number}."
+                    f"User {self._user} does not belong to the account {self._account.account_number}."
                 ) from e
         if self._user:
-            self._user_profile = get_cached_user_profile(user=self.user)
+            self._user_profile = get_cached_user_profile(user=self._user)
         if not self._user_profile:
             logger.warning(
                 "%s: user_profile() could not initialize _user_profile for user: %s, account: %s",

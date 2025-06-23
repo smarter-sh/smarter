@@ -245,13 +245,11 @@ class ApiPlugin(PluginBase):
         if self.ready:
             if version == "v1":
                 retval = super().to_json(version=version)
-                if not retval:
-                    raise SmarterPluginError(
-                        f"{self.formatted_class_name}.to_json() error: {self.name} plugin is not ready."
-                    )
                 if not isinstance(retval, dict):
-                    raise SmarterPluginError(
-                        f"{self.formatted_class_name}.to_json() error: {self.name} plugin data is not a valid JSON object. Received: {type(retval)}"
+                    raise SmarterConfigurationError(f"{self.formatted_class_name}.to_json() error: {self.name}.")
+                if not isinstance(self.plugin_data_serializer, PluginApiSerializer):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}.to_json() error: {self.name} plugin_data_serializer expected PluginApiSerializer but got {type(self.plugin_data_serializer)}."
                     )
                 retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.API_DATA.value] = (
                     self.plugin_data_serializer.data if self.plugin_data_serializer else None

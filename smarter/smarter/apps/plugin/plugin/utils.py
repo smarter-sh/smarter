@@ -12,7 +12,7 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
 from smarter.common.const import PYTHON_ROOT
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import UserClass
 
 from .base import PluginBase
 
@@ -27,7 +27,7 @@ class Plugins:
     user_profile: Optional[UserProfile] = None
     plugins: list[PluginBase] = []
 
-    def __init__(self, user: UserType, account: Account):
+    def __init__(self, user: UserClass, account: Account):
 
         self.plugins = []
         self.account = account or get_cached_user_profile(user=user).account

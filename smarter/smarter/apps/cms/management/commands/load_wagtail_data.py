@@ -19,7 +19,7 @@ from wagtail.models import Page, Revision
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.cms.const import WAGTAIL_DUMP
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 
 
 # pylint: disable=E1101
@@ -32,7 +32,7 @@ class Command(BaseCommand):
 
     help = "Load Wagtail CMS page and snippet content to a JSON file."
     _account: Account = None
-    _user: UserType = None
+    _user: UserClass = None
 
     @property
     def account(self) -> Account:
@@ -41,7 +41,7 @@ class Command(BaseCommand):
         return self._account
 
     @property
-    def admin_user(self) -> UserType:
+    def admin_user(self) -> UserClass:
         if self._user is None:
             self._user = UserProfile.objects.filter(user__is_superuser=True, user__is_active=True).first().user
         return self._user

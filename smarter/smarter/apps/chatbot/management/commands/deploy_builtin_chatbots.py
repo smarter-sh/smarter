@@ -22,7 +22,7 @@ from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import UserClass
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -34,7 +34,7 @@ class Command(BaseCommand):
     """
 
     _url: str = None
-    user: UserType = None
+    user: UserClass = None
     account: Account = None
     user_profile: UserProfile = None
 

@@ -24,7 +24,7 @@ from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -33,7 +33,7 @@ class Command(BaseCommand):
     """Deploy customer APIs from a GitHub repository of plugin YAML files organized by customer API name."""
 
     _url: str = None
-    user: UserType = None
+    user: UserClass = None
     account: Account = None
     user_profile: UserProfile = None
 

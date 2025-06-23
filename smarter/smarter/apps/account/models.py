@@ -23,7 +23,7 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 from smarter.lib.django.validators import SmarterValidator
 
 from .signals import (
@@ -294,7 +294,7 @@ class UserProfile(TimestampedModel):
             new_user_created.send(sender=self.__class__, user_profile=self)
 
     @classmethod
-    def admin_for_account(cls, account: Account) -> UserType:
+    def admin_for_account(cls, account: Account) -> UserClass:
         """Return the designated user for the account."""
         admins = cls.objects.filter(account=account, user__is_staff=True).order_by("user__id")
         if admins.exists():

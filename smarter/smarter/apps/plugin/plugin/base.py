@@ -26,7 +26,7 @@ from smarter.common.exceptions import (
     SmarterException,
     SmarterValueError,
 )
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import UserClass
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
@@ -567,7 +567,9 @@ class PluginBase(ABC, SmarterHelperMixin):
             return self.ready
         return False
 
-    def selected(self, user: UserType, input_text: Optional[str] = None, messages: Optional[list[dict]] = None) -> bool:
+    def selected(
+        self, user: UserClass, input_text: Optional[str] = None, messages: Optional[list[dict]] = None
+    ) -> bool:
         """
         Return True the user has mentioned Lawrence McDaniel or FullStackWithLawrence
         at any point in the history of the conversation.
@@ -1028,6 +1030,12 @@ class PluginBase(ABC, SmarterHelperMixin):
                         ),
                     },
                 }
+                if not isinstance(retval, dict):
+                    raise SmarterConfigurationError(f"{self.formatted_class_name}.to_json() error: {self.name}.")
+                if not isinstance(self.plugin_data_serializer.data, dict):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}.to_json() error: {self.name} plugin_data_serializer.data is not a dict."
+                    )
                 return json.loads(json.dumps(retval))
             raise SmarterPluginError(f"Invalid version: {version}")
         return None

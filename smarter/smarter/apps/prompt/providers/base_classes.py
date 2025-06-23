@@ -57,7 +57,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import UserClass
 
 from .const import OpenAIMessageKeys
 from .mixins import ProviderDbMixin
@@ -838,7 +838,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             "input_text": self.input_text,
         }
 
-    def handler(self, chat: Chat, data: dict, plugins: list[PluginBase], user: UserType) -> Union[dict, list]:
+    def handler(self, chat: Chat, data: dict, plugins: list[PluginBase], user: UserClass) -> Union[dict, list]:
         """
         Chat prompt handler. Responsible for processing incoming requests and
         invoking the appropriate OpenAI API endpoint based on the contents of

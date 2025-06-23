@@ -9,7 +9,7 @@ from django.http import HttpRequest
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import UserClass
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
@@ -34,7 +34,7 @@ class SAMTestBroker(AbstractBroker):
     #           manifest model here. We should be using a test model.
     _manifest: SAMStaticPlugin = None
     _pydantic_model: typing.Type[SAMStaticPlugin] = SAMStaticPlugin
-    _user: UserType = None
+    _user: UserClass = None
     _username: str = None
 
     @property

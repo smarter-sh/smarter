@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 from smarter.apps.account.serializers import PaymentMethodSerializer
 from smarter.apps.account.utils import get_cached_account_for_user
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 
 from .base import AccountListViewBase, AccountViewBase
 
@@ -120,7 +120,7 @@ def create_payment_method(request):
 def update_payment_method(request):
     """update an account from a json representation in the body of the request."""
     data: dict = None
-    payment_method_to_update: UserType = None
+    payment_method_to_update: UserClass = None
 
     if not request.user.is_superuser and not request.user.is_staff:
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)

@@ -11,14 +11,14 @@ from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.cache import cache_results
-from smarter.lib.django.user import UserType, get_resolved_user
+from smarter.lib.django.user import UserClass, get_resolved_user
 
 
 CACHE_TIMEOUT = 60  # 1 minute
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_pending_deployments(user: UserType) -> int:
+def get_pending_deployments(user: UserClass) -> int:
     """
     Get the number of pending deployments for the current user
     """
@@ -27,7 +27,7 @@ def get_pending_deployments(user: UserType) -> int:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_chatbots(user: UserType) -> int:
+def get_chatbots(user: UserClass) -> int:
     """
     Get the number of chatbots for the current user
     """
@@ -36,7 +36,7 @@ def get_chatbots(user: UserType) -> int:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_plugins(user: UserType) -> int:
+def get_plugins(user: UserClass) -> int:
     """
     Get the number of plugins for the current user
     """
@@ -45,7 +45,7 @@ def get_plugins(user: UserType) -> int:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_api_keys(user: UserType) -> int:
+def get_api_keys(user: UserClass) -> int:
     """
     Get the number of API keys for the current user
     """
@@ -54,7 +54,7 @@ def get_api_keys(user: UserType) -> int:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_custom_domains(user: UserType) -> int:
+def get_custom_domains(user: UserClass) -> int:
     """
     Get the number of custom domains for the current user
     """
@@ -71,7 +71,7 @@ def base(request: WSGIRequest) -> dict:
     resolved_user = get_resolved_user(user)
 
     @cache_results(timeout=CACHE_TIMEOUT)
-    def get_cached_context(user: UserType) -> dict:
+    def get_cached_context(user: UserClass) -> dict:
         current_year = datetime.now().year
         user_email = "anonymous@mail.edu"
         username = "anonymous"
