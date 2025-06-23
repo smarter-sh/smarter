@@ -4,18 +4,19 @@ import logging
 import random
 import uuid
 from datetime import datetime
+from typing import Optional
 
 from smarter.apps.account.models import Account, PaymentMethod, Secret, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.utils import hash_factory
-from smarter.lib.django.user import User, UserClass
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 logger = logging.getLogger(__name__)
 
 
-def admin_user_factory(account: Account = None) -> tuple[UserClass, Account, UserProfile]:
+def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
     username = f"testAdminUser_{hashed_slug}"
     email = f"test-{hashed_slug}@mail.com"
@@ -35,14 +36,14 @@ def admin_user_factory(account: Account = None) -> tuple[UserClass, Account, Use
     account = account or Account.objects.create(
         company_name=f"TestAccount_AdminUser_{hashed_slug}", phone_number="123-456-789"
     )
-    logger.info("admin_user_factory() Created account: %s", account.id)
+    logger.info("admin_user_factory() Created account: %s", account.id)  # type: ignore[return-value]
     user_profile = UserProfile.objects.create(user=user, account=account, is_test=True)
     logger.info("admin_user_factory() Created user profile %s", user_profile)
 
     return user, account, user_profile
 
 
-def mortal_user_factory(account: Account = None) -> tuple[UserClass, Account, UserProfile]:
+def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
     username = f"testMortalUser_{hashed_slug}"
     email = f"test-{hashed_slug}@mail.com"
@@ -62,14 +63,14 @@ def mortal_user_factory(account: Account = None) -> tuple[UserClass, Account, Us
     account = account or Account.objects.create(
         company_name=f"TestAccount_MortalUser_{hashed_slug}", phone_number="123-456-789"
     )
-    logger.info("mortal_user_factory() Created/set account: %s", account.id)
+    logger.info("mortal_user_factory() Created/set account: %s", account.id)  # type: ignore[return-value]
     user_profile = UserProfile.objects.create(user=user, account=account, is_test=True)
     logger.info("mortal_user_factory() Created user profile %s", user_profile)
 
     return user, account, user_profile
 
 
-def factory_account_teardown(user: UserClass, account: Account, user_profile: UserProfile):
+def factory_account_teardown(user: User, account: Account, user_profile: UserProfile):
     if user and account and not user_profile:
         user_profile = get_cached_user_profile(user=user, account=account)
     elif user and not user_profile:
@@ -114,7 +115,9 @@ def billing_address_factory():
 
 
 def payment_method_factory(account: Account):
-    """ """
+    """
+    Factory for creating a PaymentMethod object for testing.
+    """
 
     payment_method = PaymentMethod.objects.create(
         account=account,
@@ -144,7 +147,7 @@ def payment_method_factory_teardown(payment_method: PaymentMethod):
 
 
 def secret_factory(
-    user_profile: UserProfile, name: str, description: str, value: str, expiration: datetime = None
+    user_profile: UserProfile, name: str, description: str, value: str, expiration: Optional[datetime] = None
 ) -> Secret:
     """
     Create a Secret object for testing.

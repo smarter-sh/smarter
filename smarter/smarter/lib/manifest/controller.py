@@ -8,14 +8,14 @@ from typing import Any
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
-from smarter.lib.django.user import UserClass
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.manifest.models import AbstractSAMBase
 
 
 class AbstractController(abc.ABC, AccountMixin):
     """Map the Pydantic metadata.kindClass to the corresponding object instance."""
 
-    def __init__(self, account: Account, user: UserClass, *args, **kwargs):
+    def __init__(self, account: Account, user: User, *args, **kwargs):
         super().__init__(*args, **kwargs)
         user_profile = kwargs.pop("user_profile", None)
         request = kwargs.pop("request", None)

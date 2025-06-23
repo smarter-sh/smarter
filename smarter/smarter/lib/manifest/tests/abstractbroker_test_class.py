@@ -1,15 +1,21 @@
 # pylint: disable=W0718
 """Smarter API User Manifest handler"""
 
-import typing
+from typing import Any, Optional, Type
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
+from smarter.apps.plugin.manifest.models.common.plugin.model import (
+    SAMPluginCommon,
+    SAMPluginCommonMetadata,
+    SAMPluginCommonSpec,
+    SAMPluginCommonStatus,
+)
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
-from smarter.lib.django.user import UserClass
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
@@ -32,31 +38,33 @@ class SAMTestBroker(AbstractBroker):
     # override the base abstract manifest model with the User model
     # FIX NOTE: We shouldn't be using an implementation of the actual
     #           manifest model here. We should be using a test model.
-    _manifest: SAMStaticPlugin = None
-    _pydantic_model: typing.Type[SAMStaticPlugin] = SAMStaticPlugin
-    _user: UserClass = None
-    _username: str = None
+    _manifest: Optional[SAMPluginCommon] = None
+    _pydantic_model: Type[SAMPluginCommon] = SAMPluginCommon
+    _user: User
+    _username: Optional[str] = None
 
     @property
-    def username(self) -> str:
+    def username(self) -> Optional[str]:
         return self._username
 
     def manifest_to_django_orm(self) -> dict:
         """
         Transform the Smarter API User manifest into a Django ORM model.
         """
-        config_dump = self.manifest.spec.config.model_dump()
+        config_dump = self.manifest.spec.model_dump()  # type: ignore[return-value]
         config_dump = self.camel_to_snake(config_dump)
-        return config_dump
+        return config_dump  # type: ignore[return-value]
 
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Transform the Django ORM model into a Pydantic readable
         Smarter API User manifest dict.
         """
+        if not self.user:
+            raise SAMUserBrokerError("No user set for the broker")
         user_dict = model_to_dict(self.user)
         user_dict = self.snake_to_camel(user_dict)
-        user_dict.pop("id")
+        user_dict.pop("id")  # type: ignore[union-attr]
 
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -95,9 +103,9 @@ class SAMTestBroker(AbstractBroker):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMStaticPlugin:  # FIX NOTE: This should be a test model
+    def manifest(self) -> Optional[SAMPluginCommon]:
         """
-        SAMStaticPlugin() is a Pydantic model
+        SAMPluginCommon() is a Pydantic model
         that is used to represent the Smarter API User manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -108,12 +116,12 @@ class SAMTestBroker(AbstractBroker):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMStaticPlugin(
+            self._manifest = SAMPluginCommon(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=self.loader.manifest_metadata,
-                spec=self.loader.manifest_spec,
-                status=self.loader.manifest_status,
+                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMPluginCommonSpec(**self.loader.manifest_spec),
+                status=SAMPluginCommonStatus(**self.loader.manifest_status),
             )
         return self._manifest
 
@@ -122,25 +130,25 @@ class SAMTestBroker(AbstractBroker):
     ###########################################################################
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        super().chat(request=request, kwargs=kwargs)
+        return super().chat(request=request, kwargs=kwargs)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        super().describe(request=request, kwargs=kwargs)
+        return super().describe(request=request, kwargs=kwargs)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        super().delete(request=request, kwargs=kwargs)
+        return super().delete(request=request, kwargs=kwargs)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        super().deploy(request=request, kwargs=kwargs)
+        return super().deploy(request=request, kwargs=kwargs)
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        super().example_manifest(request=request, kwargs=kwargs)
+        return super().example_manifest(request=request, kwargs=kwargs)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        super().get(request=request, kwargs=kwargs)
+        return super().get(request=request, kwargs=kwargs)
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        super().logs(request=request, kwargs=kwargs)
+        return super().logs(request=request, kwargs=kwargs)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        super().undeploy(request=request, kwargs=kwargs)
+        return super().undeploy(request=request, kwargs=kwargs)

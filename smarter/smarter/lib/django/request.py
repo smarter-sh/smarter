@@ -352,7 +352,7 @@ class SmarterRequestMixin(AccountMixin):
 
         uid = self.uid or "unknown_uid"
         username = (
-            self.smarter_request.user.username
+            self.smarter_request.user.username  # type: ignore[union-attr]
             if self.smarter_request and hasattr(self._smarter_request, "user")
             else "unknown_user"
         )

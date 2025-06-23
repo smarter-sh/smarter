@@ -15,7 +15,6 @@ from smarter.apps.plugin.manifest.models.sql_connection.enum import (
     DBMSAuthenticationMethods,
 )
 from smarter.apps.plugin.models import SqlConnection
-from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.validators import SmarterValidator
 
 

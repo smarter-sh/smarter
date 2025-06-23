@@ -13,7 +13,8 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django import waffle
 from smarter.lib.django.serializers import UserMiniSerializer
-from smarter.lib.django.user import User, get_resolved_user
+from smarter.lib.django.user import UserClass as User
+from smarter.lib.django.user import get_resolved_user
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Account, UserProfile
@@ -174,7 +175,7 @@ class AccountMixin(SmarterHelperMixin):
         return self._account
 
     @account.setter
-    def account(self, account: Account):
+    def account(self, account: Optional[Account]):
         """
         Set the account for the current user. Handle
         management of user_profile.
@@ -205,7 +206,7 @@ class AccountMixin(SmarterHelperMixin):
         return self._account.account_number if self._account else None
 
     @account_number.setter
-    def account_number(self, account_number: str):
+    def account_number(self, account_number: Optional[str]):
         """
         A helper function to set the account from the account_number.
         """
@@ -237,7 +238,7 @@ class AccountMixin(SmarterHelperMixin):
         return self._user
 
     @user.setter
-    def user(self, user: User):
+    def user(self, user: Optional[User]):
         """
         Set the user for the current user. Handle
         management of user_profile, if the user is unset.
@@ -252,7 +253,7 @@ class AccountMixin(SmarterHelperMixin):
 
         logger.info("%s: setting user %s", self.formatted_class_name, user)
         self._user = user
-        if self._account:
+        if self._account and self._user:
             # If the account is already set, then we need to check if the user is part of the account
             # by attempting to fetch the user_profile.
             try:
@@ -297,7 +298,7 @@ class AccountMixin(SmarterHelperMixin):
         return self._user_profile
 
     @user_profile.setter
-    def user_profile(self, user_profile: UserProfile):
+    def user_profile(self, user_profile: Optional[UserProfile]):
         """
         Set the user_profile for the current user. If we're unsetting the user_profile,
         then leave the user and account as they are. But if we're setting the user_profile,

@@ -9,7 +9,7 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
-from smarter.lib.django.user import User, UserClass
+from smarter.lib.django.user import UserClass as User
 
 
 # pylint: disable=E1101
@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
         account: Optional[Account] = None
         plugin_meta: Optional[PluginMeta] = None
-        user: Optional[UserClass] = None
+        user: Optional[User] = None
         user_profile: Optional[UserProfile] = None
 
         try:
@@ -63,5 +63,8 @@ class Command(BaseCommand):
 
         controller = PluginController(account=account, user=user, user_profile=user_profile, plugin_meta=plugin_meta)  # type: ignore
         plugin = controller.obj
+        if not plugin:
+            self.stdout.write(self.style.ERROR(f"Plugin {name} does not exist."))
+            sys.exit(1)
         plugin.delete()
         self.stdout.write(self.style.SUCCESS(f"Plugin {name} has been deleted."))

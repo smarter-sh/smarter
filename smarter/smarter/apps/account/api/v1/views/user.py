@@ -1,8 +1,11 @@
 # pylint: disable=W0707,W0718
 """User views for smarter api."""
+import json
 from http import HTTPStatus
+from typing import Optional
 
 from django.core.exceptions import ValidationError
+from django.core.handlers.wsgi import WSGIRequest
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from rest_framework import status
@@ -10,7 +13,8 @@ from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.serializers import UserSerializer
-from smarter.lib.django.user import User, UserClass
+from smarter.lib.django.user import UserClass as User
+from smarter.lib.django.user import get_resolved_user
 
 from .base import AccountListViewBase, AccountViewBase
 
@@ -42,7 +46,10 @@ class UserListView(AccountListViewBase):
     serializer_class = UserSerializer
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
+        user = get_resolved_user(self.request.user)
+        if user is None:
+            return Response({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+        if user.is_superuser:
             return User.objects.all()
 
         try:
@@ -57,17 +64,20 @@ class UserListView(AccountListViewBase):
 # -----------------------------------------------------------------------
 
 
-def validate_request_body(request):
+def validate_request_body(request: WSGIRequest):
     # do a cursory check of the request data
     try:
-        if not isinstance(request.data, dict):
+        data = json.loads(request.body)
+        if not isinstance(data, dict):
             raise ValidationError(
                 f"Invalid request data. Was expecting a dictionary but received {type(request.data)}."
             )
-        if "username" not in request.data:
+        if "username" not in data:
             raise ValidationError("Invalid request data. Missing 'username' field.")
-        if "password" not in request.data:
+        if "password" not in data:
             raise ValidationError("Invalid request data. Missing 'password' field.")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
     except ValidationError as e:
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
     except Exception as e:
@@ -75,8 +85,11 @@ def validate_request_body(request):
     return None
 
 
-def eval_permissions(request, user_to_update: UserClass, user_to_update_profile: UserProfile = None):
-    if not request.user.is_superuser:
+def eval_permissions(request, user_to_update: User, user_to_update_profile: Optional[UserProfile] = None):
+    user = get_resolved_user(request.user)
+    if user is None:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+    if not user.is_superuser:
         # if the user is not a superuser then they need to have a UserProfile
         try:
             request_user_account = UserProfile.objects.get(user=request.user).account
@@ -101,8 +114,6 @@ def eval_permissions(request, user_to_update: UserClass, user_to_update_profile:
 
 
 def get_user_for_operation(request):
-    user: UserClass = None
-    user_profile: UserProfile = None
 
     if not isinstance(request.user, User):
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
@@ -121,15 +132,17 @@ def get_user_for_operation(request):
 
 
 # pylint: disable=too-many-return-statements
-def get_user(request, user_id: int = None):
+def get_user(request, user_id: Optional[int] = None):
     """Get an account json representation by id."""
-    user: UserClass = None
     if user_id is None:
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=HTTPStatus.OK.value)
 
+    request_user = get_resolved_user(request.user)
+    if request_user is None:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
     # if the user is a superuser, they can get any user
-    if request.user.is_superuser:
+    if request_user.is_superuser:
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
@@ -138,7 +151,7 @@ def get_user(request, user_id: int = None):
         return Response(serializer.data, status=HTTPStatus.OK.value)
 
     # if the user is a staff member, they can get users within their own account
-    if request.user.is_staff:
+    if request_user.is_staff:
         try:
             account = UserProfile.objects.get(user=request.user).account
             user = UserProfile.objects.get(account=account, user_id=user_id).user
@@ -155,15 +168,21 @@ def get_user(request, user_id: int = None):
     return Response(serializer.data, status=HTTPStatus.OK.value)
 
 
-def create_user(request):
+def create_user(request: WSGIRequest):
     """Create an account from a json representation in the body of the request."""
-    account: Account = None
-    data: dict = None
-    if not request.user.is_superuser and not request.user.is_staff:
+    data: dict
+
+    user = get_resolved_user(request.user)
+    if user is None:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+    if not user.is_superuser and not user.is_staff:
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     validate_request_body(request)
-    data = request.data
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
 
     # the new user will be associated with the account of the current user
     try:
@@ -178,17 +197,18 @@ def create_user(request):
     except Exception as e:
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
 
-    return HttpResponseRedirect(request.path_info + str(user.id) + "/")
+    return HttpResponseRedirect(request.path_info + str(user.id) + "/")  # type: ignore[return-value]
 
 
-def update_user(request):
+def update_user(request: WSGIRequest):
     """update an account from a json representation in the body of the request."""
-    data: dict = None
-    user_to_update: UserClass = None
-    user_to_update_profile: UserProfile = None
+    data: dict
 
     validate_request_body(request)
-    data = request.data
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
     user_to_update, user_to_update_profile = get_user_for_operation(request)
     eval_permissions(request, user_to_update, user_to_update_profile)
 
@@ -207,9 +227,8 @@ def update_user(request):
     return HttpResponseRedirect(request.path_info)
 
 
-def delete_user(request, user_id: int = None):
+def delete_user(request: WSGIRequest, user_id: Optional[int] = None):
     """delete a user by id."""
-    user: UserClass = None
     try:
         if user_id:
             user = User.objects.get(id=user_id)

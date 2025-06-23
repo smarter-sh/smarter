@@ -57,7 +57,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
-from smarter.lib.django.user import UserClass
+from smarter.lib.django.user import UserClass as User
 
 from .const import OpenAIMessageKeys
 from .mixins import ProviderDbMixin
@@ -741,6 +741,18 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                     f"{self.formatted_class_name}: plugin with id {plugin_id} not found. This is a bug."
                 ) from e
 
+            if not self.account:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: account is required to handle plugin calls."
+                )
+            if not self.user:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: user is required to handle plugin calls."
+                )
+            if not self.user_profile:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: user_profile is required to handle plugin calls."
+                )
             plugin_controller = PluginController(
                 account=self.account,
                 user=self.user,
@@ -838,7 +850,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             "input_text": self.input_text,
         }
 
-    def handler(self, chat: Chat, data: dict, plugins: list[PluginBase], user: UserClass) -> Union[dict, list]:
+    def handler(self, chat: Chat, data: dict, plugins: Optional[list[PluginBase]], user: User) -> Union[dict, list]:
         """
         Chat prompt handler. Responsible for processing incoming requests and
         invoking the appropriate OpenAI API endpoint based on the contents of
@@ -875,7 +887,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         if chat:
             self.account = chat.account
         self.data = data
-        self.plugins = plugins
+        if plugins:
+            self.plugins = plugins
         self.user = user
 
         chat_started.send(sender=self.handler, chat=self.chat, data=self.data)

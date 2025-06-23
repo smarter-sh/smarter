@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import Account, AccountContact, UserProfile
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
-from smarter.lib.django.user import User
+from smarter.lib.django.user import UserClass as User
 
 
 # pylint: disable=E1101

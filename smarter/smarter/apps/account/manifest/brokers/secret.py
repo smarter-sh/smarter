@@ -3,8 +3,8 @@
 
 import logging
 import traceback
-import typing
 from datetime import datetime, timezone
+from typing import Optional, Type
 
 from dateutil.relativedelta import relativedelta
 from django.forms.models import model_to_dict
@@ -17,11 +17,15 @@ from smarter.apps.account.manifest.enum import (
     SAMSecretStatusKeys,
 )
 from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
-from smarter.apps.account.manifest.models.secret.model import SAMSecret
+from smarter.apps.account.manifest.models.secret.model import (
+    SAMSecret,
+    SAMSecretMetadata,
+    SAMSecretSpec,
+    SAMSecretStatus,
+)
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.models import Secret
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
-from smarter.lib.django.user import get_user_model
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -39,7 +43,6 @@ from smarter.lib.manifest.enum import (
 )
 
 
-User = get_user_model()
 MAX_RESULTS = 1000
 logger = logging.getLogger(__name__)
 
@@ -76,9 +79,9 @@ class SAMSecretBroker(AbstractBroker):
     """
 
     # override the base abstract manifest model with the Secret model
-    _manifest: SAMSecret = None
-    _pydantic_model: typing.Type[SAMSecret] = SAMSecret
-    _secret_transformer: SecretTransformer = None
+    _manifest: Optional[SAMSecret] = None
+    _pydantic_model: Type[SAMSecret] = SAMSecret
+    _secret_transformer: Optional[SecretTransformer] = None
 
     @property
     def secret_transformer(self) -> SecretTransformer:
@@ -92,21 +95,21 @@ class SAMSecretBroker(AbstractBroker):
         return self._secret_transformer
 
     @property
-    def secret(self) -> Secret:
+    def secret(self) -> Optional[Secret]:
         """
         Return the Secret model instance for this manifest.
         """
         return self.secret_transformer.secret
 
-    def manifest_to_django_orm(self) -> dict:
+    def manifest_to_django_orm(self) -> Optional[dict]:
         """
         Transform the Smarter API Secret manifest into a Django ORM model.
         """
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
-        return config_dump
+        return config_dump  # type: ignore[return-value]
 
-    def django_orm_to_manifest_dict(self) -> dict:
+    def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
         Transform the Django ORM model into a Pydantic readable
         Smarter API Secret manifest dict.
@@ -114,11 +117,11 @@ class SAMSecretBroker(AbstractBroker):
         if not self.secret:
             logger.warning("%s.django_orm_to_manifest_dict() called with no secret", self.formatted_class_name)
             return None
-        secret_dict: dict = None
+        secret_dict: dict
 
         try:
             secret_dict = model_to_dict(self.secret)
-            secret_dict = self.snake_to_camel(secret_dict)
+            secret_dict = self.snake_to_camel(secret_dict)  # type: ignore[assignment]
             secret_dict.pop("id")
         except Exception as e:
             raise SAMSecretBrokerError(
@@ -135,8 +138,8 @@ class SAMSecretBroker(AbstractBroker):
                     SAMSecretMetadataKeys.NAME.value: secret_dict.get(SAMSecretMetadataKeys.NAME.value),
                     SAMSecretMetadataKeys.DESCRIPTION.value: secret_dict.get(SAMSecretMetadataKeys.DESCRIPTION.value),
                     SAMSecretMetadataKeys.VERSION.value: "1.0.0",
-                    SAMSecretMetadataKeys.USERNAME.value: self.user.username,
-                    SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: self.account.account_number,
+                    SAMSecretMetadataKeys.USERNAME.value: self.user.username if self.user else None,
+                    SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: self.account.account_number if self.account else None,
                     SAMSecretMetadataKeys.TAGS.value: secret_dict.get(SAMSecretMetadataKeys.TAGS.value),
                     SAMSecretMetadataKeys.ANNOTATIONS.value: secret_dict.get(SAMSecretMetadataKeys.ANNOTATIONS.value),
                 },
@@ -151,7 +154,7 @@ class SAMSecretBroker(AbstractBroker):
                 },
                 SAMKeys.STATUS.value: {
                     SAMSecretStatusKeys.ACCOUNT_NUMBER.value: self.account_number,
-                    SAMSecretStatusKeys.USERNAME.value: self.user.username,
+                    SAMSecretStatusKeys.USERNAME.value: self.user.username if self.user else None,
                     SAMSecretStatusKeys.CREATED.value: self.secret.created_at.isoformat(),
                     SAMSecretStatusKeys.UPDATED.value: self.secret.updated_at.isoformat(),
                     SAMSecretStatusKeys.LAST_ACCESSED.value: (
@@ -184,7 +187,7 @@ class SAMSecretBroker(AbstractBroker):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMSecret:
+    def manifest(self) -> Optional[SAMSecret]:
         """
         SAMSecret() is a Pydantic model
         that is used to represent the Smarter API Secret manifest. The Pydantic
@@ -196,13 +199,13 @@ class SAMSecretBroker(AbstractBroker):
         """
         if self._manifest:
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
+        if self.loader and self.loader.manifest_metadata and self.loader.manifest_kind == self.kind:
             self._manifest = SAMSecret(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=self.loader.manifest_metadata,
-                spec=self.loader.manifest_spec,
-                status=self.loader.manifest_status,
+                metadata=SAMSecretMetadata(**self.loader.manifest_metadata),
+                spec=SAMSecretSpec(**self.loader.manifest_spec),
+                status=SAMSecretStatus(**self.loader.manifest_status),
             )
         return self._manifest
 

@@ -2,6 +2,7 @@
 """Django context processors for base.html"""
 import time
 from datetime import datetime
+from typing import Optional
 
 from django.conf import settings
 from django.core.handlers.wsgi import WSGIRequest
@@ -11,14 +12,15 @@ from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.cache import cache_results
-from smarter.lib.django.user import UserClass, get_resolved_user
+from smarter.lib.django.user import UserClass as User
+from smarter.lib.django.user import get_resolved_user
 
 
 CACHE_TIMEOUT = 60  # 1 minute
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_pending_deployments(user: UserClass) -> int:
+def get_pending_deployments(user: User) -> int:
     """
     Get the number of pending deployments for the current user
     """
@@ -27,7 +29,7 @@ def get_pending_deployments(user: UserClass) -> int:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_chatbots(user: UserClass) -> int:
+def get_chatbots(user: User) -> int:
     """
     Get the number of chatbots for the current user
     """
@@ -36,7 +38,7 @@ def get_chatbots(user: UserClass) -> int:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_plugins(user: UserClass) -> int:
+def get_plugins(user: User) -> int:
     """
     Get the number of plugins for the current user
     """
@@ -45,7 +47,7 @@ def get_plugins(user: UserClass) -> int:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_api_keys(user: UserClass) -> int:
+def get_api_keys(user: User) -> int:
     """
     Get the number of API keys for the current user
     """
@@ -54,7 +56,7 @@ def get_api_keys(user: UserClass) -> int:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_custom_domains(user: UserClass) -> int:
+def get_custom_domains(user: User) -> int:
     """
     Get the number of custom domains for the current user
     """
@@ -71,13 +73,13 @@ def base(request: WSGIRequest) -> dict:
     resolved_user = get_resolved_user(user)
 
     @cache_results(timeout=CACHE_TIMEOUT)
-    def get_cached_context(user: UserClass) -> dict:
+    def get_cached_context(user: Optional[User]) -> dict:
         current_year = datetime.now().year
         user_email = "anonymous@mail.edu"
         username = "anonymous"
         is_superuser = False
         is_staff = False
-        if user.is_authenticated:
+        if user and user.is_authenticated:
             try:
                 user_email = user.email
                 username = user.username
@@ -97,11 +99,11 @@ def base(request: WSGIRequest) -> dict:
                 "smarter_version": "v" + __version__,
                 "current_year": current_year,
                 "product_description": "Smarter is an enterprise class plugin-based chat solution.",
-                "my_resources_pending_deployments": get_pending_deployments(user=resolved_user),
-                "my_resources_chatbots": get_chatbots(user=resolved_user),
-                "my_resources_plugins": get_plugins(user=resolved_user),
-                "my_resources_api_keys": get_api_keys(user=resolved_user),
-                "my_resources_custom_domains": get_custom_domains(user=resolved_user),
+                "my_resources_pending_deployments": get_pending_deployments(user=resolved_user) if resolved_user else 0,
+                "my_resources_chatbots": get_chatbots(user=resolved_user) if resolved_user else 0,
+                "my_resources_plugins": get_plugins(user=resolved_user) if resolved_user else 0,
+                "my_resources_api_keys": get_api_keys(user=resolved_user) if resolved_user else 0,
+                "my_resources_custom_domains": get_custom_domains(user=resolved_user) if resolved_user else 0,
             }
         }
         return cached_context
