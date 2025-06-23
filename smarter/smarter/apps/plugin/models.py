@@ -1,4 +1,4 @@
-# pylint: disable=C0114,C0115
+# pylint: disable=C0114,C0115,C0302
 """PluginMeta app models."""
 
 # python stuff
@@ -1432,12 +1432,6 @@ class PluginDataApi(PluginDataBase):
         help_text="A JSON dict containing URL parameters. Example: {'city': 'San Francisco', 'state': 'CA'}",
         blank=True,
         null=True,
-    )
-    parameters = models.JSONField(
-        help_text="A JSON dict containing parameter names and data types. Example: {'city': {'type': 'string', 'description': 'City name'}}",
-        blank=True,
-        null=True,
-        validators=[validate_openai_parameters_dict],
     )
     headers = models.JSONField(
         help_text="A JSON dict containing headers to be sent with the API request. Example: {'Authorization': 'Bearer <token>'}",
