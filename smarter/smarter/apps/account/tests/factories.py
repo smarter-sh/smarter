@@ -8,14 +8,14 @@ from datetime import datetime
 from smarter.apps.account.models import Account, PaymentMethod, Secret, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.utils import hash_factory
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 logger = logging.getLogger(__name__)
 
 
-def admin_user_factory(account: Account = None) -> tuple[UserType, Account, UserProfile]:
+def admin_user_factory(account: Account = None) -> tuple[UserClass, Account, UserProfile]:
     hashed_slug = hash_factory()
     username = f"testAdminUser_{hashed_slug}"
     email = f"test-{hashed_slug}@mail.com"
@@ -42,7 +42,7 @@ def admin_user_factory(account: Account = None) -> tuple[UserType, Account, User
     return user, account, user_profile
 
 
-def mortal_user_factory(account: Account = None) -> tuple[UserType, Account, UserProfile]:
+def mortal_user_factory(account: Account = None) -> tuple[UserClass, Account, UserProfile]:
     hashed_slug = hash_factory()
     username = f"testMortalUser_{hashed_slug}"
     email = f"test-{hashed_slug}@mail.com"
@@ -69,7 +69,7 @@ def mortal_user_factory(account: Account = None) -> tuple[UserType, Account, Use
     return user, account, user_profile
 
 
-def factory_account_teardown(user: UserType, account: Account, user_profile: UserProfile):
+def factory_account_teardown(user: UserClass, account: Account, user_profile: UserProfile):
     if user and account and not user_profile:
         user_profile = get_cached_user_profile(user=user, account=account)
     elif user and not user_profile:

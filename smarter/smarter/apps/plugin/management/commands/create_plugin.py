@@ -12,7 +12,7 @@ from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -33,7 +33,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """create the plugin."""
         account: Optional[Account] = None
-        user: Optional[UserType] = None
+        user: Optional[UserClass] = None
         account_number = options["account_number"]
         file_path = options["file_path"]
         username = options["username"]

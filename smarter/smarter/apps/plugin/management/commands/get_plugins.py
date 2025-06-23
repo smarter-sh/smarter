@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.plugin.utils import Plugins
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 from smarter.lib.manifest.enum import SAMKeys
 
 
@@ -30,7 +30,7 @@ class Command(BaseCommand):
         username = options["username"]
 
         account: Optional[Account] = None
-        user: Optional[UserType] = None
+        user: Optional[UserClass] = None
 
         try:
             user = User.objects.get(username=username)  # type: ignore

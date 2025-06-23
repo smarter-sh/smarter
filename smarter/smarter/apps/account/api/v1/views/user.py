@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.serializers import UserSerializer
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 
 from .base import AccountListViewBase, AccountViewBase
 
@@ -75,7 +75,7 @@ def validate_request_body(request):
     return None
 
 
-def eval_permissions(request, user_to_update: UserType, user_to_update_profile: UserProfile = None):
+def eval_permissions(request, user_to_update: UserClass, user_to_update_profile: UserProfile = None):
     if not request.user.is_superuser:
         # if the user is not a superuser then they need to have a UserProfile
         try:
@@ -101,7 +101,7 @@ def eval_permissions(request, user_to_update: UserType, user_to_update_profile: 
 
 
 def get_user_for_operation(request):
-    user: UserType = None
+    user: UserClass = None
     user_profile: UserProfile = None
 
     if not isinstance(request.user, User):
@@ -123,7 +123,7 @@ def get_user_for_operation(request):
 # pylint: disable=too-many-return-statements
 def get_user(request, user_id: int = None):
     """Get an account json representation by id."""
-    user: UserType = None
+    user: UserClass = None
     if user_id is None:
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=HTTPStatus.OK.value)
@@ -184,7 +184,7 @@ def create_user(request):
 def update_user(request):
     """update an account from a json representation in the body of the request."""
     data: dict = None
-    user_to_update: UserType = None
+    user_to_update: UserClass = None
     user_to_update_profile: UserProfile = None
 
     validate_request_body(request)
@@ -209,7 +209,7 @@ def update_user(request):
 
 def delete_user(request, user_id: int = None):
     """delete a user by id."""
-    user: UserType = None
+    user: UserClass = None
     try:
         if user_id:
             user = User.objects.get(id=user_id)

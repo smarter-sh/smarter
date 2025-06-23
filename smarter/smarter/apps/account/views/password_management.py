@@ -22,7 +22,7 @@ from smarter.lib.django.token_generators import (
     SmarterTokenIntegrityError,
     SmarterTokenParseError,
 )
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
 
 
@@ -84,7 +84,7 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
     # pylint: disable=unused-argument
     def get(self, request, *args, **kwargs):
         logger.info("%s.get() begin", self.formatted_class_name)
-        user: UserType = None
+        user: UserClass = None
         form = PasswordResetView.NewPasswordForm()
         uidb64 = kwargs.get("uidb64", None)
         token = kwargs.get("token", None)

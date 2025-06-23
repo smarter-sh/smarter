@@ -14,7 +14,7 @@ from django.utils.http import (
 from django.utils.timezone import now as timezone_now
 
 from smarter.common.exceptions import SmarterException
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 
 
 DEFAULT_LINK_EXPIRATION = 86400
@@ -50,10 +50,10 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         self.expiration = expiration
         super().__init__()
 
-    def user_to_uidb64(self, user: UserType) -> str:
+    def user_to_uidb64(self, user: UserClass) -> str:
         return urlsafe_base64_encode(force_bytes(user.pk))
 
-    def uidb64_to_user(self, uidb64: str) -> UserType:
+    def uidb64_to_user(self, uidb64: str) -> UserClass:
         uid = urlsafe_base64_decode(uidb64)
         return User.objects.get(pk=uid)
 
@@ -67,7 +67,7 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         url = protocol + "://" + domain + slug
         return url
 
-    def decode_link(self, uidb64, token) -> UserType:
+    def decode_link(self, uidb64, token) -> UserClass:
         """Extract the user from the uid and token and validate."""
         user = self.uidb64_to_user(uidb64)
         self.validate(user, token)

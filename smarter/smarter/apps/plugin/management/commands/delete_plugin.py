@@ -9,7 +9,7 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 
 
 # pylint: disable=E1101
@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
         account: Optional[Account] = None
         plugin_meta: Optional[PluginMeta] = None
-        user: Optional[UserType] = None
+        user: Optional[UserClass] = None
         user_profile: Optional[UserProfile] = None
 
         try:

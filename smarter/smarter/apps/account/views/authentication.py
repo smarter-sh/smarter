@@ -18,7 +18,7 @@ from smarter.lib.django.token_generators import (
     SmarterTokenIntegrityError,
     SmarterTokenParseError,
 )
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User, UserClass
 from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedNeverCachedWebView,
     SmarterNeverCachedWebView,
@@ -49,7 +49,7 @@ class LoginView(SmarterNeverCachedWebView):
 
     def post(self, request):
         form = LoginView.LoginForm(request.POST)
-        authenticated_user: UserType = None
+        authenticated_user: UserClass = None
         if form.is_valid():
             email = form.cleaned_data["email"]
             try:

@@ -12,7 +12,7 @@ from knox.settings import CONSTANTS
 
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import UserClass
 
 
 logger = getLogger(__name__)
@@ -26,7 +26,7 @@ class SmarterAuthTokenManager(AuthTokenManager):
 
     def create(
         self,
-        user: UserType,
+        user: UserClass,
         expiry=None,
         prefix=None,
         name: str = None,

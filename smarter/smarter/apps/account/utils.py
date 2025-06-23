@@ -24,7 +24,7 @@ from smarter.common.exceptions import SmarterConfigurationError, SmarterValueErr
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
-from smarter.lib.django.user import User, UserType, get_resolved_user
+from smarter.lib.django.user import User, UserClass, get_resolved_user
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -157,7 +157,7 @@ def _get_cached_user_profile(resolved_user, account):
     return user_profile
 
 
-def get_cached_user_profile(user: UserType, account: Optional[Account] = None) -> Optional[UserProfile]:
+def get_cached_user_profile(user: User, account: Optional[Account] = None) -> Optional[UserProfile]:
     """
     Locates the user_profile for a given user, or None.
     """
@@ -179,13 +179,13 @@ def get_cached_user_profile(user: UserType, account: Optional[Account] = None) -
     return _get_cached_user_profile(resolved_user, account)
 
 
-def get_cached_user_for_user_id(user_id: int) -> UserType:
+def get_cached_user_for_user_id(user_id: int) -> User:
     """
     Returns the user for the given user_id.
     """
 
     @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
-    def _in_memory_user(user_id) -> UserType:
+    def _in_memory_user(user_id) -> User:
         """
         In-memory cache for user objects.
         """
@@ -220,7 +220,7 @@ def get_cached_admin_user_for_account(account: Account) -> AbstractUser:
         # Create a new admin user and UserProfile
         random_email = f"{uuid.uuid4().hex[:8]}@mail.com"
         if account and isinstance(account.account_number, str):
-            admin_user = User.objects.create_user(username=account.account_number, email=random_email, is_staff=True)
+            admin_user = User.objects.create_user(username=account.account_number, email=random_email, is_staff=True)  # type: ignore[arg-type]
             logger.info("%s created new admin User %s for account %s", console_prefix, admin_user, account)
             user_profile = UserProfile.objects.create(user=admin_user, account=account)
             logger.info("%s created new admin UserProfile for user %s", console_prefix, user_profile)
@@ -291,7 +291,7 @@ def account_number_from_url(url: str) -> Optional[str]:
     return retval
 
 
-def get_users_for_account(account: Account) -> list[UserType]:
+def get_users_for_account(account: Account) -> list[User]:
     """
     Returns a list of users for the given account.
     """
