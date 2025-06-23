@@ -7,7 +7,6 @@ from typing import Any, Optional, Type, Union
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.manifest.enum import (
-    SAMApiConnectionSpecKeys,
     SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
     SAMPluginCommonMetadataKeys,
@@ -24,6 +23,7 @@ from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
+from ..manifest.models.common.plugin.enum import SAMPluginCommonSpecTestValues
 from ..manifest.models.sql_plugin.const import MANIFEST_KIND
 from ..manifest.models.sql_plugin.enum import SAMSqlPluginSpecSqlData
 from ..manifest.models.sql_plugin.model import SAMSqlPlugin
@@ -234,108 +234,6 @@ class SqlPlugin(PluginBase):
                 **sql_data,
             }
 
-    @property
-    def function_parameters(self) -> Optional[dict[str, Any]]:
-        """
-        Fetch the function parameters from the Django model.
-        - format according to the OpenAI function calling schema.
-        """
-        if not self.plugin_data:
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.function_parameters() error: {self.name} plugin data is not available."
-            )
-        retval = self.plugin_data.parameters
-        if not isinstance(retval, dict):
-            raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.function_parameters() error: {self.name} parameters must be a dictionary."
-            )
-
-        if "required" not in retval.keys():
-            retval["required"] = []  # type: ignore[index]
-
-        return retval
-
-    @property
-    def custom_tool(self) -> dict[str, Any]:
-        """
-        Return the plugin tool. see https://platform.openai.com/docs/assistants/tools/function-calling/quickstart
-
-        example:
-        tools=[
-            {
-                "type": "function",
-                "function": {
-                    "name": "get_current_temperature",
-                    "description": "Get the current temperature for a specific location",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "location": {
-                                "type": "string",
-                                "description": "The city and state, e.g., San Francisco, CA"
-                            },
-                            "unit": {
-                                "type": "string",
-                                "enum": ["Celsius", "Fahrenheit"],
-                                "description": "The temperature unit to use. Infer this from the user's location."
-                            }
-                        },
-                        "required": ["location", "unit"]
-                    }
-                }
-            }
-        ]
-        """
-        if not self.ready:
-            raise SmarterPluginError(
-                f"{self.formatted_class_name}.custom_tool() error: {self.name} plugin is not ready."
-            )
-        if not self.plugin_data:
-            raise SmarterPluginError(
-                f"{self.formatted_class_name}.custom_tool() error: {self.name} plugin data is not available."
-            )
-        if not isinstance(self.plugin_data.parameters, dict):
-            raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.custom_tool() error: {self.name} parameters must be a dictionary."
-            )
-
-        return {
-            "type": "function",
-            "function": {
-                "name": self.function_calling_identifier,
-                "description": self.plugin_data.description,
-                "parameters": self.function_parameters,
-            },
-        }
-
-    @classmethod
-    def parameter_factory(
-        cls,
-        name: str,
-        data_type: str,
-        description: str,
-        enum: Optional[list] = None,
-        required: Optional[bool] = False,
-        default: Optional[Any] = None,
-    ) -> dict[str, Any]:
-        """
-        Factory method to create a parameter dictionary for the SQL plugin.
-        """
-        retval = {
-            "name": name,
-            "type": data_type,
-            "description": description,
-            "required": required,
-            "default": default,
-        }
-        if enum:
-            if not isinstance(enum, list):
-                raise SmarterConfigurationError(
-                    f"{cls.formatted_class_name}.parameter_factory() error: {name} enum must be a list."
-                )
-            retval["enum"] = enum
-        return retval
-
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict] = None) -> dict:
         sql_plugin = {
@@ -385,8 +283,14 @@ class SqlPlugin(PluginBase):
                         ),
                     ],
                     SAMSqlPluginSpecSqlData.TEST_VALUES.value: [
-                        {"name": "username", "value": "admin"},
-                        {"name": "unit", "value": "Celsius"},
+                        {
+                            SAMPluginCommonSpecTestValues.NAME.value: "username",
+                            SAMPluginCommonSpecTestValues.VALUE.value: "admin",
+                        },
+                        {
+                            SAMPluginCommonSpecTestValues.NAME.value: "unit",
+                            SAMPluginCommonSpecTestValues.VALUE.value: "Celsius",
+                        },
                     ],
                     SAMSqlPluginSpecSqlData.LIMIT.value: 1,
                 },
@@ -532,34 +436,18 @@ class SqlPlugin(PluginBase):
         """
         if self.ready:
             if version == "v1":
-                retval = {
-                    SAMKeys.APIVERSION.value: self.api_version,
-                    SAMKeys.KIND.value: self.kind,
-                    SAMKeys.METADATA.value: self.plugin_meta_serializer.data if self.plugin_meta_serializer else None,
-                    SAMKeys.SPEC.value: {
-                        SAMPluginSpecKeys.SELECTOR.value: (
-                            self.plugin_selector_serializer.data if self.plugin_selector_serializer else None
-                        ),
-                        SAMPluginSpecKeys.PROMPT.value: (
-                            self.plugin_prompt_serializer.data if self.plugin_prompt_serializer else None
-                        ),
-                        SAMApiConnectionSpecKeys.CONNECTION.value: (
-                            self.plugin_data.connection.name
-                            if self.plugin_data and self.plugin_data.connection
-                            else None
-                        ),
-                        SAMPluginSpecKeys.SQL_DATA.value: (
-                            self.plugin_data_serializer.data if self.plugin_data_serializer else None
-                        ),
-                    },
-                    SAMKeys.STATUS.value: {
-                        "id": self.plugin_meta.id if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
-                        "accountNumber": self.user_profile.account.account_number if self.user_profile else None,
-                        "username": self.user_profile.user.get_username() if self.user_profile else None,
-                        "created": self.plugin_meta.created_at.isoformat() if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
-                        "modified": self.plugin_meta.updated_at.isoformat() if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
-                    },
-                }
+                retval = super().to_json(version=version)
+                if not retval:
+                    raise SmarterPluginError(
+                        f"{self.formatted_class_name}.to_json() error: {self.name} plugin is not ready."
+                    )
+                if not isinstance(retval, dict):
+                    raise SmarterPluginError(
+                        f"{self.formatted_class_name}.to_json() error: {self.name} plugin data is not a valid JSON object. Received: {type(retval)}"
+                    )
+                retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.SQL_DATA.value] = (
+                    self.plugin_data_serializer.data if self.plugin_data_serializer else None
+                )
                 return json.loads(json.dumps(retval))
             raise SmarterPluginError(f"Invalid version: {version}")
         return None

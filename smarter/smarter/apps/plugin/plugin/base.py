@@ -2,6 +2,7 @@
 
 # python stuff
 import copy
+import datetime
 import json
 import logging
 import re
@@ -20,11 +21,16 @@ from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.exceptions import SmarterException, SmarterValueError
+from smarter.common.exceptions import (
+    SmarterConfigurationError,
+    SmarterException,
+    SmarterValueError,
+)
 from smarter.lib.django.user import UserType
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.openai.enum import OpenAIToolCall, OpenAIToolTypes
 
 # plugin stuff
 from ..manifest.enum import (
@@ -222,15 +228,62 @@ class PluginBase(ABC, SmarterHelperMixin):
 
     @property
     @abstractmethod
-    def custom_tool(self) -> dict:
-        """Return the plugin tool."""
-        raise NotImplementedError()
-
-    @property
-    @abstractmethod
     def plugin_data_django_model(self) -> dict:
         """Return the plugin data definition as a json object."""
         raise NotImplementedError()
+
+    @property
+    def custom_tool(self) -> dict[str, Any]:
+        """
+        Return the plugin tool. see https://platform.openai.com/docs/assistants/tools/function-calling/quickstart
+
+        example:
+        tools=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_current_temperature",
+                    "description": "Get the current temperature for a specific location",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "location": {
+                                "type": "string",
+                                "description": "The city and state, e.g., San Francisco, CA"
+                            },
+                            "unit": {
+                                "type": "string",
+                                "enum": ["Celsius", "Fahrenheit"],
+                                "description": "The temperature unit to use. Infer this from the user's location."
+                            }
+                        },
+                        "required": ["location", "unit"]
+                    }
+                }
+            }
+        ]
+        """
+        if not self.ready:
+            raise SmarterPluginError(
+                f"{self.formatted_class_name}.custom_tool() error: {self.name} plugin is not ready."
+            )
+        if not self.plugin_data:
+            raise SmarterPluginError(
+                f"{self.formatted_class_name}.custom_tool() error: {self.name} plugin data is not available."
+            )
+        if not isinstance(self.plugin_data.parameters, dict):
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}.custom_tool() error: {self.name} parameters must be a dictionary."
+            )
+
+        return {
+            OpenAIToolCall.TYPE.value: OpenAIToolTypes.FUNCTION.value,
+            OpenAIToolCall.FUNCTION.value: {
+                OpenAIToolCall.NAME.value: self.function_calling_identifier,
+                OpenAIToolCall.DESCRIPTION.value: self.plugin_data.description,
+                OpenAIToolCall.PARAMETERS.value: self.function_parameters,
+            },
+        }
 
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
@@ -613,6 +666,27 @@ class PluginBase(ABC, SmarterHelperMixin):
         except yaml.YAMLError:
             return False
 
+    @property
+    def function_parameters(self) -> Optional[dict[str, Any]]:
+        """
+        Fetch the function parameters from the Django model.
+        - format according to the OpenAI function calling schema.
+        """
+        if not self.plugin_data:
+            raise SmarterPluginError(
+                f"{self.formatted_class_name}.function_parameters() error: {self.name} plugin data is not available."
+            )
+        retval = self.plugin_data.parameters
+        if not isinstance(retval, dict):
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}.function_parameters() error: {self.name} parameters must be a dictionary."
+            )
+
+        if "required" not in retval.keys():
+            retval["required"] = []  # type: ignore[index]
+
+        return retval
+
     def create(self):
         """Create a plugin from either yaml or a dictionary."""
         if not self._manifest:
@@ -872,13 +946,45 @@ class PluginBase(ABC, SmarterHelperMixin):
         transaction.on_commit(lambda: committed(new_plugin=plugin_meta_copy))
         return plugin_meta_copy.id if plugin_meta_copy else None  # type: ignore[reportOptionalMemberAccess]
 
+    @classmethod
+    def parameter_factory(
+        cls,
+        name: str,
+        data_type: str,
+        description: str,
+        enum: Optional[list] = None,
+        required: Optional[bool] = False,
+        default: Optional[Any] = None,
+    ) -> dict[str, Any]:
+        """
+        Factory method to create a parameter dictionary for the SQL plugin.
+        """
+        retval = {
+            "name": name,
+            "type": data_type,
+            "description": description,
+            "required": required,
+            "default": default,
+        }
+        if enum:
+            if not isinstance(enum, list):
+                raise SmarterConfigurationError(
+                    f"{cls.formatted_class_name}.parameter_factory() error: {name} enum must be a list."
+                )
+            retval["enum"] = enum
+        return retval
+
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
         """
         Serialize a plugin in JSON format that is importable by Pydantic. This
         is used to create a Pydantic model from a Django ORM model
         for purposes of rendering a Plugin manifest for the Smarter API.
         """
-        data = {**self.plugin_data_serializer.data, "id": self.plugin_data.id if self.plugin_data else None}  # type: ignore[reportOptionalMemberAccess]
+
+        # note: doing this to ensure that we can actually serialize the plugin data
+        # pylint: disable=W0104
+        {**self.plugin_data_serializer.data, "id": self.plugin_data.id if self.plugin_data else None}  # type: ignore[reportOptionalMemberAccess]
+
         if self.ready:
             if version == "v1":
                 retval = {
@@ -896,10 +1002,30 @@ class PluginBase(ABC, SmarterHelperMixin):
                     },
                     SAMKeys.STATUS.value: {
                         "id": self.plugin_meta.id if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
-                        "accountNumber": self.user_profile.account.account_number if self.user_profile else None,
-                        "username": self.user_profile.user.get_username() if self.user_profile else None,
-                        "created": self.plugin_meta.created_at.isoformat() if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
-                        "modified": self.plugin_meta.updated_at.isoformat() if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
+                        "accountNumber": (
+                            self.user_profile.account.account_number
+                            if isinstance(self.user_profile, UserProfile)
+                            else None
+                        ),
+                        "username": (
+                            self.user_profile.user.get_username()
+                            if isinstance(self.user_profile, UserProfile)
+                            else None
+                        ),
+                        "created": (
+                            self.plugin_meta.created_at.isoformat()
+                            if self.plugin_meta
+                            and self.plugin_meta.created_at
+                            and isinstance(self.plugin_meta.created_at, datetime.datetime)
+                            else None
+                        ),
+                        "updated": (
+                            self.plugin_meta.updated_at.isoformat()
+                            if self.plugin_meta
+                            and self.plugin_meta.updated_at
+                            and isinstance(self.plugin_meta.updated_at, datetime.datetime)
+                            else None
+                        ),
                     },
                 }
                 return json.loads(json.dumps(retval))
