@@ -11,6 +11,7 @@ import json
 import logging
 import re
 import warnings
+from typing import Optional
 from urllib.parse import urlparse, urlunparse
 
 import validators
@@ -480,7 +481,7 @@ class SmarterValidator:
     # utility helpers
     # --------------------------------------------------------------------------
     @staticmethod
-    def base_domain(url: str) -> str:
+    def base_domain(url: str) -> Optional[str]:
         if not url:
             return None
         base_url = SmarterValidator.base_url(url)
@@ -490,7 +491,7 @@ class SmarterValidator:
         return base_url.rstrip("/")
 
     @staticmethod
-    def base_url(url: str) -> str:
+    def base_url(url: str) -> Optional[str]:
         if not url:
             return None
         SmarterValidator.validate_url(url)
@@ -499,13 +500,13 @@ class SmarterValidator:
         return SmarterValidator.trailing_slash(unparsed_url)
 
     @staticmethod
-    def trailing_slash(url: str) -> str:
+    def trailing_slash(url: str) -> Optional[str]:
         if not url:
             return None
         return url if url.endswith("/") else url + "/"
 
     @staticmethod
-    def urlify(url: str, scheme: str = None, environment: str = SmarterEnvironments.LOCAL) -> str:
+    def urlify(url: str, scheme: Optional[str] = None, environment: str = SmarterEnvironments.LOCAL) -> Optional[str]:
         """
         ensure that URL starts with http:// or https://
         and ends with a trailing slash
@@ -521,9 +522,11 @@ class SmarterValidator:
         if not "://" in url:
             url = f"{scheme}://{url}"
         parsed_url = urlparse(url)
-        url = urlunparse((scheme, parsed_url.netloc, parsed_url.path, "", "", ""))
-        url = SmarterValidator.trailing_slash(url)
-        SmarterValidator.validate_url(url)
+        retval = urlunparse((scheme, parsed_url.netloc, parsed_url.path, "", "", ""))
+        retval = SmarterValidator.trailing_slash(url)
+        if not retval:
+            raise SmarterValueError(f"Invalid URL {url}")
+        SmarterValidator.validate_url(retval)
         return url
 
     @staticmethod

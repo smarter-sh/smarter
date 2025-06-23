@@ -33,6 +33,9 @@ def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
                 user=user_profile.user,  # type: ignore[arg-type]
                 manifest=data,  # type: ignore[arg-type]
             )
+            # we do this to ensure that that plugin can instantiate correctly.
+            # Note that plugins self-validate in their own way, so this is just a basic check.
+            # pylint: disable=W0104
             plugin_controller.plugin
         else:
             raise SmarterValueError(f"Plugin {plugin.name} does not have a valid YAML representation.")
