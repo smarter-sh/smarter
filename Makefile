@@ -115,7 +115,7 @@ docker-init:
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2 && \
 		python manage.py initialize_wagtail" && \
 		python manage.py initialize_providers && \
-		python manage.py create_sqldb_connection --host sql.lawrencemcdaniel.com --db smarter_test_db --user smarter_test_user \
+		python manage.py create_stackacademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_user smarter_test_user \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
