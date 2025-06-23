@@ -16,7 +16,7 @@ This module defines an enumeration for OpenAI function calling types.
 from smarter.common.enum import SmarterEnumAbstract
 
 
-class OpenAIToolCallType(SmarterEnumAbstract):
+class OpenAIToolCall(SmarterEnumAbstract):
     """
     Enum for OpenAI function calling types.
     """
@@ -42,4 +42,22 @@ class OpenAIToolCallType(SmarterEnumAbstract):
             cls.OBJECT,
             cls.PROPERTIES,
             cls.REQUIRED,
+        ]
+
+
+class OpenAIToolTypes(SmarterEnumAbstract):
+    """
+    Enum for OpenAI tool types.
+    """
+
+    FUNCTION = "function"
+    CODE_INTERPRETER = "code_interpreter"
+    RETRIEVAL = "retrieval"
+
+    @classmethod
+    def all(cls):
+        return [
+            cls.FUNCTION,
+            cls.CODE_INTERPRETER,
+            cls.RETRIEVAL,
         ]

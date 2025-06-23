@@ -11,7 +11,7 @@ from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
-from smarter.lib.openai.enum import OpenAIToolCallType
+from smarter.lib.openai.enum import OpenAIToolCall
 
 # smarter plugin stuff
 from ..manifest.enum import (
@@ -26,12 +26,17 @@ from ..manifest.enum import (
 from ..manifest.models.api_plugin.const import MANIFEST_KIND
 from ..manifest.models.api_plugin.enum import SAMApiPluginSpecApiData
 from ..manifest.models.api_plugin.model import SAMApiPlugin
+from ..manifest.models.common.plugin.enum import SAMPluginCommonSpecTestValues
 from ..models import ApiConnection, PluginDataApi
 from ..serializers import PluginApiSerializer
-from .base import PluginBase
+from .base import PluginBase, SmarterPluginError
 
 
 logger = logging.getLogger(__name__)
+
+
+class SmarterApiPluginError(SmarterPluginError):
+    """Base class for all SQL plugin errors."""
 
 
 class ApiPlugin(PluginBase):
@@ -40,6 +45,11 @@ class ApiPlugin(PluginBase):
     _metadata_class = SAMPluginCommonMetadataClass.API.value
     _plugin_data: Optional[PluginDataApi] = None
     _plugin_data_serializer: Optional[PluginApiSerializer] = None
+
+    @property
+    def kind(self) -> str:
+        """Return the kind of the plugin."""
+        return MANIFEST_KIND
 
     @property
     def manifest(self) -> Optional[SAMApiPlugin]:
@@ -112,58 +122,6 @@ class ApiPlugin(PluginBase):
                 **api_data,
             }
 
-    @property
-    def custom_tool(self) -> Optional[dict[str, Any]]:
-        """Return the plugin tool. see https://platform.openai.com/docs/assistants/tools/function-calling/quickstart"""
-
-        def property_factory(param) -> dict:
-            try:
-                param_type = param["type"]
-                param_enum = param["enum"] if "enum" in param else None
-                param_description = param["description"]
-            except KeyError as e:
-                raise SmarterConfigurationError(
-                    f"{self.name} PluginDataApi custom_tool() error: missing required parameter key: {e}"
-                ) from e
-
-            if param_type not in PluginDataApi.DataTypes.all():
-                raise SmarterConfigurationError(
-                    f"{self.name} PluginDataApi custom_tool() error: invalid parameter type: {param_type}"
-                )
-
-            if param_enum and not isinstance(param_enum, list):
-                raise SmarterConfigurationError(
-                    f"{self.name} PluginDataApi custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
-                )
-
-            return {
-                "type": param_type,
-                "enum": param_enum,
-                "description": param_description,
-            }
-
-        properties = {}
-        if self.plugin_data and isinstance(self.plugin_data.parameters, dict):
-            for key in self.plugin_data.parameters.keys() if self.plugin_data.parameters else {}:
-                properties[key] = property_factory(param=self.plugin_data.parameters[key])
-
-        if self.ready:
-            return {
-                OpenAIToolCallType.TYPE.value: OpenAIToolCallType.FUNCTION.value,
-                OpenAIToolCallType.FUNCTION.value: {
-                    OpenAIToolCallType.NAME.value: self.function_calling_identifier,
-                    OpenAIToolCallType.DESCRIPTION.value: (
-                        self.plugin_meta.description if self.plugin_meta else "No description provided."
-                    ),
-                    OpenAIToolCallType.PARAMETERS.value: {
-                        OpenAIToolCallType.TYPE.value: OpenAIToolCallType.OBJECT.value,
-                        OpenAIToolCallType.PROPERTIES.value: properties,
-                        OpenAIToolCallType.REQUIRED.value: [],
-                    },
-                },
-            }
-        return None
-
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
 
@@ -193,31 +151,54 @@ class ApiPlugin(PluginBase):
                     SAMPluginCommonSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
                     SAMPluginCommonSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
                 },
-                SAMPluginSpecKeys.CONNECTION.value: "example_connection",
+                SAMPluginSpecKeys.CONNECTION.value: "smarter_test_api",
                 SAMPluginSpecKeys.API_DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMApiPluginSpecApiData.ENDPOINT.value: "/api/v1/example-endpoint/",
-                    SAMApiPluginSpecApiData.PARAMETERS.value: None,
-                    SAMApiPluginSpecApiData.HEADERS.value: None,
+                    SAMApiPluginSpecApiData.ENDPOINT.value: "/stackademy/course-catalogue/",
+                    SAMApiPluginSpecApiData.PARAMETERS.value: [
+                        cls.parameter_factory(
+                            name="max_cost",
+                            data_type="string",
+                            description="A ceiling on the maximum cost of the course.",
+                            required=False,
+                            default="500.00",
+                        ),
+                        cls.parameter_factory(
+                            name="description",
+                            data_type="string",
+                            description="A keyword to search for in the course description.",
+                            required=False,
+                            default="Python",
+                        ),
+                    ],
+                    SAMApiPluginSpecApiData.HEADERS.value: [
+                        {"X-Debug-Request": "true"},
+                    ],
                     SAMApiPluginSpecApiData.BODY.value: [
                         {
-                            OpenAIToolCallType.NAME.value: "test",
-                            OpenAIToolCallType.TYPE.value: "string",
-                            OpenAIToolCallType.DESCRIPTION.value: "The test to run.",
-                            OpenAIToolCallType.REQUIRED.value: True,
-                            OpenAIToolCallType.DEFAULT.value: "test",
+                            OpenAIToolCall.NAME.value: "test",
+                            OpenAIToolCall.TYPE.value: "string",
+                            OpenAIToolCall.DESCRIPTION.value: "The test to run.",
+                            OpenAIToolCall.REQUIRED.value: True,
+                            OpenAIToolCall.DEFAULT.value: "test",
                         },
                         {
-                            OpenAIToolCallType.NAME.value: "test2",
-                            OpenAIToolCallType.TYPE.value: "string",
-                            OpenAIToolCallType.DESCRIPTION.value: "The second test to run.",
-                            OpenAIToolCallType.REQUIRED.value: False,
-                            OpenAIToolCallType.DEFAULT.value: "test2",
+                            OpenAIToolCall.NAME.value: "test2",
+                            OpenAIToolCall.TYPE.value: "string",
+                            OpenAIToolCall.DESCRIPTION.value: "The second test to run.",
+                            OpenAIToolCall.REQUIRED.value: False,
+                            OpenAIToolCall.DEFAULT.value: "test2",
                         },
                     ],
                     SAMApiPluginSpecApiData.TEST_VALUES.value: [
-                        {"name": "username", "value": "admin"},
-                        {"name": "limit", "value": 1},
+                        {
+                            SAMPluginCommonSpecTestValues.NAME.value: "username",
+                            SAMPluginCommonSpecTestValues.VALUE.value: "admin",
+                        },
+                        {
+                            SAMPluginCommonSpecTestValues.NAME.value: "limit",
+                            SAMPluginCommonSpecTestValues.VALUE.value: "1",
+                        },
                     ],
                     SAMApiPluginSpecApiData.LIMIT.value: 10,
                 },
@@ -225,8 +206,15 @@ class ApiPlugin(PluginBase):
         }
         # recast the Python dict to the Pydantic model
         # in order to validate our output
-        pydantic_model = SAMApiPlugin(**api_plugin)
-        return json.loads(pydantic_model.model_dump_json())
+        try:
+            pydantic_model = SAMApiPlugin(**api_plugin)
+        except Exception as e:
+            raise SmarterConfigurationError(f"{cls.__name__} example_manifest() error: {e}") from e
+        try:
+            # validate the manifest against the schema
+            return json.loads(pydantic_model.model_dump_json())
+        except json.JSONDecodeError as e:
+            raise SmarterConfigurationError(f"{cls.__name__} example_manifest() error: {e}") from e
 
     def create(self):
         super().create()
@@ -238,3 +226,36 @@ class ApiPlugin(PluginBase):
         Fetch information from a Plugin object.
         """
         raise NotImplementedError("tool_call_fetch_plugin_response() must be implemented in a subclass of PluginBase.")
+
+    def apply(self, function_args: dict[str, Any]) -> Optional[str]:
+        """
+        Apply the plugin to the function arguments.
+        """
+        if not self.ready:
+            raise SmarterConfigurationError(f"{self.name} PluginDataApi.apply() error: Plugin is not ready.")
+
+        raise NotImplementedError("apply() must be implemented in a subclass of PluginBase.")
+
+    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
+        """
+        Serialize a SqlPlugin in JSON format that is importable by Pydantic. This
+        is used to create a Pydantic model from a Django ORM model
+        for purposes of rendering a Plugin manifest for the Smarter API.
+        """
+        if self.ready:
+            if version == "v1":
+                retval = super().to_json(version=version)
+                if not retval:
+                    raise SmarterPluginError(
+                        f"{self.formatted_class_name}.to_json() error: {self.name} plugin is not ready."
+                    )
+                if not isinstance(retval, dict):
+                    raise SmarterPluginError(
+                        f"{self.formatted_class_name}.to_json() error: {self.name} plugin data is not a valid JSON object. Received: {type(retval)}"
+                    )
+                retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.API_DATA.value] = (
+                    self.plugin_data_serializer.data if self.plugin_data_serializer else None
+                )
+                return json.loads(json.dumps(retval))
+            raise SmarterPluginError(f"Invalid version: {version}")
+        return None

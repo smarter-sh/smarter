@@ -466,6 +466,13 @@ class PluginDataBase(TimestampedModel):
     description = models.TextField(
         help_text="A brief description of what this plugin returns. Be verbose, but not too verbose.",
     )
+    parameters = models.JSONField(
+        help_text="A JSON dict containing parameter names and data types. Example: {'required': [], 'properties': {'max_cost': {'type': 'float', 'description': 'the maximum cost that a student is willing to pay for a course.'}, 'description': {'enum': ['AI', 'mobile', 'web', 'database', 'network', 'neural networks'], 'type': 'string', 'description': 'areas of specialization for courses in the catalogue.'}}}",
+        default=dict,
+        blank=True,
+        null=True,
+        validators=[validate_openai_parameters_dict],
+    )
 
     @abstractmethod
     def sanitized_return_data(self, params: Optional[dict] = None) -> dict:
@@ -1056,13 +1063,6 @@ class PluginDataSql(PluginDataBase):
             return [cls.STR, cls.NUMBER, cls.INT, cls.BOOL, cls.OBJECT, cls.ARRAY, cls.NULL]
 
     connection = models.ForeignKey(SqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql_connection")
-    parameters = models.JSONField(
-        help_text="A JSON dict containing parameter names and data types. Example: {'required': [], 'properties': {'max_cost': {'type': 'float', 'description': 'the maximum cost that a student is willing to pay for a course.'}, 'description': {'enum': ['AI', 'mobile', 'web', 'database', 'network', 'neural networks'], 'type': 'string', 'description': 'areas of specialization for courses in the catalogue.'}}}",
-        default=dict,
-        blank=True,
-        null=True,
-        validators=[validate_openai_parameters_dict],
-    )
     sql_query = models.TextField(
         help_text="The SQL query that this plugin will execute when invoked by the user prompt.",
     )
