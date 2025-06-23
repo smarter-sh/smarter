@@ -23,7 +23,7 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import User, UserClass
+from smarter.lib.django.user import UserClass, get_resolved_user
 from smarter.lib.django.validators import SmarterValidator
 
 from .signals import (
@@ -179,7 +179,7 @@ class AccountContact(TimestampedModel):
     is_test = models.BooleanField(default=False)
     welcomed = models.BooleanField(default=False)
 
-    def send_email(self, subject: str, body: str, html: bool = False, from_email: str = None):
+    def send_email(self, subject: str, body: str, html: bool = False, from_email: Optional[str] = None):
 
         email_helper.send_email(
             subject=subject, to=self.email, body=body, html=html, from_email=from_email, quiet=self.is_test
@@ -195,14 +195,14 @@ class AccountContact(TimestampedModel):
         self.send_email(subject=subject, body=body, html=True)
 
     @classmethod
-    def get_primary_contact(cls, account: Account) -> "AccountContact":
+    def get_primary_contact(cls, account: Account) -> Optional["AccountContact"]:
         """Get the primary contact for an account."""
         return cls.objects.filter(account=account, is_primary=True).first()
 
     # pylint: disable=too-many-arguments
     @classmethod
     def send_email_to_account(
-        cls, account: Account, subject: str, body: str, html: bool = False, from_email: str = None
+        cls, account: Account, subject: str, body: str, html: bool = False, from_email: Optional[str] = None
     ) -> None:
         """Send an email to all contacts of an account."""
         contacts = cls.objects.filter(account=account)
@@ -212,7 +212,7 @@ class AccountContact(TimestampedModel):
     # pylint: disable=too-many-arguments
     @classmethod
     def send_email_to_primary_contact(
-        cls, account: Account, subject: str, body: str, html: bool = False, from_email: str = None
+        cls, account: Account, subject: str, body: str, html: bool = False, from_email: Optional[str] = None
     ) -> None:
         """Send an email to the primary point of contact of an account."""
         contact = cls.get_primary_contact(account)
@@ -257,7 +257,7 @@ class UserProfile(TimestampedModel):
 
     # Add more fields here as needed
     user = models.ForeignKey(
-        User,
+        UserClass,
         on_delete=models.CASCADE,
         related_name="user_profile",
     )
@@ -294,17 +294,17 @@ class UserProfile(TimestampedModel):
             new_user_created.send(sender=self.__class__, user_profile=self)
 
     @classmethod
-    def admin_for_account(cls, account: Account) -> UserClass:
+    def admin_for_account(cls, account: Account) -> Optional[UserClass]:
         """Return the designated user for the account."""
         admins = cls.objects.filter(account=account, user__is_staff=True).order_by("user__id")
         if admins.exists():
-            return admins.first().user
+            return admins.first().user  # type: ignore[return-value]
 
         logger.error("No admin found for account %s", account)
 
         users = cls.objects.filter(account=account).order_by("user__id")
         if users.exists():
-            user = users.first().user
+            user = users.first().user  # type: ignore[return-value]
             return user
 
         logger.error("No user for account %s", account)
@@ -361,7 +361,7 @@ class Charge(TimestampedModel):
     """Charge model for periodic account billing."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
+    user = models.ForeignKey(UserClass, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
     session_key = models.CharField(max_length=255, null=True, blank=True)
     provider = models.CharField(
         max_length=255,
@@ -397,7 +397,7 @@ class DailyBillingRecord(TimestampedModel):
     """Daily billing record model for aggregated charges."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="daily_billing_records")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="daily_billing_records")
+    user = models.ForeignKey(UserClass, on_delete=models.CASCADE, related_name="daily_billing_records")
     provider = models.CharField(
         max_length=255,
         choices=PROVIDERS,
@@ -512,7 +512,9 @@ class Secret(TimestampedModel):
         """Determine if the authenticated user has permissions to manage this key."""
         if not hasattr(request, "user"):
             return False
-        user = request.user
+        user = get_resolved_user(request.user)
+        if not isinstance(user, UserClass):
+            return False
         if not hasattr(user, "is_authenticated") or not user.is_authenticated:
             return False
         if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):

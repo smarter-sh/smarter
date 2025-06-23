@@ -157,7 +157,7 @@ def _get_cached_user_profile(resolved_user, account):
     return user_profile
 
 
-def get_cached_user_profile(user: User, account: Optional[Account] = None) -> Optional[UserProfile]:
+def get_cached_user_profile(user: UserClass, account: Optional[Account] = None) -> Optional[UserProfile]:
     """
     Locates the user_profile for a given user, or None.
     """
@@ -179,17 +179,17 @@ def get_cached_user_profile(user: User, account: Optional[Account] = None) -> Op
     return _get_cached_user_profile(resolved_user, account)
 
 
-def get_cached_user_for_user_id(user_id: int) -> User:
+def get_cached_user_for_user_id(user_id: int) -> UserClass:
     """
     Returns the user for the given user_id.
     """
 
     @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
-    def _in_memory_user(user_id) -> User:
+    def _in_memory_user(user_id) -> UserClass:
         """
         In-memory cache for user objects.
         """
-        user = User.objects.get(id=user_id)
+        user = UserClass.objects.get(id=user_id)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
             logger.info("_in_memory_user() retrieving and caching user %s", user)
         return user  # type: ignore[return-value]
@@ -291,13 +291,13 @@ def account_number_from_url(url: str) -> Optional[str]:
     return retval
 
 
-def get_users_for_account(account: Account) -> list[User]:
+def get_users_for_account(account: Account) -> list[UserClass]:
     """
     Returns a list of users for the given account.
     """
     if not account:
         raise SmarterValueError("Account is required")
-    users = User.objects.filter(userprofile__account=account)
+    users = UserClass.objects.filter(userprofile__account=account)
     return list[users]  # type: ignore[list-item,return-value]
 
 

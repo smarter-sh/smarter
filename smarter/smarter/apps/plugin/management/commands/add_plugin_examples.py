@@ -13,7 +13,9 @@ from smarter.lib.django.user import User
 
 # pylint: disable=E1101
 class Command(BaseCommand):
-    """Django manage.py create_plugin command. This command is used to add plugin examples to a user account."""
+    """
+    Django manage.py create_plugin command. This command is used to add plugin examples to a user account.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""

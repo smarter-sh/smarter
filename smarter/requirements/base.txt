@@ -41,9 +41,11 @@ djangorestframework-stubs==3.16.0       # type annotations for djangorestframewo
 django-filter==24.1                     # REST API filtering
 django-taggit==6.1.0                    # Smarter Plugin tagging
 django-rest-knox==5.0.2                 # Token authentication for REST APIs
-# dj-stripe==2.9.0                        # Stripe card processing integration
+django-stubs==5.2.1                     # Type annotations for Django
+# dj-stripe==2.9.0                      # Stripe card processing integration
 django-cors-headers==4.7.0              # Cross-origin resource sharing
 django-waffle==4.2.0                    # Feature flagging
+mypy_extensions==1.1.0                  # Type annotations for Python
 
 # for working with data
 # ------------
