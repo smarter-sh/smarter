@@ -25,7 +25,6 @@ class Migration(migrations.Migration):
                 default=dict,
                 help_text="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use. Infer this from the user's location.'}}",
                 null=True,
-                validators=[smarter.apps.plugin.models.validate_dict],
             ),
         ),
     ]
