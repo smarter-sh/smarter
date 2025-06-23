@@ -17,14 +17,15 @@ import uuid
 from functools import lru_cache
 from typing import Optional
 
-from django.contrib.auth.models import AbstractUser, AnonymousUser
+from django.contrib.auth.models import AnonymousUser
 
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
-from smarter.lib.django.user import User, UserClass, get_resolved_user
+from smarter.lib.django.user import UserClass as User
+from smarter.lib.django.user import get_resolved_user
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -157,7 +158,7 @@ def _get_cached_user_profile(resolved_user, account):
     return user_profile
 
 
-def get_cached_user_profile(user: UserClass, account: Optional[Account] = None) -> Optional[UserProfile]:
+def get_cached_user_profile(user: User, account: Optional[Account] = None) -> Optional[UserProfile]:
     """
     Locates the user_profile for a given user, or None.
     """
@@ -179,17 +180,17 @@ def get_cached_user_profile(user: UserClass, account: Optional[Account] = None) 
     return _get_cached_user_profile(resolved_user, account)
 
 
-def get_cached_user_for_user_id(user_id: int) -> UserClass:
+def get_cached_user_for_user_id(user_id: int) -> User:
     """
     Returns the user for the given user_id.
     """
 
     @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
-    def _in_memory_user(user_id) -> UserClass:
+    def _in_memory_user(user_id) -> User:
         """
         In-memory cache for user objects.
         """
-        user = UserClass.objects.get(id=user_id)
+        user = User.objects.get(id=user_id)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
             logger.info("_in_memory_user() retrieving and caching user %s", user)
         return user  # type: ignore[return-value]
@@ -201,7 +202,7 @@ def get_cached_user_for_user_id(user_id: int) -> UserClass:
 
 
 @cache_results()
-def get_cached_admin_user_for_account(account: Account) -> AbstractUser:
+def get_cached_admin_user_for_account(account: Account) -> User:
     """
     Returns the account admin user for the given account. If the user does not exist, it will be created.
     """
@@ -291,13 +292,13 @@ def account_number_from_url(url: str) -> Optional[str]:
     return retval
 
 
-def get_users_for_account(account: Account) -> list[UserClass]:
+def get_users_for_account(account: Account) -> list[User]:
     """
     Returns a list of users for the given account.
     """
     if not account:
         raise SmarterValueError("Account is required")
-    users = UserClass.objects.filter(userprofile__account=account)
+    users = User.objects.filter(userprofile__account=account)
     return list[users]  # type: ignore[list-item,return-value]
 
 

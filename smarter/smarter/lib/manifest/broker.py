@@ -236,6 +236,18 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         if self._plugin:
             return self._plugin
+        if not self.user:
+            raise SAMBrokerError(
+                message="No user set for the broker",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.CHAT,
+            )
+        if not self.account:
+            raise SAMBrokerError(
+                message="No account set for the broker",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.CHAT,
+            )
         controller = PluginController(
             request=self.smarter_request,
             user=self.user,
@@ -403,7 +415,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
         )
 
-    def describe(self, request: WSGIRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
+    def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.info(
             "%s.describe() called %s with args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs
         )
@@ -417,7 +429,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 if isinstance(data, dict):
                     data[SAMKeys.METADATA.value].get(SAMMetadataKeys.ACCOUNT.value)
                     data[SAMKeys.METADATA.value].get(SAMMetadataKeys.AUTHOR.value)
-                return self.json_response_ok(command=command, data=data) if isinstance(data, dict) else None
+                # return self.json_response_ok(command=command, data=data) if isinstance(data, dict) else None
+                return SmarterJournaledJsonResponse(
+                    request=request,
+                    command=command,
+                    data=data,
+                )
             except Exception as e:
                 name = self.plugin_meta.name if self.plugin_meta else "unknown"
                 raise SAMBrokerError(

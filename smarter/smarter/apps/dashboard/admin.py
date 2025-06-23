@@ -4,6 +4,7 @@
 from django import forms
 from django.apps import apps
 from django.contrib import admin
+from django.contrib.admin.exceptions import AlreadyRegistered
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -52,14 +53,10 @@ from smarter.apps.prompt.admin import (
 )
 from smarter.apps.prompt.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from smarter.apps.provider.admin import ProviderAdmin, ProviderModelAdmin
-from smarter.apps.provider.models import (
-    Provider,
-    ProviderModel,
-    ProviderModelVerification,
-    ProviderVerification,
-)
+from smarter.apps.provider.models import Provider, ProviderModel
 from smarter.lib.django.admin import RestrictedModelAdmin, SuperUserOnlyModelAdmin
-from smarter.lib.django.user import User
+from smarter.lib.django.user import UserClass as User
+from smarter.lib.django.user import get_resolved_user
 from smarter.lib.drf.admin import SmarterAuthTokenAdmin
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.admin import SAMJournalAdmin
@@ -80,9 +77,13 @@ class RestrictedAdminSite(admin.AdminSite):
     site_header = "Smarter Admin Console v" + __version__ + " (" + role + ")"
 
     def each_context(self, request):
-        if request.user.is_superuser:
+        user = get_resolved_user(request.user)
+        if not user:
+            self.role = "guest"
+            return super().each_context(request)
+        if user.is_superuser:
             self.role = "superuser"
-        elif request.user.is_staff:
+        elif user.is_staff:
             self.role = "account admin"
         self.site_header = "Smarter Admin Console v" + __version__ + " (" + self.role + ")"
 
@@ -117,16 +118,23 @@ class RestrictedUserAdmin(UserAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        if request.user.is_superuser:
+        user = get_resolved_user(request.user)
+        if not user:
+            return qs.none()
+        if user and user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(user=request.user)
-            return qs.filter(account=user_profile.account)
+            if user.is_authenticated:
+                user_profile = get_cached_user_profile(user=user)
+                return qs.filter(account=user_profile.account)  # type: ignore
         except UserProfile.DoesNotExist:
             return qs.none()
 
     def get_readonly_fields(self, request, obj=None):
-        if request.user.is_superuser:
+        user = get_resolved_user(request.user)
+        if not user:
+            return ["username", "email", "first_name", "last_name", "is_staff", "is_active", "date_joined"]
+        if user.is_superuser:
             return ("username", "last_login", "date_joined")
         return super().get_readonly_fields(request, obj)
 
@@ -206,9 +214,8 @@ restricted_site.register(SAMJournal, SAMJournalAdmin)
 # All remaining models are registered with the SuperUserOnlyModelAdmin
 # to restrict access to superusers only
 models = apps.get_models()
-
 for model in models:
     try:
         restricted_site.register(model, SuperUserOnlyModelAdmin)
-    except admin.sites.AlreadyRegistered:
+    except AlreadyRegistered:
         pass

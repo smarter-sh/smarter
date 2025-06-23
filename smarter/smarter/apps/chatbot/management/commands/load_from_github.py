@@ -6,6 +6,7 @@ organized in directories by customer API name.
 import os
 import re
 import subprocess
+from typing import Optional
 from urllib.parse import urljoin
 
 import yaml
@@ -24,7 +25,7 @@ from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import User, UserClass
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -32,10 +33,10 @@ from smarter.lib.django.validators import SmarterValidator
 class Command(BaseCommand):
     """Deploy customer APIs from a GitHub repository of plugin YAML files organized by customer API name."""
 
-    _url: str = None
-    user: UserClass = None
-    account: Account = None
-    user_profile: UserProfile = None
+    _url: Optional[str] = None
+    user: User
+    account: Account
+    user_profile: UserProfile
 
     def __init__(self, stdout=None, stderr=None, no_color=False, force_color=False):
         super().__init__(stdout, stderr, no_color, force_color)
@@ -175,7 +176,8 @@ class Command(BaseCommand):
 
             for _, _, files in os.walk(directory):
                 for file in files:
-                    if file.endswith(".yaml") or file.endswith(".yml"):
+
+                    if isinstance(file, str) and file.endswith(".yaml") or file.endswith(".yml"):
                         return True
             return False
 
@@ -205,9 +207,12 @@ class Command(BaseCommand):
                                 filename = os.path.basename(filespec)
                                 print(f"Loading plugin: {filename}")
                                 plugin = self.load_plugin(filespec=filespec)
+                                if not plugin:
+                                    self.stderr.write(f"Error loading plugin: {filename}")
+                                    continue
                                 ChatBotPlugin.objects.get_or_create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
 
-                    deploy_default_api.delay(chatbot_id=chatbot.id, with_domain_verification=False)
+                    deploy_default_api.delay(chatbot_id=chatbot.id, with_domain_verification=False)  # type: ignore
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -241,14 +246,15 @@ class Command(BaseCommand):
             raise SmarterValueError("username and/or account_number is required.")
 
         if account_number:
-            self.account = get_cached_account(account_number=account_number)
+            self.account = get_cached_account(account_number=account_number)  # type: ignore
 
         if username:
             self.user = User.objects.get(username=username)
         else:
             self.user = get_cached_admin_user_for_account(account=self.account)
 
-        self.user_profile = UserProfile.objects.get(user=self.user, account=self.account) if self.user else None
+        if self.user is not None:
+            self.user_profile = UserProfile.objects.get(user=self.user, account=self.account)
 
         if repo_version == 2:
             # iterate repo and apply manifests

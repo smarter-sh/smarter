@@ -12,7 +12,7 @@ from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.django.user import UserClass
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -37,13 +37,13 @@ class Command(BaseCommand):
         username: Optional[str] = options["username"]
 
         account: Account
-        user: UserClass
+        user: User
 
         self.stdout.write(f"manage.py create_plugin: account_number: {account_number} file_path: {file_path}")
 
         try:
-            user = UserClass.objects.get(username=username)  # type: ignore
-        except UserClass.DoesNotExist:
+            user = User.objects.get(username=username)  # type: ignore
+        except User.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"manage.py create_plugin: User {username} does not exist."))
             sys.exit(1)
 

@@ -40,7 +40,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake
 from smarter.lib.cache import cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import UserClass
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.django.validators import SmarterValidator
 
 from .manifest.enum import (
@@ -300,7 +300,7 @@ class PluginMeta(TimestampedModel):
 
     @classmethod
     @cache_results()
-    def get_cached_plugins_for_user(cls, user: UserClass) -> list["PluginMeta"]:
+    def get_cached_plugins_for_user(cls, user: User) -> list["PluginMeta"]:
         """
         Return a list of all instances of PluginMeta for the given user.
         This method caches the results to improve performance.
@@ -312,7 +312,7 @@ class PluginMeta(TimestampedModel):
         return list(plugins) or []
 
     @classmethod
-    def get_cached_plugin_by_name(cls, user: UserClass, name: str) -> Union["PluginMeta", None]:
+    def get_cached_plugin_by_name(cls, user: User, name: str) -> Union["PluginMeta", None]:
         """
         Return a single instance of PluginMeta by name for the given user.
         This method caches the results to improve performance.
@@ -605,7 +605,7 @@ class ConnectionBase(TimestampedModel):
         raise NotImplementedError
 
     @classmethod
-    def get_cached_connections_for_user(cls, user: UserClass) -> list["ConnectionBase"]:
+    def get_cached_connections_for_user(cls, user: User) -> list["ConnectionBase"]:
         """
         Return a list of all instances of all concrete subclasses of ConnectionBase.
         """
@@ -621,7 +621,7 @@ class ConnectionBase(TimestampedModel):
     @classmethod
     @cache_results()
     def get_cached_connection_by_name_and_kind(
-        cls, user: UserClass, kind: SAMKinds, name: str
+        cls, user: User, kind: SAMKinds, name: str
     ) -> Union["ConnectionBase", None]:
         """
         Return a single instance of a concrete subclass of ConnectionBase by name.

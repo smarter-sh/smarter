@@ -5,7 +5,7 @@ import datetime
 import logging
 import os
 import urllib.parse
-from typing import TypedDict
+from typing import Optional, TypedDict
 
 import requests
 from django.db import models
@@ -19,7 +19,7 @@ from smarter.common.exceptions import (
 )
 from smarter.lib.cache import cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import User
+from smarter.lib.django.user import UserClass as User
 
 from .const import VERIFICATION_LEAD_TIME, VERIFICATION_LIFETIME
 from .manifest.enum import ProviderModelEnum
@@ -37,7 +37,7 @@ from .signals import (
 
 
 logger = logging.getLogger(__name__)
-CACHE_TIMEOUT = 60 / 2  # 30 seconds
+CACHE_TIMEOUT = int(60 / 2)  # 30 seconds
 
 
 class ProviderModelTypedDict(TypedDict):
@@ -568,7 +568,7 @@ def get_providers() -> list[Provider]:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_model_for_provider(provider_name: str, model_name: str = None) -> ProviderModelTypedDict:
+def get_model_for_provider(provider_name: str, model_name: Optional[str] = None) -> ProviderModelTypedDict:
     """
     Get the model for a provider by name and account number. This is the
     primary way to retrieve a model for a provider. Raises a Smarter error if
@@ -602,7 +602,7 @@ def get_model_for_provider(provider_name: str, model_name: str = None) -> Provid
     return {
         ProviderModelEnum.API_KEY.value: provider.production_api_key(mask=False),
         ProviderModelEnum.PROVIDER_NAME.value: provider.name,
-        ProviderModelEnum.PROVIDER_ID.value: provider.id,
+        ProviderModelEnum.PROVIDER_ID.value: provider.id,  # type: ignore[union-attr]
         ProviderModelEnum.BASE_URL.value: provider.base_url,
         ProviderModelEnum.MODEL.value: model.name,
         ProviderModelEnum.MAX_TOKENS.value: model.max_tokens,
@@ -636,8 +636,6 @@ def get_models_for_provider(provider_name: str) -> list[ProviderModelTypedDict]:
     provider_models = ProviderModel.objects.filter(provider=provider, is_active=True)
 
     return [
-        get_model_for_provider(
-            account_number=provider.account.account_number, provider_name=provider_name, model_name=provider_model.name
-        )
+        get_model_for_provider(provider_name=provider_name, model_name=provider_model.name)
         for provider_model in provider_models
     ]

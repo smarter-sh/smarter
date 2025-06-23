@@ -9,7 +9,7 @@ There are a few objectives of this class:
 """
 
 import logging
-from typing import Callable, Dict, List, Optional, Type
+from typing import Callable, Dict, List, Optional, Type, Union
 
 from django.core.cache import cache
 
@@ -19,7 +19,7 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
-from smarter.lib.django.user import UserClass
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base_classes import OpenAICompatibleChatProvider
@@ -68,10 +68,10 @@ class ChatProviders(SmarterHelperMixin):
         return self._openai
 
     @property
-    def default(self) -> Type[OpenAICompatibleChatProvider]:
+    def default(self) -> OpenAIChatProvider:
         if self._default is None:
             self._default = OpenAIChatProvider()
-        return self._default  # type: ignore[return-value]
+        return self._default
 
     def get_cache_key(self, chat: Chat) -> str:
         """
@@ -92,8 +92,8 @@ class ChatProviders(SmarterHelperMixin):
     # all handlers
     # -------------------------------------------------------------------------
     def openai_handler(
-        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[UserClass] = None
-    ) -> Callable:
+        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[User] = None
+    ) -> Union[dict, list]:
         """Expose the handler method of the default provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
@@ -109,6 +109,10 @@ class ChatProviders(SmarterHelperMixin):
                     chat.id,  # type: ignore[arg-type]
                 )
 
+            if not user:
+                raise SmarterValueError(
+                    f"{self.formatted_class_name}: user is required to handle OpenAIChatProvider calls."
+                )
             # if we have a cached provider, we can use it to invoke the handler
             # with everything preinitialized (from the last invocation) get the response.
             result = cached_provider.handler(chat=chat, data=data, plugins=plugins, user=user)
@@ -129,8 +133,8 @@ class ChatProviders(SmarterHelperMixin):
         return result
 
     def googleai_handler(
-        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[UserClass] = None
-    ) -> Callable:
+        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[User] = None
+    ) -> Union[dict, list]:
         """Expose the handler method of the googleai provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
@@ -143,7 +147,11 @@ class ChatProviders(SmarterHelperMixin):
                 logger.info(
                     "%s.googleai_handler() returning cached GoogleAIChatProvider for chat %s",
                     self.formatted_class_name,
-                    chat.id,
+                    chat.id,  # type: ignore[arg-type]
+                )
+            if not user:
+                raise SmarterValueError(
+                    f"{self.formatted_class_name}: user is required to handle GoogleAIChatProvider calls."
                 )
             result = cached_provider.handler(chat=chat, data=data, plugins=plugins, user=user)
             cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
@@ -159,8 +167,8 @@ class ChatProviders(SmarterHelperMixin):
         return result
 
     def metaai_handler(
-        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[UserClass] = None
-    ) -> Callable:
+        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[User] = None
+    ) -> Union[dict, list]:
         """Expose the handler method of the metaai provider"""
         self.validate_chat(chat)
         cache_key = self.get_cache_key(chat)
@@ -171,7 +179,12 @@ class ChatProviders(SmarterHelperMixin):
                 SmarterWaffleSwitches.CACHE_LOGGING
             ):
                 logger.info(
-                    "%s returning cached MetaAIChatProvider for chat %s", formatted_text("metaai_handler()"), chat.id
+                    "%s returning cached MetaAIChatProvider for chat %s", formatted_text("metaai_handler()"), chat.id  # type: ignore[arg-type]
+                )
+
+            if not user:
+                raise SmarterValueError(
+                    f"{self.formatted_class_name}: user is required to handle MetaAIChatProvider calls."
                 )
             result = cached_provider.handler(chat=chat, data=data, plugins=plugins, user=user)
             cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
@@ -187,8 +200,8 @@ class ChatProviders(SmarterHelperMixin):
         return result
 
     def default_handler(
-        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[UserClass] = None
-    ) -> Callable:
+        self, chat: Chat, data: dict, plugins: Optional[List[PluginBase]] = None, user: Optional[User] = None
+    ) -> Union[dict, list]:
         """Expose the handler method of the default provider"""
         return self.openai_handler(chat=chat, data=data, plugins=plugins, user=user)
 
@@ -207,7 +220,7 @@ class ChatProviders(SmarterHelperMixin):
             "DEFAULT": self.default_handler,
         }
 
-    def get_handler(self, provider: str = None) -> Callable:
+    def get_handler(self, provider: Optional[str] = None) -> Callable:
         """
         A convenience method to get a handler by provider name.
         """
@@ -221,7 +234,12 @@ class ChatProviders(SmarterHelperMixin):
 
     @property
     def all(self) -> list[str]:
-        return list({self.googleai.provider, self.metaai.provider, self.openai.provider, self.default.provider})
+        return [
+            self.googleai.provider or "GoogleAi",
+            self.metaai.provider or "MetaAI",
+            self.openai.provider or "OpenAI",
+            self.default.provider or "Default",
+        ]
 
 
 chat_providers = ChatProviders()

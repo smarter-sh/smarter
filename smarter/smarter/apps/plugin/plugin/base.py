@@ -26,7 +26,7 @@ from smarter.common.exceptions import (
     SmarterException,
     SmarterValueError,
 )
-from smarter.lib.django.user import UserClass
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
@@ -567,9 +567,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             return self.ready
         return False
 
-    def selected(
-        self, user: UserClass, input_text: Optional[str] = None, messages: Optional[list[dict]] = None
-    ) -> bool:
+    def selected(self, user: User, input_text: Optional[str] = None, messages: Optional[list[dict]] = None) -> bool:
         """
         Return True the user has mentioned Lawrence McDaniel or FullStackWithLawrence
         at any point in the history of the conversation.

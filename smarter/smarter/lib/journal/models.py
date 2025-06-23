@@ -3,7 +3,7 @@
 from django.db import models
 
 from smarter.common.utils import hash_factory
-from smarter.lib.django.user import User
+from smarter.lib.django.user import UserClass as User
 
 from .enum import SmarterJournalCliCommands, SmarterJournalThings
 

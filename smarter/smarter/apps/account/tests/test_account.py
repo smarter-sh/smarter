@@ -4,7 +4,7 @@
 from smarter.common.utils import hash_factory
 
 # our stuff
-from smarter.lib.django.user import User
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..models import Account, UserProfile
@@ -58,7 +58,7 @@ class TestAccount(SmarterTestBase):
             postal_code="12345",
         )
 
-        account_to_update = Account.objects.get(id=account.id)
+        account_to_update = Account.objects.get(id=account.id)  # type: ignore[assignment]
         account_to_update.company_name = "New Company"
         account_to_update.save()
 

@@ -9,7 +9,7 @@ from typing import Dict, Optional, Type
 from smarter.apps.account.models import Account, UserProfile
 
 # lib manifest
-from smarter.lib.django.user import UserClass
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.controller import AbstractController
 from smarter.lib.manifest.exceptions import SAMExceptionBase
@@ -48,7 +48,7 @@ class PluginController(AbstractController):
     def __init__(
         self,
         account: Account,
-        user: UserClass,
+        user: User,
         *args,
         user_profile: Optional[UserProfile] = None,
         manifest: Optional[SAMPluginCommon] = None,

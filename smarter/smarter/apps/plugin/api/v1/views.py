@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 import yaml
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from rest_framework import status
@@ -18,12 +19,14 @@ from rest_framework.response import Response
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import User
+from smarter.lib.django.user import UserClass as User
+from smarter.lib.django.user import get_resolved_user
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
@@ -33,27 +36,30 @@ from smarter.lib.drf.views.token_authentication_helpers import (
 class PluginView(SmarterAuthenticatedAPIView):
     """Plugin view for smarter api."""
 
-    def get(self, request, plugin_id):
+    def get(self, request: WSGIRequest, plugin_id):
         return get_plugin(request, plugin_id)
 
-    def put(self, request):
+    def put(self, request: WSGIRequest):
         return create_plugin(request)
 
-    def post(self, request):
+    def post(self, request: WSGIRequest):
         return create_plugin(request)
 
-    def patch(self, request):
+    def patch(self, request: WSGIRequest):
         return update_plugin(request)
 
-    def delete(self, request, plugin_id):
+    def delete(self, request: WSGIRequest, plugin_id):
         return delete_plugin(request, plugin_id)
 
 
 class PluginCloneView(SmarterAuthenticatedAPIView):
     """Plugin clone view for smarter api."""
 
-    def post(self, request, plugin_id, new_name):
-        user_profile = get_cached_user_profile(user=request.user)
+    def post(self, request: WSGIRequest, plugin_id, new_name):
+        user = get_resolved_user(request.user)
+        if not user:
+            return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
+        user_profile = get_cached_user_profile(user=user)
         plugin_controller = PluginController(
             user_profile=user_profile,
             account=user_profile.account,  # type: ignore[arg-type]
@@ -85,7 +91,7 @@ class PluginListView(SmarterAuthenticatedListAPIView):
 class AddPluginExamplesView(SmarterAuthenticatedAPIView):
     """Add example plugins to a user profile."""
 
-    def post(self, request, user_id=None):
+    def post(self, request: WSGIRequest, user_id=None):
         try:
             user = User.objects.get(id=user_id) if user_id else request.user
             user_profile = get_cached_user_profile(user=user)  # type: ignore
@@ -128,14 +134,14 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 
         raise SmarterValueError("Invalid data format: expected JSON or YAML.")
 
-    def _create(self, request):
-        data = self.parse_yaml_file(data=request.data)
+    def _create(self, request: WSGIRequest):
+        data = self.parse_yaml_file(data=request.body.decode("utf-8"))
         return create_plugin(request=request, data=data)
 
-    def put(self, request):
+    def put(self, request: WSGIRequest):
         return self._create(request)
 
-    def post(self, request):
+    def post(self, request: WSGIRequest):
         return self._create(request)
 
 
@@ -219,16 +225,20 @@ def create_plugin(request, data: Optional[dict] = None):
     return HttpResponseRedirect(plugins_api_url + str(plugin.id) + "/")
 
 
-def update_plugin(request):
+def update_plugin(request: WSGIRequest):
     """update a plugin from a json representation in the body of the request."""
+    user = get_resolved_user(request.user)
+    data: str
 
+    if not user:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
     try:
-        user_profile = get_cached_user_profile(user=request.user)
+        user_profile = get_cached_user_profile(user=user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
     try:
-        data = request.data
+        data = request.body.decode("utf-8")
         if not isinstance(data, dict):
             return JsonResponse(
                 {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
@@ -240,18 +250,29 @@ def update_plugin(request):
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
     try:
+        data = json.loads(data)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format"}, status=HTTPStatus.BAD_REQUEST)
+
+    if not user_profile:
+        return JsonResponse({"error": "User profile not found"}, status=HTTPStatus.UNAUTHORIZED)
+    try:
         plugin_controller = PluginController(
             user_profile=user_profile,
-            account=user_profile.account,  # type: ignore[arg-type]
-            user=user_profile.user,  # type: ignore[arg-type]
-            manifest=data,  # type: ignore[arg-type]
+            account=user_profile.account,
+            user=user_profile.user,
+            manifest=SAMPluginCommon(**data),  # type: ignore[arg-type]
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise PluginDataValueError(
                 f"PluginController could not be created for data: {data}, user_profile: {user_profile}"
             )
         plugin = plugin_controller.plugin
-        plugin.update(data)
+        if not plugin:
+            return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+        if not data:
+            return JsonResponse({"error": "No data provided for update"}, status=HTTPStatus.BAD_REQUEST)
+        plugin.update()
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
