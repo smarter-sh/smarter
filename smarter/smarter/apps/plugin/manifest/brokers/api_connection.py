@@ -5,8 +5,8 @@ import json
 from logging import getLogger
 from typing import Optional, Type
 
-from django.core.handlers.wsgi import WSGIRequest
 from django.forms.models import model_to_dict
+from django.http import HttpRequest
 
 from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.enum import (
@@ -227,7 +227,8 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             return self._connection
 
         try:
-            self._connection = ApiConnection.objects.get(account=self.account, name=self.name)
+            name = self.camel_to_snake(self.name)  # type: ignore
+            self._connection = ApiConnection.objects.get(account=self.account, name=name)
         except ApiConnection.DoesNotExist as e:
             if self.manifest:
                 model_dump = (
@@ -265,7 +266,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         return self._connection
 
-    def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example ApiConnection manifest.
         """
@@ -302,7 +303,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
@@ -338,7 +339,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -423,12 +424,12 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data={})
 
-    def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Return a JSON response with the manifest data."""
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
@@ -439,50 +440,51 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         except Exception:
             pass
 
-        if self.connection:
-            try:
-                data = model_to_dict(self.connection)
-                data = self.snake_to_camel(data)
-                if not isinstance(data, dict):
-                    raise SAMConnectionBrokerError(
-                        f"Model dump failed for {self.kind} {self.connection.name}",
-                        thing=self.kind,
-                        command=command,
-                    )
-                data.pop("id")
-                data.pop(SAMMetadataKeys.NAME.value)
-                data[SAMMetadataKeys.ACCOUNT.value] = self.connection.account.account_number
-                data.pop(SAMMetadataKeys.DESCRIPTION.value)
-                data[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = (
-                    self.api_key_secret.name if self.api_key_secret else None
-                )
-                data[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = (
-                    self.proxy_password_secret.name if self.proxy_password_secret else None
-                )
+        if self.connection is None:
+            raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
-                retval = {
-                    SAMKeys.APIVERSION.value: self.api_version,
-                    SAMKeys.KIND.value: self.kind,
-                    SAMKeys.METADATA.value: {
-                        SAMMetadataKeys.NAME.value: self.connection.name,
-                        SAMMetadataKeys.DESCRIPTION.value: self.connection.description,
-                        SAMMetadataKeys.VERSION.value: self.connection.version,
-                    },
-                    SAMKeys.SPEC.value: {SAMApiConnectionSpecKeys.CONNECTION.value: data},
-                    SAMKeys.STATUS.value: {
-                        SAMApiConnectionStatusKeys.CONNECTION_STRING.value: self.connection.connection_string,
-                        SAMApiConnectionStatusKeys.IS_VALID.value: is_valid,
-                    },
-                }
-                # validate our results by round-tripping the data through the Pydantic model
-                pydantic_model = self.pydantic_model(**retval)
-                data = pydantic_model.model_dump_json()
-                return self.json_response_ok(command=command, data=retval)
-            except Exception as e:
-                raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
-        raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
+        try:
+            data = model_to_dict(self.connection)
+            data = self.snake_to_camel(data)
+            if not isinstance(data, dict):
+                raise SAMConnectionBrokerError(
+                    f"Model dump failed for {self.kind} {self.connection.name}",
+                    thing=self.kind,
+                    command=command,
+                )
+            data.pop("id")
+            data.pop(SAMMetadataKeys.NAME.value)
+            data[SAMMetadataKeys.ACCOUNT.value] = self.connection.account.account_number
+            data.pop(SAMMetadataKeys.DESCRIPTION.value)
+            data[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = (
+                self.api_key_secret.name if self.api_key_secret else None
+            )
+            data[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = (
+                self.proxy_password_secret.name if self.proxy_password_secret else None
+            )
 
-    def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+            retval = {
+                SAMKeys.APIVERSION.value: self.api_version,
+                SAMKeys.KIND.value: self.kind,
+                SAMKeys.METADATA.value: {
+                    SAMMetadataKeys.NAME.value: self.connection.name,
+                    SAMMetadataKeys.DESCRIPTION.value: self.connection.description,
+                    SAMMetadataKeys.VERSION.value: self.connection.version,
+                },
+                SAMKeys.SPEC.value: {SAMApiConnectionSpecKeys.CONNECTION.value: data},
+                SAMKeys.STATUS.value: {
+                    SAMApiConnectionStatusKeys.CONNECTION_STRING.value: self.connection.connection_string,
+                    SAMApiConnectionStatusKeys.IS_VALID.value: is_valid,
+                },
+            }
+            # validate our results by round-tripping the data through the Pydantic model
+            pydantic_model = self.pydantic_model(**retval)
+            data = pydantic_model.model_dump_json()
+            return self.json_response_ok(command=command, data=retval)
+        except Exception as e:
+            raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+
+    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.connection:
@@ -493,17 +495,17 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
-    def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Logs not implemented", thing=self.kind, command=command)
