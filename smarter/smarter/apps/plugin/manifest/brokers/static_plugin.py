@@ -7,13 +7,29 @@ from typing import Optional, Type
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
+from smarter.apps.plugin.manifest.enum import (
+    SAMPluginSpecKeys,
+    SAMStaticPluginSpecDataKeys,
+)
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
+from smarter.apps.plugin.manifest.models.common.plugin.spec import (
+    SAMPluginCommonSpecPrompt,
+    SAMPluginCommonSpecSelector,
+)
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
-from smarter.apps.plugin.manifest.models.static_plugin.spec import SAMPluginStaticSpec
-from smarter.apps.plugin.models import PluginDataStatic, PluginMeta
+from smarter.apps.plugin.manifest.models.static_plugin.spec import (
+    SAMPluginStaticSpec,
+    SAMPluginStaticSpecData,
+)
+from smarter.apps.plugin.models import (
+    PluginDataStatic,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+)
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -94,10 +110,16 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     def plugin(self) -> Optional[StaticPlugin]:
         if self._plugin:
             return self._plugin
-        self._plugin = StaticPlugin(
-            user_profile=self.user_profile,
-            manifest=self.manifest,
-        )
+        if isinstance(self.plugin_meta, PluginMeta):
+            self._plugin = StaticPlugin(
+                plugin_meta=self.plugin_meta,
+                user_profile=self.user_profile,
+            )
+        elif isinstance(self.manifest, SAMStaticPlugin):
+            self._plugin = StaticPlugin(
+                user_profile=self.user_profile,
+                manifest=self.manifest,
+            )
         return self._plugin
 
     @property
@@ -152,29 +174,128 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 command=command,
             )
 
+        # metadata
         try:
-            data = model_to_dict(self.plugin)  # type: ignore[no-any-return]
-            data = self.snake_to_camel(data)
-            if not isinstance(data, dict):
+            metadata = model_to_dict(self.plugin_meta)  # type: ignore[no-any-return]
+            metadata = self.snake_to_camel(metadata)
+            if not isinstance(metadata, dict):
                 raise SAMPluginBrokerError(
                     f"Model dump failed for {self.kind} {self.plugin.name}",
                     thing=self.kind,
                     command=command,
                 )
-            data.pop("id")
-            data.pop(SAMMetadataKeys.NAME.value)
-            data[SAMMetadataKeys.ACCOUNT.value] = self.account.account_number
-            data.pop(SAMMetadataKeys.DESCRIPTION.value)
+            logger.info(
+                "%s.describe() PluginMeta %s %s",
+                self.formatted_class_name,
+                self.kind,
+                metadata,
+            )
+            metadata = SAMPluginCommonMetadata(**metadata)
+        except PluginMeta.DoesNotExist:
+            return self.json_response_err(
+                command=command,
+                e=SAMPluginBrokerError(
+                    f"{self.formatted_class_name} {self.kind} PluginMeta does not exist for {self.plugin.name}",
+                    thing=self.kind,
+                    command=command,
+                ),
+            )
+        except Exception as e:
+            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
 
+        # PluginSelector
+        try:
+            plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
+            plugin_selector = model_to_dict(plugin_selector)  # type: ignore[no-any-return]
+            plugin_selector = self.snake_to_camel(plugin_selector)
+            if not isinstance(plugin_selector, dict):
+                raise SAMPluginBrokerError(
+                    f"Model dump failed for {self.kind} {self.plugin.name}",
+                    thing=self.kind,
+                    command=command,
+                )
+            logger.info(
+                "%s.describe() PluginSelector %s %s",
+                self.formatted_class_name,
+                self.kind,
+                plugin_selector,
+            )
+            plugin_selector = SAMPluginCommonSpecSelector(**plugin_selector)
+        except PluginSelector.DoesNotExist:
+            return self.json_response_err(
+                command=command,
+                e=SAMPluginBrokerError(
+                    f"{self.formatted_class_name} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
+                    thing=self.kind,
+                    command=command,
+                ),
+            )
+        except Exception as e:
+            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
+
+        # PluginPrompt
+        try:
+            plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
+            plugin_prompt = model_to_dict(plugin_prompt)  # type: ignore[no-any-return]
+            plugin_prompt = self.snake_to_camel(plugin_prompt)
+            if not isinstance(plugin_prompt, dict):
+                raise SAMPluginBrokerError(
+                    f"Model dump failed for {self.kind} {self.plugin.name}",
+                    thing=self.kind,
+                    command=command,
+                )
+            logger.info(
+                "%s.describe() PluginPrompt %s %s",
+                self.formatted_class_name,
+                self.kind,
+                plugin_prompt,
+            )
+            plugin_prompt = SAMPluginCommonSpecPrompt(**plugin_prompt)
+        except PluginPrompt.DoesNotExist:
+            return self.json_response_err(
+                command=command,
+                e=SAMPluginBrokerError(
+                    f"{self.formatted_class_name} {self.kind} PluginPrompt does not exist for {self.plugin_meta.name}",
+                    thing=self.kind,
+                    command=command,
+                ),
+            )
+        except Exception as e:
+            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
+
+        # PluginData
+        try:
+            plugin_data = model_to_dict(self.plugin_data)  # type: ignore[no-any-return]
+            plugin_data = self.snake_to_camel(plugin_data)
+            if not isinstance(plugin_data, dict):
+                raise SAMPluginBrokerError(
+                    f"Model dump failed for {self.kind} {self.plugin.name}",
+                    thing=self.kind,
+                    command=command,
+                )
+            logger.info(
+                "%s.describe() PluginDataStatic %s %s",
+                self.formatted_class_name,
+                self.kind,
+                plugin_data,
+            )
+            plugin_data = SAMPluginStaticSpecData(**plugin_data)
+        except Exception as e:
+            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
+
+        try:
             retval = {
                 SAMKeys.APIVERSION.value: self.api_version,
                 SAMKeys.KIND.value: self.kind,
-                SAMKeys.METADATA.value: {
-                    SAMMetadataKeys.NAME.value: self.plugin.name,
-                    SAMMetadataKeys.DESCRIPTION.value: self.plugin_meta.description,
-                    SAMMetadataKeys.VERSION.value: self.plugin_meta.version,
+                SAMKeys.METADATA.value: metadata.model_dump(),
+                SAMKeys.SPEC.value: {
+                    SAMPluginSpecKeys.PROMPT.value: plugin_prompt.model_dump(),
+                    SAMPluginSpecKeys.SELECTOR.value: plugin_selector.model_dump(),
+                    SAMPluginSpecKeys.DATA.value: {
+                        SAMStaticPluginSpecDataKeys.DESCRIPTION.value: self.plugin_meta.description,
+                        SAMStaticPluginSpecDataKeys.STATIC.value: plugin_data.model_dump(),
+                    },
                 },
-                SAMKeys.SPEC.value: data,
                 SAMKeys.STATUS.value: {
                     "created": self.plugin_meta.created_at.isoformat(),
                     "modified": self.plugin_meta.updated_at.isoformat(),
@@ -185,7 +306,16 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             data = pydantic_model.model_dump_json()
             return self.json_response_ok(command=command, data=retval)
         except Exception as e:
-            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
+            logger.error(
+                "%s.describe() failed to serialize %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin.name,
+                exc_info=True,
+            )
+            raise SAMPluginBrokerError(
+                f"Failed to serialize {self.kind} {self.plugin.name}", thing=self.kind, command=command
+            ) from e
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__

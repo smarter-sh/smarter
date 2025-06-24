@@ -103,10 +103,16 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     def plugin(self) -> Optional[SqlPlugin]:
         if self._plugin:
             return self._plugin
-        self._plugin = SqlPlugin(
-            user_profile=self.user_profile,
-            manifest=self.manifest,
-        )
+        if isinstance(self.plugin_meta, PluginMeta):
+            self._plugin = SqlPlugin(
+                plugin_meta=self.plugin_meta,
+                user_profile=self.user_profile,
+            )
+        elif isinstance(self.manifest, SAMSqlPlugin):
+            self._plugin = SqlPlugin(
+                user_profile=self.user_profile,
+                manifest=self.manifest,
+            )
         return self._plugin
 
     @property
@@ -163,7 +169,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             )
 
         try:
-            data = model_to_dict(self.plugin)  # type: ignore[no-any-return]
+            data = model_to_dict(self.plugin_data)  # type: ignore[no-any-return]
             data = self.snake_to_camel(data)
             if not isinstance(data, dict):
                 raise SAMPluginBrokerError(
