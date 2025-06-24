@@ -1,20 +1,18 @@
 # pylint: disable=W0718
 """Smarter API User Manifest handler"""
 
-from typing import Any, Optional, Type
+from typing import Optional, Type
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.plugin.manifest.models.common.plugin.model import (
-    SAMPluginCommon,
     SAMPluginCommonMetadata,
-    SAMPluginCommonSpec,
-    SAMPluginCommonStatus,
 )
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
+from smarter.apps.plugin.manifest.models.static_plugin.spec import SAMPluginStaticSpec
 from smarter.lib.django.user import UserClass as User
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
@@ -38,8 +36,8 @@ class SAMTestBroker(AbstractBroker):
     # override the base abstract manifest model with the User model
     # FIX NOTE: We shouldn't be using an implementation of the actual
     #           manifest model here. We should be using a test model.
-    _manifest: Optional[SAMPluginCommon] = None
-    _pydantic_model: Type[SAMPluginCommon] = SAMPluginCommon
+    _manifest: Optional[SAMStaticPlugin] = None
+    _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
     _user: User
     _username: Optional[str] = None
 
@@ -103,7 +101,7 @@ class SAMTestBroker(AbstractBroker):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> Optional[SAMPluginCommon]:
+    def manifest(self) -> Optional[SAMStaticPlugin]:
         """
         SAMPluginCommon() is a Pydantic model
         that is used to represent the Smarter API User manifest. The Pydantic
@@ -116,12 +114,11 @@ class SAMTestBroker(AbstractBroker):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMPluginCommon(
+            self._manifest = SAMStaticPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMPluginCommonSpec(**self.loader.manifest_spec),
-                status=SAMPluginCommonStatus(**self.loader.manifest_status),
+                spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
             )
         return self._manifest
 

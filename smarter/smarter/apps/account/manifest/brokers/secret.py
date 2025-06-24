@@ -205,7 +205,6 @@ class SAMSecretBroker(AbstractBroker):
                 kind=self.loader.manifest_kind,
                 metadata=SAMSecretMetadata(**self.loader.manifest_metadata),
                 spec=SAMSecretSpec(**self.loader.manifest_spec),
-                status=SAMSecretStatus(**self.loader.manifest_status),
             )
         return self._manifest
 

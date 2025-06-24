@@ -231,7 +231,6 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                     kind=self.loader.manifest_kind,
                     metadata=SAMSmarterAuthTokenMetadata(**self.loader.manifest_metadata),
                     spec=SAMSmarterAuthTokenSpec(**self.loader.manifest_spec),
-                    status=SAMSmarterAuthTokenStatus(**self.loader.manifest_status),
                 )
                 logger.info(
                     "%s.manifest() initialized with SAMSmarterAuthToken() using data from self.loader", self.kind
