@@ -56,11 +56,11 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     """
 
     # override the base abstract manifest model with the SqlConnection model
-    _manifest: SAMSqlConnection
+    _manifest: Optional[SAMSqlConnection] = None
     _pydantic_model: Type[SAMSqlConnection] = SAMSqlConnection
-    _sql_connection: SqlConnection
-    _password_secret: Secret
-    _proxy_password_secret: Secret
+    _connection: Optional[SqlConnection] = None
+    _password_secret: Optional[Secret] = None
+    _proxy_password_secret: Optional[Secret] = None
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -88,7 +88,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMSqlConnection:
+    def manifest(self) -> Optional[SAMSqlConnection]:
         """
         SAMSqlConnection() is a Pydantic model
         that is used to represent the Smarter API SqlConnection manifest. The Pydantic
@@ -119,7 +119,13 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        connection = self.manifest.spec.connection.model_dump()
+        if self.manifest is None or self.manifest.spec.connection is None:
+            raise SAMBrokerErrorNotReady(
+                message="Manifest or connection spec is not set",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+        connection = self.manifest.spec.connection.model_dump()  # type: ignore
         connection = self.camel_to_snake(connection)
         if not isinstance(connection, dict):
             raise SAMConnectionBrokerError(
@@ -159,7 +165,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             name = (
                 self.manifest.spec.connection.password
                 if self.manifest
-                else self.sql_connection.password.name if self.sql_connection else None
+                else self.connection.password.name if self.connection else None
             )
             self._password_secret = Secret.objects.get(
                 user_profile=self.user_profile,
@@ -187,9 +193,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 self.manifest.spec.connection.proxyPassword
                 if self.manifest
                 else (
-                    self.sql_connection.proxy_password.name
-                    if self.sql_connection and self.sql_connection.proxy_password
-                    else None
+                    self.connection.proxy_password.name if self.connection and self.connection.proxy_password else None
                 )
             )
             self._proxy_password_secret = Secret.objects.get(
@@ -207,12 +211,12 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         return None
 
     @property
-    def sql_connection(self) -> SqlConnection:
-        if self._sql_connection:
-            return self._sql_connection
+    def connection(self) -> Optional[SqlConnection]:
+        if self._connection:
+            return self._connection
 
         try:
-            self._sql_connection = SqlConnection.objects.get(account=self.account, name=self.name)
+            self._connection = SqlConnection.objects.get(account=self.account, name=self.name)
         except SqlConnection.DoesNotExist as e:
             if self.manifest:
                 model_dump = self.manifest.spec.connection.model_dump()
@@ -229,8 +233,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 model_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
                 model_dump[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.password_secret
                 model_dump[SAMKeys.KIND.value] = self.kind
-                self._sql_connection = SqlConnection(**model_dump)
-                self._sql_connection.save()
+                self._connection = SqlConnection(**model_dump)
+                self._connection.save()
                 self._created = True
             else:
                 logger.error(
@@ -240,7 +244,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     self.name or "(name is missing)",
                 )
 
-        return self._sql_connection
+        return self._connection
 
     @property
     def is_valid(self) -> bool:
@@ -248,8 +252,10 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         Return True if the SqlConnection instance
         exists and is valid.
         """
+        if self.connection is None:
+            return False
         try:
-            return self.sql_connection and self.sql_connection.validate()
+            return self.connection.validate()
         except Exception as e:
             logger.warning("%s is_valid() failed for %s %s", self.formatted_class_name, self.kind, str(e))
         return False
@@ -306,7 +312,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        name: str = kwargs.get(SAMMetadataKeys.NAME.value)  # type: ignore
+        name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value)
+        name = name or self.name
         if name is None:
             raise SAMBrokerErrorNotReady(
                 message="Name parameter is required",
@@ -359,6 +366,13 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at"]
+
+        if self.connection is None:
+            raise SAMBrokerErrorNotReady(
+                message="No connection found. Cannot apply manifest.",
+                thing=self.kind,
+                command=command,
+            )
         try:
             password_name = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
             proxy_password_name = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
@@ -370,12 +384,12 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 data.pop(field, None)
             for key, value in data.items():
                 if key == password_name:
-                    setattr(self.sql_connection, key, self.password_secret)
+                    setattr(self.connection, key, self.password_secret)
                 elif key == proxy_password_name:
-                    setattr(self.sql_connection, key, self.proxy_password_secret)
+                    setattr(self.connection, key, self.proxy_password_secret)
                 else:
-                    setattr(self.sql_connection, key, value)
-            self.sql_connection.save()
+                    setattr(self.connection, key, value)
+            self.connection.save()
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data={})
@@ -406,9 +420,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             request.user.username if request.user.is_authenticated else "Anonymous",  # type: ignore
         )
 
-        if self.sql_connection:
+        if self.connection:
             try:
-                data = model_to_dict(self.sql_connection)
+                data = model_to_dict(self.connection)
                 data = self.snake_to_camel(data)
                 if not isinstance(data, dict):
                     raise SAMConnectionBrokerError(
@@ -418,7 +432,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     )
                 data.pop("id")
                 data.pop(SAMMetadataKeys.NAME.value)
-                data[SAMMetadataKeys.ACCOUNT.value] = self.sql_connection.account.account_number
+                data[SAMMetadataKeys.ACCOUNT.value] = self.connection.account.account_number
 
                 # swap out the password and proxy password secrets instance references for their str names
                 data[camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)] = (
@@ -432,13 +446,13 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     SAMKeys.APIVERSION.value: self.api_version,
                     SAMKeys.KIND.value: self.kind,
                     SAMKeys.METADATA.value: {
-                        SAMMetadataKeys.NAME.value: self.sql_connection.name,
-                        SAMMetadataKeys.DESCRIPTION.value: self.sql_connection.description,
-                        SAMMetadataKeys.VERSION.value: self.sql_connection.version,
+                        SAMMetadataKeys.NAME.value: self.connection.name,
+                        SAMMetadataKeys.DESCRIPTION.value: self.connection.description,
+                        SAMMetadataKeys.VERSION.value: self.connection.version,
                     },
                     SAMKeys.SPEC.value: {SAMSqlConnectionSpecKeys.CONNECTION.value: data},
                     SAMKeys.STATUS.value: {
-                        SAMSqlConnectionStatusKeys.CONNECTION_STRING.value: self.sql_connection.connection_string,
+                        SAMSqlConnectionStatusKeys.CONNECTION_STRING.value: self.connection.connection_string,
                         SAMSqlConnectionStatusKeys.IS_VALID.value: self.is_valid,
                     },
                 }
@@ -452,9 +466,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
-        if self.sql_connection:
+        if self.connection:
             try:
-                self.sql_connection.delete()
+                self.connection.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e

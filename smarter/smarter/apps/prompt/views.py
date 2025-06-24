@@ -7,12 +7,13 @@ information about how the React app is integrated into the Django app.
 import logging
 import traceback
 from http import HTTPStatus
+from typing import Optional
 from urllib.parse import urljoin
 
 from django.conf import settings
-from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
-from django.http import JsonResponse
+from django.db.models import QuerySet
+from django.http import HttpRequest, JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -81,13 +82,13 @@ class SmarterChatSession(SmarterHelperMixin):
     Helper class that provides methods for creating a session key and client key.
     """
 
-    _chat: Chat = None
-    _chat_helper: ChatHelper = None
-    _chatbot: ChatBot = None
-    request: WSGIRequest = None
-    session_key: str = None
+    _chat: Optional[Chat] = None
+    _chat_helper: Optional[ChatHelper] = None
+    _chatbot: Optional[ChatBot] = None
+    request: Optional[HttpRequest] = None
+    session_key: Optional[str] = None
 
-    def __init__(self, request: WSGIRequest, session_key: str, *args, chatbot: ChatBot = None, **kwargs):
+    def __init__(self, request: HttpRequest, session_key: str, *args, chatbot: Optional[ChatBot] = None, **kwargs):
         logger.info("SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot)
         self.request = request
         self.session_key = session_key
@@ -154,14 +155,14 @@ class ChatConfigView(SmarterNeverCachedWebView):
     authentication_classes = None
     permission_classes = (UnauthenticatedPermissionClass,)
 
-    thing: SmarterJournalThings = None
-    command: SmarterJournalCliCommands = None
-    session: SmarterChatSession = None
-    _chatbot_helper: ChatBotHelper = None
-    _chatbot: ChatBot = None
+    thing: Optional[SmarterJournalThings] = None
+    command: Optional[SmarterJournalCliCommands] = None
+    session: Optional[SmarterChatSession] = None
+    _chatbot_helper: Optional[ChatBotHelper] = None
+    _chatbot: Optional[ChatBot] = None
 
     @property
-    def chatbot(self) -> ChatBot:
+    def chatbot(self) -> Optional[ChatBot]:
         return self._chatbot
 
     @property
@@ -172,9 +173,9 @@ class ChatConfigView(SmarterNeverCachedWebView):
             # throw everything but the kitchen sink at the ChatBotHelper
             self._chatbot_helper = ChatBotHelper(
                 request=self.smarter_request,
-                session_key=self.session.session_key,
-                name=self._chatbot.name,
-                chatbot_id=self._chatbot.id,
+                session_key=self.session.session_key if self.session else None,
+                name=self._chatbot.name if self._chatbot else None,
+                chatbot_id=self._chatbot.id if self._chatbot else None,  # type: ignore[union-attr]
                 account=self.account,
                 user=self.user,
                 user_profile=self.user_profile,
@@ -183,7 +184,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
             self._chatbot_helper = ChatBotHelper(
                 request=self.smarter_request,
                 name=self.smarter_request_chatbot_name,
-                session_key=self.session.session_key,
+                session_key=self.session.session_key if self.session else None,
                 account=self.account,
                 user=self.user,
                 user_profile=self.user_profile,
@@ -205,7 +206,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
             if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
                 logger.info("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
 
-    def setup(self, request: WSGIRequest, *args, chatbot_id: int = None, **kwargs):
+    def setup(self, request: HttpRequest, *args, chatbot_id: Optional[int] = None, **kwargs):
 
         super().setup(request, *args, **kwargs)
         name = kwargs.get("name", None)
@@ -239,8 +240,9 @@ class ChatConfigView(SmarterNeverCachedWebView):
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
-        self.session = SmarterChatSession(request, session_key=self.session_key, chatbot=self.chatbot)
-        session_key = self.session.session_key or self.session_key
+        if self.session_key is not None:
+            self.session = SmarterChatSession(request, session_key=self.session_key, chatbot=self.chatbot)
+            session_key = self.session.session_key or self.session_key
         if session_key != self.session_key and session_key is not None:
             logger.info("%s.setup() modifying session_key to %s", self.formatted_class_name, session_key)
             self.session_key = session_key
@@ -287,14 +289,14 @@ class ChatConfigView(SmarterNeverCachedWebView):
             "%s.setup() completed with chatbot=%s, session_key=%s",
             self.formatted_class_name,
             self.chatbot,
-            self.session.session_key,
+            self.session.session_key if self.session else "(Missing session)",
         )
 
     def __str__(self):
         return str(self.chatbot) if self.chatbot else "ChatConfigView"
 
     # pylint: disable=unused-argument
-    def post(self, request: WSGIRequest, *args, **kwargs):
+    def post(self, request: HttpRequest, *args, **kwargs):
         """
         Get the chatbot configuration.
         """
@@ -304,7 +306,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     # pylint: disable=unused-argument
-    def get(self, request: WSGIRequest, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs):
         """
         Get the chatbot configuration.
         """
@@ -337,10 +339,12 @@ class ChatConfigView(SmarterNeverCachedWebView):
         chatbot_plugins_count = ChatBotPlugin.objects.filter(chatbot=self.chatbot).count()
         chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot).order_by("-pk")[:MAX_RETURNED_PLUGINS]
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
-        history = self.session.chat_helper.history
+        history = self.session.chat_helper.history if self.session and self.session.chat_helper else {}
 
         # add chatbot_request_history and plugin_selector_history to history
         # these have to be added here due to circular import issues.
+        if self.session is None:
+            raise SmarterValueError("Session is not set. Cannot retrieve chatbot request history.")
         chatbot_requests_queryset = ChatBotRequests.objects.filter(session_key=self.session.session_key).order_by("-id")
         chatbot_requests_serializer = ChatBotRequestsSerializer(chatbot_requests_queryset, many=True)
         history["chatbot_request_history"] = chatbot_requests_serializer.data
@@ -356,7 +360,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
                 SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
                 "sandbox_mode": self.chatbot_helper.is_chatbot_sandbox_url,
                 "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE),
-                "chatbot": chatbot_serializer.data,
+                "chatbot": chatbot_serializer.data if chatbot_serializer else None,
                 "history": history,
                 "meta_data": self.chatbot_helper.to_json(),
                 "plugins": {
@@ -420,13 +424,15 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     div_root_id = SmarterApiVersions.V1 + reactjs_cdn_path.replace("app-loader.js", "root")
     div_root_id = div_root_id.replace(".", "-").replace("/", "-")
 
-    chatbot: ChatBot = None
-    chatbot_helper: ChatBotHelper = None
+    chatbot: Optional[ChatBot] = None
+    chatbot_helper: Optional[ChatBotHelper] = None
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         name = kwargs.pop("name", None)
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
+        if self.user_profile is None:
+            raise SmarterValueError("User profile is not set. Cannot proceed with ChatAppWorkbenchView setup.")
         if session_key:
             self.session_key = session_key
 
@@ -465,7 +471,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         except Exception as e:
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
-    def dispatch(self, request: WSGIRequest, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch method to handle the request.
         """
@@ -496,10 +502,10 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
     """
 
     template_path = "prompt/listview.html"
-    chatbots: models.QuerySet[ChatBot] = None
+    chatbots: Optional[models.QuerySet[ChatBot]] = None
     chatbot_helpers: list[ChatBotHelper] = []
 
-    def dispatch(self, request: WSGIRequest, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code >= 300:
             return response
@@ -510,12 +516,12 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
             if not chatbot_helper.chatbot:
                 raise SmarterValueError("chatbot_helper.chatbot is not set")
             for b in self.chatbot_helpers:
-                if b.chatbot and b.chatbot.id == chatbot_helper.chatbot.id:
+                if b.chatbot and b.chatbot.id == chatbot_helper.chatbot.id:  # type: ignore[union-attr]
                     return True
-            return
+            return False
 
         @cache_results()
-        def get_chatbots_for_account(account) -> list[ChatBot]:
+        def get_chatbots_for_account(account) -> QuerySet:
             return ChatBot.objects.filter(account=account)
 
         self.chatbots = get_chatbots_for_account(account=self.account)
@@ -523,7 +529,7 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
         for chatbot in self.chatbots:
             chatbot_helper = ChatBotHelper(
                 request=self.smarter_request,
-                chatbot_id=chatbot.id,
+                chatbot_id=chatbot.id,  # type: ignore[union-attr]
                 user=self.user,
                 account=self.account,
                 user_profile=self.user_profile,

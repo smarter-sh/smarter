@@ -172,11 +172,7 @@ class SAMAccountBroker(AbstractBroker):
         if self._manifest:
             return self._manifest
         if self.loader is None or not self.loader.manifest_metadata:
-            raise SAMBrokerErrorNotReady(
-                f"Manifest loader not set for {self.kind} broker. Cannot apply.",
-                thing=self.thing,
-                command=SmarterJournalCliCommands.APPLY,
-            )
+            return None
         if self.account is None:
             raise SAMBrokerErrorNotReady(
                 f"Account not set for {self.kind} broker. Cannot apply.",

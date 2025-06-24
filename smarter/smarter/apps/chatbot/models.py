@@ -8,8 +8,8 @@ from urllib.parse import ParseResult, urljoin
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
+from django.http import HttpRequest
 from django.urls import reverse
 from rest_framework import serializers
 
@@ -586,7 +586,7 @@ class ChatBotHelper(SmarterRequestMixin):
         parent_class = super().formatted_class_name
         return f"{parent_class}.ChatBotHelper()"
 
-    def __init__(self, request: WSGIRequest, *args, **kwargs):
+    def __init__(self, request: HttpRequest, *args, **kwargs):
         """
         Constructor for ChatBotHelper.
         :param url: The URL to parse.
@@ -931,7 +931,7 @@ class ChatBotHelper(SmarterRequestMixin):
         self.helper_logger(horizontal_line)
 
 
-def get_cached_chatbot_by_request(request: WSGIRequest) -> Optional[ChatBot]:
+def get_cached_chatbot_by_request(request: HttpRequest) -> Optional[ChatBot]:
     """
     Returns the chatbot from the cache if it exists, otherwise
     it queries the database with assistance from ChatBotHelper

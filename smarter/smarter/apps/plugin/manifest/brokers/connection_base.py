@@ -6,7 +6,7 @@ from typing import Optional, Type
 
 from django.http import HttpRequest
 
-from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.apps.plugin.models import ConnectionBase
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -24,14 +24,14 @@ class SAMConnectionBaseBroker(AbstractBroker):
     common tasks including portions of the apply()
     """
 
-    _connection: Optional[TimestampedModel] = None
+    _connection: Optional[ConnectionBase] = None
 
     @property
-    def model_class(self) -> Type[TimestampedModel]:
+    def model_class(self) -> Type[ConnectionBase]:
         raise NotImplementedError(f"{self.formatted_class_name}.model_class must be implemented in the subclass.")
 
     @property
-    def connection(self) -> Optional[TimestampedModel]:
+    def connection(self) -> Optional[ConnectionBase]:
         """Return the connection model instance."""
         raise NotImplementedError(f"{self.formatted_class_name}.connection must be implemented in the subclass.")
 
