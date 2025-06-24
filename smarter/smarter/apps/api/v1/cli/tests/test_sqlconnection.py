@@ -42,7 +42,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
     Account.
     """
 
-    sqlconnection: SqlConnection
+    sqlconnection: Optional[SqlConnection] = None  # Ensure attribute always exists
 
     def setUp(self):
         super().setUp()

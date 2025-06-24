@@ -19,6 +19,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
+from ..manifest.enum import SAMPluginCommonSpecSelectorKeyDirectiveValues
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from ..manifest.models.static_plugin.model import SAMStaticPlugin
 from ..signals import plugin_called, plugin_responded
@@ -145,7 +146,7 @@ class StaticPlugin(PluginBase):
             },
             SAMKeys.SPEC.value: {
                 SAMPluginSpecKeys.SELECTOR.value: {
-                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value,
+                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
                     SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
                         "Gobstopper",
                         "Gobstoppers",

@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 from logging import getLogger
+from typing import Optional
 from urllib.parse import urlencode
 
 import yaml
@@ -39,13 +40,13 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
     Account.
     """
 
-    apiconnection: ApiConnection = None
+    apiconnection: Optional[ApiConnection] = None
 
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
         self.query_params = urlencode({"name": self.name})
-        self.api_key: Secret = None
+        self.api_key: Optional[Secret] = None
 
     def tearDown(self):
         if self.apiconnection is not None:
@@ -174,7 +175,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         data[SAMKeys.METADATA.value]["description"] = new_description
 
         # pop the status bc its read-only
-        data.pop(SAMKeys.STATUS.value)
+        # data.pop(SAMKeys.STATUS.value)
 
         # convert the data back to yaml, since this is what the cli usually sends
         manifest = yaml.dump(data)
