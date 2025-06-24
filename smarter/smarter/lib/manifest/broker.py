@@ -11,8 +11,7 @@ from typing import Any, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
-from django.core.handlers.wsgi import WSGIRequest
-from django.http import QueryDict
+from django.http import HttpRequest, QueryDict
 from requests import PreparedRequest
 from rest_framework.serializers import ModelSerializer
 
@@ -154,7 +153,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        request: WSGIRequest,
+        request: HttpRequest,
         *args,
         **kwargs,
     ):
@@ -271,7 +270,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return self._plugin_meta
 
     @property
-    def request(self) -> WSGIRequest:
+    def request(self) -> HttpRequest:
         """Return the request object."""
         return self.smarter_request
 
@@ -280,7 +279,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         Return the query parameters from the url of the request. there are two
         scenarios to consider:
-        1. the request is a Django WSGIRequest object (the expected case)
+        1. the request is a Django HttpRequest object (the expected case)
         2. the request is a Python PreparedRequest object (the edge case)
         """
         if isinstance(self.request, PreparedRequest):
@@ -399,7 +398,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # Abstract Methods
     ###########################################################################
     # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
-    def apply(self, request: WSGIRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
+    def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """apply a manifest, which works like a upsert."""
         if self.manifest and self.manifest.status:
             raise SAMBrokerReadOnlyError(
@@ -409,13 +408,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             )
 
     @abstractmethod
-    def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """chat with the broker."""
         raise SAMBrokerErrorNotImplemented(
             message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
         )
 
-    def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.info(
             "%s.describe() called %s with args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs
         )
@@ -446,21 +445,21 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         raise SAMBrokerErrorNotReady(f"{self.formatted_class_name} {name} not ready", thing=self.kind, command=command)
 
     @abstractmethod
-    def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """delete a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="delete() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DELETE
         )
 
     @abstractmethod
-    def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """deploy a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="deploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DEPLOY
         )
 
     @abstractmethod
-    def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
         raise SAMBrokerErrorNotImplemented(
             message="example_manifest() not implemented",
@@ -469,27 +468,27 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     @abstractmethod
-    def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """get information about specified resources."""
         raise SAMBrokerErrorNotImplemented(
             message="get() not implemented", thing=self.thing, command=SmarterJournalCliCommands.GET
         )
 
     @abstractmethod
-    def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """get logs for a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="logs() not implemented", thing=self.thing, command=SmarterJournalCliCommands.LOGS
         )
 
     @abstractmethod
-    def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """undeploy a resource."""
         raise SAMBrokerErrorNotImplemented(
             message="undeploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.UNDEPLOY
         )
 
-    def schema(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def schema(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Return the published JSON schema for the Pydantic model."""
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)

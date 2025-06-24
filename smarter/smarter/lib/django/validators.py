@@ -527,6 +527,8 @@ class SmarterValidator:
         if not retval:
             raise SmarterValueError(f"Invalid URL {url}")
         SmarterValidator.validate_url(retval)
+        if not retval.endswith("/"):
+            retval += "/"
         return url
 
     @staticmethod

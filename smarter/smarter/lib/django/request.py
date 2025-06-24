@@ -750,12 +750,16 @@ class SmarterRequestMixin(AccountMixin):
 
         """
         if not self.smarter_request:
+            logger.warning("%s.is_chatbot_sandbox_url() - request is None or not set.", self.formatted_class_name)
             return False
         if not self.qualified_request:
+            logger.warning("%s.is_chatbot_sandbox_url() - request is not qualified.", self.formatted_class_name)
             return False
         if not self._url:
+            logger.warning("%s.is_chatbot_sandbox_url() - url is None or not set.", self.formatted_class_name)
             return False
         if not self.parsed_url:
+            logger.warning("%s.is_chatbot_sandbox_url() - parsed_url is None or not set.", self.formatted_class_name)
             return False
 
         # smarter api - http://localhost:8000/api/v1/prompt/1/chat/
@@ -778,13 +782,34 @@ class SmarterRequestMixin(AccountMixin):
         #   ['workbench', '<slug>', 'chat']
         #   ['workbench', '<slug>', 'config']
         if self.parsed_url.netloc != smarter_settings.environment_platform_domain:
+            logger.warning(
+                "%s.is_chatbot_sandbox_url() - parsed_url.netloc (%s) does not match environment_platform_domain (%s).",
+                self.formatted_class_name,
+                self.parsed_url.netloc,
+                smarter_settings.environment_platform_domain,
+            )
             return False
         if len(path_parts) != 3:
+            logger.warning(
+                "%s.is_chatbot_sandbox_url() - path_parts length is not 3. path_parts: %s",
+                self.formatted_class_name,
+                path_parts,
+            )
             return False
         if path_parts[0] != "workbench":
+            logger.warning(
+                "%s.is_chatbot_sandbox_url() - path_parts[0] is not 'workbench'. path_parts: %s",
+                self.formatted_class_name,
+                path_parts,
+            )
             return False
         if not path_parts[1].isalpha():
             # expecting <slug> to be alpha: ['workbench', '<slug>', 'config']
+            logger.warning(
+                "%s.is_chatbot_sandbox_url() - path_parts[1] is not alpha. path_parts: %s",
+                self.formatted_class_name,
+                path_parts,
+            )
             return False
         if path_parts[-1] in ["config", "chat"]:
             # expecting:
@@ -792,6 +817,11 @@ class SmarterRequestMixin(AccountMixin):
             #   ['workbench', '<slug>', 'config']
             return True
 
+        logger.warning(
+            "%s.is_chatbot_sandbox_url() - could not verify whether url is a chatbot sandbox url: %s",
+            self.formatted_class_name,
+            path_parts,
+        )
         return False
 
     @cached_property

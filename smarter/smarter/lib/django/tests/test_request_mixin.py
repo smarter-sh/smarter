@@ -213,7 +213,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/workbench/example/"
+        path = "/workbench/example/chat/"
         url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
@@ -222,12 +222,12 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
         self.assertIsNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
-        self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
         self.assertFalse(srm.is_chatbot_cli_api_url)
-        self.assertTrue(srm.is_chatbot_sandbox_url)
         self.assertFalse(srm.is_smarter_api)
         self.assertEqual(srm.path, path)
+        self.assertTrue(srm.is_chatbot_sandbox_url)
+        self.assertTrue(srm.is_chatbot)
 
     def test_api_url(self):
         """

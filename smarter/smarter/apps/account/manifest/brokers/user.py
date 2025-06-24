@@ -156,7 +156,6 @@ class SAMUserBroker(AbstractBroker):
                 kind=self.loader.manifest_kind,
                 metadata=SAMUserMetadata(**self.loader.manifest_metadata),
                 spec=SAMUserSpec(**self.loader.manifest_spec),
-                status=SAMUserStatus(**self.loader.manifest_status),
             )
         return self._manifest
 

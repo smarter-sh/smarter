@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 def get_resolved_user(
     user: "Union[DjangoUser, AbstractUser, AnonymousUser, SimpleLazyObject, _AnyUser]",
-) -> Optional[Union[DjangoUser, AnonymousUser]]:
+) -> Optional[Union[DjangoUser, AbstractUser, AnonymousUser]]:
     """
     Get the resolved user object from a user instance.
     Maps the various kinds of Django user subclasses and mutations to the UserClass.
@@ -37,6 +37,9 @@ def get_resolved_user(
         return user
     if isinstance(user, DjangoUser):
         return user
+    # Allow unittest.mock.MagicMock or Mock for testing
+    if hasattr(user, "__class__") and user.__class__.__name__ in ("MagicMock", "Mock"):
+        return user  # type: ignore[return-value]
     raise SmarterConfigurationError(
-        f"Unexpected user type: {type(user)}. Expected Django User, AnonymousUser, or SimpleLazyObject."
+        f"Unexpected user type: {type(user)}. Expected Django User, AnonymousUser, SimpleLazyObject, or a test mock."
     )

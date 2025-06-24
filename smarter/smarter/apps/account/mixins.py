@@ -83,6 +83,12 @@ class AccountMixin(SmarterHelperMixin):
             if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                 logger.info("%s.__init__(): received user %s", self.formatted_class_name, user)
             self._account = get_cached_account_for_user(user)
+            if not self._account:
+                logger.warning(
+                    "%s.__init__(): did not find an account for user %s",
+                    self.formatted_class_name,
+                    user,
+                )
             if self._account and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                 logger.info(
                     "%s.__init__(): set account to %s based on user %s",
@@ -97,12 +103,26 @@ class AccountMixin(SmarterHelperMixin):
             if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                 logger.info("%s.__init__(): received a request object: %s", self.formatted_class_name, url)
             if hasattr(request, "user"):
-                self._user = get_resolved_user(request.user)
+                self._user = request.user
+                if not isinstance(self._user, User):
+                    logger.warning(
+                        "%s.__init__(): could not resolve user from the request object %s",
+                        self.formatted_class_name,
+                        request,
+                    )
                 if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                     logger.info(
-                        "%s.__init__(): found a user object in the request: %s", self.formatted_class_name, self._user
+                        "%s.__init__(): found a user object in the request: %s",
+                        self.formatted_class_name,
+                        self._user.username,
                     )
                 self._account = get_cached_account_for_user(self._user)
+                if not isinstance(self._account, Account):
+                    logger.warning(
+                        "%s.__init__(): could not resolve account from the user %s",
+                        self.formatted_class_name,
+                        self._user,
+                    )
                 if self._account and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                     logger.info(
                         "%s.__init__(): set account to %s based on user: %s",
