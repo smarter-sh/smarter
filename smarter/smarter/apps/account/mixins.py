@@ -60,7 +60,7 @@ class AccountMixin(SmarterHelperMixin):
         request: Optional[Union[WSGIRequest, HttpRequest, Request]] = kwargs.get("request")
         if not request and args:
             for arg in args:
-                if isinstance(arg, HttpRequest):
+                if isinstance(arg, Union[HttpRequest, Request, WSGIRequest]):
                     if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                         logger.info("%s.__init__(): received a request object: %s", self.formatted_class_name, arg)
                     request = arg

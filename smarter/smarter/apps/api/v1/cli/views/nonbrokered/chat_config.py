@@ -9,7 +9,6 @@ from django.core.cache import cache
 from django.http import HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 
-from smarter.apps.prompt.models import Chat
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
@@ -64,23 +63,20 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         """
         uid: Optional[str] = request.POST.get("uid")
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        if session_key is None:
-            try:
-                chat = Chat.objects.get(name=name, account=self.account)
-            except Chat.DoesNotExist as e:
-                raise APIV1CLIViewError(
-                    f"Chat with name '{name}' does not exist for account {self.account.account_number if self.account else "(No Account provided)"}."
-                ) from e
-            session_key = chat.session_key
         logger.info(
-            "%s Chat config view for chat %s and client %s and session_key %s",
+            "%s Chat config view for chat %s and client %s and session_key %s request user %s self.user %s account %s",
             self.formatted_class_name,
             name,
             uid,
             session_key,
+            request.user,
+            self.user,
+            self.account,
         )
 
-        response = ChatConfigView.as_view()(request, name=name, uid=uid, session_key=session_key)
+        response = ChatConfigView.as_view()(
+            request, *args, name=name, uid=uid, session_key=session_key, user_profile=self.user_profile, **kwargs
+        )
 
         try:
             content = json.loads(response.content.decode("utf-8"))  # type: ignore[union-attr]
