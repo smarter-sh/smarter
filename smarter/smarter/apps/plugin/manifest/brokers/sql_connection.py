@@ -3,7 +3,7 @@
 
 import json
 from logging import getLogger
-from typing import Optional, Type
+from typing import Type
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
@@ -24,7 +24,6 @@ from smarter.common.utils import camel_to_snake
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
-    AbstractBroker,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -38,12 +37,13 @@ from smarter.lib.manifest.enum import (
 from ..models.sql_connection.const import MANIFEST_KIND
 from ..models.sql_connection.model import SAMSqlConnection
 from . import SAMConnectionBrokerError
+from .connection_base import SAMConnectionBaseBroker
 
 
 logger = getLogger(__name__)
 
 
-class SAMSqlConnectionBroker(AbstractBroker):
+class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     """
     Smarter API SqlConnection Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml SqlConnection manifests

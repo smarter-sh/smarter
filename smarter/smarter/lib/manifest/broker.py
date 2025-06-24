@@ -365,6 +365,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # Abstract Properties
     ###########################################################################
     @property
+    def serializer(self) -> Optional[ModelSerializer]:
+        """Return the serializer for the broker."""
+        raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
+
+    @property
     def model_class(self) -> Type[TimestampedModel]:
         """Return the Django ORM model class for the broker."""
         raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
@@ -399,13 +404,25 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ###########################################################################
     # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
-        """apply a manifest, which works like a upsert."""
-        if self.manifest and self.manifest.status:
-            raise SAMBrokerReadOnlyError(
-                message="status field is read-only",
-                thing=self.thing,
-                command=SmarterJournalCliCommands.APPLY,
-            )
+        """
+        apply a manifest, which works like a upsert.
+        metadata:
+            description: new description
+            name: test71d12b8212b628df
+            version: 1.0.0
+
+        """
+        logger.info("AbstractBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)
+
+        # mcdaniel june-2025: no need to raise an error if the manifest is read-only.
+        # we should just ignore the read-only fields.
+
+        # if self.manifest and self.manifest.status:
+        #     raise SAMBrokerReadOnlyError(
+        #         message="status field is read-only",
+        #         thing=self.thing,
+        #         command=SmarterJournalCliCommands.APPLY,
+        #     )
 
     @abstractmethod
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

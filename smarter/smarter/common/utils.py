@@ -59,7 +59,7 @@ class DateTimeEncoder(json.JSONEncoder):
 
 def camel_to_snake(name):
     """
-    Converts camelCase or poorly formatted names to snake_case.
+    Converts camelCase or incorrectly formatted names to snake_case.
     examples:
         camel_to_snake("camelCase") -> "camel_case"
         camel_to_snake("CamelCase") -> "camel_case"
