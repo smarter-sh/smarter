@@ -4,7 +4,6 @@
 import logging
 from typing import Optional
 
-from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 
 from smarter.apps.plugin.manifest.controller import PluginController
@@ -79,7 +78,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 pass
         return self._plugin_meta
 
-    def apply(self, request: WSGIRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
+    def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the

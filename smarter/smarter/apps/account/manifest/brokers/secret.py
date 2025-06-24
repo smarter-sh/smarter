@@ -21,7 +21,6 @@ from smarter.apps.account.manifest.models.secret.model import (
     SAMSecret,
     SAMSecretMetadata,
     SAMSecretSpec,
-    SAMSecretStatus,
 )
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.models import Secret
@@ -88,6 +87,12 @@ class SAMSecretBroker(AbstractBroker):
         """
         Return the SecretTransformer instance for this manifest.
         """
+        if self.user_profile is None:
+            raise SAMBrokerErrorNotReady(
+                "User profile is not set. Cannot create SecretTransformer.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         if not self._secret_transformer:
             self._secret_transformer = SecretTransformer(
                 name=self.name, api_version=self.api_version, user_profile=self.user_profile, manifest=self.manifest
@@ -105,7 +110,7 @@ class SAMSecretBroker(AbstractBroker):
         """
         Transform the Smarter API Secret manifest into a Django ORM model.
         """
-        config_dump = self.manifest.spec.config.model_dump()
+        config_dump = self.manifest.spec.config.model_dump()  # type: ignore[return-value]
         config_dump = self.camel_to_snake(config_dump)
         return config_dump  # type: ignore[return-value]
 
@@ -321,6 +326,12 @@ class SAMSecretBroker(AbstractBroker):
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
+        if self.user_profile is None:
+            raise SAMBrokerErrorNotReady(
+                "User profile is not set. Cannot describe.",
+                thing=self.kind,
+                command=command,
+            )
         param_name = request.GET.get("name", None)
         kwarg_name = kwargs.get(SAMSecretMetadataKeys.NAME.value, None)
         secret_name = param_name or kwarg_name or self.name

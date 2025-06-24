@@ -13,7 +13,6 @@ from smarter.apps.account.manifest.models.user.model import (
     SAMUser,
     SAMUserMetadata,
     SAMUserSpec,
-    SAMUserStatus,
 )
 from smarter.apps.account.models import AccountContact, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
@@ -88,7 +87,7 @@ class SAMUserBroker(AbstractBroker):
         """
         Transform the Smarter API User manifest into a Django ORM model.
         """
-        config_dump = self.manifest.spec.config.model_dump()
+        config_dump = self.manifest.spec.config.model_dump()  # type: ignore[return-value]
         config_dump = self.camel_to_snake(config_dump)
         return config_dump  # type: ignore[return-value]
 
@@ -316,7 +315,7 @@ class SAMUserBroker(AbstractBroker):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(
-                    f"Failed to delete {self.kind} {self.user.email}", thing=self.kind, command=command
+                    f"Failed to delete {self.kind} {user.email}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
