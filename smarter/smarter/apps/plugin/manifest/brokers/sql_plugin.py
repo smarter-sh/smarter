@@ -16,12 +16,10 @@ from smarter.apps.plugin.manifest.models.sql_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.manifest.models.sql_plugin.spec import SAMSqlPluginSpec
 from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.plugin.sql import SqlPlugin
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
-    AbstractBroker,
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
@@ -34,12 +32,13 @@ from smarter.lib.manifest.enum import (
 )
 
 from . import PluginSerializer, SAMPluginBrokerError
+from .plugin_base import SAMPluginBaseBroker
 
 
 logger = logging.getLogger(__name__)
 
 
-class SAMSqlPluginBroker(AbstractBroker):
+class SAMSqlPluginBroker(SAMPluginBaseBroker):
     """
     Smarter API Plugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Sql yaml Plugin manifests
@@ -116,6 +115,9 @@ class SAMSqlPluginBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         data = SqlPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
+
+    # def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    # implemented in SAMPluginBaseBroker.describe()
 
     def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__

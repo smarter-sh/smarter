@@ -393,23 +393,23 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         try:
             for key, value in data.items():
                 if key == api_key_name:
-                    logger.info("%s.apply() setting api_key Secret <Fk> to %s", self.formatted_class_name, value)
-                    if self.api_key_secret and key != self.api_key_secret.id:
+                    if self.api_key_secret and key != self.api_key_secret.id:  # type: ignore[comparison-overlap]
                         setattr(self.connection, key, self.api_key_secret)
+                        logger.info("%s.apply() setting api_key Secret <Fk> to %s", self.formatted_class_name, value)
                         updated = True
                 elif key == proxy_password_name:
-                    logger.info(
-                        "%s.apply() setting proxy_password Secret <Fk> to %s",
-                        self.formatted_class_name,
-                        value,
-                    )
                     if self.proxy_password_secret and key != self.proxy_password_secret.id:  # type: ignore[comparison-overlap]
                         setattr(self.connection, key, self.proxy_password_secret)
+                        logger.info(
+                            "%s.apply() setting proxy_password Secret <Fk> to %s",
+                            self.formatted_class_name,
+                            value,
+                        )
                         updated = True
                 else:
-                    logger.info("%s.apply() updating %s to %s", self.formatted_class_name, key, value)
                     if key != value:
                         setattr(self.connection, key, value)
+                        logger.info("%s.apply() updating %s to %s", self.formatted_class_name, key, value)
                         updated = True
 
             if updated and isinstance(self.connection, ApiConnection):
