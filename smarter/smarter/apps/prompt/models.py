@@ -6,9 +6,9 @@ from typing import Any, Optional, Union
 
 from django.conf import settings
 from django.core.cache import cache
-from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
 from django.db.utils import IntegrityError
+from django.http import HttpRequest
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account
@@ -151,7 +151,7 @@ class ChatHelper(SmarterRequestMixin):
 
     # FIX NOTE: remove session_key
     def __init__(
-        self, request: WSGIRequest, session_key: str, *args, chatbot: Optional[ChatBot] = None, **kwargs
+        self, request: HttpRequest, session_key: str, *args, chatbot: Optional[ChatBot] = None, **kwargs
     ) -> None:
         logger.info(
             "ChatHelper().__init__() - received request: %s session_key: %s, chatbot: %s", request, session_key, chatbot

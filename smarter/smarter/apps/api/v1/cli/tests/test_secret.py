@@ -188,7 +188,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("description", None), "A secret for testing purposes")
         self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("version", None), "0.1.0")
         self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("tags", None), [])
-        self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("annotations", None), None)
+        self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("annotations"), [])
 
     def test_03_describe(self):
         """
