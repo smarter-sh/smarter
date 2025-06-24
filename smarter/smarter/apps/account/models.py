@@ -151,7 +151,7 @@ class Account(TimestampedModel):
         verbose_name_plural = "Accounts"
 
     def __str__(self):
-        return str(self.company_name)
+        return str(self.account_number) + " - " + str(self.company_name)
 
 
 class AccountContact(TimestampedModel):
