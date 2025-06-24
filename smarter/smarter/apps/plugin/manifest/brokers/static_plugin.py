@@ -155,7 +155,73 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         return self.json_response_ok(command=command, data=data)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Return a JSON response with the manifest data."""
+        """
+        Return a JSON response with the manifest data.
+        example response:
+        {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "Plugin",
+                "metadata": {
+                    "name": "cli_test_plugin",
+                    "description": "A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
+                    "version": "0.2.0",
+                    "tags": [],
+                    "annotations": null,
+                    "pluginClass": "static"
+                },
+                "spec": {
+                    "prompt": {
+                        "provider": "openai",
+                        "systemRole": "Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n",
+                        "model": "gpt-4-turbo",
+                        "temperature": 0.5,
+                        "maxTokens": 256
+                    },
+                    "selector": {
+                        "directive": "search_terms",
+                        "searchTerms": [
+                            "Cli Test",
+                            "cli test plugin",
+                            "test plugin"
+                        ]
+                    },
+                    "data": {
+                        "description": "A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
+                        "staticData": {
+                            "description": "an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
+                            "staticData": {
+                                "about": "In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\n",
+                                "links": [
+                                    {
+                                        "documentation": "https://platform.openai.com/docs/guides/function-calling"
+                                    },
+                                    {
+                                        "website": "https://openai.com/"
+                                    },
+                                    {
+                                        "wikipedia": "https://en.wikipedia.org/wiki/OpenAI"
+                                    }
+                                ],
+                                "platformProvider": "OpenAI"
+                            }
+                        }
+                    }
+                },
+                "status": {
+                    "created": "2025-06-24T21:38:36.368058+00:00",
+                    "modified": "2025-06-24T21:38:36.434526+00:00"
+                }
+            },
+            "message": "Plugin cli_test_plugin described successfully",
+            "api": "smarter.sh/v1",
+            "thing": "Plugin",
+            "metadata": {
+                "key": "f3eaf0a9beb62c7603fd3cc5f5672646adc91f44e407d5615e0613baa9f46e2f"
+            }
+        }
+
+        """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
