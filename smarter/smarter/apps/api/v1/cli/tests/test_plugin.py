@@ -60,7 +60,7 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
 
         # create a Plugin from a valid manifest
         path = reverse(self.namespace + ApiV1CliReverseViews.apply, kwargs=None)
-        response, status = self.get_response(path, manifest=self.good_manifest_text)
+        response, status = self.get_response(path, manifest=self.good_manifest_text)  # type: ignore[arg-type]
 
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)

@@ -4,7 +4,7 @@
 from logging import getLogger
 from typing import Optional, Type
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest
 
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -35,7 +35,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         """Return the connection model instance."""
         raise NotImplementedError(f"{self.formatted_class_name}.connection must be implemented in the subclass.")
 
-    def apply(self, request: WSGIRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
+    def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -46,7 +46,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
         the save() command. These fields are defined in the readonly_fields list.
         """
         super().apply(request, kwargs)
-        logger.info("SAMConnectionBaseBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)
 
         # update the common meta fields
         data = self.manifest.metadata.model_dump() if self.manifest else None
@@ -57,7 +56,6 @@ class SAMConnectionBaseBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        logger.info("SAMConnectionBaseBroker.apply() data: %s", data)
 
         if self.connection is None:
             raise SAMBrokerErrorNotReady(
@@ -71,9 +69,9 @@ class SAMConnectionBaseBroker(AbstractBroker):
         updated = False
         for key, value in data.items():
             if hasattr(self.connection, key):
-                logger.info("%s.apply() updating PluginMeta %s to %s", self.formatted_class_name, key, value)
                 if getattr(self.connection, key) != value:
                     setattr(self.connection, key, value)
+                    logger.info("%s.apply() updating %s to %s", self.formatted_class_name, key, value)
                     updated = True
         if updated:
             self.connection.save()

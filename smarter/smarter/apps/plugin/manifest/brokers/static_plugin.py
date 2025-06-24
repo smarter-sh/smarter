@@ -2,18 +2,21 @@
 """Smarter API StaticPlugin Manifest handler"""
 
 import logging
-from typing import Type
+from typing import Optional, Type
 
 from django.core.handlers.wsgi import WSGIRequest
 
+from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
+    SAMPluginCommonMetadata,
+)
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
+from smarter.apps.plugin.manifest.models.static_plugin.spec import SAMPluginStaticSpec
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
-    AbstractBroker,
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
@@ -26,12 +29,13 @@ from smarter.lib.manifest.enum import (
 )
 
 from . import PluginSerializer, SAMPluginBrokerError
+from .plugin_base import SAMPluginBaseBroker
 
 
 logger = logging.getLogger(__name__)
 
 
-class SAMStaticPluginBroker(AbstractBroker):
+class SAMStaticPluginBroker(SAMPluginBaseBroker):
     """
     Smarter API StaticPlugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml StaticPlugin manifests
@@ -42,7 +46,7 @@ class SAMStaticPluginBroker(AbstractBroker):
     """
 
     # override the base abstract manifest model with the StaticPlugin model
-    _manifest: SAMStaticPlugin = None
+    _manifest: Optional[SAMStaticPlugin] = None
     _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
 
     ###########################################################################
@@ -62,7 +66,7 @@ class SAMStaticPluginBroker(AbstractBroker):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMStaticPlugin:
+    def manifest(self) -> Optional[SAMStaticPlugin]:
         """
         SAMStaticPlugin() is a Pydantic model
         that is used to represent the Smarter API StaticPlugin manifest. The Pydantic
@@ -78,9 +82,8 @@ class SAMStaticPluginBroker(AbstractBroker):
             self._manifest = SAMStaticPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=self.loader.manifest_metadata,
-                spec=self.loader.manifest_spec,
-                status=self.loader.manifest_status,
+                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
             )
         return self._manifest
 
@@ -92,6 +95,9 @@ class SAMStaticPluginBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         data = StaticPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
+
+    # def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    # implemented in SAMPluginBaseBroker.describe()
 
     def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
@@ -151,8 +157,23 @@ class SAMStaticPluginBroker(AbstractBroker):
         manifest is loaded and validated before applying the manifest to the
         Django ORM model.
         """
+        super().apply(request, kwargs)
+        logger.info("SAMStaticPluginBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+        if not isinstance(self.plugin, StaticPlugin):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} plugin not initialized. Cannot apply",
+                thing=self.kind,
+                command=command,
+            )
+        if not isinstance(self.plugin_meta, PluginMeta):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} plugin_meta not initialized. Cannot apply",
+                thing=self.kind,
+                command=command,
+            )
+
         try:
             self.plugin.create()
         except Exception as e:
@@ -195,6 +216,18 @@ class SAMStaticPluginBroker(AbstractBroker):
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
+        if not isinstance(self.plugin, StaticPlugin):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} plugin not initialized. Cannot delete",
+                thing=self.kind,
+                command=command,
+            )
+        if not isinstance(self.plugin_meta, PluginMeta):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} plugin_meta not initialized. Cannot delete",
+                thing=self.kind,
+                command=command,
+            )
         if self.plugin.ready:
             try:
                 self.plugin.delete()
