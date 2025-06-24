@@ -26,7 +26,7 @@ class SmarterTestBase(unittest.TestCase):
         """Set up the test class."""
         super().setUpClass()
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
-        cls.name = "test" + cls.hash_suffix
+        cls.name = "SmarterTestBase_" + cls.hash_suffix
         cls.uid = SmarterTestBase.generate_uid()
 
         logger.info("Setting up test class with hash suffix: %s", cls.hash_suffix)

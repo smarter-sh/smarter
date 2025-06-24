@@ -5,8 +5,9 @@ with a custom error_message attribute for the custom templates, and default erro
 """
 
 from http import HTTPStatus
+from typing import Optional
 
-from django.http import HttpResponse
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
 
@@ -22,13 +23,12 @@ class SmarterHttpResponse(HttpResponse):
     def __init__(
         self,
         request: HttpRequest,
-        error_message: str = None,
+        error_message: Optional[str] = None,
         status_code: int = HTTPStatus.OK.value,
         template_file: str = "200.html",
         *args,
         **kwargs,
     ):
-        kwargs: dict = kwargs or {}
         kwargs.setdefault("content_type", "text/html")
         self.status_code: int = status_code
         error_message = error_message or "Something went wrong! Please try again later."
@@ -38,7 +38,7 @@ class SmarterHttpResponse(HttpResponse):
 
 
 class SmarterHttpResponseBadRequest(SmarterHttpResponse):
-    def __init__(self, request: HttpRequest, error_message: str = None, *args, **kwargs):
+    def __init__(self, request: HttpRequest, error_message: Optional[str] = None, *args, **kwargs):
         status_code: int = HTTPStatus.BAD_REQUEST.value
         error_message = error_message or "Dohhhh, that's a bad request my friend."
         template_file = "400.html"
@@ -53,7 +53,7 @@ class SmarterHttpResponseBadRequest(SmarterHttpResponse):
 
 
 class SmarterHttpResponseForbidden(SmarterHttpResponse):
-    def __init__(self, request: HttpRequest, error_message: str = None, *args, **kwargs):
+    def __init__(self, request: HttpRequest, error_message: Optional[str] = None, *args, **kwargs):
         status_code: int = HTTPStatus.FORBIDDEN.value
         error_message = error_message or "Awe shucks, you're not allowed to do that."
         template_file = "403.html"
@@ -68,7 +68,7 @@ class SmarterHttpResponseForbidden(SmarterHttpResponse):
 
 
 class SmarterHttpResponseNotFound(SmarterHttpResponse):
-    def __init__(self, request: HttpRequest, error_message: str = None, *args, **kwargs):
+    def __init__(self, request: HttpRequest, error_message: Optional[str] = None, *args, **kwargs):
         status_code: int = HTTPStatus.NOT_FOUND.value
         error_message = error_message or "Oh no!!! We couldn't find that page."
         template_file = "404.html"
@@ -83,7 +83,7 @@ class SmarterHttpResponseNotFound(SmarterHttpResponse):
 
 
 class SmarterHttpResponseServerError(SmarterHttpResponse):
-    def __init__(self, request: HttpRequest, error_message: str = None, *args, **kwargs):
+    def __init__(self, request: HttpRequest, error_message: Optional[str] = None, *args, **kwargs):
         status_code: int = HTTPStatus.INTERNAL_SERVER_ERROR.value
         error_message = error_message or "Ugh!!! Something went wrong on our end."
         template_file = "500.html"

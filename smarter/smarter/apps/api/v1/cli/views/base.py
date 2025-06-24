@@ -7,8 +7,8 @@ import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
-from django.core.handlers.wsgi import WSGIRequest
 from rest_framework.exceptions import NotAuthenticated
+from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from smarter.apps.api.signals import api_request_completed, api_request_initiated
@@ -279,7 +279,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return SmarterJournalCliCommands(_command)
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
-    def setup(self, request: WSGIRequest, *args, **kwargs):
+    def setup(self, request: Request, *args, **kwargs):
         """
         Setup the view. This is called by Django before dispatch() and is used to
         set up the view for the request.
@@ -287,7 +287,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         logger.info(
             "CliBaseApiView().setup() - view for request: %s, user: %s",
             request.build_absolute_uri(),
-            request.user.username if request.user.is_authenticated else "Anonymous",
+            request.user.username if request.user and request.user.is_authenticated else "Anonymous",  # type: ignore[assignment]
         )
         super().setup(request, *args, **kwargs)
         # experiment: we want to ensure that the request object is
@@ -300,18 +300,18 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         logger.info(
             "CliBaseApiView().setup() - finished view for request: %s, user: %s, self.user: %s",
             request.build_absolute_uri(),
-            request.user.username if request.user.is_authenticated else "Anonymous",
+            request.user.username if request.user and request.user.is_authenticated else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
         )
 
-    def initial(self, request: WSGIRequest, *args, **kwargs):
+    def initial(self, request: Request, *args, **kwargs):
         """
         Initialize the view. This is called by DRF after setup() but before dispatch().
         """
         logger.info(
             "CliBaseApiView().initial() - initializing view for request: %s, user: %s, self.user: %s",
             request.build_absolute_uri(),
-            request.user.username if request.user.is_authenticated else "Anonymous",
+            request.user.username if request.user and request.user.is_authenticated else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
         )
         # Check if the request is authenticated. If not, raise an
@@ -399,11 +399,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         logger.info(
             "CliBaseApiView().initial() - finished initializing view for request: %s, user: %s",
             request.build_absolute_uri(),
-            request.user.username if request.user.is_authenticated else "Anonymous",
+            request.user.username if request.user.is_authenticated else "Anonymous",  # type: ignore[assignment]
         )
 
     # pylint: disable=too-many-return-statements,too-many-branches
-    def dispatch(self, request: WSGIRequest, *args, **kwargs):
+    def dispatch(self, request: Request, *args, **kwargs):
         """
         Dispatch the request to the appropriate handler method. This is
         called by the Django REST framework when a request is received.
