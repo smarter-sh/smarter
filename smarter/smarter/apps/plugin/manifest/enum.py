@@ -87,6 +87,13 @@ class SAMStaticPluginSpecDataKeys(SmarterEnumAbstract):
     STATIC = "staticData"
 
 
+class SAMSqlPluginSpecDataKeys(SmarterEnumAbstract):
+    """Smarter API Plugin Spec Data keys enumeration."""
+
+    DESCRIPTION = "description"
+    SQL = "sqlData"
+
+
 ###############################################################################
 # ApiConnection Spec keys
 ###############################################################################

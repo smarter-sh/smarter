@@ -9,10 +9,7 @@ from django.http import HttpRequest
 from smarter.apps.plugin.models import ConnectionBase
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import (
-    AbstractBroker,
-    SAMBrokerErrorNotReady,
-)
+from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerErrorNotReady
 
 
 logger = getLogger(__name__)
