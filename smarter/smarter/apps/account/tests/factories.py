@@ -70,7 +70,7 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
     return user, account, user_profile
 
 
-def factory_account_teardown(user: User, account: Account, user_profile: UserProfile):
+def factory_account_teardown(user: User, account: Optional[Account], user_profile: UserProfile):
     if user and account and not user_profile:
         user_profile = get_cached_user_profile(user=user, account=account)
     elif user and not user_profile:

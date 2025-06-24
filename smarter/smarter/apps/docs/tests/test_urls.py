@@ -30,6 +30,8 @@ logger = getLogger(__name__)
 class TestDocsUrls(SmarterTestBase):
     """Test AccountMixin."""
 
+    client: Client
+
     def setUp(self) -> None:
         super().setUp()
         self.client = Client()
@@ -37,8 +39,8 @@ class TestDocsUrls(SmarterTestBase):
         self.client.force_login(self.admin_user)
 
     def tearDown(self) -> None:
-        self.client.logout()
-        self.client = None
+        if self.client:
+            self.client.logout()
         super().tearDown()
 
     @classmethod
@@ -174,72 +176,72 @@ class TestDocsUrls(SmarterTestBase):
     # -----------------------------------------------------------------------
     def test_url_json_schema_account(self) -> None:
         """Test url for account JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.ACCOUNT)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.ACCOUNT.value)}")
         self.process_url(url)
 
     def test_url_json_schema_apikey(self) -> None:
         """Test url for apikey JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.AUTH_TOKEN)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.AUTH_TOKEN.value)}")
         self.process_url(url)
 
     def test_url_json_schema_chat(self) -> None:
         """Test url for chat JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT.value)}")
         self.process_url(url)
 
     def test_url_json_schema_chat_history(self) -> None:
         """Test url for chat history JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_HISTORY)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_HISTORY.value)}")
         self.process_url(url)
 
     def test_url_json_schema_chat_plugin_usage(self) -> None:
         """Test url for chat plugin usage JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_PLUGIN_USAGE)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_PLUGIN_USAGE.value)}")
         self.process_url(url)
 
     def test_url_json_schema_chat_tool_call(self) -> None:
         """Test url for chat tool call JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_TOOL_CALL)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHAT_TOOL_CALL.value)}")
         self.process_url(url)
 
     def test_url_json_schema_chatbot(self) -> None:
         """Test url for chatbot JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHATBOT)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.CHATBOT.value)}")
         self.process_url(url)
 
     def test_url_json_schema_static_plugin(self) -> None:
         """Test url for static plugin JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.STATIC_PLUGIN)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.STATIC_PLUGIN.value)}")
         self.process_url(url)
 
     def test_url_json_schema_api_connection(self) -> None:
         """Test url for api connection JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.API_CONNECTION)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.API_CONNECTION.value)}")
         self.process_url(url)
 
     def test_url_json_schema_api_plugin(self) -> None:
         """Test url for api plugin JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.API_PLUGIN)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.API_PLUGIN.value)}")
         self.process_url(url)
 
     def test_url_json_schema_sql_connection(self) -> None:
         """Test url for sql connection JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.SQL_CONNECTION)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.SQL_CONNECTION.value)}")
         self.process_url(url)
 
     def test_url_json_schema_sql_plugin(self) -> None:
         """Test url for sql plugin JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.SQL_PLUGIN)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.SQL_PLUGIN.value)}")
         self.process_url(url)
 
     def test_url_json_schema_user(self) -> None:
         """Test url for user JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.USER)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.USER.value)}")
         self.process_url(url)
 
     def test_url_json_schema_secret(self) -> None:
         """Test url for secret JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.SECRET)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.SECRET.value)}")
         self.process_url(url)
 
     # -------------------------------------------------------------------------
@@ -247,70 +249,70 @@ class TestDocsUrls(SmarterTestBase):
     # -------------------------------------------------------------------------
     def test_url_manifest_account(self) -> None:
         """Test url for account manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.ACCOUNT)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.ACCOUNT.value)}")
         self.process_url(url)
 
     def test_url_manifest_apikey(self) -> None:
         """Test url for apikey manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.AUTH_TOKEN)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.AUTH_TOKEN.value)}")
         self.process_url(url)
 
     def test_url_manifest_chat(self) -> None:
         """Test url for chat manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT.value)}")
         self.process_url(url)
 
     def test_url_manifest_chat_history(self) -> None:
         """Test url for chat history manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_HISTORY)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_HISTORY.value)}")
         self.process_url(url)
 
     def test_url_manifest_chat_plugin_usage(self) -> None:
         """Test url for chat plugin usage manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_PLUGIN_USAGE)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_PLUGIN_USAGE.value)}")
         self.process_url(url)
 
     def test_url_manifest_chat_tool_call(self) -> None:
         """Test url for chat tool call manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_TOOL_CALL)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHAT_TOOL_CALL.value)}")
         self.process_url(url)
 
     def test_url_manifest_chatbot(self) -> None:
         """Test url for chatbot manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHATBOT)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.CHATBOT.value)}")
         self.process_url(url)
 
     def test_url_manifest_static_plugin(self) -> None:
         """Test url for static plugin manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.STATIC_PLUGIN)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.STATIC_PLUGIN.value)}")
         self.process_url(url)
 
     def test_url_manifest_sql_connection(self) -> None:
         """Test url for sql connection manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.SQL_CONNECTION)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.SQL_CONNECTION.value)}")
         self.process_url(url)
 
     def test_url_manifest_sql_plugin(self) -> None:
         """Test url for sql plugin manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.SQL_PLUGIN)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.SQL_PLUGIN.value)}")
         self.process_url(url)
 
     def test_url_manifest_api_connection(self) -> None:
         """Test url for api connection manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.API_CONNECTION)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.API_CONNECTION.value)}")
         self.process_url(url)
 
     def test_url_manifest_api_plugin(self) -> None:
         """Test url for api plugin manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.API_PLUGIN)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.API_PLUGIN.value)}")
         self.process_url(url)
 
     def test_url_manifest_user(self) -> None:
         """Test url for user manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.USER)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.USER.value)}")
         self.process_url(url)
 
     def test_url_manifest_secret(self) -> None:
         """Test url for secret manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.SECRET)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.SECRET.value)}")
         self.process_url(url)

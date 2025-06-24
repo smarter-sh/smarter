@@ -256,9 +256,12 @@ def get_cached_smarter_admin_user_profile() -> UserProfile:
                 )
             return super_user_profile
 
-        staff_user_profile = (
-            UserProfile.objects.filter(account=smarter_account, user__is_staff=True).order_by("pk").first()
-        )
+        try:
+            staff_user_profile = (
+                UserProfile.objects.filter(account=smarter_account, user__is_staff=True).order_by("pk").first()
+            )
+        except UserProfile.DoesNotExist:
+            pass
         if staff_user_profile and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
             logger.info(
                 "_in_memory_smarter_admin_user_profile() retrieving and caching staff UserProfile %s",

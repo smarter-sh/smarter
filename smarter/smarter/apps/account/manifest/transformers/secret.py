@@ -87,6 +87,13 @@ class SecretTransformer(SmarterHelperMixin):
                 f"Received name: {bool(name)} data: {bool(data)}, manifest: {bool(manifest)}, "
                 f"secret_id: {bool(secret_id)}, secret: {bool(secret)}."
             )
+        self._name = None
+        self._api_version = api_version or SMARTER_API_MANIFEST_DEFAULT_VERSION
+        self._manifest = None
+        self._secret = None
+        self._secret_serializer = None
+        self._user_profile = None
+
         secret_inializing.send(sender=self.__class__, secret_name=name, user_profile=user_profile)
         self._user_profile = user_profile
         if not self._user_profile:

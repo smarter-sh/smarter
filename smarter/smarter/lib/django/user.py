@@ -23,8 +23,8 @@ if TYPE_CHECKING:
 
 
 def get_resolved_user(
-    user: "Union[UserClass, AbstractUser, AnonymousUser, SimpleLazyObject, _AnyUser]",
-) -> Optional[UserClass]:
+    user: "Union[DjangoUser, AbstractUser, AnonymousUser, SimpleLazyObject, _AnyUser]",
+) -> Optional[Union[DjangoUser, AnonymousUser]]:
     """
     Get the resolved user object from a user instance.
     Maps the various kinds of Django user subclasses and mutations to the UserClass.
@@ -33,4 +33,10 @@ def get_resolved_user(
     # pylint: disable=W0212
     if isinstance(user, SimpleLazyObject):
         return user._wrapped
-    return user if isinstance(user, UserClass) else None
+    if isinstance(user, AnonymousUser):
+        return user
+    if isinstance(user, DjangoUser):
+        return user
+    raise SmarterConfigurationError(
+        f"Unexpected user type: {type(user)}. Expected Django User, AnonymousUser, or SimpleLazyObject."
+    )

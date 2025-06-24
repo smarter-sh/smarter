@@ -1,11 +1,15 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
 """Rebuild the admin site to restrict access to certain apps and models."""
 
+from typing import Optional
+
 from django import forms
 from django.apps import apps
 from django.contrib import admin
 from django.contrib.admin.exceptions import AlreadyRegistered
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import AbstractUser, AnonymousUser
+from django.http import HttpRequest
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -76,14 +80,14 @@ class RestrictedAdminSite(admin.AdminSite):
     role: str = "customer"
     site_header = "Smarter Admin Console v" + __version__ + " (" + role + ")"
 
-    def each_context(self, request):
-        user = get_resolved_user(request.user)
-        if not user:
+    def each_context(self, request: HttpRequest):
+        user = request.user
+        if isinstance(user, AnonymousUser) or not getattr(user, "is_authenticated", False):
             self.role = "guest"
             return super().each_context(request)
-        if user.is_superuser:
+        if getattr(user, "is_superuser", False):
             self.role = "superuser"
-        elif user.is_staff:
+        elif getattr(user, "is_staff", False):
             self.role = "account admin"
         self.site_header = "Smarter Admin Console v" + __version__ + " (" + self.role + ")"
 
@@ -125,7 +129,7 @@ class RestrictedUserAdmin(UserAdmin):
             return qs
         try:
             if user.is_authenticated:
-                user_profile = get_cached_user_profile(user=user)
+                user_profile = get_cached_user_profile(user=user)  # type: ignore
                 return qs.filter(account=user_profile.account)  # type: ignore
         except UserProfile.DoesNotExist:
             return qs.none()

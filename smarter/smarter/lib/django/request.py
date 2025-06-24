@@ -23,8 +23,7 @@ from urllib.parse import ParseResult, urlparse, urlunsplit
 
 import tldextract
 import yaml
-from django.core.handlers.wsgi import WSGIRequest
-from django.http import QueryDict
+from django.http import HttpRequest, QueryDict
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import (
@@ -120,7 +119,7 @@ class SmarterRequestMixin(AccountMixin):
     )
 
     # pylint: disable=W0613
-    def __init__(self, request: WSGIRequest, *args, **kwargs):
+    def __init__(self, request: HttpRequest, *args, **kwargs):
 
         session_key: str = kwargs.pop("session_key", None)
         if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
@@ -128,7 +127,7 @@ class SmarterRequestMixin(AccountMixin):
                 "SmarterRequestMixin().__init__() - initializing with request=%s, session_key=%s", request, session_key
             )
 
-        self._smarter_request: WSGIRequest = request
+        self._smarter_request: HttpRequest = request
         self._timestamp = datetime.now()
         self._session_key: Optional[str] = None
         self._data: Optional[dict] = None
@@ -218,7 +217,7 @@ class SmarterRequestMixin(AccountMixin):
             self.__dict__.pop(prop, None)
 
     @property
-    def smarter_request(self) -> WSGIRequest:
+    def smarter_request(self) -> HttpRequest:
         """renaming this to avoid potential name collisions in child classes"""
         return self._smarter_request
 
