@@ -282,7 +282,6 @@ runs:
         --set env.ROOT_DOMAIN=smarter.sh \
         --set env.DEBUG_MODE="false" \
         --set env.DUMP_DEFAULTS="True" \
-        --set env.FERNET_ENCRYPTION_KEY=${{ inputs.FERNET_ENCRYPTION_KEY }} \
         --set env.MAILCHIMP_API_KEY=${{ inputs.mailchimp-api-key }} \
         --set env.MAILCHIMP_LIST_ID=${{ inputs.mailchimp-list-id }} \
         --set env.OPENAI_API_KEY=${{ inputs.openai-api-key }} \
