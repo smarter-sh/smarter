@@ -13,24 +13,25 @@ from ..models import Account, UserProfile
 class TestAccount(SmarterTestBase):
     """Test Account model"""
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         """Set up test fixtures."""
-        super().setUp()
+        super().setUpClass()
         hashed_slug = hash_factory()
-        username = self.name
+        username = cls.name
         email = f"test-{hashed_slug}@mail.com"
         first_name = f"TestAdminFirstName_{hashed_slug}"
         last_name = f"TestAdminLastName_{hashed_slug}"
-        self.user = User.objects.create_user(
+        cls.user = User.objects.create_user(
             email=email, first_name=first_name, last_name=last_name, username=username, password="12345"
         )
-        self.company_name = "Test Company"
+        cls.company_name = "Test Company"
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         """Clean up test fixtures."""
-        self.user.delete()
-        Account.objects.filter(company_name=self.company_name).delete()
-        super().tearDown()
+        super().tearDownClass()
+        cls.user.delete()
 
     def test_create(self):
         """Test that we can create an account."""

@@ -45,7 +45,7 @@ class LoginView(SmarterNeverCachedWebView):
 
     def get(self, request):
         user = get_resolved_user(request.user)
-        if user and user.is_authenticated:
+        if user and hasattr(user, "is_authenticated") and user.is_authenticated:
             return redirect_and_expire_cache(path="/")
         form = LoginView.LoginForm()
         context = {"form": form}
@@ -72,9 +72,7 @@ class LoginView(SmarterNeverCachedWebView):
                 )
             # pylint: disable=W0718
             except Exception as e:
-                return SmarterHttpResponseServerError(
-                    request=request, error_message=f"An unknown error occurred {e.description}"
-                )
+                return SmarterHttpResponseServerError(request=request, error_message=f"An unknown error occurred {e}")
         return SmarterHttpResponseBadRequest(request=request, error_message="Received invalid responses.")
 
 
@@ -103,7 +101,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
 
     def get(self, request):
         user = get_resolved_user(request.user)
-        if user and user.is_authenticated:
+        if user and hasattr(user, "is_authenticated") and user.is_authenticated:
             return redirect_and_expire_cache(path="/")
 
         form = AccountRegisterView.SignUpForm()
@@ -138,7 +136,7 @@ class AccountActivationEmailView(SmarterNeverCachedWebView):
 
         # generate and send the activation email
         user = get_resolved_user(request.user)
-        if not user:
+        if not isinstance(user, User) or not hasattr(user, "is_authenticated") or not user.is_authenticated:
             return SmarterHttpResponseNotFound(
                 request=request, error_message="User not found. Please log in to activate your account."
             )

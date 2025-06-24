@@ -6,6 +6,7 @@ trusted origins for CSRF protection.
 
 import logging
 from collections import defaultdict
+from typing import Optional
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -36,7 +37,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
     template tag.
     """
 
-    smarter_request: SmarterRequestMixin = None
+    smarter_request: Optional[SmarterRequestMixin] = None
 
     @property
     def CSRF_TRUSTED_ORIGINS(self) -> list[str]:
@@ -133,8 +134,10 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         if smarter_settings.environment == "local":
             logger.debug("%s._accept: environment is local. ignoring csrf checks", self.formatted_class_name)
             return None
-        if self.smarter_request.is_chatbot and waffle.switch_is_active(
-            SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS
+        if (
+            self.smarter_request
+            and self.smarter_request.is_chatbot
+            and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS)
         ):
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info(

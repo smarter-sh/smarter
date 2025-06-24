@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class SmarterTestBase(unittest.TestCase):
     """Base class for all unit tests."""
 
-    name: str = None
+    name: str
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -37,9 +37,6 @@ class SmarterTestBase(unittest.TestCase):
     def tearDownClass(cls) -> None:
         """Tear down the test class."""
         super().tearDownClass()
-        cls.hash_suffix = None
-        cls.name = None
-        cls.uid = None
 
     @classmethod
     def generate_uid(cls) -> str:

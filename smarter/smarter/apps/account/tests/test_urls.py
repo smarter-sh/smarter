@@ -30,6 +30,8 @@ class TestUrls(TestAccountMixin):
         def verify_response(reverse_name: str, status_code):
             url = reverse(reverse_name)
             print(f"Testing URL: {url}")
+            if not self.client:
+                self.fail("Client is not initialized.")
             response = self.client.get(url)
             self.assertEqual(response.status_code, status_code)
 
@@ -39,5 +41,7 @@ class TestUrls(TestAccountMixin):
         verify_response(f"{namespace}:account_password_reset_request", 200)
         verify_response(f"{namespace}:account_password_confirm", 200)
 
+        if not self.client:
+            self.fail("Client is not initialized.")
         self.client.force_login(self.non_admin_user)
         verify_response(f"{namespace}:account_deactivate", 200)

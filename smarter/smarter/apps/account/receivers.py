@@ -104,12 +104,6 @@ def account_post_save(sender, instance, created, **kwargs):
             instance,
             created,
         )
-        # create a UserProfile for the smarter admin user
-        smarter_admin = get_cached_smarter_admin_user_profile().user
-        UserProfile.objects.get_or_create(
-            user=smarter_admin,
-            account=instance,
-        )
 
 
 @receiver(post_delete, sender=Account)
