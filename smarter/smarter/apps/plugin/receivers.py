@@ -258,19 +258,22 @@ def handle_api_connection_created(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=SqlConnection)
-def handle_sql_connection_created(sender, instance, created, **kwargs):
+def handle_sql_connection_created(sender, instance: SqlConnection, created, **kwargs):
     """Handle SQL connection created signal."""
 
+    account = str(instance.account) if instance.account else "(account is missing)"
     if created:
         logger.info(
-            "%s - %s",
+            "%s - %s %s",
             formatted_text(prefix + "post_save() SqlConnection() created"),
+            account,
             formatted_json(model_to_dict(instance)),
         )
     else:
         logger.info(
-            "%s - %s",
+            "%s - %s %s",
             formatted_text(prefix + "post_save() SqlConnection() updated"),
+            account,
             formatted_json(model_to_dict(instance)),
         )
 
