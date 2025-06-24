@@ -4,7 +4,8 @@
 import logging
 from typing import Optional, Type
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.forms.models import model_to_dict
+from django.http import HttpRequest
 
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
@@ -12,7 +13,7 @@ from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.apps.plugin.manifest.models.static_plugin.spec import SAMPluginStaticSpec
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.models import PluginDataStatic, PluginMeta
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -48,6 +49,8 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     # override the base abstract manifest model with the StaticPlugin model
     _manifest: Optional[SAMStaticPlugin] = None
     _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
+    _plugin_data: Optional[PluginDataStatic] = None
+    _plugin: Optional[StaticPlugin] = None
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -87,19 +90,104 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             )
         return self._manifest
 
+    @property
+    def plugin(self) -> Optional[StaticPlugin]:
+        if self._plugin:
+            return self._plugin
+        self._plugin = StaticPlugin(
+            user_profile=self.user_profile,
+            manifest=self.manifest,
+        )
+        return self._plugin
+
+    @property
+    def plugin_data(self) -> Optional[PluginDataStatic]:
+        """
+        Returns the PluginDataStatic object for this broker.
+        This is used to store the plugin data in the database.
+        """
+        if self._plugin_data:
+            return self._plugin_data
+
+        if self.plugin_meta is None:
+            return None
+
+        try:
+            self._plugin_data = PluginDataStatic.objects.get(plugin=self.plugin_meta)
+        except PluginDataStatic.DoesNotExist:
+            logger.warning(
+                "%s.plugin_data() PluginDataStatic object does not exist for %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin_meta.name,
+            )
+        return self._plugin_data
+
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = StaticPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
-    # def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-    # implemented in SAMPluginBaseBroker.describe()
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """Return a JSON response with the manifest data."""
+        command = self.describe.__name__
+        command = SmarterJournalCliCommands(command)
 
-    def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        if not isinstance(self.plugin, StaticPlugin):
+            raise SAMBrokerErrorNotReady(message="No plugin found", thing=self.kind, command=command)
+        if self.account is None:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} account not initialized. Cannot describe",
+                thing=self.kind,
+                command=command,
+            )
+        if not isinstance(self.plugin_meta, PluginMeta):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} plugin_meta not initialized. Cannot describe",
+                thing=self.kind,
+                command=command,
+            )
+
+        try:
+            data = model_to_dict(self.plugin)  # type: ignore[no-any-return]
+            data = self.snake_to_camel(data)
+            if not isinstance(data, dict):
+                raise SAMPluginBrokerError(
+                    f"Model dump failed for {self.kind} {self.plugin.name}",
+                    thing=self.kind,
+                    command=command,
+                )
+            data.pop("id")
+            data.pop(SAMMetadataKeys.NAME.value)
+            data[SAMMetadataKeys.ACCOUNT.value] = self.account.account_number
+            data.pop(SAMMetadataKeys.DESCRIPTION.value)
+
+            retval = {
+                SAMKeys.APIVERSION.value: self.api_version,
+                SAMKeys.KIND.value: self.kind,
+                SAMKeys.METADATA.value: {
+                    SAMMetadataKeys.NAME.value: self.plugin.name,
+                    SAMMetadataKeys.DESCRIPTION.value: self.plugin_meta.description,
+                    SAMMetadataKeys.VERSION.value: self.plugin_meta.version,
+                },
+                SAMKeys.SPEC.value: data,
+                SAMKeys.STATUS.value: {
+                    "created": self.plugin_meta.created_at.isoformat(),
+                    "modified": self.plugin_meta.updated_at.isoformat(),
+                },
+            }
+            # validate our results by round-tripping the data through the Pydantic model
+            pydantic_model = self.pydantic_model(**retval)
+            data = pydantic_model.model_dump_json()
+            return self.json_response_ok(command=command, data=retval)
+        except Exception as e:
+            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
+
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -150,7 +238,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -206,13 +294,13 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             )
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         super().chat(request, kwargs)
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
 
-    def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -242,17 +330,17 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
         )
 
-    def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

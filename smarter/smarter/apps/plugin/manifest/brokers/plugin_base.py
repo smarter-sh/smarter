@@ -88,32 +88,5 @@ class SAMPluginBaseBroker(AbstractBroker):
         super().apply(request, kwargs)
         logger.info("SAMPluginBaseBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)
 
-    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        logger.info(
-            "%s.describe() called %s with args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs
-        )
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
-        self.set_and_verify_name_param(command, *args, **kwargs)
-
-        if self.plugin and self.plugin.ready:
-            try:
-                data = self.plugin.to_json()
-                if isinstance(data, dict):
-                    data[SAMKeys.METADATA.value].get(SAMMetadataKeys.ACCOUNT.value)
-                    data[SAMKeys.METADATA.value].get(SAMMetadataKeys.AUTHOR.value)
-                # return self.json_response_ok(command=command, data=data) if isinstance(data, dict) else None
-                return SmarterJournaledJsonResponse(
-                    request=request,
-                    command=command,
-                    data=data,
-                )
-            except Exception as e:
-                name = self.plugin_meta.name if self.plugin_meta else "unknown"
-                raise SAMBrokerError(
-                    f"{self.formatted_class_name} {name} describe failed",
-                    thing=self.kind,
-                    command=command,
-                ) from e
-        name = self.plugin_meta.name if self.plugin_meta else "unknown"
-        raise SAMBrokerErrorNotReady(f"{self.formatted_class_name} {name} not ready", thing=self.kind, command=command)
+    def describe(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
+        super().describe(request, *args, **kwargs)
