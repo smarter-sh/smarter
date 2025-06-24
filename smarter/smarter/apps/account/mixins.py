@@ -14,7 +14,6 @@ from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django import waffle
 from smarter.lib.django.serializers import UserMiniSerializer
 from smarter.lib.django.user import UserClass as User
-from smarter.lib.django.user import get_resolved_user
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Account, UserProfile
@@ -103,7 +102,7 @@ class AccountMixin(SmarterHelperMixin):
             if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                 logger.info("%s.__init__(): received a request object: %s", self.formatted_class_name, url)
             if hasattr(request, "user"):
-                self._user = request.user
+                self._user = request.user  # type: ignore[union-attr]
                 if not isinstance(self._user, User):
                     logger.warning(
                         "%s.__init__(): could not resolve user from the request object %s",
@@ -114,7 +113,7 @@ class AccountMixin(SmarterHelperMixin):
                     logger.info(
                         "%s.__init__(): found a user object in the request: %s",
                         self.formatted_class_name,
-                        self._user.username,
+                        self._user.username,  # type: ignore[union-attr]
                     )
                 self._account = get_cached_account_for_user(self._user)
                 if not isinstance(self._account, Account):

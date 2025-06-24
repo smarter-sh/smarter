@@ -151,7 +151,7 @@ class ChatHelper(SmarterRequestMixin):
 
     # FIX NOTE: remove session_key
     def __init__(
-        self, request: HttpRequest, session_key: str, *args, chatbot: Optional[ChatBot] = None, **kwargs
+        self, request: HttpRequest, session_key: Optional[str], *args, chatbot: Optional[ChatBot] = None, **kwargs
     ) -> None:
         logger.info(
             "ChatHelper().__init__() - received request: %s session_key: %s, chatbot: %s", request, session_key, chatbot
