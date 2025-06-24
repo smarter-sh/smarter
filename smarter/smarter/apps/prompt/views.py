@@ -88,7 +88,9 @@ class SmarterChatSession(SmarterHelperMixin):
     request: Optional[HttpRequest] = None
     session_key: Optional[str] = None
 
-    def __init__(self, request: HttpRequest, session_key: str, *args, chatbot: Optional[ChatBot] = None, **kwargs):
+    def __init__(
+        self, request: HttpRequest, session_key: Optional[str], *args, chatbot: Optional[ChatBot] = None, **kwargs
+    ):
         logger.info("SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot)
         self.request = request
         self.session_key = session_key
@@ -265,9 +267,8 @@ class ChatConfigView(SmarterNeverCachedWebView):
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
-        if self.session_key is not None:
-            self.session = SmarterChatSession(request, session_key=self.session_key, chatbot=self.chatbot)
-            session_key = self.session.session_key or self.session_key
+        self.session = SmarterChatSession(request, session_key=self.session_key, chatbot=self.chatbot)
+        session_key = self.session.session_key or self.session_key
         if session_key != self.session_key and session_key is not None:
             logger.info("%s.dispatch() modifying session_key to %s", self.formatted_class_name, session_key)
             self.session_key = session_key
