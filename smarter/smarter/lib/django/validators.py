@@ -529,7 +529,7 @@ class SmarterValidator:
         SmarterValidator.validate_url(retval)
         if not retval.endswith("/"):
             retval += "/"
-        return url
+        return retval
 
     @staticmethod
     def raise_error(msg: str) -> None:
