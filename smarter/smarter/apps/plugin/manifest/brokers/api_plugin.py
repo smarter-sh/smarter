@@ -160,7 +160,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -170,6 +170,18 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+        if self.plugin is None:
+            raise SAMBrokerError(
+                f"{self.formatted_class_name} plugin not initialized. Cannot apply manifest.",
+                thing=self.kind,
+                command=command,
+            )
+        if self.plugin_meta is None:
+            raise SAMBrokerError(
+                f"{self.formatted_class_name} plugin_meta not initialized. Cannot apply manifest.",
+                thing=self.kind,
+                command=command,
+            )
         try:
             self.plugin.create()
         except Exception as e:
@@ -188,15 +200,27 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
+        if self.plugin is None:
+            raise SAMBrokerError(
+                f"{self.formatted_class_name} plugin not initialized. Cannot delete.",
+                thing=self.kind,
+                command=command,
+            )
+        if self.plugin_meta is None:
+            raise SAMBrokerError(
+                f"{self.formatted_class_name} plugin_meta not initialized. Cannot delete.",
+                thing=self.kind,
+                command=command,
+            )
         if self.plugin.ready:
             try:
                 self.plugin.delete()
@@ -211,17 +235,17 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
         )
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)
