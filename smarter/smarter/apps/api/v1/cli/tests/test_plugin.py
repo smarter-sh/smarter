@@ -78,7 +78,9 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
 
         logger.info("Response: %s", response)
 
-        data = response
+        data = response["data"]
+        logger.info("Data: %s", data)
+
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.STATIC_PLUGIN.value)
         self.assertIsInstance(data.get(SAMKeys.METADATA.value, None), dict)
