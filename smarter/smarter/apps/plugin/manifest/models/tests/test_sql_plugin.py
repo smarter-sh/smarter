@@ -10,6 +10,7 @@ http://localhost:8000/api/v1/tests/authenticated/list/
 
 import json
 from logging import getLogger
+from typing import Optional
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from pydantic_core import ValidationError as PydanticValidationError
@@ -30,14 +31,15 @@ from smarter.lib.manifest.loader import SAMLoader
 logger = getLogger(__name__)
 
 
+# pylint: disable=W0223
 class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
     """Test SAM manifest using ApiPlugin"""
 
-    _model: SAMSqlPlugin = None
-    plugin_meta: PluginMeta = None
+    _model: Optional[SAMSqlPlugin] = None
+    plugin_meta: Optional[PluginMeta] = None
 
     @property
-    def model(self) -> SAMSqlPlugin:
+    def model(self) -> Optional[SAMSqlPlugin]:
         # override to create a SAMSqlPlugin pydantic model from the loader
         if not self._model and self.loader:
             self._model = SAMSqlPlugin(**self.loader.pydantic_model_dump())
@@ -57,6 +59,8 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
     def test_validate_api_connection_invalid_value(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="sql-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            self.fail("Manifest is not a dictionary")
 
         invalid_connection_string = "this $couldn't possibly be a valid connection name"
         self._manifest["spec"]["connection"] = invalid_connection_string
@@ -72,6 +76,8 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
     def test_validate_api_sql_query_invalid_value(self):
         """Test that the sqlQuery validator raises an error for invalid SQL syntax."""
         self.load_manifest(filename="sql-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            self.fail("Manifest is not a dictionary")
 
         invalid_sql_query = None
         self._manifest["spec"]["sqlData"]["sqlQuery"] = invalid_sql_query
@@ -88,6 +94,8 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
     def test_validate_api_sql_parameters_invalid_type(self):
         """Test that the parameters validator raises an error for invalid parameter types."""
         self.load_manifest(filename="sql-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            self.fail("Manifest is not a dictionary")
 
         invalid_parameters = [
             {
@@ -111,6 +119,8 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
     def test_validate_api_sql_parameters_missing_required(self):
         """Test that the parameters validator raises an error for missing required parameters."""
         self.load_manifest(filename="sql-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            self.fail("Manifest is not a dictionary")
 
         self._manifest["spec"]["sqlData"] = {
             "sqlQuery": "SELECT * FROM auth_user WHERE username = '{username}';",
@@ -136,6 +146,11 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
     def test_django_orm(self):
         """Test that the Django model can be initialized from the Pydantic model."""
         self.load_manifest(filename="sql-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            self.fail("Manifest is not a dictionary")
+
+        if self.model is None:
+            self.fail("Model is None, did you load the manifest?")
 
         self.plugin_meta = PluginMeta(
             account=self.account,
