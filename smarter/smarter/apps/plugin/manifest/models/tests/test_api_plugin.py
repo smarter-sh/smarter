@@ -8,7 +8,8 @@ http://localhost:8000/api/v1/tests/authenticated/dict/
 http://localhost:8000/api/v1/tests/authenticated/list/
 """
 
-import os
+from logging import getLogger
+from typing import Optional
 
 from pydantic_core import ValidationError
 
@@ -25,14 +26,18 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 
+logger = getLogger(__name__)
+
+
+# pylint: disable=W0223
 class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
     """Test SAM manifest using ApiPlugin"""
 
-    _model: SAMApiPlugin = None
-    plugin_meta: PluginMeta = None
+    _model: Optional[SAMApiPlugin] = None
+    plugin_meta: Optional[PluginMeta] = None
 
     @property
-    def model(self) -> SAMApiPlugin:
+    def model(self) -> Optional[SAMApiPlugin]:
         # override to create a SAMApiPlugin pydantic model from the loader
         if not self._model and self.loader:
             self._model = SAMApiPlugin(**self.loader.pydantic_model_dump())
@@ -60,6 +65,8 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
     def test_validate_connection_invalid_value(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="api-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            raise TypeError("Manifest should be a dictionary")
 
         invalid_connection_string = "this $couldn't possibly be a valid connection name"
         self._manifest["spec"]["connection"] = invalid_connection_string
@@ -75,6 +82,8 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
     def test_validate_connection_invalid_type(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="api-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            raise TypeError("Manifest should be a dictionary")
 
         invalid_connection_string = 1234567890
         self._manifest["spec"]["connection"] = invalid_connection_string
@@ -90,6 +99,8 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
     def test_validate_endpoint_invalid(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="api-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            raise TypeError("Manifest should be a dictionary")
 
         invalid_endpoint = "not a good endpoint"
         self._manifest["spec"]["apiData"]["endpoint"] = invalid_endpoint
@@ -105,6 +116,8 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
     def test_validate_endpoint_invalid_type(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="api-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            raise TypeError("Manifest should be a dictionary")
 
         invalid_endpoint = 1234567890
         self._manifest["spec"]["apiData"]["endpoint"] = invalid_endpoint
@@ -120,6 +133,8 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
     def test_validate_parameters_invalid(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="api-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            raise TypeError("Manifest should be a dictionary")
 
         invalid_parameters = [
             {
@@ -143,6 +158,8 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
     def test_validate_headers_invalid(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="api-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            raise TypeError("Manifest should be a dictionary")
 
         invalid_headers = [
             {
@@ -166,6 +183,8 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
     def test_validate_body_invalid(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="api-plugin.yaml")
+        if not isinstance(self._manifest, dict):
+            raise TypeError("Manifest should be a dictionary")
 
         invalid_body = "not valid json"
 
@@ -184,6 +203,8 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
     def test_django_orm(self):
         """Test that the Django model can be initialized from the Pydantic model."""
         self.load_manifest(filename="api-plugin.yaml")
+        if not self.model:
+            raise ValueError("Model should not be None")
 
         self.plugin_meta = PluginMeta(
             account=self.account,
@@ -201,6 +222,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
         model_dump["description"] = self.model.metadata.description
         model_dump = camel_to_snake_dict(model_dump)
 
+        logger.info("Creating Django model from Pydantic model dump: %s", model_dump)
         django_model = PluginDataApi(**model_dump)
         django_model.save()
 

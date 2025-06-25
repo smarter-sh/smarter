@@ -39,7 +39,10 @@ class TestStaticPlugin(TestAccountMixin):
         """Test default return value of tool_call_fetch_plugin_response()"""
         try:
             inquiry_type = inquiry_type = self.plugin.plugin_data.return_data_keys[0]
-            return_data = self.plugin.tool_call_fetch_plugin_response(inquiry_type=inquiry_type)
+            function_args = {
+                "inquiry_type": inquiry_type,
+            }
+            return_data = self.plugin.tool_call_fetch_plugin_response(function_args=function_args)
         except Exception:
             self.fail("tool_call_fetch_plugin_response() raised ExceptionType")
 
