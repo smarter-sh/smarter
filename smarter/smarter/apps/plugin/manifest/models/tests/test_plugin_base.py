@@ -508,7 +508,10 @@ class TestPluginBase(TestAccountMixin):
         plugin_called.connect(self.plugin_called_signal_handler, dispatch_uid="plugin_called_test_plugin_called_signal")
 
         plugin = StaticPlugin(user_profile=self.user_profile, data=self.data)
-        plugin.tool_call_fetch_plugin_response(inquiry_type="sales_promotions")
+        function_args = {
+            "inquiry_type": "sales_promotions",
+        }
+        plugin.tool_call_fetch_plugin_response(function_args=function_args)
 
         self.assertTrue(self.signals["plugin_called"])
 

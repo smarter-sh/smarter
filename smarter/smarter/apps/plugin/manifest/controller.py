@@ -4,7 +4,7 @@ Helper class to map to/from Pydantic manifest model, Plugin and Django ORM model
 
 import json
 from logging import getLogger
-from typing import Dict, Optional, Type
+from typing import Dict, Optional, Type, Union
 
 from smarter.apps.account.models import Account, UserProfile
 
@@ -22,11 +22,14 @@ from ..plugin.sql import SqlPlugin
 from ..plugin.static import StaticPlugin
 from .enum import SAMPluginCommonMetadataClassValues
 from .models.api_plugin.const import MANIFEST_KIND as API_MANIFEST_KIND
+from .models.api_plugin.model import SAMApiPlugin
 from .models.common.plugin.model import SAMPluginCommon
 from .models.sql_plugin.const import MANIFEST_KIND as SQL_MANIFEST_KIND
+from .models.sql_plugin.model import SAMSqlPlugin
 
 # plugin manifest
 from .models.static_plugin.const import MANIFEST_KIND as STATIC_MANIFEST_KIND
+from .models.static_plugin.model import SAMStaticPlugin
 
 
 VALID_MANIFEST_KINDS = [STATIC_MANIFEST_KIND, SQL_MANIFEST_KIND, API_MANIFEST_KIND]
@@ -62,9 +65,25 @@ class PluginController(AbstractController):
                 f"One and only one of manifest or plugin_meta should be provided. Received? manifest: {bool(manifest)}, plugin_meta: {bool(plugin_meta)}, name: {bool(name)}."
             )
         if manifest and not isinstance(manifest, SAMPluginCommon):
-            raise SAMPluginControllerError(
-                f"Manifest should descend from {SAMPluginCommon}. Received? {type(manifest)}."
+            if not isinstance(manifest, dict):
+                raise SAMPluginControllerError(
+                    f"Manifest should descend from {SAMPluginCommon}. Received? {type(manifest)}."
+                )
+            if "kind" not in manifest:
+                raise SAMPluginControllerError("Manifest dict should contain 'kind' key to determine the plugin type.")
+            if manifest["kind"] not in VALID_MANIFEST_KINDS:
+                raise SAMPluginControllerError(
+                    f"Manifest kind {manifest['kind']} should be one of: {VALID_MANIFEST_KINDS}."
+                )
+            SAMPluginCls = self.sam_map.get(manifest["kind"])
+            logger.warning(
+                "%s received %s manifest as dict, converting to %s. This may be deprecated in the future.",
+                self.formatted_class_name,
+                manifest["kind"],
+                type(SAMPluginCls).__name__,
             )
+            manifest = SAMPluginCls(**manifest)  # type: ignore[call-arg]
+
         if manifest:
             self._manifest = manifest
             logger.info("%s received manifest: %s", self.formatted_class_name, self._manifest.metadata.name)
@@ -145,6 +164,15 @@ class PluginController(AbstractController):
             SAMPluginCommonMetadataClassValues.API.value: ApiPlugin,
             SAMPluginCommonMetadataClassValues.SQL.value: SqlPlugin,
             SAMPluginCommonMetadataClassValues.STATIC.value: StaticPlugin,
+        }
+
+    @property
+    def sam_map(self) -> Dict[str, Type[Union[SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin]]]:
+        """Maps manifest kinds to their respective SAM plugin classes."""
+        return {
+            API_MANIFEST_KIND: SAMApiPlugin,
+            SQL_MANIFEST_KIND: SAMSqlPlugin,
+            STATIC_MANIFEST_KIND: SAMStaticPlugin,
         }
 
     @property
