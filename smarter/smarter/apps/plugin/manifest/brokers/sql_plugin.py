@@ -155,8 +155,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             )
         return self._plugin_data
 
-        ###########################################################################
-
+    ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -192,175 +191,12 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             )
 
         # metadata
+        metadata = self.plugin_metadata_orm2pydantic()
+        plugin_selector = self.plugin_selector_orm2pydantic()
+        plugin_prompt = self.plugin_prompt_orm2pydantic()
+
         try:
-            metadata = model_to_dict(self.plugin_meta)  # type: ignore[no-any-return]
-            metadata = self.snake_to_camel(metadata)
-            if not isinstance(metadata, dict):
-                raise SAMPluginBrokerError(
-                    f"Model dump failed for {self.kind} {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                )
-            logger.info(
-                "%s.describe() PluginMeta %s %s",
-                self.formatted_class_name,
-                self.kind,
-                metadata,
-            )
-            metadata = SAMPluginCommonMetadata(**metadata)
-        except PluginMeta.DoesNotExist:
-            return self.json_response_err(
-                command=command,
-                e=SAMPluginBrokerError(
-                    f"{self.formatted_class_name} {self.kind} PluginMeta does not exist for {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                ),
-            )
-        except Exception as e:
-            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
-
-        # PluginSelector
-        try:
-            plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
-            plugin_selector = model_to_dict(plugin_selector)  # type: ignore[no-any-return]
-            plugin_selector = self.snake_to_camel(plugin_selector)
-            if not isinstance(plugin_selector, dict):
-                raise SAMPluginBrokerError(
-                    f"Model dump failed for {self.kind} {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                )
-            logger.info(
-                "%s.describe() PluginSelector %s %s",
-                self.formatted_class_name,
-                self.kind,
-                plugin_selector,
-            )
-            plugin_selector = SAMPluginCommonSpecSelector(**plugin_selector)
-        except PluginSelector.DoesNotExist:
-            return self.json_response_err(
-                command=command,
-                e=SAMPluginBrokerError(
-                    f"{self.formatted_class_name} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
-                    thing=self.kind,
-                    command=command,
-                ),
-            )
-        except Exception as e:
-            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
-
-        # PluginPrompt
-        try:
-            plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
-            plugin_prompt = model_to_dict(plugin_prompt)  # type: ignore[no-any-return]
-            plugin_prompt = self.snake_to_camel(plugin_prompt)
-            if not isinstance(plugin_prompt, dict):
-                raise SAMPluginBrokerError(
-                    f"Model dump failed for {self.kind} {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                )
-            logger.info(
-                "%s.describe() PluginPrompt %s %s",
-                self.formatted_class_name,
-                self.kind,
-                plugin_prompt,
-            )
-            plugin_prompt = SAMPluginCommonSpecPrompt(**plugin_prompt)
-        except PluginPrompt.DoesNotExist:
-            return self.json_response_err(
-                command=command,
-                e=SAMPluginBrokerError(
-                    f"{self.formatted_class_name} {self.kind} PluginPrompt does not exist for {self.plugin_meta.name}",
-                    thing=self.kind,
-                    command=command,
-                ),
-            )
-        except Exception as e:
-            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
-
-        # PluginData
-        try:
-            plugin_data = model_to_dict(self.plugin_data)  # type: ignore[no-any-return]
-            plugin_data = self.snake_to_camel(plugin_data)
-            if not isinstance(plugin_data, dict):
-                raise SAMPluginBrokerError(
-                    f"Model dump failed for {self.kind} {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                )
-
-            # pylint: disable=W0105
-            """
-            before transform, ['parameters']['properties'] is a dict of dicts
-                {
-                    'id': 4171,
-                    'plugin': 4519,
-                    'description': 'This SQL query retrieves the Django user record for the username provided.\n',
-                    'parameters': {
-                        'type': 'object',
-                        'required': ['username'],
-                        'properties': {
-                            'unit': {'enum': ['Celsius', 'Fahrenheit'], 'type': 'string', 'description': 'The temperature unit to use.'},
-                            'username': {'type': 'string', 'description': 'The username to query.'}
-                            },
-                        'additionalProperties': False
-                    },
-                    'plugindatabasePtr': 4171,
-                    'connection': 955,
-                    'sqlQuery': "SELECT * FROM auth_user WHERE username = '{username}';\n",
-                    'testValues': [{'name': 'username', 'value': 'admin'}, {'name': 'unit', 'value': 'Celsius'}],
-                    'limit': 10
-                }
-
-                after transform, ['parameters']['properties'] becomes a list of dicts where each dict has a 'name' key
-                and the value is the original dict, e.g., and, the requirements list is re-merged into the properties dicts
-                as the 'required' key (true, false) in each dict:
-
-                {
-                'id': 4171,
-                'plugin': 4519,
-                'description': 'This SQL query retrieves the Django user record for the username provided.\n',
-                'parameters': [
-                    {
-                        'name': 'unit',
-                        'enum': ['Celsius', 'Fahrenheit'],
-                        'type': 'string',
-                        'required': false
-                        'description': 'The temperature unit to use.'
-                    },
-                    {
-                        'name': 'username',
-                        'type': 'string',
-                        'required': true
-                        'description': 'The username to query.'
-                    }
-                ],
-                'plugindatabasePtr': 4171,
-                'connection': 955,
-                'sqlQuery': "SELECT * FROM auth_user WHERE username = '{username}';\n",
-                'testValues': [{'name': 'username', 'value': 'admin'}, {'name': 'unit', 'value': 'Celsius'}],
-                'limit': 10
-                }
-            """
-            if SAMSqlPluginSpecSqlData.PARAMETERS.value in plugin_data:
-                parameters = plugin_data[SAMSqlPluginSpecSqlData.PARAMETERS.value]
-                if (
-                    isinstance(parameters, dict)
-                    and "properties" in parameters
-                    and isinstance(parameters["properties"], dict)
-                ):
-                    properties_dict = parameters["properties"]
-                    required_list = parameters.get("required", [])
-                    # Convert dict of dicts to list of dicts with 'name' and 'required' keys
-                    properties_list = []
-                    for k, v in properties_dict.items():
-                        prop = {"name": k, **v}
-                        prop["required"] = k in required_list
-                        properties_list.append(prop)
-                    plugin_data[SAMSqlPluginSpecSqlData.PARAMETERS.value] = properties_list
-
+            plugin_data = self.plugin_data_orm2pydantic()
             plugin_data = SqlData(**plugin_data)
         except Exception as e:
             raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e

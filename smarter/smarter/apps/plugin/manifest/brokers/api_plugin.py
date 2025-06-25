@@ -6,11 +6,12 @@ from typing import Optional, Type
 
 from django.http import HttpRequest
 
+from smarter.apps.plugin.manifest.enum import SAMPluginSpecKeys
 from smarter.apps.plugin.manifest.models.api_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.manifest.models.api_plugin.spec import ApiData
+from smarter.apps.plugin.models import PluginDataApi, PluginMeta
 from smarter.apps.plugin.plugin.api import ApiPlugin
-from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -45,9 +46,10 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     """
 
     # override the base abstract manifest model with the ApiPlugin model
+    _plugin: Optional[ApiPlugin] = None
+    _plugin_data: Optional[PluginDataApi] = None
     _manifest: Optional[SAMApiPlugin] = None
     _pydantic_model: Type[SAMApiPlugin] = SAMApiPlugin
-    _plugin: Optional[PluginBase] = None
     _plugin_meta: Optional[PluginMeta] = None
 
     ###########################################################################
@@ -88,6 +90,45 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             )
         return self._manifest
 
+    @property
+    def plugin(self) -> Optional[ApiPlugin]:
+        if self._plugin:
+            return self._plugin
+        if isinstance(self.plugin_meta, PluginMeta):
+            self._plugin = ApiPlugin(
+                plugin_meta=self.plugin_meta,
+                user_profile=self.user_profile,
+            )
+        elif isinstance(self.manifest, SAMApiPlugin):
+            self._plugin = ApiPlugin(
+                user_profile=self.user_profile,
+                manifest=self.manifest,
+            )
+        return self._plugin
+
+    @property
+    def plugin_data(self) -> Optional[PluginDataApi]:
+        """
+        Returns the PluginDataStatic object for this broker.
+        This is used to store the plugin data in the database.
+        """
+        if self._plugin_data:
+            return self._plugin_data
+
+        if self.plugin_meta is None:
+            return None
+
+        try:
+            self._plugin_data = PluginDataApi.objects.get(plugin=self.plugin_meta)
+        except PluginDataApi.DoesNotExist:
+            logger.warning(
+                "%s.plugin_data() PluginDataApi object does not exist for %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin_meta.name,
+            )
+        return self._plugin_data
+
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
@@ -96,6 +137,84 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         data = ApiPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
+
+    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """Return a JSON response with the manifest data."""
+        command = self.describe.__name__
+        command = SmarterJournalCliCommands(command)
+
+        if not isinstance(self.plugin, ApiPlugin):
+            raise SAMBrokerErrorNotReady(message="No plugin found", thing=self.kind, command=command)
+        if not self.plugin_data:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} plugin_data not initialized. Cannot describe",
+                thing=self.kind,
+                command=command,
+            )
+        if self.account is None:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} account not initialized. Cannot describe",
+                thing=self.kind,
+                command=command,
+            )
+        if not isinstance(self.plugin_meta, PluginMeta):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} plugin_meta not initialized. Cannot describe",
+                thing=self.kind,
+                command=command,
+            )
+
+        metadata = self.plugin_metadata_orm2pydantic()
+        plugin_selector = self.plugin_selector_orm2pydantic()
+        plugin_prompt = self.plugin_prompt_orm2pydantic()
+
+        try:
+            plugin_data = self.plugin_data_orm2pydantic()
+            plugin_data = ApiData(**plugin_data)
+        except Exception as e:
+            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
+
+        try:
+            retval = {
+                SAMKeys.APIVERSION.value: self.api_version,
+                SAMKeys.KIND.value: self.kind,
+                SAMKeys.METADATA.value: metadata.model_dump(),
+                SAMKeys.SPEC.value: {
+                    SAMPluginSpecKeys.PROMPT.value: plugin_prompt.model_dump(),
+                    SAMPluginSpecKeys.SELECTOR.value: plugin_selector.model_dump(),
+                    SAMPluginSpecKeys.CONNECTION.value: (
+                        self.plugin_data.connection.name if self.plugin_data.connection else ""
+                    ),
+                    SAMPluginSpecKeys.SQL_DATA.value: plugin_data.model_dump(),
+                },
+                SAMKeys.STATUS.value: {
+                    "created": self.plugin_meta.created_at.isoformat(),
+                    "modified": self.plugin_meta.updated_at.isoformat(),
+                },
+            }
+
+            logger.info(
+                "%s.describe() returning %s %s",
+                self.formatted_class_name,
+                self.kind,
+                retval,
+            )
+
+            # validate our results by round-tripping the data through the Pydantic model
+            pydantic_model = self.pydantic_model(**retval)
+            pydantic_model.model_dump_json()
+            return self.json_response_ok(command=command, data=retval)
+        except Exception as e:
+            logger.error(
+                "%s.describe() failed to serialize %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin.name,
+                exc_info=True,
+            )
+            raise SAMPluginBrokerError(
+                f"Failed to serialize {self.kind} {self.plugin.name}", thing=self.kind, command=command
+            ) from e
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
