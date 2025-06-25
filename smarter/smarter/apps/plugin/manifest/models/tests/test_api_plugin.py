@@ -11,17 +11,23 @@ http://localhost:8000/api/v1/tests/authenticated/list/
 from logging import getLogger
 from typing import Optional
 
-from pydantic_core import ValidationError
+from pydantic_core import ValidationError as PydanticValidationError
 
-from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
+from smarter.apps.account.manifest.brokers.secret import SAMSecretBroker
+from smarter.apps.account.manifest.models.secret.model import SAMSecret
+from smarter.apps.account.models import Secret
+from smarter.apps.plugin.manifest.brokers.api_connection import SAMApiConnectionBroker
+from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
 from smarter.apps.plugin.tests.base_classes import ManifestTestsMixin, TestPluginBase
-from smarter.apps.plugin.tests.mixins import ApiConnectionTestMixin
-from smarter.common.exceptions import SmarterValueError
-from smarter.common.utils import camel_to_snake_dict
+from smarter.apps.plugin.tests.mixins import (
+    ApiConnectionTestMixin,
+    AuthenticatedRequestMixin,
+)
 from smarter.lib.journal.enum import SmarterJournalThings
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -30,111 +36,78 @@ logger = getLogger(__name__)
 
 
 # pylint: disable=W0223
-class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
+class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin, AuthenticatedRequestMixin):
     """Test SAM manifest using ApiPlugin"""
 
-    _model: Optional[SAMApiPlugin] = None
+    _secret_model: Optional[SAMSecret] = None
+    _api_plugin_model: Optional[SAMApiPlugin] = None
+    _api_connection_model: Optional[SAMApiConnection] = None
     plugin_meta: Optional[PluginMeta] = None
 
     @property
-    def model(self) -> Optional[SAMApiPlugin]:
+    def secret_model(self) -> Optional[SAMSecret]:
+        # override to create a SAMSecret pydantic model from the loader
+        if not self._secret_model and self.loader:
+            self._secret_model = SAMSecret(**self.loader.pydantic_model_dump())
+            self.assertIsNotNone(self._secret_model)
+        return self._secret_model
+
+    @property
+    def api_connection_model(self) -> Optional[SAMApiConnection]:
         # override to create a SAMApiPlugin pydantic model from the loader
-        if not self._model and self.loader:
-            self._model = SAMApiPlugin(**self.loader.pydantic_model_dump())
-            self.assertIsNotNone(self._model)
-        return self._model
+        if not self._api_connection_model and self.loader:
+            self._api_connection_model = SAMApiConnection(**self.loader.pydantic_model_dump())
+            self.assertIsNotNone(self._api_connection_model)
+        return self._api_connection_model
+
+    @property
+    def api_plugin_model(self) -> Optional[SAMApiPlugin]:
+        # override to create a SAMApiPlugin pydantic model from the loader
+        if not self._api_plugin_model and self.loader:
+            self._api_plugin_model = SAMApiPlugin(**self.loader.pydantic_model_dump())
+            self.assertIsNotNone(self._api_plugin_model)
+        return self._api_plugin_model
 
     def test_00_api_connection_mixin(self):
-        """
-        Test the ApiConnection itself, lest we get ahead of ourselves
-        """
+        """Test the ApiConnection itself, lest we get ahead of ourselves"""
         self.assertIsInstance(self.connection_django_model, ApiConnection)
         self.assertIsInstance(self.connection_model, SAMApiConnection)
         self.assertIsInstance(self.connection_loader, SAMLoader)
         self.assertIsInstance(self.connection_manifest, dict)
         self.assertIsInstance(self.connection_manifest_path, str)
 
-        self.assertEqual(self.connection_model.kind, SmarterJournalThings.API_CONNECTION.value)
+        self.assertEqual(self.connection_model.kind, SmarterJournalThings.SQL_CONNECTION.value)
 
-    def test_01_valid_api_plugin(self):
-        """Test that we can load a valid manifest."""
-        self.load_manifest(filename="api-plugin.yaml")
-        # pylint: disable=W0104
-        self.model
-
-    def test_validate_connection_invalid_value(self):
+    def test_validate_api_connection_invalid_value(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="api-plugin.yaml")
         if not isinstance(self._manifest, dict):
-            raise TypeError("Manifest should be a dictionary")
+            self.fail("Manifest is not a dictionary")
 
         invalid_connection_string = "this $couldn't possibly be a valid connection name"
         self._manifest["spec"]["connection"] = invalid_connection_string
         self._loader = None
-        self._model = None
+        self._api_plugin_model = None
         with self.assertRaises(SAMValidationError) as context:
-            print(self.model)
+            print(self.api_plugin_model)
         self.assertIn(
-            "Smarter API Manifest validation error",
+            "must be a valid cleanstring with no illegal characters",
             str(context.exception),
         )
 
-    def test_validate_connection_invalid_type(self):
-        """Test that the timeout validator raises an error for negative values."""
+    def test_validate_api_invalid_parameter_value(self):
+        """Test for invalid parameters passed."""
         self.load_manifest(filename="api-plugin.yaml")
         if not isinstance(self._manifest, dict):
-            raise TypeError("Manifest should be a dictionary")
+            self.fail("Manifest is not a dictionary")
 
-        invalid_connection_string = 1234567890
-        self._manifest["spec"]["connection"] = invalid_connection_string
-        self._loader = None
-        self._model = None
-        with self.assertRaises(ValidationError) as context:
-            print(self.model)
-        self.assertIn(
-            "Input should be a valid string ",
-            str(context.exception),
-        )
+        logger.warning("FIX NOTE: WRITE THIS UNIT TEST!!!!")
 
-    def test_validate_endpoint_invalid(self):
-        """Test that the timeout validator raises an error for negative values."""
+    def test_validate_api_api_parameters_invalid_type(self):
+        """Test that the parameters validator raises an error for invalid parameter types."""
         self.load_manifest(filename="api-plugin.yaml")
         if not isinstance(self._manifest, dict):
-            raise TypeError("Manifest should be a dictionary")
-
-        invalid_endpoint = "not a good endpoint"
-        self._manifest["spec"]["apiData"]["endpoint"] = invalid_endpoint
-        self._loader = None
-        self._model = None
-        with self.assertRaises(SAMValidationError) as context:
-            print(self.model)
-        self.assertIn(
-            "URL endpoint 'not a good endpoint' contains invalid characters",
-            str(context.exception),
-        )
-
-    def test_validate_endpoint_invalid_type(self):
-        """Test that the timeout validator raises an error for negative values."""
-        self.load_manifest(filename="api-plugin.yaml")
-        if not isinstance(self._manifest, dict):
-            raise TypeError("Manifest should be a dictionary")
-
-        invalid_endpoint = 1234567890
-        self._manifest["spec"]["apiData"]["endpoint"] = invalid_endpoint
-        self._loader = None
-        self._model = None
-        with self.assertRaises(ValidationError) as context:
-            print(self.model)
-        self.assertIn(
-            "Input should be a valid string",
-            str(context.exception),
-        )
-
-    def test_validate_parameters_invalid(self):
-        """Test that the timeout validator raises an error for negative values."""
-        self.load_manifest(filename="api-plugin.yaml")
-        if not isinstance(self._manifest, dict):
-            raise TypeError("Manifest should be a dictionary")
+            self.fail("Manifest is not a dictionary")
 
         invalid_parameters = [
             {
@@ -145,242 +118,134 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
 
         self._manifest["spec"]["apiData"]["parameters"] = invalid_parameters
         self._loader = None
-        self._model = None
-        with self.assertRaises(ValidationError) as context:
+        self._api_plugin_model = None
+        with self.assertRaises(PydanticValidationError) as context:
             # spec.apiData.parameters.0.type
             #   Field required [type=missing, input_value={'name': 'limit', 'descri... of results to return.'}, input_type=dict]
-            print(self.model)
+            print(self.api_plugin_model)
         self.assertIn(
             "Field required [type=missing, input_value={'name': 'limit'",
             str(context.exception),
         )
 
-    def test_validate_headers_invalid(self):
-        """Test that the timeout validator raises an error for negative values."""
+    def test_validate_api_api_parameters_missing_required(self):
+        """Test that the parameters validator raises an error for missing required parameters."""
         self.load_manifest(filename="api-plugin.yaml")
         if not isinstance(self._manifest, dict):
-            raise TypeError("Manifest should be a dictionary")
+            self.fail("Manifest is not a dictionary")
 
-        invalid_headers = [
-            {
-                "name": "Authorization",
-                "wrong_key": "The authorization header.",
-            },
-        ]
-
-        self._manifest["spec"]["apiData"]["headers"] = invalid_headers
+        self._manifest["spec"]["apiData"] = {
+            "sqlQuery": "SELECT * FROM auth_user WHERE username = '{username}';",
+            "parameters": [
+                {
+                    "name": "bad_parameter",
+                    "type": "integer",
+                    "description": "The maximum number of results to return.",
+                    "default": 10,
+                },
+            ],
+        }
         self._loader = None
-        self._model = None
-        with self.assertRaises(ValidationError) as context:
-            # spec.apiData.headers.0.type
-            #   Field required [type=missing, input_value={'name': 'Authorization', 'descri... of results to return.'}, input_type=dict]
-            print(self.model)
+        self._api_plugin_model = None
+        with self.assertRaises(PydanticValidationError) as context:
+            # spec.apiData.parameters.0.default
+            print(self.api_plugin_model)
         self.assertIn(
-            "Field required [type=missing, input_value={'name': 'Authorization'",
-            str(context.exception),
-        )
-
-    def test_validate_body_invalid(self):
-        """Test that the timeout validator raises an error for negative values."""
-        self.load_manifest(filename="api-plugin.yaml")
-        if not isinstance(self._manifest, dict):
-            raise TypeError("Manifest should be a dictionary")
-
-        invalid_body = "not valid json"
-
-        self._manifest["spec"]["apiData"]["body"] = invalid_body
-        self._loader = None
-        self._model = None
-        with self.assertRaises(ValidationError) as context:
-            # spec.apiData.body.0.type
-            #   Field required [type=missing, input_value={'name': 'Authorization', 'descri... of results to return.'}, input_type=dict]
-            print(self.model)
-        self.assertIn(
-            "Input should be a valid dictionary",
+            "Input should be a valid string [type=string_type, input_value=10, input_type=int]",
             str(context.exception),
         )
 
     def test_django_orm(self):
-        """Test that the Django model can be initialized from the Pydantic model."""
-        self.load_manifest(filename="api-plugin.yaml")
-        if not self.model:
-            raise ValueError("Model should not be None")
+        """
+        Test that the Django model can be initialized from the Pydantic model.
 
-        self.plugin_meta = PluginMeta(
-            account=self.account,
-            name=self.model.metadata.name,
-            description=self.model.metadata.description,
-            plugin_class=SAMPluginCommonMetadataClassValues.API.value,
-            author=self.user_profile,
-            version="1.0.0",
+        FIX NOTE: WE HAVE TO LOAD THIS VIA THE BROKER, IN PART
+        BC THE FUNCTION CALL PARAMETERS HAVE TO BE REFORMATTED
+        FROM LIST TO DICT.
+        """
+        # 1.) create a secret for the Api connection
+        self._loader = None
+        self._manifest = None
+        self.load_manifest(filename="secret-smarter.yaml")
+        if not isinstance(self.loader, SAMLoader):
+            self.fail("Loader is not an instance of SAMLoader")
+        if not isinstance(self._manifest, dict):
+            self.fail("Manifest is not a dictionary")
+
+        if self.secret_model is None:
+            self.fail("Secret model is None, did you load the manifest?")
+
+        secret_broker = SAMSecretBroker(
+            self.request,
+            loader=self.loader,
+            manifest=self.manifest,
         )
+        secret_broker.apply(self.request)
+        if not isinstance(secret_broker.secret, Secret):
+            self.fail("secret is not an instance of SAMSecret")
+
+        # 2.) create an Api connection
+        self._loader = None
+        self._manifest = None
+        self.load_manifest(filename="api-connection.yaml")
+        if not isinstance(self.loader, SAMLoader):
+            self.fail("Loader is not an instance of SAMLoader")
+        if not isinstance(self._manifest, dict):
+            self.fail("Manifest is not a dictionary")
+
+        if self.api_connection_model is None:
+            self.fail("ApiConnection model is None, did you load the manifest?")
+
+        connection_broker = SAMApiConnectionBroker(
+            self.request,
+            loader=self.connection_loader,
+            manifest=self.connection_manifest,
+        )
+        connection_broker.apply(self.request)
+
+        self._loader = None
+        self._manifest = None
+        self.load_manifest(filename="api-plugin.yaml")
+        if not isinstance(self.loader, SAMLoader):
+            self.fail("Loader is not an instance of SAMLoader")
+        if not isinstance(self._manifest, dict):
+            self.fail("Manifest is not a dictionary")
+
+        # 3.) create an Api plugin
+        api_plugin_broker = SAMApiPluginBroker(
+            self.request,
+            loader=self.loader,
+            manifest=self.manifest,
+        )
+        api_plugin_broker.apply(self.request)
+        self.plugin_meta = api_plugin_broker.plugin_meta
+
+        if not isinstance(self.plugin_meta, PluginMeta):
+            self.fail("plugin_meta is not an instance of PluginMeta")
+        if self.api_plugin_model is None:
+            self.fail("ApiPlugin model is None, did you load the manifest?")
+
+        # 4.) try to save it
         self.plugin_meta.save()
 
-        model_dump = self.model.spec.apiData.model_dump()
-        model_dump["connection"] = self.connection_django_model
-        model_dump["plugin"] = self.plugin_meta
-        model_dump["description"] = self.model.metadata.description
-        model_dump = camel_to_snake_dict(model_dump)
+        response = api_plugin_broker.describe(self.request)
+        self.assertIsInstance(response, SmarterJournaledJsonResponse)
+        self.assertEqual(response.status_code, 200)
 
-        logger.info("Creating Django model from Pydantic model dump: %s", model_dump)
-        django_model = PluginDataApi(**model_dump)
-        django_model.save()
-
-        self.assertIsNotNone(django_model)
-        self.assertIsInstance(django_model, PluginDataApi)
-
-        self.assertEqual(django_model.plugin.account, self.account)
-        self.assertEqual(django_model.plugin.name, self.model.metadata.name)
-        self.assertEqual(django_model.plugin.description, self.model.metadata.description)
-        self.assertEqual(django_model.plugin.plugin_class, SAMPluginCommonMetadataClassValues.API.value)
-
-        self.assertEqual(django_model.connection, self.connection_django_model)
-        self.assertEqual(django_model.endpoint, self.model.spec.apiData.endpoint)
-
-        pydantic_url_params = [param.model_dump() for param in self.model.spec.apiData.url_params or []]
-        django_url_params = django_model.url_params or []
-        self.assertEqual(pydantic_url_params, django_url_params)
-
-        pydantic_headers = [header.model_dump() for header in self.model.spec.apiData.headers or []]
-        django_headers = django_model.headers or []
-        self.assertEqual(pydantic_headers, django_headers)
-
-        pydantic_body = self.model.spec.apiData.body or {}
-        django_body = django_model.body or {}
-        self.assertEqual(pydantic_body, django_body)
-
-        pydantic_parameters = [param.model_dump() for param in self.model.spec.apiData.parameters or []]
-        django_parameters = django_model.parameters or []
-        self.assertEqual(pydantic_parameters, django_parameters)
-
-        pydantic_test_values = [test_value.model_dump() for test_value in self.model.spec.apiData.test_values or []]
-        django_test_values = django_model.test_values or []
-        self.assertEqual(pydantic_test_values, django_test_values)
-
-        # try some invalid values
         # ---------------------------------------------------------------------
-        django_model.parameters = "this isn't even json, let alone a valid Pydantic model"
-        with self.assertRaises(SmarterValueError) as context:
-            django_model.save()
-        self.assertIn(
-            "parameters must be a list of dictionaries but got: <class 'str'>",
-            str(context.exception),
-        )
-
-        # this should work
-        django_model.parameters = [
-            {
-                "name": "username",
-                "type": "string",
-                "description": "The username to query.",
-                "required": True,
-                "default": "admin",
-            }
-        ]
-        django_model.save()
-
-        django_model.parameters = [
-            {
-                # "name": "username",
-                "type": "string",
-                "description": "The username to query.",
-                "required": True,
-                "default": "admin",
-            }
-        ]
-        with self.assertRaises(SmarterValueError) as context:
-            django_model.save()
-        self.assertIn(
-            "Invalid parameter structure",
-            str(context.exception),
-        )
-        self.assertIn(
-            "Field required [type=missing, input_value",
-            str(context.exception),
-        )
-
-        # this works.
-        # FIX NOTE: TO DISCUSS.
-        django_model.parameters = [
-            {
-                "name": "username",
-                "type": "string",
-                "description": "The username to query.",
-                "required": True,
-                "default": "admin",
-                "well": "how did i get here?",  # not part of the Pydantic model
-            }
-        ]
-        django_model.save()
-
-        django_model.parameters = [
-            {
-                "name": "username",
-                "type": "string",
-                "description": "The username to query.",
-                "required": True,
-                "default": "admin",
-            }
-        ]
-        django_model.test_values = [
-            {
-                "name": "not_the_username",
-                "value": "blah",
-            }
-        ]
-        with self.assertRaises(SmarterValueError) as context:
-            django_model.save()
-        self.assertIn(
-            "Test value for parameter 'username' is missing",
-            str(context.exception),
-        )
-
-        django_model.parameters = None
-        with self.assertRaises(SmarterValueError) as context:
-            django_model.save()
-        self.assertIn(
-            "Placeholder 'username' is not defined in parameters",
-            str(context.exception),
-        )
-
-        # this should work
-        django_model.parameters = None
-        django_model.endpoint = "/api/v1/tests/unauthenticated/list/"
-        django_model.save()
-
-        django_model.body = "definitely not valid json"
-        with self.assertRaises(SmarterValueError) as context:
-            django_model.save()
-        self.assertIn(
-            "body must be a dict or a list but got: <class 'str'>",
-            str(context.exception),
-        )
-
-        django_model.headers = "this isn't even json, let alone a valid Pydantic model"
-        with self.assertRaises(SmarterValueError) as context:
-            django_model.save()
-        self.assertIn(
-            "headers must be a list of dictionaries but got: <class 'str'>",
-            str(context.exception),
-        )
-
-        django_model.url_params = "this isn't even json, let alone a valid Pydantic model"
-        with self.assertRaises(SmarterValueError) as context:
-            django_model.save()
-        self.assertIn(
-            "url_params must be a list of dictionaries but got: <class 'str'>",
-            str(context.exception),
-        )
-
-        # this should work
-        django_model.body = None
-        django_model.headers = None
-        django_model.url_params = None
-        django_model.test_values = None
-        django_model.parameters = None
-        django_model.save()
+        # tear down the test data
+        # ---------------------------------------------------------------------
+        try:
+            api_plugin_broker.delete(self.request)
+        except (PluginDataApi.DoesNotExist, ValueError):
+            pass
 
         try:
-            django_model.delete()
-        except (PluginDataApi.DoesNotExist, ValueError):
+            connection_broker.delete(self.request)
+        except (ApiConnection.DoesNotExist, ValueError):
+            pass
+
+        try:
+            secret_broker.delete(self.request)
+        except (Secret.DoesNotExist, ValueError):
             pass

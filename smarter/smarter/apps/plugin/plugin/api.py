@@ -3,9 +3,10 @@
 # python stuff
 import json
 import logging
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Union
 
 # smarter stuff
+from smarter.apps.account.models import UserProfile
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
@@ -27,7 +28,7 @@ from ..manifest.models.api_plugin.const import MANIFEST_KIND
 from ..manifest.models.api_plugin.enum import SAMApiPluginSpecApiData
 from ..manifest.models.api_plugin.model import SAMApiPlugin
 from ..manifest.models.common.plugin.enum import SAMPluginCommonSpecTestValues
-from ..models import ApiConnection, PluginDataApi
+from ..models import ApiConnection, PluginDataApi, PluginMeta
 from ..serializers import PluginApiSerializer
 from .base import PluginBase, SmarterPluginError
 
@@ -45,6 +46,33 @@ class ApiPlugin(PluginBase):
     _metadata_class = SAMPluginCommonMetadataClass.API.value
     _plugin_data: Optional[PluginDataApi] = None
     _plugin_data_serializer: Optional[PluginApiSerializer] = None
+
+    def __init__(
+        self,
+        *args,
+        user_profile: Optional[UserProfile] = None,
+        selected: bool = False,
+        api_version: Optional[str] = None,
+        manifest: Optional[SAMApiPlugin] = None,
+        plugin_id: Optional[int] = None,
+        plugin_meta: Optional[PluginMeta] = None,
+        data: Union[dict[str, Any], str, None] = None,
+        **kwargs,
+    ):
+        self._manifest = manifest  # note: this is redundant and can probably be removed.
+        self._plugin_data = None
+        self._plugin_data_serializer = None
+        super().__init__(
+            *args,
+            user_profile=user_profile,
+            selected=selected,
+            api_version=api_version,
+            plugin_id=plugin_id,
+            plugin_meta=plugin_meta,
+            manifest=manifest,  # type: ignore[arg-type]
+            data=data,
+            **kwargs,
+        )
 
     @property
     def kind(self) -> str:

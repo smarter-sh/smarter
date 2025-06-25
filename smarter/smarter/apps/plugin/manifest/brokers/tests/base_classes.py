@@ -2,6 +2,7 @@
 
 import json
 import os
+from typing import Any, Optional, Tuple
 
 from django.test import Client
 
@@ -31,7 +32,7 @@ class TestSAMBrokerMixin(TestPluginClassBase):
         super().setUpClass()
         instance = cls()
 
-        cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
+        cls.token_record, cls.token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
             name=instance.admin_user.username,
             user=instance.admin_user,
             description=instance.admin_user.username,
@@ -76,7 +77,9 @@ class TestSAMBrokerMixin(TestPluginClassBase):
         self.load_manifest(filename=self.good_manifest_path)
         self.assertIsNotNone(self.model)
 
-    def get_response(self, path, manifest: str = None, data: dict = None) -> tuple[dict[str, any], int]:
+    def get_response(
+        self, path, manifest: Optional[str] = None, data: Optional[dict] = None
+    ) -> Optional[tuple[dict[str, Any], int]]:
         """
         Prepare and get a response from an api/v1/ endpoint.
         """
@@ -85,11 +88,11 @@ class TestSAMBrokerMixin(TestPluginClassBase):
         response_json = None
 
         if manifest:
-            response = client.post(path=path, data=manifest, content_type="application/json", **headers)
+            response = client.post(path=path, data=manifest, content_type="application/json", **headers)  # type: ignore[call-arg]
         elif data:
-            response = client.post(path=path, data=data, content_type="application/json", **headers)
+            response = client.post(path=path, data=data, content_type="application/json", **headers)  # type: ignore[call-arg]
         else:
-            response = client.post(path=path, content_type="application/json", data=None, **headers)
+            response = client.post(path=path, content_type="application/json", data=None, **headers)  # type: ignore[call-arg]
         response_content = response.content.decode("utf-8")
         try:
             response_json = json.loads(response_content)
@@ -116,7 +119,7 @@ class TestSAMBrokerMixin(TestPluginClassBase):
                     # If any dictionary in the list has an "error" key, raise an exception
                     # pylint: disable=W0719
                     raise Exception(f"Error in response: {item['error']}")
-        return response_json, response.status_code
+        return response_json, response.status_code  # type: ignore[return-value]
 
 
 class TestSAMPluginBrokerBase(TestPluginBase, TestSAMBrokerMixin):
