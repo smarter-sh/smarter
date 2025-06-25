@@ -86,7 +86,9 @@ def validate_no_spaces(value) -> None:
 def validate_openai_parameters_dict(value):
     """
     example:
-    {
+
+    'parameters': {
+        'type': 'object',
         'properties': {
             'max_cost': {
                 'type': 'float',
@@ -99,6 +101,7 @@ def validate_openai_parameters_dict(value):
             }
         },
         'required': ['max_cost']
+        'additionalProperties': False
     }
     """
     logger.info("validate_openai_parameters_dict() %s", value)
@@ -893,10 +896,14 @@ class SqlConnection(ConnectionBase):
             plugin_sql_connection_success.send(sender=self.__class__, connection=self)
             return connection_handler
 
+        except (paramiko.SSHException, DatabaseError, ImproperlyConfigured) as e:
+            logger.error("SSH connection failed: %s", e)
+            plugin_sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
+            return None
         # pylint: disable=W0718
         except Exception as e:
-            plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
-            logger.error("TCP/IP over SSH connection failed: %s", e)
+            plugin_sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
+            logger.error("An unexpected error occurred: %s", e)
             return None
 
     def connect_ldap_user_pwd(self) -> Optional[BaseDatabaseWrapper]:
@@ -914,7 +921,7 @@ class SqlConnection(ConnectionBase):
             return ldap_user_pwd_connection
         # pylint: disable=W0718
         except Exception as e:
-            plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
+            plugin_sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
             logger.error("LDAP User/Password connection failed: %s", e)
             return None
 
