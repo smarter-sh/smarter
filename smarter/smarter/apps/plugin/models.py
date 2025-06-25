@@ -361,7 +361,7 @@ class PluginSelector(TimestampedModel):
     directive = models.CharField(
         help_text="The selection strategy to use for this plugin.",
         max_length=255,
-        default="search_terms",
+        default=SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
         choices=SELECT_DIRECTIVES,
     )
     search_terms = models.JSONField(

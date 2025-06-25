@@ -10,7 +10,7 @@ spec:
     baseUrl: http://localhost:8000/api/v1/tests
     headers: {}
     method: GET
-    parameters: []
+    parameters: {}
     timeout: 30
     useSsl: false
     authenticationMethod: none

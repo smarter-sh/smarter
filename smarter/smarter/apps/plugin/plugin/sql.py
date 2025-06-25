@@ -11,6 +11,7 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClassValues,
     SAMPluginCommonMetadataKeys,
     SAMPluginCommonSpecPromptKeys,
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
     SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
 )
@@ -177,10 +178,18 @@ class SqlPlugin(PluginBase):
         """
         if self._manifest:
             # recast the Pydantic model to the PluginDataSql Django ORM model
-            plugin_data_sqlconnection = SqlConnection.objects.get(
-                account=self.user_profile.account if self.user_profile else None,
-                name=self.manifest.spec.connection if self.manifest else None,
-            )
+            try:
+                account = self.user_profile.account if self.user_profile else None
+                connection_name = self._manifest.spec.connection if self._manifest else None
+                plugin_data_sqlconnection = SqlConnection.objects.get(
+                    account=account,
+                    name=connection_name,
+                )
+            except SqlConnection.DoesNotExist as e:
+                raise SmarterSqlPluginError(
+                    f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for account {account}. Error: {e}"
+                ) from e
+
             sql_data = self.manifest.spec.sqlData.model_dump() if self.manifest else None
             if not sql_data:
                 raise SmarterSqlPluginError(
@@ -248,7 +257,7 @@ class SqlPlugin(PluginBase):
             },
             SAMKeys.SPEC.value: {
                 SAMPluginSpecKeys.SELECTOR.value: {
-                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value,
+                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
                     SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
                         "smarter",
                         "users",

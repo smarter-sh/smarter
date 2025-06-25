@@ -22,8 +22,12 @@ from smarter.apps.plugin.manifest.models.common.plugin.status import (
     SAMPluginCommonStatus,
 )
 from smarter.apps.plugin.manifest.models.sql_plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.sql_plugin.enum import SAMSqlPluginSpecSqlData
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
-from smarter.apps.plugin.manifest.models.sql_plugin.spec import SAMSqlPluginSpec
+from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
+    SAMSqlPluginSpec,
+    SqlData,
+)
 from smarter.apps.plugin.models import (
     PluginDataSql,
     PluginMeta,
@@ -168,6 +172,12 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
 
         if not isinstance(self.plugin, SqlPlugin):
             raise SAMBrokerErrorNotReady(message="No plugin found", thing=self.kind, command=command)
+        if not self.plugin_data:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} {self.kind} plugin_data not initialized. Cannot describe",
+                thing=self.kind,
+                command=command,
+            )
         if self.account is None:
             raise SAMPluginBrokerError(
                 f"{self.formatted_class_name} {self.kind} account not initialized. Cannot describe",
@@ -280,13 +290,78 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                     thing=self.kind,
                     command=command,
                 )
-            logger.info(
-                "%s.describe() PluginDataStatic %s %s",
-                self.formatted_class_name,
-                self.kind,
-                plugin_data,
-            )
-            plugin_data = SAMSqlPluginSpec(**plugin_data)
+
+            # pylint: disable=W0105
+            """
+            before transform, ['parameters']['properties'] is a dict of dicts
+                {
+                    'id': 4171,
+                    'plugin': 4519,
+                    'description': 'This SQL query retrieves the Django user record for the username provided.\n',
+                    'parameters': {
+                        'type': 'object',
+                        'required': ['username'],
+                        'properties': {
+                            'unit': {'enum': ['Celsius', 'Fahrenheit'], 'type': 'string', 'description': 'The temperature unit to use.'},
+                            'username': {'type': 'string', 'description': 'The username to query.'}
+                            },
+                        'additionalProperties': False
+                    },
+                    'plugindatabasePtr': 4171,
+                    'connection': 955,
+                    'sqlQuery': "SELECT * FROM auth_user WHERE username = '{username}';\n",
+                    'testValues': [{'name': 'username', 'value': 'admin'}, {'name': 'unit', 'value': 'Celsius'}],
+                    'limit': 10
+                }
+
+                after transform, ['parameters']['properties'] becomes a list of dicts where each dict has a 'name' key
+                and the value is the original dict, e.g., and, the requirements list is re-merged into the properties dicts
+                as the 'required' key (true, false) in each dict:
+
+                {
+                'id': 4171,
+                'plugin': 4519,
+                'description': 'This SQL query retrieves the Django user record for the username provided.\n',
+                'parameters': [
+                    {
+                        'name': 'unit',
+                        'enum': ['Celsius', 'Fahrenheit'],
+                        'type': 'string',
+                        'required': false
+                        'description': 'The temperature unit to use.'
+                    },
+                    {
+                        'name': 'username',
+                        'type': 'string',
+                        'required': true
+                        'description': 'The username to query.'
+                    }
+                ],
+                'plugindatabasePtr': 4171,
+                'connection': 955,
+                'sqlQuery': "SELECT * FROM auth_user WHERE username = '{username}';\n",
+                'testValues': [{'name': 'username', 'value': 'admin'}, {'name': 'unit', 'value': 'Celsius'}],
+                'limit': 10
+                }
+            """
+            if SAMSqlPluginSpecSqlData.PARAMETERS.value in plugin_data:
+                parameters = plugin_data[SAMSqlPluginSpecSqlData.PARAMETERS.value]
+                if (
+                    isinstance(parameters, dict)
+                    and "properties" in parameters
+                    and isinstance(parameters["properties"], dict)
+                ):
+                    properties_dict = parameters["properties"]
+                    required_list = parameters.get("required", [])
+                    # Convert dict of dicts to list of dicts with 'name' and 'required' keys
+                    properties_list = []
+                    for k, v in properties_dict.items():
+                        prop = {"name": k, **v}
+                        prop["required"] = k in required_list
+                        properties_list.append(prop)
+                    plugin_data[SAMSqlPluginSpecSqlData.PARAMETERS.value] = properties_list
+
+            plugin_data = SqlData(**plugin_data)
         except Exception as e:
             raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
 
@@ -298,19 +373,27 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                 SAMKeys.SPEC.value: {
                     SAMPluginSpecKeys.PROMPT.value: plugin_prompt.model_dump(),
                     SAMPluginSpecKeys.SELECTOR.value: plugin_selector.model_dump(),
-                    SAMPluginSpecKeys.DATA.value: {
-                        SAMSqlPluginSpecDataKeys.DESCRIPTION.value: self.plugin_meta.description,
-                        SAMSqlPluginSpecDataKeys.SQL.value: plugin_data.model_dump(),
-                    },
+                    SAMPluginSpecKeys.CONNECTION.value: (
+                        self.plugin_data.connection.name if self.plugin_data.connection else ""
+                    ),
+                    SAMPluginSpecKeys.SQL_DATA.value: plugin_data.model_dump(),
                 },
                 SAMKeys.STATUS.value: {
                     "created": self.plugin_meta.created_at.isoformat(),
                     "modified": self.plugin_meta.updated_at.isoformat(),
                 },
             }
+
+            logger.info(
+                "%s.describe() returning %s %s",
+                self.formatted_class_name,
+                self.kind,
+                retval,
+            )
+
             # validate our results by round-tripping the data through the Pydantic model
             pydantic_model = self.pydantic_model(**retval)
-            data = pydantic_model.model_dump_json()
+            pydantic_model.model_dump_json()
             return self.json_response_ok(command=command, data=retval)
         except Exception as e:
             logger.error(

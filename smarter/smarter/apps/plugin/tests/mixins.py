@@ -2,8 +2,13 @@
 Test mixins for the plugin module.
 """
 
+import json
 import os
 from logging import getLogger
+from typing import Optional
+
+from django.http import HttpRequest
+from django.test import Client
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
@@ -26,16 +31,41 @@ class ConnectionTextMixinBase(TestAccountMixin):
     """
 
 
+class AuthenticatedRequestMixin(ConnectionTextMixinBase):
+    """
+    A mixin class that adds an authenticated request to the test case.
+    """
+
+    client: Client
+    request: HttpRequest
+
+    @classmethod
+    def setUpClass(cls):
+        """Set up test fixtures."""
+        super().setUpClass()
+        logger.info("Setting up AuthenticatedRequestMixin")
+        cls.client = Client()
+        cls.client.force_login(cls.admin_user)
+        response = cls.client.get("/some-url/")
+        cls.request = response.wsgi_request
+
+    @classmethod
+    def tearDownClass(cls):
+        """Tear down test fixtures."""
+        logger.info("Tearing down AuthenticatedRequestMixin")
+        super().tearDownClass()
+
+
 class ApiConnectionTestMixin(ConnectionTextMixinBase):
     """
     A mixin class that adds ApiConnection class setUpClass and
     tearDownClass methods."""
 
-    connection_loader: SAMLoader
-    connection_manifest_path: str = None
-    connection_manifest: dict = None
-    connection_model: SAMApiConnection
-    connection_django_model: ApiConnection = None
+    connection_loader: Optional[SAMLoader]
+    connection_manifest_path: Optional[str] = None
+    connection_manifest: Optional[dict] = None
+    connection_model: Optional[SAMApiConnection]
+    connection_django_model: Optional[ApiConnection] = None
 
     @classmethod
     def setUpClass(cls):
@@ -49,8 +79,16 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         connection_manifest_filename = "api-connection.yaml"
         connection_manifest_path = os.path.join(HERE, "mock_data", connection_manifest_filename)
         connection_manifest = get_readonly_yaml_file(connection_manifest_path)
-        connection_loader = SAMLoader(manifest=connection_manifest)
+        if not isinstance(connection_manifest, dict):
+            raise ValueError(f"Connection manifest not found at {connection_manifest_path}")
+        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest))
         connection_model = SAMApiConnection(**connection_loader.pydantic_model_dump())
+        if not isinstance(connection_model, SAMApiConnection):
+            raise ValueError("Connection model is not an instance of SAMApiConnection")
+        if connection_model.spec is None:
+            raise ValueError("Connection manifest spec is None")
+        if connection_model.metadata is None:
+            raise ValueError("Connection manifest metadata is None")
 
         # 2.) transform the manifest for a django model
         # ---------------------------------------------------------------------
@@ -100,7 +138,8 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_loader = None
         cls.connection_model = None
         try:
-            cls.connection_django_model.delete()
+            if isinstance(cls.connection_django_model, ApiConnection):
+                cls.connection_django_model.delete()
         # pylint: disable=W0718
         except Exception:
             pass
@@ -115,11 +154,11 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
     tearDownClass methods.
     """
 
-    connection_loader: SAMLoader
-    connection_manifest_path: str = None
-    connection_manifest: dict = None
-    connection_model: SAMSqlConnection
-    connection_django_model: SqlConnection = None
+    connection_loader: Optional[SAMLoader]
+    connection_manifest_path: Optional[str] = None
+    connection_manifest: Optional[dict] = None
+    connection_model: Optional[SAMSqlConnection]
+    connection_django_model: Optional[SqlConnection] = None
 
     @classmethod
     def setUpClass(cls):
@@ -132,7 +171,9 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         connection_manifest_filename = "sql-connection.yaml"
         connection_manifest_path = os.path.join(HERE, "mock_data", connection_manifest_filename)
         connection_manifest = get_readonly_yaml_file(connection_manifest_path)
-        connection_loader = SAMLoader(manifest=connection_manifest)
+        if not isinstance(connection_manifest, dict):
+            raise ValueError(f"Connection manifest not found at {connection_manifest_path}")
+        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest))
         connection_model = SAMSqlConnection(**connection_loader.pydantic_model_dump())
 
         # 2.) transform the manifest for a django model
@@ -183,7 +224,8 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_loader = None
         cls.connection_model = None
         try:
-            cls.connection_django_model.delete()
+            if isinstance(cls.connection_django_model, SqlConnection):
+                cls.connection_django_model.delete()
         # pylint: disable=W0718
         except Exception:
             pass
