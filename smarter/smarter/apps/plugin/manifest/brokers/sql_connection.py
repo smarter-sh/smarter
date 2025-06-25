@@ -20,7 +20,6 @@ from smarter.apps.plugin.manifest.models.sql_connection.enum import (
 )
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
-from smarter.common.utils import camel_to_snake
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -139,13 +138,13 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         connection[SAMKeys.KIND.value] = self.kind
 
         # retrieve the password Secret
-        password = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
+        password = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
         connection[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.get_or_create_secret(
             user_profile=self.user_profile, name=connection[password]
         )
 
         # retrieve the proxyUsername Secret, if it exists
-        proxy_password_name = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
+        proxy_password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
         if connection.get(proxy_password_name):
             connection[proxy_password_name] = self.get_or_create_secret(
                 user_profile=self.user_profile,
@@ -379,8 +378,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 command=command,
             )
         try:
-            password_name = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
-            proxy_password_name = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
+            password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
+            proxy_password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
             data = self.manifest_to_django_orm()
 
             logger.info("apply() django model dump: %s", data)
@@ -445,10 +444,10 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             data[SAMMetadataKeys.ACCOUNT.value] = self.connection.account.account_number
 
             # swap out the password and proxy password secrets instance references for their str names
-            data[camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)] = (
+            data[self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)] = (
                 self.password_secret.name if self.password_secret else None
             )
-            data[camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)] = (
+            data[self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)] = (
                 self.proxy_password_secret.name if self.proxy_password_secret else None
             )
 
