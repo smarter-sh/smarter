@@ -5,6 +5,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 import requests
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -118,6 +119,10 @@ class Command(BaseCommand):
         """
         Initialize OpenAI provider and its models.
         """
+        if self.user_profile is None:
+            self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
+            return
+
         openai_api_key, _ = Secret.objects.update_or_create(
             name=OPENAI_API_KEY_NAME,
             defaults={
@@ -127,7 +132,8 @@ class Command(BaseCommand):
             },
         )
 
-        openai_logo = HERE / "data" / "logos" / "openai" / "OpenAI-white-monoblossom.png"
+        filename = "OpenAI-white-monoblossom.png"
+        openai_logo = HERE / "data" / "logos" / "openai" / filename
         with open(openai_logo, "rb") as logo_file:
             provider, _ = Provider.objects.update_or_create(
                 name=OPENAI_API,
@@ -144,7 +150,7 @@ class Command(BaseCommand):
                     "base_url": "https://api.openai.com/v1/",
                     "api_key": openai_api_key,
                     "connectivity_test_path": "chat/completions",
-                    "logo": logo_file.read(),
+                    "logo": ContentFile(logo_file.read(), name=filename),
                     "website_url": "https://www.openai.com/",
                     "contact_email": SMARTER_CONTACT_EMAIL,
                     "contact_email_verified": timezone.now(),
@@ -164,6 +170,10 @@ class Command(BaseCommand):
         """
         Initialize Google AI provider and its models.
         """
+        if self.user_profile is None:
+            self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
+            return
+
         googleai_api_key, _ = Secret.objects.update_or_create(
             name=GOOGLE_API_KEY_NAME,
             defaults={
@@ -173,7 +183,8 @@ class Command(BaseCommand):
             },
         )
 
-        google_logo = HERE / "data" / "logos" / "googleai" / "google-ai.png"
+        filename = "google-ai.png"
+        google_logo = HERE / "data" / "logos" / "googleai" / filename
         with open(google_logo, "rb") as logo_file:
             provider, _ = Provider.objects.update_or_create(
                 name=GOOGLE_API,
@@ -190,7 +201,7 @@ class Command(BaseCommand):
                     "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
                     "api_key": googleai_api_key,
                     "connectivity_test_path": "chat/completions",
-                    "logo": logo_file.read(),
+                    "logo": ContentFile(logo_file.read(), name=filename),
                     "website_url": "https://ai.google.com/",
                     "contact_email": SMARTER_CONTACT_EMAIL,
                     "contact_email_verified": timezone.now(),
@@ -209,6 +220,10 @@ class Command(BaseCommand):
         """
         Initialize Meta AI provider and its models.
         """
+        if self.user_profile is None:
+            self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
+            return
+
         metaai_api_key, _ = Secret.objects.update_or_create(
             name=META_API_KEY_NAME,
             defaults={
@@ -217,7 +232,8 @@ class Command(BaseCommand):
                 "encrypted_value": Secret.encrypt("your-meta-ai-api-key"),
             },
         )
-        meta_logo = HERE / "data" / "logos" / "metaai" / "mono_white" / "Meta_lockup_mono_white_RGB.svg"
+        filename = "Meta_lockup_mono_white_RGB.svg"
+        meta_logo = HERE / "data" / "logos" / "metaai" / "mono_white" / filename
 
         with open(meta_logo, "rb") as logo_file:
             provider, _ = Provider.objects.update_or_create(
@@ -235,7 +251,7 @@ class Command(BaseCommand):
                     "base_url": "https://metaai.com/api/",
                     "api_key": metaai_api_key,
                     "connectivity_test_path": "chat/completions",
-                    "logo": logo_file.read(),
+                    "logo": ContentFile(logo_file.read(), name=filename),
                     "website_url": "https://ai.meta.com/",
                     "contact_email": SMARTER_CONTACT_EMAIL,
                     "contact_email_verified": timezone.now(),
