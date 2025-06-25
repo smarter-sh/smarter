@@ -1,8 +1,8 @@
 # pylint: disable=wrong-import-position
 """Test SAMApiConnectionBroker."""
 
-import json
 import os
+from typing import Optional
 
 from django.http import HttpRequest
 from waffle.models import Switch
@@ -11,12 +11,8 @@ from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.factories import factory_secret_teardown, secret_factory
 from smarter.apps.plugin.manifest.brokers.api_connection import SAMApiConnectionBroker
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
-from smarter.apps.plugin.models import ApiConnection
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.journal.enum import SmarterJournalThings
-from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
 
 from .base_classes import TestSAMConnectionBrokerBase
 
@@ -24,17 +20,17 @@ from .base_classes import TestSAMConnectionBrokerBase
 class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
     """Test SAMApiConnectionBroker"""
 
-    _model: SAMApiConnection = None
-    good_manifest_path: str = None
-    waffle_setting: bool = None
-    request: HttpRequest = None
-    api_key_name: str = None
-    api_key_value: str = None
-    api_key: Secret = None
+    _model: Optional[SAMApiConnection] = None
+    good_manifest_path: Optional[str] = None
+    waffle_setting: bool = False
+    request: Optional[HttpRequest] = None
+    api_key_name: Optional[str] = None
+    api_key_value: Optional[str] = None
+    api_key: Optional[Secret] = None
 
-    proxy_password_name: str = None
-    proxy_password_value: str = None
-    proxy_password: Secret = None
+    proxy_password_name: Optional[str] = None
+    proxy_password_value: Optional[str] = None
+    proxy_password: Optional[Secret] = None
 
     @classmethod
     def setUpClass(cls):
@@ -62,13 +58,13 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
 
         try:
             # clean up the api_key secret
-            factory_secret_teardown(secret=cls.api_key)
+            factory_secret_teardown(secret=cls.api_key)  # pylint: disable=E1101
             cls.api_key = None
             cls.api_key_name = None
             cls.api_key_value = None
 
             # clean up the proxy_password secret
-            factory_secret_teardown(secret=cls.proxy_password)
+            factory_secret_teardown(secret=cls.proxy_password)  # type: ignore[E1101]
             cls.proxy_password = None
             cls.proxy_password_name = None
             cls.proxy_password_value = None
@@ -90,7 +86,7 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
         # temporarily disable the waffle switch for testing
         if self.waffle_setting:
             switch = Switch.objects.get(name=SmarterWaffleSwitches.JOURNAL)
-            switch.is_active = False
+            switch.is_active = False  # type: ignore[assignment]
             switch.save()
         self.good_manifest_path = os.path.join(self.mock_data_path, "api-connection-good.yaml")
         self.valid_manifest_self_check()
@@ -101,14 +97,14 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
         # restore the waffle switch to its original state
         if self.waffle_setting:
             switch = Switch.objects.get(name=SmarterWaffleSwitches.JOURNAL)
-            switch.is_active = True
+            switch.is_active = True  # type: ignore[assignment]
             switch.save()
         self.request = None
         self._model = None
         super().tearDown()
 
     @property
-    def model(self) -> SAMApiConnection:
+    def model(self) -> Optional[SAMApiConnection]:
         # override to create a pydantic model from the loader
         if not self._model and self.loader:
             self._model = SAMApiConnection(**self.loader.pydantic_model_dump())

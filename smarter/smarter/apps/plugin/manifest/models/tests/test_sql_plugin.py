@@ -8,11 +8,9 @@ http://localhost:8000/api/v1/tests/authenticated/dict/
 http://localhost:8000/api/v1/tests/authenticated/list/
 """
 
-import json
 from logging import getLogger
 from typing import Optional
 
-from django.core.exceptions import ValidationError as DjangoValidationError
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.manifest.brokers.secret import SAMSecretBroker
@@ -20,7 +18,6 @@ from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
-from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
@@ -29,8 +26,6 @@ from smarter.apps.plugin.tests.mixins import (
     AuthenticatedRequestMixin,
     SqlConnectionTestMixin,
 )
-from smarter.common.exceptions import SmarterValueError
-from smarter.common.utils import camel_to_snake_dict
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.exceptions import SAMValidationError

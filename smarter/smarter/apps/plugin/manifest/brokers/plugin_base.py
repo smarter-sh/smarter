@@ -27,7 +27,7 @@ from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 
-from . import PluginSerializer, SAMPluginBrokerError
+from . import SAMPluginBrokerError
 
 
 logger = logging.getLogger(__name__)
@@ -87,6 +87,10 @@ class SAMPluginBaseBroker(AbstractBroker):
     @property
     def plugin_data(self) -> Optional[PluginDataBase]:
         raise NotImplementedError("plugin_data property must be implemented in the subclass of SAMPluginBaseBroker")
+
+    # --------------------------------------------------------------------------
+    # ORM to Pydantic conversion methods
+    # --------------------------------------------------------------------------
 
     def plugin_metadata_orm2pydantic(self) -> SAMPluginCommonMetadata:
         """
@@ -241,6 +245,13 @@ class SAMPluginBaseBroker(AbstractBroker):
                 thing=self.kind,
                 command=command,
             )
+
+        if self.plugin is None:
+            raise SAMPluginBrokerError(
+                f"Plugin {self.name} not found",
+                thing=self.kind,
+                command=command,
+            )
         try:
             plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
             plugin_prompt = model_to_dict(plugin_prompt)  # type: ignore[no-any-return]
@@ -318,6 +329,3 @@ class SAMPluginBaseBroker(AbstractBroker):
         """
         super().apply(request, kwargs)
         logger.info("SAMPluginBaseBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)
-
-    def describe(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
-        super().describe(request, *args, **kwargs)
