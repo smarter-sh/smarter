@@ -123,7 +123,7 @@ class Command(BaseCommand):
             defaults={
                 "description": "API key for OpenAI services.",
                 "user_profile": self.user_profile,
-                "encrypted_values": Secret.encrypt("your-openai-api-key"),
+                "encrypted_value": Secret.encrypt("your-openai-api-key"),
             },
         )
 
@@ -169,7 +169,7 @@ class Command(BaseCommand):
             defaults={
                 "description": "API key for Google AI services.",
                 "user_profile": self.user_profile,
-                "encrypted_values": Secret.encrypt("your-google-ai-api-key"),
+                "encrypted_value": Secret.encrypt("your-google-ai-api-key"),
             },
         )
 
@@ -214,7 +214,7 @@ class Command(BaseCommand):
             defaults={
                 "description": "API key for Meta AI services.",
                 "user_profile": self.user_profile,
-                "encrypted_values": Secret.encrypt("your-meta-ai-api-key"),
+                "encrypted_value": Secret.encrypt("your-meta-ai-api-key"),
             },
         )
         meta_logo = HERE / "data" / "logos" / "metaai" / "mono_white" / "Meta_lockup_mono_white_RGB.svg"
