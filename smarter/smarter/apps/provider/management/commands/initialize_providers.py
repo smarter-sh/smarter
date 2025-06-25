@@ -118,7 +118,7 @@ class Command(BaseCommand):
         """
         Initialize OpenAI provider and its models.
         """
-        Secret.objects.update_or_create(
+        openai_api_key, _ = Secret.objects.update_or_create(
             name=OPENAI_API_KEY_NAME,
             defaults={
                 "description": "API key for OpenAI services.",
@@ -142,7 +142,7 @@ class Command(BaseCommand):
                     "is_flagged": False,
                     "is_suspended": False,
                     "base_url": "https://api.openai.com/v1/",
-                    "api_key": "openai_api_key",
+                    "api_key": openai_api_key,
                     "connectivity_test_path": "chat/completions",
                     "logo": logo_file.read(),
                     "website_url": "https://www.openai.com/",
@@ -164,7 +164,7 @@ class Command(BaseCommand):
         """
         Initialize Google AI provider and its models.
         """
-        Secret.objects.update_or_create(
+        googleai_api_key, _ = Secret.objects.update_or_create(
             name=GOOGLE_API_KEY_NAME,
             defaults={
                 "description": "API key for Google AI services.",
@@ -188,7 +188,7 @@ class Command(BaseCommand):
                     "is_flagged": False,
                     "is_suspended": False,
                     "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
-                    "api_key": "google_ai_api_key",
+                    "api_key": googleai_api_key,
                     "connectivity_test_path": "chat/completions",
                     "logo": logo_file.read(),
                     "website_url": "https://ai.google.com/",
@@ -209,7 +209,7 @@ class Command(BaseCommand):
         """
         Initialize Meta AI provider and its models.
         """
-        Secret.objects.update_or_create(
+        metaai_api_key, _ = Secret.objects.update_or_create(
             name=META_API_KEY_NAME,
             defaults={
                 "description": "API key for Meta AI services.",
@@ -233,7 +233,7 @@ class Command(BaseCommand):
                     "is_flagged": False,
                     "is_suspended": False,
                     "base_url": "https://metaai.com/api/",
-                    "api_key": "meta_ai_api_key",
+                    "api_key": metaai_api_key,
                     "connectivity_test_path": "chat/completions",
                     "logo": logo_file.read(),
                     "website_url": "https://ai.meta.com/",
