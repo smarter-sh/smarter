@@ -56,6 +56,8 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         cls.client = Client()
         cls.client.force_login(cls.admin_user)
         cls.kwargs = {}
+
+        # Add example plugins to the user profile
         add_example_plugins(user_profile=cls.user_profile)
 
         cls.broker.apply(request=cls.request, kwargs=cls.kwargs)

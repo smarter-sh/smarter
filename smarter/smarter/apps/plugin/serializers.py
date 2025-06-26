@@ -158,14 +158,10 @@ class PluginApiSerializer(SmarterCamelCaseSerializer):
         model = PluginDataApi
         fields = [
             "connection",
-            "description",
-            "parameters",
-            "url",
             "method",
+            "endpoint",
+            "url_params",
             "headers",
-            "params",
-            "data",
-            "auth_type",
-            "username",
-            "password",
+            "body",
+            "limit",
         ]

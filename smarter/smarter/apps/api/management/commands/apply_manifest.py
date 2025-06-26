@@ -11,10 +11,11 @@ from django.core.management.base import BaseCommand
 from django.urls import reverse
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.user import UserClass as User
 from smarter.lib.drf.models import SmarterAuthToken
 
 
@@ -35,9 +36,10 @@ class Command(BaseCommand):
     - how to work with the response object
     """
 
-    help = "Run API CLI endpoint verifications."
+    help = "Apply a Smarter manifest."
     _data: Optional[str] = None
     filespec: Optional[str] = None
+    user: Optional[User] = None
 
     @property
     def data(self) -> str:
@@ -55,10 +57,16 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         """Add arguments to the command."""
         parser.add_argument(
-            "filespec",
+            "--filespec",
             type=str,
             nargs="?",
             help="relative path a Smarter manifest file (e.g. smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml).",
+        )
+        parser.add_argument(
+            "--username",
+            type=str,
+            default=None,
+            help="Username of the admin user to use when applying the manifest.",
         )
 
     def handle(self, *args, **options):
@@ -68,11 +76,22 @@ class Command(BaseCommand):
         endpoint may be hosted over https or http.
         """
 
-        self.filespec = options["filespec"]
+        self.filespec = options.get("filespec")
         if self.filespec is None:
             self.stdout.write(self.style.ERROR("No filespec provided."))
             return
-        user_profile = get_cached_smarter_admin_user_profile()
+        username = options.get("username")
+        if not isinstance(username, str) or not username.strip():
+            self.stdout.write(self.style.ERROR("No username provided."))
+            return
+
+        try:
+            self.user = User.objects.get(username=username.strip())
+        except User.DoesNotExist:
+            self.stdout.write(self.style.ERROR(f"User '{username}' does not exist."))
+            return
+
+        user_profile = get_cached_user_profile(user=self.user)
         if not isinstance(user_profile, UserProfile):
             self.stdout.write(self.style.ERROR("No admin user profile found."))
             return

@@ -62,6 +62,7 @@ class Command(BaseCommand):
         except Secret.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Secret '{name}' does not exist for user '{username}'."))
             return
+        # pylint: disable=W0718
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Error updating Secret '{name}': {e}"))
             return

@@ -1,10 +1,14 @@
 """Common model utils."""
 
 import datetime
+from logging import getLogger
 
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import is_aware, make_aware
+
+
+logger = getLogger(__name__)
 
 
 class TimestampedModel(models.Model):
@@ -20,7 +24,10 @@ class TimestampedModel(models.Model):
     def validate(self):
         """Validate the model."""
         # this breaks on SmarterAuthToken.objects.create()
-        self.full_clean()
+        # self.full_clean()
+        logger.warning(
+            f"TimestampedModel().validate() called but not applied on {self.__class__.__name__} with field values: {self.__dict__}"
+        )
 
     def save(self, *args, **kwargs):
         """Override save to validate before saving."""

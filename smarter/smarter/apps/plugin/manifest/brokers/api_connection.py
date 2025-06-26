@@ -251,7 +251,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     self.manifest.metadata.description if self.manifest and self.manifest.metadata else None
                 )
                 model_dump[SAMKeys.KIND.value] = self.kind
-                model_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = self.api_key_secret
+                model_dump["api_key"] = self.api_key_secret
 
                 self._connection = ApiConnection(**model_dump)
                 self._connection.save()

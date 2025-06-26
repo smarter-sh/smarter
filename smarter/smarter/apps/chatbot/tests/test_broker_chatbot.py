@@ -14,11 +14,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.common.utils import (
-    dict_is_contained_in,
-    dict_is_subset,
-    get_readonly_yaml_file,
-)
+from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -50,9 +46,11 @@ class TestSAMChatbotBroker(TestAccountMixin):
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
-        cls.broker = SAMChatbotBroker(request=cls.request, account=cls.account, manifest=cls.manifest)
+        cls.broker = SAMChatbotBroker(request=cls.request, account=cls.account, manifest=cls.manifest)  # type: ignore[call-arg]
         cls.client = Client()
         cls.kwargs = {}
+
+        # Add example plugins to the user profile
         add_example_plugins(user_profile=cls.user_profile)
 
     def test_chatbot_broker_apply(self):
