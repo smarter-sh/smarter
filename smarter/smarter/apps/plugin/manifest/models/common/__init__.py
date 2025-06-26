@@ -107,15 +107,11 @@ class Parameter(BaseModel):
         default=None,
         description="A list of allowed values for the parameter. Example: ['Celsius', 'Fahrenheit']",
     )
-    default: Optional[str] = Field(None, description="The default value of the parameter, if any.")
+    default: Optional[Any] = Field(None, description="The default value of the parameter, if any.")
 
     @field_validator("default")
     def validate_default(cls, v):
-        if v is None:
-            return v
-        if isinstance(v, str):
-            return v
-        return str(v)
+        return str(v) if v is not None else v
 
     @model_validator(mode="after")
     def validate_enum_and_default(self):

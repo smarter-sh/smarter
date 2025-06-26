@@ -176,72 +176,78 @@ class SqlPlugin(PluginBase):
             }
         ]
         """
-        if self._manifest:
-            # recast the Pydantic model to the PluginDataSql Django ORM model
-            try:
-                account = self.user_profile.account if self.user_profile else None
-                connection_name = self._manifest.spec.connection if self._manifest else None
-                plugin_data_sqlconnection = SqlConnection.objects.get(
-                    account=account,
-                    name=connection_name,
-                )
-            except SqlConnection.DoesNotExist as e:
-                raise SmarterSqlPluginError(
-                    f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}. Error: {e}"
-                ) from e
+        if not self._manifest:
+            return None
 
-            sql_data = self.manifest.spec.sqlData.model_dump() if self.manifest else None
-            if not sql_data:
-                raise SmarterSqlPluginError(
-                    f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required SQL data."
-                )
-            sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
-            sql_data["connection"] = plugin_data_sqlconnection
+        # recast the Pydantic model to the PluginDataSql Django ORM model
+        try:
+            account = self.user_profile.account if self.user_profile else None
+            connection_name = self._manifest.spec.connection if self._manifest else None
+            plugin_data_sqlconnection = SqlConnection.objects.get(
+                account=account,
+                name=connection_name,
+            )
+        except SqlConnection.DoesNotExist as e:
+            raise SmarterSqlPluginError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}. Error: {e}"
+            ) from e
 
-            # recast the Pydantic model's parameters field
-            # to conform to openai's function calling schema.
-            recasted_parameters = {"type": "object", "properties": {}, "required": [], "additionalProperties": False}
-            parameters = self.manifest.spec.sqlData.parameters if self.manifest and self.manifest.spec else None
-            logger.info("plugin_data_django_model() recasting parameters: %s", parameters)
-            if isinstance(parameters, list):
-                for parameter in parameters:
-                    if isinstance(parameter, Parameter):
-                        # if the parameter is a Pydantic model, we need to convert it to a
-                        # standard json dict.
-                        parameter = parameter.model_dump()
-                    logger.info("plugin_data_django_model() processing parameter: %s %s", type(parameter), parameter)
-                    if not isinstance(parameter, dict):
+        sql_data = self.manifest.spec.sqlData.model_dump() if self.manifest else None
+        if not sql_data:
+            raise SmarterSqlPluginError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required SQL data."
+            )
+        sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
+        sql_data["connection"] = plugin_data_sqlconnection
+
+        # recast the Pydantic model's parameters field
+        # to conform to openai's function calling schema.
+        recasted_parameters = {"type": "object", "properties": {}, "required": [], "additionalProperties": False}
+        parameters = self.manifest.spec.sqlData.parameters if self.manifest and self.manifest.spec else None
+        logger.info("plugin_data_django_model() recasting parameters: %s", parameters)
+        if isinstance(parameters, list):
+            for parameter in parameters:
+                if isinstance(parameter, Parameter):
+                    # if the parameter is a Pydantic model, we need to convert it to a
+                    # standard json dict.
+                    parameter = parameter.model_dump()
+                logger.info("plugin_data_django_model() processing parameter: %s %s", type(parameter), parameter)
+                if not isinstance(parameter, dict):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a valid json dict. Received: {parameter} {type(parameter)}"
+                    )
+                if "name" not in parameter or "type" not in parameter:
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must have a 'name' and 'type' field. Received: {parameter}"
+                    )
+                recasted_parameters["properties"][parameter["name"]] = {
+                    "type": parameter["type"],
+                    "description": parameter.get("description", ""),
+                }
+                if "enum" in parameter and parameter["enum"]:
+                    if not isinstance(parameter["enum"], list):
                         raise SmarterConfigurationError(
-                            f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a valid json dict. Received: {parameter} {type(parameter)}"
+                            f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameter 'enum' must be a list. Received: {parameter['enum']} {type(parameter['enum'])}"
                         )
-                    if "name" not in parameter or "type" not in parameter:
-                        raise SmarterConfigurationError(
-                            f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must have a 'name' and 'type' field. Received: {parameter}"
-                        )
-                    recasted_parameters["properties"][parameter["name"]] = {
-                        "type": parameter["type"],
-                        "description": parameter.get("description", ""),
-                    }
-                    if "enum" in parameter and parameter["enum"]:
-                        if not isinstance(parameter["enum"], list):
-                            raise SmarterConfigurationError(
-                                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameter 'enum' must be a list. Received: {parameter['enum']} {type(parameter['enum'])}"
-                            )
-                        recasted_parameters["properties"][parameter["name"]]["enum"] = parameter["enum"]
-                    if parameter.get("required", False):
-                        recasted_parameters["required"].append(parameter["name"])
+                    recasted_parameters["properties"][parameter["name"]]["enum"] = parameter["enum"]
+                if parameter.get("required", False):
+                    recasted_parameters["required"].append(parameter["name"])
 
-                sql_data["parameters"] = recasted_parameters
-            else:
-                raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
-                )
+            sql_data["parameters"] = recasted_parameters
+        else:
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
+            )
 
-            return {
-                "plugin": self.plugin_meta,
-                "description": self.plugin_meta.description if self.plugin_meta else None,
-                **sql_data,
-            }
+        return {
+            "plugin": self.plugin_meta,
+            "description": (
+                self.manifest.metadata.description
+                if self.manifest and self.manifest.metadata
+                else self.plugin_meta.description if self.plugin_meta else None
+            ),
+            **sql_data,
+        }
 
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict] = None) -> dict:

@@ -34,6 +34,11 @@ class ApiData(SmarterBasePydanticModel):
         max_length=255,
         description="The endpoint path for the API. Example: '/v1/weather'.",
     )
+    method: str = Field(
+        default="GET",
+        description="The HTTP method to use for the API request. Default is 'GET'.",
+        max_length=10,
+    )
     url_params: Optional[List[UrlParam]] = Field(
         default=None,
         description="A list of URL parameters to be included in the API request. Example: {'city': 'San Francisco'}",
@@ -66,6 +71,13 @@ class ApiData(SmarterBasePydanticModel):
         except (SAMValidationError, SmarterValueError) as e:
             raise SAMValidationError(f"Invalid endpoint: {e}") from e
         return v
+
+    @field_validator("method")
+    def validate_method(cls, v):
+        valid_methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+        if v.upper() not in valid_methods:
+            raise SAMValidationError(f"Invalid HTTP method: {v}. Must be one of {valid_methods}.")
+        return v.upper()
 
 
 class SAMApiPluginSpec(SAMPluginCommonSpec):

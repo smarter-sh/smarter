@@ -7,6 +7,7 @@ from typing import Any, Optional, Type, Union
 
 # smarter stuff
 from smarter.apps.account.models import UserProfile
+from smarter.apps.plugin.manifest.models.common import Parameter
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
@@ -131,24 +132,78 @@ class ApiPlugin(PluginBase):
     @property
     def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
         """Return the plugin data definition as a json object."""
-        if self._manifest:
-            # recast the Pydantic model to the PluginDataApi Django ORM model
-            api_connection = ApiConnection.objects.get(
-                account=self.user_profile.account if self.user_profile else None,
-                name=self.manifest.spec.connection if self.manifest else None,
+        if not self._manifest:
+            return None
+
+        # recast the Pydantic model to the PluginDataApi Django ORM model
+        try:
+            account = self.user_profile.account if self.user_profile else None
+            connection_name = self._manifest.spec.connection if self._manifest and self._manifest.spec else None
+            plugin_data_apiconnection = ApiConnection.objects.get(
+                account=account,
+                name=connection_name,
             )
-            api_data = self.manifest.spec.apiData.model_dump() if self.manifest and self.manifest.spec.apiData else None
-            if not api_data:
-                raise SmarterConfigurationError(
-                    f"{self.name} PluginDataApi plugin_data_django_model() error: missing required apiData in manifest spec."
-                )
-            api_data = {camel_to_snake(key): value for key, value in api_data.items()}
-            api_data["connection"] = api_connection
-            return {
-                "plugin": self.plugin_meta,
-                "description": self.plugin_meta.description if self.plugin_meta else None,
-                **api_data,
-            }
+        except ApiConnection.DoesNotExist as e:
+            raise SmarterApiPluginError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: ApiConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}. Error: {e}"
+            ) from e
+
+        api_data = self.manifest.spec.apiData.model_dump() if self.manifest else None
+        if not api_data:
+            raise SmarterApiPluginError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required SQL data."
+            )
+        api_data = {camel_to_snake(key): value for key, value in api_data.items()}
+        api_data["connection"] = plugin_data_apiconnection
+
+        # recast the Pydantic model's parameters field
+        # to conform to openai's function calling schema.
+        recasted_parameters = {"type": "object", "properties": {}, "required": [], "additionalProperties": False}
+        parameters = self.manifest.spec.apiData.parameters if self.manifest and self.manifest.spec else None
+        logger.info("plugin_data_django_model() recasting parameters: %s", parameters)
+        if isinstance(parameters, list):
+            for parameter in parameters:
+                if isinstance(parameter, Parameter):
+                    # if the parameter is a Pydantic model, we need to convert it to a
+                    # standard json dict.
+                    parameter = parameter.model_dump()
+                logger.info("plugin_data_django_model() processing parameter: %s %s", type(parameter), parameter)
+                if not isinstance(parameter, dict):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a valid json dict. Received: {parameter} {type(parameter)}"
+                    )
+                if "name" not in parameter or "type" not in parameter:
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must have a 'name' and 'type' field. Received: {parameter}"
+                    )
+                recasted_parameters["properties"][parameter["name"]] = {
+                    "type": parameter["type"],
+                    "description": parameter.get("description", ""),
+                }
+                if "enum" in parameter and parameter["enum"]:
+                    if not isinstance(parameter["enum"], list):
+                        raise SmarterConfigurationError(
+                            f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameter 'enum' must be a list. Received: {parameter['enum']} {type(parameter['enum'])}"
+                        )
+                    recasted_parameters["properties"][parameter["name"]]["enum"] = parameter["enum"]
+                if parameter.get("required", False):
+                    recasted_parameters["required"].append(parameter["name"])
+
+            api_data["parameters"] = recasted_parameters
+        else:
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
+            )
+
+        return {
+            "plugin": self.plugin_meta,
+            "description": (
+                self.manifest.metadata.description
+                if self.manifest and self.manifest.metadata
+                else self.plugin_meta.description if self.plugin_meta else None
+            ),
+            **api_data,
+        }
 
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
@@ -200,7 +255,11 @@ class ApiPlugin(PluginBase):
                         ),
                     ],
                     SAMApiPluginSpecApiData.HEADERS.value: [
-                        {"X-Debug-Request": "true"},
+                        {"name": "X-Debug-Request", "value": "true"},
+                        {"name": "X-API-Key", "value": "your_api_key_here"},
+                        {"name": "Content-Type", "value": "application/json"},
+                        {"name": "Accept", "value": "application/json"},
+                        {"name": "X-Request-ID", "value": "12345"},
                     ],
                     SAMApiPluginSpecApiData.BODY.value: [
                         {

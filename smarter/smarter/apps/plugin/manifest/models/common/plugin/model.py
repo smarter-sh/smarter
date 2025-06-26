@@ -1,6 +1,5 @@
 """Smarter API Plugin Manifest"""
 
-from abc import abstractmethod
 from typing import ClassVar, Optional
 
 from pydantic import Field

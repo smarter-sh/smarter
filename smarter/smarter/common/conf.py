@@ -210,6 +210,15 @@ class SettingsDefaults:
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
     LLAMA_API_KEY = os.environ.get("LLAMA_API_KEY", None)
 
+    SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = os.environ.get(
+        "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME",
+        TFVARS.get("smarter_mysql_test_database_secret_name", "smarter-mysql-test-database"),
+    )
+    SMARTER_MYSQL_TEST_DATABASE_PASSWORD = os.environ.get(
+        "SMARTER_MYSQL_TEST_DATABASE_PASSWORD",
+        TFVARS.get("smarter_mysql_test_database_password", "SET-ME-PLEASE"),
+    )
+
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
     # -------------------------------------------------------------------------
@@ -395,6 +404,12 @@ class Settings(BaseSettings):
     )
     llama_api_key: Optional[SecretStr] = Field(
         SettingsDefaults.LLAMA_API_KEY,
+    )
+    smarter_mysql_test_database_secret_name: Optional[str] = Field(
+        SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME,
+    )
+    smarter_mysql_test_database_password: Optional[str] = Field(
+        SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_PASSWORD,
     )
     social_auth_google_oauth2_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
