@@ -58,6 +58,11 @@ spec:
               python manage.py deploy_builtin_chatbots --account_number 4386-2072-3294
               python manage.py deploy_builtin_chatbots --account_number 5680-6558-6577
               python manage.py initialize_providers
+              python manage.py apply_manifest 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml'
+              python manage.py update_secret --name smarter_test_db --username admin --value "{{ .Values.env.SMARTER_TEST_DB_PASSWORD }}"
+              python manage.py apply_manifest 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml'
+              python manage.py apply_manifest 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml'
+
           command:
             - /bin/sh
             - -c
@@ -110,6 +115,8 @@ spec:
               value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
             - name: SECRET_KEY
               value: "{{ .Values.env.SECRET_KEY }}"
+            - name: SMARTER_TEST_DB_PASSWORD
+              value: "{{ .Values.env.SMARTER_TEST_DB_PASSWORD }}"
             - name: CACHES_LOCATION
               value: "{{ .Values.env.CACHES_LOCATION }}"
             - name: CELERY_BROKER_URL

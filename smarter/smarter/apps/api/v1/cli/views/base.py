@@ -285,9 +285,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         set up the view for the request.
         """
         logger.info(
-            "CliBaseApiView().setup() - view for request: %s, user: %s",
+            "CliBaseApiView().setup() - view for request: %s, user: %s is_authenticated: %s",
             request.build_absolute_uri(),
-            request.user.username if request.user and request.user.is_authenticated else "Anonymous",  # type: ignore[assignment]
+            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
+            request.user.is_authenticated,
         )
         super().setup(request, *args, **kwargs)
         # experiment: we want to ensure that the request object is
@@ -298,10 +299,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
         logger.info(
-            "CliBaseApiView().setup() - finished view for request: %s, user: %s, self.user: %s",
+            "CliBaseApiView().setup() - finished view for request: %s, user: %s, self.user: %s is_authenticated: %s",
             request.build_absolute_uri(),
-            request.user.username if request.user and request.user.is_authenticated else "Anonymous",  # type: ignore[assignment]
+            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
+            request.user.is_authenticated,
         )
 
     def initial(self, request: Request, *args, **kwargs):
@@ -309,10 +311,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         Initialize the view. This is called by DRF after setup() but before dispatch().
         """
         logger.info(
-            "CliBaseApiView().initial() - initializing view for request: %s, user: %s, self.user: %s",
+            "CliBaseApiView().initial() - initializing view for request: %s, user: %s, self.user: %s is_authenticated: %s",
             request.build_absolute_uri(),
-            request.user.username if request.user and request.user.is_authenticated else "Anonymous",  # type: ignore[assignment]
+            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
+            request.user.is_authenticated,
         )
         # Check if the request is authenticated. If not, raise an
         # authentication error. see SmarterTokenAuthentication for details

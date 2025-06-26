@@ -187,7 +187,7 @@ class SqlPlugin(PluginBase):
                 )
             except SqlConnection.DoesNotExist as e:
                 raise SmarterSqlPluginError(
-                    f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for account {account}. Error: {e}"
+                    f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}. Error: {e}"
                 ) from e
 
             sql_data = self.manifest.spec.sqlData.model_dump() if self.manifest else None

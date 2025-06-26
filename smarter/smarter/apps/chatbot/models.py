@@ -303,7 +303,9 @@ class ChatBot(TimestampedModel):
         return url
 
     @property
-    def url_chatapp(self):
+    def url_chatapp(self) -> str:
+        if not isinstance(self.url, str):
+            raise SmarterValueError("ChatBot.url is not a valid string")
         return urljoin(self.url, "chatapp/")
 
     def ready(self):
@@ -313,7 +315,7 @@ class ChatBot(TimestampedModel):
         - has a verified DNS A record
         - has a valid, issued tls certificate.
         """
-        if self.mode(self.url) == self.Modes.SANDBOX:
+        if isinstance(self.url, str) and self.mode(self.url) == self.Modes.SANDBOX:
             return True
 
         return (
@@ -400,6 +402,8 @@ class ChatBotPlugin(TimestampedModel):
         if not self.chatbot:
             return None
         admin_user = UserProfile.admin_for_account(self.chatbot.account)
+        if admin_user is None:
+            raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
         user_profile = get_cached_user_profile(admin_user)
         plugin_controller = PluginController(
             account=self.chatbot.account, user=admin_user, plugin_meta=self.plugin_meta, user_profile=user_profile
@@ -413,6 +417,8 @@ class ChatBotPlugin(TimestampedModel):
         if not chatbot:
             return None
         admin_user = UserProfile.admin_for_account(chatbot.account)
+        if admin_user is None:
+            raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
         user_profile = get_cached_user_profile(admin_user)
         loader = SAMLoader(manifest=data)
         manifest = SAMPluginCommon(**loader.json_data)  # type: ignore[call-arg]
@@ -430,6 +436,8 @@ class ChatBotPlugin(TimestampedModel):
             return []
         chatbot_plugins = cls.objects.filter(chatbot=chatbot)
         admin_user = UserProfile.admin_for_account(chatbot.account)
+        if admin_user is None:
+            raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
         user_profile = get_cached_user_profile(admin_user)
         retval = []
         for chatbot_plugin in chatbot_plugins:
@@ -649,7 +657,7 @@ class ChatBotHelper(SmarterRequestMixin):
         return str(self.chatbot) if self._chatbot else "undefined"
 
     @property
-    def account(self) -> Account:
+    def account(self) -> Optional[Account]:
         """
         Override the account based on the named url, if available.
         example: http://education.3141-5926-5359.api.localhost:8000/config/
