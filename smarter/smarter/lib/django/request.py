@@ -560,14 +560,27 @@ class SmarterRequestMixin(AccountMixin):
 
     @cached_property
     def ip_address(self) -> Optional[str]:
-        if self.smarter_request:
+        if (
+            self.smarter_request is not None
+            and hasattr(self.smarter_request, "META")
+            and isinstance(self.smarter_request.META, dict)
+        ):
             return self.smarter_request.META.get("REMOTE_ADDR", "") or "ip_address"
         return None
 
     @cached_property
     def user_agent(self) -> Optional[str]:
-        if self.smarter_request:
-            return self.smarter_request.META.get("HTTP_USER_AGENT", "") or "user_agent"
+        if (
+            self.smarter_request is not None
+            and hasattr(self.smarter_request, "META")
+            and isinstance(self.smarter_request.META, dict)
+        ):
+            # META is a dictionary-like object containing all HTTP headers
+            # and other request metadata.
+            # HTTP_USER_AGENT is the standard header for user agent information.
+            # If it doesn't exist, we return a default value.
+            # This is useful for debugging and logging purposes.
+            return self.smarter_request.META.get("HTTP_USER_AGENT", "user_agent")
         return None
 
     @cached_property
