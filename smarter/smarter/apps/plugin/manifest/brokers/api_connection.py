@@ -389,7 +389,6 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         data = self.manifest_to_django_orm()
         for field in readonly_fields:
             data.pop(field, None)
-        logger.info("%s.apply() data: %s", self.formatted_class_name, data)
 
         try:
             for key, value in data.items():
@@ -422,7 +421,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
-        return self.json_response_ok(command=command, data={})
+        return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__

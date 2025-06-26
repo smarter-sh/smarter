@@ -193,13 +193,6 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                 },
             }
 
-            logger.info(
-                "%s.describe() returning %s %s",
-                self.formatted_class_name,
-                self.kind,
-                retval,
-            )
-
             # validate our results by round-tripping the data through the Pydantic model
             pydantic_model = self.pydantic_model(**retval)
             pydantic_model.model_dump_json()
@@ -311,7 +304,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                 self.plugin.save()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
-            return self.json_response_ok(command=command, data={})
+            return self.json_response_ok(command=command, data=self.to_json())
         try:
             raise SAMBrokerErrorNotReady(
                 f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
