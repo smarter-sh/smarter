@@ -347,9 +347,7 @@ class SAMSecretBroker(AbstractBroker):
 
         if self.secret:
             try:
-                logger.info("calling self.django_orm_to_manifest_dict()")
                 data = self.django_orm_to_manifest_dict()
-                logger.info("returning self.json_response_ok(command=command, data=data)")
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMSecretBrokerError(

@@ -256,7 +256,7 @@ class SAMUserBroker(AbstractBroker):
                 thing=self.kind,
                 command=command,
             ) from e
-        return self.json_response_ok(command=command, data={})
+        return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
@@ -309,9 +309,7 @@ class SAMUserBroker(AbstractBroker):
 
         if user:
             try:
-                logger.info("Deleting user %s", user)
                 user.delete()
-                logger.info("Deleted user %s", username)
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(

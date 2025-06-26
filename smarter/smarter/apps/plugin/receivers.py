@@ -197,39 +197,64 @@ def handle_plugin_selected(sender, *args, **kwargs):
 
 
 @receiver(post_save, sender=PluginMeta)
-def handle_plugin_meta_created(sender, instance, created, **kwargs):
+def handle_plugin_meta_saved(sender, instance, created, **kwargs):
+    """Handle plugin meta saved signal."""
 
     if created:
         logger.info("%s %s", formatted_text(prefix + "post_save() PluginMeta() record created:"), instance.name)
+    else:
+        logger.info(
+            "%s %s",
+            formatted_text(prefix + "post_save() PluginMeta() record updated:"),
+            instance.name,
+        )
 
 
 @receiver(post_save, sender=PluginSelector)
-def handle_plugin_selector_created(sender, instance, created, **kwargs):
-    """Handle plugin selector created signal."""
+def handle_plugin_selector_saved(sender, instance, created, **kwargs):
+    """Handle plugin selector saved signal."""
 
     if created:
         logger.info("%s", formatted_text(prefix + "post_save() PluginSelector() record created."))
+    else:
+        logger.info(
+            "%s - %s",
+            formatted_text(prefix + "post_save() PluginSelector() record updated:"),
+            formatted_json(model_to_dict(instance)),
+        )
 
 
 @receiver(post_save, sender=PluginPrompt)
-def handle_plugin_prompt_created(sender, instance, created, **kwargs):
-    """Handle plugin prompt created signal."""
+def handle_plugin_prompt_saved(sender, instance, created, **kwargs):
+    """Handle plugin prompt saved signal."""
 
     if created:
         logger.info("%s", formatted_text(prefix + "post_save() PluginPrompt() record created."))
+    else:
+        logger.info(
+            "%s - %s",
+            formatted_text(prefix + "post_save() PluginPrompt() record updated:"),
+            formatted_json(model_to_dict(instance)),
+        )
 
 
 @receiver(post_save, sender=PluginDataStatic)
-def handle_plugin_data_created(sender, instance, created, **kwargs):
-    """Handle plugin data created signal."""
+def handle_plugin_data_saved(sender, instance, created, **kwargs):
+    """Handle plugin data saved signal."""
 
     if created:
         logger.info("%s", formatted_text(prefix + "post_save() PluginDataStatic() record created."))
+    else:
+        logger.info(
+            "%s - %s",
+            formatted_text(prefix + "post_save() PluginDataStatic() record updated:"),
+            formatted_json(model_to_dict(instance)),
+        )
 
 
 @receiver(post_save, sender=PluginSelectorHistory)
-def handle_plugin_selector_history_created(sender, instance, created, **kwargs):
-    """Handle plugin selector history created signal."""
+def handle_plugin_selector_history_saved(sender, instance, created, **kwargs):
+    """Handle plugin selector history saved signal."""
 
     if created:
         logger.info(
@@ -237,11 +262,17 @@ def handle_plugin_selector_history_created(sender, instance, created, **kwargs):
             formatted_text(prefix + "post_save() PluginSelectorHistory() created"),
             formatted_json(model_to_dict(instance)),
         )
+    else:
+        logger.info(
+            "%s - %s",
+            formatted_text(prefix + "post_save() PluginSelectorHistory() updated"),
+            formatted_json(model_to_dict(instance)),
+        )
 
 
 @receiver(post_save, sender=ApiConnection)
-def handle_api_connection_created(sender, instance, created, **kwargs):
-    """Handle API connection created signal."""
+def handle_api_connection_saved(sender, instance, created, **kwargs):
+    """Handle API connection saved signal."""
 
     if created:
         logger.info(
@@ -258,8 +289,8 @@ def handle_api_connection_created(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=SqlConnection)
-def handle_sql_connection_created(sender, instance: SqlConnection, created, **kwargs):
-    """Handle SQL connection created signal."""
+def handle_sql_connection_saved(sender, instance: SqlConnection, created, **kwargs):
+    """Handle SQL connection saved signal."""
 
     account = str(instance.account) if instance.account else "(account is missing)"
     if created:
@@ -279,8 +310,8 @@ def handle_sql_connection_created(sender, instance: SqlConnection, created, **kw
 
 
 @receiver(post_save, sender=PluginDataApi)
-def handle_plugin_data_api_created(sender, instance, created, **kwargs):
-    """Handle plugin data API created signal."""
+def handle_plugin_data_api_saved(sender, instance, created, **kwargs):
+    """Handle plugin data API saved signal."""
 
     if created:
         logger.info(
@@ -297,8 +328,8 @@ def handle_plugin_data_api_created(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=PluginDataSql)
-def handle_plugin_data_sql_created(sender, instance, created, **kwargs):
-    """Handle plugin data SQL created signal."""
+def handle_plugin_data_sql_saved(sender, instance, created, **kwargs):
+    """Handle plugin data SQL saved signal."""
 
     if created:
         logger.info(

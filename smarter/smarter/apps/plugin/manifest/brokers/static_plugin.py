@@ -242,12 +242,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     thing=self.kind,
                     command=command,
                 )
-            logger.info(
-                "%s.describe() PluginMeta %s %s",
-                self.formatted_class_name,
-                self.kind,
-                metadata,
-            )
             metadata = SAMPluginCommonMetadata(**metadata)
         except PluginMeta.DoesNotExist:
             return self.json_response_err(
@@ -272,12 +266,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     thing=self.kind,
                     command=command,
                 )
-            logger.info(
-                "%s.describe() PluginSelector %s %s",
-                self.formatted_class_name,
-                self.kind,
-                plugin_selector,
-            )
             plugin_selector = SAMPluginCommonSpecSelector(**plugin_selector)
         except PluginSelector.DoesNotExist:
             return self.json_response_err(
@@ -302,12 +290,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     thing=self.kind,
                     command=command,
                 )
-            logger.info(
-                "%s.describe() PluginPrompt %s %s",
-                self.formatted_class_name,
-                self.kind,
-                plugin_prompt,
-            )
             plugin_prompt = SAMPluginCommonSpecPrompt(**plugin_prompt)
         except PluginPrompt.DoesNotExist:
             return self.json_response_err(
@@ -331,12 +313,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     thing=self.kind,
                     command=command,
                 )
-            logger.info(
-                "%s.describe() PluginDataStatic %s %s",
-                self.formatted_class_name,
-                self.kind,
-                plugin_data,
-            )
             plugin_data = SAMPluginStaticSpecData(**plugin_data)
         except Exception as e:
             raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
@@ -434,7 +410,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         Django ORM model.
         """
         super().apply(request, kwargs)
-        logger.info("SAMStaticPluginBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         if not isinstance(self.plugin, StaticPlugin):
@@ -467,7 +442,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 self.plugin.save()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
-            return self.json_response_ok(command=command, data={})
+            return self.json_response_ok(command=command, data=self.to_json())
         try:
             raise SAMBrokerErrorNotReady(
                 f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command

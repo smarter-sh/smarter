@@ -461,7 +461,7 @@ class SAMChatbotBroker(AbstractBroker):
                         )
 
             # done! return the response. Django will take care of committing the transaction
-            return self.json_response_ok(command=command, data={})
+            return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__

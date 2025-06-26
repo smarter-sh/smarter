@@ -382,8 +382,6 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             proxy_password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
             data = self.manifest_to_django_orm()
 
-            logger.info("apply() django model dump: %s", data)
-
             for field in readonly_fields:
                 data.pop(field, None)
             for key, value in data.items():
@@ -396,7 +394,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             self.connection.save()
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
-        return self.json_response_ok(command=command, data={})
+        return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
@@ -414,15 +412,6 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 thing=self.kind,
                 command=command,
             )
-
-        logger.info(
-            "%s.describe() called with request=%s, args=%s, kwargs=%s, user=%s",
-            self.formatted_class_name,
-            request,
-            args,
-            kwargs,
-            request.user.username if request.user.is_authenticated else "Anonymous",  # type: ignore
-        )
 
         if self.connection is None:
             raise SAMBrokerErrorNotReady(

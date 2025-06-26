@@ -810,6 +810,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             logger.debug("Saved plugin %s: %s.", self.name, self.id)
 
         if not self.ready:
+            logger.warning("%s.save() Plugin is not ready. Cannot save.", self.formatted_class_name)
             return False
 
         with transaction.atomic():

@@ -367,16 +367,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         logger.info("AbstractBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)
 
-        # mcdaniel june-2025: no need to raise an error if the manifest is read-only.
-        # we should just ignore the read-only fields.
-
-        # if self.manifest and self.manifest.status:
-        #     raise SAMBrokerReadOnlyError(
-        #         message="status field is read-only",
-        #         thing=self.thing,
-        #         command=SmarterJournalCliCommands.APPLY,
-        #     )
-
     @abstractmethod
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """chat with the broker."""

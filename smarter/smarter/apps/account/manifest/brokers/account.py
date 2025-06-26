@@ -304,7 +304,7 @@ class SAMAccountBroker(AbstractBroker):
             self.account.save()
         except Exception as e:
             raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
-        return self.json_response_ok(command=command, data={})
+        return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
