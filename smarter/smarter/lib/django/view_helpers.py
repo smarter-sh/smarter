@@ -106,13 +106,15 @@ class SmarterWebHtmlView(SmarterView):
     """
 
     # pylint: disable=W0613
-    def clean_http_response(self, request: HttpRequest, template_path, context=None):
+    def clean_http_response(self, request: HttpRequest, template_path, *args, context=None, **kwargs):
         """Render a template and return an HttpResponse with comments removed."""
         minified_html = self.render_clean_html(request, template_path, context)
         return HttpResponse(content=minified_html, content_type="text/html")
 
-    def get(self, request):
-        return self.clean_http_response(request, template_path=self.template_path)
+    def get(self, request, *args, **kwargs):
+        return self.clean_http_response(
+            request, template_path=self.template_path, context=self.context, *args, **kwargs
+        )
 
 
 @method_decorator(never_cache, name="dispatch")

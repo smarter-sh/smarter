@@ -223,8 +223,8 @@ class ChatConfigView(SmarterNeverCachedWebView):
                 request.build_absolute_uri(),
             )
 
-        if not request.user.is_authenticated:
-            return SmarterHttpResponseNotFound(request=request, error_message="ChatBot not found")
+        # if not request.user.is_authenticated:
+        #     return SmarterHttpResponseNotFound(request=request, error_message="ChatBot not found")
 
         self.chatbot_name = kwargs.get("name", None)
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
