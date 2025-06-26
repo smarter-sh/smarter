@@ -195,9 +195,9 @@ class SmarterValidator:
             raise SmarterValueError(f"Invalid account number {account_number}")
 
     @staticmethod
-    def validate_domain(domain: str) -> None:
+    def validate_domain(domain: Optional[str]) -> None:
         """Validate domain format"""
-        if domain not in SmarterValidator.LOCAL_HOSTS + [None, ""]:
+        if isinstance(domain, str) and domain not in SmarterValidator.LOCAL_HOSTS + [None, ""]:
             SmarterValidator.validate_hostname(domain.split(":")[0])
             SmarterValidator.validate_url("http://" + domain)
 

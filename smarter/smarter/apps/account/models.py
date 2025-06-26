@@ -425,17 +425,20 @@ class Secret(TimestampedModel):
     Secret model for securely storing and managing sensitive account-level information.
 
     Usage:
+        - encrypt a secret value before saving it:
+            secret_value = Secret.encrypt("my-sensitive-api-key")
         - Create a new secret:
             secret = Secret(
                 name="API Key",
                 user_profile=user_profile_instance,
-                value="my-sensitive-api-key"
+                valencrypted_valueue=secret_value
             )
             secret.save()
 
         - Retrieve and decrypt a secret:
             retrieved_secret = Secret.objects.get(id=secret.id)
             decrypted_value = retrieved_secret.get_secret()
+
 
     Note:
         The `value` field is transient and only used during runtime. It is not stored in the database
