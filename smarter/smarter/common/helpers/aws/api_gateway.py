@@ -5,9 +5,8 @@ from typing import Any, Optional
 from botocore.config import Config
 
 from smarter.common.conf import SettingsDefaults
-from smarter.common.exceptions import SmarterConfigurationError
 
-from .aws import AWSBase
+from .aws import AWSBase, SmarterAWSException
 
 
 class AWSAPIGateway(AWSBase):
@@ -27,7 +26,7 @@ class AWSAPIGateway(AWSBase):
         if self._client:
             return self._client
         if not self.aws_session:
-            raise SmarterConfigurationError("AWS session is not initialized.")
+            raise SmarterAWSException("AWS session is not initialized.")
         config = Config(
             read_timeout=SettingsDefaults.AWS_APIGATEWAY_READ_TIMEOUT,
             connect_timeout=SettingsDefaults.AWS_APIGATEWAY_CONNECT_TIMEOUT,
@@ -49,7 +48,7 @@ class AWSAPIGateway(AWSBase):
     def get_api_stage(self) -> str:
         """Return the API stage."""
         if not self.name:
-            raise SmarterConfigurationError("API Gateway name is not set.")
+            raise SmarterAWSException("API Gateway name is not set.")
         api = self.get_api(self.name) or {}
         api_id = api.get("id")
         if api_id:
@@ -75,7 +74,7 @@ class AWSAPIGateway(AWSBase):
     def api_gateway_name(self):
         """Return the API Gateway name."""
         if not self.shared_resource_identifier:
-            raise SmarterConfigurationError("Shared resource identifier is not set.")
+            raise SmarterAWSException("Shared resource identifier is not set.")
         return self.shared_resource_identifier + "-api"
 
     def api_exists(self, api_name: str) -> bool:
@@ -99,7 +98,7 @@ class AWSAPIGateway(AWSBase):
     def api_resource_and_method_exists(self, path, method) -> bool:
         """Test that the API Gateway resource and method exists."""
         if not self.name:
-            raise SmarterConfigurationError("API Gateway name is not set.")
+            raise SmarterAWSException("API Gateway name is not set.")
         api = self.get_api(self.name) or {}
         api_id = api.get("id")
         resources = self.client.get_resources(restApiId=api_id)

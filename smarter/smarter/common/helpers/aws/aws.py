@@ -19,6 +19,7 @@ from smarter.common.const import (
     SMARTER_PLATFORM_SUBDOMAIN,
     SmarterEnvironments,
 )
+from smarter.common.exceptions import SmarterException
 
 # mcdaniel apr-2024: technically we shouldn't import smarter.libe.django into the aws helpers
 # but the validators don't depend on django initialization, so we're okay here.
@@ -28,6 +29,10 @@ from .exceptions import AWSNotReadyError
 
 
 logger = logging.getLogger(__name__)
+
+
+class SmarterAWSException(SmarterException):
+    """Raised when the hosted zone is not found."""
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods

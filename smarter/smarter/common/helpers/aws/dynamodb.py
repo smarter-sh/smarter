@@ -2,9 +2,7 @@
 
 from typing import Optional
 
-from smarter.common.exceptions import SmarterConfigurationError
-
-from .aws import AWSBase
+from .aws import AWSBase, SmarterAWSException
 
 
 class AWSDynamoDB(AWSBase):
@@ -16,7 +14,7 @@ class AWSDynamoDB(AWSBase):
     def client(self):
         """Return the AWS DynamoDB client."""
         if not self.aws_session:
-            raise SmarterConfigurationError("AWS session is not initialized.")
+            raise SmarterAWSException("AWS session is not initialized.")
         if not self._client:
             self._client = self.aws_session.client("dynamodb")
         return self._client

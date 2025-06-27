@@ -6,10 +6,8 @@ import logging
 import time
 from typing import Optional
 
-from smarter.common.exceptions import SmarterConfigurationError
-
 # our stuff
-from .aws import AWSBase
+from .aws import AWSBase, SmarterAWSException
 from .exceptions import AWSACMVerificationFailed
 
 
@@ -28,7 +26,7 @@ class AWSCertificateManager(AWSBase):
         if self._client:
             return self._client
         if not self.aws_session:
-            raise SmarterConfigurationError("AWS session is not initialized.")
+            raise SmarterAWSException("AWS session is not initialized.")
         self._client = self.aws_session.client("acm")
         return self._client
 
