@@ -5,14 +5,15 @@ import string
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, AccountContact, UserProfile
+from smarter.apps.account.models import Account, AccountContact
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile
 from smarter.common.const import (
     SMARTER_ACCOUNT_NUMBER,
     SMARTER_COMPANY_NAME,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
     SMARTER_CUSTOMER_SUPPORT_PHONE,
 )
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.drf.models import SmarterAuthToken
 
 

@@ -6,10 +6,11 @@ import json
 from logging import getLogger
 from typing import Dict, Optional, Type, Union
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile
 
 # lib manifest
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.controller import AbstractController
 from smarter.lib.manifest.exceptions import SAMExceptionBase

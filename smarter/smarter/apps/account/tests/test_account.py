@@ -1,10 +1,9 @@
 # pylint: disable=wrong-import-position
 """Test Account."""
 
-from smarter.common.utils import hash_factory
-
 # our stuff
-from smarter.lib.django.user import UserClass as User
+from smarter.apps.account.models import UserClass as User
+from smarter.common.utils import hash_factory
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..models import Account, UserProfile

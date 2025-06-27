@@ -16,7 +16,6 @@ from smarter.lib.drf.manifest.models.auth_token.metadata import (
 )
 from smarter.lib.drf.manifest.models.auth_token.model import SAMSmarterAuthToken
 from smarter.lib.drf.manifest.models.auth_token.spec import SAMSmarterAuthTokenSpec
-from smarter.lib.drf.manifest.models.auth_token.status import SAMSmarterAuthTokenStatus
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse

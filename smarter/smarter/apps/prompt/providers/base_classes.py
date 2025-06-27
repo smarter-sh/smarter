@@ -21,6 +21,7 @@ from smarter.apps.account.models import (
     CHARGE_TYPE_PROMPT_COMPLETION,
     CHARGE_TYPE_TOOL,
 )
+from smarter.apps.account.models import UserClass as User
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
@@ -57,7 +58,6 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
-from smarter.lib.django.user import UserClass as User
 
 from .const import OpenAIMessageKeys
 from .mixins import ProviderDbMixin

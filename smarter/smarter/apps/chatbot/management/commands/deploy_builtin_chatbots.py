@@ -14,7 +14,9 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 from rest_framework.test import force_authenticate
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
@@ -24,7 +26,6 @@ from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.django.validators import SmarterValidator
 
 

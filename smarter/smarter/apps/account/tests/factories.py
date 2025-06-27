@@ -6,10 +6,11 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from smarter.apps.account.models import Account, PaymentMethod, Secret, UserProfile
+from smarter.apps.account.models import Account, PaymentMethod, Secret
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.utils import hash_factory
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 

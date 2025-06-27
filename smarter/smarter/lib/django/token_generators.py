@@ -13,8 +13,8 @@ from django.utils.http import (
 )
 from django.utils.timezone import now as timezone_now
 
+from smarter.apps.account.models import UserClass as User
 from smarter.common.exceptions import SmarterException
-from smarter.lib.django.user import UserClass as User
 
 
 DEFAULT_LINK_EXPIRATION = 86400

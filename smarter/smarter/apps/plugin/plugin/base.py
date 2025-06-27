@@ -16,6 +16,7 @@ from django.db.models.query import QuerySet
 from rest_framework import serializers
 
 # smarter stuff
+from smarter.apps.account.models import UserClass as User
 from smarter.apps.account.models import UserProfile
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
@@ -26,7 +27,6 @@ from smarter.common.exceptions import (
     SmarterException,
     SmarterValueError,
 )
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader

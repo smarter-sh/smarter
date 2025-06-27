@@ -11,6 +11,7 @@ import requests
 from django.db import models
 
 from smarter.apps.account.models import Account, Secret
+from smarter.apps.account.models import UserClass as User
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
@@ -19,7 +20,6 @@ from smarter.common.exceptions import (
 )
 from smarter.lib.cache import cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import UserClass as User
 
 from .const import VERIFICATION_LEAD_TIME, VERIFICATION_LIFETIME
 from .manifest.enum import ProviderModelEnum

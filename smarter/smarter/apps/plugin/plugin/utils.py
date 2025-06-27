@@ -7,12 +7,13 @@ from typing import Any, Optional, Union
 
 import yaml
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
 from smarter.common.const import PYTHON_ROOT
-from smarter.lib.django.user import UserClass as User
 
 from .base import PluginBase
 
