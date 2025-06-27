@@ -162,7 +162,7 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
+    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "SET-ME-PLEASE")
 
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4o-mini"
@@ -178,7 +178,7 @@ class SettingsDefaults:
     LLM_DEFAULT_MAX_TOKENS = 2048
 
     # defaults for this Python package
-    ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
+    ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
     ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "smarter.sh"))
     SHARED_RESOURCE_IDENTIFIER = os.environ.get(
         "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
@@ -188,94 +188,84 @@ class SettingsDefaults:
 
     # aws auth
     AWS_PROFILE = os.environ.get("AWS_PROFILE", TFVARS.get("aws_profile", None))
-    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", TFVARS.get("aws_access_key_id", None))
-    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", TFVARS.get("aws_secret_access_key", None))
-    AWS_REGION = os.environ.get("AWS_REGION", TFVARS.get("aws_region", "us-east-1"))
+    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", "SET-ME-PLEASE"))
+    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(os.environ.get("AWS_SECRET_ACCESS_KEY", "SET-ME-PLEASE"))
+    AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
     # aws api gateway defaults
-    AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = TFVARS.get("create_custom_domain", False)
-    AWS_APIGATEWAY_READ_TIMEOUT: int = TFVARS.get("aws_apigateway_read_timeout", 70)
-    AWS_APIGATEWAY_CONNECT_TIMEOUT: int = TFVARS.get("aws_apigateway_connect_timeout", 70)
-    AWS_APIGATEWAY_MAX_ATTEMPTS: int = TFVARS.get("aws_apigateway_max_attempts", 10)
+    AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = os.environ.get("create_custom_domain", False)
+    AWS_APIGATEWAY_READ_TIMEOUT: int = int(os.environ.get("aws_apigateway_read_timeout", 70))
+    AWS_APIGATEWAY_CONNECT_TIMEOUT: int = int(os.environ.get("aws_apigateway_connect_timeout", 70))
+    AWS_APIGATEWAY_MAX_ATTEMPTS: int = int(os.environ.get("aws_apigateway_max_attempts", 10))
 
     AWS_EKS_CLUSTER_NAME = os.environ.get(
         "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
     )
     AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
-    FERNET_ENCRYPTION_KEY = os.environ.get("FERNET_ENCRYPTION_KEY", None)
-    GOOGLE_MAPS_API_KEY = os.environ.get(
-        "GOOGLE_MAPS_API_KEY",
-        TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
+
+    logger.info("FERNET_ENCRYPTION_KEY is set to: %s", os.environ.get("FERNET_ENCRYPTION_KEY", "SET-ME-PLEASE"))
+    FERNET_ENCRYPTION_KEY: str = os.environ.get("FERNET_ENCRYPTION_KEY", "SET-ME-PLEASE")
+
+    GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(
+        os.environ.get("GOOGLE_MAPS_API_KEY", os.environ.get("google_maps_api_key", "SET-ME-PLEASE"))
     )
-    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
-    LLAMA_API_KEY = os.environ.get("LLAMA_API_KEY", None)
+    GEMINI_API_KEY: SecretStr = SecretStr(os.environ.get("GEMINI_API_KEY", "SET-ME-PLEASE"))
+    LLAMA_API_KEY: SecretStr = SecretStr(os.environ.get("LLAMA_API_KEY", "SET-ME-PLEASE"))
 
     SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = os.environ.get(
         "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME",
-        TFVARS.get("smarter_mysql_test_database_secret_name", "smarter_test_db"),
+        "smarter_test_db",
     )
     SMARTER_MYSQL_TEST_DATABASE_PASSWORD = os.environ.get(
         "SMARTER_MYSQL_TEST_DATABASE_PASSWORD",
-        TFVARS.get("smarter_mysql_test_database_password", "SET-ME-PLEASE"),
+        "SET-ME-PLEASE",
     )
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get(
-        "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
-        TFVARS.get("social_auth_google_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", None),
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: SecretStr = SecretStr(
+        os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "SET-ME-PLEASE")
     )
-    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get(
-        "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET",
-        TFVARS.get("social_auth_google_oauth2_secret", None)
-        or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", None),
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: SecretStr = SecretStr(
+        os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "SET-ME-PLEASE")
     )
     # -------------------------------------------------------------------------
     # see: https://github.com/settings/applications/2620957
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GITHUB_KEY = os.environ.get(
-        "SOCIAL_AUTH_GITHUB_KEY",
-        TFVARS.get("social_auth_github_key", None) or os.environ.get("SOCIAL_AUTH_GITHUB_KEY", None),
-    )
-    SOCIAL_AUTH_GITHUB_SECRET = os.environ.get(
-        "SOCIAL_AUTH_GITHUB_SECRET",
-        TFVARS.get("social_auth_github_secret", None) or os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", None),
-    )
+    SOCIAL_AUTH_GITHUB_KEY: SecretStr = SecretStr(os.environ.get("SOCIAL_AUTH_GITHUB_KEY", "SET-ME-PLEASE"))
+    SOCIAL_AUTH_GITHUB_SECRET: SecretStr = SecretStr(os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", "SET-ME-PLEASE"))
     # -------------------------------------------------------------------------
     # see:  https://www.linkedin.com/developers/apps/221422881/settings
     #       https://www.linkedin.com/developers/apps/221422881/products?refreshKey=1734980684455
     # verification url: https://www.linkedin.com/developers/apps/verification/3ac34414-09a4-433b-983a-0d529fa486f1
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.environ.get(
-        "SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY",
-        TFVARS.get("social_auth_linkedin_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", None),
+    SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(
+        os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", "SET-ME-PLEASE")
     )
-    SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = os.environ.get(
-        "SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET",
-        TFVARS.get("social_auth_linkedin_oauth2_secret", None)
-        or os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", None),
+    SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(
+        os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", "SET-ME-PLEASE")
     )
 
     LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
 
-    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", None)
-    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", None)
+    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", "SET-ME-PLEASE")
+    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", "SET-ME-PLEASE")
 
     MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", "https://smarter.sh")
     LOGO: str = os.environ.get(
         "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
     )
 
-    OPENAI_API_ORGANIZATION = os.environ.get("OPENAI_API_ORGANIZATION", None)
-    OPENAI_API_KEY = os.environ.get("TF_VAR_OPENAI_API_KEY", None)
+    OPENAI_API_ORGANIZATION = os.environ.get("OPENAI_API_ORGANIZATION", "SET-ME-PLEASE")
+    OPENAI_API_KEY: SecretStr = SecretStr(os.environ.get("OPENAI_API_KEY", "SET-ME-PLEASE"))
     OPENAI_ENDPOINT_IMAGE_N = 4
     OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
-    PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY", None)
+    PINECONE_API_KEY: SecretStr = SecretStr(os.environ.get("PINECONE_API_KEY", "SET-ME-PLEASE"))
 
     SECRET_KEY = os.getenv("SECRET_KEY")
 
-    SMTP_SENDER = os.environ.get("SMTP_SENDER", None)
+    SMTP_SENDER = os.environ.get("SMTP_SENDER", "SET-ME-PLEASE")
     SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "no-reply@smarter.sh")
     SMTP_HOST = os.environ.get("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
@@ -359,50 +349,50 @@ class Settings(BaseSettings):
     aws_profile: Optional[str] = Field(
         SettingsDefaults.AWS_PROFILE,
     )
-    aws_access_key_id: Optional[SecretStr] = Field(
+    aws_access_key_id: SecretStr = Field(
         SettingsDefaults.AWS_ACCESS_KEY_ID,
     )
-    aws_secret_access_key: Optional[SecretStr] = Field(
+    aws_secret_access_key: SecretStr = Field(
         SettingsDefaults.AWS_SECRET_ACCESS_KEY,
     )
-    aws_regions: Optional[List[str]] = Field(AWS_REGIONS, description="The list of AWS regions")
-    aws_region: Optional[str] = Field(
+    aws_regions: List[str] = Field(AWS_REGIONS, description="The list of AWS regions")
+    aws_region: str = Field(
         SettingsDefaults.AWS_REGION,
     )
     aws_apigateway_create_custom_domaim: Optional[bool] = Field(
         SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN,
     )
-    aws_eks_cluster_name: Optional[str] = Field(
+    aws_eks_cluster_name: str = Field(
         SettingsDefaults.AWS_EKS_CLUSTER_NAME,
     )
-    aws_db_instance_identifier: Optional[str] = Field(
+    aws_db_instance_identifier: str = Field(
         SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
     )
-    anthropic_api_key: Optional[str] = Field(
+    anthropic_api_key: SecretStr = Field(
         SettingsDefaults.ANTHROPIC_API_KEY,
     )
-    environment: Optional[str] = Field(
+    environment: str = Field(
         SettingsDefaults.ENVIRONMENT,
     )
-    fernet_encryption_key: Optional[str] = Field(
+    fernet_encryption_key: str = Field(
         SettingsDefaults.FERNET_ENCRYPTION_KEY,
     )
-    local_hosts: Optional[List[str]] = Field(
+    local_hosts: List[str] = Field(
         SettingsDefaults.LOCAL_HOSTS,
     )
-    root_domain: Optional[str] = Field(
+    root_domain: str = Field(
         SettingsDefaults.ROOT_DOMAIN,
     )
     init_info: Optional[str] = Field(
         None,
     )
-    google_maps_api_key: Optional[SecretStr] = Field(
+    google_maps_api_key: SecretStr = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
     )
-    gemini_api_key: Optional[SecretStr] = Field(
+    gemini_api_key: SecretStr = Field(
         SettingsDefaults.GEMINI_API_KEY,
     )
-    llama_api_key: Optional[SecretStr] = Field(
+    llama_api_key: SecretStr = Field(
         SettingsDefaults.LLAMA_API_KEY,
     )
     smarter_mysql_test_database_secret_name: Optional[str] = Field(
@@ -411,31 +401,31 @@ class Settings(BaseSettings):
     smarter_mysql_test_database_password: Optional[str] = Field(
         SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_PASSWORD,
     )
-    social_auth_google_oauth2_key: Optional[str] = Field(
+    social_auth_google_oauth2_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
     )
-    social_auth_google_oauth2_secret: Optional[str] = Field(
+    social_auth_google_oauth2_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
     )
-    social_auth_github_key: Optional[str] = Field(
+    social_auth_github_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY,
     )
-    social_auth_github_secret: Optional[str] = Field(
+    social_auth_github_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET,
     )
-    social_auth_linkedin_oauth2_key: Optional[str] = Field(
+    social_auth_linkedin_oauth2_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY,
     )
-    social_auth_linkedin_oauth2_secret: Optional[str] = Field(
+    social_auth_linkedin_oauth2_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET,
     )
-    langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
+    langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY)
     logo: Optional[str] = Field(SettingsDefaults.LOGO)
     mailchimp_api_key: Optional[SecretStr] = Field(SettingsDefaults.MAILCHIMP_API_KEY)
     mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID)
     marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL)
     openai_api_organization: Optional[str] = Field(SettingsDefaults.OPENAI_API_ORGANIZATION)
-    openai_api_key: Optional[SecretStr] = Field(SettingsDefaults.OPENAI_API_KEY)
+    openai_api_key: SecretStr = Field(SettingsDefaults.OPENAI_API_KEY)
     openai_endpoint_image_n: Optional[int] = Field(SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N)
     openai_endpoint_image_size: Optional[str] = Field(SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
     llm_default_provider: str = Field(SettingsDefaults.LLM_DEFAULT_PROVIDER)
@@ -443,7 +433,7 @@ class Settings(BaseSettings):
     llm_default_system_role: str = Field(SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE)
     llm_default_temperature: float = Field(SettingsDefaults.LLM_DEFAULT_TEMPERATURE)
     llm_default_max_tokens: int = Field(SettingsDefaults.LLM_DEFAULT_MAX_TOKENS)
-    pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY)
+    pinecone_api_key: SecretStr = Field(SettingsDefaults.PINECONE_API_KEY)
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY)
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY)
 
@@ -722,31 +712,31 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("aws_access_key_id")
-    def validate_aws_access_key_id(cls, v, values: ValidationInfo) -> Optional[SecretStr]:
+    def validate_aws_access_key_id(cls, v, values: ValidationInfo) -> SecretStr:
         """Validate aws_access_key_id"""
         if not isinstance(v, SecretStr):
             v = SecretStr(v)
         if v.get_secret_value() in [None, ""]:
-            return SecretStr(SettingsDefaults.AWS_ACCESS_KEY_ID)
+            return SettingsDefaults.AWS_ACCESS_KEY_ID
         aws_profile = values.data.get("aws_profile", None)
         if aws_profile and len(aws_profile) > 0 and aws_profile != SettingsDefaults.AWS_PROFILE:
             # pylint: disable=logging-fstring-interpolation
             logger.warning(f"aws_access_key_id is being ignored. using aws_profile {aws_profile}.")
-            return SecretStr(SettingsDefaults.AWS_ACCESS_KEY_ID)
+            return SettingsDefaults.AWS_ACCESS_KEY_ID
         return v
 
     @field_validator("aws_secret_access_key")
-    def validate_aws_secret_access_key(cls, v, values: ValidationInfo) -> Optional[SecretStr]:
+    def validate_aws_secret_access_key(cls, v, values: ValidationInfo) -> SecretStr:
         """Validate aws_secret_access_key"""
         if not isinstance(v, SecretStr):
             v = SecretStr(v)
         if v.get_secret_value() in [None, ""]:
-            return SecretStr(SettingsDefaults.AWS_SECRET_ACCESS_KEY)
+            return SettingsDefaults.AWS_SECRET_ACCESS_KEY
         aws_profile = values.data.get("aws_profile", None)
         if aws_profile and len(aws_profile) > 0 and aws_profile != SettingsDefaults.AWS_PROFILE:
             # pylint: disable=logging-fstring-interpolation
             logger.warning(f"aws_secret_access_key is being ignored. using aws_profile {aws_profile}.")
-            return SecretStr(SettingsDefaults.AWS_SECRET_ACCESS_KEY)
+            return SettingsDefaults.AWS_SECRET_ACCESS_KEY
         return v
 
     @field_validator("aws_region")
@@ -772,6 +762,9 @@ class Settings(BaseSettings):
 
         if v in [None, ""]:
             return SettingsDefaults.FERNET_ENCRYPTION_KEY
+
+        if v == "SET-ME-PLEASE":
+            return v
 
         try:
             # Decode the key using URL-safe base64
@@ -822,9 +815,9 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("anthropic_api_key")
-    def validate_anthropic_api_key(cls, v) -> Optional[SecretStr]:
+    def validate_anthropic_api_key(cls, v) -> SecretStr:
         """Validate anthropic_api_key"""
-        if v in [None, ""] and SettingsDefaults.ANTHROPIC_API_KEY is not None:
+        if v in [None, ""]:
             return SecretStr(SettingsDefaults.ANTHROPIC_API_KEY)
         return v
 
@@ -849,74 +842,72 @@ class Settings(BaseSettings):
     @field_validator("google_maps_api_key")
     def check_google_maps_api_key(cls, v) -> SecretStr:
         """Check google_maps_api_key"""
-        if v in [None, ""] and SettingsDefaults.GOOGLE_MAPS_API_KEY is not None:
-            return SecretStr(SettingsDefaults.GOOGLE_MAPS_API_KEY)
+        if str(v) in [None, ""]:
+            return SettingsDefaults.GOOGLE_MAPS_API_KEY
         return v
 
     @field_validator("gemini_api_key")
     def check_gemini_api_key(cls, v) -> SecretStr:
         """Check gemini_api_key"""
-        if v in [None, ""] and SettingsDefaults.GEMINI_API_KEY is not None:
-            return SecretStr(SettingsDefaults.GEMINI_API_KEY)
+        if str(v) in [None, ""]:
+            return SettingsDefaults.GEMINI_API_KEY
         return v
 
     @field_validator("llama_api_key")
     def check_llama_api_key(cls, v) -> SecretStr:
         """Check llama_api_key"""
-        if v in [None, ""] and SettingsDefaults.LLAMA_API_KEY is not None:
-            return SecretStr(SettingsDefaults.LLAMA_API_KEY)
+        if str(v) in [None, ""]:
+            return SettingsDefaults.LLAMA_API_KEY
         return v
 
     @field_validator("social_auth_google_oauth2_key")
     def check_social_auth_google_oauth2_key(cls, v) -> SecretStr:
         """Check social_auth_google_oauth2_key"""
         if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY:
-            return SecretStr(SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY)
+            return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
         return v
 
     @field_validator("social_auth_google_oauth2_secret")
     def check_social_auth_google_oauth2_secret(cls, v) -> SecretStr:
         """Check social_auth_google_oauth2_secret"""
         if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET is not None:
-            return SecretStr(SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET)
+            return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
         return v
 
     @field_validator("social_auth_github_key")
     def check_social_auth_github_key(cls, v) -> SecretStr:
         """Check social_auth_github_key"""
         if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY is not None:
-            return SecretStr(SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY)
+            return SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY
         return v
 
     @field_validator("social_auth_github_secret")
     def check_social_auth_github_secret(cls, v) -> SecretStr:
         """Check social_auth_github_secret"""
-        if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET is not None:
-            return SecretStr(SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET)
+        if v in [None, ""]:
+            return SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET
         return v
 
     @field_validator("social_auth_linkedin_oauth2_key")
     def check_social_auth_linkedin_oauth2_key(cls, v) -> SecretStr:
         """Check social_auth_linkedin_oauth2_key"""
-        if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY is not None:
-            return SecretStr(SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY)
+        if v in [None, ""]:
+            return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
         return v
 
     @field_validator("social_auth_linkedin_oauth2_secret")
     def check_social_auth_linkedin_oauth2_secret(cls, v) -> SecretStr:
         """Check social_auth_linkedin_oauth2_secret"""
-        if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET is not None:
-            return SecretStr(SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET)
+        if v in [None, ""]:
+            return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
         return v
 
     @field_validator("langchain_memory_key")
-    def check_langchain_memory_key(cls, v) -> SecretStr:
+    def check_langchain_memory_key(cls, v) -> str:
         """Check langchain_memory_key"""
-        if isinstance(v, int):
-            return v
         if v in [None, ""] and SettingsDefaults.LANGCHAIN_MEMORY_KEY:
-            return SecretStr(SettingsDefaults.LANGCHAIN_MEMORY_KEY)
-        return v
+            return SettingsDefaults.LANGCHAIN_MEMORY_KEY
+        return str(v)
 
     @field_validator("logo")
     def check_logo(cls, v) -> str:
@@ -948,14 +939,14 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("openai_api_organization")
-    def check_openai_api_organization(cls, v) -> str:
+    def check_openai_api_organization(cls, v) -> Optional[str]:
         """Check openai_api_organization"""
         if v in [None, ""]:
             return SettingsDefaults.OPENAI_API_ORGANIZATION
         return v
 
     @field_validator("openai_api_key")
-    def check_openai_api_key(cls, v) -> Optional[str]:
+    def check_openai_api_key(cls, v) -> SecretStr:
         """Check openai_api_key"""
         if v in [None, ""]:
             return SettingsDefaults.OPENAI_API_KEY
