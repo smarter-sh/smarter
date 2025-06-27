@@ -10,8 +10,7 @@ from typing import Optional, TypedDict
 import requests
 from django.db import models
 
-from smarter.apps.account.models import Account, Secret
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import Account, Secret, User
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,

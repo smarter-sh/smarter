@@ -7,7 +7,7 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import User
 from smarter.apps.plugin.manifest.models.common.plugin.model import (
     SAMPluginCommonMetadata,
 )

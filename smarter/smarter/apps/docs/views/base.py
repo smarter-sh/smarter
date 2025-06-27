@@ -10,7 +10,6 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import markdown
-from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 from django.http.response import HttpResponse
 from django.shortcuts import render
@@ -49,13 +48,16 @@ class DocsBaseView(SmarterWebHtmlView):
     kind: Optional[SAMKinds] = None
     context: dict = {}
 
-    def get_brokered_json_response(self, reverse_name: str, view, request: WSGIRequest, *args, **kwargs):
+    def get_brokered_json_response(self, reverse_name: str, view, request: HttpRequest, *args, **kwargs):
         """Get the JSON response from the brokered smarter.sh/api endpoint."""
+        if request.user is None:
+            raise DocsError("request.user is None. This should not happen.")
+
         logger.info(
             "Getting brokered JSON response for reverse_name=%s, kind=%s, request.user=%s",
             reverse_name,
             self.kind,
-            request.user.username if request.user.is_authenticated else "Anonymous",
+            request.user.username if request.user.is_authenticated else "Anonymous",  # type: ignore[union-attr]
         )
         if not self.template_path:
             raise DocsError("self.template_path not set.")
@@ -78,7 +80,7 @@ class DocsBaseView(SmarterWebHtmlView):
             "Creating brokered request for reverse_name=%s, kind=%s, request.user=%s",
             reverse_name,
             self.kind,
-            cli_request.user.username if cli_request.user.is_authenticated else "Anonymous",
+            cli_request.user.username if cli_request.user.is_authenticated else "Anonymous",  # type: ignore[union-attr]
         )
         response = view(request=cli_request, kind=self.kind.value, *args, **kwargs)
         json_response = json.loads(response.content.decode("utf-8"))
@@ -94,7 +96,7 @@ class DocsBaseView(SmarterWebHtmlView):
             "Brokered JSON response for reverse_name=%s, kind=%s, request.user=%s: %s",
             reverse_name,
             self.kind,
-            request.user.username if request.user.is_authenticated else "Anonymous",
+            request.user.username if request.user.is_authenticated else "Anonymous",  # type: ignore[union-attr]
             json_response,
         )
         return json_response
@@ -105,7 +107,7 @@ class DocsBaseView(SmarterWebHtmlView):
             "canonical": request.path,
         }
 
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
 
 
 # ------------------------------------------------------------------------------

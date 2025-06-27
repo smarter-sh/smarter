@@ -5,9 +5,7 @@ from smarter.apps.account.models import (
     AccountContact,
     PaymentMethod,
     Secret,
-)
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import (
+    User,
     UserProfile,
 )
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer

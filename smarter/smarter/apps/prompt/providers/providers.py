@@ -13,7 +13,7 @@ from typing import Callable, Dict, List, Optional, Type, Union
 
 from django.core.cache import cache
 
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import User
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
 from smarter.common.classes import SmarterHelperMixin

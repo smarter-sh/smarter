@@ -11,7 +11,7 @@ from knox import crypto
 from knox.models import AuthToken, AuthTokenManager
 from knox.settings import CONSTANTS
 
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import User
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.model_helpers import TimestampedModel
 

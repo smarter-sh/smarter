@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 
 from django.urls import reverse
 
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import User
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds

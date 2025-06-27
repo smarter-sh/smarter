@@ -13,7 +13,7 @@ from django.utils.http import (
 )
 from django.utils.timezone import now as timezone_now
 
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import User
 from smarter.common.exceptions import SmarterException
 
 

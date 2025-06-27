@@ -85,10 +85,10 @@ def welcome_email_context(first_name: str) -> dict:
     }
 
 
+# future proofing: if we ever change the User model, we'll have this hook.
 User = get_user_model()
 if not issubclass(User, DjangoUser):
     raise SmarterConfigurationError("Django User model is not available. Ensure Django is properly configured.")
-UserClass = DjangoUser
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import _AnyUser
@@ -99,7 +99,7 @@ def get_resolved_user(
 ) -> Optional[Union[DjangoUser, AbstractUser, AnonymousUser]]:
     """
     Get the resolved user object from a user instance.
-    Maps the various kinds of Django user subclasses and mutations to the UserClass.
+    Maps the various kinds of Django user subclasses and mutations to the User.
     Used for resolving type annotations and ensuring type safety.
     """
     # pylint: disable=W0212
@@ -292,7 +292,7 @@ class UserProfile(TimestampedModel):
 
     # Add more fields here as needed
     user = models.ForeignKey(
-        UserClass,
+        User,
         on_delete=models.CASCADE,
         related_name="user_profile",
     )
@@ -329,7 +329,7 @@ class UserProfile(TimestampedModel):
             new_user_created.send(sender=self.__class__, user_profile=self)
 
     @classmethod
-    def admin_for_account(cls, account: Account) -> Optional[UserClass]:
+    def admin_for_account(cls, account: Account) -> Optional[User]:
         """Return the designated user for the account."""
         admins = cls.objects.filter(account=account, user__is_staff=True).order_by("user__id")
         if admins.exists():
@@ -396,7 +396,7 @@ class Charge(TimestampedModel):
     """Charge model for periodic account billing."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
-    user = models.ForeignKey(UserClass, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
     session_key = models.CharField(max_length=255, null=True, blank=True)
     provider = models.CharField(
         max_length=255,
@@ -432,7 +432,7 @@ class DailyBillingRecord(TimestampedModel):
     """Daily billing record model for aggregated charges."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="daily_billing_records")
-    user = models.ForeignKey(UserClass, on_delete=models.CASCADE, related_name="daily_billing_records")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="daily_billing_records")
     provider = models.CharField(
         max_length=255,
         choices=PROVIDERS,
@@ -551,7 +551,7 @@ class Secret(TimestampedModel):
         if not hasattr(request, "user"):
             return False
         user = get_resolved_user(request.user)
-        if not isinstance(user, UserClass):
+        if not isinstance(user, User):
             return False
         if not hasattr(user, "is_authenticated") or not user.is_authenticated:
             return False

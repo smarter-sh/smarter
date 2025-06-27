@@ -11,8 +11,7 @@ from django.http import Http404, HttpResponseRedirect, JsonResponse
 from rest_framework import status
 from rest_framework.response import Response
 
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile, get_resolved_user
+from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.serializers import UserSerializer
 
 from .base import AccountListViewBase, AccountViewBase

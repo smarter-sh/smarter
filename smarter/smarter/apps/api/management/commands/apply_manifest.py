@@ -10,8 +10,7 @@ import httpx
 from django.core.management.base import BaseCommand
 from django.urls import reverse
 
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import settings as smarter_settings

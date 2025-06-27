@@ -8,8 +8,7 @@ from django.conf import settings
 from django.core.handlers.wsgi import WSGIRequest
 
 from smarter.__version__ import __version__
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.plugin.models import PluginMeta

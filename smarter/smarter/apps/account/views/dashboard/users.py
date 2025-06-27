@@ -8,8 +8,7 @@ from django import forms, http
 from django.db import transaction
 from django.shortcuts import redirect
 
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.lib.django.view_helpers import SmarterAdminWebView
 

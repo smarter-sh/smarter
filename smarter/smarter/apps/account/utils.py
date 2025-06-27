@@ -19,8 +19,7 @@ from typing import Optional
 
 from django.contrib.auth.models import AnonymousUser
 
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text

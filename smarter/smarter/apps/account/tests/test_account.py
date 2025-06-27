@@ -2,7 +2,7 @@
 """Test Account."""
 
 # our stuff
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import User
 from smarter.common.utils import hash_factory
 from smarter.lib.unittest.base_classes import SmarterTestBase
 

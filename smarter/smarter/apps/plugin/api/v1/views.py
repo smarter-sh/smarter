@@ -16,8 +16,7 @@ from rest_framework import status
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile, get_resolved_user
+from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
