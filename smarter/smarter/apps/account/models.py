@@ -12,7 +12,6 @@ from cryptography.fernet import Fernet
 
 # django stuff
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.contrib.auth.models import User as DjangoUser
 from django.core.handlers.wsgi import WSGIRequest
@@ -86,7 +85,13 @@ def welcome_email_context(first_name: str) -> dict:
 
 
 # future proofing: if we ever change the User model, we'll have this hook.
-User = get_user_model()
+class User(DjangoUser):
+    """
+    This is a placeholder for the Django User model.
+    It is used to ensure that the User model is available in the context of this module.
+    """
+
+
 if not issubclass(User, DjangoUser):
     raise SmarterConfigurationError("Django User model is not available. Ensure Django is properly configured.")
 
@@ -329,7 +334,7 @@ class UserProfile(TimestampedModel):
             new_user_created.send(sender=self.__class__, user_profile=self)
 
     @classmethod
-    def admin_for_account(cls, account: Account) -> Optional[User]:
+    def admin_for_account(cls, account: Account) -> User:
         """Return the designated user for the account."""
         admins = cls.objects.filter(account=account, user__is_staff=True).order_by("user__id")
         if admins.exists():
