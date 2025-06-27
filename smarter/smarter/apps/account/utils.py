@@ -15,7 +15,7 @@ import logging
 import re
 import uuid
 from functools import lru_cache
-from typing import Optional
+from typing import Any, Optional
 
 from django.contrib.auth.models import AnonymousUser
 
@@ -96,11 +96,10 @@ def _get_account_for_user(user):
 
     user_id = getattr(user, "id", None)
     if not user_id:
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.error("get_cached_account_for_user() user has no ID")
+        logger.warning("get_cached_account_for_user() user has no ID: %s", user)
         return None
 
-    @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
+    @cache_results()
     def _get_account_for_user_by_id(user_id):
         """
         In-memory cache for user accounts.
@@ -117,8 +116,7 @@ def _get_account_for_user(user):
         # If no default account is found, return the first account
         user_profile = user_profiles.first()
         if not user_profile:
-            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.error("get_cached_account_for_user_by_id() no UserProfile found for user ID %s", user_id)
+            logger.warning("get_cached_account_for_user_by_id() no UserProfile found for user ID %s", user_id)
             return None
         account = user_profile.account
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
@@ -132,17 +130,16 @@ def _get_account_for_user(user):
     return _get_account_for_user_by_id(user_id)
 
 
-def get_cached_account_for_user(user) -> Optional[Account]:
+def get_cached_account_for_user(user: Any) -> Optional[Account]:
     """
     Locates the account for a given user, or None if no account exists.
     """
     if isinstance(user, AnonymousUser):
         return None
-
     return _get_account_for_user(user)
 
 
-def _get_cached_user_profile(resolved_user, account):
+def _get_cached_user_profile(resolved_user: User, account: Optional[Account]) -> Optional[UserProfile]:
 
     @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
     def _in_memory_user_profile(user_id, account_id):
@@ -151,28 +148,30 @@ def _get_cached_user_profile(resolved_user, account):
             logger.info("_in_memory_user_profile() retrieving and caching UserProfile %s", user_profile)
         return user_profile
 
-    user_profile = _in_memory_user_profile(resolved_user.id, account.id)
+    if resolved_user is None or account is None:
+        logger.warning("get_cached_user_profile() cannot initialize with user: %s account: %s", resolved_user, account)
+        return None
+    user_profile = _in_memory_user_profile(resolved_user.id, account.id)  # type: ignore[return-value]
     if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
         logger.info("get_cached_user_profile() retrieving and caching UserProfile %s", user_profile)
     return user_profile
 
 
-def get_cached_user_profile(user: User, account: Optional[Account] = None) -> UserProfile:
+def get_cached_user_profile(user: User, account: Optional[Account] = None) -> Optional[UserProfile]:
     """
     Locates the user_profile for a given user, or None.
     """
-
     account = account or get_cached_account_for_user(user)
+    if not account:
+        logger.warning("get_cached_user_profile() no account found for user: %s", user)
+        return None
 
     # pylint: disable=W0212
     resolved_user = get_resolved_user(user)
-    retval = _get_cached_user_profile(resolved_user, account)
-    if not retval:
-        raise SmarterConfigurationError(
-            f"Failed to retrieve UserProfile for user {resolved_user} and account {account}. "
-            "Please ensure the user is associated with the account."
-        )
-    return retval
+    if isinstance(resolved_user, User):
+        return _get_cached_user_profile(resolved_user, account)
+    logger.warning("get_cached_user_profile() user is not resolvable: %s", user)
+    return None
 
 
 def get_cached_user_for_user_id(user_id: int) -> User:

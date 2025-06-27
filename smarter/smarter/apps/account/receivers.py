@@ -20,7 +20,6 @@ from .signals import (
 )
 from .utils import (
     get_cached_default_account,
-    get_cached_smarter_admin_user_profile,
     get_cached_user_profile,
 )
 

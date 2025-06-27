@@ -12,8 +12,7 @@ from cryptography.fernet import Fernet
 
 # django stuff
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, AnonymousUser
-from django.contrib.auth.models import User as DjangoUser
+from django.contrib.auth.models import AbstractUser, AnonymousUser, User
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.validators import RegexValidator
 from django.db import models
@@ -84,36 +83,28 @@ def welcome_email_context(first_name: str) -> dict:
     }
 
 
-# future proofing: if we ever change the User model, we'll have this hook.
-class User(DjangoUser):
-    """
-    This is a placeholder for the Django User model.
-    It is used to ensure that the User model is available in the context of this module.
-    """
-
-
-if not issubclass(User, DjangoUser):
-    raise SmarterConfigurationError("Django User model is not available. Ensure Django is properly configured.")
-
 if TYPE_CHECKING:
     from django.contrib.auth.models import _AnyUser
 
 
 def get_resolved_user(
-    user: "Union[DjangoUser, AbstractUser, AnonymousUser, SimpleLazyObject, _AnyUser]",
-) -> Optional[Union[DjangoUser, AbstractUser, AnonymousUser]]:
+    user: "Union[User, AbstractUser, AnonymousUser, SimpleLazyObject, _AnyUser]",
+) -> Optional[Union[User, AbstractUser, AnonymousUser]]:
     """
     Get the resolved user object from a user instance.
     Maps the various kinds of Django user subclasses and mutations to the User.
     Used for resolving type annotations and ensuring type safety.
     """
+    # this is the expected case
+    if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
+        return user
+
+    # these are manageable edge cases
+    # --------------------------------
+
     # pylint: disable=W0212
     if isinstance(user, SimpleLazyObject):
         return user._wrapped
-    if isinstance(user, AnonymousUser):
-        return user
-    if isinstance(user, DjangoUser):
-        return user
     # Allow unittest.mock.MagicMock or Mock for testing
     if hasattr(user, "__class__") and user.__class__.__name__ in ("MagicMock", "Mock"):
         return user  # type: ignore[return-value]
@@ -297,7 +288,7 @@ class UserProfile(TimestampedModel):
 
     # Add more fields here as needed
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="user_profile",
     )
@@ -401,7 +392,9 @@ class Charge(TimestampedModel):
     """Charge model for periodic account billing."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="charge", null=False, blank=False
+    )
     session_key = models.CharField(max_length=255, null=True, blank=True)
     provider = models.CharField(
         max_length=255,
@@ -437,7 +430,7 @@ class DailyBillingRecord(TimestampedModel):
     """Daily billing record model for aggregated charges."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="daily_billing_records")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="daily_billing_records")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="daily_billing_records")
     provider = models.CharField(
         max_length=255,
         choices=PROVIDERS,
