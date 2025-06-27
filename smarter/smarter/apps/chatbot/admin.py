@@ -3,8 +3,10 @@
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.apps.dashboard.admin import smarter_restricted_admin_site
-from smarter.lib.django.admin import RestrictedModelAdmin
+from smarter.apps.dashboard.admin import (
+    RestrictedModelAdmin,
+    smarter_restricted_admin_site,
+)
 
 from .models import (
     ChatBot,

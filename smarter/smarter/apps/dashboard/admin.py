@@ -1,22 +1,43 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
 """Rebuild the admin site to restrict access to certain apps and models."""
 
-from logging import getLogger
-
-from django.apps import apps
 from django.contrib import admin
-from django.contrib.admin.exceptions import AlreadyRegistered, NotRegistered
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest
-from knox.models import AuthToken
 
 from smarter.__version__ import __version__
-from smarter.lib.django.admin import RestrictedModelAdmin, SuperUserOnlyModelAdmin
 
 from .models import EmailContactList
 
 
-logger = getLogger(__name__)
+# pylint: disable=W0613
+class RestrictedModelAdmin(admin.ModelAdmin):
+    """
+    Customized Django Admin console model class that restricts access to the
+    model and prevents adding new instances of the model.
+    """
+
+    def has_module_permission(self, request: HttpRequest):
+        return request.user.is_superuser or request.user.is_staff
+
+    def has_add_permission(self, request: HttpRequest, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request: HttpRequest, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request: HttpRequest, obj=None):
+        return request.user.is_superuser
+
+
+class SuperUserOnlyModelAdmin(admin.ModelAdmin):
+    """
+    Customized Django Admin console model class that restricts
+    module access to superusers only.
+    """
+
+    def has_module_permission(self, request: HttpRequest):
+        return request.user.is_superuser
 
 
 class RestrictedAdminSite(admin.AdminSite):
@@ -61,16 +82,10 @@ smarter_restricted_admin_site.register(EmailContactList, EmailContactListAdmin)
 
 # All remaining models are registered with the SuperUserOnlyModelAdmin
 # to restrict access to superusers only
-# models = apps.get_models()
-# for model in models:
-#     try:
-#         smarter_restricted_admin_site.register(model, SuperUserOnlyModelAdmin)
-#     except AlreadyRegistered:
-#         pass
-
-try:
-    # Unregister the Know AuthToken model since we subclassed this
-    # and created our own admin for it.
-    smarter_restricted_admin_site.unregister(AuthToken)
-except NotRegistered as e:
-    logger.warning("Could not unregister AuthToken model because it is not registered: %s", e)
+#
+# try:
+#     # Unregister the Know AuthToken model since we subclassed this
+#     # and created our own admin for it.
+#     smarter_restricted_admin_site.unregister(AuthToken)
+# except NotRegistered as e:
+#     logger.warning("Could not unregister AuthToken model because it is not registered: %s", e)

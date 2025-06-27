@@ -6,8 +6,10 @@ from django.contrib import admin
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
-from smarter.apps.dashboard.admin import smarter_restricted_admin_site
-from smarter.lib.django.admin import RestrictedModelAdmin
+from smarter.apps.dashboard.admin import (
+    RestrictedModelAdmin,
+    smarter_restricted_admin_site,
+)
 
 from .models import (
     ApiConnection,
@@ -111,10 +113,10 @@ class PluginStaticAdmin(RestrictedModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
-            return qs.filter(plugindatastatic__isnull=False).distinct()
+            return qs.filter(plugin_class="static").distinct()
         try:
             account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account, plugindatastatic__isnull=False).distinct()
+            return qs.filter(account=account, plugin_class="static").distinct()
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -140,10 +142,10 @@ class PluginApiAdmin(RestrictedModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
-            return qs.filter(plugindataapi__isnull=False).distinct()
+            return qs.filter(plugin_class="api").distinct()
         try:
             account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account, plugindataapi__isnull=False).distinct()
+            return qs.filter(account=account, plugin_class="api").distinct()
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -169,10 +171,10 @@ class PluginSqlAdmin(RestrictedModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
-            return qs.filter(plugindatasql__isnull=False).distinct()
+            return qs.filter(plugin_class="sql").distinct()
         try:
             account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account, plugindatasql__isnull=False).distinct()
+            return qs.filter(account=account, plugin_class="sql").distinct()
         except UserProfile.DoesNotExist:
             return qs.none()
 
