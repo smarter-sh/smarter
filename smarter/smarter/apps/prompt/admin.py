@@ -3,9 +3,10 @@
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.dashboard.admin import smarter_restricted_admin_site
 from smarter.lib.django.admin import RestrictedModelAdmin
 
-from .models import Chat, ChatPluginUsage, ChatToolCall
+from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 
 
 class ChatAdmin(RestrictedModelAdmin):
@@ -87,3 +88,9 @@ class ChatToolCallHistoryAdmin(RestrictedModelAdmin):
             return qs.filter(chat__account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
+
+
+smarter_restricted_admin_site.register(Chat, ChatAdmin)
+smarter_restricted_admin_site.register(ChatHistory, ChatHistoryAdmin)
+smarter_restricted_admin_site.register(ChatPluginUsage, ChatPluginUsageAdmin)
+smarter_restricted_admin_site.register(ChatToolCall, ChatToolCallHistoryAdmin)
