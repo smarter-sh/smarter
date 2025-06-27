@@ -3,6 +3,7 @@ Command to create a test SQL database connection.
 """
 
 import getpass
+import os
 
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
@@ -15,6 +16,8 @@ from smarter.apps.plugin.manifest.models.sql_connection.enum import (
     DBMSAuthenticationMethods,
 )
 from smarter.apps.plugin.models import SqlConnection
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import PROJECT_ROOT
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -33,30 +36,43 @@ class Command(BaseCommand):
             "--db_host", type=SmarterValidator.validate_hostname, required=True, help="The host of the SQL database."
         )
         parser.add_argument(
-            "--db_port", type=SmarterValidator.validate_port, default=3306, help="The port of the SQL database."
-        )
-        parser.add_argument("--db_username", type=str, required=True, help="The username for the SQL database.")
-        parser.add_argument(
             "--db_name",
             type=SmarterValidator.validate_clean_string,
             required=True,
             help="The name of the SQL database connection.",
         )
+        parser.add_argument("--db_username", type=str, required=True, help="The username for the SQL database.")
         parser.add_argument(
             "--db_password", type=str, help="The password for the SQL database. If not provided, you will be prompted."
+        )
+        parser.add_argument(
+            "--db_port", type=SmarterValidator.validate_port, default=3306, help="The port of the SQL database."
         )
 
     def handle(self, *args, **options):
         """Create a test SQL database connection."""
 
-        db_name = options["db_name"]
         host = options["db_host"]
-        port = options["db_port"]
+        if host is None:
+            self.stdout.write(self.style.ERROR("The --db_host argument is required."))
+            return
+        db_name = options["db_name"]
+        if db_name is None:
+            self.stdout.write(self.style.ERROR("The --db_name argument is required."))
+            return
         username = options["db_username"]
+        if username is None:
+            self.stdout.write(self.style.ERROR("The --db_username argument is required."))
+            return
         password = options.get("db_password")
         if not password:
-            password = getpass.getpass("SQL database password: ")
+            password = smarter_settings.smarter_mysql_test_database_password
+            if not password:
+                password = getpass.getpass("SQL database password: ")
         password = Secret.encrypt(password)
+        port = options["db_port"]
+        if port is None:
+            port = 3306
 
         admin_user_profile: UserProfile = get_cached_smarter_admin_user_profile()
         secret_name = db_name
@@ -73,6 +89,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Secret '{secret_name}' updated."))
 
         except Secret.DoesNotExist:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Secret '{secret_name}' for account '{admin_user_profile}' does not exist. Creating a new one."
+                )
+            )
             secret = Secret.objects.create(
                 user_profile=admin_user_profile,
                 name=secret_name,
@@ -107,9 +128,17 @@ class Command(BaseCommand):
             return
 
         # 3.) handle the Plugin
+        file_path = os.path.join(
+            PROJECT_ROOT,
+            "apps",
+            "plugin",
+            "data",
+            "sample-plugins",
+            "stackademy-sql.yaml",
+        )
         call_command(
             "create_plugin",
             account_number=admin_user_profile.account.account_number,
             username=admin_user_profile.user.username,
-            path="./smarter/smarter/apps/plugin/data/sample-plugins/stackademy-sql.yaml",
+            file_path=file_path,
         )
