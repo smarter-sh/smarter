@@ -3,6 +3,7 @@
 # python stuff
 import logging
 import os
+from typing import Optional
 from urllib.parse import urlparse
 
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
@@ -41,21 +42,21 @@ class AWSBase(SmarterHelperMixin):
 
     LOCAL_HOSTS = smarter_settings.local_hosts
 
-    _aws_access_key_id: str = None
-    _aws_secret_access_key: str = None
-    _aws_region: str = None
-    _aws_profile: str = None
+    _aws_access_key_id: Optional[str] = None
+    _aws_secret_access_key: Optional[str] = None
+    _aws_region: Optional[str] = None
+    _aws_profile: Optional[str] = None
 
-    _aws_access_key_id_source: str = None
-    _aws_secret_access_key_source: str = None
+    _aws_access_key_id_source: Optional[str] = None
+    _aws_secret_access_key_source: Optional[str] = None
 
     _initialized: bool = False
     _domain = None
     _aws_session = None
-    _root_domain: str = None
-    _environment: str = None
-    _environment_domain: str = None
-    _shared_resource_identifier: str = None
+    _root_domain: str = smarter_settings.root_domain
+    _environment: str = smarter_settings.environment
+    _environment_domain: Optional[str] = None
+    _shared_resource_identifier: Optional[str] = None
     _debug_mode: bool = False
 
     _connected: bool = False
@@ -63,16 +64,16 @@ class AWSBase(SmarterHelperMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        aws_access_key_id: str = None,
-        aws_secret_access_key: str = None,
-        aws_region: str = None,
-        aws_profile: str = None,
-        shared_resource_identifier: str = None,
-        environment: str = None,
-        environment_domain: str = None,
-        root_domain: str = None,
+        aws_access_key_id: Optional[str] = None,
+        aws_secret_access_key: Optional[str] = None,
+        aws_region: Optional[str] = None,
+        aws_profile: Optional[str] = None,
+        shared_resource_identifier: Optional[str] = None,
+        environment: Optional[str] = None,
+        environment_domain: Optional[str] = None,
+        root_domain: Optional[str] = None,
         debug_mode: bool = False,
-        init_info: str = None,
+        init_info: Optional[str] = None,
     ):
         Services.raise_error_on_disabled(Services.AWS_CLI)
 
@@ -97,8 +98,8 @@ class AWSBase(SmarterHelperMixin):
         if not self.initialized and self.is_aws_deployed:
             # If we're running inside AWS Lambda, then we don't need to set the AWS credentials.
             logger.debug("running inside AWS Lambda")
-            self._aws_access_key_id_source: str = "overridden by IAM role-based security"
-            self._aws_secret_access_key_source: str = "overridden by IAM role-based security"
+            self._aws_access_key_id_source = "overridden by IAM role-based security"
+            self._aws_secret_access_key_source = "overridden by IAM role-based security"
             self._aws_session = boto3.Session(region_name=self.aws_region)
             self._initialized = True
 
@@ -162,6 +163,9 @@ class AWSBase(SmarterHelperMixin):
     def aws_account_id(self):
         """AWS account id"""
         Services.raise_error_on_disabled(Services.AWS_CLI)
+        if not self.aws_session:
+            logger.warning("aws_session is not initialized")
+            return None
         sts_client = self.aws_session.client("sts")
         if not sts_client:
             logger.warning("could not initialize sts_client")
@@ -269,7 +273,7 @@ class AWSBase(SmarterHelperMixin):
     def domain_resolver(self, domain: str) -> str:
         """Validate the domain and swap out localhost for the proxy domain."""
         if self.environment == SmarterEnvironments.LOCAL:
-            proxy_domain: str = None
+            proxy_domain: Optional[str] = None
             if smarter_settings.environment_platform_domain in domain:
                 proxy_domain = domain.replace(smarter_settings.environment_platform_domain, self.environment_domain)
             if smarter_settings.environment_api_domain in domain:
@@ -301,10 +305,13 @@ class AWSBase(SmarterHelperMixin):
         """
         return bool(self.connected()) and bool(smarter_settings.environment in SmarterEnvironments.all)
 
-    def connected(self):
+    def connected(self) -> bool:
         """Test that the AWS connection works."""
         if self._connected:
             return True
+        if not self.aws_session:
+            logger.error("connected() Failure - aws_session is not initialized")
+            return False
         try:
             # pylint: disable=pointless-statement
             self._connected = self.aws_session.client("sts").get_caller_identity()

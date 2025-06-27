@@ -1,5 +1,7 @@
 """AWS Lambda helper class."""
 
+from smarter.common.exceptions import SmarterConfigurationError
+
 from .aws import AWSBase
 
 
@@ -11,6 +13,8 @@ class AWSLambdaFunction(AWSBase):
     @property
     def client(self):
         """Return the AWS Lambda client."""
+        if not self.aws_session:
+            raise SmarterConfigurationError("AWS session is not initialized.")
         if not self._client:
             self._client = self.aws_session.client("lambda")
         return self._client

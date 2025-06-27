@@ -2,8 +2,10 @@
 
 # python stuff
 
-# our stuff
 from smarter.common.conf import settings as smarter_settings
+
+# our stuff
+from smarter.common.exceptions import SmarterConfigurationError
 
 from .aws import AWSBase
 
@@ -16,6 +18,8 @@ class AWSIdentifyAccessManagement(AWSBase):
     @property
     def client(self):
         """Return the AWS IAM client."""
+        if not self.aws_session:
+            raise SmarterConfigurationError("AWS session is not initialized.")
         if not self._client:
             self._client = self.aws_session.client("iam")
         return self._client

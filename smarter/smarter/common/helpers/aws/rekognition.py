@@ -1,5 +1,9 @@
 """AWS Rekognition helper class."""
 
+from typing import Optional
+
+from smarter.common.exceptions import SmarterConfigurationError
+
 from .aws import AWSBase
 
 
@@ -17,6 +21,8 @@ class AWSRekognition(AWSBase):
     @property
     def client(self):
         """Return the AWS Rekognition client."""
+        if not self.aws_session:
+            raise SmarterConfigurationError("AWS session is not initialized.")
         if not self._client:
             self._client = self.aws_session.client("rekognition")
         return self._client
@@ -26,7 +32,7 @@ class AWSRekognition(AWSBase):
         """Return the AWS Rekognition collection ID."""
         return self._collection_id
 
-    def get_rekognition_collection_by_id(self, collection_id) -> str:
+    def get_rekognition_collection_by_id(self, collection_id) -> Optional[str]:
         """Return the Rekognition collection."""
         response = self.client.list_collections()
         for collection in response["CollectionIds"]:

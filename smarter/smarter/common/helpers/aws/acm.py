@@ -4,6 +4,9 @@ import logging
 
 # python stuff
 import time
+from typing import Optional
+
+from smarter.common.exceptions import SmarterConfigurationError
 
 # our stuff
 from .aws import AWSBase
@@ -22,8 +25,11 @@ class AWSCertificateManager(AWSBase):
     @property
     def client(self):
         """Return the AWS ACM client"""
-        if not self._client:
-            self._client = self.aws_session.client("acm")
+        if self._client:
+            return self._client
+        if not self.aws_session:
+            raise SmarterConfigurationError("AWS session is not initialized.")
+        self._client = self.aws_session.client("acm")
         return self._client
 
     @property
@@ -36,7 +42,7 @@ class AWSCertificateManager(AWSBase):
             self._route53 = AWSRoute53()
         return self._route53
 
-    def get_certificate_arn(self, domain_name) -> str:
+    def get_certificate_arn(self, domain_name) -> Optional[str]:
         """Return the certificate ARN."""
         response = self.client.list_certificates()
         for certificate in response["CertificateSummaryList"]:

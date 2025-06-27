@@ -1,15 +1,16 @@
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801,too-many-lines
 """
-Configuration for Lambda functions.
+Smarter platform configuration settings.
 
-This module is used to configure the Lambda functions. It uses the pydantic_settings
-library to validate the configuration values. The configuration values are initialized
-according to the following prioritization sequence:
+This module is used to generate strongly typed settings values for the platform.
+It uses the pydantic_settings library to validate the configuration values.
+The configuration values are initialized according to the following
+prioritization sequence:
+
     1. constructor
     2. environment variables
     3. `.env` file
-    4. tfvars file
-    5. defaults
+    4. defaults
 
 The Settings class also provides a dump property that returns a dictionary of all
 configuration values. This is useful for debugging and logging.
@@ -27,9 +28,7 @@ import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
 import re
-from functools import (
-    lru_cache,  # library for caching function results. used for the SingletonSettings class
-)
+from functools import lru_cache
 from typing import Any, List, Optional, Tuple, Union
 
 # 3rd party stuff
@@ -167,28 +166,6 @@ class SettingsDefaults:
 
     ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "SET-ME-PLEASE")
 
-    LLM_DEFAULT_PROVIDER = "openai"
-    LLM_DEFAULT_MODEL = "gpt-4o-mini"
-    LLM_DEFAULT_SYSTEM_ROLE = (
-        "You are a helpful chatbot. When given the opportunity to utilize "
-        "function calling, you should always do so. This will allow you to "
-        "provide the best possible responses to the user. If you are unable to "
-        "provide a response, you should prompt the user for more information. If "
-        "you are still unable to provide a response, you should inform the user "
-        "that you are unable to help them at this time."
-    )
-    LLM_DEFAULT_TEMPERATURE = 0.5
-    LLM_DEFAULT_MAX_TOKENS = 2048
-
-    # defaults for this Python package
-    ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
-    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "smarter.sh"))
-    SHARED_RESOURCE_IDENTIFIER = os.environ.get(
-        "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
-    )
-    DEBUG_MODE: bool = bool(os.environ.get("DEBUG_MODE", TFVARS.get("debug_mode", False)))
-    DUMP_DEFAULTS: bool = bool(os.environ.get("DUMP_DEFAULTS", TFVARS.get("dump_defaults", False)))
-
     # aws auth
     AWS_PROFILE = os.environ.get("AWS_PROFILE", TFVARS.get("aws_profile", None))
     AWS_ACCESS_KEY_ID: SecretStr = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", "SET-ME-PLEASE"))
@@ -205,15 +182,55 @@ class SettingsDefaults:
         "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
     )
     AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
+    DEBUG_MODE: bool = bool(os.environ.get("DEBUG_MODE", TFVARS.get("debug_mode", False)))
+    DUMP_DEFAULTS: bool = bool(os.environ.get("DUMP_DEFAULTS", TFVARS.get("dump_defaults", False)))
+    ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
 
-    logger.info("FERNET_ENCRYPTION_KEY is set to: %s", os.environ.get("FERNET_ENCRYPTION_KEY", "SET-ME-PLEASE"))
     FERNET_ENCRYPTION_KEY: str = os.environ.get("FERNET_ENCRYPTION_KEY", "SET-ME-PLEASE")
 
     GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(
         os.environ.get("GOOGLE_MAPS_API_KEY", os.environ.get("google_maps_api_key", "SET-ME-PLEASE"))
     )
     GEMINI_API_KEY: SecretStr = SecretStr(os.environ.get("GEMINI_API_KEY", "SET-ME-PLEASE"))
+    LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
+
     LLAMA_API_KEY: SecretStr = SecretStr(os.environ.get("LLAMA_API_KEY", "SET-ME-PLEASE"))
+
+    LLM_DEFAULT_PROVIDER = "openai"
+    LLM_DEFAULT_MODEL = "gpt-4o-mini"
+    LLM_DEFAULT_SYSTEM_ROLE = (
+        "You are a helpful chatbot. When given the opportunity to utilize "
+        "function calling, you should always do so. This will allow you to "
+        "provide the best possible responses to the user. If you are unable to "
+        "provide a response, you should prompt the user for more information. If "
+        "you are still unable to provide a response, you should inform the user "
+        "that you are unable to help them at this time."
+    )
+    LLM_DEFAULT_TEMPERATURE = 0.5
+    LLM_DEFAULT_MAX_TOKENS = 2048
+
+    LOCAL_HOSTS = ["localhost", "127.0.0.1"]
+    LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS.append("testserver")
+
+    LOGO: str = os.environ.get(
+        "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
+    )
+    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", "SET-ME-PLEASE")
+    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", "SET-ME-PLEASE")
+
+    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", "https://smarter.sh")
+
+    OPENAI_API_ORGANIZATION = os.environ.get("OPENAI_API_ORGANIZATION", "SET-ME-PLEASE")
+    OPENAI_API_KEY: SecretStr = SecretStr(os.environ.get("OPENAI_API_KEY", "SET-ME-PLEASE"))
+    OPENAI_ENDPOINT_IMAGE_N = 4
+    OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
+    PINECONE_API_KEY: SecretStr = SecretStr(os.environ.get("PINECONE_API_KEY", "SET-ME-PLEASE"))
+
+    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "smarter.sh"))
+    SHARED_RESOURCE_IDENTIFIER = os.environ.get(
+        "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
+    )
 
     SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = os.environ.get(
         "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME",
@@ -250,22 +267,6 @@ class SettingsDefaults:
         os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", "SET-ME-PLEASE")
     )
 
-    LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
-
-    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", "SET-ME-PLEASE")
-    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", "SET-ME-PLEASE")
-
-    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", "https://smarter.sh")
-    LOGO: str = os.environ.get(
-        "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
-    )
-
-    OPENAI_API_ORGANIZATION = os.environ.get("OPENAI_API_ORGANIZATION", "SET-ME-PLEASE")
-    OPENAI_API_KEY: SecretStr = SecretStr(os.environ.get("OPENAI_API_KEY", "SET-ME-PLEASE"))
-    OPENAI_ENDPOINT_IMAGE_N = 4
-    OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
-    PINECONE_API_KEY: SecretStr = SecretStr(os.environ.get("PINECONE_API_KEY", "SET-ME-PLEASE"))
-
     SECRET_KEY = os.getenv("SECRET_KEY")
 
     SMTP_SENDER = os.environ.get("SMTP_SENDER", "SET-ME-PLEASE")
@@ -279,10 +280,6 @@ class SettingsDefaults:
 
     STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "SET-ME-PLEASE")
     STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "SET-ME-PLEASE")
-
-    LOCAL_HOSTS = ["localhost", "127.0.0.1"]
-    LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
-    LOCAL_HOSTS.append("testserver")
 
     @classmethod
     def to_dict(cls):
@@ -332,8 +329,6 @@ class Settings(BaseSettings):
 
         frozen = True
 
-    _aws_access_key_id_source: str = "unset"
-    _aws_secret_access_key_source: str = "unset"
     _dump: dict
 
     # pylint: disable=too-many-branches,too-many-statements

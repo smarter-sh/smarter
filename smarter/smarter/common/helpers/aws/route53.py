@@ -3,12 +3,14 @@
 # python stuff
 import logging
 import time
-from typing import Tuple
+from typing import Optional, Tuple
 
 import botocore
+import botocore.exceptions
 import dns.resolver
 from django.conf import settings
 
+from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_text
 
 from .aws import AWSBase
@@ -31,11 +33,13 @@ class AWSRoute53(AWSBase):
     @property
     def client(self):
         """Return the AWS Route53 client."""
+        if not self.aws_session:
+            raise SmarterConfigurationError("AWS session is not initialized.")
         if not self._client:
             self._client = self.aws_session.client("route53")
         return self._client
 
-    def get_hosted_zone(self, domain_name) -> str:
+    def get_hosted_zone(self, domain_name) -> Optional[str]:
         """Return the hosted zone."""
         logger.info("%s.get_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
@@ -73,7 +77,7 @@ class AWSRoute53(AWSBase):
         logger.info("%s.get_or_create_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         hosted_zone = self.get_hosted_zone(domain_name)
-        if hosted_zone:
+        if isinstance(hosted_zone, dict):
             return (hosted_zone, False)
 
         self.client.create_hosted_zone(
@@ -82,15 +86,18 @@ class AWSRoute53(AWSBase):
             HostedZoneConfig={"Comment": "Managed by Smarter manage.py verify_dns_configuration", "PrivateZone": False},
         )
         hosted_zone = self.get_hosted_zone(domain_name)
+        if not isinstance(hosted_zone, dict):
+            raise AWSHostedZoneNotFound(f"Hosted zone not found for domain {domain_name}")
         logger.info("Created hosted zone %s %s", hosted_zone, domain_name)
         return (hosted_zone, True)
 
     def get_hosted_zone_id(self, hosted_zone) -> str:
         """Return the hosted zone id."""
         logger.info("%s.get_hosted_zone_id() hosted_zone: %s", self.formatted_class_name, hosted_zone)
-        if hosted_zone:
+        if isinstance(hosted_zone, dict) and "Id" in hosted_zone:
             return hosted_zone["Id"].split("/")[-1]
-        return None
+        else:
+            raise AWSHostedZoneNotFound(f"Hosted zone not found for {hosted_zone}. Expected a dict with 'Id' key.")
 
     def get_hosted_zone_id_for_domain(self, domain_name) -> str:
         """Return the hosted zone id for the domain."""
@@ -129,7 +136,16 @@ class AWSRoute53(AWSBase):
         ns_records = self.get_ns_records(hosted_zone_id=hosted_zone_id)
         # noting that a hosted zone can have multiple NS records, we need to find
         # the NS records for the domain of the hosted zone itself.
-        return next((item for item in ns_records if item["Name"] in [domain, f"{domain}."]), None)
+        if isinstance(ns_records, list) and len(ns_records) > 0:
+            # return the first NS record that matches the domain name
+            # or the domain name with a trailing dot
+            logger.info(
+                "%s.get_ns_records_for_domain() found %s NS records", self.formatted_class_name, len(ns_records)
+            )
+            return next(item for item in ns_records if item["Name"] in [domain, f"{domain}."])
+        raise AWSHostedZoneNotFound(
+            f"NS records not found for domain {domain}. Make sure the domain is registered and the hosted zone exists."
+        )
 
     def delete_hosted_zone(self, domain_name):
         # Get the hosted zone id
@@ -155,7 +171,7 @@ class AWSRoute53(AWSBase):
         # Delete the hosted zone
         self.client.delete_hosted_zone(Id=hosted_zone_id)
 
-    def get_dns_record(self, hosted_zone_id: str, record_name: str, record_type: str) -> dict:
+    def get_dns_record(self, hosted_zone_id: str, record_name: str, record_type: str) -> Optional[dict]:
         """
         Return the DNS record from the hosted zone.
         example return value:
@@ -236,10 +252,10 @@ class AWSRoute53(AWSBase):
         record_name: str,
         record_type: str,
         record_ttl: int,
-        record_alias_target: dict = None,
+        record_alias_target: Optional[dict] = None,
         record_value=None,  # can be a single text value of a list of dict
     ) -> Tuple[dict, bool]:
-        action: str = None
+        action: Optional[str] = None
         fn_name = self.formatted_class_name + ".get_or_create_dns_record()"
         logger.info(
             "%s hosted_zone_id: %s record_name: %s record_type: %s",
@@ -385,7 +401,7 @@ class AWSRoute53(AWSBase):
             ChangeBatch=change_batch,
         )
 
-    def get_environment_A_record(self, domain: str = None) -> dict:
+    def get_environment_A_record(self, domain: Optional[str] = None) -> Optional[dict]:
         """
         Return the DNS A record for the environment domain.
         example return value:
@@ -433,7 +449,7 @@ class AWSRoute53(AWSBase):
         logger.error("Domain %s does not exist or no DNS answer after multiple attempts", domain_name)
         return False
 
-    def create_domain_a_record(self, hostname: str, api_host_domain: str) -> dict:
+    def create_domain_a_record(self, hostname: str, api_host_domain: str) -> dict:  # type: ignore[no-untyped-def]
         """Creates an A record inside an AWS Route53 hosted zone."""
         fn_name = formatted_text(module_prefix + "create_domain_a_record()")
         logger.info("%s for hostname %s, api_host_domain %s", fn_name, hostname, api_host_domain)
@@ -479,6 +495,10 @@ class AWSRoute53(AWSBase):
                 api_host_domain,
                 hosted_zone_id,
             )
+            if not isinstance(deployment_record, dict):
+                raise AWSHostedZoneNotFound(
+                    f"Deployment record not found for {hostname} in hosted zone {hosted_zone_id}"
+                )
             return deployment_record
 
         except botocore.exceptions.ClientError as e:

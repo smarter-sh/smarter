@@ -1,6 +1,7 @@
 """AWS EKS helper class."""
 
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.exceptions import SmarterConfigurationError
 
 from .aws import AWSBase
 
@@ -13,6 +14,8 @@ class AWSEks(AWSBase):
     @property
     def client(self):
         """Return the AWS DynamoDB client."""
+        if not self.aws_session:
+            raise SmarterConfigurationError("AWS session is not initialized.")
         if not self._client:
             self._client = self.aws_session.client("eks")
         return self._client
