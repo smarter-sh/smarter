@@ -57,7 +57,7 @@ class SmarterValidator:
     SMARTER_ACCOUNT_NUMBER_REGEX = r"\b\d{4}-\d{4}-\d{4}\b"
 
     @staticmethod
-    def validate_camel_case(value: str) -> None:
+    def validate_camel_case(value: str) -> str:
         """Validate camel case format"""
         if not re.match(SmarterValidator.VALID_CAMEL_CASE, value):
             raise SmarterValueError(f"Invalid camel case {value}")
@@ -71,18 +71,19 @@ class SmarterValidator:
             raise SmarterValueError(f"Value must be in camel case format: {value}")
         if not value[1:].isalpha():
             raise SmarterValueError(f"Value must be in camel case format: {value}")
+        return value
 
     @staticmethod
     def is_valid_camel_case(value: str) -> bool:
         """Check if the value is valid camel case"""
         try:
-            SmarterValidator.validate_camel_case(value)
+            SmarterValidator.ºcamel_case(value)
             return True
         except SmarterValueError:
             return False
 
     @staticmethod
-    def validate_snake_case(value: str) -> None:
+    def validate_snake_case(value: str) -> str:
         """Validate snake case format"""
         if not re.match(SmarterValidator.VALID_SNAKE_CASE, value):
             raise SmarterValueError(f"Invalid snake case {value}")
@@ -92,6 +93,7 @@ class SmarterValidator:
             raise SmarterValueError(f"Value must start with a lowercase letter: {value}")
         if not value[0].isalpha():
             raise SmarterValueError(f"Value must start with a letter: {value}")
+        return value
 
     @staticmethod
     def is_valid_snake_case(value: str) -> bool:
@@ -103,7 +105,7 @@ class SmarterValidator:
             return False
 
     @staticmethod
-    def validate_pascal_case(value: str) -> None:
+    def validate_pascal_case(value: str) -> str:
         """Validate pascal case format"""
         if not re.match(SmarterValidator.VALID_PASCAL_CASE, value):
             raise SmarterValueError(f"Invalid pascal case {value}")
@@ -119,6 +121,7 @@ class SmarterValidator:
             raise SmarterValueError(f"Value must be in pascal case format: {value}")
         if not value[1:].isalpha():
             raise SmarterValueError(f"Value must be in pascal case format: {value}")
+        return value
 
     @staticmethod
     def is_valid_pascal_case(value: str) -> bool:
@@ -130,7 +133,7 @@ class SmarterValidator:
             return False
 
     @staticmethod
-    def validate_json(value: str) -> None:
+    def validate_json(value: str) -> str:
         """Validate JSON format"""
         try:
             if not isinstance(value, str):
@@ -140,6 +143,7 @@ class SmarterValidator:
             json.loads(value)
         except (ValueError, TypeError) as e:
             raise SmarterValueError(f"Invalid JSON value {value}") from e
+        return value
 
     @staticmethod
     def is_valid_json(value: str) -> bool:
@@ -151,10 +155,11 @@ class SmarterValidator:
             return False
 
     @staticmethod
-    def validate_semantic_version(version: str) -> None:
+    def validate_semantic_version(version: str) -> str:
         """Validate semantic version format (e.g., 1.12.1)"""
         if not re.match(SmarterValidator.VALID_SEMANTIC_VERSION, version):
             raise SmarterValueError(f"Invalid semantic version {version}")
+        return version
 
     @staticmethod
     def is_valid_semantic_version(version: str) -> bool:
@@ -166,12 +171,13 @@ class SmarterValidator:
             return False
 
     @staticmethod
-    def validate_is_not_none(value: str) -> None:
+    def validate_is_not_none(value: str) -> str:
         """Validate that the value is not None"""
         if value is None:
             raise SmarterValueError("Value cannot be None")
         if not value:
             raise SmarterValueError("Value cannot be empty")
+        return value
 
     @staticmethod
     def is_not_none(value: str) -> bool:
@@ -183,42 +189,47 @@ class SmarterValidator:
             return False
 
     @staticmethod
-    def validate_session_key(session_key: str) -> None:
+    def validate_session_key(session_key: str) -> str:
         """Validate session key format"""
         if not re.match(SmarterValidator.VALID_SESSION_KEY, session_key):
             raise SmarterValueError(f"Invalid session key {session_key}")
+        return session_key
 
     @staticmethod
-    def validate_account_number(account_number: str) -> None:
+    def validate_account_number(account_number: str) -> str:
         """Validate account number format"""
         if not re.match(SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN, account_number):
             raise SmarterValueError(f"Invalid account number {account_number}")
+        return account_number
 
     @staticmethod
-    def validate_domain(domain: Optional[str]) -> None:
+    def validate_domain(domain: Optional[str]) -> Optional[str]:
         """Validate domain format"""
         if isinstance(domain, str) and domain not in SmarterValidator.LOCAL_HOSTS + [None, ""]:
             SmarterValidator.validate_hostname(domain.split(":")[0])
             SmarterValidator.validate_url("http://" + domain)
+        return domain
 
     @staticmethod
-    def validate_email(email: str) -> None:
+    def validate_email(email: str) -> str:
         """Validate email format"""
         try:
             validate_email(email)
         except ValidationError as e:
             raise SmarterValueError(f"Invalid email {email}") from e
+        return email
 
     @staticmethod
-    def validate_ip(ip: str) -> None:
+    def validate_ip(ip: str) -> str:
         """Validate IP address format"""
         try:
             validate_ipv4_address(ip)
         except ValidationError as e:
             raise SmarterValueError(f"Invalid IP address {ip}") from e
+        return ip
 
     @staticmethod
-    def validate_port(port: str) -> None:
+    def validate_port(port: str) -> str:
         """Validate port format"""
         if not re.match(SmarterValidator.VALID_PORT_PATTERN, port):
             raise SmarterValueError(f"Invalid port {port}")
@@ -227,16 +238,17 @@ class SmarterValidator:
         port_num = int(port)
         if not (0 <= port_num <= 65535):
             raise SmarterValueError(f"Port out of range (0-65535): {port}")
+        return port
 
     @staticmethod
-    def validate_url(url: str) -> None:
+    def validate_url(url: str) -> str:
         """Validate URL format"""
         valid_protocols = ["http", "https"]
         if not url:
             raise SmarterValueError(f"Invalid url {url}")
         try:
             if any(local_url in url for local_url in SmarterValidator.LOCAL_URLS):
-                return
+                return url
         except TypeError:
             pass
         try:
@@ -250,17 +262,18 @@ class SmarterValidator:
             if parsed.scheme not in valid_protocols:
                 raise SmarterValueError(f"Invalid url protocol {parsed.scheme}") from e
             if all([parsed.scheme, parsed.netloc]) or url.startswith("localhost"):
-                return
+                return url
             if SmarterValidator.is_valid_ip(url):
-                return
+                return url
             if validators.url(url):
                 parsed = urlparse(url)
                 if parsed.scheme in valid_protocols:
-                    return
+                    return url
             raise SmarterValueError(f"Invalid url {url}") from e
+        return url
 
     @staticmethod
-    def validate_hostname(hostname: str) -> None:
+    def validate_hostname(hostname: str) -> str:
         """Validate hostname format"""
         if ":" in hostname:
             hostname, port = hostname.split(":")
@@ -272,38 +285,42 @@ class SmarterValidator:
             hostname = hostname[:-1]  # strip exactly one dot from the right, if present
         allowed = re.compile(SmarterValidator.VALID_HOSTNAME_PATTERN, re.IGNORECASE)
         if all(allowed.match(x) for x in hostname.split(".")):
-            return
+            return hostname
         raise SmarterValueError(f"Invalid hostname {hostname}")
 
     @staticmethod
-    def validate_uuid(uuid: str) -> None:
+    def validate_uuid(uuid: str) -> str:
         """Validate UUID format"""
         if not re.match(SmarterValidator.VALID_UUID_PATTERN, uuid):
             raise SmarterValueError(f"Invalid UUID {uuid}")
+        return uuid
 
     @staticmethod
-    def validate_clean_string(v: str) -> None:
+    def validate_clean_string(v: str) -> str:
         """Validate clean string format"""
         if not re.match(SmarterValidator.VALID_CLEAN_STRING, v):
             raise SmarterValueError(f"Invalid clean string {v}")
+        return v
 
     @staticmethod
-    def validate_http_request_header_key(key: str) -> None:
+    def validate_http_request_header_key(key: str) -> str:
         """
         Validate HTTP request header key format
         HTTP header name must be ASCII and cannot contain special characters like ()<>@,;:\"/[]?={} \t
         """
         if not key.isascii() or not re.match(r"^[!#$%&'*+\-.^_`|~0-9a-zA-Z]+$", key):
             raise SmarterValueError("Header name contains invalid characters or is not ASCII.")
+        return key
 
     @staticmethod
-    def validate_http_request_header_value(value: str) -> None:
+    def validate_http_request_header_value(value: str) -> str:
         """
         Validate HTTP request header value format
         HTTP header value must not contain control characters like \n or \r
         """
         if not re.match(r"^[\t\x20-\x7E\x80-\xFF]*$", value):
             raise SmarterValueError("Header value contains invalid characters (e.g., control characters).")
+        return value
 
     # --------------------------------------------------------------------------
     # boolean helpers

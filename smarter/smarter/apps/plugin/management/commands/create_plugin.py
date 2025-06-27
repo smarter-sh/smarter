@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
+from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
@@ -67,8 +67,7 @@ class Command(BaseCommand):
         if not loader.ready:
             self.stdout.write(self.style.ERROR("manage.py create_plugin. SAMLoader is not ready."))
             sys.exit(1)
-        manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
-
+        manifest = SAMPluginCommon(**loader.pydantic_model_dump())
         self.stdout.write(f"Creating plugin {manifest.metadata.name} for account {account}...")
         controller = PluginController(account=account, user=user, user_profile=user_profile, manifest=manifest)  # type: ignore
         plugin = controller.obj

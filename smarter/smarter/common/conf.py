@@ -212,7 +212,7 @@ class SettingsDefaults:
 
     SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = os.environ.get(
         "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME",
-        TFVARS.get("smarter_mysql_test_database_secret_name", "smarter-mysql-test-database"),
+        TFVARS.get("smarter_mysql_test_database_secret_name", "smarter_test_db"),
     )
     SMARTER_MYSQL_TEST_DATABASE_PASSWORD = os.environ.get(
         "SMARTER_MYSQL_TEST_DATABASE_PASSWORD",
