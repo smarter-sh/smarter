@@ -6,6 +6,7 @@ from django.contrib import admin
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.dashboard.admin import smarter_restricted_admin_site
 from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import (
@@ -269,3 +270,33 @@ class ApiConnectionAdmin(RestrictedModelAdmin):
             return qs.filter(account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
+
+
+# Plugin Models
+class PluginMetaStatic(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (Static)"
+        verbose_name_plural = "Plugin Meta (Static)"
+
+
+class PluginMetaApi(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (API)"
+        verbose_name_plural = "Plugin Meta (API)"
+
+
+class PluginMetaSql(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (SQL)"
+        verbose_name_plural = "Plugin Meta (SQL)"
+
+
+smarter_restricted_admin_site.register(PluginMetaStatic, PluginStaticAdmin)
+smarter_restricted_admin_site.register(PluginMetaApi, PluginApiAdmin)
+smarter_restricted_admin_site.register(PluginMetaSql, PluginSqlAdmin)
+smarter_restricted_admin_site.register(SqlConnection, SqlConnectionAdmin)
+smarter_restricted_admin_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
+smarter_restricted_admin_site.register(ApiConnection, ApiConnectionAdmin)

@@ -19,7 +19,7 @@ from smarter.apps.account.views.authentication import (
 )
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
-from smarter.apps.dashboard.admin import restricted_site
+from smarter.apps.dashboard.admin import smarter_restricted_admin_site
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
 from smarter.apps.dashboard.views.dashboard import ComingSoon
 from smarter.apps.docs.const import namespace as docs_namespace
@@ -38,7 +38,7 @@ from smarter.apps.provider.const import namespace as provider_namespace
 
 logger = getLogger(__name__)
 
-admin.site = restricted_site
+admin.site = smarter_restricted_admin_site
 
 # Load the admin modules of all installed apps
 # and register their models with the custom admin site

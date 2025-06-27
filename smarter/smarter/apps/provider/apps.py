@@ -8,7 +8,7 @@ class ProviderConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.apps.provider"
-    verbose_name = "Provider"
+    verbose_name = "Smarter Provider"
 
     # pylint: disable=C0415,W0611
     def ready(self):

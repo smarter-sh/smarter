@@ -3,6 +3,7 @@
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.dashboard.admin import smarter_restricted_admin_site
 from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import (
@@ -11,6 +12,7 @@ from .models import (
     ChatBotCustomDomain,
     ChatBotCustomDomainDNS,
     ChatBotFunctions,
+    ChatBotPlugin,
     ChatBotRequests,
 )
 
@@ -171,3 +173,13 @@ class ChatBotFunctionsAdmin(RestrictedModelAdmin):
             return qs.filter(chatbot__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
+
+
+# ChatBot
+smarter_restricted_admin_site.register(ChatBot, ChatBotAdmin)
+smarter_restricted_admin_site.register(ChatBotCustomDomain, ChatBotCustomDomainAdmin)
+smarter_restricted_admin_site.register(ChatBotCustomDomainDNS, ChatBotCustomDomainDNSAdmin)
+smarter_restricted_admin_site.register(ChatBotAPIKey, ChatBotAPIKeyAdmin)
+smarter_restricted_admin_site.register(ChatBotPlugin, ChatBotPluginAdmin)
+smarter_restricted_admin_site.register(ChatBotFunctions, ChatBotFunctionsAdmin)
+smarter_restricted_admin_site.register(ChatBotRequests, ChatBotRequestsAdmin)

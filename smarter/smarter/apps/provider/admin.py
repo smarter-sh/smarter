@@ -5,6 +5,7 @@ from django.contrib import admin
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.dashboard.admin import smarter_restricted_admin_site
 from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import (
@@ -102,3 +103,8 @@ class ProviderModelAdmin(RestrictedModelAdmin):
             return qs.filter(provider_model__provider__account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
+
+
+# Provider Models
+smarter_restricted_admin_site.register(Provider, ProviderAdmin)
+smarter_restricted_admin_site.register(ProviderModel, ProviderModelAdmin)

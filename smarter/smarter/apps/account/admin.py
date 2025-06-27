@@ -2,11 +2,18 @@
 """Account admin."""
 
 from django import forms
-from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+
+# from django.contrib import admin
 from django.core.handlers.wsgi import WSGIRequest
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 
 from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.dashboard.admin import smarter_restricted_admin_site
 from smarter.lib.django.admin import RestrictedModelAdmin
+from smarter.lib.django.user import UserClass as User
+from smarter.lib.django.user import get_resolved_user
 
 from .models import (
     Account,
@@ -19,9 +26,12 @@ from .models import (
 )
 
 
-@admin.register(Account)
+# @admin.register(Account)
 class AccountAdmin(RestrictedModelAdmin):
     """Account model admin."""
+
+    class Meta:
+        model = Account
 
     readonly_fields = (
         "created_at",
@@ -40,9 +50,12 @@ class AccountAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-@admin.register(AccountContact)
+# @admin.register(AccountContact)
 class AccountContactAdmin(RestrictedModelAdmin):
     """AccountContact model admin."""
+
+    class Meta:
+        model = AccountContact
 
     readonly_fields = (
         "created_at",
@@ -61,9 +74,12 @@ class AccountContactAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-@admin.register(Charge)
+# @admin.register(Charge)
 class ChargeAdmin(RestrictedModelAdmin):
     """Charge model admin."""
+
+    class Meta:
+        model = Charge
 
     def get_readonly_fields(self, request, obj=None):
         # pylint: disable=protected-access
@@ -86,9 +102,12 @@ class ChargeAdmin(RestrictedModelAdmin):
         return qs.none()
 
 
-@admin.register(DailyBillingRecord)
+# @admin.register(DailyBillingRecord)
 class DailyBillingRecordAdmin(RestrictedModelAdmin):
     """DailyBillingRecord model admin."""
+
+    class Meta:
+        model = DailyBillingRecord
 
     def get_readonly_fields(self, request: WSGIRequest, obj=None):
         return [field.name for field in self.model._meta.fields]
@@ -110,9 +129,12 @@ class DailyBillingRecordAdmin(RestrictedModelAdmin):
         return qs.none()
 
 
-@admin.register(PaymentMethod)
+# @admin.register(PaymentMethod)
 class PaymentMethodModelAdmin(RestrictedModelAdmin):
     """Payment method model admin."""
+
+    class Meta:
+        model = PaymentMethod
 
     readonly_fields = (
         "created_at",
@@ -174,9 +196,12 @@ class SecretAdminForm(forms.ModelForm):
         return value
 
 
-@admin.register(Secret)
+# @admin.register(Secret)
 class SecretAdmin(RestrictedModelAdmin):
     """Secret model admin."""
+
+    class Meta:
+        model = Secret
 
     form = SecretAdminForm
     readonly_fields = (
@@ -209,3 +234,60 @@ class SecretAdmin(RestrictedModelAdmin):
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
+
+
+class CustomPasswordWidget(forms.Widget):
+    """Custom widget for the password field in the UserChangeForm."""
+
+    def render(self, name, value, attrs=None, renderer=None):
+        return mark_safe('<a href="password/" style="color: blue;">CHANGE PASSWORD</a>')  # nosec
+
+
+class UserChangeForm(forms.ModelForm):
+    """Custom form for the User model that includes a link to change the password."""
+
+    password = forms.CharField(widget=CustomPasswordWidget(), label=_("Password"))
+
+    class Meta:
+        model = User
+        fields = "__all__"
+
+
+class RestrictedUserAdmin(UserAdmin):
+    """Custom User admin that restricts access to users based on their account."""
+
+    form = UserChangeForm
+
+    def has_add_permission(self, request):
+        return False
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        user = get_resolved_user(request.user)
+        if not user:
+            return qs.none()
+        if user and user.is_superuser:
+            return qs
+        try:
+            if user.is_authenticated:
+                user_profile = get_cached_user_profile(user=user)  # type: ignore
+                return qs.filter(account=user_profile.account)  # type: ignore
+        except UserProfile.DoesNotExist:
+            return qs.none()
+
+    def get_readonly_fields(self, request, obj=None):
+        user = get_resolved_user(request.user)
+        if not user:
+            return ["username", "email", "first_name", "last_name", "is_staff", "is_active", "date_joined"]
+        if user.is_superuser:
+            return ("username", "last_login", "date_joined")
+        return super().get_readonly_fields(request, obj)
+
+
+smarter_restricted_admin_site.register(Account, AccountAdmin)
+smarter_restricted_admin_site.register(AccountContact, AccountContactAdmin)
+smarter_restricted_admin_site.register(Charge, ChargeAdmin)
+smarter_restricted_admin_site.register(DailyBillingRecord, DailyBillingRecordAdmin)
+smarter_restricted_admin_site.register(PaymentMethod, PaymentMethodModelAdmin)
+smarter_restricted_admin_site.register(Secret, SecretAdmin)
+smarter_restricted_admin_site.register(UserProfile, RestrictedModelAdmin)
