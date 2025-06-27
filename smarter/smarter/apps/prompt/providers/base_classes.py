@@ -20,8 +20,8 @@ from smarter.apps.account.models import (
     CHARGE_TYPE_PLUGIN,
     CHARGE_TYPE_PROMPT_COMPLETION,
     CHARGE_TYPE_TOOL,
+    User,
 )
-from smarter.apps.account.models import UserClass as User
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase

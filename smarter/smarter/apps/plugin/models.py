@@ -30,9 +30,7 @@ from pydantic import ValidationError
 from rest_framework import serializers
 from taggit.managers import TaggableManager
 
-from smarter.apps.account.models import Account, Secret
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import Account, Secret, User, UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
 
 # smarter stuff

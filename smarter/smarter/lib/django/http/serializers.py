@@ -3,7 +3,7 @@
 from django.http import HttpRequest
 from rest_framework import serializers
 
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):

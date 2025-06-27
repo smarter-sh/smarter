@@ -14,9 +14,7 @@ from smarter.apps.account.manifest.models.user.model import (
     SAMUserMetadata,
     SAMUserSpec,
 )
-from smarter.apps.account.models import AccountContact
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.lib.journal.enum import SmarterJournalCliCommands

@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.test import RequestFactory
 
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import User
 
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin

@@ -36,6 +36,9 @@ class PluginDetailView(DocsBaseView):
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
+        if self.user is None:
+            logger.error("Request user is None. This should not happen.")
+            return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         self.name = kwargs.pop("name", None)
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
         if self.kind is None:
@@ -53,7 +56,7 @@ class PluginDetailView(DocsBaseView):
 
     def get(self, request, *args, **kwargs):
         if not self.plugin:
-            logger.error("Plugin %s not found for user %s.", self.name, self.user.username)
+            logger.error("Plugin %s not found for user %s.", self.name, self.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Plugin not found")
 
         logger.info("Rendering connection detail view for %s of kind %s, kwargs=%s.", self.name, self.kind, kwargs)
@@ -92,6 +95,9 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
     plugins: list[PluginMeta]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
+        if self.user is None:
+            logger.error("Request user is None. This should not happen.")
+            return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         self.plugins = PluginMeta.get_cached_plugins_for_user(self.user)
         context = {
             "plugins": self.plugins,

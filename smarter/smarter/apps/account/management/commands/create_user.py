@@ -6,9 +6,7 @@ from urllib.parse import urljoin
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, AccountContact
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import Account, AccountContact, User, UserProfile
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
 

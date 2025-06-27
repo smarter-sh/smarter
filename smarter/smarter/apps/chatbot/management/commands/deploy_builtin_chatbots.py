@@ -14,9 +14,7 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 from rest_framework.test import force_authenticate
 
-from smarter.apps.account.models import Account
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,

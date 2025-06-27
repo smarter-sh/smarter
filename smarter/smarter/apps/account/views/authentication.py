@@ -6,8 +6,7 @@ from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,

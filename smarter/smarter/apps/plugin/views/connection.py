@@ -6,6 +6,7 @@ in the Smarter Dashboard.
 """
 
 import logging
+from typing import Optional
 
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
@@ -17,6 +18,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import ConnectionBase
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
+from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
@@ -30,10 +32,10 @@ class ConnectionDetailView(DocsBaseView):
     """
 
     template_path = "plugin/manifest_detail.html"
-    name: str = None
-    kind: SAMKinds = None
-    kwargs: dict = None
-    connection: ConnectionBase = None
+    name: Optional[str] = None
+    kind: Optional[SAMKinds] = None
+    kwargs: Optional[dict] = None
+    connection: Optional[ConnectionBase] = None
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
@@ -47,13 +49,22 @@ class ConnectionDetailView(DocsBaseView):
             return SmarterHttpResponseNotFound(
                 request=request, error_message=f"Connection kind {self.kind} is not supported"
             )
+        if not self.name:
+            logger.error("Connection name is required but not provided.")
+            return SmarterHttpResponseNotFound(request=request, error_message="Connection name is required")
+        if not self.user:
+            logger.error("User is not authenticated.")
+            return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         self.connection = ConnectionBase.get_cached_connection_by_name_and_kind(
             user=self.user, kind=self.kind, name=self.name
         )
 
     def get(self, request, *args, **kwargs):
+        if self.user is None:
+            logger.error("Request user is None. This should not happen.")
+            return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         if not self.connection:
-            logger.error("Connection %s of kind %s not found for user %s.", self.name, self.kind, self.user.username)
+            logger.error("Connection %s of kind %s not found for user %s.", self.name, self.kind, self.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Connection not found")
 
         logger.info("Rendering connection detail view for %s of kind %s, kwargs=%s.", self.name, self.kind, kwargs)
@@ -76,6 +87,8 @@ class ConnectionDetailView(DocsBaseView):
             "manifest": yaml_response,
             "page_title": self.name,
         }
+        if not self.template_path:
+            raise SmarterConfigurationError("self.template_path not set.")
         return render(request, self.template_path, context=context)
 
 
@@ -89,6 +102,9 @@ class ConnectionListView(SmarterAuthenticatedNeverCachedWebView):
     connections: list[ConnectionBase]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
+        if self.user is None:
+            logger.error("Request user is None. This should not happen.")
+            return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         self.connections = ConnectionBase.get_cached_connections_for_user(self.user)
         context = {
             "connections": self.connections,

@@ -11,8 +11,7 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.chatbot.models import (
     ChatBot,
     ChatBotAPIKey,

@@ -8,9 +8,7 @@ ensure that:
 """
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,

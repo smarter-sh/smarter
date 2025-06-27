@@ -7,8 +7,7 @@ import abc
 from typing import Any
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import Account, User
 from smarter.lib.manifest.models import AbstractSAMBase
 
 

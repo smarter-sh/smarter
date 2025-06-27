@@ -16,8 +16,7 @@ from django.db.models.query import QuerySet
 from rest_framework import serializers
 
 # smarter stuff
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin

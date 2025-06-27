@@ -8,8 +8,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.http.shortcuts import (

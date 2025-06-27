@@ -3,7 +3,6 @@
 
 import logging
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -11,7 +10,7 @@ from django.dispatch import receiver
 from smarter.common.helpers.console_helpers import formatted_text
 
 from .manifest.transformers.secret import SecretTransformer
-from .models import Account, Charge, DailyBillingRecord, Secret, UserProfile
+from .models import Account, Charge, DailyBillingRecord, Secret, User, UserProfile
 from .signals import (
     secret_accessed,
     secret_created,
@@ -26,7 +25,6 @@ from .utils import (
 )
 
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 
 module_prefix = "smarter.apps.account.receivers"

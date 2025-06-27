@@ -2,9 +2,7 @@
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile, get_resolved_user
+from smarter.apps.account.models import Account, User, UserProfile, get_resolved_user
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.lib.drf.models import SmarterAuthToken
 

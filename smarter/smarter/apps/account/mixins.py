@@ -8,7 +8,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 from rest_framework.request import Request
 
-from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import User
 from smarter.apps.account.serializers import UserMiniSerializer
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin

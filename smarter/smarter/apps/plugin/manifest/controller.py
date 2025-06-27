@@ -6,9 +6,7 @@ import json
 from logging import getLogger
 from typing import Dict, Optional, Type, Union
 
-from smarter.apps.account.models import Account
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
 
 # lib manifest
 from smarter.lib.journal.enum import SmarterJournalThings

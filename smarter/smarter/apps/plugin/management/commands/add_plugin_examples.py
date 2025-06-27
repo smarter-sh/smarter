@@ -5,8 +5,7 @@ from typing import Optional
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import UserClass as User
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.utils import add_example_plugins
 
