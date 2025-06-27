@@ -306,7 +306,7 @@ class ChatBot(TimestampedModel):
     def url_chatapp(self) -> str:
         if not isinstance(self.url, str):
             raise SmarterValueError("ChatBot.url is not a valid string")
-        return urljoin(self.url, "chatapp/")
+        return urljoin(self.url, "chat/")
 
     def ready(self):
         """
