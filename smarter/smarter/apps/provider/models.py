@@ -8,9 +8,10 @@ import urllib.parse
 from typing import Optional, TypedDict
 
 import requests
+from django.conf import settings
 from django.db import models
 
-from smarter.apps.account.models import Account, Secret, User
+from smarter.apps.account.models import Account, Secret
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
@@ -114,7 +115,11 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         Account, on_delete=models.CASCADE, blank=False, null=False, help_text="The account that owns the provider."
     )
     owner = models.ForeignKey(
-        User, on_delete=models.CASCADE, blank=False, null=False, help_text="The users that owns the provider."
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        blank=False,
+        null=False,
+        help_text="The users that owns the provider.",
     )
     name = models.CharField(max_length=255, blank=False, null=False, unique=True, help_text="The name of the provider.")
     description = models.TextField(blank=True, null=True)
@@ -198,7 +203,7 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         blank=True, null=True, help_text="The date and time when the terms of service were accepted."
     )
     tos_accepted_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
