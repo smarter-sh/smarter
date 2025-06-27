@@ -2,9 +2,7 @@
 
 from typing import Optional
 
-from smarter.common.exceptions import SmarterConfigurationError
-
-from .aws import AWSBase
+from .aws import AWSBase, SmarterAWSException
 
 
 class AWSRekognition(AWSBase):
@@ -22,7 +20,7 @@ class AWSRekognition(AWSBase):
     def client(self):
         """Return the AWS Rekognition client."""
         if not self.aws_session:
-            raise SmarterConfigurationError("AWS session is not initialized.")
+            raise SmarterAWSException("AWS session is not initialized.")
         if not self._client:
             self._client = self.aws_session.client("rekognition")
         return self._client
