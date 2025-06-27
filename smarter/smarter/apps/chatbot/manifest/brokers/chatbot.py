@@ -490,7 +490,7 @@ class SAMChatbotBroker(AbstractBroker):
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
-        if not self.manifest:
+        if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         if self.chatbot:
             try:
@@ -501,20 +501,18 @@ class SAMChatbotBroker(AbstractBroker):
                     "%s.describe() failed to describe %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self.name,
                     exc_info=True,
                 )
                 raise SAMChatbotBrokerError(
-                    f"Failed to describe {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
+                    f"Failed to describe {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(
-            f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
-        )
+        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
-        if not self.manifest:
+        if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         if self.chatbot:
             try:
@@ -525,20 +523,18 @@ class SAMChatbotBroker(AbstractBroker):
                     "%s.delete() failed to delete %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self.name,
                     exc_info=True,
                 )
                 raise SAMChatbotBrokerError(
-                    f"Failed to delete {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
+                    f"Failed to delete {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(
-            f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
-        )
+        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        if not self.manifest:
+        if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         if self.chatbot:
             try:
@@ -550,7 +546,7 @@ class SAMChatbotBroker(AbstractBroker):
                     "%s.deploy() failed to deploy %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self.name,
                     exc_info=True,
                 )
                 raise SAMChatbotBrokerError(
@@ -561,7 +557,7 @@ class SAMChatbotBroker(AbstractBroker):
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        if not self.manifest:
+        if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         if self.chatbot:
             try:
@@ -573,7 +569,7 @@ class SAMChatbotBroker(AbstractBroker):
                     "%s.undeploy() failed to undeploy %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self.manifest.metadata.name,
+                    self.name,
                     exc_info=True,
                 )
                 raise SAMChatbotBrokerError(
