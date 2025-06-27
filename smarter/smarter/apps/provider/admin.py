@@ -5,8 +5,10 @@ from django.contrib import admin
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
-from smarter.apps.dashboard.admin import smarter_restricted_admin_site
-from smarter.lib.django.admin import RestrictedModelAdmin
+from smarter.apps.dashboard.admin import (
+    RestrictedModelAdmin,
+    smarter_restricted_admin_site,
+)
 
 from .models import (
     Provider,

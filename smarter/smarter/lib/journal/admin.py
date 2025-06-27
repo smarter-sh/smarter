@@ -1,7 +1,9 @@
 """Account admin."""
 
-from smarter.apps.dashboard.admin import smarter_restricted_admin_site
-from smarter.lib.django.admin import RestrictedModelAdmin
+from smarter.apps.dashboard.admin import (
+    RestrictedModelAdmin,
+    smarter_restricted_admin_site,
+)
 from smarter.lib.journal.models import SAMJournal
 
 

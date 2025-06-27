@@ -2,9 +2,11 @@
 
 from logging import getLogger
 
+from django.apps import apps
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.admin.exceptions import AlreadyRegistered, NotRegistered
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from wagtail import urls as wagtail_urls
@@ -19,7 +21,10 @@ from smarter.apps.account.views.authentication import (
 )
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
-from smarter.apps.dashboard.admin import smarter_restricted_admin_site
+from smarter.apps.dashboard.admin import (
+    SuperUserOnlyModelAdmin,
+    smarter_restricted_admin_site,
+)
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
 from smarter.apps.dashboard.views.dashboard import ComingSoon
 from smarter.apps.docs.const import namespace as docs_namespace
@@ -38,11 +43,28 @@ from smarter.apps.provider.const import namespace as provider_namespace
 
 logger = getLogger(__name__)
 
+# -----------------------------------------------------------------------------
+# Initialize custom admin site for Smarter
+# -----------------------------------------------------------------------------
 admin.site = smarter_restricted_admin_site
-
-# Load the admin modules of all installed apps
-# and register their models with the custom admin site
 admin.autodiscover()
+
+models = apps.get_models()
+for model in models:
+    try:
+        # Register all non-Smarter models with the SuperUserOnlyModelAdmin
+        # to restrict access to superusers only
+        smarter_restricted_admin_site.register(model, SuperUserOnlyModelAdmin)
+    except AlreadyRegistered:
+        pass
+try:
+    # Unregister the Knox AuthToken model since we subclassed this
+    # and created our own admin for it.
+    from knox.models import AuthToken
+
+    smarter_restricted_admin_site.unregister(AuthToken)
+except NotRegistered as e:
+    logger.warning("Could not unregister AuthToken model because it is not registered: %s", e)
 
 name_prefix = "root"
 

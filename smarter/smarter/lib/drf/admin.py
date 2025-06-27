@@ -1,8 +1,11 @@
 """SmarterAuthToken admin."""
 
-from smarter.apps.dashboard.admin import smarter_restricted_admin_site
-from smarter.lib.django.admin import RestrictedModelAdmin
-from smarter.lib.drf.models import SmarterAuthToken
+from smarter.apps.dashboard.admin import (
+    RestrictedModelAdmin,
+    smarter_restricted_admin_site,
+)
+
+from .models import SmarterAuthToken
 
 
 # Register your models here.
