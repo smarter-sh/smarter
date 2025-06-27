@@ -27,6 +27,9 @@ import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
 import re
+from functools import (
+    lru_cache,  # library for caching function results. used for the SingletonSettings class
+)
 from typing import Any, List, Optional, Tuple, Union
 
 # 3rd party stuff
@@ -193,7 +196,7 @@ class SettingsDefaults:
     AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
     # aws api gateway defaults
-    AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = os.environ.get("create_custom_domain", False)
+    AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = bool(os.environ.get("create_custom_domain", False))
     AWS_APIGATEWAY_READ_TIMEOUT: int = int(os.environ.get("aws_apigateway_read_timeout", 70))
     AWS_APIGATEWAY_CONNECT_TIMEOUT: int = int(os.environ.get("aws_apigateway_connect_timeout", 70))
     AWS_APIGATEWAY_MAX_ATTEMPTS: int = int(os.environ.get("aws_apigateway_max_attempts", 10))
@@ -359,7 +362,7 @@ class Settings(BaseSettings):
     aws_region: str = Field(
         SettingsDefaults.AWS_REGION,
     )
-    aws_apigateway_create_custom_domaim: Optional[bool] = Field(
+    aws_apigateway_create_custom_domaim: bool = Field(
         SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN,
     )
     aws_eks_cluster_name: str = Field(
@@ -1098,35 +1101,13 @@ class Settings(BaseSettings):
         return v
 
 
-class SingletonSettings:
-    """
-    Alternative Singleton pattern to resolve metaclass inheritance conflict
-    from Pydantic BaseSettings.
-
-    Traceback (most recent call last):
-    File "/smarter/manage.py", line 8, in <module>
-        from smarter.common.conf import settings as smarter_settings
-    File "/smarter/smarter/common/conf.py", line 262, in <module>
-        class Settings(BaseSettings, metaclass=Singleton):
-    TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
-    """
-
-    _instance = None
-
-    def __new__(cls):
-        """Create a new instance of Settings"""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            try:
-                cls._instance._settings = Settings()
-            except ValidationError as e:
-                raise SmarterConfigurationError("Invalid configuration: " + str(e)) from e
-        return cls._instance
-
-    @property
-    def settings(self) -> Settings:
-        """Return the settings"""
-        return self._settings
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    """Get the singleton settings instance."""
+    try:
+        return Settings()
+    except ValidationError as e:
+        raise SmarterConfigurationError("Invalid configuration: " + str(e)) from e
 
 
-settings = SingletonSettings().settings
+settings = get_settings()
