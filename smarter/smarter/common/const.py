@@ -63,6 +63,8 @@ def load_version() -> Dict[str, str]:
     """Stringify the __version__ module."""
     version_file_path = os.path.join(PROJECT_ROOT, "__version__.py")
     spec = importlib.util.spec_from_file_location("__version__", version_file_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load version file: {version_file_path}")
     version_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(version_module)
     return version_module.__dict__

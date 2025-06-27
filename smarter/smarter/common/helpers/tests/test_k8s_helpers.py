@@ -35,7 +35,7 @@ class Testk8sHelpers(SmarterTestBase):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        self.environment = SmarterEnvironments.LOCAL
+        self.environment = SmarterEnvironments.ALPHA
         self.api_domain = f"{self.environment}.api.{smarter_settings.root_domain}"
         self.cluster_issuer = self.api_domain
         self.account_number = SMARTER_ACCOUNT_NUMBER
