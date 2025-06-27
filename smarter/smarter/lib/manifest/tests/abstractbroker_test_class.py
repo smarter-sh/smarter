@@ -7,13 +7,13 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
+from smarter.apps.account.models import UserClass as User
 from smarter.apps.plugin.manifest.models.common.plugin.model import (
     SAMPluginCommonMetadata,
 )
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.apps.plugin.manifest.models.static_plugin.spec import SAMPluginStaticSpec
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys

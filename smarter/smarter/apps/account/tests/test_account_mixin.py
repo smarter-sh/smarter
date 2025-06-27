@@ -8,14 +8,15 @@ ensure that:
 """
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     get_cached_user_profile,
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 

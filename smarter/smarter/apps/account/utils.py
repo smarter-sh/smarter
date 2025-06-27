@@ -19,13 +19,13 @@ from typing import Optional
 
 from django.contrib.auth.models import AnonymousUser
 
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import get_resolved_user
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
-from smarter.lib.django.user import UserClass as User
-from smarter.lib.django.user import get_resolved_user
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -158,26 +158,22 @@ def _get_cached_user_profile(resolved_user, account):
     return user_profile
 
 
-def get_cached_user_profile(user: User, account: Optional[Account] = None) -> Optional[UserProfile]:
+def get_cached_user_profile(user: User, account: Optional[Account] = None) -> UserProfile:
     """
     Locates the user_profile for a given user, or None.
     """
 
-    try:
-        if not user.is_authenticated:
-            logger.warning("get_cached_user_profile() user is not authenticated")
-            return None
-    except AttributeError:
-        return None
-
     account = account or get_cached_account_for_user(user)
-    if not account:
-        logger.error("get_cached_user_profile() no account found for user %s", user)
-        return None
 
     # pylint: disable=W0212
     resolved_user = get_resolved_user(user)
-    return _get_cached_user_profile(resolved_user, account)
+    retval = _get_cached_user_profile(resolved_user, account)
+    if not retval:
+        raise SmarterConfigurationError(
+            f"Failed to retrieve UserProfile for user {resolved_user} and account {account}. "
+            "Please ensure the user is associated with the account."
+        )
+    return retval
 
 
 def get_cached_user_for_user_id(user_id: int) -> User:

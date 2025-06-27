@@ -13,13 +13,13 @@ from typing import Callable, Dict, List, Optional, Type, Union
 
 from django.core.cache import cache
 
+from smarter.apps.account.models import UserClass as User
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base_classes import OpenAICompatibleChatProvider

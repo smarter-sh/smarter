@@ -5,25 +5,28 @@
 import logging
 import os
 import random
-from typing import Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 # 3rd party stuff
 from cryptography.fernet import Fernet
 
 # django stuff
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser, AnonymousUser
+from django.contrib.auth.models import User as DjangoUser
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.functional import SimpleLazyObject
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import UserClass, get_resolved_user
 from smarter.lib.django.validators import SmarterValidator
 
 from .signals import (
@@ -80,6 +83,38 @@ def welcome_email_context(first_name: str) -> dict:
         "twitter_url": settings.SMARTER_BRANDING_URL_TWITTER,
         "linkedin_url": settings.SMARTER_BRANDING_URL_LINKEDIN,
     }
+
+
+User = get_user_model()
+if not issubclass(User, DjangoUser):
+    raise SmarterConfigurationError("Django User model is not available. Ensure Django is properly configured.")
+UserClass = DjangoUser
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import _AnyUser
+
+
+def get_resolved_user(
+    user: "Union[DjangoUser, AbstractUser, AnonymousUser, SimpleLazyObject, _AnyUser]",
+) -> Optional[Union[DjangoUser, AbstractUser, AnonymousUser]]:
+    """
+    Get the resolved user object from a user instance.
+    Maps the various kinds of Django user subclasses and mutations to the UserClass.
+    Used for resolving type annotations and ensuring type safety.
+    """
+    # pylint: disable=W0212
+    if isinstance(user, SimpleLazyObject):
+        return user._wrapped
+    if isinstance(user, AnonymousUser):
+        return user
+    if isinstance(user, DjangoUser):
+        return user
+    # Allow unittest.mock.MagicMock or Mock for testing
+    if hasattr(user, "__class__") and user.__class__.__name__ in ("MagicMock", "Mock"):
+        return user  # type: ignore[return-value]
+    raise SmarterConfigurationError(
+        f"Unexpected user type: {type(user)}. Expected Django User, AnonymousUser, SimpleLazyObject, or a test mock."
+    )
 
 
 class Account(TimestampedModel):

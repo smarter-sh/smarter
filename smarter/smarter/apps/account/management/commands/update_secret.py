@@ -5,8 +5,8 @@ import getpass
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Secret
+from smarter.apps.account.models import UserClass as User
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.lib.django.user import UserClass as User
 
 
 # pylint: disable=E1101

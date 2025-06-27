@@ -14,7 +14,9 @@ from django.core.management.base import BaseCommand
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
@@ -25,7 +27,6 @@ from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.django.validators import SmarterValidator
 
 

@@ -8,12 +8,12 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 from rest_framework.request import Request
 
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.serializers import UserMiniSerializer
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django import waffle
-from smarter.lib.django.serializers import UserMiniSerializer
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Account, UserProfile

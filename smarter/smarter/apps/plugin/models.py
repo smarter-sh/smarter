@@ -30,7 +30,9 @@ from pydantic import ValidationError
 from rest_framework import serializers
 from taggit.managers import TaggableManager
 
-from smarter.apps.account.models import Account, Secret, UserProfile
+from smarter.apps.account.models import Account, Secret
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
 
 # smarter stuff
@@ -40,7 +42,6 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake
 from smarter.lib.cache import cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.django.validators import SmarterValidator
 
 from .manifest.enum import (
@@ -49,7 +50,7 @@ from .manifest.enum import (
 )
 
 # plugin stuff
-from .manifest.models.common import Parameter, RequestHeader, TestValue, UrlParam
+from .manifest.models.common import RequestHeader, TestValue, UrlParam
 from .manifest.models.sql_connection.enum import DbEngines, DBMSAuthenticationMethods
 from .signals import (
     plugin_api_connection_attempted,

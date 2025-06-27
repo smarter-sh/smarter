@@ -16,7 +16,8 @@ from rest_framework import status
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile, get_resolved_user
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
@@ -25,8 +26,6 @@ from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import UserClass as User
-from smarter.lib.django.user import get_resolved_user
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,

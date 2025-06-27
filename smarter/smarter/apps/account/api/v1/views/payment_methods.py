@@ -12,11 +12,11 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.apps.account.models import Account, PaymentMethod
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile, get_resolved_user
 from smarter.apps.account.serializers import PaymentMethodSerializer
 from smarter.apps.account.utils import get_cached_account_for_user
-from smarter.lib.django.user import UserClass as User
-from smarter.lib.django.user import get_resolved_user
 
 from .base import AccountListViewBase, AccountViewBase
 

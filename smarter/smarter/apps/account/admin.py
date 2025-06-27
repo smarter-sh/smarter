@@ -9,13 +9,13 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import get_resolved_user
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.dashboard.admin import (
     RestrictedModelAdmin,
     smarter_restricted_admin_site,
 )
-from smarter.lib.django.user import UserClass as User
-from smarter.lib.django.user import get_resolved_user
 
 from .models import (
     Account,

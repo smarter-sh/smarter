@@ -6,10 +6,11 @@ from typing import Optional
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.plugin.utils import Plugins
-from smarter.lib.django.user import UserClass as User
 from smarter.lib.manifest.enum import SAMKeys
 
 

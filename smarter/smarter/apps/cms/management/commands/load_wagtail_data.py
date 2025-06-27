@@ -16,10 +16,11 @@ from wagtail.documents.models import Document
 from wagtail.images.models import Image
 from wagtail.models import Page, Revision
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account
+from smarter.apps.account.models import UserClass as User
+from smarter.apps.account.models import UserProfile
 from smarter.apps.cms.const import WAGTAIL_DUMP
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
-from smarter.lib.django.user import UserClass as User
 
 
 # pylint: disable=E1101
