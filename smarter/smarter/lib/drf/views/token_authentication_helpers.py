@@ -39,6 +39,13 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
         Initialize the view with the request and any additional arguments.
         """
         super().initial(request, *args, **kwargs)
+        logger.info(
+            "%s.initial() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            request,
+            args,
+            kwargs,
+        )
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
 
 
@@ -56,6 +63,13 @@ class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
         Initialize the view with the request and any additional arguments.
         """
         super().initial(request, *args, **kwargs)
+        logger.info(
+            "%s.initial() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            request,
+            args,
+            kwargs,
+        )
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
 
 
@@ -76,6 +90,13 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
         Initialize the view with the request and any additional arguments.
         """
         super().initial(request, *args, **kwargs)
+        logger.info(
+            "%s.initial() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            request,
+            args,
+            kwargs,
+        )
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
 
     def is_superuser_or_unauthorized(self):
@@ -99,4 +120,11 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
         Initialize the view with the request and any additional arguments.
         """
         super().initial(request, *args, **kwargs)
+        logger.info(
+            "%s.initial() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            request,
+            args,
+            kwargs,
+        )
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
