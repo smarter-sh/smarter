@@ -115,9 +115,11 @@ class SmarterRequestMixin(AccountMixin):
     #     "_session_key",
     #     "_data",
     #     "_url",
-    #     "_url_urlunparse_without_params",
+    #     "_parse_result",
     #     "_params",
     #     "_cache_key",
+    #     "_instance_id",
+    #     "_url_account_number",
     # )
 
     # pylint: disable=W0613
@@ -125,8 +127,9 @@ class SmarterRequestMixin(AccountMixin):
         self._instance_id = id(self)
         self._smarter_request: HttpRequest = request
         self._timestamp = datetime.now()
-        self._url: ParseResult
-        self._url_urlunparse_without_params: Optional[str] = None
+        self._url: Optional[str] = None
+        self._url_account_number: Optional[str] = None
+        self._parse_result: ParseResult
         self._params: Optional[QueryDict] = None
         self._session_key: Optional[str] = kwargs.pop("session_key") if "session_key" in kwargs else None
         self._data: Optional[dict] = None
@@ -136,15 +139,15 @@ class SmarterRequestMixin(AccountMixin):
             raise SmarterValueError(
                 f"{self.formatted_class_name}.__init__() - request url is None or empty. request={request}"
             )
-        self._url = urlparse(url)
-        if not self._url.scheme or not self._url.netloc:
+        self._parse_result = urlparse(url)
+        if not self._parse_result.scheme or not self._parse_result.netloc:
             raise SmarterValueError(f"{self.formatted_class_name} - request url is not a valid URL. url={url}")
         # rebuild the url minus any query parameters
         # example:
         # a request url like https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
         # will return https://hr.3141-5926-5359.alpha.api.smarter.sh/config/
-        self._url_urlunparse_without_params = urlunsplit((self._url.scheme, self._url.netloc, self._url.path, "", ""))
-        self._url_urlunparse_without_params = SmarterValidator.urlify(self._url_urlunparse_without_params)  # type: ignore[no-any-return]
+        self._url = urlunsplit((self._parse_result.scheme, self._parse_result.netloc, self._parse_result.path, "", ""))
+        self._url = SmarterValidator.urlify(self._url)  # type: ignore[no-any-return]
 
         super().__init__(request, *args, **kwargs)
         # self.invalidate_cached_properties()
@@ -167,9 +170,10 @@ class SmarterRequestMixin(AccountMixin):
                 self._session_key,
             )
 
-        if self._url and self.is_chatbot_named_url:
+        if self._parse_result and self.is_chatbot_named_url:
             account_number = account_number_from_url(self.url)
             if account_number:
+                self._url_account_number = account_number
                 if self.account and self.account.account_number != account_number:
                     raise SmarterValueError(
                         f"account number from url ({account_number}) does not match existing account ({self.account.account_number})."
@@ -243,7 +247,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         if not self._smarter_request:
             return False
-        path = self._url.path if self._url else None
+        path = self._parse_result.path if self._parse_result else None
         if not path:
             return False
 
@@ -281,15 +285,14 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def url(self) -> str:
         """
-        The URL to parse.
-        :return: The URL to parse.
+        The str representation of the ParseResult object stored in _parse_result.
         """
-        if not isinstance(self._url, ParseResult):
+        if not isinstance(self._parse_result, ParseResult):
             raise SmarterValueError(
-                f"The URL has not been initialized as a ParseResult. Received type: {type(self._url)}"
+                f"The URL has not been initialized as a ParseResult. Received type: {type(self._parse_result)}"
             )
-        if self._url_urlunparse_without_params:
-            return self._url_urlunparse_without_params
+        if self._url:
+            return self._url
 
         logger.error(
             "%s.url() property was accessed before it was initialized. request: %s",
@@ -301,11 +304,11 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def parsed_url(self) -> ParseResult:
         """
-        expose our private _url
+        expose our private url
         """
-        if not isinstance(self._url, ParseResult):
+        if not isinstance(self._parse_result, ParseResult):
             raise SmarterValueError("The URL has not been initialized as a ParseResult.")
-        return self._url
+        return self._parse_result
 
     @property
     def url_path_parts(self) -> list:
@@ -415,16 +418,20 @@ class SmarterRequestMixin(AccountMixin):
             return None
 
     @property
-    def smarter_request_chatbot_account_number(self) -> Optional[str]:
+    def url_account_number(self) -> Optional[str]:
         """
         http://example.3141-5926-5359.api.localhost:8000/config
         SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
         """
+        if self._url_account_number:
+            return self._url_account_number
+
         if not self.smarter_request:
             return None
         if not self.qualified_request:
             return None
-        return account_number_from_url(self.url)
+        self._url_account_number = account_number_from_url(self.url)
+        return self._url_account_number
 
     @property
     def smarter_request_chatbot_name(self) -> Optional[str]:
@@ -448,7 +455,7 @@ class SmarterRequestMixin(AccountMixin):
                 return retval
             # pylint: disable=broad-except
             except Exception:
-                logger.warning(
+                logger.error(
                     "%s.smarter_request_chatbot_name() - failed to extract chatbot name from url: %s",
                     self.formatted_class_name,
                     self.url,
@@ -466,7 +473,7 @@ class SmarterRequestMixin(AccountMixin):
                 return retval
             # pylint: disable=broad-except
             except Exception:
-                logger.warning(
+                logger.error(
                     "%s.smarter_request_chatbot_name() - failed to extract chatbot name from url: %s",
                     self.formatted_class_name,
                     self.url,
@@ -645,15 +652,11 @@ class SmarterRequestMixin(AccountMixin):
         - http://localhost:8000/api/v1/chatbots/1556/chat/
         """
 
-        return (
-            self.qualified_request
-            and not self.is_config
-            and (
-                self.is_chatbot_named_url
-                or self.is_chatbot_sandbox_url
-                or self.is_chatbot_smarter_api_url
-                or self.is_chatbot_cli_api_url
-            )
+        return self.qualified_request and (
+            self.is_chatbot_named_url
+            or self.is_chatbot_sandbox_url
+            or self.is_chatbot_smarter_api_url
+            or self.is_chatbot_cli_api_url
         )
 
     @property
@@ -733,23 +736,31 @@ class SmarterRequestMixin(AccountMixin):
         Returns True if the url is of the form
         - https://example.3141-5926-5359.api.smarter.sh/
         - http://example.3141-5926-5359.api.localhost:8000/
+        - http://example.3141-5926-5359.api.localhost:8000/config/
         """
         if not self.smarter_request:
             return False
         if not self.url:
             return False
-        if not self.smarter_request:
-            return False
         if not smarter_settings.environment_api_domain in self.url:
             return False
-        if account_number_from_url(self.url):
+        account_number = self.url_account_number
+        if account_number is not None:
+            logger.info(
+                "%s.is_chatbot_named_url() - url is a named url with account number: %s",
+                self.formatted_class_name,
+                account_number,
+            )
+            if self.account is None:
+                # lazy load the account from the account number
+                self.account = get_cached_account(account_number=account_number)
             return True
 
         # Accept root path or root with trailing slash
-        if isinstance(self._url, ParseResult) and self._url.path not in ("", "/"):
+        if isinstance(self._parse_result, ParseResult) and self._parse_result.path not in ("", "/"):
             return False
 
-        if isinstance(self._url, ParseResult) and netloc_pattern_named_url.match(self._url.netloc):
+        if isinstance(self._parse_result, ParseResult) and netloc_pattern_named_url.match(self._parse_result.netloc):
             return True
 
         return False
@@ -772,16 +783,16 @@ class SmarterRequestMixin(AccountMixin):
 
         """
         if not self.smarter_request:
-            logger.warning("%s.is_chatbot_sandbox_url() - request is None or not set.", self.formatted_class_name)
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.warning("%s.is_chatbot_sandbox_url() - request is None or not set.", self.formatted_class_name)
             return False
         if not self.qualified_request:
-            logger.warning("%s.is_chatbot_sandbox_url() - request is not qualified.", self.formatted_class_name)
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.warning("%s.is_chatbot_sandbox_url() - request is not qualified.", self.formatted_class_name)
             return False
-        if not self._url:
-            logger.warning("%s.is_chatbot_sandbox_url() - url is None or not set.", self.formatted_class_name)
-            return False
-        if not self.parsed_url:
-            logger.warning("%s.is_chatbot_sandbox_url() - parsed_url is None or not set.", self.formatted_class_name)
+        if not self._parse_result:
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.warning("%s.is_chatbot_sandbox_url() - url is None or not set.", self.formatted_class_name)
             return False
 
         # smarter api - http://localhost:8000/api/v1/prompt/1/chat/
@@ -804,34 +815,38 @@ class SmarterRequestMixin(AccountMixin):
         #   ['workbench', '<slug>', 'chat']
         #   ['workbench', '<slug>', 'config']
         if self.parsed_url.netloc != smarter_settings.environment_platform_domain:
-            logger.warning(
-                "%s.is_chatbot_sandbox_url() - parsed_url.netloc (%s) does not match environment_platform_domain (%s).",
-                self.formatted_class_name,
-                self.parsed_url.netloc,
-                smarter_settings.environment_platform_domain,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.warning(
+                    "%s.is_chatbot_sandbox_url() - parsed_url.netloc (%s) does not match environment_platform_domain (%s).",
+                    self.formatted_class_name,
+                    self.parsed_url.netloc,
+                    smarter_settings.environment_platform_domain,
+                )
             return False
         if len(path_parts) != 3:
-            logger.warning(
-                "%s.is_chatbot_sandbox_url() - path_parts length is not 3. path_parts: %s",
-                self.formatted_class_name,
-                path_parts,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.warning(
+                    "%s.is_chatbot_sandbox_url() - path_parts length is not 3. path_parts: %s",
+                    self.formatted_class_name,
+                    path_parts,
+                )
             return False
         if path_parts[0] != "workbench":
-            logger.warning(
-                "%s.is_chatbot_sandbox_url() - path_parts[0] is not 'workbench'. path_parts: %s",
-                self.formatted_class_name,
-                path_parts,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.warning(
+                    "%s.is_chatbot_sandbox_url() - path_parts[0] is not 'workbench'. path_parts: %s",
+                    self.formatted_class_name,
+                    path_parts,
+                )
             return False
         if not path_parts[1].isalpha():
             # expecting <slug> to be alpha: ['workbench', '<slug>', 'config']
-            logger.warning(
-                "%s.is_chatbot_sandbox_url() - path_parts[1] is not alpha. path_parts: %s",
-                self.formatted_class_name,
-                path_parts,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.warning(
+                    "%s.is_chatbot_sandbox_url() - path_parts[1] is not alpha. path_parts: %s",
+                    self.formatted_class_name,
+                    path_parts,
+                )
             return False
         if path_parts[-1] in ["config", "chat"]:
             # expecting:
@@ -839,11 +854,12 @@ class SmarterRequestMixin(AccountMixin):
             #   ['workbench', '<slug>', 'config']
             return True
 
-        logger.warning(
-            "%s.is_chatbot_sandbox_url() - could not verify whether url is a chatbot sandbox url: %s",
-            self.formatted_class_name,
-            path_parts,
-        )
+        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+            logger.warning(
+                "%s.is_chatbot_sandbox_url() - could not verify whether url is a chatbot sandbox url: %s",
+                self.formatted_class_name,
+                path_parts,
+            )
         return False
 
     @property
@@ -973,28 +989,31 @@ class SmarterRequestMixin(AccountMixin):
         """
         # cheap and easy way to fail.
         if not isinstance(self._smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest]):
-            logger.warning(
-                "%s.ready() - %s request is not a HttpRequest. Received %s. Cannot process request.",
-                self.formatted_class_name,
-                self._instance_id,
-                type(self._smarter_request).__name__,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.warning(
+                    "%s.is_requestmixin_ready() - %s request is not a HttpRequest. Received %s. Cannot process request.",
+                    self.formatted_class_name,
+                    self._instance_id,
+                    type(self._smarter_request).__name__,
+                )
             return False
-        if not isinstance(self._url, ParseResult):
-            logger.warning(
-                "%s.ready() - %s _url is not a ParseResult. Received %s. Cannot process request.",
-                self.formatted_class_name,
-                self._instance_id,
-                type(self._url).__name__,
-            )
+        if not isinstance(self._parse_result, ParseResult):
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.warning(
+                    "%s.is_requestmixin_ready() - %s _parse_result is not a ParseResult. Received %s. Cannot process request.",
+                    self.formatted_class_name,
+                    self._instance_id,
+                    type(self._parse_result).__name__,
+                )
             return False
-        if not isinstance(self._url_urlunparse_without_params, str):
-            logger.warning(
-                "%s.ready() - %s _url_urlunparse_without_params is not a string. Received %s. Cannot process request.",
-                self.formatted_class_name,
-                self._instance_id,
-                type(self._url_urlunparse_without_params).__name__,
-            )
+        if not isinstance(self._url, str):
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.warning(
+                    "%s.is_requestmixin_ready() - %s _url is not a string. Received %s. Cannot process request.",
+                    self.formatted_class_name,
+                    self._instance_id,
+                    type(self._url).__name__,
+                )
             return False
         return True
 
