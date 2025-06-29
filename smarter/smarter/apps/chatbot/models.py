@@ -656,7 +656,7 @@ class ChatBotHelper(SmarterRequestMixin):
                     "%s.__init__() %s initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
                     self.formatted_class_name,
                     self._instance_id,
-                    self.url if self._url else "undefined",
+                    self.url if self.url else "undefined",
                     self.name,
                     self.chatbot_id,
                     self.user,
@@ -756,7 +756,7 @@ class ChatBotHelper(SmarterRequestMixin):
         is initialized and has a valid ChatBot instance.
         """
         if not isinstance(self._chatbot, ChatBot):
-            self._err = f"{self.formatted_class_name}.ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
+            self._err = f"{self.formatted_class_name}.is_chatbothelper_ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
             logger.warning(self._err)
             return False
         return True
