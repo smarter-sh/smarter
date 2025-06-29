@@ -41,6 +41,7 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterException, SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -522,6 +523,13 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
             "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE),
         }
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            logger.info(
+                "%s.dispatch() - rendering template %s with context: %s",
+                self.formatted_class_name,
+                self.template_path,
+                formatted_json(context),
+            )
         return render(request=request, template_name=self.template_path, context=context)
 
 

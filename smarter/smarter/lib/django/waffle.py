@@ -12,12 +12,12 @@ from django.core.cache import cache
 from django.db.utils import OperationalError
 
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_text_green
 
 
 logger = logging.getLogger(__name__)
 CACHE_EXPIRATION = 60  # seconds
-prefix = formatted_text("switch_is_active()")
+prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")
 
 
 # Smarter Waffle Switches and Flags
@@ -74,8 +74,16 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
 
 @cache_results(timeout=CACHE_EXPIRATION)
 def switch_is_active(switch_name: str) -> bool:
+    if not isinstance(switch_name, str):
+        logger.error("%s switch_name must be a string, got %s", prefix, type(switch_name).__name__)
+        return False
+    if switch_name not in SmarterWaffleSwitches().all:
+        logger.error("%s switch_name '%s' is not a valid SmarterWaffleSwitches attribute", prefix, switch_name)
+        return False
     try:
         switch = waffle_orig.get_waffle_switch_model().get(switch_name)
+        if switch.is_active():
+            logger.info("%s: %s is active and will be cached for %s seconds.", prefix, switch_name, CACHE_EXPIRATION)
         return switch.is_active()
     except OperationalError as e:
         # Handle the case where the database is not ready
