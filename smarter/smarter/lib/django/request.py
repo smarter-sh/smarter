@@ -156,7 +156,12 @@ class SmarterRequestMixin(AccountMixin):
         super().__init__(request, **kwargs)
 
         if session_key is not None:
-            self.session_key = session_key
+            self._session_key = session_key
+            logger.info(
+                "%s.__init__() - setting session_key=%s from kwargs",
+                self.formatted_class_name,
+                self._session_key,
+            )
 
         if self._url and self.is_chatbot_named_url:
             account_number = account_number_from_url(self.url)
@@ -369,22 +374,14 @@ class SmarterRequestMixin(AccountMixin):
         Getter for the session_key property. The session_key is a unique identifier
         for a chat session. It is used to identify the chat session across multiple requests.
         """
+        if not self._session_key:
+            self._session_key = self.find_session_key() or self.generate_session_key()
+            SmarterValidator.validate_session_key(self._session_key)
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.info(
+                    "%s.session_key() - setting session_key to %s", self.formatted_class_name, self._session_key
+                )
         return self._session_key
-
-    @session_key.setter
-    def session_key(self, value: str):
-        """
-        Setter for the session_key property.
-        This is used to set the session_key from the request object.
-        """
-        if not value:
-            raise SmarterValueError("Session key cannot be None or empty.")
-        SmarterValidator.validate_session_key(value)
-        if not self.smarter_request:
-            raise SmarterValueError("Session key cannot be set without a valid request object.")
-        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-            logger.info("%s.session_key() - setting session_key to %s", self.formatted_class_name, value)
-        self._session_key = value
 
     @cached_property
     def smarter_request_chatbot_id(self) -> Optional[int]:
@@ -996,11 +993,9 @@ class SmarterRequestMixin(AccountMixin):
         """
         Generate a session_key based on a unique string and the current datetime.
         """
-        key_string = self.unique_client_string
-        if key_string:
-            session_key = hash_factory(length=64)
-            self.helper_logger(f"Generated new session key: {session_key}")
-            return session_key
+        session_key = hash_factory(length=64)
+        self.helper_logger(f"Generated new session key: {session_key}")
+        return session_key
 
     def find_session_key(self) -> Optional[str]:
         """

@@ -151,19 +151,15 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         # if the new_session url parameter was passed and is set to True
         # then we will delete the cache_key and the session_key.
         if self.new_session:
-            self.session_key = self.generate_session_key()
             logger.info(
                 "%s.initial() new_session is True, resetting the session_key and deleting cache_key: %s",
                 self.formatted_class_name,
                 self.cache_key,
             )
+            self._session_key = self.generate_session_key()
             cache.delete(self.cache_key)
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.info("%s.initial() deleted cache_key: %s", self.formatted_class_name, self.cache_key)
-        else:
-            # look for the session_key in the request body. If we don't find it then we will
-            # generate a new session_key and cache it.
-            self.session_key = self.find_session_key() or self.generate_session_key()
 
         # 1.) attempt to retrieve a session_key from the cache. if we get a hit
         # then we will update the request body with the session_key
@@ -176,7 +172,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
                 self.session_key,
                 session_key,
             )
-            self.session_key = session_key
+            self._session_key = session_key
 
         # 3.) at this point we either have a session_key from the cache, or from the request body
         #     or from SmarterRequestMixin(). Otherwise, this will raise a SmarterValueError.
@@ -395,7 +391,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             self._chat_config = chat_config.get(SCLIResponseGet.DATA.value, {})
             session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
             if session_key is not None:
-                self.session_key = session_key
+                self._session_key = session_key
                 logger.info(
                     "%s.handler() initialized session_key from chat_config: %s",
                     self.formatted_class_name,
