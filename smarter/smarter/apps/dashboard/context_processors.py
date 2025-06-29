@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 from django.conf import settings
-from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import User, get_resolved_user
@@ -63,7 +63,7 @@ def get_custom_domains(user: User) -> int:
     return ChatBotCustomDomain.objects.filter(chatbot__account=account).count() or 0
 
 
-def base(request: WSGIRequest) -> dict:
+def base(request: HttpRequest) -> dict:
     """
     Base context processor for all templates that inherit
     from base.html, which renders the dashboard layout
@@ -98,20 +98,20 @@ def base(request: WSGIRequest) -> dict:
                 "smarter_version": "v" + __version__,
                 "current_year": current_year,
                 "product_description": "Smarter is an enterprise class plugin-based chat solution.",
-                "my_resources_pending_deployments": get_pending_deployments(user=resolved_user) if resolved_user else 0,
-                "my_resources_chatbots": get_chatbots(user=resolved_user) if resolved_user else 0,
-                "my_resources_plugins": get_plugins(user=resolved_user) if resolved_user else 0,
-                "my_resources_api_keys": get_api_keys(user=resolved_user) if resolved_user else 0,
-                "my_resources_custom_domains": get_custom_domains(user=resolved_user) if resolved_user else 0,
+                "my_resources_pending_deployments": get_pending_deployments(user=resolved_user) if resolved_user else 0,  # type: ignore[assignment]
+                "my_resources_chatbots": get_chatbots(user=resolved_user) if resolved_user else 0,  # type: ignore[assignment]
+                "my_resources_plugins": get_plugins(user=resolved_user) if resolved_user else 0,  # type: ignore[assignment]
+                "my_resources_api_keys": get_api_keys(user=resolved_user) if resolved_user else 0,  # type: ignore[assignment]
+                "my_resources_custom_domains": get_custom_domains(user=resolved_user) if resolved_user else 0,  # type: ignore[assignment]
             }
         }
         return cached_context
 
-    context = get_cached_context(user=resolved_user)
+    context = get_cached_context(user=resolved_user)  # type: ignore[assignment]
     return context
 
 
-def branding(request: WSGIRequest) -> dict:
+def branding(request: HttpRequest) -> dict:
     """
     Branding context processor for all templates that inherit
     from base.html, which renders the dashboard layout

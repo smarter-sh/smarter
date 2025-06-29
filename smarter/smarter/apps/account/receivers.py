@@ -18,10 +18,7 @@ from .signals import (
     secret_inializing,
     secret_ready,
 )
-from .utils import (
-    get_cached_default_account,
-    get_cached_user_profile,
-)
+from .utils import get_cached_default_account, get_cached_user_profile
 
 
 logger = logging.getLogger(__name__)
