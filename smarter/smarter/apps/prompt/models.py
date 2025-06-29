@@ -159,8 +159,6 @@ class ChatHelper(SmarterRequestMixin):
         if not request:
             raise SmarterValueError(f"{self.formatted_class_name} request object is required.")
         super().__init__(request, session_key=session_key, **kwargs)
-        if not self.session_key:
-            self.session_key = self.generate_session_key()  # type: ignore[assignment]
         self._chat = None
         self._chatbot = chatbot
 
@@ -179,6 +177,13 @@ class ChatHelper(SmarterRequestMixin):
             )
 
         if session_key:
+            self._session_key = session_key
+            logger.info(
+                "%s.__init__() - setting session_key to %s from session_key parameter",
+                self.formatted_class_name,
+                self._session_key,
+            )
+        if self.session_key:
             logger.info("%s.__init__() received session_key: %s", self.formatted_class_name, session_key)
             self._chat = self.get_cached_chat()
 
