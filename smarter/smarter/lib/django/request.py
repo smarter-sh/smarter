@@ -528,7 +528,7 @@ class SmarterRequestMixin(AccountMixin):
         return self._data
 
     @cached_property
-    def unique_client_string(self) -> Optional[str]:
+    def unique_client_string(self) -> str:
         """
         Generate a unique string based on:
          - account number
@@ -539,7 +539,7 @@ class SmarterRequestMixin(AccountMixin):
         Used for generating session_key and client_key.
         """
         if not self.smarter_request:
-            return None
+            return "unique_client_string"
         account_number = self.account.account_number if self.account else "####-####-####"
         url = self.url if self.url else "http://localhost:8000/"
         timestamp = self.timestamp.isoformat()
@@ -992,7 +992,7 @@ class SmarterRequestMixin(AccountMixin):
         if self.smarter_request and self.smarter_request.COOKIES:
             return self.smarter_request.COOKIES.get(cookie_name)
 
-    def generate_session_key(self) -> Optional[str]:
+    def generate_session_key(self) -> str:
         """
         Generate a session_key based on a unique string and the current datetime.
         """
