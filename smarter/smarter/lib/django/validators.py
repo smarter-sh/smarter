@@ -246,6 +246,8 @@ class SmarterValidator:
         valid_protocols = ["http", "https"]
         if not url:
             raise SmarterValueError(f"Invalid url {url}")
+        if not isinstance(url, str):
+            raise SmarterValueError(f"Invalid url {url}. Should be a string")
         try:
             if any(local_url in url for local_url in SmarterValidator.LOCAL_URLS):
                 return url

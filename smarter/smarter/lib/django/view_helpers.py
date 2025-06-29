@@ -76,6 +76,11 @@ class SmarterView(View, SmarterRequestMixin):
         return minified_html
 
     def setup(self, request: HttpRequest, *args, **kwargs):
+        """
+        Setup the view with the request and any additional arguments.
+        This method initializes the SmarterRequestMixin with the request.
+        """
+        logger.info("%s.setup() - request: %s, args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs)
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         return super().setup(request, *args, **kwargs)
 

@@ -290,10 +290,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             request.user.is_authenticated,
         )
-        super().setup(request, *args, **kwargs)
         # experiment: we want to ensure that the request object is
         # initialized before we call the SmarterRequestMixin.
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        super().setup(request, *args, **kwargs)
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.

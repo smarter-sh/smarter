@@ -502,7 +502,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 SmarterWaffleSwitches.CHATBOT_LOGGING
             ):
                 logger.info(
-                    "%s - url=%s, account=%s, user=%s, name=%s",
+                    "%s.dispatch() - url=%s, account=%s, user=%s, name=%s",
                     self.formatted_class_name,
                     self.url,
                     self.account,
@@ -530,6 +530,16 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             return SmarterHttpResponseNotFound(request=request, error_message="ChatBot not found")
         # pylint: disable=broad-except
         except Exception as e:
+            logger.error(
+                "%s.dispatch() - Exception occurred while getting chatbot: %s. "
+                "Request URL: %s, Session Key: %s, Name: %s\nStack trace: %s",
+                self.formatted_class_name,
+                str(e),
+                request.build_absolute_uri(),
+                self.session_key,
+                name,
+                traceback.format_exc(),
+            )
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
         if not self.chatbot:

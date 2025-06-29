@@ -27,7 +27,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
-from smarter.common.exceptions import SmarterValueError
+from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.common.utils import smarter_build_absolute_uri
@@ -595,11 +595,7 @@ class ChatBotHelper(SmarterRequestMixin):
         return f"{parent_class}.ChatBotHelper()"
 
     def __init__(self, request: HttpRequest, *args, **kwargs):
-        """
-        Constructor for ChatBotHelper.
-        :param url: The URL to parse.
-        :param environment: The environment to use for the URL. (for unit testing only)
-        """
+        self._instance_id = id(self)
         self._chatbot: Optional[ChatBot] = None
         self._chatbot_custom_domain: Optional[ChatBotCustomDomain] = None
         self._chatbot_requests: Optional[ChatBotRequests] = None
@@ -607,50 +603,70 @@ class ChatBotHelper(SmarterRequestMixin):
         self._name: Optional[str] = None
         self._err: Optional[str] = None
 
-        super().__init__(request, **kwargs)
-        if not self.qualified_request:
-            self._err = f"ChatBotHelper.__init__() not a qualified url. Quitting. {self.url}"
+        super().__init__(request, *args, **kwargs)
+        if not self.is_chatbot:
+            self._err = f"ChatBotHelper.__init__() not a chatbot. Quitting. {self.url}"
             logger.warning(self._err)
             return None
 
+        self._chatbot_id: Optional[int] = kwargs.get("chatbot_id") or self.smarter_request_chatbot_id
+        self._name: Optional[str] = kwargs.get("name") or self.smarter_request_chatbot_name
+
+        logger.info(
+            "ChatBotHelper.__init__() %s is a chatbot. url=%s, name=%s, account=%s",
+            self._instance_id,
+            self.url,
+            self.name,
+            self.account,
+        )
+
         if not self.user or not self.user.is_authenticated:
-            logger.warning("ChatBotHelper.__init__() called with unauthenticated request")
-
-        name = kwargs.get("name")
-        chatbot_id = kwargs.get("chatbot_id")
-
-        self._chatbot_id = self._chatbot_id or chatbot_id or self.smarter_request_chatbot_id
-        self._name = self._name or name or self.smarter_request_chatbot_name
-
-        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-            logger.info(
-                "%s.__init__() initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
-                self.formatted_class_name,
-                self.url if self._url else "undefined",
-                self.name,
-                self.chatbot_id,
-                self.user,
-                self.account,
-                self.session_key,
+            logger.warning("ChatBotHelper.__init__() %s called with unauthenticated request", self._instance_id)
+        if not self.account:
+            logger.warning("ChatBotHelper.__init__() %s called with no account", self._instance_id)
+        if not isinstance(self.name, str):
+            logger.warning(
+                "ChatBotHelper.__init__() %s did not find a name for the chatbot.",
+                self._instance_id,
             )
-
-        if self.ready:
-            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot}")
-            return None
 
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
             self.helper_logger(
-                f"__init__() url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
+                f"__init__() {self._instance_id} url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
+            )
+        if not isinstance(self.chatbot, ChatBot):
+            if self.account and self._name:
+                self._chatbot = self._chatbot or get_cached_chatbot(account=self.account, name=self._name)
+        if not isinstance(self._chatbot, ChatBot):
+            logger.warning(
+                "ChatBotHelper.__init__() %s did not find a ChatBot for url=%s, name=%s, chatbot_id=%s, account=%s",
+                self._instance_id,
+                self.url,
+                self.name,
+                self.chatbot_id,
+                self.account,
             )
 
-        if self.account and self._name:
-            self._chatbot = self._chatbot or get_cached_chatbot(account=self.account, name=self._name)
-        if self.ready:
-            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from account and name")
+        if self.is_chatbothelper_ready:
+            self.helper_logger(
+                f"__init__() {self._instance_id} initialized self.chatbot={self.chatbot} from account and name"
+            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
+                logger.info(
+                    "%s.__init__() %s initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
+                    self.formatted_class_name,
+                    self._instance_id,
+                    self.url if self._url else "undefined",
+                    self.name,
+                    self.chatbot_id,
+                    self.user,
+                    self.account,
+                    self.session_key,
+                )
             return None
 
-        self.helper_warning(
-            f"__init__() ChatBotHelper did not find a chatbot for url={ self._url } name={ self._name } chatbot_id={ self._chatbot_id } user={ self._user } account={ self.account }."
+        raise SmarterConfigurationError(
+            f"ChatBotHelper.__init__() {self._instance_id} failed to initialize ChatBot from url={self.url}, name={self.name}, chatbot_id={self.chatbot_id}. This is a bug in the code, please report it.",
         )
 
     def __str__(self):
@@ -727,43 +743,31 @@ class ChatBotHelper(SmarterRequestMixin):
         - self.path slug when is_chatbot_sandbox_url
         """
         if self._chatbot:
-            self._name = self.chatbot.name if self.chatbot else None
+            self._name = self._chatbot.name
 
         if self._name:
             return self._name
 
-        self._name = super().smarter_request_chatbot_name
-
-        if (
-            not self._name
-            and self.is_chatbot_named_url
-            and isinstance(self.parsed_url, ParseResult)
-            and self.parsed_url.hostname is not None
-        ):
-            # covers a case like http://example.api.localhost:8000/
-            self._name = self.parsed_url.hostname.split(".")[0]
-
-        if (
-            not self._name
-            and self.is_chatbot_sandbox_url
-            and isinstance(self.parsed_url, ParseResult)
-            and self.parsed_url.hostname is not None
-        ):
-            # covers a case like http://localhost:8000/workbench/example/
-            path_parts = self.parsed_url.path.split("/")
-            if len(path_parts) > 2:
-                self._name = path_parts[2]
-
-        return self._name
+    @property
+    def is_chatbothelper_ready(self) -> bool:
+        """
+        Returns True if the ChatBotHelper is ready to be used.
+        This is a convenience property that checks if the ChatBotHelper
+        is initialized and has a valid ChatBot instance.
+        """
+        if not isinstance(self._chatbot, ChatBot):
+            self._err = f"{self.formatted_class_name}.ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
+            logger.warning(self._err)
+            return False
+        return True
 
     @property
     def ready(self) -> bool:
-        retval = bool(super().ready) and bool(self._chatbot)
+        retval = bool(super().ready)
         if not retval:
-            self._err = f"ChatBotHelper.ready() returning false because ChatBot is not initialized. url={self._url}"
-            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-                self.helper_logger(self._err)
-        return retval
+            self._err = f"{self.formatted_class_name}.ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
+            logger.warning(self._err)
+        return retval and self.is_chatbothelper_ready
 
     def to_json(self) -> dict[str, Any]:
         """

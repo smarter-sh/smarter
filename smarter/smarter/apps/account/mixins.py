@@ -156,7 +156,7 @@ class AccountMixin(SmarterHelperMixin):
                             url,
                         )
 
-        if self.ready:
+        if self.is_accountmixin_ready:
             if waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING):
                 logger.info(
                     "%s.__init__(): is fully initialized with user: %s",
@@ -330,11 +330,38 @@ class AccountMixin(SmarterHelperMixin):
         self._account = self._user_profile.account
 
     @property
+    def is_accountmixin_ready(self) -> bool:
+        """
+        Returns True if the AccountMixin is ready to be used.
+        This is a convenience property that checks if the account and user
+        are initialized.
+        """
+        if not isinstance(self.account, Account):
+            logger.warning(
+                "%s: ready() returning false because account is not initialized.",
+                self.formatted_class_name,
+            )
+            return False
+        if not isinstance(self.user, User):
+            logger.warning(
+                "%s: ready() returning false because user is not initialized.",
+                self.formatted_class_name,
+            )
+            return False
+        return True
+
+    @property
     def ready(self) -> bool:
         """
-        Returns True if the account, user, and user_profile are all set.
+        Returns True if the account and user are set.
         """
-        return True
+        retval = super().ready
+        if not retval:
+            logger.warning(
+                "%s: ready() returning false because super().ready returned false. This might cause problems with other initializations.",
+                self.formatted_class_name,
+            )
+        return retval and self.is_accountmixin_ready
 
     @property
     def is_authenticated(self) -> bool:

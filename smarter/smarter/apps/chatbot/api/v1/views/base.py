@@ -174,13 +174,22 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s: %s", self.formatted_class_name, message)
 
+    def setup(self, request: WSGIRequest, *args, **kwargs):
+        """
+        Setup method for the ChatBot API base viewset.
+        This method initializes the SmarterRequestMixin with the request,
+        and sets up the ChatBotHelper and ChatHelper instances.
+        """
+        logger.info("%s.setup() - request: %s, args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs)
+        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        return super().setup(request, *args, **kwargs)
+
     def dispatch(self, request: WSGIRequest, *args, name: Optional[str] = None, **kwargs):
         """
         Setup method for the ChatBot API base viewset.
         This method initializes the ChatBotHelper and ChatHelper instances,
         sets up the request, and logs relevant information.
         """
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         self._chatbot_id = kwargs.get("chatbot_id")
         if self._chatbot_id:
             kwargs.pop("chatbot_id")
