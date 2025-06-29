@@ -121,7 +121,7 @@ class SmarterRequestMixin(AccountMixin):
     # pylint: disable=W0613
     def __init__(self, request: HttpRequest, *args, **kwargs):
 
-        session_key: str = kwargs.pop("session_key", None)
+        session_key = kwargs.pop("session_key") if "session_key" in kwargs else None
         if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             logger.info(
                 "SmarterRequestMixin().__init__() - initializing with request=%s, session_key=%s", request, session_key
@@ -156,7 +156,7 @@ class SmarterRequestMixin(AccountMixin):
         super().__init__(request, **kwargs)
 
         if session_key is not None:
-            self._session_key = session_key
+            self._session_key = str(session_key)
             logger.info(
                 "%s.__init__() - setting session_key=%s from kwargs",
                 self.formatted_class_name,

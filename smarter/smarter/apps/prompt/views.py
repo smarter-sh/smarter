@@ -243,9 +243,9 @@ class ChatConfigView(SmarterNeverCachedWebView):
             )
 
         self.chatbot_name = kwargs.get("name")
-        session_key = str(kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME))
+        session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
         if session_key is not None:
-            self._session_key = session_key
+            self._session_key = str(session_key)
             logger.info(
                 "%s.dispatch() - setting session_key=%s from kwargs, chatbot_name=%s from kwargs",
                 self.formatted_class_name,
@@ -488,7 +488,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
         if self.user_profile is None:
             raise SmarterValueError("User profile is not set. Cannot proceed with ChatAppWorkbenchView dispatch.")
-        if session_key:
+        if session_key is not None:
             self._session_key = session_key
             logger.info(
                 "%s.dispatch() - setting session_key=%s from kwargs, name=%s from kwargs",
