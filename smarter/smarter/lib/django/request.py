@@ -143,23 +143,25 @@ class SmarterRequestMixin(AccountMixin):
         self._session_key: Optional[str] = kwargs.pop("session_key") if "session_key" in kwargs else None
         self._data: Optional[dict] = None
         self._cache_key: Optional[str] = None
+
         url = self.smarter_build_absolute_uri(self.smarter_request)
         if url is None:
             raise SmarterValueError(
                 f"{self.formatted_class_name}.__init__() - request url is None or empty. request={request}"
             )
+
         self._parse_result = urlparse(url)
         if not self._parse_result.scheme or not self._parse_result.netloc:
             raise SmarterValueError(f"{self.formatted_class_name} - request url is not a valid URL. url={url}")
+
         # rebuild the url minus any query parameters
         # example:
         # a request url like https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
         # will return https://hr.3141-5926-5359.alpha.api.smarter.sh/config/
         self._url = urlunsplit((self._parse_result.scheme, self._parse_result.netloc, self._parse_result.path, "", ""))
-        self._url = SmarterValidator.urlify(self._url)  # type: ignore[no-any-return]
+        self._url = SmarterValidator.urlify(self._url)
 
         super().__init__(request, *args, **kwargs)
-        # self.invalidate_cached_properties()
 
         logger.info(
             "%s.__init__() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s",
@@ -213,17 +215,15 @@ class SmarterRequestMixin(AccountMixin):
         """
         cached_properties = [
             "qualified_request",
-            "url",
-            "url_path_parts",
-            "smarter_request_chatbot_id",
+            "cache_key",
             "smarter_request_chatbot_name",
             "unique_client_string",
-            "client_key",
             "ip_address",
             "user_agent",
-            "is_config",
             "is_dashboard",
+            "is_workbench",
             "is_environment_root_domain",
+            "is_chatbot",
             "is_smarter_api",
             "is_chatbot_smarter_api_url",
             "is_chatbot_cli_api_url",
@@ -235,6 +235,9 @@ class SmarterRequestMixin(AccountMixin):
             "subdomain",
             "api_subdomain",
             "domain",
+            "formatted_class_name",
+            "is_requestmixin_ready",
+            "ready",
         ]
         for prop in cached_properties:
             self.__dict__.pop(prop, None)
