@@ -16,11 +16,21 @@ from smarter.lib.django.http.shortcuts import (
 )
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from ..models import ChatBot, get_cached_chatbot_by_request
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
+    ) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
     logger.info("Loading smarter.apps.chatbot.middleware.security.SecurityMiddleware")

@@ -93,7 +93,8 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
 
         # this is a workaround to not being able to inherit from
         # SmarterRequestMixin inside of middleware.
-        logger.info("%s.process_request - initializing SmarterRequestMixin", self.formatted_class_name)
+        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
+            logger.info("%s.process_request - initializing SmarterRequestMixin", self.formatted_class_name)
         self.smarter_request = SmarterRequestMixin(request)
 
         url = self.smarter_request.url if self.smarter_request else "unknown"

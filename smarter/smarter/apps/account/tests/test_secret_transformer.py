@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test Secret Manager."""
 
-import logging
 import os
 
 import yaml
@@ -20,7 +19,6 @@ from .mixins import TestAccountMixin
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-logger = logging.getLogger(__name__)
 
 
 class TestSmarterSecretTransformer(TestAccountMixin):

@@ -11,13 +11,22 @@ from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from ..base import APIV1CLIViewError
 from .chat import CACHE_EXPIRATION, ApiV1CliChatBaseApiView
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):

@@ -94,7 +94,8 @@ class SmarterChatSession(SmarterHelperMixin):
     _session_key: str
 
     def __init__(self, request: HttpRequest, session_key: str, *args, chatbot: Optional[ChatBot] = None, **kwargs):
-        logger.info("SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot)
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            logger.info("SmarterChatSession().__init__() called with session_key=%s, chatbot=%s", session_key, chatbot)
         self.request = request
         if not isinstance(session_key, str):
             raise SmarterValueError(
@@ -228,48 +229,52 @@ class ChatConfigView(SmarterNeverCachedWebView):
 
     def dispatch(self, request: HttpRequest, *args, chatbot_id: Optional[int] = None, **kwargs):
 
-        if self.user_profile is not None:
-            logger.info(
-                "%s.dispatch() - %s user_profile=%s",
-                self.formatted_class_name,
-                request.build_absolute_uri(),
-                self.user_profile,
-            )
-        else:
-            logger.warning(
-                "%s.dispatch() - %s user_profile is None. This may cause issues with the chat config view.",
-                self.formatted_class_name,
-                request.build_absolute_uri(),
-            )
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            if self.user_profile is not None:
+                logger.info(
+                    "%s.dispatch() - %s user_profile=%s",
+                    self.formatted_class_name,
+                    request.build_absolute_uri(),
+                    self.user_profile,
+                )
+            else:
+                logger.warning(
+                    "%s.dispatch() - %s user_profile is None. This may cause issues with the chat config view.",
+                    self.formatted_class_name,
+                    request.build_absolute_uri(),
+                )
 
         self.chatbot_name = kwargs.get("name")
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
         if session_key is not None:
             self._session_key = str(session_key)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+                logger.info(
+                    "%s.dispatch() - setting session_key=%s from kwargs, chatbot_name=%s from kwargs",
+                    self.formatted_class_name,
+                    self.session_key,
+                    self.chatbot_name,
+                )
+
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info(
-                "%s.dispatch() - setting session_key=%s from kwargs, chatbot_name=%s from kwargs",
+                "%s.dispatch() called with request=%s, chatbot_id=%s, session_key=%s chatbot_name=%s user_profile=%s",
                 self.formatted_class_name,
+                request.build_absolute_uri(),
+                chatbot_id,
                 self.session_key,
                 self.chatbot_name,
+                self.user_profile,
             )
-
-        logger.info(
-            "%s.dispatch() called with request=%s, chatbot_id=%s, session_key=%s chatbot_name=%s user_profile=%s",
-            self.formatted_class_name,
-            request.build_absolute_uri(),
-            chatbot_id,
-            self.session_key,
-            self.chatbot_name,
-            self.user_profile,
-        )
 
         try:
             self._chatbot = get_cached_chatbot_by_request(request=request)
             if not self._chatbot:
-                logger.info(
-                    "%s.dispatch() - get_cached_chatbot_by_request() returned None. Attempting to instantiate ChatBotHelper with additional info",
-                    self.formatted_class_name,
-                )
+                if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+                    logger.info(
+                        "%s.dispatch() - get_cached_chatbot_by_request() returned None. Attempting to instantiate ChatBotHelper with additional info",
+                        self.formatted_class_name,
+                    )
                 self.chatbot_helper = ChatBotHelper(
                     request=self.smarter_request,
                     session_key=self.session_key,
@@ -292,13 +297,14 @@ class ChatConfigView(SmarterNeverCachedWebView):
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
         self.session = SmarterChatSession(request, session_key=self.session_key, chatbot=self.chatbot)
-        logger.info(
-            "%s.dispatch() received url=%s session_key=%s, name=%s",
-            self.formatted_class_name,
-            self.url,
-            self.session_key,
-            self.chatbot_name,
-        )
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            logger.info(
+                "%s.dispatch() received url=%s session_key=%s, name=%s",
+                self.formatted_class_name,
+                self.url,
+                self.session_key,
+                self.chatbot_name,
+            )
 
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s - dispatch() url=%s session=%s", self.formatted_class_name, self.url, self.session)
@@ -331,12 +337,13 @@ class ChatConfigView(SmarterNeverCachedWebView):
         self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
 
-        logger.info(
-            "%s.dispatch() completed with chatbot=%s, session_key=%s",
-            self.formatted_class_name,
-            self.chatbot,
-            self.session.session_key if self.session else "(Missing session)",
-        )
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            logger.info(
+                "%s.dispatch() completed with chatbot=%s, session_key=%s",
+                self.formatted_class_name,
+                self.chatbot,
+                self.session.session_key if self.session else "(Missing session)",
+            )
         return super().dispatch(request, *args, **kwargs)
 
     def __str__(self):
@@ -490,25 +497,27 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             raise SmarterValueError("User profile is not set. Cannot proceed with ChatAppWorkbenchView dispatch.")
         if session_key is not None:
             self._session_key = session_key
-            logger.info(
-                "%s.dispatch() - setting session_key=%s from kwargs, name=%s from kwargs",
-                self.formatted_class_name,
-                self.session_key,
-                name,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+                logger.info(
+                    "%s.dispatch() - setting session_key=%s from kwargs, name=%s from kwargs",
+                    self.formatted_class_name,
+                    self.session_key,
+                    name,
+                )
 
         try:
             if waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE) or waffle.switch_is_active(
                 SmarterWaffleSwitches.CHATBOT_LOGGING
             ):
-                logger.info(
-                    "%s.dispatch() - url=%s, account=%s, user=%s, name=%s",
-                    self.formatted_class_name,
-                    self.url,
-                    self.account,
-                    self.user_profile.user,
-                    name,
-                )
+                if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+                    logger.info(
+                        "%s.dispatch() - url=%s, account=%s, user=%s, name=%s",
+                        self.formatted_class_name,
+                        self.url,
+                        self.account,
+                        self.user_profile.user,
+                        name,
+                    )
             self.chatbot = get_cached_chatbot_by_request(request=self.smarter_request)
             if not self.chatbot:
                 self.chatbot_helper = ChatBotHelper(
@@ -521,9 +530,12 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                 )
                 self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
             if self.chatbot:
-                logger.info(
-                    "%s.dispatch() - set chatbot=%s from self.chatbot_helper", self.formatted_class_name, self.chatbot
-                )
+                if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+                    logger.info(
+                        "%s.dispatch() - set chatbot=%s from self.chatbot_helper",
+                        self.formatted_class_name,
+                        self.chatbot,
+                    )
             else:
                 raise ChatBot.DoesNotExist
         except ChatBot.DoesNotExist:

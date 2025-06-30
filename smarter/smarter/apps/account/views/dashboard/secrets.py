@@ -12,14 +12,23 @@ from django.core.handlers.wsgi import WSGIRequest
 # our stuff
 from smarter.apps.account.admin import SecretAdminForm as SecretForm
 from smarter.apps.account.models import Secret
+from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
 )
 from smarter.lib.django.view_helpers import SmarterAdminWebView
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SecretsView(SmarterAdminWebView):

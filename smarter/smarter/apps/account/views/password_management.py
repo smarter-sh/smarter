@@ -8,9 +8,10 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
-from smarter.apps.account.models import User, get_resolved_user
+from smarter.apps.account.models import User
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
@@ -24,9 +25,17 @@ from smarter.lib.django.token_generators import (
     SmarterTokenParseError,
 )
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class PasswordResetRequestView(SmarterNeverCachedWebView):

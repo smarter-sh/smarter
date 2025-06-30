@@ -38,6 +38,7 @@ from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.loader import SAMLoader
 
 from .signals import (
@@ -55,7 +56,14 @@ from .signals import (
 CACHE_PREFIX = "ChatBotHelper_"
 API_VI_CHATBOT_NAMESPACE = "api:v1:chatbot"
 
-logger = logging.getLogger(__name__)
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # -----------------------------------------------------------------------------
@@ -612,13 +620,15 @@ class ChatBotHelper(SmarterRequestMixin):
         self._chatbot_id: Optional[int] = kwargs.get("chatbot_id") or self.smarter_request_chatbot_id
         self._name: Optional[str] = kwargs.get("name") or self.smarter_request_chatbot_name
 
-        logger.info(
-            "ChatBotHelper.__init__() %s is a chatbot. url=%s, name=%s, account=%s",
-            self._instance_id,
-            self.url,
-            self.name,
-            self.account,
-        )
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
+            logger.info(
+                "%s.__init__() %s is a chatbot. url=%s, name=%s, account=%s",
+                self.formatted_class_name,
+                self._instance_id,
+                self.url,
+                self.name,
+                self.account,
+            )
 
         if not self.user or not self.user.is_authenticated:
             logger.warning("ChatBotHelper.__init__() %s called with unauthenticated request", self._instance_id)
@@ -958,7 +968,8 @@ def get_cached_chatbot_by_request(request: HttpRequest) -> Optional[ChatBot]:
         chatbot_helper = ChatBotHelper(request)
         if chatbot_helper.is_valid:
             chatbot = chatbot_helper.chatbot
-            logging.info("get_cached_chatbot_by_request() caching chatbot %s for %s", chatbot, url)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logging.info("%sget_cached_chatbot_by_request() caching chatbot %s for %s", chatbot, url)
             return chatbot
 
     return get_chatbot_by_url(url)

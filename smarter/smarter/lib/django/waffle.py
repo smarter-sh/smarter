@@ -24,9 +24,10 @@ prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")
 class SmarterWaffleSwitches:
     """A class representing the fixed set of Waffle switches for the Smarter API."""
 
-    ACCOUNT_MIXIN_LOGGING = "account_mixin_logging"
+    ACCOUNT_LOGGING = "account_mixin_logging"
+    API_LOGGING = "api_logging"
     CACHE_LOGGING = "cache_logging"
-    CHAT_LOGGING = "chat_logging"
+    PROMPT_LOGGING = "prompt_logging"
     CHATAPP_LOGGING = "chatapp_logging"
     CHATBOT_LOGGING = "chatbot_logging"
     CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
@@ -34,16 +35,22 @@ class SmarterWaffleSwitches:
     JOURNAL = "journal"
     MANIFEST_LOGGING = "manifest_logging"
     MIDDLEWARE_LOGGING = "middleware_logging"
+    PLUGIN_LOGGING = "plugin_logging"
+    PROVIDER_LOGGING = "provider_logging"
     REACTAPP_DEBUG_MODE = "reactapp_debug_mode"
     REQUEST_MIXIN_LOGGING = "request_mixin_logging"
+    RECEIVER_LOGGING = "receiver_logging"
+    TASK_LOGGING = "task_logging"
+    VIEW_LOGGING = "view_logging"
 
     @property
     def all(self):
         """Return all switches."""
         return [
-            self.ACCOUNT_MIXIN_LOGGING,
+            self.ACCOUNT_LOGGING,
+            self.API_LOGGING,
             self.CACHE_LOGGING,
-            self.CHAT_LOGGING,
+            self.PROMPT_LOGGING,
             self.CHATAPP_LOGGING,
             self.CHATBOT_LOGGING,
             self.CHATBOT_HELPER_LOGGING,
@@ -51,8 +58,13 @@ class SmarterWaffleSwitches:
             self.JOURNAL,
             self.MANIFEST_LOGGING,
             self.MIDDLEWARE_LOGGING,
+            self.PLUGIN_LOGGING,
+            self.PROVIDER_LOGGING,
             self.REACTAPP_DEBUG_MODE,
             self.REQUEST_MIXIN_LOGGING,
+            self.RECEIVER_LOGGING,
+            self.TASK_LOGGING,
+            self.VIEW_LOGGING,
         ]
 
 

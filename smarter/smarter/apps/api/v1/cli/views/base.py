@@ -34,8 +34,10 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.aws.exceptions import SmarterAWSError
 from smarter.common.helpers.k8s_helpers import KubernetesHelperException
+from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.drf.view_helpers import SmarterAuthenticatedPermissionClass
 from smarter.lib.journal.enum import (
@@ -43,6 +45,7 @@ from smarter.lib.journal.enum import (
     SmarterJournalEnumException,
 )
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
@@ -55,7 +58,13 @@ from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 BUG_REPORT = (
     "Encountered an unexpected error. "

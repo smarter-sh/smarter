@@ -100,7 +100,7 @@ class ChatProviders(SmarterHelperMixin):
         cached_provider: OpenAIChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING) or waffle.switch_is_active(
+            if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
                 SmarterWaffleSwitches.CACHE_LOGGING
             ):
                 logger.info(
@@ -141,7 +141,7 @@ class ChatProviders(SmarterHelperMixin):
         cached_provider: GoogleAIChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING) or waffle.switch_is_active(
+            if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
                 SmarterWaffleSwitches.CACHE_LOGGING
             ):
                 logger.info(
@@ -175,7 +175,7 @@ class ChatProviders(SmarterHelperMixin):
         cached_provider: MetaAIChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING) or waffle.switch_is_active(
+            if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
                 SmarterWaffleSwitches.CACHE_LOGGING
             ):
                 logger.info(

@@ -8,6 +8,9 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .manifest.transformers.secret import SecretTransformer
 from .models import Account, Charge, DailyBillingRecord, Secret, User, UserProfile
@@ -21,7 +24,18 @@ from .signals import (
 from .utils import get_cached_default_account, get_cached_user_profile
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
+        and level <= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
 
 module_prefix = "smarter.apps.account.receivers"
 

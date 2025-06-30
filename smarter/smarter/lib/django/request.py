@@ -164,11 +164,12 @@ class SmarterRequestMixin(AccountMixin):
 
         if isinstance(self._session_key, str):
             SmarterValidator.validate_session_key(self._session_key)
-            logger.info(
-                "%s.__init__() - session_key is set to %s from kwargs",
-                self.formatted_class_name,
-                self._session_key,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.info(
+                    "%s.__init__() - session_key is set to %s from kwargs",
+                    self.formatted_class_name,
+                    self._session_key,
+                )
 
         if self._parse_result and self.is_chatbot_named_url:
             account_number = account_number_from_url(self.url)
@@ -746,11 +747,12 @@ class SmarterRequestMixin(AccountMixin):
             return False
         account_number = self.url_account_number
         if account_number is not None:
-            logger.info(
-                "%s.is_chatbot_named_url() - url is a named url with account number: %s",
-                self.formatted_class_name,
-                account_number,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+                logger.info(
+                    "%s.is_chatbot_named_url() - url is a named url with account number: %s",
+                    self.formatted_class_name,
+                    account_number,
+                )
             if self.account is None:
                 # lazy load the account from the account number
                 self.account = get_cached_account(account_number=account_number)

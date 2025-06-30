@@ -33,9 +33,16 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -113,18 +120,20 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
 
         self._chatbot_id = self._chatbot_helper.chatbot_id
         if self._chatbot_id:
-            logger.info(
-                "%s: %s initialized ChatBotHelper with id: %s, url: %s",
-                self.formatted_class_name,
-                self._chatbot_helper,
-                self._chatbot_id,
-                self._url,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
+                logger.info(
+                    "%s: %s initialized ChatBotHelper with id: %s, url: %s",
+                    self.formatted_class_name,
+                    self._chatbot_helper,
+                    self._chatbot_id,
+                    self._url,
+                )
         if self._chatbot_helper:
-            logger.info(
-                "%s: %s ChatBotHelper reinitializing user: %s, account: %s",
-            )
-            self._url = urlparse(self._chatbot_helper.url)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
+                logger.info(
+                    "%s: %s ChatBotHelper reinitializing user: %s, account: %s",
+                )
+            self._url = urlparse(self._chatbot_helper.url)  # type: ignore
             self._user = self._chatbot_helper.user
             self._account = self._chatbot_helper.account
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
@@ -180,7 +189,14 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
         This method initializes the SmarterRequestMixin with the request,
         and sets up the ChatBotHelper and ChatHelper instances.
         """
-        logger.info("%s.setup() - request: %s, args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs)
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
+            logger.info(
+                "%s.setup() - request: %s, args: %s, kwargs: %s",
+                self.formatted_class_name,
+                self.smarter_build_absolute_uri(request),
+                args,
+                kwargs,
+            )
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         return super().setup(request, *args, **kwargs)
 

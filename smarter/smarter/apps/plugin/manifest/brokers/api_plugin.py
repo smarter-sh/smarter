@@ -12,8 +12,11 @@ from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.manifest.models.api_plugin.spec import ApiData
 from smarter.apps.plugin.models import PluginDataApi, PluginMeta
 from smarter.apps.plugin.plugin.api import ApiPlugin
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
@@ -32,7 +35,13 @@ from . import PluginSerializer, SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SAMApiPluginBroker(SAMPluginBaseBroker):

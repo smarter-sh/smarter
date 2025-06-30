@@ -4,25 +4,18 @@
 import logging
 from typing import Optional, Type
 
-from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecKeys,
-    SAMSqlPluginSpecDataKeys,
 )
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
-)
-from smarter.apps.plugin.manifest.models.common.plugin.spec import (
-    SAMPluginCommonSpecPrompt,
-    SAMPluginCommonSpecSelector,
 )
 from smarter.apps.plugin.manifest.models.common.plugin.status import (
     SAMPluginCommonStatus,
 )
 from smarter.apps.plugin.manifest.models.sql_plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.sql_plugin.enum import SAMSqlPluginSpecSqlData
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
     SAMSqlPluginSpec,
@@ -31,12 +24,13 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
 from smarter.apps.plugin.models import (
     PluginDataSql,
     PluginMeta,
-    PluginPrompt,
-    PluginSelector,
 )
 from smarter.apps.plugin.plugin.sql import SqlPlugin
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
@@ -53,7 +47,13 @@ from . import PluginSerializer, SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SAMSqlPluginBroker(SAMPluginBaseBroker):

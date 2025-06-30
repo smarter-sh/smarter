@@ -1,7 +1,6 @@
 """Django Signal Receivers for chat app."""
 
 # pylint: disable=W0612,W0613,C0115
-import json
 import logging
 from typing import Union
 
@@ -14,6 +13,7 @@ from smarter.apps.plugin.signals import plugin_deleting
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from .signals import (
@@ -36,8 +36,22 @@ from .tasks import create_chat_history
 from .views import ChatConfigView, SmarterChatSession
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+        and level <= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 prefix = "smarter.apps.prompt.receivers"
+
+
+def get_sender_name(sender):
+    return f"{sender.__self__.__class__.__name__}.{sender.__name__}({id(sender)})"
 
 
 @receiver(plugin_deleting, dispatch_uid=prefix + ".plugin_deleting")
@@ -88,19 +102,14 @@ def handle_chat_config_invoked_(sender, instance: ChatConfigView, request, data:
     logger.info("%s url=%s", formatted_text(f"{prefix}.chat_config_invoked"), url)
 
 
-def get_sender_name(sender):
-    return f"{sender.__self__.__class__.__name__}.{sender.__name__}({id(sender)})"
-
-
 @receiver(chat_started, dispatch_uid="chat_started")
 def handle_chat_started(sender, chat: Chat, data: dict, **kwargs):
     """Handle chat started signal."""
 
     sender_name = get_sender_name(sender)
     logger.info(
-        "signal received from %s %s for chat %s",
-        sender_name,
-        formatted_text("chat_started"),
+        "%s for chat %s",
+        formatted_text(f"{prefix}.chat_started"),
         chat,
     )
 
@@ -110,26 +119,25 @@ def handle_chat_completion_request_sent(sender, chat: Chat, iteration: int, requ
     """Handle chat completion request sent signal."""
 
     sender_name = get_sender_name(sender)
-    prefix = formatted_text(f"chat_completion_request for iteration {iteration}")
+    this_prefix = formatted_text(f"{prefix}.chat_completion_request for iteration {iteration}")
 
     logger.info(
-        "signal received from %s %s for chat: %s ",
-        sender_name,
-        prefix,
+        "%s for chat: %s ",
+        this_prefix,
         chat,
     )
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
         logger.info(
             "%s for chat %s, \nrequest: %s",
-            formatted_text("chat_completion_request"),
+            this_prefix,
             chat,
             formatted_json(request),
         )
     else:
         logger.info(
             "%s for chat: %s",
-            prefix,
+            this_prefix,
             chat,
         )
 
@@ -146,16 +154,14 @@ def handle_chat_completion_response_received(
 ):
     """Handle chat completion called signal."""
 
-    this_prefix = formatted_text(f"chat_completion_response for iteration {iteration}")
+    this_prefix = formatted_text(f"{prefix}.chat_completion_response for iteration {iteration}")
     sender_name = get_sender_name(sender)
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
         logger.info(
-            "%s %s signal received from %s %s for chat %s, \nrequest: %s, \nresponse: %s",
-            prefix,
+            "%s from %s for chat %s, \nrequest: %s, \nresponse: %s",
             this_prefix,
             sender_name,
-            formatted_text("chat_completion_response"),
             chat,
             formatted_json(request),
             formatted_json(response),
@@ -163,7 +169,7 @@ def handle_chat_completion_response_received(
     else:
         logger.info(
             "%s for chat %s",
-            formatted_text("chat_completion_response"),
+            this_prefix,
             chat,
         )
 
@@ -174,9 +180,8 @@ def handle_chat_completion_plugin_called(sender, chat: Chat, plugin: PluginMeta,
     sender_name = get_sender_name(sender)
 
     logger.info(
-        "signal received from %s %s for chat %s, \nplugin: %s, \ninput_text: %s",
-        sender_name,
-        formatted_text("chat_completion_plugin_called"),
+        "%s for chat %s, \nplugin: %s, \ninput_text: %s",
+        formatted_text(f"{prefix}.chat_completion_plugin_called"),
         chat,
         plugin,
         input_text,
@@ -197,14 +202,11 @@ def handle_chat_completion_tool_called(
     """Handle chat completion tool call signal."""
 
     chat_id = chat.id if chat else None  # type: ignore
-    this_prefix = formatted_text("handle_chat_completion_tool_called()")
     sender_name = get_sender_name(sender)
 
     logger.info(
-        "signal received from %s %s %s %s %s for chat: %s",
-        sender_name,
-        prefix,
-        this_prefix,
+        "%s %s %s for chat: %s",
+        formatted_text(f"{prefix}.chat_completion_tool_called"),
         function_name,
         function_args,
         chat_id,
@@ -220,20 +222,18 @@ def handle_chat_response_success(
 
     sender_name = get_sender_name(sender)
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
         logger.info(
-            "signal received from %s %s for chat %s, \nrequest: %s, \nresponse: %s",
-            sender_name,
-            formatted_text("chat_finished"),
+            "%s for chat %s, \nrequest: %s, \nresponse: %s",
+            formatted_text(f"{prefix}.chat_finished"),
             chat,
             formatted_json(request),
             formatted_json(response),
         )
     else:
         logger.info(
-            "signal received from %s %s for chat %s",
-            sender_name,
-            formatted_text("chat_finished"),
+            "%s for chat %s",
+            formatted_text(f"{prefix}.chat_finished"),
             chat,
         )
     create_chat_history.delay(chat.id, request, response, messages)  # type: ignore
@@ -257,8 +257,8 @@ def handle_chat_response_failure(
     sender_name = get_sender_name(sender)
 
     logger.error(
-        "%s signal received from %s during iteration %s for chat: %s, request_meta_data: %s, exception: %s %s",
-        formatted_text("chat_response_failure"),
+        "%s from %s during iteration %s for chat: %s, request_meta_data: %s, exception: %s %s",
+        formatted_text(f"{prefix}.chat_response_failure"),
         sender_name,
         iteration,
         chat if chat else None,
@@ -266,17 +266,18 @@ def handle_chat_response_failure(
         exception,
         stack_trace if stack_trace else "",
     )
-    logger.error("chat_response_failure %s %s", formatted_text("messages dump:"), formatted_json(messages))
     if iteration == 1 and first_iteration:
         logger.error(
-            "%s for chat: %s, first_iteration: %s",
+            "%s %s for chat: %s, first_iteration: %s",
+            formatted_text(f"{prefix}.chat_response_failure"),
             formatted_text("dump"),
             chat if chat else None,
             formatted_json(first_iteration),
         )
     if iteration == 2 and second_iteration:
         logger.error(
-            "%s for chat: %s, second_iteration: %s",
+            "%s %s for chat: %s, second_iteration: %s",
+            formatted_text(f"{prefix}.chat_response_failure"),
             formatted_text("dump"),
             chat if chat else None,
             formatted_json(second_iteration),
@@ -292,7 +293,7 @@ def handle_chat_provider_initialized(sender, **kwargs):
 
     logger.info(
         "%s with name: %s, base_url: %s",
-        formatted_text(f"{sender.__class__.__name__}() initialized"),
+        formatted_text(f"{prefix}.chat_provider_initialized"),
         sender.provider,
         sender.base_url,
     )
@@ -304,7 +305,7 @@ def handle_chat_handler_console_output(sender, message, json_obj, **kwargs):
 
     logger.info(
         "%s: %s\n%s",
-        formatted_text(f"{sender.__class__.__name__}().handler() console output"),
+        formatted_text(f"{prefix}.chat_handler_console_output console output"),
         message,
         formatted_json(json_obj),
     )
@@ -322,9 +323,9 @@ def handle_llm_tool_presented(sender, tool: dict, **kwargs):
     sender_name = sender.__name__
 
     logger.info(
-        "signal received from %s %s: %s",
+        "%s from %s: %s",
+        formatted_text(f"{prefix}.llm_tool_presented"),
         sender_name,
-        formatted_text("llm_tool_presented"),
         formatted_json(tool),
     )
 
@@ -339,9 +340,9 @@ def handle_get_current_weather_request(sender, **kwargs):
     sender_name = sender.__name__
 
     logger.info(
-        "signal received from %s %s for location: %s, unit: %s",
+        "%s from %s for location: %s, unit: %s",
+        formatted_text(f"{prefix}.llm_tool_requested"),
         sender_name,
-        formatted_text("llm_tool_requested"),
         location,
         unit,
     )
@@ -350,35 +351,9 @@ def handle_get_current_weather_request(sender, **kwargs):
 @receiver(llm_tool_responded, dispatch_uid="llm_tool_responded")
 def handle_llm_tool_responded(sender, **kwargs):
     """Handle get_current_weather() response signal."""
-
-    location = kwargs.get("location")
-    unit = kwargs.get("unit")
-    latitude = kwargs.get("latitude")
-    longitude = kwargs.get("longitude")
-    address = kwargs.get("address")
-    params = kwargs.get("params")
-    geocode_result = kwargs.get("geocode_result")
-    hourly_json = kwargs.get("hourly_json")
-    hourly_json = json.loads(hourly_json) if isinstance(hourly_json, str) else hourly_json
-
     sender_name = sender.__name__
 
-    logger.info(
-        "signal received from %s %s for location: %s, unit: %s, latitude: %s, longitude: %s, address: %s",
-        sender_name,
-        formatted_text("llm_tool_responded"),
-        location,
-        unit,
-        latitude,
-        longitude,
-        address,
-    )
-    logger.info(
-        "response: %s, params: %s, geocode_result: %s",
-        formatted_json(hourly_json),  # type: ignore
-        formatted_json(params),  # type: ignore
-        formatted_json(geocode_result),  # type: ignore
-    )
+    logger.info("%s from %s", formatted_text(f"{prefix}.llm_tool_responded"), sender_name)
 
 
 # ------------------------------------------------------------------------------
@@ -388,37 +363,45 @@ def handle_llm_tool_responded(sender, **kwargs):
 def handle_chat_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text("Chat() record created."))
+        logger.info("%s", formatted_text(prefix + ".Chat() record created."))
+    else:
+        logger.info("%s", formatted_text(prefix + ".Chat() record updated."))
 
 
 @receiver(post_save, sender=ChatHistory)
 def handle_chat_history_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text("ChatHistory() record created."))
+        logger.info("%s", formatted_text(prefix + ".ChatHistory() record created."))
+    else:
+        logger.info("%s", formatted_text(prefix + ".ChatHistory() record updated."))
 
 
 @receiver(post_save, sender=ChatToolCall)
 def handle_chat_tool_call_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text("ChatToolCall() record created."))
+        logger.info("%s", formatted_text(prefix + ".ChatToolCall() record created."))
+    else:
+        logger.info("%s", formatted_text(prefix + ".ChatToolCall() record updated."))
 
 
 @receiver(post_save, sender=ChatPluginUsage)
 def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text("ChatPluginUsage() record created."))
+        logger.info("%s", formatted_text(prefix + ".ChatPluginUsage() record created."))
+    else:
+        logger.info("%s", formatted_text(prefix + ".ChatPluginUsage() record updated."))
 
 
 @receiver(pre_delete, sender=ChatToolCall)
 def handle_chat_tool_call_post_delete(sender, instance, **kwargs):
     """Handle ChatToolCall post delete signal."""
-    logger.info("%s %s deleting", formatted_text("ChatToolCall() record"), instance)
+    logger.info("%s %s deleting", formatted_text(prefix + ".ChatToolCall() record"), instance)
 
 
 @receiver(pre_delete, sender=ChatPluginUsage)
 def handle_chat_plugin_usage_post_delete(sender, instance, **kwargs):
     """Handle ChatPluginUsage post delete signal."""
-    logger.info("%s %s deleting", formatted_text("ChatPluginUsage() record"), instance)
+    logger.info("%s %s deleting", formatted_text(prefix + ".ChatPluginUsage() record"), instance)
