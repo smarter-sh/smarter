@@ -6,9 +6,11 @@ from django.apps import apps
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.admin.exceptions import AlreadyRegistered, NotRegistered
+from django.contrib.admin.exceptions import AlreadyRegistered
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
+from waffle import get_waffle_switch_model
+from waffle.admin import SwitchAdmin
 from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail_transfer import urls as wagtailtransfer_urls
@@ -46,25 +48,31 @@ logger = getLogger(__name__)
 # -----------------------------------------------------------------------------
 # Initialize custom admin site for Smarter
 # -----------------------------------------------------------------------------
+Switch = get_waffle_switch_model()
+
+
 admin.site = smarter_restricted_admin_site
 admin.autodiscover()
+smarter_restricted_admin_site.register(Switch, SwitchAdmin)
+
+EXCLUDED_MODELS = [
+    "knox.AuthToken",  # We have our own admin for this
+    "waffle.Switch",
+    "waffle.Sample",
+    "waffle.Flag",
+]
 
 models = apps.get_models()
 for model in models:
+    model_label = f"{model._meta.app_label}.{model._meta.object_name}"
+    if model_label in EXCLUDED_MODELS:
+        continue
+
     try:
-        # Register all non-Smarter models with the SuperUserOnlyModelAdmin
-        # to restrict access to superusers only
         smarter_restricted_admin_site.register(model, SuperUserOnlyModelAdmin)
     except AlreadyRegistered:
         pass
-try:
-    # Unregister the Knox AuthToken model since we subclassed this
-    # and created our own admin for it.
-    from knox.models import AuthToken
 
-    smarter_restricted_admin_site.unregister(AuthToken)
-except NotRegistered as e:
-    logger.warning("Could not unregister AuthToken model because it is not registered: %s", e)
 
 name_prefix = "root"
 
