@@ -232,31 +232,6 @@ class ChatConfigView(SmarterNeverCachedWebView):
 
     def dispatch(self, request: HttpRequest, *args, chatbot_id: Optional[int] = None, **kwargs):
 
-        if self.user_profile is not None:
-            logger.info(
-                "%s.dispatch() - %s user_profile=%s",
-                self.formatted_class_name,
-                request.build_absolute_uri(),
-                self.user_profile,
-            )
-        else:
-            logger.warning(
-                "%s.dispatch() - %s user_profile is None. This may cause issues with the chat config view.",
-                self.formatted_class_name,
-                request.build_absolute_uri(),
-            )
-
-        self.chatbot_name = kwargs.get("name")
-        session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        if session_key is not None:
-            self._session_key = str(session_key)
-            logger.info(
-                "%s.dispatch() - setting session_key=%s from kwargs, chatbot_name=%s from kwargs",
-                self.formatted_class_name,
-                self.session_key,
-                self.chatbot_name,
-            )
-
         logger.info(
             "%s.dispatch() called with request=%s, chatbot_id=%s, session_key=%s chatbot_name=%s user_profile=%s",
             self.formatted_class_name,
@@ -267,44 +242,64 @@ class ChatConfigView(SmarterNeverCachedWebView):
             self.user_profile,
         )
 
-        try:
-            self._chatbot = get_cached_chatbot_by_request(request=request)
-            if not self._chatbot:
+        if self.user_profile is None:
+            logger.warning(
+                "%s.dispatch() - %s user_profile is None. This may cause issues with the chat config view.",
+                self.formatted_class_name,
+                request.build_absolute_uri(),
+            )
+
+        if chatbot_id is not None:
+            try:
+                self._chatbot = ChatBot.objects.get(id=chatbot_id)
+                self.chatbot_name = self._chatbot.name
                 logger.info(
-                    "%s.dispatch() - get_cached_chatbot_by_request() returned None. Attempting to instantiate ChatBotHelper with additional info",
+                    "%s.dispatch() - set chatbot=%s from chatbot_id=%s",
                     self.formatted_class_name,
+                    self._chatbot,
+                    chatbot_id,
                 )
-                self.chatbot_helper = ChatBotHelper(
-                    request=self.smarter_request,
-                    session_key=self.session_key,
-                    chatbot_id=chatbot_id,
-                    name=self.chatbot_name,
-                    account=self.account,
-                    user=self.user,
-                    user_profile=self.user_profile,
+            except ChatBot.DoesNotExist:
+                logger.error(
+                    "%s.dispatch() - ChatBot with id=%s does not exist. Returning 404.",
+                    self.formatted_class_name,
+                    chatbot_id,
                 )
-        except ChatBot.DoesNotExist:
-            return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
+                return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
+        else:
+            self.chatbot_name = kwargs.get("name")
+            try:
+                self._chatbot = get_cached_chatbot_by_request(request=request)
+                if not self._chatbot:
+                    logger.info(
+                        "%s.dispatch() - get_cached_chatbot_by_request() returned None. Attempting to instantiate ChatBotHelper with additional info",
+                        self.formatted_class_name,
+                    )
+                    self.chatbot_helper = ChatBotHelper(
+                        request=self.smarter_request,
+                        session_key=self.session_key,
+                        chatbot_id=chatbot_id,
+                        name=self.chatbot_name,
+                        account=self.account,
+                        user=self.user,
+                        user_profile=self.user_profile,
+                    )
+            except ChatBot.DoesNotExist:
+                return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
 
         # Initialize the chat session for this request. session_key is generated
         # and managed by the /config/ endpoint for the chatbot
         #
-        # example: https://customer-support.3141-5926-5359.api.smarter.sh/workbench/config/?session_key=123456
+        # examples:
+        # - https://customer-support.3141-5926-5359.api.smarter.sh/workbench/config/?session_key=123456
+        # - http://localhost:8000/api/v1/chatbots/1556/chat/config/?session_key=0733c7b3a33e7eb733c95f6d7fc88d671b6c957e6857a04d05b3f5905167116f
         #
         # The React app calls this endpoint at app initialization to get a
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
         self.session = SmarterChatSession(request, session_key=self.session_key, chatbot=self.chatbot)
-        logger.info(
-            "%s.dispatch() received url=%s session_key=%s, name=%s",
-            self.formatted_class_name,
-            self.url,
-            self.session_key,
-            self.chatbot_name,
-        )
 
-        logger.info("%s - dispatch() url=%s session=%s", self.formatted_class_name, self.url, self.session)
         logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
 
         if self.chatbot_helper and self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
