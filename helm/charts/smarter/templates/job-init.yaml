@@ -58,10 +58,11 @@ spec:
               python manage.py deploy_builtin_chatbots --account_number 4386-2072-3294
               python manage.py deploy_builtin_chatbots --account_number 5680-6558-6577
               python manage.py initialize_providers
-              python manage.py apply_manifest 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml'
+              python manage.py create_stackacademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user
+              python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin
               python manage.py update_secret --name smarter_test_db --username admin --value "{{ .Values.env.SMARTER_TEST_DB_PASSWORD }}"
-              python manage.py apply_manifest 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml'
-              python manage.py apply_manifest 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml'
+              python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin
+              python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin
 
           command:
             - /bin/sh
