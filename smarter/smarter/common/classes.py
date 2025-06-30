@@ -85,7 +85,13 @@ class SmarterHelperMixin:
         :param request: The request object.
         :return: The request URL.
         """
-        return utils_smarter_build_absolute_uri(request)
+        retval = utils_smarter_build_absolute_uri(request)
+        if not retval:
+            raise SmarterValueError(
+                "Failed to build absolute URI from request. "
+                "Ensure the request object is valid and has the necessary attributes."
+            )
+        return retval
 
     def data_to_dict(self, data: Union[dict, str]) -> dict:
         """

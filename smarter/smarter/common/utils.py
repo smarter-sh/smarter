@@ -217,6 +217,7 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
             url = request.build_absolute_uri()
             if url:
                 return url
+        # pylint: disable=W0718
         except Exception as e:
             logger.warning(
                 "smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
@@ -236,6 +237,7 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
         url = f"{scheme}://{host}{path}"
         if SmarterValidator.is_valid_url(url):
             return url
+    # pylint: disable=W0718
     except Exception as e:
         logger.warning(
             "smarter_build_absolute_uri() failed to build URL from request attributes: %s",

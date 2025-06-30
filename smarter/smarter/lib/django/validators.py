@@ -525,14 +525,14 @@ class SmarterValidator:
         return url if url.endswith("/") else url + "/"
 
     @staticmethod
-    def urlify(url: str, scheme: Optional[str] = None, environment: str = SmarterEnvironments.LOCAL) -> Optional[str]:
+    def urlify(url: str, scheme: Optional[str] = None, environment: str = SmarterEnvironments.LOCAL) -> str:
         """
         ensure that URL starts with http:// or https://
         and ends with a trailing slash
         """
         logger.debug("urlify %s, %s", url, scheme)
         if not url:
-            return None
+            raise SmarterValueError("URL cannot be empty")
         if scheme:
             warnings.warn("scheme is deprecated and will be removed in a future release.", DeprecationWarning)
         if scheme and scheme not in ["http", "https"]:
