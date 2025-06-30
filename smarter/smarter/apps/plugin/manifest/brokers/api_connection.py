@@ -2,7 +2,7 @@
 """Smarter Api ApiConnection Manifest handler"""
 
 import json
-from logging import getLogger
+import logging
 from typing import Optional, Type
 
 from django.forms.models import model_to_dict
@@ -25,8 +25,11 @@ from smarter.apps.plugin.manifest.models.common.connection.status import (
 from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.serializers import ApiConnectionSerializer
 from smarter.common.utils import camel_to_snake
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
@@ -44,7 +47,13 @@ from . import SAMConnectionBrokerError
 from .connection_base import SAMConnectionBaseBroker
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SAMApiConnectionBroker(SAMConnectionBaseBroker):

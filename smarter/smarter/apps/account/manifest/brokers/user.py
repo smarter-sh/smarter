@@ -1,7 +1,7 @@
 # pylint: disable=W0718
 """Smarter API User Manifest handler"""
 
-from logging import getLogger
+import logging
 from typing import Optional, Type
 
 from django.forms.models import model_to_dict
@@ -17,8 +17,11 @@ from smarter.apps.account.manifest.models.user.model import (
 from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.account.utils import get_cached_user_profile
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
@@ -34,8 +37,19 @@ from smarter.lib.manifest.enum import (
 )
 
 
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+        and level <= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
 MAX_RESULTS = 1000
-logger = getLogger(__name__)
 
 
 class SAMUserBrokerError(SAMBrokerError):

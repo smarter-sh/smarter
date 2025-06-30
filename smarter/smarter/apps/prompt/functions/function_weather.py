@@ -20,7 +20,7 @@ to avoid repeated API calls, and to retry failed API calls.
 """
 
 import json
-from logging import getLogger
+import logging
 from typing import Optional
 
 import googlemaps
@@ -31,11 +31,20 @@ from retry_requests import retry
 
 from smarter.common.conf import settings
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from ..signals import llm_tool_presented, llm_tool_requested, llm_tool_responded
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # Google Maps API key

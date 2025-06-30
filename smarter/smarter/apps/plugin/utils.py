@@ -1,8 +1,8 @@
 """Ultility functions for plugins."""
 
 import io
+import logging
 import os
-from logging import getLogger
 from typing import Optional
 
 import yaml
@@ -13,12 +13,23 @@ from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import PROJECT_ROOT
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .plugin.utils import PluginExamples
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-logger = getLogger(__name__)
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # pylint: disable=W0613,C0415

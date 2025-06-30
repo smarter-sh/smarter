@@ -3,8 +3,8 @@ Test mixins for the plugin module.
 """
 
 import json
+import logging
 import os
-from logging import getLogger
 from typing import Optional
 
 from django.http import HttpRequest
@@ -15,13 +15,24 @@ from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConne
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import ApiConnection, SqlConnection
 from smarter.common.utils import camel_to_snake_dict, get_readonly_yaml_file
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.loader import SAMLoader
 
 from .factories import secret_factory
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-logger = getLogger(__name__)
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class ConnectionTextMixinBase(TestAccountMixin):

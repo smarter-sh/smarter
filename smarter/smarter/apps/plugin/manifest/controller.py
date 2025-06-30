@@ -3,13 +3,16 @@ Helper class to map to/from Pydantic manifest model, Plugin and Django ORM model
 """
 
 import json
-from logging import getLogger
+import logging
 from typing import Dict, Optional, Type, Union
 
 from smarter.apps.account.models import Account, User, UserProfile
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 # lib manifest
 from smarter.lib.journal.enum import SmarterJournalThings
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.controller import AbstractController
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 
@@ -32,7 +35,15 @@ from .models.static_plugin.model import SAMStaticPlugin
 
 
 VALID_MANIFEST_KINDS = [STATIC_MANIFEST_KIND, SQL_MANIFEST_KIND, API_MANIFEST_KIND]
-logger = getLogger(__name__)
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SAMPluginControllerError(SAMExceptionBase):

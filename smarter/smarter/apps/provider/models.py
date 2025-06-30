@@ -19,7 +19,10 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.lib.cache import cache_results
+from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .const import VERIFICATION_LEAD_TIME, VERIFICATION_LIFETIME
 from .manifest.enum import ProviderModelEnum
@@ -36,7 +39,18 @@ from .signals import (
 )
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+        and level <= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
 CACHE_TIMEOUT = int(60 / 2)  # 30 seconds
 
 
