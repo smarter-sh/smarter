@@ -6,9 +6,7 @@ from typing import Optional, Type
 
 from django.http import HttpRequest
 
-from smarter.apps.plugin.manifest.enum import (
-    SAMPluginSpecKeys,
-)
+from smarter.apps.plugin.manifest.enum import SAMPluginSpecKeys
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
@@ -21,10 +19,7 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
     SAMSqlPluginSpec,
     SqlData,
 )
-from smarter.apps.plugin.models import (
-    PluginDataSql,
-    PluginMeta,
-)
+from smarter.apps.plugin.models import PluginDataSql, PluginMeta
 from smarter.apps.plugin.plugin.sql import SqlPlugin
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

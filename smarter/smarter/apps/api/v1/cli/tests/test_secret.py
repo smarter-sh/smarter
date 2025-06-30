@@ -1,10 +1,10 @@
 """Test Api v1 CLI commands for secret"""
 
 import json
+import logging
 import os
 from datetime import datetime
 from http import HTTPStatus
-from logging import getLogger
 from urllib.parse import urlencode
 
 from dateutil.relativedelta import relativedelta
@@ -15,7 +15,10 @@ from smarter.apps.account.models import Secret
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import (
     SAMKeys,
     SAMMetadataKeys,
@@ -27,7 +30,17 @@ from smarter.lib.manifest.loader import SAMLoader
 from .base_class import ApiV1CliTestBase
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+        and level <= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 KIND = SAMKinds.SECRET.value

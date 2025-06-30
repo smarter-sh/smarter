@@ -58,12 +58,21 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .const import OpenAIMessageKeys
 from .mixins import ProviderDbMixin
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 # 1.) EXCEPTION_MAP: A dictionary that maps exceptions to HTTP status codes and error types.
 # Base exception map for chat providers. This maps internally raised exceptions to HTTP status codes.

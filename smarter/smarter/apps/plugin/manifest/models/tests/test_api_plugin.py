@@ -8,7 +8,7 @@ http://localhost:8000/api/v1/tests/authenticated/dict/
 http://localhost:8000/api/v1/tests/authenticated/list/
 """
 
-from logging import getLogger
+import logging
 from typing import Optional
 
 from pydantic_core import ValidationError as PydanticValidationError
@@ -26,13 +26,22 @@ from smarter.apps.plugin.tests.mixins import (
     ApiConnectionTestMixin,
     AuthenticatedRequestMixin,
 )
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # pylint: disable=W0223

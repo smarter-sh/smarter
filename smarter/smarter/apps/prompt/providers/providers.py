@@ -21,6 +21,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base_classes import OpenAICompatibleChatProvider
 from .googleai.classes import GoogleAIChatProvider
@@ -31,7 +32,14 @@ from .openai.classes import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 from .openai.classes import OpenAIChatProvider
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
 CACHE_PREFIX = "smarter.apps.prompt.providers"
 CACHE_TIMEOUT = 10
 

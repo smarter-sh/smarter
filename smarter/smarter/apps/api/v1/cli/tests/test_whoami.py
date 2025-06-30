@@ -1,22 +1,35 @@
 """Test Api v1 CLI non-brokered whoami command"""
 
+import logging
 from http import HTTPStatus
-from logging import getLogger
 
 from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
     SCLIResponseMetadata,
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
 )
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base_class import ApiV1CliTestBase
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+        and level <= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class TestApiCliV1Whoami(ApiV1CliTestBase):

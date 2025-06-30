@@ -1,8 +1,6 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'describe' view"""
 
-from logging import getLogger
-
 from drf_yasg.utils import swagger_auto_schema
 
 from .base import CliBaseApiView
@@ -81,13 +79,5 @@ The response from this endpoint is a JSON object containing a representation of 
         Response: a JSON object containing the resource manifest.
         """
 
-        logger = getLogger(__name__)
-        logger.info(
-            "ApiV1CliDescribeApiView().get() called with request=%s, kind=%s, kwargs=%s, user=%s",
-            request,
-            kind,
-            kwargs,
-            request.user.username if request.user.is_authenticated else "Anonymous",
-        )
         response = self.broker.describe(request, *args, **kwargs)
         return response
