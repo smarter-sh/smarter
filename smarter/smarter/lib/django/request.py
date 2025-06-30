@@ -12,6 +12,7 @@ known url patterns for Smarter chatbots. key features include:
 """
 
 import hashlib
+import inspect
 import json
 import logging
 import re
@@ -213,34 +214,10 @@ class SmarterRequestMixin(AccountMixin):
         Invalidate cached properties to force re-evaluation.
         This is useful for testing or when the request object changes.
         """
-        cached_properties = [
-            "qualified_request",
-            "cache_key",
-            "smarter_request_chatbot_name",
-            "unique_client_string",
-            "ip_address",
-            "user_agent",
-            "is_dashboard",
-            "is_workbench",
-            "is_environment_root_domain",
-            "is_chatbot",
-            "is_smarter_api",
-            "is_chatbot_smarter_api_url",
-            "is_chatbot_cli_api_url",
-            "is_chatbot_named_url",
-            "is_chatbot_sandbox_url",
-            "is_default_domain",
-            "path",
-            "root_domain",
-            "subdomain",
-            "api_subdomain",
-            "domain",
-            "formatted_class_name",
-            "is_requestmixin_ready",
-            "ready",
-        ]
-        for prop in cached_properties:
-            self.__dict__.pop(prop, None)
+        for cls in self.__class__.__mro__:
+            for name, value in inspect.getmembers(cls):
+                if isinstance(value, cached_property):
+                    self.__dict__.pop(name, None)
 
     @property
     def smarter_request(self) -> HttpRequest:
