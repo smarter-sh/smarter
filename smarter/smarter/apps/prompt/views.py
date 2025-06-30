@@ -593,7 +593,7 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
         for chatbot in self.chatbots:
             chatbot_helper = ChatBotHelper(
                 request=self.smarter_request,
-                chatbot_id=chatbot.id,  # type: ignore[union-attr]
+                chatbot=chatbot,
                 user=self.user,
                 account=self.account,
                 user_profile=self.user_profile,
