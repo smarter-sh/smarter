@@ -614,21 +614,22 @@ class ChatBotHelper(SmarterRequestMixin):
 
     def __init__(self, request: HttpRequest, *args, **kwargs):
         self._instance_id = id(self)
-        self._chatbot: Optional[ChatBot] = None
-        self._chatbot_custom_domain: Optional[ChatBotCustomDomain] = None
-        self._chatbot_requests: Optional[ChatBotRequests] = None
-        self._chatbot_id: Optional[int] = None
-        self._name: Optional[str] = None
-        self._err: Optional[str] = None
+        self._chatbot: Optional[ChatBot] = kwargs.get("chatbot")
+        self._chatbot_custom_domain: Optional[ChatBotCustomDomain] = kwargs.get("chatbot_custom_domain")
+        self._chatbot_requests: Optional[ChatBotRequests] = kwargs.get("chatbot_requests")
+        self._err: Optional[str] = kwargs.get("err")
+        self._chatbot_id: Optional[int] = kwargs.get("chatbot_id")
+        self._name: Optional[str] = kwargs.get("name")
 
+        # initializations that depend on the superclass
         super().__init__(request, *args, **kwargs)
+        self._chatbot_id = self._chatbot_id or self.smarter_request_chatbot_id
+        self._name = self._name or self.smarter_request_chatbot_name
+
         if not self.is_chatbot:
             self._err = f"ChatBotHelper.__init__() not a chatbot. Quitting. {self.url}"
             logger.warning(self._err)
             return None
-
-        self._chatbot_id: Optional[int] = kwargs.get("chatbot_id") or self.smarter_request_chatbot_id
-        self._name: Optional[str] = kwargs.get("name") or self.smarter_request_chatbot_name
 
         chatbot_helper_logger.info(
             "%s.__init__() %s is a chatbot. url=%s, name=%s, account=%s",
