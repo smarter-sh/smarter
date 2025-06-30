@@ -4,18 +4,31 @@
 
 
 import json
-from logging import getLogger
+import logging
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .signals import api_request_completed, api_request_initiated
 from .v1.cli.views.base import CliBaseApiView
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
+        and level <= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # api_request_initiated.send(sender=self.__class__, instance=self, request=request)

@@ -10,13 +10,26 @@ import logging
 
 from django.conf import settings
 
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.smarter_celery import app
 
 from .verification import verify_provider as verification_verify_provider
 from .verification import verify_provider_model as verification_verify_provider_model
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
+        and level <= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 module_prefix = "smarter.apps.provider.tasks."
 
 

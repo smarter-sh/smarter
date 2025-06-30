@@ -17,7 +17,9 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 # from django.views.decorators.csrf import ensure_csrf_cookie
 from htmlmin.main import minify
 
+from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)
@@ -80,7 +82,14 @@ class SmarterView(View, SmarterRequestMixin):
         Setup the view with the request and any additional arguments.
         This method initializes the SmarterRequestMixin with the request.
         """
-        logger.info("%s.setup() - request: %s, args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs)
+        if waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING):
+            logger.info(
+                "%s.setup() - request: %s, args: %s, kwargs: %s",
+                self.formatted_class_name,
+                self.smarter_build_absolute_uri(request),
+                args,
+                kwargs,
+            )
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         return super().setup(request, *args, **kwargs)
 

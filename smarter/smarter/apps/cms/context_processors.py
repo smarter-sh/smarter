@@ -1,12 +1,7 @@
 """Django context processors for docs/base.html"""
 
-import logging
-
 from smarter.__version__ import __version__
 from smarter.common.conf import settings as smarter_settings
-
-
-logger = logging.getLogger(__name__)
 
 
 # pylint: disable=W0613

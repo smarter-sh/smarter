@@ -153,9 +153,13 @@ class ChatHelper(SmarterRequestMixin):
     def __init__(
         self, request: HttpRequest, session_key: Optional[str], *args, chatbot: Optional[ChatBot] = None, **kwargs
     ) -> None:
-        logger.info(
-            "ChatHelper().__init__() - received request: %s session_key: %s, chatbot: %s", request, session_key, chatbot
-        )
+        if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
+            logger.info(
+                "ChatHelper().__init__() - received request: %s session_key: %s, chatbot: %s",
+                self.smarter_build_absolute_uri(request),
+                session_key,
+                chatbot,
+            )
         if not request:
             raise SmarterValueError(f"{self.formatted_class_name} request object is required.")
         super().__init__(request, session_key=session_key, **kwargs)
@@ -168,31 +172,35 @@ class ChatHelper(SmarterRequestMixin):
             )
 
         if chatbot:
-            logger.info("%s.__init__() received ChatBot instance: %s", self.formatted_class_name, chatbot)
+            if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
+                logger.info("%s.__init__() received ChatBot instance: %s", self.formatted_class_name, chatbot)
+                logger.info(
+                    "%s.__init__() - reinitializing account from chatbot.account: %s",
+                    self.formatted_class_name,
+                    self.account,
+                )
             self.account = chatbot.account
-            logger.info(
-                "%s.__init__() - reinitializing account from chatbot.account: %s",
-                self.formatted_class_name,
-                self.account,
-            )
 
         if session_key:
             self._session_key = session_key
-            logger.info(
-                "%s.__init__() - setting session_key to %s from session_key parameter",
-                self.formatted_class_name,
-                self._session_key,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
+                logger.info(
+                    "%s.__init__() - setting session_key to %s from session_key parameter",
+                    self.formatted_class_name,
+                    self._session_key,
+                )
         if self.session_key:
-            logger.info("%s.__init__() received session_key: %s", self.formatted_class_name, session_key)
+            if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
+                logger.info("%s.__init__() received session_key: %s", self.formatted_class_name, session_key)
             self._chat = self.get_cached_chat()
 
-        logger.info(
-            "ChatHelper().__init__() - finished %s with session_key: %s, chat: %s",
-            "is ready" if self.ready else "is not ready",
-            self.session_key,
-            self._chat,
-        )
+        if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
+            logger.info(
+                "ChatHelper().__init__() - finished %s with session_key: %s, chat: %s",
+                "is ready" if self.ready else "is not ready",
+                self.session_key,
+                self._chat,
+            )
 
     def __str__(self):
         return self.session_key
@@ -285,7 +293,7 @@ class ChatHelper(SmarterRequestMixin):
 
         chat: Chat = cache.get(self.session_key)  # type: ignore[assignment]
         if chat:
-            if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING) or waffle.switch_is_active(
+            if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
                 SmarterWaffleSwitches.CACHE_LOGGING
             ):
                 logger.info(
@@ -296,7 +304,7 @@ class ChatHelper(SmarterRequestMixin):
         if self.session_key:
             try:
                 chat = Chat.objects.get(session_key=self.session_key)
-                if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+                if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
                     logger.info(
                         "%s - retrieved Chat instance: %s session_key: %s",
                         self.formatted_class_name,
@@ -328,16 +336,8 @@ class ChatHelper(SmarterRequestMixin):
             except IntegrityError as e:
                 raise SmarterConfigurationError(f"{self.formatted_class_name} - IntegrityError: {str(e)}") from e
 
-            if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
-                logger.info(
-                    "%s - created new Chat instance: %s session_key: %s",
-                    self.formatted_class_name,
-                    chat,
-                    chat.session_key,
-                )
-
         cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING) or waffle.switch_is_active(
+        if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
             SmarterWaffleSwitches.CACHE_LOGGING
         ):
             logger.info(

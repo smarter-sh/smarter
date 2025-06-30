@@ -13,6 +13,7 @@ from requests import Response
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import (
     ApiConnection,
@@ -53,7 +54,18 @@ from .signals import (  # plugin signals; sql_connection signals; api_connection
 from .tasks import create_plugin_selector_history
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+        and level <= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
 prefix = "smarter.apps.plugin.receivers."
 
 
@@ -115,7 +127,7 @@ def handle_plugin_called(sender, plugin: PluginBase, **kwargs):
 
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
         logger.info("%s - %s inquiry_type: %s", formatted_text(prefix + "plugin_called"), plugin.name, inquiry_type)
     else:
         logger.info(
@@ -138,7 +150,7 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
     except (TypeError, json.JSONDecodeError):
         pass
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
         logger.info(
             "%s - %s inquiry_type: %s inquiry_return: %s",
             formatted_text(prefix + "plugin_responded"),

@@ -8,17 +8,28 @@ from pydantic import Field, field_validator
 
 from smarter.apps.plugin.manifest.models.common import Parameter, TestValue
 from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
+from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import SmarterBasePydanticModel
 
 from .const import MANIFEST_KIND
 
 
-logger = logging.getLogger(__name__)
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SqlData(SmarterBasePydanticModel):

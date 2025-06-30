@@ -19,7 +19,6 @@ from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.signals import (
     secret_created,
     secret_deleted,
-    secret_edited,
     secret_inializing,
     secret_ready,
 )
@@ -27,12 +26,21 @@ from smarter.apps.account.utils import get_user_profiles_for_account
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterException
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 SMARTER_API_MANIFEST_COMPATIBILITY = [SmarterApiVersions.V1]
 SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1

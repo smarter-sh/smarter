@@ -28,6 +28,9 @@ from smarter.common.helpers.aws.exceptions import (
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.smarter_celery import app
 
 from .exceptions import SmarterChatBotException
@@ -63,7 +66,17 @@ from .signals import (
 )
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
+        and level <= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 module_prefix = "smarter.apps.chatbot.tasks."
