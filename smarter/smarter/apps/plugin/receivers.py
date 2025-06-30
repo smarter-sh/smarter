@@ -127,15 +127,7 @@ def handle_plugin_called(sender, plugin: PluginBase, **kwargs):
 
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-        logger.info("%s - %s inquiry_type: %s", formatted_text(prefix + "plugin_called"), plugin.name, inquiry_type)
-    else:
-        logger.info(
-            "%s - %s inquiry_type: %s",
-            formatted_text(prefix + "plugin_called"),
-            plugin.name,
-            inquiry_type,
-        )
+    logger.info("%s - %s inquiry_type: %s", formatted_text(prefix + "plugin_called"), plugin.name, inquiry_type)
 
 
 @receiver(plugin_responded, dispatch_uid="plugin_responded")
@@ -150,21 +142,13 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
     except (TypeError, json.JSONDecodeError):
         pass
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-        logger.info(
-            "%s - %s inquiry_type: %s inquiry_return: %s",
-            formatted_text(prefix + "plugin_responded"),
-            plugin.name,
-            inquiry_type,
-            formatted_json(inquiry_return) if isinstance(inquiry_return, (dict, list)) else inquiry_return,
-        )
-    else:
-        logger.info(
-            "%s - %s inquiry_type: %s",
-            formatted_text(prefix + "plugin_responded"),
-            plugin.name,
-            inquiry_type,
-        )
+    logger.info(
+        "%s - %s inquiry_type: %s inquiry_return: %s",
+        formatted_text(prefix + "plugin_responded"),
+        plugin.name,
+        inquiry_type,
+        formatted_json(inquiry_return) if isinstance(inquiry_return, (dict, list)) else inquiry_return,
+    )
 
 
 @receiver(plugin_ready, dispatch_uid="plugin_ready")

@@ -304,8 +304,7 @@ def handle_chatbot_called(sender, **kwargs):
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_called()")
 
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
-    if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-        logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
+    logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
 
     request: Optional[HttpRequest] = kwargs.get("request")
     try:

@@ -20,9 +20,17 @@ from htmlmin.main import minify
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
 register = template.Library()
 
 
@@ -82,14 +90,13 @@ class SmarterView(View, SmarterRequestMixin):
         Setup the view with the request and any additional arguments.
         This method initializes the SmarterRequestMixin with the request.
         """
-        if waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING):
-            logger.info(
-                "%s.setup() - request: %s, args: %s, kwargs: %s",
-                self.formatted_class_name,
-                self.smarter_build_absolute_uri(request),
-                args,
-                kwargs,
-            )
+        logger.info(
+            "%s.setup() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            self.smarter_build_absolute_uri(request),
+            args,
+            kwargs,
+        )
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         return super().setup(request, *args, **kwargs)
 

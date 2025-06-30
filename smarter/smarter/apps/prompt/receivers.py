@@ -127,19 +127,12 @@ def handle_chat_completion_request_sent(sender, chat: Chat, iteration: int, requ
         chat,
     )
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-        logger.info(
-            "%s for chat %s, \nrequest: %s",
-            this_prefix,
-            chat,
-            formatted_json(request),
-        )
-    else:
-        logger.info(
-            "%s for chat: %s",
-            this_prefix,
-            chat,
-        )
+    logger.info(
+        "%s for chat %s, \nrequest: %s",
+        this_prefix,
+        chat,
+        formatted_json(request),
+    )
 
 
 @receiver(chat_completion_response, dispatch_uid="chat_completion_response")
@@ -157,21 +150,14 @@ def handle_chat_completion_response_received(
     this_prefix = formatted_text(f"{prefix}.chat_completion_response for iteration {iteration}")
     sender_name = get_sender_name(sender)
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-        logger.info(
-            "%s from %s for chat %s, \nrequest: %s, \nresponse: %s",
-            this_prefix,
-            sender_name,
-            chat,
-            formatted_json(request),
-            formatted_json(response),
-        )
-    else:
-        logger.info(
-            "%s for chat %s",
-            this_prefix,
-            chat,
-        )
+    logger.info(
+        "%s from %s for chat %s, \nrequest: %s, \nresponse: %s",
+        this_prefix,
+        sender_name,
+        chat,
+        formatted_json(request),
+        formatted_json(response),
+    )
 
 
 @receiver(chat_completion_plugin_called, dispatch_uid="chat_completion_plugin_called")
@@ -222,20 +208,14 @@ def handle_chat_response_success(
 
     sender_name = get_sender_name(sender)
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-        logger.info(
-            "%s for chat %s, \nrequest: %s, \nresponse: %s",
-            formatted_text(f"{prefix}.chat_finished"),
-            chat,
-            formatted_json(request),
-            formatted_json(response),
-        )
-    else:
-        logger.info(
-            "%s for chat %s",
-            formatted_text(f"{prefix}.chat_finished"),
-            chat,
-        )
+    logger.info(
+        "%s for chat %s, \nrequest: %s, \nresponse: %s",
+        formatted_text(f"{prefix}.chat_finished"),
+        chat,
+        formatted_json(request),
+        formatted_json(response),
+    )
+
     create_chat_history.delay(chat.id, request, response, messages)  # type: ignore
 
 

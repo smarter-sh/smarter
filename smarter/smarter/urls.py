@@ -10,7 +10,6 @@ from django.contrib.admin.exceptions import AlreadyRegistered
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from waffle import get_waffle_switch_model
-from waffle.admin import SwitchAdmin
 from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail_transfer import urls as wagtailtransfer_urls
@@ -41,6 +40,7 @@ from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.lib.django.waffle import SmarterSwitchAdmin
 
 
 logger = getLogger(__name__)
@@ -48,12 +48,11 @@ logger = getLogger(__name__)
 # -----------------------------------------------------------------------------
 # Initialize custom admin site for Smarter
 # -----------------------------------------------------------------------------
-Switch = get_waffle_switch_model()
-
-
 admin.site = smarter_restricted_admin_site
 admin.autodiscover()
-smarter_restricted_admin_site.register(Switch, SwitchAdmin)
+
+Switch = get_waffle_switch_model()
+smarter_restricted_admin_site.register(Switch, SmarterSwitchAdmin)
 
 EXCLUDED_MODELS = [
     "knox.AuthToken",  # We have our own admin for this

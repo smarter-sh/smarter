@@ -10,6 +10,7 @@ from functools import wraps
 import waffle as waffle_orig
 from django.core.cache import cache
 from django.db.utils import OperationalError
+from waffle.admin import SwitchAdmin
 
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
 from smarter.common.helpers.console_helpers import formatted_text_green
@@ -20,7 +21,18 @@ CACHE_EXPIRATION = 60  # seconds
 prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")
 
 
-# Smarter Waffle Switches and Flags
+class SmarterSwitchAdmin(SwitchAdmin):
+    """
+    Customized Django Admin console for managing Waffle switches.
+    This class restricts access to the module to superusers only.
+    """
+
+    ordering = ("name",)
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser  # type: ignore[return-value]
+
+
 class SmarterWaffleSwitches:
     """A class representing the fixed set of Waffle switches for the Smarter API."""
 

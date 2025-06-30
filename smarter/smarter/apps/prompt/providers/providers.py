@@ -37,8 +37,17 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level <= logging.INFO
 
 
+def should_log_caching(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
+    ) and level <= logging.INFO
+
+
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+caching_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_caching)
 
 CACHE_PREFIX = "smarter.apps.prompt.providers"
 CACHE_TIMEOUT = 10
@@ -108,14 +117,11 @@ class ChatProviders(SmarterHelperMixin):
         cached_provider: OpenAIChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
-                SmarterWaffleSwitches.CACHE_LOGGING
-            ):
-                logger.info(
-                    "%s.openai_handler() returning cached OpenAIChatProvider for chat %s",
-                    self.formatted_class_name,
-                    chat.id,  # type: ignore[arg-type]
-                )
+            caching_logger.info(
+                "%s.openai_handler() returning cached OpenAIChatProvider for chat %s",
+                self.formatted_class_name,
+                chat.id,  # type: ignore[arg-type]
+            )
 
             if not user:
                 raise SmarterValueError(
@@ -128,15 +134,13 @@ class ChatProviders(SmarterHelperMixin):
             # the state of the class instance will change after the handler is invoked
             # so we need to update the cache with the new state, and we'll also reset the timeout.
             cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
-            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                self.logger_helper("caching", cache_key)
+            caching_logger.info(f"caching {cache_key}")
             return result
 
         result = self.openai.handler(chat=chat, data=data, plugins=plugins, user=user)
         # raised Can't pickle <function capfirst at 0x7ffffa408540>: it's not the same object as django.utils.text.capfirst
         # cache.set(cache_key, self.openai, timeout=CACHE_TIMEOUT)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            self.logger_helper("caching", cache_key)
+        caching_logger.info(f"caching {cache_key}")
         self._openai = None
         return result
 
@@ -149,28 +153,23 @@ class ChatProviders(SmarterHelperMixin):
         cached_provider: GoogleAIChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
-                SmarterWaffleSwitches.CACHE_LOGGING
-            ):
-                logger.info(
-                    "%s.googleai_handler() returning cached GoogleAIChatProvider for chat %s",
-                    self.formatted_class_name,
-                    chat.id,  # type: ignore[arg-type]
-                )
+            caching_logger.info(
+                "%s.googleai_handler() returning cached GoogleAIChatProvider for chat %s",
+                self.formatted_class_name,
+                chat.id,  # type: ignore[arg-type]
+            )
             if not user:
                 raise SmarterValueError(
                     f"{self.formatted_class_name}: user is required to handle GoogleAIChatProvider calls."
                 )
             result = cached_provider.handler(chat=chat, data=data, plugins=plugins, user=user)
             cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
-            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                self.logger_helper("caching", cache_key)
+            caching_logger.info(f"caching {cache_key}")
             return result
 
         result = self.googleai.handler(chat=chat, data=data, plugins=plugins, user=user)
         cache.set(cache_key, self.googleai, timeout=CACHE_TIMEOUT)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            self.logger_helper("caching", cache_key)
+        caching_logger.info(f"caching {cache_key}")
         self._googleai = None
         return result
 
@@ -183,12 +182,9 @@ class ChatProviders(SmarterHelperMixin):
         cached_provider: MetaAIChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) or waffle.switch_is_active(
-                SmarterWaffleSwitches.CACHE_LOGGING
-            ):
-                logger.info(
-                    "%s returning cached MetaAIChatProvider for chat %s", formatted_text("metaai_handler()"), chat.id  # type: ignore[arg-type]
-                )
+            caching_logger.info(
+                "%s returning cached MetaAIChatProvider for chat %s", formatted_text("metaai_handler()"), chat.id  # type: ignore[arg-type]
+            )
 
             if not user:
                 raise SmarterValueError(
@@ -196,14 +192,12 @@ class ChatProviders(SmarterHelperMixin):
                 )
             result = cached_provider.handler(chat=chat, data=data, plugins=plugins, user=user)
             cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
-            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                self.logger_helper("caching", cache_key)
+            caching_logger.info(f"caching {cache_key}")
             return result
 
         result = self.metaai.handler(chat=chat, data=data, plugins=plugins, user=user)
         cache.set(cache_key, self.metaai, timeout=CACHE_TIMEOUT)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            self.logger_helper("caching", cache_key)
+        caching_logger.info(f"caching {cache_key}")
         self._metaai = None
         return result
 

@@ -362,16 +362,15 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
     def handler(self, request, name, *args, **kwargs):
         # get the chat configuration for the ChatBot (name)
-        if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-            logger.info(
-                "%s.handler() 1. name: %s url: %s data: %s session_key: %s, new session: %s",
-                self.formatted_class_name,
-                name,
-                self.url,
-                self.data,
-                self.session_key,
-                self.new_session,
-            )
+        logger.info(
+            "%s.handler() 1. name: %s url: %s data: %s session_key: %s, new session: %s",
+            self.formatted_class_name,
+            name,
+            self.url,
+            self.data,
+            self.session_key,
+            self.new_session,
+        )
 
         chat_config: JsonResponse = ChatConfigView.as_view()(request, name=name, session_key=self.session_key)  # type: ignore[return-value]
         if not isinstance(chat_config, JsonResponse):
@@ -382,8 +381,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             raise APIV1CLIChatViewError(
                 f"Internal error. Failed to get chat config for chatbot: {name} {chat_config.get('content')}"
             )
-        if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-            logger.info("%s.handler() 2. chat_config: %s %s", self.formatted_class_name, chat_config, type(chat_config))
+        logger.info("%s.handler() 2. chat_config: %s %s", self.formatted_class_name, chat_config, type(chat_config))
 
         try:
             # bootstrap our chat session configuration
@@ -400,12 +398,11 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
             if session_key is not None:
                 self._session_key = session_key
-                if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-                    logger.info(
-                        "%s.handler() initialized session_key from chat_config: %s",
-                        self.formatted_class_name,
-                        self.session_key,
-                    )
+                logger.info(
+                    "%s.handler() initialized session_key from chat_config: %s",
+                    self.formatted_class_name,
+                    self.session_key,
+                )
             cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.info(
@@ -418,8 +415,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         except TypeError as e:
             raise APIV1CLIViewError(f"Internal error. Chat config 'content' is missing: {chat_config}") from e
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-            logger.info("%s.handler() 3. config: %s", self.formatted_class_name, json.dumps(self.chat_config, indent=4))
+        logger.info("%s.handler() 3. config: %s", self.formatted_class_name, json.dumps(self.chat_config, indent=4))
 
         # create a Smarter chatbot request body
         request_body = self.chat_request_body_factory()
@@ -434,10 +430,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response = json.loads(chat_response.content)
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
-        if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-            logger.info(
-                "%s.handler() 4. response_data: %s", self.formatted_class_name, json.dumps(response_data, indent=4)
-            )
+        logger.info("%s.handler() 4. response_data: %s", self.formatted_class_name, json.dumps(response_data, indent=4))
         try:
             if not response_data:
                 raise APIV1CLIChatViewError(f"Internal error. Chat response key 'data' is missing: {chat_response}")
@@ -467,8 +460,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
 
         data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
-        if waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING):
-            logger.info("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data, indent=4))
+        logger.info("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data, indent=4))
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,

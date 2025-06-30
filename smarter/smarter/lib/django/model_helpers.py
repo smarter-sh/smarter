@@ -25,7 +25,7 @@ class TimestampedModel(models.Model):
         """Validate the model."""
         # this breaks on SmarterAuthToken.objects.create()
         # self.full_clean()
-        logger.warning("TimestampedModel().validate() called but not applied on %s", self.__class__.__name__)
+        # logger.warning("TimestampedModel().validate() called but not applied on %s", self.__class__.__name__)
 
     def save(self, *args, **kwargs):
         """Override save to validate before saving."""
