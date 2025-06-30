@@ -62,8 +62,14 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level <= logging.INFO
 
 
+def should_log_chatbot_helper(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING) and level <= logging.INFO
+
+
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+chatbot_helper_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_chatbot_helper)
 
 
 # -----------------------------------------------------------------------------
@@ -291,8 +297,12 @@ class ChatBot(TimestampedModel):
         example: "http://localhost:8000/api/v1/chatbots/5174/chat/"
         """
         path = reverse(f"{API_VI_CHATBOT_NAMESPACE}:default_chatbot_api_view", kwargs={"chatbot_id": self.id})  # type: ignore[arg-type]
+
         url = urljoin(smarter_settings.environment_url, path)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
+        if not isinstance(url, str):
+            raise SmarterValueError("ChatBot.url_chatbot is not a valid string")
+
         return url
 
     @property
@@ -620,15 +630,14 @@ class ChatBotHelper(SmarterRequestMixin):
         self._chatbot_id: Optional[int] = kwargs.get("chatbot_id") or self.smarter_request_chatbot_id
         self._name: Optional[str] = kwargs.get("name") or self.smarter_request_chatbot_name
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-            logger.info(
-                "%s.__init__() %s is a chatbot. url=%s, name=%s, account=%s",
-                self.formatted_class_name,
-                self._instance_id,
-                self.url,
-                self.name,
-                self.account,
-            )
+        chatbot_helper_logger.info(
+            "%s.__init__() %s is a chatbot. url=%s, name=%s, account=%s",
+            self.formatted_class_name,
+            self._instance_id,
+            self.url,
+            self.name,
+            self.account,
+        )
 
         if not self.user or not self.user.is_authenticated:
             logger.warning("ChatBotHelper.__init__() %s called with unauthenticated request", self._instance_id)
@@ -640,10 +649,9 @@ class ChatBotHelper(SmarterRequestMixin):
                 self._instance_id,
             )
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-            self.helper_logger(
-                f"__init__() {self._instance_id} url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
-            )
+        chatbot_helper_logger.info(
+            f"__init__() {self._instance_id} url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
+        )
         if not isinstance(self.chatbot, ChatBot):
             if self.account and self._name:
                 self._chatbot = self._chatbot or get_cached_chatbot(account=self.account, name=self._name)
@@ -661,18 +669,17 @@ class ChatBotHelper(SmarterRequestMixin):
             self.helper_logger(
                 f"__init__() {self._instance_id} initialized self.chatbot={self.chatbot} from account and name"
             )
-            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-                logger.info(
-                    "%s.__init__() %s initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
-                    self.formatted_class_name,
-                    self._instance_id,
-                    self.url if self.url else "undefined",
-                    self.name,
-                    self.chatbot_id,
-                    self.user,
-                    self.account,
-                    self.session_key,
-                )
+            chatbot_helper_logger.info(
+                "%s.__init__() %s initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
+                self.formatted_class_name,
+                self._instance_id,
+                self.url if self.url else "undefined",
+                self.name,
+                self.chatbot_id,
+                self.user,
+                self.account,
+                self.session_key,
+            )
             return None
 
         raise SmarterConfigurationError(
@@ -690,8 +697,7 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         account_number = account_number_from_url(self.url)
         if account_number:
-            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-                self.helper_logger(f"overriding account with account_number from named url: {self.url}")
+            chatbot_helper_logger.info("overriding account with account_number from named url: %s", self.url)
             return get_cached_account(account_number=account_number)  # type: ignore[return-value]
 
         # from the super()
@@ -934,8 +940,7 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         Create a log entry
         """
-        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
-            logger.info("%s: %s", self.formatted_class_name, message)
+        chatbot_helper_logger.info("%s: %s", self.formatted_class_name, message)
 
     def helper_warning(self, message: str):
         """
@@ -969,7 +974,7 @@ def get_cached_chatbot_by_request(request: HttpRequest) -> Optional[ChatBot]:
         if chatbot_helper.is_valid:
             chatbot = chatbot_helper.chatbot
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logging.info("%sget_cached_chatbot_by_request() caching chatbot %s for %s", chatbot, url)
+                logging.info("get_cached_chatbot_by_request() caching chatbot %s for %s", chatbot, url)
             return chatbot
 
     return get_chatbot_by_url(url)

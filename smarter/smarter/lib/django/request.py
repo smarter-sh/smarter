@@ -41,13 +41,22 @@ from smarter.common.utils import hash_factory
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
 # Match netloc: chatbot_name.account_number.api.environment_api_domain
 netloc_pattern_named_url = re.compile(
     rf"^(?P<chatbot_name>[a-zA-Z0-9\-]+)\.(?P<account_number>\d{{4}}-\d{{4}}-\d{{4}})\.api\.{re.escape(smarter_settings.environment_platform_domain)}(:\d+)?$"
 )
-logger = logging.getLogger(__name__)
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING) and level <= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SmarterRequestMixin(AccountMixin):
@@ -152,24 +161,22 @@ class SmarterRequestMixin(AccountMixin):
         super().__init__(request, *args, **kwargs)
         # self.invalidate_cached_properties()
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-            logger.info(
-                "%s.__init__() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s",
-                self.formatted_class_name,
-                self._instance_id,
-                request,
-                args,
-                kwargs,
-            )
+        logger.info(
+            "%s.__init__() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s",
+            self.formatted_class_name,
+            self._instance_id,
+            request,
+            args,
+            kwargs,
+        )
 
         if isinstance(self._session_key, str):
             SmarterValidator.validate_session_key(self._session_key)
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.info(
-                    "%s.__init__() - session_key is set to %s from kwargs",
-                    self.formatted_class_name,
-                    self._session_key,
-                )
+            logger.info(
+                "%s.__init__() - session_key is set to %s from kwargs",
+                self.formatted_class_name,
+                self._session_key,
+            )
 
         if self._parse_result and self.is_chatbot_named_url:
             account_number = account_number_from_url(self.url)
@@ -181,12 +188,11 @@ class SmarterRequestMixin(AccountMixin):
                     )
 
             if self.account and not self._user:
-                if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                    logger.warning(
-                        "%s.__init__() - account (%s) is set but user is not.",
-                        self.formatted_class_name,
-                        self.account,
-                    )
+                logger.warning(
+                    "%s.__init__() - account (%s) is set but user is not.",
+                    self.formatted_class_name,
+                    self.account,
+                )
 
         self.eval_chatbot_url()
 
@@ -198,8 +204,7 @@ class SmarterRequestMixin(AccountMixin):
             raise SmarterValueError(
                 f"{self.formatted_class_name}.__init__() - request {self._instance_id} is not ready. request={self.smarter_request}"
             )
-        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-            logger.info("SmarterRequestMixin().__init__() - finished %s", self.dump())
+        logger.info("SmarterRequestMixin().__init__() - finished %s", self.dump())
 
     def invalidate_cached_properties(self):
         """
@@ -393,10 +398,7 @@ class SmarterRequestMixin(AccountMixin):
         if not self._session_key:
             self._session_key = self.find_session_key() or self.generate_session_key()
             SmarterValidator.validate_session_key(self._session_key)
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.info(
-                    "%s.session_key() - setting session_key to %s", self.formatted_class_name, self._session_key
-                )
+            logger.info("%s.session_key() - setting session_key to %s", self.formatted_class_name, self._session_key)
         return self._session_key
 
     @property
@@ -525,12 +527,11 @@ class SmarterRequestMixin(AccountMixin):
                 if body is not None:
                     body_str = body.decode("utf-8").strip()
                     self._data = yaml.safe_load(body_str) if body_str else {}
-                    if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                        logger.info(
-                            "%s.data() - initialized from parsed request body as yaml: %s",
-                            self.formatted_class_name,
-                            body_str,
-                        )
+                    logger.info(
+                        "%s.data() - initialized from parsed request body as yaml: %s",
+                        self.formatted_class_name,
+                        body_str,
+                    )
             except yaml.YAMLError:
                 logger.error(
                     "%s - failed to parse request body as JSON or YAML. request.body=%s",
@@ -539,8 +540,7 @@ class SmarterRequestMixin(AccountMixin):
                 )
 
         self._data = self._data or {}
-        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
-            self.helper_logger(f"request body json={self._data}")
+        self.helper_logger(f"request body json={self._data}")
 
         return self._data
 
@@ -747,12 +747,11 @@ class SmarterRequestMixin(AccountMixin):
             return False
         account_number = self.url_account_number
         if account_number is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.info(
-                    "%s.is_chatbot_named_url() - url is a named url with account number: %s",
-                    self.formatted_class_name,
-                    account_number,
-                )
+            logger.info(
+                "%s.is_chatbot_named_url() - url is a named url with account number: %s",
+                self.formatted_class_name,
+                account_number,
+            )
             if self.account is None:
                 # lazy load the account from the account number
                 self.account = get_cached_account(account_number=account_number)
@@ -785,16 +784,13 @@ class SmarterRequestMixin(AccountMixin):
 
         """
         if not self.smarter_request:
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.warning("%s.is_chatbot_sandbox_url() - request is None or not set.", self.formatted_class_name)
+            logger.warning("%s.is_chatbot_sandbox_url() - request is None or not set.", self.formatted_class_name)
             return False
         if not self.qualified_request:
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.warning("%s.is_chatbot_sandbox_url() - request is not qualified.", self.formatted_class_name)
+            logger.warning("%s.is_chatbot_sandbox_url() - request is not qualified.", self.formatted_class_name)
             return False
         if not self._parse_result:
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.warning("%s.is_chatbot_sandbox_url() - url is None or not set.", self.formatted_class_name)
+            logger.warning("%s.is_chatbot_sandbox_url() - url is None or not set.", self.formatted_class_name)
             return False
 
         # smarter api - http://localhost:8000/api/v1/prompt/1/chat/
@@ -817,38 +813,34 @@ class SmarterRequestMixin(AccountMixin):
         #   ['workbench', '<slug>', 'chat']
         #   ['workbench', '<slug>', 'config']
         if self.parsed_url.netloc != smarter_settings.environment_platform_domain:
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.warning(
-                    "%s.is_chatbot_sandbox_url() - parsed_url.netloc (%s) does not match environment_platform_domain (%s).",
-                    self.formatted_class_name,
-                    self.parsed_url.netloc,
-                    smarter_settings.environment_platform_domain,
-                )
+            logger.warning(
+                "%s.is_chatbot_sandbox_url() - parsed_url.netloc (%s) does not match environment_platform_domain (%s).",
+                self.formatted_class_name,
+                self.parsed_url.netloc,
+                smarter_settings.environment_platform_domain,
+            )
             return False
         if len(path_parts) != 3:
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.warning(
-                    "%s.is_chatbot_sandbox_url() - path_parts length is not 3. path_parts: %s",
-                    self.formatted_class_name,
-                    path_parts,
-                )
+            logger.warning(
+                "%s.is_chatbot_sandbox_url() - path_parts length is not 3. path_parts: %s",
+                self.formatted_class_name,
+                path_parts,
+            )
             return False
         if path_parts[0] != "workbench":
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.warning(
-                    "%s.is_chatbot_sandbox_url() - path_parts[0] is not 'workbench'. path_parts: %s",
-                    self.formatted_class_name,
-                    path_parts,
-                )
+            logger.warning(
+                "%s.is_chatbot_sandbox_url() - path_parts[0] is not 'workbench'. path_parts: %s",
+                self.formatted_class_name,
+                path_parts,
+            )
             return False
         if not path_parts[1].isalpha():
             # expecting <slug> to be alpha: ['workbench', '<slug>', 'config']
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.warning(
-                    "%s.is_chatbot_sandbox_url() - path_parts[1] is not alpha. path_parts: %s",
-                    self.formatted_class_name,
-                    path_parts,
-                )
+            logger.warning(
+                "%s.is_chatbot_sandbox_url() - path_parts[1] is not alpha. path_parts: %s",
+                self.formatted_class_name,
+                path_parts,
+            )
             return False
         if path_parts[-1] in ["config", "chat"]:
             # expecting:
@@ -856,12 +848,11 @@ class SmarterRequestMixin(AccountMixin):
             #   ['workbench', '<slug>', 'config']
             return True
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-            logger.warning(
-                "%s.is_chatbot_sandbox_url() - could not verify whether url is a chatbot sandbox url: %s",
-                self.formatted_class_name,
-                path_parts,
-            )
+        logger.warning(
+            "%s.is_chatbot_sandbox_url() - could not verify whether url is a chatbot sandbox url: %s",
+            self.formatted_class_name,
+            path_parts,
+        )
         return False
 
     @property
@@ -991,31 +982,28 @@ class SmarterRequestMixin(AccountMixin):
         """
         # cheap and easy way to fail.
         if not isinstance(self._smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest]):
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.warning(
-                    "%s.is_requestmixin_ready() - %s request is not a HttpRequest. Received %s. Cannot process request.",
-                    self.formatted_class_name,
-                    self._instance_id,
-                    type(self._smarter_request).__name__,
-                )
+            logger.warning(
+                "%s.is_requestmixin_ready() - %s request is not a HttpRequest. Received %s. Cannot process request.",
+                self.formatted_class_name,
+                self._instance_id,
+                type(self._smarter_request).__name__,
+            )
             return False
         if not isinstance(self._parse_result, ParseResult):
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.warning(
-                    "%s.is_requestmixin_ready() - %s _parse_result is not a ParseResult. Received %s. Cannot process request.",
-                    self.formatted_class_name,
-                    self._instance_id,
-                    type(self._parse_result).__name__,
-                )
+            logger.warning(
+                "%s.is_requestmixin_ready() - %s _parse_result is not a ParseResult. Received %s. Cannot process request.",
+                self.formatted_class_name,
+                self._instance_id,
+                type(self._parse_result).__name__,
+            )
             return False
         if not isinstance(self._url, str):
-            if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-                logger.warning(
-                    "%s.is_requestmixin_ready() - %s _url is not a string. Received %s. Cannot process request.",
-                    self.formatted_class_name,
-                    self._instance_id,
-                    type(self._url).__name__,
-                )
+            logger.warning(
+                "%s.is_requestmixin_ready() - %s _url is not a string. Received %s. Cannot process request.",
+                self.formatted_class_name,
+                self._instance_id,
+                type(self._url).__name__,
+            )
             return False
         return True
 
@@ -1190,8 +1178,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         Create a log entry
         """
-        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
-            logger.info("%s %s", self.formatted_class_name, message)
+        logger.info("%s %s", self.formatted_class_name, message)
 
     def dump(self):
         """

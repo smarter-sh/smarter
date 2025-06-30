@@ -54,10 +54,11 @@ class ViewBase(SmarterAdminAPIView):
     """Base class for all chatbot detail views."""
 
     def dispatch(self, request, *args, **kwargs):
+        retval = super().dispatch(request, *args, **kwargs)
         if isinstance(request.user, User):
             self.user_profile = get_object_or_404(UserProfile, user=request.user)
             self.account = self.user_profile.account
-        return super().dispatch(request, *args, **kwargs)
+        return retval
 
 
 class ListViewBase(SmarterAdminListAPIView):
@@ -87,6 +88,7 @@ class ChatbotView(ViewBase):
         return ChatBot.objects.filter(id=self.chatbot.id)  # type: ignore[return-value]
 
     def dispatch(self, request, *args, **kwargs):
+        retval = super().dispatch(request, *args, **kwargs)
         chatbot_id = kwargs.get("chatbot_id")
         if chatbot_id:
             kwargs.pop("chatbot_id")
@@ -94,13 +96,13 @@ class ChatbotView(ViewBase):
             self.account = self.chatbot.account
             logger.info("ChatbotView.dispatch() chatbot_id: %s", chatbot_id)
             logger.info("ChatbotView.dispatch() account: %s", self.account)
-        return super().dispatch(request, *args, **kwargs)
+        return retval
 
     def get(self, request, chatbot_id: int):
         serializer = self.serializer_class(self.chatbot)
         return Response(serializer.data, status=HTTPStatus.OK)
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         try:
             data = request.data
             chatbot = ChatBot.objects.create(**data)
@@ -108,7 +110,7 @@ class ChatbotView(ViewBase):
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info + str(chatbot.id) + "/")  # type: ignore[return-value]
 
-    def patch(self, request, chatbot_id: Optional[int] = None):
+    def patch(self, request, *args, chatbot_id: Optional[int] = None, **kwargs):
         chatbot: Optional[ChatBot] = None
         data: Optional[dict] = None
 
@@ -138,7 +140,7 @@ class ChatbotView(ViewBase):
 
         return HttpResponseRedirect(request.path_info)
 
-    def delete(self, request, chatbot_id: Optional[int] = None):
+    def delete(self, request, *args, chatbot_id: Optional[int] = None, **kwargs):
         if chatbot_id and self.is_superuser_or_unauthorized():
             chatbot = get_object_or_404(ChatBot, pk=chatbot_id)
         else:

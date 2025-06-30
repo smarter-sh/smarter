@@ -85,11 +85,12 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
-    def initial(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         """
         Initialize the view with the request and any additional arguments.
         """
-        super().initial(request, *args, **kwargs)
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        retval = super().dispatch(request, *args, **kwargs)
         logger.info(
             "%s.initial() - request: %s, args: %s, kwargs: %s",
             self.formatted_class_name,
@@ -97,7 +98,7 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
             args,
             kwargs,
         )
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        return retval
 
     def is_superuser_or_unauthorized(self):
         """Check if the user is a superuser or unauthorized."""

@@ -18,12 +18,18 @@ from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level <= logging.INFO
 
-if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-    logger.info("Loading smarter.lib.django.middleware.cors.CorsMiddleware")
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+logger.info("Loading smarter.lib.django.middleware.cors.CorsMiddleware")
 
 
 class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
@@ -34,9 +40,8 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
     request: Optional[HttpRequest] = None
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
-        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-            url = self.smarter_build_absolute_uri(request)
-            logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
+        url = self.smarter_build_absolute_uri(request)
+        logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
         self._url = None
         self._chatbot = None
         self.request = request
@@ -56,20 +61,18 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
 
         url_string = url.geturl() if isinstance(url, SplitResult) else None
         if url_string in conf.CORS_ALLOWED_ORIGINS:
-            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-                logger.info(
-                    "%s url: %s is an allowed origin",
-                    self.formatted_class_name,
-                    url.geturl() if isinstance(url, SplitResult) else "(Missing URL)",
-                )
-            return None
-
-        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             logger.info(
-                "%s instantiating ChatBotHelper() for url: %s",
+                "%s url: %s is an allowed origin",
                 self.formatted_class_name,
                 url.geturl() if isinstance(url, SplitResult) else "(Missing URL)",
             )
+            return None
+
+        logger.info(
+            "%s instantiating ChatBotHelper() for url: %s",
+            self.formatted_class_name,
+            url.geturl() if isinstance(url, SplitResult) else "(Missing URL)",
+        )
         if self.request is not None:
             self._chatbot = get_cached_chatbot_by_request(request=self.request)
 
@@ -82,10 +85,9 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
         else:
             self._url = url
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-            logger.info(
-                "%s.url() set url: %s", self.formatted_class_name, self._url.geturl() if self._url else "(Missing URL)"
-            )
+        logger.info(
+            "%s.url() set url: %s", self.formatted_class_name, self._url.geturl() if self._url else "(Missing URL)"
+        )
 
     @property
     def CORS_ALLOWED_ORIGINS(self) -> list[str] | tuple[str]:
@@ -102,8 +104,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
             url = self.url.geturl() if isinstance(self.url, SplitResult) else None
             if url is not None and url not in retval:
                 retval.append(url)
-            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-                logger.info("%s.CORS_ALLOWED_ORIGINS() added origin: %s", self.formatted_class_name, url)
+            logger.info("%s.CORS_ALLOWED_ORIGINS() added origin: %s", self.formatted_class_name, url)
         return retval
 
     @property
@@ -114,8 +115,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
     def origin_found_in_white_lists(self, origin: str, url: SplitResult) -> bool:
         self.url = url
         if self.chatbot is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-                logger.info("%s.origin_found_in_white_lists() returning True: %s", self.formatted_class_name, url)
+            logger.info("%s.origin_found_in_white_lists() returning True: %s", self.formatted_class_name, url)
             return True
         return (
             (origin == "null" and origin in self.CORS_ALLOWED_ORIGINS)
@@ -125,16 +125,14 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
 
     def regex_domain_match(self, origin: str) -> bool:
         if self.chatbot is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-                logger.info("%s.regex_domain_match() returning True: %s", self.formatted_class_name, self.url)
+            logger.info("%s.regex_domain_match() returning True: %s", self.formatted_class_name, self.url)
             return True
         return any(re.match(domain_pattern, origin) for domain_pattern in self.CORS_ALLOWED_ORIGIN_REGEXES)
 
     def _url_in_whitelist(self, url: SplitResult) -> bool:
         self.url = url
         if self.chatbot is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-                logger.info("%s._url_in_whitelist() returning True: %s", self.formatted_class_name, url)
+            logger.info("%s._url_in_whitelist() returning True: %s", self.formatted_class_name, url)
             return True
         origins = [urlsplit(o) for o in self.CORS_ALLOWED_ORIGINS]
         return any(origin.scheme == url.scheme and origin.netloc == url.netloc for origin in origins)

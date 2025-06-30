@@ -34,7 +34,11 @@ from .models import Account, UserProfile
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level <= logging.INFO
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
+        and level <= logging.INFO
+    )
 
 
 base_logger = logging.getLogger(__name__)
@@ -55,8 +59,7 @@ def get_cached_account(account_id: Optional[int] = None, account_number: Optiona
         In-memory cache for account objects by ID.
         """
         account = Account.objects.get(id=account_id)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.info("_in_memory_account_by_id() retrieving and caching account %s", account)
+        logger.info("_in_memory_account_by_id() retrieving and caching account %s", account)
         return account
 
     @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
@@ -65,8 +68,7 @@ def get_cached_account(account_id: Optional[int] = None, account_number: Optiona
         In-memory cache for account objects by account number.
         """
         account = Account.objects.get(account_number=account_number)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.info("_in_memory_account_by_number() retrieving and caching account %s", account)
+        logger.info("_in_memory_account_by_number() retrieving and caching account %s", account)
         return account
 
     if account_id:
@@ -91,8 +93,7 @@ def get_cached_default_account() -> Account:
     Returns the default account.
     """
     account = Account.objects.get(is_default_account=True)
-    if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-        logger.info("get_cached_default_account() retrieving and caching default account %s", account)
+    logger.info("get_cached_default_account() retrieving and caching default account %s", account)
     return account
 
 
@@ -126,12 +127,11 @@ def _get_account_for_user(user):
             logger.warning("get_cached_account_for_user_by_id() no UserProfile found for user ID %s", user_id)
             return None
         account = user_profile.account
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.info(
-                "_get_account_for_user_by_id() retrieving and caching default account %s for user ID %s",
-                account,
-                user_id,
-            )
+        logger.info(
+            "_get_account_for_user_by_id() retrieving and caching default account %s for user ID %s",
+            account,
+            user_id,
+        )
         return account
 
     return _get_account_for_user_by_id(user_id)
@@ -151,16 +151,14 @@ def _get_cached_user_profile(resolved_user: User, account: Optional[Account]) ->
     @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
     def _in_memory_user_profile(user_id, account_id):
         user_profile = UserProfile.objects.get(user_id=user_id, account_id=account_id)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.info("_in_memory_user_profile() retrieving and caching UserProfile %s", user_profile)
+        logger.info("_in_memory_user_profile() retrieving and caching UserProfile %s", user_profile)
         return user_profile
 
     if resolved_user is None or account is None:
         logger.warning("get_cached_user_profile() cannot initialize with user: %s account: %s", resolved_user, account)
         return None
     user_profile = _in_memory_user_profile(resolved_user.id, account.id)  # type: ignore[return-value]
-    if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-        logger.info("get_cached_user_profile() retrieving and caching UserProfile %s", user_profile)
+    logger.info("get_cached_user_profile() retrieving and caching UserProfile %s", user_profile)
     return user_profile
 
 
@@ -192,13 +190,11 @@ def get_cached_user_for_user_id(user_id: int) -> User:
         In-memory cache for user objects.
         """
         user = User.objects.get(id=user_id)
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.info("_in_memory_user() retrieving and caching user %s", user)
+        logger.info("_in_memory_user() retrieving and caching user %s", user)
         return user  # type: ignore[return-value]
 
     user = _in_memory_user(user_id)
-    if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-        logger.info("get_cached_user_for_user_id() retrieving and caching user %s", user)
+    logger.info("get_cached_user_for_user_id() retrieving and caching user %s", user)
     return user
 
 
@@ -213,10 +209,7 @@ def get_cached_admin_user_for_account(account: Account) -> User:
     console_prefix = formatted_text("get_cached_admin_user_for_account()")
     user_profile = UserProfile.objects.filter(account=account, user__is_staff=True).order_by("pk").first()
     if user_profile:
-        if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.info(
-                "%s found and cached admin UserProfile %s for account %s", console_prefix, user_profile, account
-            )
+        logger.info("%s found and cached admin UserProfile %s for account %s", console_prefix, user_profile, account)
         return user_profile.user
     else:
         # Create a new admin user and UserProfile
@@ -250,11 +243,10 @@ def get_cached_smarter_admin_user_profile() -> UserProfile:
             UserProfile.objects.filter(account_id=smarter_account_id, user__is_superuser=True).order_by("pk").first()
         )
         if super_user_profile:
-            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.info(
-                    "_in_memory_smarter_admin_user_profile() retrieving and caching superuser UserProfile %s",
-                    super_user_profile,
-                )
+            logger.info(
+                "_in_memory_smarter_admin_user_profile() retrieving and caching superuser UserProfile %s",
+                super_user_profile,
+            )
             return super_user_profile
 
         try:
