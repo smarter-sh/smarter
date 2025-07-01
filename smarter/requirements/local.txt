@@ -29,7 +29,7 @@ django-stubs==5.2.1                     # Type annotations for Django
 djangorestframework-stubs==3.16.0       # type annotations for djangorestframework
 flake8==7.1.1
 flake8-coding==1.3.2
-isort==5.13.2
+isort==6.0.1
 mypy_extensions==1.1.0                  # Type annotations for Python
 mypy==1.15.0
 pre-commit==4.0.1
