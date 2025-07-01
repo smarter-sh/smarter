@@ -77,7 +77,7 @@ mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to th
 beautifulsoup4==4.13.3                  # HTML parser for Wagtail page compression
 docutils==0.21.2                        # required by Django for django.contrib.admindocs
 drf-yasg==1.21.10                        # Swagger API documentation
-lxml==5.2.2                             # parser for Wagtail page compression
+lxml==6.0.0                             # parser for Wagtail page compression
 markdown==3.8                           # Markdown reader/parser
 python-hcl2==7.0.1                      # Terraform hcl parser for reading Terraform tfvars files
 wagtail==6.4.1                          # Wagail CMS, for building static pages
