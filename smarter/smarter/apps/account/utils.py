@@ -14,7 +14,6 @@ the primary key id value account.id, user.id, etc.
 import logging
 import re
 import uuid
-from functools import lru_cache
 from typing import Any, Optional
 
 from django.contrib.auth.models import AnonymousUser
@@ -36,9 +35,8 @@ def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
-        and level <= logging.INFO
-    )
+        or waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
+    ) and level <= logging.INFO
 
 
 base_logger = logging.getLogger(__name__)
@@ -47,28 +45,35 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 LRU_CACHE_MAX_SIZE = 128
 
 
-@cache_results()
 def get_cached_account(account_id: Optional[int] = None, account_number: Optional[str] = None) -> Optional[Account]:
     """
     Returns the account for the given account_id or account_number.
     """
 
-    @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
-    def _in_memory_account_by_id(account_id):
+    @cache_results()
+    def _in_memory_account_by_id(account_id) -> Optional[Account]:
         """
         In-memory cache for account objects by ID.
         """
-        account = Account.objects.get(id=account_id)
-        logger.info("_in_memory_account_by_id() retrieving and caching account %s", account)
+        logger.info("_in_memory_account_by_id() retrieving and caching account %s", account_id)
+        try:
+            account = Account.objects.get(id=account_id)
+        except Account.DoesNotExist:
+            logger.warning("_in_memory_account_by_id() account with ID %s does not exist", account_id)
+            return None
         return account
 
-    @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
-    def _in_memory_account_by_number(account_number):
+    @cache_results()
+    def _in_memory_account_by_number(account_number) -> Optional[Account]:
         """
         In-memory cache for account objects by account number.
         """
-        account = Account.objects.get(account_number=account_number)
-        logger.info("_in_memory_account_by_number() retrieving and caching account %s", account)
+        logger.info("_in_memory_account_by_number() retrieving and caching account %s", account_number)
+        try:
+            account = Account.objects.get(account_number=account_number)
+        except Account.DoesNotExist:
+            logger.warning("_in_memory_account_by_number() account with number %s does not exist", account_number)
+            return None
         return account
 
     if account_id:
@@ -87,7 +92,7 @@ def get_cached_smarter_account() -> Optional[Account]:
     return account
 
 
-@lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
+@cache_results()
 def get_cached_default_account() -> Account:
     """
     Returns the default account.
@@ -97,7 +102,6 @@ def get_cached_default_account() -> Account:
     return account
 
 
-@cache_results()
 def _get_account_for_user(user):
     if not user:
         return None
@@ -148,7 +152,7 @@ def get_cached_account_for_user(user: Any) -> Optional[Account]:
 
 def _get_cached_user_profile(resolved_user: User, account: Optional[Account]) -> Optional[UserProfile]:
 
-    @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
+    @cache_results()
     def _in_memory_user_profile(user_id, account_id):
         user_profile = UserProfile.objects.get(user_id=user_id, account_id=account_id)
         logger.info("_in_memory_user_profile() retrieving and caching UserProfile %s", user_profile)
@@ -184,7 +188,7 @@ def get_cached_user_for_user_id(user_id: int) -> User:
     Returns the user for the given user_id.
     """
 
-    @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
+    @cache_results()
     def _in_memory_user(user_id) -> User:
         """
         In-memory cache for user objects.
@@ -198,7 +202,6 @@ def get_cached_user_for_user_id(user_id: int) -> User:
     return user
 
 
-@cache_results()
 def get_cached_admin_user_for_account(account: Account) -> User:
     """
     Returns the account admin user for the given account. If the user does not exist, it will be created.
@@ -206,23 +209,37 @@ def get_cached_admin_user_for_account(account: Account) -> User:
     if not account:
         raise SmarterValueError("Account is required")
 
-    console_prefix = formatted_text("get_cached_admin_user_for_account()")
-    user_profile = UserProfile.objects.filter(account=account, user__is_staff=True).order_by("pk").first()
-    if user_profile:
-        logger.info("%s found and cached admin UserProfile %s for account %s", console_prefix, user_profile, account)
-        return user_profile.user
-    else:
-        # Create a new admin user and UserProfile
-        random_email = f"{uuid.uuid4().hex[:8]}@mail.com"
-        if account and isinstance(account.account_number, str):
-            admin_user = User.objects.create_user(username=account.account_number, email=random_email, is_staff=True)  # type: ignore[arg-type]
-            logger.info("%s created new admin User %s for account %s", console_prefix, admin_user, account)
-            user_profile = UserProfile.objects.create(user=admin_user, account=account)
-            logger.info("%s created new admin UserProfile for user %s", console_prefix, user_profile)
-    if not user_profile:
-        logger.error("%s failed to query nor create admin UserProfile for account %s", console_prefix, account)
-        raise SmarterConfigurationError("Failed to create admin UserProfile")
-    return user_profile.user if user_profile else None  # type: ignore[return-value]
+    @cache_results()
+    def admin_for_account(account_number: str) -> User:
+        account = get_cached_account(account_number=account_number)
+        if not account:
+            raise SmarterConfigurationError(
+                f"Failed to retrieve account with number {account_number}. Please ensure the account exists and is configured correctly."
+            )
+        console_prefix = formatted_text("get_cached_admin_user_for_account()")
+        user_profile = UserProfile.objects.filter(account=account, user__is_staff=True).order_by("pk").first()
+        if user_profile:
+            logger.info(
+                "%s found and cached admin UserProfile %s for account %s", console_prefix, user_profile, account
+            )
+            return user_profile.user
+        else:
+            # Create a new admin user and UserProfile
+            random_email = f"{uuid.uuid4().hex[:8]}@mail.com"
+            if account and isinstance(account.account_number, str):
+                admin_user = User.objects.create_user(username=account.account_number, email=random_email, is_staff=True)  # type: ignore[arg-type]
+                logger.info("%s created new admin User %s for account %s", console_prefix, admin_user, account)
+                user_profile = UserProfile.objects.create(user=admin_user, account=account)
+                logger.info("%s created new admin UserProfile for user %s", console_prefix, user_profile)
+        if not user_profile:
+            logger.error("%s failed to query nor create admin UserProfile for account %s", console_prefix, account)
+            raise SmarterConfigurationError("Failed to create admin UserProfile")
+        return user_profile.user if user_profile else None  # type: ignore[return-value]
+
+    account_number = account.account_number if isinstance(account, Account) else None
+    if not account_number:
+        raise SmarterValueError("Account number is required to retrieve admin user")
+    return admin_for_account(account_number)
 
 
 @cache_results()
@@ -237,7 +254,6 @@ def get_cached_smarter_admin_user_profile() -> UserProfile:
             "Failed to retrieve smarter account. Please ensure the account exists and is configured correctly."
         )
 
-    @lru_cache(maxsize=LRU_CACHE_MAX_SIZE)
     def _in_memory_smarter_admin_user_profile(smarter_account_id):
         super_user_profile = (
             UserProfile.objects.filter(account_id=smarter_account_id, user__is_superuser=True).order_by("pk").first()

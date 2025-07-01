@@ -35,7 +35,7 @@ SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
 SMARTER_IS_INTERNAL_API_REQUEST = "smarter_is_internal_api_request"
 
 # Default cache expiration expressed in seconds for Redis based Django caching.
-SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 5  # 5 minutes
+SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 1  # 5 minutes
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
