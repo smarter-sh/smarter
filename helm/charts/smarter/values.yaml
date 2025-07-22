@@ -25,10 +25,15 @@ redis:
         memory: "1Gi"
         cpu: "512m"
     affinity: {}
-    tolerations:
-      - key: "lawrencemcdaniel.com/smarter"
-        operator: Equal
-        value: "smarter-platform"
-        effect: NoSchedule
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: lawrencemcdaniel.com/smarter
+                  operator: In
+                  values:
+                    - smarter-platform
     nodeSelector:
       environment: "smarter-platform"
