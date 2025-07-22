@@ -17,7 +17,7 @@ redis:
   master:
     persistence:
       enabled: true
-      existingClaim: "{{ .Values.appName }}-redis-pvc"
+      existingClaim: "smarter-redis"
     resources:
       requests:
         memory: "512Mi"
