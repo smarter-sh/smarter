@@ -44,6 +44,11 @@ spec:
                     operator: In
                     values:
                       - smarter
+      tolerations:
+        - key: "node-group"
+          operator: "Equal"
+          value: "smarter"
+          effect: "NoSchedule"
       containers:
         - name: {{ .Values.appName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
