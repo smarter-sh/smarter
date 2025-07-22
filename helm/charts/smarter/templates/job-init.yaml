@@ -17,14 +17,26 @@ spec:
     spec:
       affinity:
         nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-group
+                    operator: In
+                    values:
+                      - smarter
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
               preference:
                 matchExpressions:
-                  - key: lawrencemcdaniel.com/smarter
+                  - key: node-group
                     operator: In
                     values:
-                      - smarter-platform
+                      - smarter
+      tolerations:
+        - key: "node-group"
+          operator: "Equal"
+          value: "smarter"
+          effect: "NoSchedule"
       automountServiceAccountToken: true
       containers:
         - resources:
