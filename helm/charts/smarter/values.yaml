@@ -2,7 +2,7 @@ appName: smarter
 workerName: smarter-worker
 beatName: smarter-beat
 appJobName: smarter-job-db-init
-version: 0.7.3
+version: 0.8.0
 deployment:
   containerPort: 8000
 service:
@@ -17,7 +17,6 @@ redis:
   master:
     persistence:
       enabled: true
-      existingClaim: redis
     resources:
       requests:
         memory: "512Mi"
