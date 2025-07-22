@@ -35,5 +35,3 @@ redis:
                   operator: In
                   values:
                     - smarter-platform
-    nodeSelector:
-      environment: "smarter-platform"
