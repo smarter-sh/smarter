@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: "{{ .Values.appName }}-redis-pv"
+  name: {{ .Values.redis.master.persistence.existingClaim }}
 spec:
   capacity:
     storage: 10Gi
@@ -16,4 +16,4 @@ spec:
             - key: node-group
               operator: In
               values:
-                - smarter
+                - {{ .Values.appName }}
