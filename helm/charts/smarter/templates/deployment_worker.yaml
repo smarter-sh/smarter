@@ -33,10 +33,10 @@ spec:
             - weight: 100
               preference:
                 matchExpressions:
-                  - key: lawrencemcdaniel.com/smarter
+                  - key: node-group
                     operator: In
                     values:
-                      - smarter-platform
+                      - smarter
       containers:
         - name: {{ .Values.workerName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
