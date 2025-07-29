@@ -80,7 +80,7 @@ drf-yasg==1.21.10                        # Swagger API documentation
 lxml==5.2.2                             # parser for Wagtail page compression
 markdown==3.8                           # Markdown reader/parser
 python-hcl2==7.0.1                      # Terraform hcl parser for reading Terraform tfvars files
-wagtail==6.4.1                          # Wagail CMS, for building static pages
+wagtail==7.0.1                          # Wagail CMS, for building static pages
 wagtail-transfer==0.9.4                 # https://github.com/wagtail/wagtail-transfer
 
 
