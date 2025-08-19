@@ -1,6 +1,7 @@
 # pylint: disable=W0718
 """Smarter API StaticPlugin Manifest handler"""
 
+import json
 import logging
 from typing import Optional, Type
 
@@ -132,6 +133,11 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 user_profile=self.user_profile,
                 manifest=self.manifest,
             )
+        elif self.name:
+            self._plugin = StaticPlugin(
+                user_profile=self.user_profile,
+                name=self.name,
+            )
         return self._plugin
 
     @property
@@ -230,7 +236,11 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
 
         if not isinstance(self.plugin, StaticPlugin):
-            raise SAMBrokerErrorNotReady(message="No plugin found", thing=self.kind, command=command)
+            raise SAMBrokerErrorNotReady(
+                message=f"No plugin found. url: {request.build_absolute_uri()}, args={json.dumps(args)}, kwargs={json.dumps(kwargs)}",
+                thing=self.kind,
+                command=command,
+            )
         if self.account is None:
             raise SAMPluginBrokerError(
                 f"{self.formatted_class_name} {self.kind} account not initialized. Cannot describe",
