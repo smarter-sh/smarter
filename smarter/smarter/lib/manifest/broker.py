@@ -157,7 +157,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             "AbstractBroker.__init__() initializing request: %s, args: %s, kwargs: %s", self.request, args, kwargs
         )
 
-        self._name = kwargs.get("name")
+        self._name = kwargs.get("name")  # i suspect that this is always None bc DRF sets name later in the process
         self._kind = kwargs.get("kind")
         self._loader = kwargs.get("loader")
         api_version: Optional[str] = kwargs.get("api_version", SmarterApiVersions.V1)
