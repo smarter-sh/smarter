@@ -32,7 +32,7 @@ whitenoise==6.9.0                       # static file serving
 # ------------
 Django==5.1.7
 django-extensions==3.2.3
-django-debug-toolbar==5.2.0
+django-debug-toolbar==6.0.0
 django-redis==5.4.0                     # object caching
 django-celery-beat==2.8.1               # scheduled asynchronous tasks
 djangorestframework==3.15.2             # for creating REST APIs on top of Django
