@@ -36,7 +36,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
         or waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
-    ) and level <= logging.INFO
+    ) and level >= logging.INFO
 
 
 base_logger = logging.getLogger(__name__)

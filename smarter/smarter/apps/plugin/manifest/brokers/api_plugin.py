@@ -40,7 +40,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level <= logging.INFO
+    ) and level >= logging.INFO
 
 
 base_logger = logging.getLogger(__name__)
@@ -211,10 +211,11 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             return self.json_response_ok(command=command, data=retval)
         except Exception as e:
             logger.error(
-                "%s.describe() failed to serialize %s %s",
+                "%s.describe() failed to serialize %s %s: %s",
                 self.formatted_class_name,
                 self.kind,
                 self.plugin.name,
+                str(e),
                 exc_info=True,
             )
             raise SAMPluginBrokerError(
