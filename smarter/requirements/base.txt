@@ -75,7 +75,7 @@ mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to th
 # for platform documentation in /docs/
 # ------------
 beautifulsoup4==4.13.3                  # HTML parser for Wagtail page compression
-docutils==0.21.2                        # required by Django for django.contrib.admindocs
+docutils==0.22                        # required by Django for django.contrib.admindocs
 drf-yasg==1.21.10                        # Swagger API documentation
 lxml==6.0.0                             # parser for Wagtail page compression
 markdown==3.8                           # Markdown reader/parser
