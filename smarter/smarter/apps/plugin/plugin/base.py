@@ -117,6 +117,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         plugin_id: Optional[int] = None,
         plugin_meta: Optional[PluginMeta] = None,
         data: Union[dict[str, Any], str, None] = None,
+        name: Union[str, None] = None,
         **kwargs,
     ):
         """
@@ -127,11 +128,11 @@ class PluginBase(ABC, SmarterHelperMixin):
         see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
         super().__init__(*args, **kwargs)
-        if sum([bool(data), bool(manifest), bool(plugin_id), bool(plugin_meta)]) != 1:
+        if sum([bool(data), bool(manifest), bool(plugin_id), bool(plugin_meta), bool(name)]) != 1:
             raise SmarterPluginError(
-                f"Must specify one and only one of: manifest, data, plugin_id, or plugin_meta. "
+                f"Must specify one and only one of: manifest, data, plugin_id, plugin_meta, or name. "
                 f"Received: data {bool(data)}, manifest {bool(manifest)}, "
-                f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}."
+                f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}, name {bool(name)}."
             )
         self._api_version = api_version or self.api_version
         self._selected = selected
@@ -152,9 +153,14 @@ class PluginBase(ABC, SmarterHelperMixin):
         #######################################################################
         if plugin_id:
             self.id = plugin_id
-
-        if plugin_meta:
+        elif plugin_meta:
             self.id = plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+        elif name and self.user_profile:
+            try:
+                self._plugin_meta = PluginMeta.objects.get(account=self.user_profile.account, name=name)
+                self.id = self._plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+            except PluginMeta.DoesNotExist as e:
+                raise SmarterPluginError(f"PluginMeta with name {name} does not exist for this account.") from e
 
         #######################################################################
         # Smarter API Manifest based initialization
@@ -163,8 +169,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             # we received a Pydantic model from a manifest broker.
             self._manifest = manifest
             self.create()
-
-        if data is not None:
+        elif data is not None:
             # we received a yaml or json string representation of a manifest.
             data = self.data_to_dict(data)
             self.api_version = data.get("apiVersion", self.api_version)

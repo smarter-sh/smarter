@@ -99,7 +99,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 logger.error("%s Failed to generate cache key data for %s", logger_prefix, func.__name__)
                 return func(*args, **kwargs)
             cache_key = generate_cache_key(func, key_data)
-            unpickled_cache_key = unpickle_key_data(key_data)
+            # unpickled_cache_key = unpickle_key_data(key_data)
 
             cached_result = cache.get(cache_key, CACHE_MISS_SENTINEL)
             if cached_result is not CACHE_MISS_SENTINEL:
@@ -151,7 +151,7 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 return func(request, *args, **kwargs)
             url = smarter_build_absolute_uri(request)
             user_identifier = (
-                request.user.username if hasattr(request, "user") and request.user.is_authenticated else "anonymous"
+                request.user.username if hasattr(request, "user") and request.user.is_authenticated else "anonymous"  # type: ignore[union-attr,attr-defined]
             )
             cache_key = f"{func.__name__}_{url}_{user_identifier}"
             result = cache.get(cache_key)
