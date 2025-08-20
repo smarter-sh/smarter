@@ -29,7 +29,7 @@ class WaffleSwitchedLoggerWrapper:
         self._logger = logger
         self._condition_func = condition_func
 
-    def _should_log(self, level: int) -> bool:
+    def _should_log(self, level: int = logging.DEBUG) -> bool:
         """Check if we should log based on custom conditions."""
         if not self._logger.isEnabledFor(level):
             return False

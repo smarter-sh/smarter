@@ -24,7 +24,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
-        and level <= logging.INFO
+        and level >= logging.INFO
     )
 
 

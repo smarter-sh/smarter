@@ -59,12 +59,12 @@ API_VI_CHATBOT_NAMESPACE = "api:v1:chatbot"
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level <= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= logging.INFO
 
 
 def should_log_chatbot_helper(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING) and level <= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING) and level >= logging.INFO
 
 
 base_logger = logging.getLogger(__name__)
