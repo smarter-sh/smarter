@@ -388,7 +388,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
-        self._manifest_name = self.params.get("name", None) if self.params else None
+        self._manifest_name = self.params.get("name", None) if self.params else kwargs.get("name", None)
 
         user_agent = request.headers.get("User-Agent", "")
         if "Go-http-client" not in user_agent:
