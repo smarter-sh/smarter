@@ -30,6 +30,15 @@ from .utils import (
 )
 
 
+UserType = Union[AnonymousUser, User, None]
+AccountNumberType = Optional[str]
+AccountType = Optional[Account]
+UserProfileType = Optional[UserProfile]
+ApiTokenType = Optional[bytes]
+OptionalRequestionType = Optional[Union[WSGIRequest, HttpRequest, Request]]
+RequestionType = Union[WSGIRequest, HttpRequest, Request]
+
+
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= logging.INFO
@@ -41,17 +50,27 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class AccountMixin(SmarterHelperMixin):
     """
-    Provides the account and user properties. Leverages
-    cached queries to reduce database overhead. Cache expiration is
-    intended to be short-lived, so that changes to the account or user
-    are reflected in the properties. The account and user
-    properties are lazy-loaded, and the user_profile property is
-    derived from the account and user properties.
+    AccountMixin
 
-    account: Account - the account to which the user belongs.
-    account_number: str - a string of the format ####-####-#### that uniquely
-       identifies an account and can be passed as a proxy to the account object.
-    user: User - the Django user for the current user.
+    Provides consistent initializations and short-lived caching of
+    the account, user, and user_profile properties using various sources
+    such as direct arguments, request objects, or API tokens.
+
+    It prioritizes initialization in the following order:
+    1. Explicit account_number, account, or user arguments.
+    2. Request object (from kwargs or positional args), extracting user and account info.
+    3. API token authentication if provided.
+
+    Args:
+        *args: Positional arguments, may include a request object.
+        account_number (Optional[str]): Unique account identifier.
+        account (Optional[Account]): Account instance.
+        user (Union[AnonymousUser, User, None]): Django user instance.
+        api_token (Optional[bytes]): API token for authentication.
+        **kwargs: Additional keyword arguments, may include 'request'.
+
+    The constructor attempts to resolve and cache the account and user information,
+    logging relevant events and warnings if data cannot be resolved.
     """
 
     __slots__ = ("_account", "_user", "_user_profile")
@@ -59,42 +78,21 @@ class AccountMixin(SmarterHelperMixin):
     def __init__(
         self,
         *args,
-        account_number: Optional[str] = None,
-        account: Optional[Account] = None,
-        user: Union[AnonymousUser, User, None] = None,
-        api_token: Optional[bytes] = None,
+        account_number: AccountNumberType = None,
+        account: AccountType = None,
+        user: UserType = None,
+        api_token: ApiTokenType = None,
         **kwargs,
     ):
-        """
-        AccountMixin
-
-        This constructor sets up the account, user, and user_profile properties using
-        various sources such as direct arguments, request objects, or API tokens.
-        It prioritizes initialization in the following order:
-        1. Explicit account_number, account, or user arguments.
-        2. Request object (from kwargs or positional args), extracting user and account info.
-        3. API token authentication if provided.
-
-        Args:
-            *args: Positional arguments, may include a request object.
-            account_number (Optional[str]): Unique account identifier.
-            account (Optional[Account]): Account instance.
-            user (Union[AnonymousUser, User, None]): Django user instance.
-            api_token (Optional[bytes]): API token for authentication.
-            **kwargs: Additional keyword arguments, may include 'request'.
-
-        The constructor attempts to resolve and cache the account and user information,
-        logging relevant events and warnings if data cannot be resolved.
-        """
         super().__init__(*args, **kwargs)
-        self._account: Optional[Account] = None
-        self._user: Union[AnonymousUser, User, None] = None
-        self._user_profile: Optional[UserProfile] = None
+        self._account: AccountType = None
+        self._user: UserType = None
+        self._user_profile: UserProfileType = None
 
-        request: Optional[Union[WSGIRequest, HttpRequest, Request]] = kwargs.get("request")
+        request: OptionalRequestionType = kwargs.get("request")
         if not request and args:
             for arg in args:
-                if isinstance(arg, Union[HttpRequest, Request, WSGIRequest]):
+                if isinstance(arg, RequestionType):
                     logger.info(
                         "%s.__init__(): received a request object: %s",
                         self.formatted_class_name,
@@ -212,7 +210,7 @@ class AccountMixin(SmarterHelperMixin):
         return f"{inherited_class} AccountMixin()"
 
     @property
-    def account(self) -> Optional[Account]:
+    def account(self) -> AccountType:
         """
         Returns the account for the current user. Handle
         lazy instantiation from user or user_profile.
@@ -226,7 +224,7 @@ class AccountMixin(SmarterHelperMixin):
         return self._account
 
     @account.setter
-    def account(self, account: Optional[Account]):
+    def account(self, account: AccountType):
         """
         Set the account for the current user. Handle
         management of user_profile.
@@ -250,14 +248,14 @@ class AccountMixin(SmarterHelperMixin):
             return
 
     @property
-    def account_number(self) -> Optional[str]:
+    def account_number(self) -> AccountNumberType:
         """
         A helper function to get the account number from the account.
         """
         return self._account.account_number if self._account else None
 
     @account_number.setter
-    def account_number(self, account_number: Optional[str]):
+    def account_number(self, account_number: AccountNumberType):
         """
         A helper function to set the account from the account_number.
         """
@@ -276,7 +274,7 @@ class AccountMixin(SmarterHelperMixin):
             )
 
     @property
-    def user(self) -> Optional[User]:
+    def user(self) -> UserType:
         """
         Returns the user for the current user. Handle
         lazy instantiation from user_profile or account.
@@ -288,7 +286,7 @@ class AccountMixin(SmarterHelperMixin):
         return self._user
 
     @user.setter
-    def user(self, user: Optional[User]):
+    def user(self, user: UserType):
         """
         Set the user for the current user. Handle
         management of user_profile, if the user is unset.
@@ -319,7 +317,7 @@ class AccountMixin(SmarterHelperMixin):
             self._user_profile = None
 
     @property
-    def user_profile(self) -> Optional[UserProfile]:
+    def user_profile(self) -> UserProfileType:
         """
         Returns the user_profile for the current user. Handle
         lazy instantiation from user or account.
@@ -328,7 +326,7 @@ class AccountMixin(SmarterHelperMixin):
             return self._user_profile
         # note that we have to use property references here in order to trigger
         # the property setters.
-        if self._account and self._user:
+        if self._account and isinstance(self._user, User):
             try:
                 self._user_profile = get_cached_user_profile(user=self._user, account=self._account)
                 return self._user_profile
@@ -336,7 +334,7 @@ class AccountMixin(SmarterHelperMixin):
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {self._account.account_number}."
                 ) from e
-        if self._user:
+        if isinstance(self._user, User):
             self._user_profile = get_cached_user_profile(user=self._user)
         if not self._user_profile:
             logger.warning(
@@ -348,7 +346,7 @@ class AccountMixin(SmarterHelperMixin):
         return self._user_profile
 
     @user_profile.setter
-    def user_profile(self, user_profile: Optional[UserProfile]):
+    def user_profile(self, user_profile: UserProfileType):
         """
         Set the user_profile for the current user. If we're unsetting the user_profile,
         then leave the user and account as they are. But if we're setting the user_profile,
