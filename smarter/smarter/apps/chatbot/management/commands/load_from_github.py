@@ -6,6 +6,7 @@ organized in directories by customer API name.
 import os
 import re
 import subprocess
+import sys
 from typing import Optional
 from urllib.parse import urljoin
 
@@ -22,10 +23,12 @@ from smarter.apps.account.utils import (
 from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
-from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
+from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.manifest.loader import SAMLoader
 
 
 # pylint: disable=E1101,too-many-instance-attributes
@@ -91,24 +94,20 @@ class Command(BaseCommand):
         if not self.user_profile:
             raise SmarterValueError("User profile is required.")
 
-        with open(filespec, encoding="utf-8") as file:
-            data = file.read()
-
-        if data:
-            try:
-                data = yaml.safe_load(data)
-            except yaml.YAMLError as exc:
-                print("Error in configuration file:", exc)
-        else:
-            raise SmarterValueError("Could not read the file.")
-
-        plugin_controller = PluginController(
-            user=self.user,
-            account=self.account,
-            manifest_data=data,
-            user_profile=self.user_profile,
+        loader = SAMLoader(
+            api_version=SmarterApiVersions.V1,
+            file_path=filespec,
         )
-        plugin = plugin_controller.plugin
+
+        if not loader.ready:
+            self.stdout.write(self.style.ERROR("manage.py create_plugin. SAMLoader is not ready."))
+            sys.exit(1)
+        plugin_class = SAM_MAP[loader.manifest_kind]
+        manifest = plugin_class(**loader.pydantic_model_dump())
+        self.stdout.write(f"Creating {plugin_class.__name__} {manifest.metadata.name} for account {self.account}...")
+
+        controller = PluginController(account=self.account, user=self.user, user_profile=self.user_profile, manifest=manifest)  # type: ignore
+        plugin = controller.obj
         return plugin
 
     def apply_manifest(self, manifest_data: str) -> HttpResponse:
@@ -204,7 +203,7 @@ class Command(BaseCommand):
                             if file.endswith(".yaml") or file.endswith(".yml"):
                                 filespec = os.path.join(directory_path, file)
                                 filename = os.path.basename(filespec)
-                                print(f"Loading plugin: {filename}")
+                                print(f"Loading plugin: {filespec}")
                                 plugin = self.load_plugin(filespec=filespec)
                                 if not plugin:
                                     self.stderr.write(f"Error loading plugin: {filename}")

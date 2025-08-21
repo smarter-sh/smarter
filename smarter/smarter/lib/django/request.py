@@ -171,7 +171,7 @@ class SmarterRequestMixin(AccountMixin):
             request,
             args,
             kwargs,
-            request.META.get("HTTP_AUTHORIZATION"),
+            request.META.get("HTTP_AUTHORIZATION") if request and hasattr(request, "META") else None,
         )
 
         if isinstance(self._session_key, str):
@@ -228,7 +228,11 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def auth_header(self) -> Optional[str]:
         """Get the Authorization header from the request."""
-        return self._smarter_request.META.get("HTTP_AUTHORIZATION") if self._smarter_request else None
+        return (
+            self._smarter_request.META.get("HTTP_AUTHORIZATION")
+            if self._smarter_request and hasattr(self._smarter_request, "META")
+            else None
+        )
 
     @cached_property
     def api_token(self) -> Optional[bytes]:
