@@ -59,11 +59,36 @@ class AccountMixin(SmarterHelperMixin):
     def __init__(
         self,
         *args,
+        account_number: Optional[str] = None,
+        account: Optional[Account] = None,
+        user: Union[AnonymousUser, User, None] = None,
+        api_token: Optional[bytes] = None,
         **kwargs,
     ):
+        """
+        AccountMixin
+
+        This constructor sets up the account, user, and user_profile properties using
+        various sources such as direct arguments, request objects, or API tokens.
+        It prioritizes initialization in the following order:
+        1. Explicit account_number, account, or user arguments.
+        2. Request object (from kwargs or positional args), extracting user and account info.
+        3. API token authentication if provided.
+
+        Args:
+            *args: Positional arguments, may include a request object.
+            account_number (Optional[str]): Unique account identifier.
+            account (Optional[Account]): Account instance.
+            user (Union[AnonymousUser, User, None]): Django user instance.
+            api_token (Optional[bytes]): API token for authentication.
+            **kwargs: Additional keyword arguments, may include 'request'.
+
+        The constructor attempts to resolve and cache the account and user information,
+        logging relevant events and warnings if data cannot be resolved.
+        """
         super().__init__(*args, **kwargs)
         self._account: Optional[Account] = None
-        self._user: Optional[User] = None
+        self._user: Union[AnonymousUser, User, None] = None
         self._user_profile: Optional[UserProfile] = None
 
         request: Optional[Union[WSGIRequest, HttpRequest, Request]] = kwargs.get("request")
@@ -77,11 +102,6 @@ class AccountMixin(SmarterHelperMixin):
                     )
                     request = arg
                     break
-
-        account_number: Optional[str] = kwargs.get("account_number")
-        account = kwargs.get("account")
-        user = kwargs.get("user")
-        api_token: Union[bytes, None] = kwargs.get("api_token", None)
 
         if account_number is not None:
             logger.info("%s.__init__(): received account_number %s", self.formatted_class_name, account_number)
