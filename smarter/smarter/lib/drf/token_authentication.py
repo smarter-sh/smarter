@@ -6,9 +6,11 @@ from django.utils import timezone
 from knox.auth import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
+from smarter.apps.account.models import User
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterException
 from smarter.common.utils import mask_string
+from smarter.lib.cache import cache_results
 
 from .models import SmarterAuthToken
 from .signals import (
@@ -18,6 +20,7 @@ from .signals import (
 )
 
 
+CACHE_TIMEOUT = 60 * 60 * 24  # 24 hours
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +50,8 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
             kwargs,
         )
 
-    def authenticate_credentials(self, token: bytes) -> tuple:
+    @cache_results(CACHE_TIMEOUT)
+    def authenticate_credentials(self, token: bytes) -> tuple[User, SmarterAuthToken]:
         # authenticate the user using the normal token authentication
         # this will raise an AuthenticationFailed exception if the token is invalid
         if not isinstance(token, bytes):
@@ -59,6 +63,13 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         )
         logger.info("%s.authenticate_credentials() - %s", self.formatted_class_name, masked_token)
         user, auth_token = super().authenticate_credentials(token)
+        if not isinstance(user, User):
+            logger.warning(
+                "%s.authenticate_credentials() - failed to retrieve user for token: %s",
+                self.formatted_class_name,
+                masked_token,
+            )
+            raise AuthenticationFailed("Invalid token")
 
         # next, we need to ensure that the token is active, otherwise
         # we should raise an exception that exactly matches the one
