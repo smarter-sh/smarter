@@ -14,8 +14,10 @@ from smarter.apps.account.serializers import UserMiniSerializer
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.common.utils import mask_string
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import Account, UserProfile
@@ -79,6 +81,7 @@ class AccountMixin(SmarterHelperMixin):
         account_number: Optional[str] = kwargs.get("account_number")
         account = kwargs.get("account")
         user = kwargs.get("user")
+        api_token: Union[bytes, None] = kwargs.get("api_token", None)
 
         if account_number is not None:
             logger.info("%s.__init__(): received account_number %s", self.formatted_class_name, account_number)
@@ -133,8 +136,11 @@ class AccountMixin(SmarterHelperMixin):
                     self._account,
                     self.user_profile,
                 )
-            else:
-                logger.warning("%s.__init__(): did not find a user in the request object", self.formatted_class_name)
+            elif not api_token:
+                logger.warning(
+                    "%s.__init__(): did not find a user in the request object nor an Api token in the request header",
+                    self.formatted_class_name,
+                )
             if not self._account:
                 # if the account is not set, then try to get it from the request
                 # by parsing the URL.
@@ -148,12 +154,20 @@ class AccountMixin(SmarterHelperMixin):
                     )
                     self._account = get_cached_account(account_number=account_number)
                     logger.info("%s.__init__(): set account to %s", self.formatted_class_name, self._account)
-                else:
+                elif not api_token:
                     logger.warning(
-                        "%s.__init__(): did not find an account number in the request url %s",
+                        "%s.__init__(): did not find an account number in the request url nor an API token in the request header: %s",
                         self.formatted_class_name,
                         url,
                     )
+        if not self._user and isinstance(api_token, bytes):
+            logger.info(
+                "%s.__init__(): found API token in kwargs: %s",
+                self.formatted_class_name,
+                mask_string(api_token.decode()),
+            )
+            user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
+            self.user = user
 
         if self.is_accountmixin_ready:
             logger.info(

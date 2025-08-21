@@ -38,11 +38,10 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
-from smarter.common.utils import hash_factory
+from smarter.common.utils import hash_factory, mask_string
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
@@ -163,17 +162,7 @@ class SmarterRequestMixin(AccountMixin):
         self._url = urlunsplit((self._parse_result.scheme, self._parse_result.netloc, self._parse_result.path, "", ""))
         self._url = SmarterValidator.urlify(self._url)
 
-        super().__init__(request, *args, **kwargs)
-
-        if not self.is_authenticated and self.auth_header:
-            logger.warning(
-                "%s.__init__() - user is not authenticated but found an Authentication header in the request: %s",
-                self.formatted_class_name,
-                self.auth_header,
-            )
-            if self.api_token is not None:
-                user, _ = SmarterTokenAuthentication().authenticate_credentials(self.api_token)
-                self.user = user
+        super().__init__(request, *args, api_token=self.api_token, **kwargs)
 
         logger.info(
             "%s.__init__() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s auth_header=%s",
@@ -1123,7 +1112,7 @@ class SmarterRequestMixin(AccountMixin):
             "url": self.url,
             "session_key": self.session_key,
             "auth_header": self.auth_header,
-            "api_key": self.api_token.decode() if self.api_token else None,
+            "api_token": mask_string(self.api_token.decode()) if self.api_token else None,
             "data": self.data,
             "chatbot_id": self.smarter_request_chatbot_id,
             "chatbot_name": self.smarter_request_chatbot_name,
