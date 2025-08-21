@@ -60,7 +60,7 @@ class SAMTestBroker(AbstractBroker):
         """
         if not self.user:
             raise SAMUserBrokerError("No user set for the broker")
-        user_dict = model_to_dict(self.user)
+        user_dict = model_to_dict(self.user) if isinstance(self.user, User) else {}
         user_dict = self.snake_to_camel(user_dict)
         user_dict.pop("id")  # type: ignore[union-attr]
 
@@ -77,7 +77,7 @@ class SAMTestBroker(AbstractBroker):
                 SAMUserSpecKeys.CONFIG.value: user_dict,
             },
             SAMKeys.STATUS.value: {
-                "dateJoined": self.user.date_joined.isoformat(),
+                "dateJoined": self.user.date_joined.isoformat() if isinstance(self.user, User) else None,
             },
         }
         return data

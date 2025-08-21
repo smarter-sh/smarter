@@ -228,7 +228,7 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def auth_header(self) -> Optional[str]:
         """Get the Authorization header from the request."""
-        return self._smarter_request.META.get("HTTP_AUTHORIZATION")
+        return self._smarter_request.META.get("HTTP_AUTHORIZATION") if self._smarter_request else None
 
     @cached_property
     def api_token(self) -> Optional[bytes]:

@@ -1,7 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
-from django.test import Client
+from rest_framework.test import APIClient
 
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -16,7 +16,7 @@ class TestPluginUrls(TestAccountMixin):
         """Set up test fixtures."""
         super().setUp()
         add_example_plugins(user_profile=self.user_profile)
-        self.client = Client()
+        self.client = APIClient()
         self.client.force_login(self.admin_user)
 
     def test_account_users_add_plugins_view(self):

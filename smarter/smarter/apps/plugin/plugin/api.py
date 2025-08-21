@@ -3,10 +3,9 @@
 # python stuff
 import json
 import logging
-from typing import Any, Optional, Type, Union
+from typing import Any, Optional, Type
 
 # smarter stuff
-from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.manifest.models.common import Parameter
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
@@ -32,7 +31,7 @@ from ..manifest.models.api_plugin.const import MANIFEST_KIND
 from ..manifest.models.api_plugin.enum import SAMApiPluginSpecApiData
 from ..manifest.models.api_plugin.model import SAMApiPlugin
 from ..manifest.models.common.plugin.enum import SAMPluginCommonSpecTestValues
-from ..models import ApiConnection, PluginDataApi, PluginMeta
+from ..models import ApiConnection, PluginDataApi
 from ..serializers import PluginApiSerializer
 from .base import PluginBase, SmarterPluginError
 
@@ -53,6 +52,8 @@ class SmarterApiPluginError(SmarterPluginError):
 class ApiPlugin(PluginBase):
     """A Plugin that uses an http request to a REST API to retrieve its return data"""
 
+    SAMPluginType = SAMApiPlugin
+    _manifest: Optional[SAMApiPlugin] = None
     _metadata_class = SAMPluginCommonMetadataClass.API.value
     _plugin_data: Optional[PluginDataApi] = None
     _plugin_data_serializer: Optional[PluginApiSerializer] = None
@@ -60,29 +61,10 @@ class ApiPlugin(PluginBase):
     def __init__(
         self,
         *args,
-        user_profile: Optional[UserProfile] = None,
-        selected: bool = False,
-        api_version: Optional[str] = None,
         manifest: Optional[SAMApiPlugin] = None,
-        plugin_id: Optional[int] = None,
-        plugin_meta: Optional[PluginMeta] = None,
-        data: Union[dict[str, Any], str, None] = None,
         **kwargs,
     ):
-        self._manifest = manifest  # note: this is redundant and can probably be removed.
-        self._plugin_data = None
-        self._plugin_data_serializer = None
-        super().__init__(
-            *args,
-            user_profile=user_profile,
-            selected=selected,
-            api_version=api_version,
-            plugin_id=plugin_id,
-            plugin_meta=plugin_meta,
-            manifest=manifest,  # type: ignore[arg-type]
-            data=data,
-            **kwargs,
-        )
+        super().__init__(*args, manifest=manifest, **kwargs)
 
     @property
     def kind(self) -> str:
@@ -95,8 +77,8 @@ class ApiPlugin(PluginBase):
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMApiPlugin(**self.to_json())  # type: ignore[call-arg]
-        return self._manifest if isinstance(self._manifest, SAMApiPlugin) else None
+            self._manifest = self.SAMPluginType(**self.to_json())  # type: ignore[call-arg]
+        return self._manifest if isinstance(self._manifest, self.SAMPluginType) else None
 
     @property
     def plugin_data(self) -> Optional[PluginDataApi]:
@@ -303,7 +285,7 @@ class ApiPlugin(PluginBase):
         # recast the Python dict to the Pydantic model
         # in order to validate our output
         try:
-            pydantic_model = SAMApiPlugin(**api_plugin)
+            pydantic_model = cls.SAMPluginType(**api_plugin)
         except Exception as e:
             raise SmarterConfigurationError(f"{cls.__name__} example_manifest() error: {e}") from e
         try:

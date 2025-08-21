@@ -101,13 +101,13 @@ class AccountMixin(SmarterHelperMixin):
                     request = arg
                     break
 
-        if account_number is not None:
+        if isinstance(account_number, str):
             logger.info("%s.__init__(): received account_number %s", self.formatted_class_name, account_number)
             self._account = get_cached_account(account_number=account_number) if account_number else account
-        if account is not None:
+        if isinstance(account, Account):
             logger.info("%s.__init__(): received account %s", self.formatted_class_name, account)
             self._account = account
-        if user is not None:
+        if isinstance(user, User):
             self._user = user
             logger.info("%s.__init__(): received user %s", self.formatted_class_name, user)
             self._account = get_cached_account_for_user(user)
