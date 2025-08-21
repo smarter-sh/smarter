@@ -82,24 +82,25 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         Process the request to set up the CSRF protection.
         If the request is for a ChatBot, then we'll exempt it from CSRF checks.
         """
-        if not hasattr(request, "user") or not request.user.is_authenticated:
-            # this is the expected case where the request is not yet authenticated
-            # because we are in middleware and authentication has not yet occurred.
-            #
-            # we'll add our own smarter admin user just for initializing
-            # the ChatBotHelper.
-            admin_user_profile = get_cached_smarter_admin_user_profile()
-            request.user = admin_user_profile.user
-            logger.info(
-                "%s: request is not (yet) authenticated. Using admin user as a proxy for evaluating CSRF_TRUSTED_ORIGINS: %s",
-                self.formatted_class_name,
-                admin_user_profile,
-            )
-
         # this is a workaround to not being able to inherit from
         # SmarterRequestMixin inside of middleware.
         logger.info("%s.process_request - initializing SmarterRequestMixin", self.formatted_class_name)
         self.smarter_request = SmarterRequestMixin(request)
+        if self.smarter_request and hasattr(self.smarter_request, "user") and self.smarter_request.user is not None:
+            request.user = self.smarter_request.user
+
+        if not hasattr(request, "user") or (request.user and not request.user.is_authenticated):
+            # this would only happen if the url routes to DRF but no
+            # Authentication token was passed in the header. In this
+            # case we'll add our own smarter admin user just for initializing
+            # the ChatBotHelper.
+            admin_user_profile = get_cached_smarter_admin_user_profile()
+            request.user = admin_user_profile.user
+            logger.warning(
+                "%s: request is not (yet) authenticated. Using admin user as a proxy for evaluating CSRF_TRUSTED_ORIGINS: %s",
+                self.formatted_class_name,
+                admin_user_profile,
+            )
 
         url = self.smarter_request.url if self.smarter_request else "unknown"
         logger.info("%s.__call__(): %s", self.formatted_class_name, url)
