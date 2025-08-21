@@ -141,6 +141,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _params: Optional[dict[str, Any]] = None
     _prompt: Optional[str] = None
 
+    def __init__(self, *args, **kwargs):
+        logger.info("%s.__init__() - called", self.formatted_class_name)
+        super().__init__(*args, **kwargs)
+        logger.info("%s.__init__() - initialized", self.formatted_class_name)
+
     @property
     def formatted_class_name(self) -> str:
         """
@@ -293,8 +298,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         Setup the view. This is called by Django before dispatch() and is used to
         set up the view for the request.
         """
+        logger.info("%s.setup() - called for request: %s", self.formatted_class_name, request.build_absolute_uri())
+        super().setup(request, *args, **kwargs)
         logger.info(
-            "CliBaseApiView().setup() - view for request: %s, user: %s is_authenticated: %s",
+            "%s.setup() - view for request: %s, user: %s is_authenticated: %s",
+            self.formatted_class_name,
             request.build_absolute_uri(),
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             request.user.is_authenticated,
@@ -302,7 +310,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # experiment: we want to ensure that the request object is
         # initialized before we call the SmarterRequestMixin.
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
-        super().setup(request, *args, **kwargs)
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
@@ -319,13 +326,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         Initialize the view. This is called by DRF after setup() but before dispatch().
         """
-        logger.info(
-            "CliBaseApiView().initial() - initializing view for request: %s, user: %s, self.user: %s is_authenticated: %s",
-            request.build_absolute_uri(),
-            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
-            self.user_profile,
-            request.user.is_authenticated,
-        )
+        logger.info("%s.initial() - called for request: %s", self.formatted_class_name, request.build_absolute_uri())
         # Check if the request is authenticated. If not, raise an
         # authentication error. see SmarterTokenAuthentication for details
         # on how the token is validated.
@@ -333,6 +334,16 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # of the form: 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY'
         try:
             super().initial(request, *args, **kwargs)
+
+            logger.info(
+                "%s.initial() - authenticated request: %s, user: %s, self.user: %s is_authenticated: %s, auth_header: %s",
+                self.formatted_class_name,
+                request.build_absolute_uri(),
+                request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
+                self.user_profile,
+                request.user.is_authenticated,
+                request.META.get("HTTP_AUTHORIZATION"),
+            )
         except NotAuthenticated as e:
             internal_api_request = getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False)
             if internal_api_request:
@@ -348,21 +359,28 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 auth_header = request.headers.get("Authorization")
                 if auth_header:
                     logger.error(
-                        "CliBaseApiView().initial() - Authorization header contains an invalid, inactive or malformed token: %s",
+                        "%s.initial() - Authorization header contains an invalid, inactive or malformed token: %s",
+                        self.formatted_class_name,
                         e,
                     )
                 else:
                     logger.error(
-                        "CliBaseApiView().initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact support@smarter.sh %s",
+                        "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact support@smarter.sh %s",
+                        self.formatted_class_name,
                         e,
                     )
                 raise SmarterAPIV1CLIViewErrorNotAuthenticated(
                     "Smarter api v1 command-line interface error: authentication failed"
                 ) from e
+
         # if we got here, then the request is authenticated, and we need to
         # restore the user object for the request, which DRF will have set
         # to an AnonymousUser at the start of its own authentication process.
         # see: https://www.django-rest-framework.org/api-guide/authentication/#how-authentication-is-determined
+        if not self.user:
+            # this is the expected case, where the request object is missing the user and therefore
+            # the AccountMixin has not set user nor account.
+            self.user = SmarterTokenAuthentication.get_user_from_request(request)
         request.user = self.user  # type: ignore[assignment]
 
         if self.smarter_request is None:
@@ -432,7 +450,15 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         return a generic error message with a bug report URL.
         """
         try:
+            logger.info(
+                "%s.dispatch() - called for request: %s", self.formatted_class_name, request.build_absolute_uri()
+            )
             response = super().dispatch(request, *args, **kwargs)
+            logger.info(
+                "%s.dispatch() - finished processing request: %s",
+                self.formatted_class_name,
+                request.build_absolute_uri(),
+            )
             api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
             return response
         # pylint: disable=broad-except
