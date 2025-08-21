@@ -41,10 +41,20 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 class StaticPlugin(PluginBase):
     """A PLugin that returns a static json object stored in the Plugin itself."""
 
+    SAMPluginType = SAMStaticPlugin
+
+    _manifest: Optional[SAMStaticPlugin] = None
     _metadata_class: str = SAMPluginCommonMetadataClass.STATIC.value
     _plugin_data: Optional[PluginDataStatic] = None
     _plugin_data_serializer: Optional[PluginStaticSerializer] = None
-    _manifest: Optional[SAMStaticPlugin] = None
+
+    def __init__(
+        self,
+        *args,
+        manifest: Optional[SAMStaticPlugin] = None,
+        **kwargs,
+    ):
+        super().__init__(*args, manifest=manifest, **kwargs)
 
     @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
@@ -208,7 +218,7 @@ class StaticPlugin(PluginBase):
 
         # recast the Python dict to the Pydantic model
         # in order to validate our output
-        pydantic_model = SAMStaticPlugin(**static_plugin)
+        pydantic_model = cls.SAMPluginType(**static_plugin)
         return json.loads(pydantic_model.model_dump_json())
 
     def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> str:

@@ -5,7 +5,8 @@ import logging
 import os
 
 from django.core.handlers.wsgi import WSGIRequest
-from django.test import Client, RequestFactory
+from django.test import RequestFactory
+from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
@@ -64,7 +65,7 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         cls.request: WSGIRequest = cls.create_generic_request(url=cls.broker.chatbot.url_chatbot)
 
         cls.request.user = cls.admin_user
-        cls.client = Client()
+        cls.client = APIClient()
         cls.client.force_login(cls.admin_user)
         cls.kwargs = {}
 

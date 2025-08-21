@@ -335,9 +335,11 @@ class Command(BaseCommand):
             """
             Given a domain like 'alpha.platform.example.com', return its parent domain 'platform.example.com'.
             """
-            parts = domain.strip(".").split(".")
+            domain_no_port = domain.split(":")[0].strip(".")
+            parts = domain_no_port.split(".")
             if len(parts) < 3:
-                raise SmarterValueError(f"Cannot determine parent domain for: {domain}")
+                # For localhost or similar, just return the domain without port
+                return domain_no_port
             parent_domain = ".".join(parts[1:])
             return aws_helper.aws.domain_resolver(parent_domain)
 

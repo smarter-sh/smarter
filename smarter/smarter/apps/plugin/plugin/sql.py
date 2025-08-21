@@ -5,7 +5,6 @@ import logging
 import re
 from typing import Any, Optional, Type, Union
 
-from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
@@ -16,7 +15,7 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecKeys,
 )
 from smarter.apps.plugin.manifest.models.common import Parameter
-from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
+from smarter.apps.plugin.models import PluginDataSql, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
@@ -51,37 +50,20 @@ class SmarterSqlPluginError(SmarterPluginError):
 class SqlPlugin(PluginBase):
     """A PLugin that uses an SQL query executed on a remote SQL database server to retrieve its return data"""
 
+    SAMPluginType = SAMSqlPlugin
+
+    _manifest: Optional[SAMSqlPlugin] = None
     _metadata_class = SAMPluginCommonMetadataClass.SQL.value
     _plugin_data: PluginDataSql | None = None
     _plugin_data_serializer: PluginSqlSerializer | None = None
-    _manifest: SAMSqlPlugin | None = None
 
     def __init__(
         self,
         *args,
-        user_profile: Optional[UserProfile] = None,
-        selected: bool = False,
-        api_version: Optional[str] = None,
         manifest: Optional[SAMSqlPlugin] = None,
-        plugin_id: Optional[int] = None,
-        plugin_meta: Optional[PluginMeta] = None,
-        data: Union[dict[str, Any], str, None] = None,
         **kwargs,
     ):
-        self._manifest = manifest  # note: this is redundant and can probably be removed.
-        self._plugin_data = None
-        self._plugin_data_serializer = None
-        super().__init__(
-            *args,
-            user_profile=user_profile,
-            selected=selected,
-            api_version=api_version,
-            plugin_id=plugin_id,
-            plugin_meta=plugin_meta,
-            manifest=manifest,  # type: ignore[arg-type]
-            data=data,
-            **kwargs,
-        )
+        super().__init__(*args, manifest=manifest, **kwargs)
 
     @property
     def kind(self) -> str:
@@ -94,7 +76,7 @@ class SqlPlugin(PluginBase):
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMSqlPlugin(**self.to_json())  # type: ignore[call-arg]
+            self._manifest = self.SAMPluginType(**self.to_json())  # type: ignore[call-arg]
         return self._manifest
 
     @property
@@ -322,7 +304,7 @@ class SqlPlugin(PluginBase):
         }
         # recast the Python dict to the Pydantic model
         # in order to validate our output
-        pydantic_model = SAMSqlPlugin(**sql_plugin)
+        pydantic_model = cls.SAMPluginType(**sql_plugin)
         return json.loads(pydantic_model.model_dump_json())
 
     def create(self):

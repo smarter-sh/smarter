@@ -17,6 +17,7 @@ from rest_framework import serializers
 
 # smarter stuff
 from smarter.apps.account.models import User, UserProfile
+from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
@@ -40,7 +41,6 @@ from ..manifest.enum import (
     SAMPluginSpecKeys,
 )
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
-from ..manifest.models.static_plugin.model import SAMPluginCommon, SAMStaticPlugin
 from ..models import (
     PluginDataBase,
     PluginMeta,
@@ -86,9 +86,10 @@ class SmarterPluginError(SmarterException):
 class PluginBase(ABC, SmarterHelperMixin):
     """An abstract base class for working with plugins."""
 
+    SAMPluginType = SAMPluginCommon
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
-    _manifest: Optional[SAMPluginCommon] = None
-    _pydantic_model: Optional[Type[SAMStaticPlugin]] = SAMStaticPlugin
+    _manifest: Optional[SAMPluginType] = None
+    _pydantic_model: Optional[Type[SAMPluginType]] = SAMPluginType
 
     _plugin_meta: Optional[PluginMeta] = None
     _plugin_selector: Optional[PluginSelector] = None
@@ -113,7 +114,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         user_profile: Optional[UserProfile] = None,
         selected: bool = False,
         api_version: Optional[str] = None,
-        manifest: Optional[SAMStaticPlugin] = None,
+        manifest: Optional[SAMPluginCommon] = None,
         plugin_id: Optional[int] = None,
         plugin_meta: Optional[PluginMeta] = None,
         data: Union[dict[str, Any], str, None] = None,
@@ -166,6 +167,11 @@ class PluginBase(ABC, SmarterHelperMixin):
         # Smarter API Manifest based initialization
         #######################################################################
         if manifest:
+            if not isinstance(manifest, self.SAMPluginType):
+                raise TypeError(
+                    f"{self.formatted_class_name}__init__() expected manifest of type {self.SAMPluginType.__name__} but received {type(manifest)}."
+                )
+
             # we received a Pydantic model from a manifest broker.
             self._manifest = manifest
             self.create()
@@ -182,7 +188,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             )
             if not loader.ready:
                 raise SAMValidationError("Loader is not ready. SAMLoader is not ready.")
-            self._manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
+            self._manifest = self.SAMPluginType(**loader.pydantic_model_dump())
             self.create()
 
         if self.ready:

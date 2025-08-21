@@ -68,7 +68,7 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         super().setUp()
         self.auth_token, self.secret_key = SmarterAuthToken.objects.create(
             name="testKey", user=self.admin_user, description="unit test"
-        )
+        )  # type: ignore
         self.chatbot = ChatBot.objects.create(
             account=self.account,
             name="manage-command-create-plugin-test-case",

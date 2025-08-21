@@ -2,10 +2,12 @@
 
 import json
 from http import HTTPStatus
+from typing import Any
 from urllib.parse import urlencode
 
-from django.test import Client
 from django.urls import reverse
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.test import APIClient
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -37,19 +39,19 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
 
     def authentication_scenarios(
         self, path, wrong_key: bool = False, missing_key: bool = False, session_authentication: bool = False
-    ) -> tuple[dict[str, any], int]:
+    ) -> tuple[dict[str, Any], int]:
         """
         Prepare and get a response from an api/v1/ endpoint.
         """
-        client = Client()
+        client = APIClient()
         headers_wrong_key = {"HTTP_AUTHORIZATION": "Token WRONG_KEY"}
         headers_missing_key = {}
 
         response = None
         if wrong_key:
-            response = client.post(path=path, data=None, content_type="application/json", **headers_wrong_key)
+            response = client.post(path=path, data=None, content_type="application/json", headers=headers_wrong_key)
         elif missing_key:
-            response = client.post(path=path, data=None, content_type="application/json", **headers_missing_key)
+            response = client.post(path=path, data=None, content_type="application/json", headers=headers_missing_key)
         elif session_authentication:
             client.force_login(user=self.non_admin_user)
             response = client.post(path=path, data=None, content_type="application/json")
@@ -69,7 +71,8 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
 
     def test_authentication_with_bad_apikey(self):
         # verify that wrong key authentication is insufficient to access the endpoint
-        response, status = self.authentication_scenarios(path=self.public_path, wrong_key=True)
+        with self.assertRaises(AuthenticationFailed):
+            response, status = self.authentication_scenarios(path=self.public_path, wrong_key=True)
         self.assertEqual(status, HTTPStatus.UNAUTHORIZED)
         self.assertIn(SmarterJournalApiResponseKeys.ERROR, response.keys())
 
