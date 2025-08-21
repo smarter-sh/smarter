@@ -38,12 +38,21 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
 
     model = SmarterAuthToken
 
-    def authenticate_credentials(self, token):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        logger.info(
+            "SmarterTokenAuthentication.__init__() called - %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+
+    def authenticate_credentials(self, token: bytes) -> tuple:
         # authenticate the user using the normal token authentication
         # this will raise an AuthenticationFailed exception if the token is invalid
         if not isinstance(token, bytes):
-            raise AuthenticationFailed("Invalid token type. Expected bytes", 401)
-        masked_token = mask_string(string=token)
+            raise AuthenticationFailed("Invalid token type. Expected bytes")
+        masked_token = mask_string(string=token.decode())
         smarter_token_authentication_request.send(
             sender=self.__class__,
             token=masked_token,
@@ -61,7 +70,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
                 user=user,
                 token=masked_token,
             )
-            raise AuthenticationFailed("Api key is not activated.", 401)
+            raise AuthenticationFailed("Api key is not activated.")
 
         # update the last used time for the token
         smarter_auth_token.last_used_at = timezone.now()
@@ -75,3 +84,21 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
             token=masked_token,
         )
         return (user, smarter_auth_token)
+
+    @classmethod
+    def get_user_from_request(cls, request):
+        auth_header = request.META.get("HTTP_AUTHORIZATION")
+        if not auth_header or not auth_header.startswith("Token "):
+            return None
+        token_key = auth_header.split("Token ")[1]
+        # If your tokens are bytes, decode as needed
+        # token = token.encode()  # if needed
+        try:
+            auth_token = SmarterAuthToken.objects.get(token_key=token_key)
+            return auth_token.user
+        except SmarterAuthToken.DoesNotExist:
+            logger.warning(
+                "SmarterTokenAuthentication.get_user_from_request() failed to retrieve user for token_key: %s",
+                token_key,
+            )
+            return None
