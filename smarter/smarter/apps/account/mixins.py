@@ -35,8 +35,8 @@ AccountNumberType = Optional[str]
 AccountType = Optional[Account]
 UserProfileType = Optional[UserProfile]
 ApiTokenType = Optional[bytes]
-OptionalRequestionType = Optional[Union[WSGIRequest, HttpRequest, Request]]
-RequestionType = Union[WSGIRequest, HttpRequest, Request]
+OptionalRequestType = Optional[Union[WSGIRequest, HttpRequest, Request]]
+RequestType = Union[WSGIRequest, HttpRequest, Request]
 
 
 def should_log(level):
@@ -89,10 +89,10 @@ class AccountMixin(SmarterHelperMixin):
         self._user: UserType = None
         self._user_profile: UserProfileType = None
 
-        request: OptionalRequestionType = kwargs.get("request")
+        request: OptionalRequestType = kwargs.get("request")
         if not request and args:
             for arg in args:
-                if isinstance(arg, RequestionType):
+                if isinstance(arg, RequestType):
                     logger.info(
                         "%s.__init__(): received a request object: %s",
                         self.formatted_class_name,
