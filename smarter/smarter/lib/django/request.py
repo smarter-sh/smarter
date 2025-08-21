@@ -1111,7 +1111,7 @@ class SmarterRequestMixin(AccountMixin):
             "ready": self.ready,
             "url": self.url,
             "session_key": self.session_key,
-            "auth_header": self.auth_header,
+            "auth_header": self.auth_header[:10] + "****" if self.auth_header else None,
             "api_token": mask_string(self.api_token.decode()) if self.api_token else None,
             "data": self.data,
             "chatbot_id": self.smarter_request_chatbot_id,
