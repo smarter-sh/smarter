@@ -42,6 +42,7 @@ from smarter.common.utils import hash_factory
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
@@ -164,13 +165,24 @@ class SmarterRequestMixin(AccountMixin):
 
         super().__init__(request, *args, **kwargs)
 
+        if not self.is_authenticated and self.auth_header:
+            logger.warning(
+                "%s.__init__() - user is not authenticated but found an Authentication header in the request: %s",
+                self.formatted_class_name,
+                self.auth_header,
+            )
+            if self.api_token is not None:
+                user, _ = SmarterTokenAuthentication().authenticate_credentials(self.api_token)
+                self.user = user
+
         logger.info(
-            "%s.__init__() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s",
+            "%s.__init__() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s auth_header=%s",
             self.formatted_class_name,
             self._instance_id,
             request,
             args,
             kwargs,
+            request.META.get("HTTP_AUTHORIZATION"),
         )
 
         if isinstance(self._session_key, str):
@@ -223,6 +235,18 @@ class SmarterRequestMixin(AccountMixin):
     def smarter_request(self) -> HttpRequest:
         """renaming this to avoid potential name collisions in child classes"""
         return self._smarter_request
+
+    @cached_property
+    def auth_header(self) -> Optional[str]:
+        """Get the Authorization header from the request."""
+        return self._smarter_request.META.get("HTTP_AUTHORIZATION")
+
+    @cached_property
+    def api_token(self) -> Optional[bytes]:
+        """Get the API token from the request."""
+        if isinstance(self.auth_header, str) and self.auth_header.startswith("Token "):
+            return self.auth_header.split("Token ")[1].encode()
+        return None
 
     @cached_property
     def qualified_request(self) -> bool:
@@ -1098,6 +1122,8 @@ class SmarterRequestMixin(AccountMixin):
             "ready": self.ready,
             "url": self.url,
             "session_key": self.session_key,
+            "auth_header": self.auth_header,
+            "api_key": self.api_token.decode() if self.api_token else None,
             "data": self.data,
             "chatbot_id": self.smarter_request_chatbot_id,
             "chatbot_name": self.smarter_request_chatbot_name,
