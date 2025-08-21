@@ -9,8 +9,9 @@ ensure that:
 
 import json
 from logging import getLogger
+from typing import Any, Optional
 
-from django.test import Client
+from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.drf.models import SmarterAuthToken
@@ -29,7 +30,7 @@ class ApiV1TestBase(TestAccountMixin):
         super().setUpClass()
         instance = cls()
 
-        cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
+        cls.token_record, cls.token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
             name=instance.admin_user.username,
             user=instance.admin_user,
             description=instance.admin_user.username,
@@ -44,11 +45,14 @@ class ApiV1TestBase(TestAccountMixin):
             pass
         super().tearDownClass()
 
-    def get_response(self, path, manifest: str = None, data: dict = None) -> tuple[dict[str, any], int]:
+    def get_response(
+        self, path, manifest: Optional[str] = None, data: Optional[dict] = None
+    ) -> tuple[dict[str, Any], int]:
         """
         Prepare and get a response from an api/v1/ endpoint.
         """
-        client = Client()
+        client = APIClient()
+
         headers = {"Authorization": f"Token {self.token_key}"}
 
         if manifest:
