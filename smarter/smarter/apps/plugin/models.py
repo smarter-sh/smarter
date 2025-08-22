@@ -1180,11 +1180,42 @@ class PluginDataSql(PluginDataBase):
     def valdate_all_placeholders_in_parameters(self) -> None:
         """
         Validate that all placeholders in the SQL query string are present in the parameters.
+
+        example plugin:
+            {
+            'plugin': <PluginMeta: sql_test>,
+            'description': 'test plugin',
+            'sql_query': "SELECT * FROM auth_user WHERE username = '{username}';",
+
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'username': {
+                        'type': 'string',
+                        'description': 'The username of the user.'
+                    }
+                },
+                'required': ['username'],
+                'additionalProperties': False
+                },
+            'test_values': 'admin',
+            'limit': 1,
+            'connection': <SqlConnection: test_sql_connection - django.db.backends.mysql://smarter:******@smarter-mysql:3306/smarter>
+            }
+
         """
-        placeholders = re.findall(r"{(.*?)}", self.sql_query)
+        placeholders = re.findall(r"{(.*?)}", self.sql_query) or []
         parameters = self.parameters or {}
+        properties = parameters.get("properties", {})
+        logger.info(
+            "%s.valdate_all_placeholders_in_parameters() Validating all placeholders in SQL query parameters: %s\n properties: %s, placeholders: %s",
+            self.__class__.__name__,
+            self.sql_query,
+            properties,
+            placeholders,
+        )
         for placeholder in placeholders:
-            if self.parameters is None or not any(placeholder in inner_dict for inner_dict in parameters.values()):
+            if self.parameters is None or placeholder not in properties:
                 raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters.")
 
     def validate(self) -> bool:
@@ -1626,3 +1657,11 @@ class PluginDataApi(PluginDataBase):
         )
         account_number = cast(str, account_number)
         return str(account_number + " - " + self.plugin.name)
+
+
+PluginDataType = type[PluginDataStatic] | type[PluginDataApi] | type[PluginDataSql]
+PLUGIN_DATA_MAP: dict[str, PluginDataType] = {
+    SAMKinds.API_PLUGIN.value: PluginDataApi,
+    SAMKinds.SQL_PLUGIN.value: PluginDataSql,
+    SAMKinds.STATIC_PLUGIN.value: PluginDataStatic,
+}

@@ -8,6 +8,7 @@ from functools import cached_property
 from typing import Dict, Optional, Type, Union
 
 from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -26,23 +27,25 @@ from ..plugin.static import StaticPlugin
 
 # common plugin
 from .enum import SAMPluginCommonMetadataClassValues
-
-# api plugin
-from .models.api_plugin.const import MANIFEST_KIND as API_MANIFEST_KIND
 from .models.api_plugin.model import SAMApiPlugin
 from .models.common.plugin.model import SAMPluginCommon
-
-# sql plugin
-from .models.sql_plugin.const import MANIFEST_KIND as SQL_MANIFEST_KIND
 from .models.sql_plugin.model import SAMSqlPlugin
-
-# static plugin
-from .models.static_plugin.const import MANIFEST_KIND as STATIC_MANIFEST_KIND
 from .models.static_plugin.model import SAMStaticPlugin
 
 
-VALID_MANIFEST_KINDS = [STATIC_MANIFEST_KIND, SQL_MANIFEST_KIND, API_MANIFEST_KIND]
-PluginType = Union[SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin]
+VALID_MANIFEST_KINDS = [SAMKinds.STATIC_PLUGIN.value, SAMKinds.SQL_PLUGIN.value, SAMKinds.API_PLUGIN.value]
+PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin]
+SAMPluginType = type[SAMApiPlugin] | type[SAMSqlPlugin] | type[SAMStaticPlugin]
+PLUGIN_MAP: dict[str, PluginType] = {
+    SAMKinds.API_PLUGIN.value: ApiPlugin,
+    SAMKinds.SQL_PLUGIN.value: SqlPlugin,
+    SAMKinds.STATIC_PLUGIN.value: StaticPlugin,
+}
+SAM_MAP: dict[str, SAMPluginType] = {
+    SAMKinds.API_PLUGIN.value: SAMApiPlugin,
+    SAMKinds.SQL_PLUGIN.value: SAMSqlPlugin,
+    SAMKinds.STATIC_PLUGIN.value: SAMStaticPlugin,
+}
 
 
 def should_log(level):
@@ -54,19 +57,6 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-PLUGIN_MAP = {
-    SAMPluginCommonMetadataClassValues.API.value: ApiPlugin,
-    SAMPluginCommonMetadataClassValues.SQL.value: SqlPlugin,
-    SAMPluginCommonMetadataClassValues.STATIC.value: StaticPlugin,
-}
-
-SAM_MAP = {
-    API_MANIFEST_KIND: SAMApiPlugin,
-    SQL_MANIFEST_KIND: SAMSqlPlugin,
-    STATIC_MANIFEST_KIND: SAMStaticPlugin,
-}
-
-
 class SAMPluginControllerError(SAMExceptionBase):
     """Base exception for Smarter API Plugin Controller handling."""
 
@@ -74,7 +64,7 @@ class SAMPluginControllerError(SAMExceptionBase):
 class PluginController(AbstractController):
     """Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
-    _manifest: Optional[PluginType] = None
+    _manifest: Optional[Union[ApiPlugin, SqlPlugin, StaticPlugin]] = None
     _plugin: Optional[PluginBase] = None
     _plugin_meta: Optional[PluginMeta] = None
     _name: Optional[str] = None
@@ -85,7 +75,7 @@ class PluginController(AbstractController):
         user: User,
         *args,
         user_profile: Optional[UserProfile] = None,
-        manifest: Optional[PluginType] = None,
+        manifest: Optional[Union[ApiPlugin, SqlPlugin, StaticPlugin]] = None,
         plugin_meta: Optional[PluginMeta] = None,
         name: Optional[str] = None,
         **kwargs,
@@ -147,7 +137,7 @@ class PluginController(AbstractController):
     ###########################################################################
     @property
     def manifest(self) -> Optional[SAMPluginCommon]:
-        return self._manifest
+        return self._manifest  # type: ignore
 
     @property
     def name(self) -> Optional[str]:
@@ -190,11 +180,11 @@ class PluginController(AbstractController):
         return self.obj
 
     @cached_property
-    def map(self) -> Dict[str, Type[PluginBase]]:
+    def map(self) -> Dict[str, PluginType]:
         return PLUGIN_MAP
 
     @cached_property
-    def sam_map(self) -> Dict[str, Type[PluginType]]:
+    def sam_map(self) -> Dict[str, SAMPluginType]:
         """Maps manifest kinds to their respective SAM plugin classes."""
         return SAM_MAP
 
@@ -217,9 +207,9 @@ class PluginController(AbstractController):
                 else None
             )
             if isinstance(self._plugin, SAMPluginCommon):
-                self._manifest = self._plugin.manifest
+                self._manifest = self._plugin.manifest  # type: ignore[assignment]
         elif self.manifest:
-            Plugin = self.map[self.manifest.metadata.pluginClass]
+            Plugin = self.map[self.manifest.kind]
             self._plugin = Plugin(manifest=self.manifest, user_profile=self.user_profile)  # type: ignore[call-arg]
         return self._plugin
 

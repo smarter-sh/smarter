@@ -10,6 +10,9 @@ class SAMPluginCommonMetadataClassValues(SmarterEnumAbstract):
     """Smarter API Plugin Metadata Class keys enumeration."""
 
     # a plugin that returns a static json response contained inside the plugin manifest
+    LEGACY = "static"
+
+    # a plugin that returns a static json response contained inside the plugin manifest
     STATIC = "static"
 
     # a plugin that returns a dynamic json response by

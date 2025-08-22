@@ -31,7 +31,6 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
-from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.manifest.models import (
     AbstractSAMBase,
@@ -452,7 +451,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         try:
             secret = Secret.objects.get(name=name, user_profile=user_profile)
         except Secret.DoesNotExist as e:
-
+            logger.info(
+                "%s.get_or_create_secret() Secret %s not found for user %s",
+                self.formatted_class_name,
+                name,
+                user_profile.user.username,
+            )
             if not value:
                 raise SAMBrokerError(
                     message=f"Secret {name} not found and no value was provided provided",

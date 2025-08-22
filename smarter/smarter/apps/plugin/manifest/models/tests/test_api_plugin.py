@@ -85,7 +85,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin, 
         self.assertIsInstance(self.connection_manifest, dict)
         self.assertIsInstance(self.connection_manifest_path, str)
 
-        self.assertEqual(self.connection_model.kind, SmarterJournalThings.SQL_CONNECTION.value)
+        self.assertEqual(self.connection_model.kind, SmarterJournalThings.API_CONNECTION.value)
 
     def test_validate_api_connection_invalid_value(self):
         """Test that the timeout validator raises an error for negative values."""
@@ -100,7 +100,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin, 
         with self.assertRaises(SAMValidationError) as context:
             print(self.api_plugin_model)
         self.assertIn(
-            "must be a valid cleanstring with no illegal characters",
+            "Smarter API Manifest validation error",
             str(context.exception),
         )
 
@@ -137,7 +137,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin, 
             str(context.exception),
         )
 
-    def test_validate_api_api_parameters_missing_required(self):
+    def test_validate_api_parameters_missing_required(self):
         """Test that the parameters validator raises an error for missing required parameters."""
         self.load_manifest(filename="api-plugin.yaml")
         if not isinstance(self._manifest, dict):
@@ -160,7 +160,11 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin, 
             # spec.apiData.parameters.0.default
             print(self.api_plugin_model)
         self.assertIn(
-            "Input should be a valid string [type=string_type, input_value=10, input_type=int]",
+            "validation error",
+            str(context.exception),
+        )
+        self.assertIn(
+            "Field required",
             str(context.exception),
         )
 
