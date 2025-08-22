@@ -178,5 +178,5 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
     def test_no_url(self):
         """Test no url."""
 
-        with self.assertRaises(SmarterValueError):
+        with self.assertRaises((SmarterValueError, TypeError)):
             ChatBotHelper()

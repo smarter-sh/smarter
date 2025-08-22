@@ -203,8 +203,8 @@ class TestChatBotTasks(TestAccountMixin):
         self.assertIn(a_record["Name"], [resolved_hostname, resolved_hostname + "."])
         self.assertEqual(a_record["Type"], "A")
 
-        self.assertTrue(self.chatbot.deployed)
         self.assertTrue(self.chatbot.ready())
+        self.assertTrue(self.chatbot.deployed)
         self.assertEqual(self.chatbot.dns_verification_status, ChatBot.DnsVerificationStatusChoices.VERIFIED)
         self.assertEqual(
             self.chatbot.tls_certificate_issuance_status, ChatBot.TlsCertificateIssuanceStatusChoices.ISSUED

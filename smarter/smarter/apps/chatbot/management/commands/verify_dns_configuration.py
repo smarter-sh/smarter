@@ -3,7 +3,7 @@
 from django.core.management.base import BaseCommand
 
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.aws_helpers import aws_helper
 
 
@@ -343,42 +343,52 @@ class Command(BaseCommand):
             parent_domain = ".".join(parts[1:])
             return aws_helper.aws.domain_resolver(parent_domain)
 
-        parent_domain = get_parent_domain(domain)
-        log_prefix = self.log_prefix + " - " + f"verify() - domain: {domain}, parent_domain: {parent_domain}"
-        print("-" * 80)
-        self.stdout.write(
-            self.style.NOTICE(f"{log_prefix} verifying AWS Route53 DNS infrastructure for domain: {domain}")
+        resolved_domain = aws_helper.aws.domain_resolver(domain)
+        parent_domain = get_parent_domain(resolved_domain)
+
+        log_prefix = (
+            self.log_prefix
+            + " - "
+            + f"verify() - domain: {domain}, resolved domain: {resolved_domain}, parent_domain: {parent_domain}"
         )
         print("-" * 80)
-
-        domain = aws_helper.aws.domain_resolver(domain)
+        self.stdout.write(
+            self.style.NOTICE(f"{log_prefix} verifying AWS Route53 DNS infrastructure for domain: {resolved_domain}")
+        )
+        print("-" * 80)
 
         # 1. Verify that the AWS Route53 hosted zone exists for the environment platform
         #    example: alpha.platform.example.com, beta.platform.example.com, etc.
         # ---------------------------------------------------------------------
-        _, created = aws_helper.route53.get_or_create_hosted_zone(domain_name=domain)
+        _, created = aws_helper.route53.get_or_create_hosted_zone(domain_name=resolved_domain)
         if created:
-            self.stdout.write(self.style.SUCCESS(f"{log_prefix} created AWS Route53 hosted zone for domain: {domain}"))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"{log_prefix} created AWS Route53 hosted zone for resolved_domain: {resolved_domain}"
+                )
+            )
         else:
-            self.stdout.write(self.style.SUCCESS(f"{log_prefix} verified hosted zone for domain: {domain}"))
+            self.stdout.write(
+                self.style.SUCCESS(f"{log_prefix} verified hosted zone for resolved_domain: {resolved_domain}")
+            )
 
-        domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=domain)
+        domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=resolved_domain)
 
         print("-" * 80)
 
-        # 2. Verify that the NS records for the domain exist in the parent domain's hosted zone
+        # 2. Verify that the NS records for the resolved_domain exist in the parent resolved_domain's hosted zone
         # ---------------------------------------------------------------------
-        domain_ns_records = aws_helper.route53.get_ns_records_for_domain(domain=domain)
+        domain_ns_records = aws_helper.route53.get_ns_records_for_domain(domain=resolved_domain)
         self.stdout.write(
             self.style.NOTICE(
-                f"{log_prefix} NS records for {domain} exist in the hosted zone for {parent_domain}. HostedZoneID: {domain_hosted_zone_id} NS records: {domain_ns_records}"
+                f"{log_prefix} NS records for {resolved_domain} exist in the hosted zone for {parent_domain}. HostedZoneID: {domain_hosted_zone_id} NS records: {domain_ns_records}"
             )
         )
 
         parent_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=parent_domain)
         ns_record, created = aws_helper.route53.get_or_create_dns_record(
             hosted_zone_id=parent_hosted_zone_id,
-            record_name=domain,
+            record_name=resolved_domain,
             record_type="NS",
             record_value=domain_ns_records["ResourceRecords"],
             record_ttl=300,
@@ -386,23 +396,23 @@ class Command(BaseCommand):
         if created:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"{log_prefix} added NS Records for {domain} to hosted zone for {parent_domain}: {ns_record}"
+                    f"{log_prefix} added NS Records for {resolved_domain} to hosted zone for {parent_domain}: {ns_record}"
                 )
             )
         else:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"{log_prefix} verified NS Records for {domain} in hosted zone for {parent_domain}: {ns_record}"
+                    f"{log_prefix} verified NS Records for {resolved_domain} in hosted zone for {parent_domain}: {ns_record}"
                 )
             )
 
-        # 3. Verify that an A record exists for the domain in its environment hosted zone
+        # 3. Verify that an A record exists for the resolved_domain in its environment hosted zone
         # ---------------------------------------------------------------------
         a_record = self.get_any_A_record()
 
         domain_a_record, create = aws_helper.route53.get_or_create_dns_record(
             hosted_zone_id=domain_hosted_zone_id,
-            record_name=domain,
+            record_name=resolved_domain,
             record_type="A",
             record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
             record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
@@ -410,14 +420,18 @@ class Command(BaseCommand):
         )
         if create:
             self.stdout.write(
-                self.style.SUCCESS(f"{log_prefix} created A record for domain {domain} hosted zone.: {domain_a_record}")
+                self.style.SUCCESS(
+                    f"{log_prefix} created A record for domain {resolved_domain} hosted zone.: {domain_a_record}"
+                )
             )
         else:
-            self.stdout.write(self.style.SUCCESS(f"{log_prefix} verified A record for domain {domain} in hosted zone."))
+            self.stdout.write(
+                self.style.SUCCESS(f"{log_prefix} verified A record for domain {resolved_domain} in hosted zone.")
+            )
 
         print("-" * 80)
         self.stdout.write(
-            self.style.SUCCESS(f"{log_prefix} verified AWS Route53 DNS infrastructure for domain: {domain}")
+            self.style.SUCCESS(f"{log_prefix} verified AWS Route53 DNS infrastructure for domain: {resolved_domain}")
         )
         print("-" * 80)
 
