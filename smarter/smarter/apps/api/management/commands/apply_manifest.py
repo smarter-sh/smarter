@@ -7,6 +7,7 @@ from typing import Optional
 from urllib.parse import urljoin
 
 import httpx
+from django.core.management import CommandError
 from django.core.management.base import BaseCommand
 from django.urls import reverse
 
@@ -112,13 +113,19 @@ class Command(BaseCommand):
         url = urljoin(smarter_settings.environment_url, path)
         headers = {"Authorization": f"Token {token_key}", "Content-Type": "application/json"}
 
-        response = httpx.post(url, data=self.data, headers=headers)  # type: ignore[call-arg]
-        response_content = response.content.decode("utf-8")
+        httpx_response = httpx.post(url, data=self.data, headers=headers)  # type: ignore[call-arg]
+        token_record.delete()
+
+        # wrap up the request
+        response_content = httpx_response.content.decode("utf-8")
         response_json = json.loads(response_content)
 
         self.stdout.write("url: " + self.style.NOTICE(url))
         response = json.dumps(response_json, indent=4) + "\n"
-        self.stdout.write("response: " + self.style.SUCCESS(response))
-
-        token_record.delete()
-        self.stdout.write(self.style.SUCCESS("manifest applied."))
+        if httpx_response.status_code == httpx.codes.OK:
+            self.stdout.write("response: " + self.style.SUCCESS(response))
+            self.stdout.write(self.style.SUCCESS("manifest applied."))
+        else:
+            msg = f"Manifest apply failed with status code: {httpx_response.status_code}\n{response}"
+            self.stdout.write(self.style.ERROR(msg))
+            raise CommandError(msg)

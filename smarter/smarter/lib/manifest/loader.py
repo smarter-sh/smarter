@@ -104,7 +104,7 @@ class SAMLoader(SmarterHelperMixin):
         self,
         api_version: str = SmarterApiVersions.V1,
         kind: Optional[str] = None,
-        manifest: Optional[str] = None,
+        manifest: Optional[Union[str, dict]] = None,
         file_path: Optional[str] = None,
         url: Optional[str] = None,
     ):
@@ -119,7 +119,13 @@ class SAMLoader(SmarterHelperMixin):
             raise SAMLoaderError("Only one of manifest, file_path, or url is allowed.")
 
         if manifest:
-            self._raw_data = manifest
+            if isinstance(manifest, str):
+                # if manifest is a string, assume it's a JSON/YAML string
+                self._raw_data = manifest
+            elif isinstance(manifest, dict):
+                self._raw_data = json.dumps(manifest)
+            else:
+                raise SAMLoaderError(f"Invalid manifest format. Expected JSON string or dict but got {type(manifest)}")
         elif file_path:
             with open(file_path, encoding="utf-8") as file:
                 self._raw_data = file.read()
