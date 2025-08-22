@@ -71,6 +71,10 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     _plugin_meta: Optional[PluginMeta] = None
     _plugin_data: Optional[PluginDataSql] = None
 
+    def __init__(self, *args, manifest: Optional[SAMSqlPlugin], **kwargs):
+        super().__init__(*args, **kwargs)
+        self._manifest = manifest
+
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################

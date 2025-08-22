@@ -17,7 +17,6 @@ from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.tests.base_classes import TestConnectionBase
 from smarter.apps.plugin.tests.factories import secret_factory
 from smarter.common.api import SmarterApiVersions
-from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake, camel_to_snake_dict
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -287,7 +286,7 @@ class TestSqlConnection(TestConnectionBase):
             self.fail("Model should not be None after loading the manifest")
 
         valid_max_overflow = 5
-        self.manifest["spec"]["connection"]["maxOverflow"] = valid_max_overflow
+        self._manifest["spec"]["connection"]["maxOverflow"] = valid_max_overflow
         self._loader = None
         self._model = None  # type: ignore[assignment]
         self.model

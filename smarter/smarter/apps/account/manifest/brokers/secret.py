@@ -95,6 +95,15 @@ class SAMSecretBroker(AbstractBroker):
     _pydantic_model: Type[SAMSecret] = SAMSecret
     _secret_transformer: Optional[SecretTransformer] = None
 
+    def __init__(self, *args, manifest: Optional[SAMSecret] = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._manifest = manifest
+        if self._manifest and not isinstance(self._manifest, SAMSecret):
+            raise SAMSecretBrokerError(
+                f"Manifest must be of type {SAMSecret.__name__}, got {type(self._manifest)}: {self._manifest}",
+                thing=self.kind,
+            )
+
     @property
     def secret_transformer(self) -> SecretTransformer:
         """
