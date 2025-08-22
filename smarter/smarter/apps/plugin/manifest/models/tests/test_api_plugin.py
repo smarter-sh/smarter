@@ -188,11 +188,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin, 
         if self.secret_model is None:
             self.fail("Secret model is None, did you load the manifest?")
 
-        secret_broker = SAMSecretBroker(
-            self.request,
-            loader=self.loader,
-            manifest=self.manifest,
-        )
+        secret_broker = SAMSecretBroker(self.request, loader=self.loader)
         secret_broker.apply(self.request)
         if not isinstance(secret_broker.secret, Secret):
             self.fail("secret is not an instance of SAMSecret")
@@ -211,11 +207,11 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin, 
 
         connection_broker = SAMApiConnectionBroker(
             self.request,
-            loader=self.connection_loader,
-            manifest=self.connection_manifest,
+            loader=self.loader,
         )
         connection_broker.apply(self.request)
 
+        # 3.) create an Api plugin
         self._loader = None
         self._manifest = None
         self.load_manifest(filename="api-plugin.yaml")
@@ -224,11 +220,9 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin, 
         if not isinstance(self._manifest, dict):
             self.fail("Manifest is not a dictionary")
 
-        # 3.) create an Api plugin
         api_plugin_broker = SAMApiPluginBroker(
             self.request,
             loader=self.loader,
-            manifest=self.manifest,
         )
         api_plugin_broker.apply(self.request)
         self.plugin_meta = api_plugin_broker.plugin_meta

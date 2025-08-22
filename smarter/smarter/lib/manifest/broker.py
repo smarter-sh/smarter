@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
+import json
 import logging
 import re
 import traceback
@@ -149,6 +150,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         self,
         request: HttpRequest,
         *args,
+        name: Optional[str] = None,  # i suspect that this is always None bc DRF sets name later in the process
+        kind: Optional[str] = None,
+        loader: Optional[SAMLoader] = None,
+        api_version: Optional[str] = SmarterApiVersions.V1,
+        manifest: Optional[AbstractSAMBase] = None,
+        file_path: Optional[str] = None,
+        url: Optional[str] = None,
         **kwargs,
     ):
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
@@ -156,14 +164,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             "AbstractBroker.__init__() initializing request: %s, args: %s, kwargs: %s", self.request, args, kwargs
         )
 
-        self._name = kwargs.get("name")  # i suspect that this is always None bc DRF sets name later in the process
-        self._kind = kwargs.get("kind")
-        self._loader = kwargs.get("loader")
-        api_version: Optional[str] = kwargs.get("api_version", SmarterApiVersions.V1)
-        manifest: Optional[str] = kwargs.get("manifest")
-        file_path: Optional[str] = kwargs.get("file_path")
-        url: Optional[str] = kwargs.get("url")
-
+        self._name = name  # i suspect that this is always None bc DRF sets name later in the process
+        self._kind = kind
+        self._manifest = manifest
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(
                 message=f"Unsupported apiVersion: {api_version}",
@@ -171,18 +174,19 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             )
         self._api_version = api_version
 
-        try:
-            self._loader = SAMLoader(
-                api_version=api_version,
-                kind=self.kind,
-                manifest=manifest,
-                file_path=file_path,
-                url=url,
-            )
-            if self._loader:
-                self._validated = True
-        except SAMLoaderError as e:
-            logger.error("%s.__init__() failed to initialize loader: %s", self.formatted_class_name, str(e))
+        if self.manifest:
+            self._validated = True
+        else:
+            try:
+                self._loader = loader or SAMLoader(
+                    api_version=api_version,
+                    kind=self.kind,
+                    manifest=json.dumps(manifest.model_dump()) if manifest else None,
+                    file_path=file_path,
+                    url=url,
+                )
+            except SAMLoaderError as e:
+                logger.error("%s.__init__() failed to initialize loader: %s", self.formatted_class_name, str(e))
 
         if self.user:
             logger.info("%s.__init__() received user: %s", self.formatted_class_name, self.user_profile)
@@ -191,7 +195,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             logger.info("%s.__init__() set name to %s", self.formatted_class_name, self._name)
 
         if self._loader:
-            logger.info("%s.__init__() received a %s loader", self.formatted_class_name, self._loader.manifest_kind)
+            logger.info("%s.__init__() received %s loader", self.formatted_class_name, self._loader.manifest_kind)
             self._validated = True
             logger.info(
                 "%s.__init__() loader initialized with manifest kind: %s",
@@ -348,6 +352,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 metadata=AbstractSAMMetadataBase(**self.loader.manifest_metadata),
                 spec=AbstractSAMSpecBase(**self.loader.manifest_spec),
                 status=AbstractSAMStatusBase(**self.loader.manifest_status),
+            )
+            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
+        else:
+            logger.warning(
+                "%s.manifest() returning None: expected loader.manifest_kind of %s but received %s",
+                self.formatted_class_name,
+                self.kind,
+                self.loader.manifest_kind if self.loader else None,
             )
         return self._manifest
 

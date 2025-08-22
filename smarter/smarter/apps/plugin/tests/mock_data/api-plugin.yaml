@@ -18,7 +18,7 @@ spec:
     model: gpt-4o-mini
     temperature: 0.5
     maxTokens: 256
-  connection: testApiConnection
+  connection: test_api_connection
   apiData:
     endpoint: /api/v1/tests/unauthenticated/list/{username}/
     parameters:

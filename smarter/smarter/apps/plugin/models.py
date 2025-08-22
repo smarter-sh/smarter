@@ -1628,12 +1628,19 @@ class PluginDataApi(PluginDataBase):
         """
         Validate that all placeholders in the SQL query string are present in the parameters.
         """
-        placeholders = re.findall(r"{(.*?)}", self.endpoint)
-        parameters = self.parameters or []
+        placeholders = re.findall(r"{(.*?)}", self.endpoint) or []
+        parameters = self.parameters or {}
+        properties = parameters.get("properties", {})
+        logger.info(
+            "%s.valdate_all_placeholders_in_parameters() Validating all placeholders in SQL query parameters: %s\n properties: %s, placeholders: %s",
+            self.__class__.__name__,
+            self.endpoint,
+            properties,
+            placeholders,
+        )
         for placeholder in placeholders:
-            # pylint: disable=E1133
-            if self.parameters is None or not any(param.get("name") == placeholder for param in parameters):
-                raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters: {self.parameters}")
+            if self.parameters is None or placeholder not in properties:
+                raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters.")
 
     def validate(self) -> bool:
         super().validate()
