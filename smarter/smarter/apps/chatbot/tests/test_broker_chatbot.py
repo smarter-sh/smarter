@@ -6,6 +6,7 @@ import os
 from http import HTTPStatus
 
 import yaml
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
 from django.test import Client, RequestFactory
 
@@ -38,7 +39,7 @@ class TestSAMChatbotBroker(TestAccountMixin):
     """Test SAM Chatbot Broker"""
 
     @classmethod
-    def create_generic_request(cls):
+    def create_generic_request(cls) -> WSGIRequest:
         factory = RequestFactory()
         url = "/some-url/"
         headers = {"CONTENT_TYPE": "application/json"}

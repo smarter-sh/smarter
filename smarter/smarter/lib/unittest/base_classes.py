@@ -9,6 +9,8 @@ import unittest
 from typing import Union
 
 import yaml
+from django.http import HttpRequest
+from django.test import RequestFactory
 
 from smarter.common.utils import hash_factory
 
@@ -63,3 +65,25 @@ class SmarterTestBase(unittest.TestCase):
     def generate_hash_suffix(length: int = 16) -> str:
         """Generate a unique hash suffix for test data."""
         return hash_factory(length=length)
+
+    def create_generic_request(self, url="http://example.com") -> HttpRequest:
+        factory = RequestFactory()
+        json_data = {
+            "session_key": "6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b",
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {
+                    "role": "assistant",
+                    "content": "Welcome to Smarter!. Following are some example prompts: blah blah blah",
+                },
+                {"role": "smarter", "content": 'Tool call: function_calling_plugin_0002({"inquiry_type":"about"})'},
+                {"role": "user", "content": "Hello, World!"},
+            ],
+        }
+        json_data = json.dumps(json_data).encode("utf-8")
+
+        headers = {}
+        data = {}
+
+        request: HttpRequest = factory.post(path=url, data=data, content_type="application/json", headers=headers)
+        return request

@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
 from django.test import Client
 
@@ -12,8 +12,6 @@ from smarter.apps.plugin.tests.base_classes import (
     TestPluginClassBase,
 )
 from smarter.lib.drf.models import SmarterAuthToken
-
-from .factories import create_generic_request
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -51,7 +49,7 @@ class TestSAMBrokerMixin(TestPluginClassBase):
         """Set up test fixtures."""
         super().setUp()
         self.mock_data_path = os.path.join(HERE, "mock_data")
-        self.request = create_generic_request()
+        self.request = self.create_generic_request()
         self.client = Client()
         self.client.force_login(self.admin_user)
 
