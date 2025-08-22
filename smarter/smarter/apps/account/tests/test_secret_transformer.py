@@ -32,7 +32,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         Test that the SecretTransformer cannot be initialized without any secret data.
         """
         with self.assertRaises(SmarterSecretTransformerError):
-            SecretTransformer(self.user_profile)
+            SecretTransformer(user_profile=self.user_profile)
 
     def test_manager_02_example_manifest(self):
         """
