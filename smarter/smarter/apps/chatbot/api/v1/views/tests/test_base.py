@@ -4,7 +4,7 @@ import json
 import logging
 import os
 
-from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest
 from django.test import RequestFactory
 from rest_framework.test import APIClient
 
@@ -37,7 +37,7 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
 
     # pylint: disable=W0212
     @classmethod
-    def create_generic_request(cls, url: str) -> WSGIRequest:
+    def create_generic_request(cls, url: str) -> HttpRequest:
         factory = RequestFactory()
         json_data = {
             "session_key": "6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b",
@@ -52,7 +52,7 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
             ],
         }
         json_data = json.dumps(json_data).encode("utf-8")
-        request: WSGIRequest = factory.post(path=url, data=json_data, content_type="application/json")
+        request: HttpRequest = factory.post(path=url, data=json_data, content_type="application/json")
         return request
 
     @classmethod
@@ -64,7 +64,7 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         cls.broker = SAMChatbotBroker(
             request=cls.create_generic_request("/anywhere/"), account=cls.account, manifest=json.dumps(cls.manifest)
         )
-        cls.request: WSGIRequest = cls.create_generic_request(url=cls.broker.chatbot.url_chatbot)
+        cls.request = cls.create_generic_request(url=cls.broker.chatbot.url_chatbot)
 
         cls.request.user = cls.admin_user
         cls.client = APIClient()
