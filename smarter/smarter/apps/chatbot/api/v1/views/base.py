@@ -47,7 +47,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 # pylint: disable=too-many-instance-attributes
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
+class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     """
     Base viewset for all ChatBot APIs. Handles
     - api key authentication
@@ -70,7 +70,6 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
     plugins: Optional[List[PluginBase]] = None
 
     def __init__(self, *args, **kwargs):
-        SmarterRequestMixin.__init__(self, *args, **kwargs)
         super().__init__(**kwargs)
 
     @property

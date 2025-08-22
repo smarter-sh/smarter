@@ -2,6 +2,7 @@
 Base class for creating units tests of chat providers.
 """
 
+import logging
 import os
 
 # python stuff
@@ -12,6 +13,7 @@ from pathlib import Path
 from time import sleep
 from typing import Callable, Optional
 
+from django.db.utils import IntegrityError
 from django.test import Client
 from django.urls import reverse
 
@@ -24,6 +26,9 @@ from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.utils import get_readonly_yaml_file
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from ..models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from ..providers.providers import chat_providers
@@ -34,6 +39,15 @@ from ..signals import (
     chat_started,
 )
 from ..tests.test_setup import get_test_file, get_test_file_path
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -185,7 +199,12 @@ class ProviderBaseClass(TestAccountMixin):
             ChatHistory.objects.filter(chat=chat).delete()
             ChatToolCall.objects.filter(chat=chat).delete()
             ChatPluginUsage.objects.filter(chat=chat).delete()
-            chat.delete()
+
+            try:
+                chat.delete()
+            except IntegrityError as e:
+                logger.debug("IntegrityError details: %s", e)
+
         if self.chatbot:
             self.chatbot.delete()
         if self.plugin:
@@ -195,7 +214,7 @@ class ProviderBaseClass(TestAccountMixin):
         super().tearDown()
 
     def chatbot_factory(self, provider: str = "openai"):
-        chatbot = ChatBot.objects.create(
+        chatbot, _ = ChatBot.objects.get_or_create(
             name="TestChatBot",
             account=self.account,
             description="Test ChatBot",
@@ -208,7 +227,7 @@ class ProviderBaseClass(TestAccountMixin):
             app_welcome_message="Welcome to Smarter!",
             provider=provider,
         )
-        ChatBotPlugin.objects.create(
+        ChatBotPlugin.objects.get_or_create(
             chatbot=chatbot,
             plugin_meta=self.plugin.plugin_meta,
         )
