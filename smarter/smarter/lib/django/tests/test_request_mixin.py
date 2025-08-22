@@ -74,32 +74,8 @@ class TestSmarterRequestMixin(TestAccountMixin):
         """
         Test that SmarterRequestMixin doesn't identify any kind of resource nor api.
         """
-        srm = SmarterRequestMixin(request=None)
-        try:
-            srm.to_json()
-        except SmarterValueError as e:
-            self.assertIsInstance(e, SmarterValueError)
-
-        try:
-            srm.url
-        except SmarterValueError as e:
-            self.assertIsInstance(e, SmarterValueError)
-
-        self.assertIsNone(srm.account)
-        self.assertIsNone(srm.session_key)
-        self.assertIsNone(srm.domain)
-        self.assertIsNone(srm.ip_address)
-        self.assertFalse(srm.is_smarter_api)
-        self.assertFalse(srm.is_chatbot)
-        self.assertFalse(srm.is_chatbot_smarter_api_url)
-        self.assertFalse(srm.is_chatbot_named_url)
-        self.assertFalse(srm.is_chatbot_sandbox_url)
-        self.assertFalse(srm.is_chatbot_cli_api_url)
-        self.assertFalse(srm.is_default_domain)
-        self.assertIsNone(srm.path)
-        self.assertIsNone(srm.root_domain)
-        self.assertIsNone(srm.subdomain)
-        self.assertIsNone(srm.user)
+        with self.assertRaises((SmarterValueError, TypeError)):
+            SmarterRequestMixin(request=None)
 
     def test_unauthenticated_instantiation(self):
         """

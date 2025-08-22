@@ -25,7 +25,7 @@ from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.utils import get_readonly_yaml_file
 
-from ..models import Chat, ChatHistory, ChatPluginUsage
+from ..models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from ..providers.providers import chat_providers
 from ..signals import (
     chat_completion_response,
@@ -182,6 +182,9 @@ class ProviderBaseClass(TestAccountMixin):
             # ChatHistory.objects.filter(chat=chat).delete()
             # ChatToolCall.objects.filter(chat=chat).delete()
             # ChatPluginUsage.objects.filter(chat=chat).delete()
+            ChatHistory.objects.filter(chat=chat).delete()
+            ChatToolCall.objects.filter(chat=chat).delete()
+            ChatPluginUsage.objects.filter(chat=chat).delete()
             chat.delete()
         if self.chatbot:
             self.chatbot.delete()
