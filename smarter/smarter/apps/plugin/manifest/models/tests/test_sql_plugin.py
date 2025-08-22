@@ -82,12 +82,12 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
     def test_00_sql_connection_mixin(self):
         """Test the SqlConnection itself, lest we get ahead of ourselves"""
         self.assertIsInstance(self.connection_django_model, SqlConnection)
-        self.assertIsInstance(self.connection_model, SAMSqlConnection)
+        self.assertIsInstance(self.sql_connection_model, SAMSqlConnection)
         self.assertIsInstance(self.connection_loader, SAMLoader)
         self.assertIsInstance(self.connection_manifest, dict)
         self.assertIsInstance(self.connection_manifest_path, str)
 
-        self.assertEqual(self.connection_model.kind, SmarterJournalThings.SQL_CONNECTION.value)
+        self.assertEqual(self.sql_connection_model.kind, SmarterJournalThings.SQL_CONNECTION.value)
 
     def test_validate_api_connection_invalid_value(self):
         """Test that the timeout validator raises an error for negative values."""
@@ -166,6 +166,8 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
                 },
             ],
         }
+        sam_sql_connection = self.sql_connection_model
+        sql_connection = SqlConnection(**sam_sql_connection.model_dump())
 
         sam_sql_plugin = SAMSqlPlugin(**self._manifest)
         logger.info(
@@ -203,7 +205,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
         secret_broker = SAMSecretBroker(
             self.request,
             loader=self.loader,
-            manifest=self.manifest,
+            manifest=self.secret_model,
         )
         secret_broker.apply(self.request)
         if not isinstance(secret_broker.secret, Secret):
@@ -224,7 +226,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
         connection_broker = SAMSqlConnectionBroker(
             self.request,
             loader=self.connection_loader,
-            manifest=self.connection_manifest,
+            manifest=self.sql_connection_model,
         )
         connection_broker.apply(self.request)
 
@@ -237,11 +239,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
             self.fail("Manifest is not a dictionary")
 
         # 3.) create an Sql plugin
-        sql_plugin_broker = SAMSqlPluginBroker(
-            self.request,
-            loader=self.loader,
-            manifest=self.manifest,
-        )
+        sql_plugin_broker = SAMSqlPluginBroker(self.request, loader=self.loader, manifest=self.sql_plugin_model)
         sql_plugin_broker.apply(self.request)
         self.plugin_meta = sql_plugin_broker.plugin_meta
 

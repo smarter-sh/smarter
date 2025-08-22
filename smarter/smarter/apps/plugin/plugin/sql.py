@@ -170,26 +170,26 @@ class SqlPlugin(PluginBase):
         if not self._manifest:
             return None
 
-        # recast the Pydantic model to the PluginDataSql Django ORM model
-        try:
-            account = self.user_profile.account if self.user_profile else None
-            connection_name = self._manifest.spec.connection if self._manifest else None
-            plugin_data_sqlconnection = SqlConnection.objects.get(
-                account=account,
-                name=connection_name,
-            )
-        except SqlConnection.DoesNotExist as e:
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}. Error: {e}"
-            ) from e
-
         sql_data = self.manifest.spec.sqlData.model_dump() if self.manifest else None
         if not sql_data:
             raise SmarterSqlPluginError(
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required SQL data."
             )
         sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
-        sql_data["connection"] = plugin_data_sqlconnection
+        connection_name = self._manifest.spec.connection if self._manifest else None
+        if connection_name:
+            # recast the Pydantic model to the PluginDataSql Django ORM model
+            try:
+                account = self.user_profile.account if self.user_profile else None
+                plugin_data_sqlconnection = SqlConnection.objects.get(
+                    account=account,
+                    name=connection_name,
+                )
+                sql_data["connection"] = plugin_data_sqlconnection
+            except SqlConnection.DoesNotExist as e:
+                raise SmarterSqlPluginError(
+                    f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for account {account}. Error: {e}"
+                ) from e
 
         # recast the Pydantic model's parameters field
         # to conform to openai's function calling schema.

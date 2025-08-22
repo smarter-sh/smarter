@@ -73,6 +73,7 @@ class SecretTransformer(SmarterHelperMixin):
 
     def __init__(
         self,
+        *args,
         user_profile: UserProfile,
         name: Optional[str] = None,
         api_version: Optional[str] = None,
@@ -80,6 +81,7 @@ class SecretTransformer(SmarterHelperMixin):
         secret_id: Optional[int] = None,
         secret: Optional[Secret] = None,
         data: Optional[Union[dict, str]] = None,
+        **kwargs,
     ):
         """
         Options for initialization are:
@@ -89,45 +91,63 @@ class SecretTransformer(SmarterHelperMixin):
         - yaml manifest or json representation of a yaml manifest
         see ./tests/data/secret-good.yaml for an example.
         """
+        super().__init__(*args, **kwargs)
         if sum([bool(name), bool(data), bool(manifest), bool(secret_id), bool(secret)]) == 0:
             raise SmarterSecretTransformerError(
                 f"Must specify at least one of: name, manifest, data, secret_id, or secret. "
                 f"Received name: {bool(name)} data: {bool(data)}, manifest: {bool(manifest)}, "
                 f"secret_id: {bool(secret_id)}, secret: {bool(secret)}."
             )
-        self._name = None
-        self._api_version = api_version or SMARTER_API_MANIFEST_DEFAULT_VERSION
-        self._manifest = None
-        self._secret = None
+        self._secret = secret if secret else None
         self._secret_serializer = None
-        self._user_profile = None
+        self._user_profile = user_profile
 
         secret_inializing.send(sender=self.__class__, secret_name=name, user_profile=user_profile)
         self._user_profile = user_profile
         if not self._user_profile:
             raise SmarterSecretTransformerError("User profile is not set.")
         if name:
-            self.name = name
-        self.api_version = api_version or self.api_version
+            self._name = name
+        self._api_version = api_version or self._api_version
 
         #######################################################################
         # identifiers for existing secrets
         #######################################################################
         if secret_id:
+            logger.info(
+                "%s.__init__() Initializing secret transformer with secret_id: %s", self.formatted_class_name, secret_id
+            )
             self.id = secret_id
-
         if secret:
+            logger.info(
+                "%s.__init__() Initializing secret transformer with secret: %s", self.formatted_class_name, secret
+            )
             self.id = secret.id  # type: ignore[union-attr]
 
         #######################################################################
         # Smarter API Manifest based initialization
         #######################################################################
+        if api_version and api_version not in SMARTER_API_MANIFEST_COMPATIBILITY:
+            raise SmarterSecretTransformerError(f"API version {api_version} is not compatible.")
+        if api_version:
+            logger.info(
+                "%s.__init__() Initializing secret transformer with api_version: %s",
+                self.formatted_class_name,
+                api_version,
+            )
+            self._api_version = api_version
         if manifest:
+            logger.info(
+                "%s.__init__() Initializing secret transformer with manifest: %s", self.formatted_class_name, manifest
+            )
+            if not isinstance(manifest, SAMSecret):
+                raise SAMValidationError(f"Expected SAMSecret, but got {type(manifest)}.")
             # we received a Pydantic model from a manifest broker.
             self._manifest = manifest
             self.api_version = manifest.apiVersion
 
         if isinstance(data, dict):
+            logger.info("%s.__init__() Initializing secret transformer with data: %s", self.formatted_class_name, data)
             # we received a yaml or json string representation of a manifest.
             self.api_version = data.get(SAMKeys.APIVERSION.value, self.api_version)
             if data.get(SAMKeys.KIND.value) != self.kind:

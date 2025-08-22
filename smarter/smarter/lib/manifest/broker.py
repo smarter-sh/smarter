@@ -166,7 +166,18 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         self._name = name  # i suspect that this is always None bc DRF sets name later in the process
         self._kind = kind
-        self._manifest = manifest
+        if manifest and not isinstance(manifest, AbstractSAMBase):
+            logger.info(
+                "%s.__init__() received manifest of type %s. converting to SAM via SAMLoader()",
+                self.formatted_class_name,
+                type(manifest),
+            )
+            self._loader = loader or SAMLoader(
+                api_version=api_version,
+                kind=self.kind,
+                manifest=manifest,
+            )
+
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(
                 message=f"Unsupported apiVersion: {api_version}",
@@ -293,7 +304,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """The name of the manifest."""
         if self._name:
             return self._name
-        if not self._name and self.manifest and self.manifest.metadata and self.manifest.metadata.name:
+        if (
+            not self._name
+            and isinstance(self.manifest, AbstractSAMBase)
+            and self.manifest.metadata
+            and self.manifest.metadata.name
+        ):
             # assign from the manifest metadata, if we have it
             self._name = self.manifest.metadata.name
             logger.info("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
@@ -343,9 +359,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         to illustrate the correct way to initialize a AbstractSAMBase Pydantic model.
         The actual property must be implemented by the concrete broker class.
         """
-        if self._manifest:
-            return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
+        if not self._manifest and self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = AbstractSAMBase(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,

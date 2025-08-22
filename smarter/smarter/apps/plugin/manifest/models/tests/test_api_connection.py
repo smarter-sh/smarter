@@ -1,6 +1,7 @@
 """Test ApiConnection Django ORM and Manifest Loader."""
 
 import logging
+from typing import Optional
 
 from pydantic_core import ValidationError
 
@@ -29,7 +30,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 class TestApiConnection(TestConnectionBase):
     """Test ApiConnection Django ORM and Manifest Loader"""
 
-    _model: SAMApiConnection = None
+    _model: Optional[SAMApiConnection] = None
 
     @property
     def model(self) -> SAMApiConnection:
@@ -37,6 +38,8 @@ class TestApiConnection(TestConnectionBase):
         if not self._model and self.loader:
             self._model = SAMApiConnection(**self.loader.pydantic_model_dump())
             self.assertIsNotNone(self._model)
+        if not isinstance(self._model, SAMApiConnection):
+            raise TypeError(f"Expected SAMApiConnection, got {type(self._model)}")
         return self._model
 
     def test_valid_manifest(self):
@@ -45,6 +48,9 @@ class TestApiConnection(TestConnectionBase):
         """
         self.load_manifest(filename="api-connection.yaml")
         self.assertIsNotNone(self.model)
+        self.assertIsNotNone(self.model.metadata)
+        self.assertIsNotNone(self.model.spec)
+        self.assertIsNotNone(self.model.spec.connection)
 
         snake_case_name = camel_to_snake(self.model.metadata.name)
         self.assertEqual(self.model.metadata.name, snake_case_name)
