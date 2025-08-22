@@ -154,7 +154,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         kind: Optional[str] = None,
         loader: Optional[SAMLoader] = None,
         api_version: Optional[str] = SmarterApiVersions.V1,
-        manifest: Optional[AbstractSAMBase] = None,
+        manifest: Optional[Union[AbstractSAMBase, str]] = None,
         file_path: Optional[str] = None,
         url: Optional[str] = None,
         **kwargs,
@@ -166,17 +166,20 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         self._name = name  # i suspect that this is always None bc DRF sets name later in the process
         self._kind = kind
-        if manifest and not isinstance(manifest, AbstractSAMBase):
-            logger.info(
-                "%s.__init__() received manifest of type %s. converting to SAM via SAMLoader()",
-                self.formatted_class_name,
-                type(manifest),
-            )
-            self._loader = loader or SAMLoader(
-                api_version=api_version,
-                kind=self.kind,
-                manifest=manifest,
-            )
+        if manifest:
+            if not isinstance(manifest, AbstractSAMBase):
+                logger.info(
+                    "%s.__init__() received manifest of type %s. converting to SAM via SAMLoader()",
+                    self.formatted_class_name,
+                    type(manifest),
+                )
+                self._loader = loader or SAMLoader(
+                    api_version=api_version,
+                    kind=self.kind,
+                    manifest=manifest,
+                )
+            else:
+                self._manifest = manifest
 
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(

@@ -5,7 +5,7 @@ Helper class to map to/from Pydantic manifest model, Plugin and Django ORM model
 import json
 import logging
 from functools import cached_property
-from typing import Dict, Optional, Type, Union
+from typing import Dict, Optional, Union
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -40,6 +40,11 @@ PLUGIN_MAP: dict[str, PluginType] = {
     SAMKinds.API_PLUGIN.value: ApiPlugin,
     SAMKinds.SQL_PLUGIN.value: SqlPlugin,
     SAMKinds.STATIC_PLUGIN.value: StaticPlugin,
+}
+PLUGIN_META_CLASS_MAP = {
+    SAMPluginCommonMetadataClassValues.API.value: ApiPlugin,
+    SAMPluginCommonMetadataClassValues.SQL.value: SqlPlugin,
+    SAMPluginCommonMetadataClassValues.STATIC.value: StaticPlugin,
 }
 SAM_MAP: dict[str, SAMPluginType] = {
     SAMKinds.API_PLUGIN.value: SAMApiPlugin,
@@ -184,6 +189,10 @@ class PluginController(AbstractController):
         return PLUGIN_MAP
 
     @cached_property
+    def plugin_meta_class_map(self) -> Dict[str, PluginType]:
+        return PLUGIN_META_CLASS_MAP
+
+    @cached_property
     def sam_map(self) -> Dict[str, SAMPluginType]:
         """Maps manifest kinds to their respective SAM plugin classes."""
         return SAM_MAP
@@ -194,8 +203,8 @@ class PluginController(AbstractController):
             return self._plugin
         if self._plugin_meta:
             Plugin = (
-                self.map[self.plugin_meta.plugin_class]
-                if self.plugin_meta and self.plugin_meta.plugin_class in self.map
+                self.plugin_meta_class_map[self.plugin_meta.plugin_class]
+                if self.plugin_meta and self.plugin_meta.plugin_class in self.plugin_meta_class_map
                 else None
             )
             if not Plugin:

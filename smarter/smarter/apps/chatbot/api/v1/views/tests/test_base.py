@@ -61,7 +61,9 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         super().setUpClass()
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
-        cls.broker = SAMChatbotBroker(request=None, account=cls.account, manifest=cls.manifest)
+        cls.broker = SAMChatbotBroker(
+            request=cls.create_generic_request("/anywhere/"), account=cls.account, manifest=json.dumps(cls.manifest)
+        )
         cls.request: WSGIRequest = cls.create_generic_request(url=cls.broker.chatbot.url_chatbot)
 
         cls.request.user = cls.admin_user
@@ -86,7 +88,7 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
             super().tearDownClass()
 
     def test_base_class_properties(self):
-        base_class = ChatBotApiBaseViewSet()
+        base_class = ChatBotApiBaseViewSet(self.request)
 
         # invoke dispatch method in order to set our class properties
         base_class.dispatch(self.request, name=self.broker.chatbot.name)

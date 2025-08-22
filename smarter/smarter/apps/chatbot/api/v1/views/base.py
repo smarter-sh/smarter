@@ -69,6 +69,10 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, SmarterRequestMixin):
     http_method_names: list[str] = ["get", "post", "options"]
     plugins: Optional[List[PluginBase]] = None
 
+    def __init__(self, *args, **kwargs):
+        SmarterRequestMixin.__init__(self, *args, **kwargs)
+        super().__init__(**kwargs)
+
     @property
     def chatbot_id(self):
         return self._chatbot_id
