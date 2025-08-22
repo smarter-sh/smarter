@@ -67,7 +67,12 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
     def sql_connection_model(self) -> Optional[SAMSqlConnection]:
         # override to create a SAMSqlPlugin pydantic model from the loader
         if not self._sql_connection_model and self.loader:
-            self._sql_connection_model = SAMSqlConnection(**self.loader.pydantic_model_dump())
+            if self.loader.manifest_kind == SmarterJournalThings.SQL_CONNECTION.value:
+                self._sql_connection_model = SAMSqlConnection(**self.loader.pydantic_model_dump())
+            else:
+                raise SmarterValueError(
+                    f"{self.__class__.__name__}.sql_connection_model() received an invalid manifest kind {self.loader.manifest_kind} for SQL connection"
+                )
             self.assertIsNotNone(self._sql_connection_model)
         return self._sql_connection_model
 
@@ -151,6 +156,32 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
 
     def test_validate_api_sql_parameters_missing_required(self):
         """Test that the parameters validator raises an error for missing required parameters."""
+
+        # create the secret
+        self._loader = None
+        self._manifest = None
+        self.load_manifest(filename="secret-smarter.yaml")
+        secret_broker = SAMSecretBroker(
+            self.request,
+            loader=self.loader,
+            manifest=self.secret_model,
+        )
+        secret_broker.apply(self.request)
+
+        # create the connection
+        self._loader = None
+        self._manifest = None
+        self.load_manifest(filename="sql-connection.yaml")
+        connection_broker = SAMSqlConnectionBroker(
+            self.request,
+            loader=self.connection_loader,
+            manifest=self.sql_connection_model,
+        )
+        connection_broker.apply(self.request)
+
+        # create the plugin
+        self._loader = None
+        self._manifest = None
         self.load_manifest(filename="sql-plugin.yaml")
         if not isinstance(self._manifest, dict):
             self.fail("Manifest is not a dictionary")
@@ -166,8 +197,6 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
                 },
             ],
         }
-        sam_sql_connection = self.sql_connection_model
-        sql_connection = SqlConnection(**sam_sql_connection.model_dump())
 
         sam_sql_plugin = SAMSqlPlugin(**self._manifest)
         logger.info(

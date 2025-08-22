@@ -3,7 +3,7 @@
 import abc
 import re
 from logging import getLogger
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
