@@ -257,11 +257,14 @@ class AWSRoute53(AWSBase):
         action: Optional[str] = None
         fn_name = self.formatted_class_name + ".get_or_create_dns_record()"
         logger.info(
-            "%s hosted_zone_id: %s record_name: %s record_type: %s",
+            "%s hosted_zone_id: %s record_name: %s record_type: %s record_ttl: %s record_alias_target: %s record_value: %s",
             fn_name,
             hosted_zone_id,
             record_name,
             record_type,
+            record_ttl,
+            record_alias_target,
+            record_value,
         )
 
         def match_values(record_value, fetched_record) -> bool:
@@ -321,11 +324,16 @@ class AWSRoute53(AWSBase):
                 change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [{"Value": f'"{record_value}"'}]
             change_batch["Changes"][0]["ResourceRecordSet"]["TTL"] = record_ttl
 
-        self.client.change_resource_record_sets(
-            HostedZoneId=hosted_zone_id,
-            ChangeBatch=change_batch,
-        )
-        logger.info("%s posted aws route53 change batch %s", fn_name, change_batch)
+        try:
+            self.client.change_resource_record_sets(
+                HostedZoneId=hosted_zone_id,
+                ChangeBatch=change_batch,
+            )
+            logger.info("%s posted aws route53 change batch %s", fn_name, change_batch)
+        except Exception as e:
+            msg = f"{fn_name} failed to post aws route53 change batch in hosted zone {hosted_zone_id}\n{change_batch}:\n{e}"
+            logger.error(msg)
+            raise SmarterAWSException(msg) from e
 
         record = None
         attempts = 0

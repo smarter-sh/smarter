@@ -336,11 +336,27 @@ class ChatBot(TimestampedModel):
         if isinstance(self.url, str) and self.mode(self.url) == self.Modes.SANDBOX:
             return True
 
-        return (
-            self.dns_verification_status == self.DnsVerificationStatusChoices.VERIFIED
-            and self.deployed
-            and self.tls_certificate_issuance_status == self.TlsCertificateIssuanceStatusChoices.ISSUED
-        )
+        if self.dns_verification_status != self.DnsVerificationStatusChoices.VERIFIED:
+            logger.warning(
+                "ChatBot %s is not ready. DNS verification status is %s",
+                self.name,
+                self.dns_verification_status,
+            )
+            return False
+
+        if self.tls_certificate_issuance_status != self.TlsCertificateIssuanceStatusChoices.ISSUED:
+            logger.warning(
+                "ChatBot %s is not ready. TLS certificate issuance status is %s",
+                self.name,
+                self.tls_certificate_issuance_status,
+            )
+            return False
+
+        if not self.deployed:
+            logger.warning("ChatBot %s is not ready. It is not deployed.", self.name)
+            return False
+
+        return True
 
     def mode(self, url: str) -> str:
         logger.debug("mode: %s", url)
@@ -348,15 +364,28 @@ class ChatBot(TimestampedModel):
             return self.Modes.UNKNOWN
         SmarterValidator.validate_url(url)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
-        custom_url = SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-        default_url = SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-        sandbox_url = SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-        if custom_url and custom_url in url:
-            return self.Modes.CUSTOM
-        if default_url and default_url in url:
-            return self.Modes.DEFAULT
-        if sandbox_url and sandbox_url in url:
-            return self.Modes.SANDBOX
+
+        try:
+            custom_url = SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)  # type: ignore[return-value]
+            if custom_url and custom_url in url:
+                return self.Modes.CUSTOM
+        except SmarterValueError:
+            pass
+
+        try:
+            default_url = SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)  # type: ignore[return-value]
+            if default_url and default_url in url:
+                return self.Modes.DEFAULT
+        except SmarterValueError:
+            pass
+
+        try:
+            sandbox_url = SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)  # type: ignore[return-value]
+            if sandbox_url and sandbox_url in url:
+                return self.Modes.SANDBOX
+        except SmarterValueError:
+            pass
+
         logger.error(
             "Invalid ChatBot url %s received for default_url: %s, sandbox_url: %s, custom_url: %a",
             url,
