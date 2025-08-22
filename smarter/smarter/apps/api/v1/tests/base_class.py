@@ -87,6 +87,9 @@ class ApiV1TestBase(TestAccountMixin):
         response_json = json.loads(response_content)
 
         logger.info(
-            "ApiV1TestBase.get_response() with status code: %d response: %s", response.status_code, response_json
+            "ApiV1TestBase.get_response() %s with status code: %d response: %s",
+            path,
+            response.status_code,
+            response_json,
         )
         return response_json, response.status_code
