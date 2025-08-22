@@ -54,6 +54,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         and are therefore removed from the Django ORM model dict prior to attempting
         the save() command. These fields are defined in the readonly_fields list.
         """
+        logger.info("%s.apply() called with request: %s", self.formatted_class_name, request.build_absolute_uri())
         super().apply(request, kwargs)
 
         # update the common meta fields
@@ -61,7 +62,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         data = self.camel_to_snake(data) if data else None
         if not isinstance(data, dict):
             raise SAMBrokerErrorNotReady(
-                f"Manifest is not ready for {self.kind} broker. Cannot apply.",
+                f"Manifest is not ready for {self.kind} broker. Cannot apply. manifest: {self.manifest.model_dump() if self.manifest else None}",
                 thing=self.thing,
                 command=SmarterJournalCliCommands.APPLY,
             )

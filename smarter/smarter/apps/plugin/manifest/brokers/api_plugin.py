@@ -197,7 +197,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                     SAMPluginSpecKeys.CONNECTION.value: (
                         self.plugin_data.connection.name if self.plugin_data.connection else ""
                     ),
-                    SAMPluginSpecKeys.SQL_DATA.value: plugin_data.model_dump(),
+                    SAMPluginSpecKeys.API_DATA.value: plugin_data.model_dump(),
                 },
                 SAMKeys.STATUS.value: {
                     "created": self.plugin_meta.created_at.isoformat(),

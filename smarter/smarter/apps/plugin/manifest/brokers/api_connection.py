@@ -112,9 +112,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         are automatically cascade-initialized by the Pydantic model, implicitly
         passing **data to each child's constructor.
         """
-        if self._manifest:
-            return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
+        if not self._manifest and self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMApiConnection(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
@@ -125,6 +123,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     if self.loader and self.loader.manifest_status
                     else None
                 ),
+            )
+            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
+        else:
+            logger.warning(
+                "%s.manifest() could not initialize manifest. Expected %s but got %s",
+                self.formatted_class_name,
+                self.kind,
+                self.loader.manifest_kind if self.loader else None,
             )
         return self._manifest
 
@@ -167,7 +173,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if api_key_name:
             try:
                 secret = Secret.objects.get(name=api_key_name, user_profile=self.user_profile)
-                config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = secret.id
+                config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = secret.id  # type: ignore[assignment]
             except Secret.DoesNotExist:
                 logger.warning(
                     "%s.manifest_to_django_orm() api key Secret %s not found for user %s",
@@ -181,7 +187,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if proxy_password_name:
             try:
                 secret = Secret.objects.get(name=proxy_password_name, user_profile=self.user_profile)
-                config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = secret.id
+                config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = secret.id  # type: ignore[assignment]
             except Secret.DoesNotExist:
                 logger.warning(
                     "%s.manifest_to_django_orm() proxy password Secret %s not found for user %s",
