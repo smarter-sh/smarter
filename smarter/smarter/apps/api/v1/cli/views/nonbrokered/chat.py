@@ -88,12 +88,14 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         if self.is_config:
             # config views are not expected to have a prompt
             return None
-        retval = self.data.get("prompt", None) if isinstance(self.data, dict) else None
-        if not retval:
-            raise APIV1CLIChatViewError(
-                f"Internal error. 'prompt' key is missing from the request body. self.data: {self.data}"
-            )
-        return retval
+        if self._prompt is None:
+            self._prompt = self.data.get("prompt", None) if isinstance(self.data, dict) else None
+            if not self._prompt:
+                raise APIV1CLIChatViewError(
+                    f"Internal error. 'prompt' key is missing from the request body. self.data: {self.data}"
+                )
+            logger.info("%s.prompt() found prompt: %s", self.formatted_class_name, self._prompt)
+        return self._prompt
 
     @property
     def new_session(self) -> bool:
@@ -296,9 +298,12 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             else:
                 # otherwise, create a new message list
                 self._messages = self.new_message_list_factory()
+        logger.info("%s.messages() value is set: %s", self.formatted_class_name, self._messages)
         return self._messages
 
     def new_message_list_factory(self) -> list[dict[str, str]]:
+
+        logger.info("%s.new_message_list_factory() called", self.formatted_class_name)
 
         system_dict: Optional[dict] = None
         welcome_dict: Optional[dict] = None
@@ -331,13 +336,16 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         retval = [system_dict]
         if welcome_dict:
-            retval.extend(welcome_dict)
-        retval.extend(prompt_dict)
+            retval.append(welcome_dict)
+        retval.append(prompt_dict)
 
+        logger.info("%s.new_message_list_factory() retval: %s", self.formatted_class_name, retval)
         return retval
 
     def chat_request_body_factory(self) -> dict[str, Any]:
-        return {SMARTER_CHAT_SESSION_KEY_NAME: self.session_key, "messages": self.messages}
+        retval = {SMARTER_CHAT_SESSION_KEY_NAME: self.session_key, "messages": self.messages}
+        logger.info("%s.chat_request_body_factory() retval: %s", self.formatted_class_name, retval)
+        return retval
 
     def chat_request_factory(self, request_body: dict) -> HttpRequest:
         """Create a new request for the chatbot API."""
@@ -441,9 +449,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 response_error = response_data.get("error")
                 if response_error:
                     raise APIV1CLIChatViewError(f"Chat response error: {response_error}")
-                raise APIV1CLIChatViewError(
-                    f"Internal error. Chat response body and error keys are missing: {response_body}"
-                )
+                raise APIV1CLIChatViewError(f"Internal error: {response_data}")
         except APIV1CLIChatViewError as e:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
