@@ -77,7 +77,7 @@ class SmarterValidator:
     def is_valid_camel_case(value: str) -> bool:
         """Check if the value is valid camel case"""
         try:
-            SmarterValidator.ºcamel_case(value)
+            SmarterValidator.validate_camel_case(value)
             return True
         except SmarterValueError:
             return False

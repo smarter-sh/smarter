@@ -58,5 +58,7 @@ class TestSAMSqlPluginBroker(TestSAMPluginBrokerBase, SqlConnectionTestMixin):
         if self.request is None or self.account is None:
             self.fail("Request and account must be set for the broker to work properly.")
 
-        broker = SAMSqlPluginBroker(request=self.request, account=self.account, file_path=self.good_manifest_path)
+        broker = SAMSqlPluginBroker(
+            request=self.request, account=self.account, file_path=self.good_manifest_path, manifest=None
+        )
         self.assertIsInstance(broker, SAMSqlPluginBroker)

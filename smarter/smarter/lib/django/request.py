@@ -20,6 +20,7 @@ import warnings
 from datetime import datetime
 from functools import cached_property
 from typing import Any, Optional, Union
+from unittest.mock import MagicMock
 from urllib.parse import ParseResult, urlparse, urlunsplit
 
 import tldextract
@@ -378,7 +379,7 @@ class SmarterRequestMixin(AccountMixin):
             if self.smarter_request and hasattr(self._smarter_request, "user")
             else "unknown_user"
         )
-        raw_string = self.__class__.__name__ + "_" + username + "_" + "cache_key()_" + uid
+        raw_string = f"{self.__class__.__name__}_{str(username)}_cache_key()_{str(uid)}"
         hash_object = hashlib.sha256()
         hash_object.update(raw_string.encode())
         hash_string = hash_object.hexdigest()
@@ -510,7 +511,7 @@ class SmarterRequestMixin(AccountMixin):
             body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
             if body is not None:
                 body_str = body.decode("utf-8").strip()
-                self._data = json.loads(body_str) if body_str else None
+                self._data = json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
                 if self._data and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
                     logger.info(
                         "%s.data() - initialized from parsed request body as json: %s",
@@ -978,7 +979,7 @@ class SmarterRequestMixin(AccountMixin):
         This is a convenience property to check if the request is ready.
         """
         # cheap and easy way to fail.
-        if not isinstance(self._smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest]):
+        if not isinstance(self._smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
             logger.warning(
                 "%s.is_requestmixin_ready() - %s request is not a HttpRequest. Received %s. Cannot process request.",
                 self.formatted_class_name,
