@@ -115,15 +115,18 @@ class SAMChatbotBroker(AbstractBroker):
         in the database. The ChatBot object is retrieved from the database, if it exists,
         or created from the manifest if it does not.
         """
-        if self._chatbot:
-            return self._chatbot
-        try:
-            self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
-        except ChatBot.DoesNotExist:
-            if self.manifest:
-                data = self.manifest_to_django_orm()
-                self._chatbot = ChatBot.objects.create(**data)
-                self._created = True
+        if not self._chatbot:
+            try:
+                self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
+            except ChatBot.DoesNotExist:
+                if self.manifest:
+                    data = self.manifest_to_django_orm()
+                    self._chatbot = ChatBot.objects.create(**data)
+                    self._created = True
+                else:
+                    logger.warning(
+                        "%s.chatbot() %s not found for account %s", self.formatted_class_name, self.name, self.account
+                    )
 
         return self._chatbot
 
@@ -504,7 +507,7 @@ class SAMChatbotBroker(AbstractBroker):
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         if self.name is None:
-            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+            raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         if self.chatbot:
             try:
                 data = self.django_orm_to_manifest_dict()

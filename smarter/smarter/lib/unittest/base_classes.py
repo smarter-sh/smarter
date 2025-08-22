@@ -12,7 +12,7 @@ import yaml
 from django.http import HttpRequest
 from django.test import RequestFactory
 
-from smarter.common.utils import hash_factory
+from smarter.common.utils import camel_to_snake, hash_factory
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ class SmarterTestBase(unittest.TestCase):
         """Set up the test class."""
         super().setUpClass()
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
-        cls.name = "SmarterTestBase_" + cls.hash_suffix
+        cls.name = camel_to_snake("SmarterTestBase_" + cls.hash_suffix)
         cls.uid = SmarterTestBase.generate_uid()
 
         logger.info("Setting up test class with hash suffix: %s", cls.hash_suffix)
