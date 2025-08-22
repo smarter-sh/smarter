@@ -164,17 +164,32 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         # retrieve the apiKey Secret
         api_key_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
-        config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = self.get_or_create_secret(
-            user_profile=self.user_profile, name=config_dump[api_key_name]
-        )
+        if api_key_name:
+            try:
+                secret = Secret.objects.get(name=api_key_name, user_profile=self.user_profile)
+                config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = secret.id
+            except Secret.DoesNotExist:
+                logger.warning(
+                    "%s.manifest_to_django_orm() api key Secret %s not found for user %s",
+                    self.formatted_class_name,
+                    api_key_name,
+                    self.user_profile.user.username,
+                )
 
         # retrieve the proxyUsername Secret, if it exists
         proxy_password_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
-        if config_dump.get(proxy_password_name):
-            config_dump[proxy_password_name] = self.get_or_create_secret(
-                user_profile=self.user_profile,
-                name=config_dump[proxy_password_name],
-            )
+        if proxy_password_name:
+            try:
+                secret = Secret.objects.get(name=proxy_password_name, user_profile=self.user_profile)
+                config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = secret.id
+            except Secret.DoesNotExist:
+                logger.warning(
+                    "%s.manifest_to_django_orm() proxy password Secret %s not found for user %s",
+                    self.formatted_class_name,
+                    proxy_password_name,
+                    self.user_profile.user.username,
+                )
+
         return config_dump
 
     @property

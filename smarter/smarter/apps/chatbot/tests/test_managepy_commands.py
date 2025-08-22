@@ -181,6 +181,8 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
             a_record, f"DNS A record not found for hosted zone {api_hosted_zone_id}, {chatbot_default_host}"
         )
         resolved_chatbot_domain = aws_helper.aws.domain_resolver(chatbot_default_host)
+        if not isinstance(a_record, dict):
+            self.fail(f"Unexpected DNS record format for {chatbot_default_host}: {a_record}")
         self.assertEqual(str(a_record["Name"]).rstrip("."), str(resolved_chatbot_domain).rstrip("."))
 
         # verify that the dns record verification is either underway or completed

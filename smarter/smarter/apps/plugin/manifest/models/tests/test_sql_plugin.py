@@ -21,11 +21,13 @@ from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
+from smarter.apps.plugin.plugin.sql import SqlPlugin
 from smarter.apps.plugin.tests.base_classes import ManifestTestsMixin, TestPluginBase
 from smarter.apps.plugin.tests.mixins import (
     AuthenticatedRequestMixin,
     SqlConnectionTestMixin,
 )
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalThings
@@ -164,13 +166,17 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
                 },
             ],
         }
-        self._loader = None
+
+        sam_sql_plugin = SAMSqlPlugin(**self._manifest)
+        logger.info(
+            "test_validate_api_sql_parameters_missing_required() Created SAMSqlPlugin: %s", sam_sql_plugin.model_dump()
+        )
+
         self._sql_plugin_model = None
-        with self.assertRaises(PydanticValidationError) as context:
-            # spec.sqlData.parameters.0.default
-            print(self.sql_plugin_model)
+        with self.assertRaises(SmarterValueError) as context:
+            SqlPlugin(manifest=sam_sql_plugin, user_profile=self.user_profile)
         self.assertIn(
-            "Input should be a valid string [type=string_type, input_value=10, input_type=int]",
+            "Placeholder 'username' is not defined in parameter",
             str(context.exception),
         )
 
