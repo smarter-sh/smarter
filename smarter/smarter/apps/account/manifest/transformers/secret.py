@@ -64,12 +64,12 @@ class SecretSerializer(serializers.ModelSerializer):
 class SecretTransformer(SmarterHelperMixin):
     """A class for working with secrets."""
 
-    _name: Optional[str]
-    _api_version: str
-    _manifest: Optional[SAMSecret]
-    _secret: Optional[Secret]
-    _secret_serializer: Optional[SecretSerializer]
-    _user_profile: Optional[UserProfile]
+    _name: Optional[str] = None
+    _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
+    _manifest: Optional[SAMSecret] = None
+    _secret: Optional[Secret] = None
+    _secret_serializer: Optional[SecretSerializer] = None
+    _user_profile: Optional[UserProfile] = None
 
     def __init__(
         self,
@@ -108,7 +108,8 @@ class SecretTransformer(SmarterHelperMixin):
             raise SmarterSecretTransformerError("User profile is not set.")
         if name:
             self._name = name
-        self._api_version = api_version or self._api_version
+        if api_version:
+            self._api_version = api_version
 
         #######################################################################
         # identifiers for existing secrets
