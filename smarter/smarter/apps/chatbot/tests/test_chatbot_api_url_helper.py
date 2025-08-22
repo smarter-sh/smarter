@@ -11,6 +11,7 @@ from django.test import RequestFactory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain, ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -176,14 +177,6 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
 
     def test_no_url(self):
         """Test no url."""
-        helper = ChatBotHelper(request=None)
 
-        self.assertTrue(helper.is_valid is False, f"Expected False, but got {helper.is_valid}")
-        self.assertTrue(helper.account is None, f"Expected None, but got {helper.account}")
-        self.assertTrue(helper.chatbot is None, f"Expected None, but got {helper.chatbot}")
-        self.assertTrue(helper.account_number is None, f"Expected None, but got {helper.account_number}")
-        self.assertTrue(helper.is_custom_domain is False, f"Expected False, but got {helper.is_custom_domain}")
-        self.assertTrue(helper.smarter_request is None, f"Expected None, but got {helper.smarter_request}")
-        self.assertTrue(helper.is_deployed is False, f"Expected False, but got {helper.is_deployed}")
-        self.assertTrue(helper.api_host is None, f"Expected None, but got {helper.api_host}")
-        self.assertTrue(helper.api_subdomain is None, f"Expected None, but got {helper.api_subdomain}")
+        with self.assertRaises(SmarterValueError):
+            ChatBotHelper()

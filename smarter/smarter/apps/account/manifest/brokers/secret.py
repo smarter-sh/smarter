@@ -1,10 +1,11 @@
 # pylint: disable=W0718
 """Smarter API User Manifest handler"""
 
+import json
 import logging
 import traceback
 from datetime import datetime, timezone
-from typing import Optional, Type
+from typing import Optional, Type, Union
 
 from dateutil.relativedelta import relativedelta
 from django.forms.models import model_to_dict
@@ -43,6 +44,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.manifest.loader import SAMLoader
 
 
 def should_log(level):
@@ -95,9 +97,26 @@ class SAMSecretBroker(AbstractBroker):
     _pydantic_model: Type[SAMSecret] = SAMSecret
     _secret_transformer: Optional[SecretTransformer] = None
 
-    def __init__(self, *args, manifest: Optional[SAMSecret] = None, **kwargs):
+    def __init__(self, *args, manifest: Optional[Union[SAMSecret, str, dict]] = None, **kwargs):
         super().__init__(*args, **kwargs)
-        self._manifest = manifest
+        if manifest:
+            if not isinstance(manifest, SAMSecret):
+                logger.info(
+                    "%s.__init__() received manifest of type %s. converting to SAMSecret via SAMLoader()",
+                    self.formatted_class_name,
+                    type(manifest),
+                )
+                if isinstance(manifest, str):
+                    self._loader = SAMLoader(
+                        manifest=manifest,
+                    )
+                if isinstance(manifest, dict):
+                    self._loader = SAMLoader(
+                        manifest=json.dumps(manifest),
+                    )
+            else:
+                self._manifest = manifest
+
         if self._manifest and not isinstance(self._manifest, SAMSecret):
             raise SAMSecretBrokerError(
                 f"Manifest must be of type {SAMSecret.__name__}, got {type(self._manifest)}: {self._manifest}",

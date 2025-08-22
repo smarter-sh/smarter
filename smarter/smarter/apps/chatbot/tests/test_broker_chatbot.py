@@ -5,10 +5,9 @@ import logging
 import os
 from http import HTTPStatus
 
-import requests
 import yaml
 from django.http import JsonResponse
-from django.test import Client
+from django.test import Client, RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
@@ -40,14 +39,14 @@ class TestSAMChatbotBroker(TestAccountMixin):
 
     @classmethod
     def create_generic_request(cls):
-        url = "http://example.com"
-        headers = {"Content-Type": "application/json"}
+        factory = RequestFactory()
+        url = "/some-url/"
+        headers = {"CONTENT_TYPE": "application/json"}
         data = {}
 
-        request = requests.Request("GET", url, headers=headers, data=data)
-        prepared_request = request.prepare()
-
-        return prepared_request
+        # Create a GET request object
+        request = factory.get(url, data, **headers)
+        return request
 
     @classmethod
     def setUpClass(cls):
@@ -57,7 +56,7 @@ class TestSAMChatbotBroker(TestAccountMixin):
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
-        cls.broker = SAMChatbotBroker(request=cls.request, account=cls.account, manifest=cls.manifest)  # type: ignore[call-arg]
+        cls.broker = SAMChatbotBroker(request=cls.request, account=cls.account, manifest=json.dumps(cls.manifest))
         cls.client = Client()
         cls.kwargs = {}
 
