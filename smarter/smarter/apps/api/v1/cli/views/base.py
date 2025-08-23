@@ -35,6 +35,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.aws.exceptions import SmarterAWSError
 from smarter.common.helpers.k8s_helpers import KubernetesHelperException
+from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
@@ -294,32 +295,19 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return SmarterJournalCliCommands(_command)
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
-    def initialize_request(self, request: HttpRequest, *args: Any, **kwargs: Any) -> Request:
-        """
-        This is the earliest point in the DRF view lifecycle where the request object is available.
-        Up to this point our SmarterRequestMixin, and AccountMixin classes are only partially
-        initialized. This method takes care of the rest of the initialization.
-        """
-        if not self.is_requestmixin_ready:
-            logger.info(
-                "%s.initialize_request() - completing initialization of SmarterRequestMixin with request: %s",
-                self.formatted_class_name,
-                request.build_absolute_uri(),
-            )
-            self.smarter_request = request
-        return super().initialize_request(request, *args, **kwargs)
-
     def setup(self, request: Request, *args, **kwargs):
         """
         Setup the view. This is called by Django before dispatch() and is used to
         set up the view for the request.
         """
-        logger.info("%s.setup() - called for request: %s", self.formatted_class_name, request.build_absolute_uri())
+        logger.info(
+            "%s.setup() - called for request: %s", self.formatted_class_name, smarter_build_absolute_uri(request)
+        )
         super().setup(request, *args, **kwargs)
         logger.info(
             "%s.setup() - view for request: %s, user: %s is_authenticated: %s",
             self.formatted_class_name,
-            request.build_absolute_uri(),
+            smarter_build_absolute_uri(request),
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             request.user.is_authenticated,
         )
@@ -332,7 +320,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
         logger.info(
             "CliBaseApiView().setup() - finished view for request: %s, user: %s, self.user: %s is_authenticated: %s",
-            request.build_absolute_uri(),
+            smarter_build_absolute_uri(request),
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
             request.user.is_authenticated,
@@ -341,8 +329,21 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     def initial(self, request: Request, *args, **kwargs):
         """
         Initialize the view. This is called by DRF after setup() but before dispatch().
+
+        This is the earliest point in the DRF view lifecycle where the request object is available.
+        Up to this point our SmarterRequestMixin, and AccountMixin classes are only partially
+        initialized. This method takes care of the rest of the initialization.
         """
-        logger.info("%s.initial() - called for request: %s", self.formatted_class_name, request.build_absolute_uri())
+        url = smarter_build_absolute_uri(request)
+        logger.info("%s.initial() - called for request: %s", self.formatted_class_name, url)
+        if not self.is_requestmixin_ready:
+            logger.info(
+                "%s.initial() - completing initialization of SmarterRequestMixin with request: %s",
+                self.formatted_class_name,
+                url,
+            )
+            self.smarter_request = request
+
         # Check if the request is authenticated. If not, raise an
         # authentication error. see SmarterTokenAuthentication for details
         # on how the token is validated.
@@ -350,11 +351,12 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # of the form: 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY'
         try:
             super().initial(request, *args, **kwargs)
+            self.user = request.user if request and getattr(request, "user", None) and getattr(request.user, "is_authenticated", False) else None  # type: ignore[assignment]
 
             logger.info(
                 "%s.initial() - authenticated request: %s, user: %s, self.user: %s is_authenticated: %s, auth_header: %s",
                 self.formatted_class_name,
-                request.build_absolute_uri(),
+                url,
                 request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
                 self.user_profile,
                 request.user.is_authenticated,
@@ -366,7 +368,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 logger.info(
                     "%s.initial() - internal api request. Skipping authentication: %s",
                     self.formatted_class_name,
-                    request.build_absolute_uri(),
+                    url,
                 )
             else:
                 # regardless of the authentication error, we still need to
@@ -404,7 +406,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 f"{self.formatted_class_name}.smarter_request request object is not set. This should not happen."
             )
         if not self.ready:
-            logger.warning(f"{self.formatted_class_name} is not in a ready state. This might affect some operations.")
+            logger.warning(
+                f"{self.formatted_class_name}.initial() is not in a ready state. This might affect some operations."
+            )
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
@@ -444,7 +448,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 )
         logger.info(
             "CliBaseApiView().initial() - finished initializing view for request: %s, user: %s",
-            request.build_absolute_uri(),
+            url,
             request.user.username if request and getattr(request, "user", None) and getattr(request.user, "is_authenticated", False) else "Anonymous",  # type: ignore[assignment]
         )
 
@@ -466,14 +470,13 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         return a generic error message with a bug report URL.
         """
         try:
-            logger.info(
-                "%s.dispatch() - called for request: %s", self.formatted_class_name, request.build_absolute_uri()
-            )
+            url = smarter_build_absolute_uri(request)
+            logger.info("%s.dispatch() - called for request: %s", self.formatted_class_name, url)
             response = super().dispatch(request, *args, **kwargs)
             logger.info(
                 "%s.dispatch() - finished processing request: %s",
                 self.formatted_class_name,
-                request.build_absolute_uri(),
+                url,
             )
             api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
             return response

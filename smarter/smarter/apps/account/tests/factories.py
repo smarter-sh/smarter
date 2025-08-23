@@ -14,7 +14,7 @@ from smarter.apps.account.models import (
     UserProfile,
 )
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.common.utils import hash_factory
+from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -32,7 +32,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
-    username = f"testAdminUser_{hashed_slug}"
+    username = camel_to_snake(f"testAdminUser_{hashed_slug}")
     email = f"test-admin-{hashed_slug}@mail.com"
     first_name = f"TestAdminFirstName_{hashed_slug}"
     last_name = f"TestAdminLastName_{hashed_slug}"
@@ -59,7 +59,7 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
 
 def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
-    username = f"testMortalUser_{hashed_slug}"
+    username = camel_to_snake(f"testAdminUser_{hashed_slug}")
     email = f"test-mortal-{hashed_slug}@mail.com"
     first_name = f"TestMortalFirstName_{hashed_slug}"
     last_name = f"TestMortalLastName_{hashed_slug}"
@@ -135,7 +135,7 @@ def payment_method_factory(account: Account):
 
     payment_method = PaymentMethod.objects.create(
         account=account,
-        name="TestPaymentMethod" + SmarterTestBase.generate_hash_suffix(),
+        name=camel_to_snake("TestPaymentMethod" + SmarterTestBase.generate_hash_suffix()),
         stripe_id="test-stripe-id",
         card_type="test_card_type",
         card_last_4=random.randint(1000, 9999),
@@ -178,7 +178,7 @@ def secret_factory(
     encrypted_value = Secret.encrypt(value)
     secret = Secret.objects.create(
         user_profile=user_profile,
-        name=name,
+        name=camel_to_snake(name),
         description=description,
         encrypted_value=encrypted_value,
         expires_at=expiration,

@@ -25,6 +25,9 @@ class WaffleSwitchedLoggerWrapper:
     logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_detailed)
     """
 
+    # log entries will be forced at this level and above
+    REQUIRED_LOG_LEVEL = 30
+
     def __init__(self, logger: logging.Logger, condition_func: Optional[Callable] = None):
         self._logger = logger
         self._condition_func = condition_func
@@ -40,23 +43,23 @@ class WaffleSwitchedLoggerWrapper:
         return True
 
     def debug(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.DEBUG):
+        if self._should_log(logging.DEBUG) or logging.DEBUG >= self.REQUIRED_LOG_LEVEL:
             self._logger.debug(msg, *args, **kwargs)
 
     def info(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.INFO):
+        if self._should_log(logging.INFO) or logging.INFO >= self.REQUIRED_LOG_LEVEL:
             self._logger.info(msg, *args, **kwargs)
 
     def warning(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.WARNING):
+        if self._should_log(logging.WARNING) or logging.WARNING >= self.REQUIRED_LOG_LEVEL:
             self._logger.warning(msg, *args, **kwargs)
 
     def error(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.ERROR):
+        if self._should_log(logging.ERROR) or logging.ERROR >= self.REQUIRED_LOG_LEVEL:
             self._logger.error(msg, *args, **kwargs)
 
     def critical(self, msg: Any, *args, **kwargs):
-        if self._should_log(logging.CRITICAL):
+        if self._should_log(logging.CRITICAL) or logging.CRITICAL >= self.REQUIRED_LOG_LEVEL:
             self._logger.critical(msg, *args, **kwargs)
 
     def set_condition(self, condition_func: Callable):
