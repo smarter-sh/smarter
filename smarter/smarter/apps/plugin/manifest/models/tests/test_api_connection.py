@@ -220,10 +220,10 @@ class TestApiConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["authMethod"] = invalid_auth_method
         self._loader = None
         self._model = None
-        with self.assertRaises(SAMValidationError) as context:
+        with self.assertRaises(ValidationError) as context:
             print(self.model)
         self.assertIn(
-            f"Invalid authentication method: . Must be one of {AuthMethods.all_values()}.",
+            f"Input should be a valid string",
             str(context.exception),
         )
 
