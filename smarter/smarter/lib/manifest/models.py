@@ -5,7 +5,7 @@ import re
 from logging import getLogger
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
@@ -25,6 +25,14 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
         arbitrary_types_allowed=True,  # allow Field attributed to be created from custom class types
         frozen=True,  # models are read-only
     )
+
+    @model_validator(mode="before")
+    def coerce_none_strings(cls, data):
+        if isinstance(data, dict):
+            for k, v in data.items():
+                if v in ("None", ""):
+                    data[k] = None
+        return data
 
 
 class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
