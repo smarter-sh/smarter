@@ -354,7 +354,7 @@ def get_user_profiles_for_account(account: Account) -> Optional[list[UserProfile
 
 def cache_invalidate(user: Optional[User] = None, account: Optional[Account] = None):
     """
-    Invalidates all cache entries for the given user.
+    Invalidates all cache entries for the given user/account.
     """
     resolved_user = get_resolved_user(user) if user else None
 

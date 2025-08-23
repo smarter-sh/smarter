@@ -74,6 +74,7 @@ class TestPluginClassBase(TestAccountMixin):
     @property
     def manifest(self) -> Optional[dict]:
         if not self._manifest and self.manifest_path:
+            logger.info("Loading manifest from %s", self.manifest_path)
             self._manifest = get_readonly_yaml_file(self.manifest_path)
             self.assertIsNotNone(self._manifest)
         return self._manifest
@@ -82,6 +83,7 @@ class TestPluginClassBase(TestAccountMixin):
     def loader(self) -> Optional[SAMLoader]:
         # initialize a SAMLoader object with the manifest raw data
         if not self._loader and self.manifest:
+            logger.info("initializing SAMLoader from manifest data")
             self._loader = SAMLoader(manifest=json.dumps(self.manifest))
             self.assertIsNotNone(self._loader)
         return self._loader
