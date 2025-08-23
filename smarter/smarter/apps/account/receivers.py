@@ -1,11 +1,13 @@
 # pylint: disable=unused-argument
 """Django signal receivers for account app."""
 
+import json
 import logging
 
 from django.contrib.auth.signals import user_logged_in
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
+from django.forms.models import model_to_dict
 
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
@@ -21,7 +23,7 @@ from .signals import (
     secret_inializing,
     secret_ready,
 )
-from .utils import get_cached_default_account, get_cached_user_profile
+from .utils import cache_invalidate, get_cached_default_account, get_cached_user_profile
 
 
 def should_log(level):
@@ -59,13 +61,14 @@ def user_logged_in_receiver(sender, request, user, **kwargs):
 @receiver(post_save, sender=User)
 def user_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of User model."""
-    if created:
-        logger.info(
-            "%s User post_save signal received. instance: %s, created: %s",
-            formatted_text(f"{module_prefix}.user_post_save()"),
-            instance,
-            created,
-        )
+    logger.info(
+        "%s User post_save signal received. instance: %s, created: %s",
+        formatted_text(f"{module_prefix}.user_post_save()"),
+        instance,
+        created,
+    )
+    if not created:
+        cache_invalidate(user=instance)
 
 
 @receiver(post_delete, sender=User)
@@ -82,13 +85,14 @@ def user_post_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=UserProfile)
 def user_profile_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of UserProfile model."""
-    if created:
-        logger.info(
-            "%s UserProfile post_save signal received. instance: %s, created: %s",
-            formatted_text(f"{module_prefix}.user_profile_post_save()"),
-            instance,
-            created,
-        )
+    logger.info(
+        "%s UserProfile post_save signal received. instance: %s, created: %s",
+        formatted_text(f"{module_prefix}.user_profile_post_save()"),
+        instance,
+        created,
+    )
+    if not created:
+        cache_invalidate(user=instance.user, account=instance.account)
 
 
 @receiver(post_delete, sender=UserProfile)
@@ -105,13 +109,14 @@ def user_profile_post_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=Account)
 def account_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of Account model."""
+    model_prefix = formatted_text(f"{module_prefix}.account_post_save() signal received.")
+    account_json = json.dumps(model_to_dict(instance), default=str)
     if created:
-        logger.info(
-            "%s Account post_save signal received. instance: %s, created: %s",
-            formatted_text(f"{module_prefix}.account_post_save()"),
-            instance,
-            created,
-        )
+        logger.info("%s Account created: %s", model_prefix, instance)
+    else:
+        cache_invalidate(account=instance)
+
+    logger.info("%s instance: %s", model_prefix, account_json)
 
 
 @receiver(post_delete, sender=Account)
@@ -128,38 +133,38 @@ def account_post_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=Charge)
 def charge_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of Charge model."""
-    if created:
-        logger.info(
-            "%s Charge post_save signal received. instance: %s, created: %s",
-            formatted_text(f"{module_prefix}.charge_post_save()"),
-            instance,
-            created,
-        )
+    charge_json = json.dumps(model_to_dict(instance), default=str)
+    logger.info(
+        "%s Charge post_save signal received. instance: %s, created: %s",
+        formatted_text(f"{module_prefix}.charge_post_save()"),
+        charge_json,
+        created,
+    )
 
 
 @receiver(post_save, sender=DailyBillingRecord)
 def daily_billing_record_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of DailyBillingRecord model."""
-    if created:
-        logger.info(
-            "%s DailyBillingRecord post_save signal received. instance: %s, created: %s",
-            formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
-            instance,
-            created,
-        )
+    daily_billing_record_json = json.dumps(model_to_dict(instance), default=str)
+    logger.info(
+        "%s DailyBillingRecord post_save signal received. instance: %s, created: %s",
+        formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
+        daily_billing_record_json,
+        created,
+    )
 
 
 @receiver(post_save, sender=Secret)
 def secret_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of Secret model."""
-    if created:
-        logger.info(
-            "%s Secret post_save signal received. instance: %s, id: %s created: %s",
-            formatted_text(f"{module_prefix}.secret_post_save()"),
-            instance,
-            instance.id,
-            created,
-        )
+    secret_json = json.dumps(model_to_dict(instance), default=str)
+    logger.info(
+        "%s Secret post_save signal received. instance: %s, id: %s created: %s",
+        formatted_text(f"{module_prefix}.secret_post_save()"),
+        secret_json,
+        instance.id,
+        created,
+    )
 
 
 @receiver(post_delete, sender=Secret)

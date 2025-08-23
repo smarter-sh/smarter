@@ -45,7 +45,9 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 LRU_CACHE_MAX_SIZE = 128
 
 
-def get_cached_account(account_id: Optional[int] = None, account_number: Optional[str] = None) -> Optional[Account]:
+def get_cached_account(
+    account_id: Optional[int] = None, account_number: Optional[str] = None, invalidate: bool = False
+) -> Optional[Account]:
     """
     Returns the account for the given account_id or account_number.
     """
@@ -77,32 +79,42 @@ def get_cached_account(account_id: Optional[int] = None, account_number: Optiona
         return account
 
     if account_id:
-        return _in_memory_account_by_id(account_id)
+        return (
+            _in_memory_account_by_id(account_id) if not invalidate else _in_memory_account_by_id.invalidate(account_id)
+        )
 
     if account_number:
-        return _in_memory_account_by_number(account_number)
+        return (
+            _in_memory_account_by_number(account_number)
+            if not invalidate
+            else _in_memory_account_by_number.invalidate(account_number)
+        )
 
 
 @cache_results()
-def get_cached_smarter_account() -> Optional[Account]:
+def get_cached_smarter_account(invalidate: bool = False) -> Optional[Account]:
     """
     Returns the smarter account.
     """
-    account = get_cached_account(account_number=SMARTER_ACCOUNT_NUMBER)
+    account = get_cached_account(account_number=SMARTER_ACCOUNT_NUMBER, invalidate=invalidate)
     return account
 
 
-@cache_results()
-def get_cached_default_account() -> Account:
+def get_cached_default_account(invalidate: bool = False) -> Account:
     """
     Returns the default account.
     """
-    account = Account.objects.get(is_default_account=True)
-    logger.info("get_cached_default_account() retrieving and caching default account %s", account)
-    return account
+
+    @cache_results()
+    def _get_default_account():
+        account = Account.objects.get(is_default_account=True)
+        logger.info("get_cached_default_account() retrieving and caching default account %s", account)
+        return account
+
+    return _get_default_account() if not invalidate else _get_default_account.invalidate()
 
 
-def _get_account_for_user(user):
+def _get_account_for_user(user, invalidate: bool = False) -> Optional[Account]:
     if not user:
         return None
 
@@ -138,19 +150,21 @@ def _get_account_for_user(user):
         )
         return account
 
-    return _get_account_for_user_by_id(user_id)
+    return _get_account_for_user_by_id(user_id) if not invalidate else _get_account_for_user_by_id.invalidate(user_id)
 
 
-def get_cached_account_for_user(user: Any) -> Optional[Account]:
+def get_cached_account_for_user(user: Any, invalidate: bool = False) -> Optional[Account]:
     """
     Locates the account for a given user, or None if no account exists.
     """
     if isinstance(user, AnonymousUser):
         return None
-    return _get_account_for_user(user)
+    return _get_account_for_user(user, invalidate=invalidate)
 
 
-def _get_cached_user_profile(resolved_user: User, account: Optional[Account]) -> Optional[UserProfile]:
+def _get_cached_user_profile(
+    resolved_user: User, account: Optional[Account], invalidate: bool = False
+) -> Optional[UserProfile]:
 
     @cache_results()
     def _in_memory_user_profile(user_id, account_id):
@@ -161,16 +175,21 @@ def _get_cached_user_profile(resolved_user: User, account: Optional[Account]) ->
     if resolved_user is None or account is None:
         logger.warning("get_cached_user_profile() cannot initialize with user: %s account: %s", resolved_user, account)
         return None
-    user_profile = _in_memory_user_profile(resolved_user.id, account.id)  # type: ignore[return-value]
-    logger.info("get_cached_user_profile() retrieving and caching UserProfile %s", user_profile)
-    return user_profile
+
+    return (
+        _in_memory_user_profile(resolved_user.id, account.id)
+        if not invalidate
+        else _in_memory_user_profile.invalidate(resolved_user.id, account.id)
+    )
 
 
-def get_cached_user_profile(user: User, account: Optional[Account] = None) -> Optional[UserProfile]:
+def get_cached_user_profile(
+    user: User, account: Optional[Account] = None, invalidate: bool = False
+) -> Optional[UserProfile]:
     """
     Locates the user_profile for a given user, or None.
     """
-    account = account or get_cached_account_for_user(user)
+    account = account or get_cached_account_for_user(user, invalidate=invalidate)
     if not account:
         logger.warning("get_cached_user_profile() no account found for user: %s", user)
         return None
@@ -178,12 +197,12 @@ def get_cached_user_profile(user: User, account: Optional[Account] = None) -> Op
     # pylint: disable=W0212
     resolved_user = get_resolved_user(user)
     if isinstance(resolved_user, User):
-        return _get_cached_user_profile(resolved_user, account)
+        return _get_cached_user_profile(resolved_user, account, invalidate=invalidate)
     logger.warning("get_cached_user_profile() user is not resolvable: %s", user)
     return None
 
 
-def get_cached_user_for_user_id(user_id: int) -> User:
+def get_cached_user_for_user_id(user_id: int, invalidate: bool = False) -> User:
     """
     Returns the user for the given user_id.
     """
@@ -197,12 +216,12 @@ def get_cached_user_for_user_id(user_id: int) -> User:
         logger.info("_in_memory_user() retrieving and caching user %s", user)
         return user  # type: ignore[return-value]
 
-    user = _in_memory_user(user_id)
+    user = _in_memory_user(user_id) if not invalidate else _in_memory_user.invalidate(user_id)
     logger.info("get_cached_user_for_user_id() retrieving and caching user %s", user)
     return user
 
 
-def get_cached_admin_user_for_account(account: Account) -> User:
+def get_cached_admin_user_for_account(account: Account, invalidate: bool = False) -> User:
     """
     Returns the account admin user for the given account. If the user does not exist, it will be created.
     """
@@ -239,11 +258,10 @@ def get_cached_admin_user_for_account(account: Account) -> User:
     account_number = account.account_number if isinstance(account, Account) else None
     if not account_number:
         raise SmarterValueError("Account number is required to retrieve admin user")
-    return admin_for_account(account_number)
+    return admin_for_account(account_number) if not invalidate else admin_for_account.invalidate(account_number)  # type: ignore[return-value]
 
 
-@cache_results()
-def get_cached_smarter_admin_user_profile() -> UserProfile:
+def get_cached_smarter_admin_user_profile(invalidate: bool = False) -> UserProfile:
     """
     Returns the smarter admin user.
     """
@@ -254,6 +272,7 @@ def get_cached_smarter_admin_user_profile() -> UserProfile:
             "Failed to retrieve smarter account. Please ensure the account exists and is configured correctly."
         )
 
+    @cache_results()
     def _in_memory_smarter_admin_user_profile(smarter_account_id):
         super_user_profile = (
             UserProfile.objects.filter(account_id=smarter_account_id, user__is_superuser=True).order_by("pk").first()
@@ -282,11 +301,14 @@ def get_cached_smarter_admin_user_profile() -> UserProfile:
             "Failed to retrieve smarter admin user profile. Please ensure the account has a superuser or staff user."
         )
 
-    return _in_memory_smarter_admin_user_profile(smarter_account.id)  # type: ignore[return-value]
+    return (
+        _in_memory_smarter_admin_user_profile(smarter_account.id)
+        if not invalidate
+        else _in_memory_smarter_admin_user_profile.invalidate(smarter_account.id)
+    )
 
 
-@cache_results()
-def account_number_from_url(url: str) -> Optional[str]:
+def account_number_from_url(url: str, invalidate: bool = False) -> Optional[str]:
     """
     Extracts the account number from the URL.
     :return: The account number or None if not found.
@@ -296,12 +318,17 @@ def account_number_from_url(url: str) -> Optional[str]:
     """
     if not url:
         return None
-    SmarterValidator.validate_url(url)
-    match = re.search(SmarterValidator.SMARTER_ACCOUNT_NUMBER_REGEX, url)
-    retval = match.group(0) if match else None
-    if retval is not None and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-        logger.info("account_number_from_url() extracted and cached account number %s from URL %s", retval, url)
-    return retval
+
+    @cache_results()
+    def _account_number_from_url(url: str) -> Optional[str]:
+        SmarterValidator.validate_url(url)
+        match = re.search(SmarterValidator.SMARTER_ACCOUNT_NUMBER_REGEX, url)
+        retval = match.group(0) if match else None
+        if retval is not None and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+            logger.info("account_number_from_url() extracted and cached account number %s from URL %s", retval, url)
+        return retval
+
+    return _account_number_from_url(url) if not invalidate else _account_number_from_url.invalidate(url)
 
 
 def get_users_for_account(account: Account) -> list[User]:
@@ -323,3 +350,34 @@ def get_user_profiles_for_account(account: Account) -> Optional[list[UserProfile
 
     user_profiles = UserProfile.objects.filter(account=account)
     return user_profiles  # type: ignore[list-item,return-value]
+
+
+def cache_invalidate(user: Optional[User] = None, account: Optional[Account] = None):
+    """
+    Invalidates all cache entries for the given user.
+    """
+    resolved_user = get_resolved_user(user) if user else None
+
+    if not isinstance(resolved_user, User) and not isinstance(account, Account):
+        raise SmarterValueError("either user or account is required")
+
+    if not isinstance(resolved_user, User) and isinstance(account, Account):
+        resolved_user = get_cached_admin_user_for_account(account, invalidate=True)
+    else:
+        user_profile = UserProfile.objects.filter(user=resolved_user).first()
+        if not user_profile:
+            raise SmarterValueError(f"did not find a UserProfile for {resolved_user}")
+        account = user_profile.account
+
+    logger.info("cache_invalidate() invalidating cache for user: %s account: %s", resolved_user, account)
+
+    if not isinstance(account, Account):
+        raise SmarterValueError(f"could not resolve account {account} for user {user}")
+
+    get_cached_account(account_id=account.id, invalidate=True)
+    get_cached_admin_user_for_account(account=account, invalidate=True)
+
+    if isinstance(resolved_user, User):
+        get_cached_account_for_user(user=resolved_user, invalidate=True)
+        get_cached_user_profile(user=resolved_user, account=account, invalidate=True)
+        get_cached_user_for_user_id(user_id=resolved_user.id, invalidate=True)

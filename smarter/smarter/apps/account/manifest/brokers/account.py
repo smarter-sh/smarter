@@ -14,6 +14,7 @@ from smarter.apps.account.manifest.models.account.metadata import SAMAccountMeta
 from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.manifest.models.account.spec import SAMAccountSpec
 from smarter.apps.account.models import Account
+from smarter.apps.account.utils import cache_invalidate
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -313,6 +314,9 @@ class SAMAccountBroker(AbstractBroker):
                 data.pop(field, None)
             for key, value in data.items():
                 setattr(self.account, key, value)
+                logger.info("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
+            logger.info("%s.apply() Saving %s", self.formatted_class_name, self.account)
+            cache_invalidate(user=self.user, account=self.account)
             self.account.save()
         except Exception as e:
             raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e

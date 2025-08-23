@@ -20,8 +20,10 @@ from smarter.apps.account.models import Secret, UserProfile
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseErrorKeys,
     SmarterJournalApiResponseKeys,
@@ -32,6 +34,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.manifest.models import (
     AbstractSAMBase,
@@ -47,7 +50,14 @@ inflect_engine = inflect.engine()
 
 SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
 
-logger = logging.getLogger(__name__)
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SAMBrokerError(SAMExceptionBase):
@@ -393,7 +403,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             version: 1.0.0
 
         """
-        logger.info("AbstractBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)
+        logger.info(
+            "AbstractBroker.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
+            request,
+            args,
+            kwargs,
+            self.account,
+            self.user,
+        )
 
     @abstractmethod
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

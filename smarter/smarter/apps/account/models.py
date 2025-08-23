@@ -106,6 +106,9 @@ def get_resolved_user(
     Maps the various kinds of Django user subclasses and mutations to the User.
     Used for resolving type annotations and ensuring type safety.
     """
+    if user is None:
+        return None
+
     # this is the expected case
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
         return user
