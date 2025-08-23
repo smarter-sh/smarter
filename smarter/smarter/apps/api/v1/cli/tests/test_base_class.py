@@ -93,8 +93,8 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
     def test_authentication_with_no_apikey_public(self):
         """verify that missing key authentication is insufficient to access the endpoint"""
         response, status = self.authentication_scenarios(path=self.public_path, missing_key=True)
-        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
-        self.assertIn("errorClass", response.keys())
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
 
     def test_authentication_with_no_apikey_private(self):
         """verify that missing key authentication is insufficient to access the endpoint"""

@@ -40,25 +40,21 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
         super().__init__(*args, **kwargs)
 
-    def initialize_request(self, request: HttpRequest, *args, **kwargs) -> Request:
+    def initial(self, request, *args, **kwargs):
         """
+        Initialize the view with the request and any additional arguments.
+
         This is the earliest point in the DRF view lifecycle where the request object is available.
         Up to this point our SmarterRequestMixin, and AccountMixin classes are only partially
         initialized. This method takes care of the rest of the initialization.
         """
         if not self.is_requestmixin_ready:
             logger.info(
-                "%s.initialize_request() - completing initialization of SmarterRequestMixin with request: %s",
+                "%s.initial() - completing initialization of SmarterRequestMixin with request: %s",
                 self.formatted_class_name,
                 request.build_absolute_uri(),
             )
             self.smarter_request = request
-        return super().initialize_request(request, *args, **kwargs)
-
-    def initial(self, request, *args, **kwargs):
-        """
-        Initialize the view with the request and any additional arguments.
-        """
         super().initial(request, *args, **kwargs)
         logger.info(
             "%s.initial() - request: %s, args: %s, kwargs: %s",

@@ -546,6 +546,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
                 status=HTTPStatus.NOT_FOUND,
                 stack_trace=traceback.format_exc(),
+                description=f"{self.formatted_class_name}.post() ChatBot {name} not found for account {self.account}",
             )
 
         # pylint: disable=W0718
