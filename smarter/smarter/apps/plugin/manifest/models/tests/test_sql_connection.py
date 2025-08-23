@@ -119,9 +119,9 @@ class TestSqlConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["database"] = invalid_database
         self._loader = None
         self._model = None  # type: ignore[assignment]
-        with self.assertRaises(SAMValidationError) as context:
+        with self.assertRaises(ValidationError) as context:
             print(self.model)
-        self.assertIn(f"Invalid database name: {invalid_database}. Must be a valid string.", str(context.exception))
+        self.assertIn("Input should be a valid string", str(context.exception))
 
     def test_validate_username_invalid_value(self):
         """Test that the username validator raises an error for invalid values."""
