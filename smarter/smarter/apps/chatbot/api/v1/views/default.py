@@ -6,6 +6,7 @@ Smarter Customer API view.
 import logging
 import traceback
 from http import HTTPStatus
+from typing import Optional
 
 from django.http import JsonResponse
 
@@ -31,7 +32,7 @@ class DefaultChatbotApiView(ChatBotApiBaseViewSet):
     top-level viewset for customer-deployed Plugin-based Chat APIs.
     """
 
-    def dispatch(self, request, *args, name: str = None, **kwargs):
+    def dispatch(self, request, *args, name: Optional[str] = None, **kwargs):
         """
         Smarter API ChatBot dispatch method.
 

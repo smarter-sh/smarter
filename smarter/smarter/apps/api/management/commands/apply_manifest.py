@@ -78,22 +78,22 @@ class Command(BaseCommand):
 
         self.filespec = options.get("filespec")
         if self.filespec is None:
-            self.stdout.write(self.style.ERROR("No filespec provided."))
+            self.stderr.write(self.style.ERROR("No filespec provided."))
             return
         username = options.get("username")
         if not isinstance(username, str) or not username.strip():
-            self.stdout.write(self.style.ERROR("No username provided."))
+            self.stderr.write(self.style.ERROR("No username provided."))
             return
 
         try:
             self.user = User.objects.get(username=username.strip())
         except User.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"User '{username}' does not exist."))
+            self.stderr.write(self.style.ERROR(f"User '{username}' does not exist."))
             return
 
         user_profile = get_cached_user_profile(user=self.user)
         if not isinstance(user_profile, UserProfile):
-            self.stdout.write(self.style.ERROR("No admin user profile found."))
+            self.stderr.write(self.style.ERROR("No admin user profile found."))
             return
 
         user = user_profile.user
@@ -106,26 +106,38 @@ class Command(BaseCommand):
             )
         # pylint: disable=W0718
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Error creating API token: {e}"))
+            self.stderr.write(self.style.ERROR(f"Error creating API token: {e}"))
             return
 
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply, kwargs={})
         url = urljoin(smarter_settings.environment_url, path)
         headers = {"Authorization": f"Token {token_key}", "Content-Type": "application/json"}
 
+        self.stdout.write(
+            self.style.NOTICE(
+                f"manage.py apply_manifest - Applying manifest via api endpoint {url}. manifest: {self.data}"
+            )
+        )
+
         httpx_response = httpx.post(url, data=self.data, headers=headers)  # type: ignore[call-arg]
         token_record.delete()
 
         # wrap up the request
-        response_content = httpx_response.content.decode("utf-8")
-        response_json = json.loads(response_content)
-
         self.stdout.write("url: " + self.style.NOTICE(url))
+        response_content = httpx_response.content.decode("utf-8")
+        if isinstance(response_content, (str, bytearray, bytes)):
+            try:
+                response_json = json.loads(response_content)
+            except json.JSONDecodeError:
+                response_json = {"error": "unable to decode response content", "raw": response_content}
+        else:
+            response_json = {"error": "unable to decode response content"}
+
         response = json.dumps(response_json, indent=4) + "\n"
         if httpx_response.status_code == httpx.codes.OK:
             self.stdout.write("response: " + self.style.SUCCESS(response))
             self.stdout.write(self.style.SUCCESS("manifest applied."))
         else:
-            msg = f"Manifest apply failed with status code: {httpx_response.status_code}\n{response}"
-            self.stdout.write(self.style.ERROR(msg))
+            msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {self.data}\nresponse: {response}"
+            self.stderr.write(self.style.ERROR(msg))
             raise CommandError(msg)

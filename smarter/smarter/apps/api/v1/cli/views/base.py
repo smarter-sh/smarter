@@ -7,6 +7,7 @@ import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
+from django.http.request import HttpRequest
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -142,9 +143,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _prompt: Optional[str] = None
 
     def __init__(self, *args, **kwargs):
-        logger.info("%s.__init__() - called", self.formatted_class_name)
+        request = None
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
         super().__init__(*args, **kwargs)
-        logger.info("%s.__init__() - initialized", self.formatted_class_name)
 
     @property
     def formatted_class_name(self) -> str:
@@ -293,6 +294,21 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return SmarterJournalCliCommands(_command)
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
+    def initialize_request(self, request: HttpRequest, *args: Any, **kwargs: Any) -> Request:
+        """
+        This is the earliest point in the DRF view lifecycle where the request object is available.
+        Up to this point our SmarterRequestMixin, and AccountMixin classes are only partially
+        initialized. This method takes care of the rest of the initialization.
+        """
+        if not self.is_requestmixin_ready:
+            logger.info(
+                "%s.initialize_request() - completing initialization of SmarterRequestMixin with request: %s",
+                self.formatted_class_name,
+                request.build_absolute_uri(),
+            )
+            self.smarter_request = request
+        return super().initialize_request(request, *args, **kwargs)
+
     def setup(self, request: Request, *args, **kwargs):
         """
         Setup the view. This is called by Django before dispatch() and is used to
@@ -388,7 +404,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 f"{self.formatted_class_name}.smarter_request request object is not set. This should not happen."
             )
         if not self.ready:
-            raise SmarterValueError(f"{self.formatted_class_name} is not in a ready state. Cannot continue.")
+            logger.warning(f"{self.formatted_class_name} is not in a ready state. This might affect some operations.")
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
@@ -429,7 +445,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         logger.info(
             "CliBaseApiView().initial() - finished initializing view for request: %s, user: %s",
             request.build_absolute_uri(),
-            request.user.username if request.user.is_authenticated else "Anonymous",  # type: ignore[assignment]
+            request.user.username if request and getattr(request, "user", None) and getattr(request.user, "is_authenticated", False) else "Anonymous",  # type: ignore[assignment]
         )
 
     # pylint: disable=too-many-return-statements,too-many-branches

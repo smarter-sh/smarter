@@ -41,10 +41,10 @@ def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
     if not isinstance(user_profile, UserProfile):
         raise SmarterValueError("User profile is required to add example plugins.")
     username: str = user_profile.user.username
-
-    # Add required secrets
     output = io.StringIO()
     error_output = io.StringIO()
+
+    # Add required secrets
     manifest_path = os.path.join(PROJECT_ROOT, "apps/account/data/sample-secrets/smarter-test-db.yaml")
     call_command("apply_manifest", filespec=manifest_path, username=username, stdout=output)
     logger.info("Applied manifest %s. output: %s", manifest_path, output.getvalue())
@@ -72,8 +72,6 @@ def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
         raise SmarterValueError(f"Failed to update secret: {exc}") from exc
 
     # add required connections
-    output = io.StringIO()
-    error_output = io.StringIO()
     manifest_path = os.path.join(HERE, "data/sample-connections/smarter-test-db.yaml")
     try:
         call_command("apply_manifest", filespec=manifest_path, username=username, stdout=output, stderr=error_output)
@@ -85,8 +83,6 @@ def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
         logger.error("Failed to apply manifest %s: %s", manifest_path, exc)
         raise SmarterValueError(f"Failed to apply manifest: {exc}") from exc
 
-    output = io.StringIO()
-    error_output = io.StringIO()
     manifest_path = os.path.join(HERE, "data/sample-connections/smarter-test-api.yaml")
     try:
         call_command("apply_manifest", filespec=manifest_path, username=username, stdout=output, stderr=error_output)

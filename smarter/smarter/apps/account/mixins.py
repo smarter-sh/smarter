@@ -139,7 +139,7 @@ class AccountMixin(SmarterHelperMixin):
                 logger.info(
                     "%s.__init__(): found a user object in the request: %s",
                     self.formatted_class_name,
-                    self._user.username,  # type: ignore[union-attr]
+                    self._user,
                 )
                 self._account = get_cached_account_for_user(self._user)
                 if not isinstance(self._account, Account):
@@ -215,8 +215,13 @@ class AccountMixin(SmarterHelperMixin):
         Returns the account for the current user. Handle
         lazy instantiation from user or user_profile.
         """
-        if self._account:
-            return self._account
+        try:
+            if self._account:
+                return self._account
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning("error getting account: %s", e)
+            return None
         if self._user_profile:
             self._account = self._user_profile.account if self._user_profile else None
         elif self._user:
@@ -279,8 +284,14 @@ class AccountMixin(SmarterHelperMixin):
         Returns the user for the current user. Handle
         lazy instantiation from user_profile or account.
         """
-        if self._user:
-            return self._user
+        try:
+            if self._user:
+                return self._user
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning("error getting user: %s", e)
+            return None
+
         if self._user_profile:
             self._user = self._user_profile.user
         return self._user

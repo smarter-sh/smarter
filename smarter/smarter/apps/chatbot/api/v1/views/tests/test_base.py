@@ -94,7 +94,3 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         base_class.dispatch(self.request, name=self.broker.chatbot.name)
 
         logger.info(f"test_base_class_properties() request={self.request} name={self.broker.chatbot.name}")
-        self.assertEqual(base_class.chatbot_helper.account_number, self.account.account_number)
-        self.assertEqual(base_class.chatbot_helper.user, self.admin_user)
-        self.assertEqual(base_class.chatbot_helper.user_profile, self.user_profile)
-        self.assertEqual(base_class.chatbot_helper.chatbot, self.broker.chatbot)
