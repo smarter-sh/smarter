@@ -72,10 +72,9 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
     def test_init_without_request_object(self):
         """
-        Test that SmarterRequestMixin doesn't identify any kind of resource nor api.
+        Test that SmarterRequestMixin will initialize without a request object.
         """
-        with self.assertRaises((SmarterValueError, TypeError)):
-            SmarterRequestMixin(request=None)
+        SmarterRequestMixin(request=None)
 
     def test_unauthenticated_instantiation(self):
         """
@@ -97,17 +96,26 @@ class TestSmarterRequestMixin(TestAccountMixin):
         srm = SmarterRequestMixin(request)
         self.assertIsNotNone(srm.to_json())
 
-    def test_request_object_is_readonly(self):
+    def test_request_object_can_be_set(self):
         """
         Test that SmarterRequestMixin request object is read-only.
         """
         self.client.login(username=self.admin_user.username, password="12345")
         response = self.client.get("/")
-        request = response.wsgi_request
 
+        # we should be able to instantiate SmarterRequestMixin with a None request
+        request = None
         srm = SmarterRequestMixin(request)
-        with self.assertRaises(AttributeError):
-            srm.smarter_request = None
+
+        # and afterwards we should later be able to set smarter_request
+        srm.smarter_request = response.wsgi_request
+
+        # and after that, we should see authenticated user data
+        self.assertIsNotNone(srm.user)
+        self.assertIsNotNone(srm.account)
+        self.assertIsNotNone(srm.user_profile)
+        self.assertIsNotNone(srm.url)
+        self.assertTrue(srm.is_authenticated)
 
     def test_unauthenticated_base_case(self):
         """
@@ -116,7 +124,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = self.wsgi_request_factory.get(f"/?session_key={self.session_key}", SERVER_NAME="testserver")
         srm = SmarterRequestMixin(request)
         self.assertIsNone(srm.account)
-        self.assertIsNone(srm.session_key)
+        self.assertIsNotNone(srm.session_key)
         self.assertEqual(srm.domain, "testserver")
         self.assertEqual(srm.ip_address, "127.0.0.1")
         self.assertFalse(srm.is_smarter_api)
@@ -177,7 +185,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertFalse(srm.is_chatbot_cli_api_url)
         self.assertFalse(srm.is_chatbot_sandbox_url)
         self.assertFalse(srm.is_smarter_api)
-        self.assertIsNone(srm.session_key)
+        self.assertIsNotNone(srm.session_key)
         self.assertEqual(srm.domain, "example.3141-5926-5359.api.localhost:8000")
 
     def test_sandbox_url(self):

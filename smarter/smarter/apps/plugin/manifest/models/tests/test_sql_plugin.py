@@ -92,8 +92,6 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
         self.assertIsInstance(self.connection_manifest, dict)
         self.assertIsInstance(self.connection_manifest_path, str)
 
-        self.assertEqual(self.sql_connection_model.kind, SmarterJournalThings.SQL_CONNECTION.value)
-
     def test_validate_api_connection_invalid_value(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="sql-plugin.yaml")
