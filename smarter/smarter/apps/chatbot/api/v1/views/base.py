@@ -167,7 +167,11 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     @property
     def url(self):
-        return self._url
+        try:
+            return self._url
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning("%s: Error getting url: %s", self.formatted_class_name, e)
 
     @property
     def is_web_platform(self):

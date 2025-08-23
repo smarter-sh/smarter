@@ -23,7 +23,7 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
     _model: Optional[SAMApiConnection] = None
     good_manifest_path: Optional[str] = None
     waffle_setting: bool = False
-    request: Optional[HttpRequest] = None
+    request: HttpRequest
     api_key_name: Optional[str] = None
     api_key_value: Optional[str] = None
     api_key: Optional[Secret] = None

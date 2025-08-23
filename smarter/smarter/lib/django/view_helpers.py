@@ -2,6 +2,7 @@
 
 import logging
 import re
+from typing import Optional
 
 from django import template
 from django.conf import settings
@@ -53,6 +54,16 @@ class SmarterView(View, SmarterRequestMixin):
 
     template_path: str = ""
     context: dict = {}
+
+    def __init__(self, *args, **kwargs):
+        request: Optional[HttpRequest] = None
+        if args:
+            request = args[0]
+        elif "request" in kwargs:
+            request = kwargs["request"]
+
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @register.filter
     def remove_comments(self, html):

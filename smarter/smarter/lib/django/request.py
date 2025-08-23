@@ -39,7 +39,7 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
-from smarter.common.utils import hash_factory, mask_string
+from smarter.common.utils import hash_factory, mask_string, smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -68,6 +68,11 @@ class SmarterRequestMixin(AccountMixin):
 
     Works with any Django request object and any valid url, but is designed
     as a helper class for Smarter ChatBot urls.
+
+    Fix note: we've been boxed into making the request object an optional positional
+    argument, because Django view lifecycles do not recognize the request object
+    until well after class __init__(). Meanwhile, SmarterRequestMixin is
+    included as a mixin in the Smarter base view classes.
 
     valid end points:
         1.) root end points for named urls. Public or authenticated chats
@@ -134,9 +139,9 @@ class SmarterRequestMixin(AccountMixin):
     )
 
     # pylint: disable=W0613
-    def __init__(self, request: HttpRequest, *args, **kwargs):
+    def __init__(self, request: Optional[HttpRequest], *args, **kwargs):
         self._instance_id = id(self)
-        self._smarter_request: HttpRequest = request
+        self._smarter_request: Optional[HttpRequest] = request
         self._timestamp = datetime.now()
         self._url: Optional[str] = None
         self._url_account_number: Optional[str] = None
@@ -146,7 +151,26 @@ class SmarterRequestMixin(AccountMixin):
         self._data: Optional[dict] = None
         self._cache_key: Optional[str] = None
 
-        url = self.smarter_build_absolute_uri(self.smarter_request)
+        if request:
+            self.init(request, *args, **kwargs)
+        else:
+            logger.warning(
+                "%s.__init__() - request is None. SmarterRequestMixin will be partially initialized. This might affect request processing.",
+                self.formatted_class_name,
+            )
+            super().__init__(request, *args, api_token=self.api_token, **kwargs)
+
+    def init(self, request: HttpRequest, *args, **kwargs):
+        """
+        Handles initializations that require a valid request. This is called
+        from __init__() iif the request object is passed. It is also called
+        from the smarter_request setter.
+        """
+        url = smarter_build_absolute_uri(self.smarter_request)
+        logger.info(
+            "%s.init() - initializing with request=%s, args=%s, kwargs=%s", self.formatted_class_name, url, args, kwargs
+        )
+
         if url is None:
             raise SmarterValueError(
                 f"{self.formatted_class_name}.__init__() - request url is None or empty. request={request}"
@@ -166,7 +190,7 @@ class SmarterRequestMixin(AccountMixin):
         super().__init__(request, *args, api_token=self.api_token, **kwargs)
 
         logger.info(
-            "%s.__init__() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s auth_header=%s",
+            "%s.init() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s auth_header=%s",
             self.formatted_class_name,
             self._instance_id,
             request,
@@ -178,7 +202,7 @@ class SmarterRequestMixin(AccountMixin):
         if isinstance(self._session_key, str):
             SmarterValidator.validate_session_key(self._session_key)
             logger.info(
-                "%s.__init__() - session_key is set to %s from kwargs",
+                "%s.init() - session_key is set to %s from kwargs",
                 self.formatted_class_name,
                 self._session_key,
             )
@@ -194,7 +218,7 @@ class SmarterRequestMixin(AccountMixin):
 
             if self.account and not self._user:
                 logger.warning(
-                    "%s.__init__() - account (%s) is set but user is not.",
+                    "%s.init() - account (%s) is set but user is not.",
                     self.formatted_class_name,
                     self.account,
                 )
@@ -203,13 +227,13 @@ class SmarterRequestMixin(AccountMixin):
 
         if self.is_requestmixin_ready:
             self.helper_logger(
-                f"__init__() {self._instance_id} initialized successfully url={self.url}, session_key={self.session_key}, user={self.user_profile}"
+                f"init() {self._instance_id} initialized successfully url={self.url}, session_key={self.session_key}, user={self.user_profile}"
             )
         else:
-            raise SmarterValueError(
-                f"{self.formatted_class_name}.__init__() - request {self._instance_id} is not ready. request={self.smarter_request}"
-            )
-        logger.info("SmarterRequestMixin().__init__() - finished %s", self.dump())
+            msg = f"{self.formatted_class_name}.init() - request {self._instance_id} is not ready. request={self.smarter_request}"
+            logger.warning(msg)
+
+        logger.info("SmarterRequestMixin().init() - finished %s", self.dump())
 
     def invalidate_cached_properties(self):
         """
@@ -225,6 +249,17 @@ class SmarterRequestMixin(AccountMixin):
     def smarter_request(self) -> HttpRequest:
         """renaming this to avoid potential name collisions in child classes"""
         return self._smarter_request
+
+    @smarter_request.setter
+    def smarter_request(self, request: HttpRequest):
+        self._smarter_request = request
+        if request is not None:
+            logger.info(
+                "%s.smarter_request setter called with request: %s",
+                self.formatted_class_name,
+                smarter_build_absolute_uri(request),
+            )
+            self.init(request)
 
     @cached_property
     def auth_header(self) -> Optional[str]:
@@ -374,11 +409,7 @@ class SmarterRequestMixin(AccountMixin):
             return None
 
         uid = self.uid or "unknown_uid"
-        username = (
-            self.smarter_request.user.username  # type: ignore[union-attr]
-            if self.smarter_request and hasattr(self._smarter_request, "user")
-            else "unknown_user"
-        )
+        username = getattr(self.smarter_request, "user", "Anonymous") if self.smarter_request else "Anonymous"
         raw_string = f"{self.__class__.__name__}_{str(username)}_cache_key()_{str(uid)}"
         hash_object = hashlib.sha256()
         hash_object.update(raw_string.encode())
@@ -1099,7 +1130,7 @@ class SmarterRequestMixin(AccountMixin):
             return session_key
 
         # finally, we look for it in the GET parameters.
-        session_key = self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
+        session_key = self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) if self.smarter_request else None
         session_key = session_key.strip() if isinstance(session_key, str) else None
         if session_key:
             SmarterValidator.validate_session_key(session_key)
@@ -1112,6 +1143,8 @@ class SmarterRequestMixin(AccountMixin):
         """
         serializes the object.
         """
+        if not self.is_requestmixin_ready:
+            return super().to_json()
         return {
             "ready": self.ready,
             "url": self.url,
