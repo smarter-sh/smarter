@@ -266,8 +266,8 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertIn("thing", response)
         self.assertEqual(response["thing"], "SqlConnection")
         self.assertIn("metadata", response)
-        self.assertIn("key", response["metadata"])
-        self.assertIsInstance(response["metadata"]["key"], str)
+        self.assertIn("command", response["metadata"].keys())
+        self.assertEqual(response["metadata"]["command"], "get")
 
         # validate titles
         expected_titles = [
@@ -326,8 +326,8 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertIn("thing", response)
         self.assertEqual(response["thing"], "SqlConnection")
         self.assertIn("metadata", response)
-        self.assertIn("key", response["metadata"])
-        self.assertIsInstance(response["metadata"]["key"], str)
+        self.assertIn("command", response["metadata"])
+        self.assertEqual(response["metadata"]["command"], "get")
 
         data = response["data"]
         self.assertIn("apiVersion", data)
