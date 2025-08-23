@@ -3,6 +3,7 @@
 import json
 import logging
 from http import HTTPStatus
+from typing import Tuple
 from urllib.parse import urlencode
 
 from django.urls import reverse
@@ -73,7 +74,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
 
         super().tearDown()
 
-    def auth_token_factory(self) -> SmarterAuthToken:
+    def auth_token_factory(self) -> Tuple[SmarterAuthToken, str]:
         """Create a SmarterAuthToken record for testing"""
 
         auth_token_record, secret_token = SmarterAuthToken.objects.create(
@@ -81,7 +82,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
             user=self.admin_user,
             description=f"{self.__class__.__name__} Test API Key",
             is_active=True,
-        )
+        )  # type: ignore
         return auth_token_record, secret_token
 
     def validate_response(self, response: dict) -> None:
@@ -403,8 +404,8 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.assertIn("deleted successfully", response["message"])
         self.assertEqual(response["thing"], "AuthToken")
         self.assertEqual(response["api"], "smarter.sh/v1")
-        self.assertIn("metadata", response.keys())
-        self.assertIn("key", response["metadata"].keys())
+        self.assertIn("metadata", response)
+        self.assertIn("command", response["metadata"].keys())
 
         # verify the SmarterAuthToken was deleted
         try:
