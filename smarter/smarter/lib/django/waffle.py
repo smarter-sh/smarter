@@ -91,6 +91,11 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
                 cache.set(cache_key, result, timeout)
             return result
 
+        def invalidate(*args, **kwargs):
+            cache_key = f"{func.__name__}_{args}_{kwargs}"
+            cache.delete(cache_key)
+
+        wrapper.invalidate = invalidate  # type: ignore[attr-defined]
         return wrapper
 
     return decorator

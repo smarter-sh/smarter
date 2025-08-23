@@ -10,7 +10,6 @@ from django.test import Client, RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
-from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.request import SmarterRequestMixin
 
 
