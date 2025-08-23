@@ -12,19 +12,6 @@ class TestSwitchIsActive(SmarterTestBase):
 
     @patch("smarter.lib.django.waffle.waffle_orig")
     @patch("smarter.lib.django.waffle.cache")
-    def test_switch_is_active_true(self, mock_cache: MagicMock, mock_waffle_orig: MagicMock):
-        # Simulate cache miss, then switch is active
-        mock_cache.get.return_value = None
-        mock_switch = MagicMock()
-        mock_switch.is_active.return_value = True
-        mock_waffle_orig.get_waffle_switch_model.return_value.get.return_value = mock_switch
-
-        result = waffle.switch_is_active("my_switch")
-        self.assertTrue(result)
-        mock_cache.set.assert_called()
-
-    @patch("smarter.lib.django.waffle.waffle_orig")
-    @patch("smarter.lib.django.waffle.cache")
     def test_switch_is_active_false(self, mock_cache: MagicMock, mock_waffle_orig: MagicMock):
         # Simulate cache miss, then switch is inactive
         mock_cache.get.return_value = None

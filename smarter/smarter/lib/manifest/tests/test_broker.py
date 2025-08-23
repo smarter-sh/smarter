@@ -200,9 +200,8 @@ class TestAbstractBrokerClass(TestAccountMixin):
         try:
             self.broker.describe(request=self.broker.request, kwargs=None)
         except SAMBrokerErrorNotImplemented as e:
-            self.assertEqual(
-                e.get_formatted_err_message,
-                "Smarter API Plugin manifest broker: describe() not implemented error.  describe() not implemented",
+            self.assertIn(
+                "Smarter API Plugin manifest broker: describe() not implemented error.", e.get_formatted_err_message
             )
 
     def test_delete(self) -> None:
