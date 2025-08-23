@@ -154,6 +154,8 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         # dump the manifest to json
         manifest_json = json.loads(manifest.model_dump_json())
 
+        logger.info("manifest_json=%s", json.dumps(manifest_json, indent=4))
+
         # retrieve the current manifest by calling "describe"
         path = reverse(self.namespace + ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, data=manifest_json)
@@ -191,8 +193,14 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertEqual(response["api"], SmarterApiVersions.V1)
         self.assertEqual(response["thing"], SAMKinds.SECRET.value)
         self.assertIsInstance(response["metadata"], dict)
-        self.assertIn("key", response["metadata"])
+
         data: dict = response["data"]
+        self.assertIsInstance(data, dict)
+        self.assertIn("name", data["data"]["metadata"])
+        self.assertIn("description", data["data"]["metadata"])
+        self.assertIn("version", data["data"]["metadata"])
+
+        data: dict = response["data"]["data"]
         self.assertIsInstance(data, dict)
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SECRET.value)
