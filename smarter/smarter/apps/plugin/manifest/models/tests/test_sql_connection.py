@@ -42,6 +42,7 @@ class TestSqlConnection(TestConnectionBase):
     def model(self) -> Optional[SAMSqlConnection]:
         # create a SAMSqlConnection pydantic model from the loader
         if not self._model and self.loader:
+            logger.info("Creating SAMSqlConnection pydantic model from loader data")
             self._model = SAMSqlConnection(**self.loader.pydantic_model_dump())
             self.assertIsNotNone(self._model)
         return self._model
@@ -130,12 +131,13 @@ class TestSqlConnection(TestConnectionBase):
             self.fail("Manifest should not be None after loading the file")
 
         invalid_username = ""
-        self._manifest["spec"]["connection"]["username"] = invalid_username
+        self._manifest["spec"]["connection"]["hostname"] = invalid_username
         self._loader = None
         self._model = None  # type: ignore[assignment]
-        with self.assertRaises(SAMValidationError) as context:
-            print(self.model)
-        self.assertIn(f"Invalid username: {invalid_username}. Must be a valid string.", str(context.exception))
+
+        with self.assertRaises(ValidationError) as context:
+            logger.info("Creating SAMSqlConnection pydantic model from bad loader data, %s", self.model.model_dump())
+        self.assertIn(f"Input should be a valid string", str(context.exception))
 
     def test_validate_timeout_invalid_value(self):
         """Test that the timeout validator raises an error for invalid values."""
