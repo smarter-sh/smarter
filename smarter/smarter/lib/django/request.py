@@ -167,6 +167,7 @@ class SmarterRequestMixin(AccountMixin):
         from the smarter_request setter.
         """
         url = smarter_build_absolute_uri(self.smarter_request)
+
         logger.info(
             "%s.init() - initializing with request=%s, args=%s, kwargs=%s", self.formatted_class_name, url, args, kwargs
         )
@@ -190,13 +191,15 @@ class SmarterRequestMixin(AccountMixin):
         super().__init__(request, *args, api_token=self.api_token, **kwargs)
 
         logger.info(
-            "%s.init() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s auth_header=%s",
+            "%s.init() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s auth_header=%s user_profile=%s, account=%s",
             self.formatted_class_name,
             self._instance_id,
             request,
             args,
             kwargs,
             request.META.get("HTTP_AUTHORIZATION") if request and hasattr(request, "META") else None,
+            self.user_profile if self.user_profile else None,
+            self.account if self.account else None,
         )
 
         if isinstance(self._session_key, str):
@@ -1036,7 +1039,7 @@ class SmarterRequestMixin(AccountMixin):
             return False
         return True
 
-    @cached_property
+    @property
     def ready(self) -> bool:
         """
         returns True if the request is ready for processing.

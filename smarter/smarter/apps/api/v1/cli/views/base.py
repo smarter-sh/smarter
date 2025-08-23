@@ -7,7 +7,6 @@ import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
-from django.http.request import HttpRequest
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -35,7 +34,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.aws.exceptions import SmarterAWSError
 from smarter.common.helpers.k8s_helpers import KubernetesHelperException
-from smarter.common.utils import smarter_build_absolute_uri
+from smarter.common.utils import mask_string, smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
@@ -360,7 +359,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
                 self.user_profile,
                 request.user.is_authenticated,
-                request.META.get("HTTP_AUTHORIZATION"),
+                mask_string(str(request.META.get("HTTP_AUTHORIZATION"))),
             )
         except NotAuthenticated as e:
             internal_api_request = getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False)
@@ -474,9 +473,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             logger.info("%s.dispatch() - called for request: %s", self.formatted_class_name, url)
             response = super().dispatch(request, *args, **kwargs)
             logger.info(
-                "%s.dispatch() - finished processing request: %s",
+                "%s.dispatch() - finished processing request: %s, user_profile: %s, account: %s",
                 self.formatted_class_name,
                 url,
+                self.user_profile if self.user_profile else None,
+                self.account if self.account else None,
             )
             api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
             return response

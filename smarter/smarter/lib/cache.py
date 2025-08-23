@@ -4,6 +4,7 @@ import hashlib
 import logging
 import pickle
 from functools import wraps
+from typing import Optional
 
 from django.core.cache import cache
 from django.http import HttpRequest
@@ -128,6 +129,20 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                     )
             return result
 
+        def invalidate(*args, **kwargs):
+            key_data = generate_key_data(func, args, kwargs)
+            if key_data is None:
+                return
+            cache_key = generate_cache_key(func, key_data)
+            cache.delete(cache_key)
+            if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.info(
+                    "%s invalidated cache entry for %s",
+                    formatted_text_red("@cache_results()"),
+                    cache_key,
+                )
+
+        wrapper.invalidate = invalidate  # type: ignore[attr-defined]
         return wrapper
 
     return decorator
