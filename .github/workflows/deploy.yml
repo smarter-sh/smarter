@@ -50,6 +50,7 @@ jobs:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           pinecone-api-key: ${{ secrets.PINECONE_API_KEY }}
           pinecone-environment: ${{ secrets.PINECONE_ENVIRONMENT }}
+          smarter-mysql-test_database_password: ${{ secrets.SMARTER_MYSQL_TEST_DATABASE_PASSWORD}}
           social-auth-google-oauth2-key: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}
           social-auth-google-oauth2-secret: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}
           social-auth-github-key: ${{ secrets.SOCIAL_AUTH_GITHUB_KEY }}
