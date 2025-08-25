@@ -18,6 +18,9 @@ from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseServerError,
+)
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -82,6 +85,26 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         Process the request to set up the CSRF protection.
         If the request is for a ChatBot, then we'll exempt it from CSRF checks.
         """
+        # Short-circuit for health checks
+        if request.path in ["/healthz", "/readiness", "/liveness"]:
+            return None
+
+        # Short-circuit for any requests born from internal IP address hosts
+        host = request.get_host()
+        if not host:
+            return SmarterHttpResponseServerError(
+                request=request,
+                error_message="Internal error (500) - could not parse request.",
+            )
+
+        if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
+            logger.info(
+                "%s %s identified as an internal IP address, exiting.",
+                self.formatted_class_name,
+                host,
+            )
+            return None
+
         # this is a workaround to not being able to inherit from
         # SmarterRequestMixin inside of middleware.
         logger.info("%s.process_request - initializing SmarterRequestMixin", self.formatted_class_name)
