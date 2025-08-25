@@ -60,7 +60,7 @@ spec:
       information about everlasting gobstoppers.
     temperature: 1
   selector:
-    directive: searchTerms
+    directive: search_terms
     searchTerms:
     - Gobstopper
     - Gobstoppers

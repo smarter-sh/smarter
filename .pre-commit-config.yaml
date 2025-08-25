@@ -30,7 +30,7 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.2.0
+    rev: 7.3.0
     hooks:
       - id: flake8
   - repo: https://github.com/PyCQA/isort
@@ -46,12 +46,12 @@ repos:
   #       language: script
   #       types: [python]
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.8.3
+    rev: 1.8.6
     hooks:
       - id: bandit
         args: ["-ll"]
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       # See https://pre-commit.com/hooks.html for more hooks
       #- id: check-added-large-files
@@ -65,7 +65,7 @@ repos:
       - id: check-xml
         exclude: "smarter/smarter/static/|smarter/smarter/templates/"
       - id: check-yaml
-        exclude: ^smarter/smarter/apps/api/v1/cli/tests/data/api-connection\.yaml$
+        exclude: ^smarter/smarter/apps/api/v1/cli/tests/data/api-connection\.yaml$|^helm/charts/smarter/templates/deployment_.*\.yaml$
       - id: destroyed-symlinks
       - id: detect-aws-credentials
         args: ["--allow-missing-credentials"]

@@ -1,53 +1,54 @@
 """Test SmarterTokenAuthentication class"""
 
-from unittest.mock import Mock, patch
+import time
 
+from django.utils import timezone
 from rest_framework.exceptions import AuthenticationFailed
 
-from smarter.lib.unittest.base_classes import SmarterTestBase
-
-from ..token_authentication import (
+from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.drf.token_authentication import (
     SmarterTokenAuthentication,
     SmarterTokenAuthenticationError,
 )
 
 
-class TestSmarterTokenAuthentication(SmarterTestBase):
+class TestSmarterTokenAuthentication(TestAccountMixin):
     """Test the SmarterTokenAuthentication class."""
+
+    smarter_auth_token: SmarterAuthToken
 
     def setUp(self):
         super().setUp()
         self.auth = SmarterTokenAuthentication()
-        self.token = b"sometoken"
-        self.user = Mock()
-        self.auth_token = Mock()
-        self.smarter_auth_token = Mock()
+        self.smarter_auth_token, self.token_key = SmarterAuthToken.objects.create(
+            name=self.name,
+            user=self.admin_user,
+            description="TestSmarterTokenAuthenticationMiddleware() test description",
+        )  # type: ignore
 
-    @patch("smarter.lib.drf.token_authentication.SmarterAuthToken")
-    @patch("smarter.lib.drf.token_authentication.TokenAuthentication.authenticate_credentials")
-    def test_authenticate_credentials_active_token(self, mock_super_auth, mock_token_model):
-        # Mock super().authenticate_credentials to return user and token
-        mock_super_auth.return_value = (self.user, self.auth_token)
-        self.auth_token.token_key = b"key123"
-        # Mock SmarterAuthToken.objects.get to return an active token
-        mock_token_model.objects.get.return_value = self.smarter_auth_token
-        self.smarter_auth_token.is_active = True
+    def tearDown(self):
+        super().tearDown()
+        self.smarter_auth_token.delete()
 
-        result = self.auth.authenticate_credentials(self.token)
-        self.assertEqual(result, (self.user, self.smarter_auth_token))
-        self.assertTrue(self.smarter_auth_token.last_used_at)
-        self.smarter_auth_token.save.assert_called_once()
+    def test_authenticate_credentials_active_token(self):
+        start_time = timezone.now()
+        token_key_bytes = self.token_key.encode()
+        authenticated_user, self.smarter_auth_token = self.auth.authenticate_credentials(token_key_bytes)
+        # Simulate some processing time to avoid a race condition with the
+        # Django signal that updates last_used_at
+        time.sleep(1)
+        self.smarter_auth_token.refresh_from_db()
+        self.assertTrue(authenticated_user.is_authenticated)
+        self.assertTrue(self.smarter_auth_token.is_active)
+        self.assertEqual((authenticated_user, self.smarter_auth_token), (self.admin_user, self.smarter_auth_token))
+        self.assertLess(start_time, self.smarter_auth_token.last_used_at)
 
-    @patch("smarter.lib.drf.token_authentication.SmarterAuthToken")
-    @patch("smarter.lib.drf.token_authentication.TokenAuthentication.authenticate_credentials")
-    def test_authenticate_credentials_inactive_token(self, mock_super_auth, mock_token_model):
-        mock_super_auth.return_value = (self.user, self.auth_token)
-        self.auth_token.token_key = b"key123"
-        mock_token_model.objects.get.return_value = self.smarter_auth_token
+    def test_authenticate_credentials_inactive_token(self):
         self.smarter_auth_token.is_active = False
-
+        self.smarter_auth_token.save()
         with self.assertRaises(AuthenticationFailed):
-            self.auth.authenticate_credentials(self.token)
+            self.auth.authenticate_credentials(self.token_key[:1])
 
     def test_smarter_token_authentication_error_message(self):
         err = SmarterTokenAuthenticationError()

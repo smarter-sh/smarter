@@ -1,4 +1,3 @@
----
 apiVersion: smarter.sh/v1
 kind: Plugin
 metadata:
@@ -12,7 +11,7 @@ metadata:
     - verification
 spec:
   selector:
-    directive: searchTerms
+    directive: search_terms
     searchTerms:
       - plugin verification
       - verification

@@ -76,9 +76,12 @@ class ParameterType(str, Enum):
     """Enum for parameter types."""
 
     STRING = "string"
+    NUMBER = "number"  # Used for both float and double
     INTEGER = "integer"
-    FLOAT = "float"
     BOOLEAN = "boolean"
+    OBJECT = "object"
+    ARRAY = "array"
+    NULL = "null"
 
 
 class Parameter(BaseModel):
@@ -90,23 +93,25 @@ class Parameter(BaseModel):
     and also for creating the function calling prompt api.
     """
 
+    class Config:
+        use_enum_values = True
+
     name: str = Field(..., description="The name of the parameter.")
-    type: ParameterType = Field(..., description="The data type of the parameter (e.g., string, integer).")
+    type: ParameterType = Field(
+        ...,
+        description="The data type of the parameter (one of: string, number, integer, boolean, object, array, null).",
+    )
     description: Optional[str] = Field(default=None, description="A description of the parameter.")
     required: bool = Field(default=False, description="Whether the parameter is required.")
     enum: Optional[List[str]] = Field(
         default=None,
         description="A list of allowed values for the parameter. Example: ['Celsius', 'Fahrenheit']",
     )
-    default: Optional[str] = Field(None, description="The default value of the parameter, if any.")
+    default: Optional[Any] = Field(None, description="The default value of the parameter, if any.")
 
     @field_validator("default")
     def validate_default(cls, v):
-        if v is None:
-            return v
-        if isinstance(v, str):
-            return v
-        return str(v)
+        return str(v) if v is not None else v
 
     @model_validator(mode="after")
     def validate_enum_and_default(self):

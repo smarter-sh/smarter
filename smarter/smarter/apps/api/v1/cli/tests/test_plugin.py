@@ -1,6 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test api/v1/cli endpoints on the Plugin model."""
 
+import logging
 import os
 from http import HTTPStatus
 from urllib.parse import urlencode
@@ -18,6 +19,8 @@ from .base_class import ApiV1CliTestBase
 
 KIND = SAMKinds.STATIC_PLUGIN.value
 HERE = os.path.abspath(os.path.dirname(__file__))
+
+logger = logging.getLogger(__name__)
 
 
 class TestApiV1CliPlugin(ApiV1CliTestBase):
@@ -60,7 +63,7 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
 
         # create a Plugin from a valid manifest
         path = reverse(self.namespace + ApiV1CliReverseViews.apply, kwargs=None)
-        response, status = self.get_response(path, manifest=self.good_manifest_text)
+        response, status = self.get_response(path, manifest=self.good_manifest_text)  # type: ignore[arg-type]
 
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
@@ -73,7 +76,11 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
-        data = response[SCLIResponseGet.DATA.value]
+        logger.info("Response: %s", response)
+
+        data = response["data"]
+        logger.info("Data: %s", data)
+
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.STATIC_PLUGIN.value)
         self.assertIsInstance(data.get(SAMKeys.METADATA.value, None), dict)

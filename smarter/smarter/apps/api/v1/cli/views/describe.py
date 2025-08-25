@@ -78,15 +78,6 @@ The response from this endpoint is a JSON object containing a representation of 
         Returns:
         Response: a JSON object containing the resource manifest.
         """
-        from logging import getLogger
 
-        logger = getLogger(__name__)
-        logger.info(
-            "ApiV1CliDescribeApiView().get() called with request=%s, kind=%s, kwargs=%s, user=%s",
-            request,
-            kind,
-            kwargs,
-            request.user.username if request.user.is_authenticated else "Anonymous",
-        )
         response = self.broker.describe(request, *args, **kwargs)
         return response

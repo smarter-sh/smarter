@@ -2,9 +2,8 @@
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, User, UserProfile, get_resolved_user
 from smarter.apps.account.utils import get_cached_admin_user_for_account
-from smarter.lib.django.user import User
 from smarter.lib.drf.models import SmarterAuthToken
 
 
@@ -32,9 +31,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("You must provide an account number or a username"))
             return
 
-        account = None
-        user = None
-
         if account_number:
             account = Account.objects.get(account_number=account_number)
             user = get_cached_admin_user_for_account(account)
@@ -47,7 +43,7 @@ class Command(BaseCommand):
 
         auth_token, token_key = SmarterAuthToken.objects.create(
             name=f"{account.account_number}.{user.username}", user=user, description=description
-        )
+        )  # type: ignore[assignment]
         self.stdout.write(
             self.style.SUCCESS(
                 f"API key created successfully for account {account.account_number} and user {user.username}"

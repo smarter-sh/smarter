@@ -24,7 +24,7 @@ class PluginSerializer(SmarterCamelCaseSerializer):
 
     def get_email(self, obj: PluginMeta):
         if obj.author:
-            user_profile = UserProfile.objects.get(id=obj.author_id)
+            user_profile = UserProfile.objects.get(id=obj.author_id)  # type: ignore[union-attr]
             return user_profile.user.email if user_profile.user else None
         return None
 

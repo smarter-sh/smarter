@@ -66,7 +66,7 @@ def validate_messages(request_body):
         raise SmarterValueError("dict key 'messages' should be a JSON list")
     for message in messages:
         if not isinstance(message, dict):
-            raise SmarterValueError(f"invalid object type {type(message)} found in messages list")
+            raise SmarterValueError(f"invalid object type {type(message)} {message} found in messages list {messages}")
         if "role" not in message:
             raise SmarterValueError(f"dict key 'role' not found in message {json.dumps(message, indent=4)}")
         if message["role"] not in OpenAIMessageKeys.all_roles:

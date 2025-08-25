@@ -7,6 +7,9 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import SmarterAuthToken
 from .signals import (
@@ -16,8 +19,14 @@ from .signals import (
 )
 
 
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 module_prefix = "smarter.lib.drf.receivers"
-logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=SmarterAuthToken)

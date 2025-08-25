@@ -5,10 +5,41 @@ from smarter.apps.account.models import (
     AccountContact,
     PaymentMethod,
     Secret,
+    User,
     UserProfile,
 )
-from smarter.lib.django.serializers import UserMiniSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
+
+
+class UserSerializer(SmarterCamelCaseSerializer):
+    """User serializer for smarter api."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "is_staff",
+            "is_superuser",
+        ]  # add more fields if needed
+
+
+class UserMiniSerializer(SmarterCamelCaseSerializer):
+    """User serializer for smarter api."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "email",
+        ]
+
+        read_only_fields = fields
 
 
 class AccountSerializer(SmarterCamelCaseSerializer):

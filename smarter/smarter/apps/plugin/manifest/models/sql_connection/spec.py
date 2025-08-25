@@ -103,7 +103,7 @@ class SqlConnection(SmarterBasePydanticModel):
                 (port for engine, port in SqlConnectionORM.DBMS_CHOICES if engine == values.get("dbEngine")), None
             )
             if default_port is not None:
-                return default_port
+                return int(default_port)
         if v and (v < 1 or v > 65535):
             raise SAMValidationError(f"Invalid SQL connection port: {v}. Must be between 1 and 65535.")
         return v
@@ -188,7 +188,7 @@ class SqlConnection(SmarterBasePydanticModel):
         return v
 
 
-class SAMSqlPluginSpec(AbstractSAMSpecBase):
+class SAMSqlConnectionSpec(AbstractSAMSpecBase):
     """Smarter API Sql Connection Manifest SqlConnection.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

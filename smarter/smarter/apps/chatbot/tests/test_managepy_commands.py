@@ -1,8 +1,8 @@
 # pylint: disable=W0613
 """Tests for manage.py create_plugin."""
 
+import logging
 import time
-from logging import getLogger
 
 from django.core.management import call_command
 
@@ -18,10 +18,19 @@ from smarter.apps.chatbot.signals import (
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -59,7 +68,7 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         super().setUp()
         self.auth_token, self.secret_key = SmarterAuthToken.objects.create(
             name="testKey", user=self.admin_user, description="unit test"
-        )
+        )  # type: ignore
         self.chatbot = ChatBot.objects.create(
             account=self.account,
             name="manage-command-create-plugin-test-case",
@@ -172,6 +181,8 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
             a_record, f"DNS A record not found for hosted zone {api_hosted_zone_id}, {chatbot_default_host}"
         )
         resolved_chatbot_domain = aws_helper.aws.domain_resolver(chatbot_default_host)
+        if not isinstance(a_record, dict):
+            self.fail(f"Unexpected DNS record format for {chatbot_default_host}: {a_record}")
         self.assertEqual(str(a_record["Name"]).rstrip("."), str(resolved_chatbot_domain).rstrip("."))
 
         # verify that the dns record verification is either underway or completed

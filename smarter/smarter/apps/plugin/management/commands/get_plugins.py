@@ -2,13 +2,13 @@
 """This module retrieves a list of plugins for an account using manage.py on the command line."""
 
 import sys
+from typing import Optional
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.plugin.utils import Plugins
-from smarter.lib.django.user import User, UserType
 from smarter.lib.manifest.enum import SAMKeys
 
 
@@ -28,11 +28,11 @@ class Command(BaseCommand):
         account_number = options["account_number"]
         username = options["username"]
 
-        account: Account = None
-        user: UserType = None
+        account: Optional[Account] = None
+        user: Optional[User] = None
 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(username=username)  # type: ignore
         except User.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"manage.py retrieve_plugin: User {username} does not exist."))
             sys.exit(1)
@@ -44,14 +44,14 @@ class Command(BaseCommand):
             sys.exit(1)
 
         try:
-            get_cached_user_profile(user=user, account=account)
+            get_cached_user_profile(user=user, account=account)  # type: ignore
         except UserProfile.DoesNotExist:
             self.stdout.write(
                 self.style.ERROR(f"manage.py retrieve_plugin: UserProfile for {user} and {account} does not exist.")
             )
             sys.exit(1)
 
-        plugins = Plugins(user=user, account=account)
+        plugins = Plugins(user=user, account=account)  # type: ignore
         retval = [
             {"id": plugin[SAMKeys.STATUS.value]["id"], "name": plugin[SAMKeys.METADATA.value]["name"]}
             for plugin in plugins.data

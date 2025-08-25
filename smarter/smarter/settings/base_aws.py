@@ -71,7 +71,7 @@ SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_HTTPONLY = True
 
-ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
+ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
 SMARTER_ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, ENVIRONMENT_API_DOMAIN, f"*.{ENVIRONMENT_API_DOMAIN}"]
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
