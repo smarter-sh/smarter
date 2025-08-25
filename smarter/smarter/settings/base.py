@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 ALLOWED_HOSTS = ["*"]
 SMARTER_ALLOWED_HOSTS = []
 LOCAL_HOSTS = smarter_settings.local_hosts
+INTERNAL_IP_PREFIXES = ["192.168."]
 
 # to disable redis/celery in collectstatic
 if "collectstatic" in sys.argv:

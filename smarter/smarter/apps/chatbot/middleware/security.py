@@ -64,8 +64,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                 error_message="Internal error (500) - could not parse request.",
             )
 
-        internal_ip_prefixes = ["192.168."]
-        if any(host.startswith(prefix) for prefix in internal_ip_prefixes):
+        if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
             logger.info(
                 "%s %s identified as an internal IP address, allowing request.",
                 self.formatted_class_name,

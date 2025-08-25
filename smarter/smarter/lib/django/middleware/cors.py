@@ -11,12 +11,16 @@ from urllib.parse import SplitResult, urlsplit
 
 from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
+from django.conf import settings
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
 
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
 from smarter.lib.django import waffle
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseServerError,
+)
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -40,6 +44,27 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
     request: Optional[HttpRequest] = None
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+
+        # Short-circuit for health checks
+        if request.path in ["/healthz", "/readiness", "/liveness"]:
+            return super().__call__(request)
+
+        # Short-circuit for any requests born from internal IP address hosts
+        host = request.get_host()
+        if not host:
+            return SmarterHttpResponseServerError(
+                request=request,
+                error_message="Internal error (500) - could not parse request.",
+            )
+
+        if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
+            logger.info(
+                "%s %s identified as an internal IP address, exiting.",
+                self.formatted_class_name,
+                host,
+            )
+            return super().__call__(request)
+
         url = self.smarter_build_absolute_uri(request)
         logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
         self._url = None
