@@ -39,19 +39,26 @@ class Command(BaseCommand):
     help = "Apply a Smarter manifest."
     _data: Optional[str] = None
     filespec: Optional[str] = None
+    manifest: Optional[str] = None
     user: Optional[User] = None
 
     @property
     def data(self) -> str:
         """Open and validate the structure of the Manifest data."""
-        if not self.filespec:
-            raise SmarterValueError("No filespec provided. Please specify a valid manifest file path.")
+
         if self._data is None:
-            try:
-                with open(self.filespec, encoding="utf-8") as file:
-                    self._data = file.read()
-            except FileNotFoundError as e:
-                raise SmarterValueError(f"File not found: {self.filespec}") from e
+            if self.manifest:
+                self.stdout.write("Using manifest provided on command line.")
+                self._data = self.manifest
+            elif self.filespec:
+                try:
+                    with open(self.filespec, encoding="utf-8") as file:
+                        self._data = file.read()
+                    self.stdout.write(f"Using manifest from file: {self.filespec}")
+                except FileNotFoundError as e:
+                    raise SmarterValueError(f"File not found: {self.filespec}") from e
+            if not self._data:
+                raise SmarterValueError("Provide either a filespec or a manifest.")
         return self._data
 
     def add_arguments(self, parser):
@@ -61,6 +68,12 @@ class Command(BaseCommand):
             type=str,
             nargs="?",
             help="relative path a Smarter manifest file (e.g. smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml).",
+        )
+        parser.add_argument(
+            "--manifest",
+            type=str,
+            nargs="?",
+            help="a Smarter manifest in yaml or json format.",
         )
         parser.add_argument(
             "--username",
@@ -77,10 +90,9 @@ class Command(BaseCommand):
         """
 
         self.filespec = options.get("filespec")
-        if self.filespec is None:
-            self.stderr.write(self.style.ERROR("No filespec provided."))
-            return
+        self.manifest = options.get("manifest")
         username = options.get("username")
+
         if not isinstance(username, str) or not username.strip():
             self.stderr.write(self.style.ERROR("No username provided."))
             return
@@ -119,11 +131,11 @@ class Command(BaseCommand):
             )
         )
 
+        self.stdout.write(self.style.NOTICE("Applying manifest ..."))
         httpx_response = httpx.post(url, data=self.data, headers=headers)  # type: ignore[call-arg]
         token_record.delete()
 
         # wrap up the request
-        self.stdout.write("url: " + self.style.NOTICE(url))
         response_content = httpx_response.content.decode("utf-8")
         if isinstance(response_content, (str, bytearray, bytes)):
             try:
@@ -139,5 +151,4 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("manifest applied."))
         else:
             msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {self.data}\nresponse: {response}"
-            self.stderr.write(self.style.ERROR(msg))
             raise CommandError(msg)
