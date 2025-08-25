@@ -58,7 +58,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # these typically originate from health checks from load balancers.
         # ---------------------------------------------------------------------
         # Short-circuit for health checks
-        if request.path in ["/healthz", "/readiness", "/liveness"]:
+        if request.path.replace("/", "") in ["healthz", "readiness", "liveness"]:
             return None
 
         host = request.get_host()
@@ -68,11 +68,13 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                 error_message="Internal error (500) - could not parse request.",
             )
 
+        # Short-circuit for any requests born from internal IP address hosts
+        # This is unlikely, but not impossible.
         if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
-                request.path,
+                self.smarter_build_absolute_uri(request),
             )
             return None
 
