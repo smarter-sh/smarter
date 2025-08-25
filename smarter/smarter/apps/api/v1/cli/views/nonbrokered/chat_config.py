@@ -3,6 +3,7 @@
 
 import json
 import logging
+from typing import Optional
 
 from django.core.cache import cache
 from django.http import HttpRequest
@@ -10,13 +11,22 @@ from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from ..base import APIV1CLIViewError
 from .chat import CACHE_EXPIRATION, ApiV1CliChatBaseApiView
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
@@ -60,15 +70,34 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         :param name: Name of the chat
         :param uid: UID of the client, created from the machine mac address and the hostname
         """
-        uid: str = request.POST.get("uid")
+        uid: Optional[str] = request.POST.get("uid")
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        logger.info("%s Chat config view for chat %s and client %s.", self.formatted_class_name, name, uid)
+        logger.info(
+            "%s Chat config view for chat %s and client %s and session_key %s request user %s self.user %s account %s",
+            self.formatted_class_name,
+            name,
+            uid,
+            session_key,
+            request.user,
+            self.user,
+            self.account,
+        )
 
-        response = ChatConfigView.as_view()(request, name=name, uid=uid, session_key=session_key)
+        response = ChatConfigView.as_view()(
+            request, *args, name=name, uid=uid, session_key=session_key, user_profile=self.user_profile, **kwargs
+        )
 
         try:
-            content = json.loads(response.content)
+            content = json.loads(response.content.decode("utf-8"))  # type: ignore[union-attr]
+            if not isinstance(content, dict):
+                raise APIV1CLIViewError(
+                    f"Misconfigured. Expected a JSON object in response content for chat config view but received {type(content).__name__}."
+                )
             content = content.get(SmarterJournalApiResponseKeys.DATA)
+            if not isinstance(content, dict):
+                raise APIV1CLIViewError(
+                    f"Misconfigured. Expected a JSON object in response data for chat config view but received {type(content).__name__}."
+                )
             session_key = content.get(SMARTER_CHAT_SESSION_KEY_NAME)
             cache.set(key=self.cache_key, value=session_key, timeout=CACHE_EXPIRATION)
         except json.JSONDecodeError as e:

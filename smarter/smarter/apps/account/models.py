@@ -5,31 +5,50 @@
 import logging
 import os
 import random
+from typing import TYPE_CHECKING, Optional, Union
 
 # 3rd party stuff
 from cryptography.fernet import Fernet
 
 # django stuff
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser, AnonymousUser, User
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.functional import SimpleLazyObject
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .signals import new_charge_created, new_user_created, secret_created, secret_edited
+from .signals import (
+    new_charge_created,
+    new_user_created,
+    secret_accessed,
+    secret_created,
+    secret_edited,
+)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-logger = logging.getLogger(__name__)
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 CHARGE_TYPE_PROMPT_COMPLETION = "completion"
@@ -75,6 +94,39 @@ def welcome_email_context(first_name: str) -> dict:
     }
 
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import _AnyUser
+
+
+def get_resolved_user(
+    user: "Union[User, AbstractUser, AnonymousUser, SimpleLazyObject, _AnyUser]",
+) -> Optional[Union[User, AbstractUser, AnonymousUser]]:
+    """
+    Get the resolved user object from a user instance.
+    Maps the various kinds of Django user subclasses and mutations to the User.
+    Used for resolving type annotations and ensuring type safety.
+    """
+    if user is None:
+        return None
+
+    # this is the expected case
+    if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
+        return user
+
+    # these are manageable edge cases
+    # --------------------------------
+
+    # pylint: disable=W0212
+    if isinstance(user, SimpleLazyObject):
+        return user._wrapped
+    # Allow unittest.mock.MagicMock or Mock for testing
+    if hasattr(user, "__class__") and user.__class__.__name__ in ("MagicMock", "Mock"):
+        return user  # type: ignore[return-value]
+    raise SmarterConfigurationError(
+        f"Unexpected user type: {type(user)}. Expected Django User, AnonymousUser, SimpleLazyObject, or a test mock."
+    )
+
+
 class Account(TimestampedModel):
     """Account model."""
 
@@ -98,6 +150,10 @@ class Account(TimestampedModel):
     language = models.CharField(max_length=255, default="EN", blank=True, null=True)
     timezone = models.CharField(max_length=255, blank=True, null=True)
     currency = models.CharField(max_length=255, default="USD", blank=True, null=True)
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Indicates whether the account is active. Inactive accounts cannot be used for billing or resource management, nor hosting Provider apis.",
+    )
 
     @classmethod
     def randomized_account_number(cls):
@@ -140,7 +196,7 @@ class Account(TimestampedModel):
         verbose_name_plural = "Accounts"
 
     def __str__(self):
-        return str(self.company_name)
+        return str(self.account_number) + " - " + str(self.company_name)
 
 
 class AccountContact(TimestampedModel):
@@ -168,7 +224,7 @@ class AccountContact(TimestampedModel):
     is_test = models.BooleanField(default=False)
     welcomed = models.BooleanField(default=False)
 
-    def send_email(self, subject: str, body: str, html: bool = False, from_email: str = None):
+    def send_email(self, subject: str, body: str, html: bool = False, from_email: Optional[str] = None):
 
         email_helper.send_email(
             subject=subject, to=self.email, body=body, html=html, from_email=from_email, quiet=self.is_test
@@ -184,14 +240,14 @@ class AccountContact(TimestampedModel):
         self.send_email(subject=subject, body=body, html=True)
 
     @classmethod
-    def get_primary_contact(cls, account: Account) -> "AccountContact":
+    def get_primary_contact(cls, account: Account) -> Optional["AccountContact"]:
         """Get the primary contact for an account."""
         return cls.objects.filter(account=account, is_primary=True).first()
 
     # pylint: disable=too-many-arguments
     @classmethod
     def send_email_to_account(
-        cls, account: Account, subject: str, body: str, html: bool = False, from_email: str = None
+        cls, account: Account, subject: str, body: str, html: bool = False, from_email: Optional[str] = None
     ) -> None:
         """Send an email to all contacts of an account."""
         contacts = cls.objects.filter(account=account)
@@ -201,7 +257,7 @@ class AccountContact(TimestampedModel):
     # pylint: disable=too-many-arguments
     @classmethod
     def send_email_to_primary_contact(
-        cls, account: Account, subject: str, body: str, html: bool = False, from_email: str = None
+        cls, account: Account, subject: str, body: str, html: bool = False, from_email: Optional[str] = None
     ) -> None:
         """Send an email to the primary point of contact of an account."""
         contact = cls.get_primary_contact(account)
@@ -246,7 +302,7 @@ class UserProfile(TimestampedModel):
 
     # Add more fields here as needed
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="user_profile",
     )
@@ -283,17 +339,17 @@ class UserProfile(TimestampedModel):
             new_user_created.send(sender=self.__class__, user_profile=self)
 
     @classmethod
-    def admin_for_account(cls, account: Account) -> UserType:
+    def admin_for_account(cls, account: Account) -> User:
         """Return the designated user for the account."""
         admins = cls.objects.filter(account=account, user__is_staff=True).order_by("user__id")
         if admins.exists():
-            return admins.first().user
+            return admins.first().user  # type: ignore[return-value]
 
         logger.error("No admin found for account %s", account)
 
         users = cls.objects.filter(account=account).order_by("user__id")
         if users.exists():
-            user = users.first().user
+            user = users.first().user  # type: ignore[return-value]
             return user
 
         logger.error("No user for account %s", account)
@@ -350,7 +406,9 @@ class Charge(TimestampedModel):
     """Charge model for periodic account billing."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="charge", null=False, blank=False
+    )
     session_key = models.CharField(max_length=255, null=True, blank=True)
     provider = models.CharField(
         max_length=255,
@@ -386,7 +444,7 @@ class DailyBillingRecord(TimestampedModel):
     """Daily billing record model for aggregated charges."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="daily_billing_records")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="daily_billing_records")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="daily_billing_records")
     provider = models.CharField(
         max_length=255,
         choices=PROVIDERS,
@@ -414,17 +472,20 @@ class Secret(TimestampedModel):
     Secret model for securely storing and managing sensitive account-level information.
 
     Usage:
+        - encrypt a secret value before saving it:
+            secret_value = Secret.encrypt("my-sensitive-api-key")
         - Create a new secret:
             secret = Secret(
                 name="API Key",
                 user_profile=user_profile_instance,
-                value="my-sensitive-api-key"
+                valencrypted_valueue=secret_value
             )
             secret.save()
 
         - Retrieve and decrypt a secret:
             retrieved_secret = Secret.objects.get(id=secret.id)
             decrypted_value = retrieved_secret.get_secret()
+
 
     Note:
         The `value` field is transient and only used during runtime. It is not stored in the database
@@ -472,7 +533,7 @@ class Secret(TimestampedModel):
         else:
             secret_edited.send(sender=self.__class__, secret=self)
 
-    def get_secret(self, update_last_accessed=True) -> str:
+    def get_secret(self, update_last_accessed=True) -> Optional[str]:
         """
         Decrypts and returns the original value of the secret. Optionally updates the `last_accessed` timestamp.
         """
@@ -480,7 +541,7 @@ class Secret(TimestampedModel):
             if update_last_accessed:
                 self.last_accessed = timezone.now()
                 self.save(update_fields=["last_accessed"])
-            logger.info("Secret '%s' accessed by user %s", self.name, self.user_profile.user.username)
+            secret_accessed.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
             fernet = self.get_fernet()
             if self.encrypted_value:
                 return fernet.decrypt(self.encrypted_value).decode()
@@ -501,7 +562,9 @@ class Secret(TimestampedModel):
         """Determine if the authenticated user has permissions to manage this key."""
         if not hasattr(request, "user"):
             return False
-        user = request.user
+        user = get_resolved_user(request.user)
+        if not isinstance(user, User):
+            return False
         if not hasattr(user, "is_authenticated") or not user.is_authenticated:
             return False
         if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):

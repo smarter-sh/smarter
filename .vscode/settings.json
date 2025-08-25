@@ -16,5 +16,6 @@
     "**/dist": true,
     "**/keen_v3.0.6": true,
     "**/staticfiles": true
-  }
+  },
+  "python.analysis.exclude": ["**/migrations/**"]
 }

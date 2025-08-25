@@ -3,7 +3,6 @@
 
 import html
 import json
-import logging
 
 from django import forms
 from django.core.handlers.wsgi import WSGIRequest
@@ -18,9 +17,6 @@ from smarter.lib.django.view_helpers import (
 )
 
 from ..models import EmailContactList
-
-
-logger = logging.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------

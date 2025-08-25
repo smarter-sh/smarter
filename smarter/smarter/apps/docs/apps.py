@@ -10,3 +10,4 @@ class ApiConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = f"smarter.apps.{app_name}"
+    verbose_name = "Smarter Docs"

@@ -6,10 +6,10 @@ manifest and schema.
 import json
 import os
 from logging import getLogger
+from typing import Optional
 from urllib.parse import urlparse
 
 import markdown
-from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 from django.http.response import HttpResponse
 from django.shortcuts import render
@@ -19,7 +19,7 @@ from django.urls import reverse
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST, SmarterEnvironments
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 from smarter.lib.django.view_helpers import SmarterWebHtmlView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
@@ -30,7 +30,7 @@ logger = getLogger(__name__)
 DOCS_PATH = "/home/smarter_user/data/doc/"
 
 
-class DocsError(SmarterExceptionBase):
+class DocsError(SmarterException):
     """Base class for all /docs/ errors."""
 
     @property
@@ -44,17 +44,20 @@ class DocsError(SmarterExceptionBase):
 class DocsBaseView(SmarterWebHtmlView):
     """JSON Schema base view"""
 
-    template_path: str = None
-    kind: SAMKinds = None
+    template_path: Optional[str] = None
+    kind: Optional[SAMKinds] = None
     context: dict = {}
 
-    def get_brokered_json_response(self, reverse_name: str, view, request: WSGIRequest, *args, **kwargs):
+    def get_brokered_json_response(self, reverse_name: str, view, request: HttpRequest, *args, **kwargs):
         """Get the JSON response from the brokered smarter.sh/api endpoint."""
+        if request.user is None:
+            raise DocsError("request.user is None. This should not happen.")
+
         logger.info(
             "Getting brokered JSON response for reverse_name=%s, kind=%s, request.user=%s",
             reverse_name,
             self.kind,
-            request.user.username if request.user.is_authenticated else "Anonymous",
+            request.user.username if request.user.is_authenticated else "Anonymous",  # type: ignore[union-attr]
         )
         if not self.template_path:
             raise DocsError("self.template_path not set.")
@@ -77,7 +80,7 @@ class DocsBaseView(SmarterWebHtmlView):
             "Creating brokered request for reverse_name=%s, kind=%s, request.user=%s",
             reverse_name,
             self.kind,
-            cli_request.user.username if cli_request.user.is_authenticated else "Anonymous",
+            cli_request.user.username if cli_request.user.is_authenticated else "Anonymous",  # type: ignore[union-attr]
         )
         response = view(request=cli_request, kind=self.kind.value, *args, **kwargs)
         json_response = json.loads(response.content.decode("utf-8"))
@@ -93,7 +96,7 @@ class DocsBaseView(SmarterWebHtmlView):
             "Brokered JSON response for reverse_name=%s, kind=%s, request.user=%s: %s",
             reverse_name,
             self.kind,
-            request.user.username if request.user.is_authenticated else "Anonymous",
+            request.user.username if request.user.is_authenticated else "Anonymous",  # type: ignore[union-attr]
             json_response,
         )
         return json_response
@@ -104,7 +107,7 @@ class DocsBaseView(SmarterWebHtmlView):
             "canonical": request.path,
         }
 
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
 
 
 # ------------------------------------------------------------------------------
@@ -114,12 +117,15 @@ class TxtBaseView(SmarterWebHtmlView):
     """Text base view"""
 
     template_path = "docs/txt_file.html"
-    text_file: str = None
-    title: str = None
-    leader: str = None
+    text_file: Optional[str] = None
+    title: Optional[str] = None
+    leader: Optional[str] = None
 
     def get(self, request, *args, **kwargs):
         file_path = self.text_file
+        if not file_path:
+            raise DocsError("self.text_file not set.")
+
         with open(file_path, encoding="utf-8") as text_file:
             text_content = text_file.read()
 
@@ -135,9 +141,11 @@ class MarkdownBaseView(SmarterWebHtmlView):
     """Markdown base view"""
 
     template_path = "docs/markdown.html"
-    markdown_file: str = None
+    markdown_file: Optional[str] = None
 
     def get(self, request, *args, **kwargs):
+        if not self.markdown_file:
+            raise DocsError("self.markdown_file not set.")
         file_path = os.path.join(DOCS_PATH, self.markdown_file)
         with open(file_path, encoding="utf-8") as markdown_file:
             md_text = markdown_file.read()

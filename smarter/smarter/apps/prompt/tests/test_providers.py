@@ -26,13 +26,13 @@ from .classes import ProviderBaseClass
 class TestChatProviders(SmarterTestBase):
     """Test chat provider base class."""
 
-    def test_providers(self):
+    def verify_providers(self):
         """Test chat providers."""
         self.assertIsInstance(chat_providers.openai, OpenAIChatProvider)
         self.assertIsInstance(chat_providers.googleai, GoogleAIChatProvider)
         self.assertIsInstance(chat_providers.metaai, MetaAIChatProvider)
 
-    def test_providers_name_readonly(self):
+    def verify_providers_name_readonly(self):
         """Test that chat provider names are read-only."""
         with self.assertRaises(AttributeError):
             chat_providers.openai.provider = "new_name"
@@ -43,7 +43,7 @@ class TestChatProviders(SmarterTestBase):
         with self.assertRaises(AttributeError):
             chat_providers.metaai.provider = "new_name"
 
-    def test_providers_get_handler(self):
+    def verify_providers_get_handler(self):
         """Test provider get_handler()."""
 
         handler = chat_providers.get_handler(provider=chat_providers.openai.provider)
@@ -58,7 +58,7 @@ class TestChatProviders(SmarterTestBase):
         handler = chat_providers.get_handler()
         self.assertIsInstance(handler, Callable)
 
-    def test_providers_all(self):
+    def verify_providers_all(self):
         """Test provider all()."""
         this_all = [OPENAI_PROVIDER_NAME, GOOGLEAI_PROVIDER_NAME, METAAI_PROVIDER_NAME]
         self.assertCountEqual(chat_providers.all, this_all)

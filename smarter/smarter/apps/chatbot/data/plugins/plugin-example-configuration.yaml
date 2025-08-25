@@ -32,7 +32,7 @@ spec:
       response, without any additions, nor embelishments.'
     temperature: 0
   selector:
-    directive: searchTerms
+    directive: search_terms
     searchTerms:
     - example function calling configuration
     - Example configuration

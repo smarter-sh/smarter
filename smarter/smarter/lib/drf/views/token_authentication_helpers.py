@@ -5,10 +5,11 @@ from http import HTTPStatus
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import ListAPIView
+from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from smarter.lib.django.request import SmarterRequestMixin
@@ -34,11 +35,34 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
+    def __init__(self, *args, **kwargs):
+        request = None
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+
     def initial(self, request, *args, **kwargs):
         """
         Initialize the view with the request and any additional arguments.
+
+        This is the earliest point in the DRF view lifecycle where the request object is available.
+        Up to this point our SmarterRequestMixin, and AccountMixin classes are only partially
+        initialized. This method takes care of the rest of the initialization.
         """
+        if not self.is_requestmixin_ready:
+            logger.info(
+                "%s.initial() - completing initialization of SmarterRequestMixin with request: %s",
+                self.formatted_class_name,
+                request.build_absolute_uri(),
+            )
+            self.smarter_request = request
         super().initial(request, *args, **kwargs)
+        logger.info(
+            "%s.initial() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            request,
+            args,
+            kwargs,
+        )
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
 
 
@@ -56,6 +80,13 @@ class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
         Initialize the view with the request and any additional arguments.
         """
         super().initial(request, *args, **kwargs)
+        logger.info(
+            "%s.initial() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            request,
+            args,
+            kwargs,
+        )
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
 
 
@@ -71,12 +102,25 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
-    def initial(self, request, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        request = None
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+    def dispatch(self, request, *args, **kwargs):
         """
         Initialize the view with the request and any additional arguments.
         """
-        super().initial(request, *args, **kwargs)
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        retval = super().dispatch(request, *args, **kwargs)
+        logger.info(
+            "%s.initial() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            request,
+            args,
+            kwargs,
+        )
+        return retval
 
     def is_superuser_or_unauthorized(self):
         """Check if the user is a superuser or unauthorized."""
@@ -99,4 +143,11 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
         Initialize the view with the request and any additional arguments.
         """
         super().initial(request, *args, **kwargs)
+        logger.info(
+            "%s.initial() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            request,
+            args,
+            kwargs,
+        )
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)

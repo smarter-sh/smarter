@@ -2,6 +2,7 @@
 """Test SAMSqlPluginBroker."""
 
 import os
+from typing import Optional
 
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
@@ -15,8 +16,8 @@ from .base_classes import TestSAMPluginBrokerBase
 class TestSAMSqlPluginBroker(TestSAMPluginBrokerBase, SqlConnectionTestMixin):
     """Test SAMSqlPluginBroker"""
 
-    _model: SAMSqlPlugin = None
-    good_manifest_path: str = None
+    _model: Optional[SAMSqlPlugin] = None
+    good_manifest_path: Optional[str] = None
 
     @property
     def connection_loader(self) -> SAMLoader:
@@ -39,7 +40,7 @@ class TestSAMSqlPluginBroker(TestSAMPluginBrokerBase, SqlConnectionTestMixin):
         return self.__class__.connection_model
 
     @property
-    def model(self) -> SAMSqlPlugin:
+    def model(self) -> Optional[SAMSqlPlugin]:
         # override to create a pydantic model from the loader
         if not self._model and self.loader:
             self._model = SAMSqlPlugin(**self.loader.pydantic_model_dump())
@@ -54,6 +55,10 @@ class TestSAMSqlPluginBroker(TestSAMPluginBrokerBase, SqlConnectionTestMixin):
 
     def test_broker_with_valid_manifest(self):
         """Test valid file path and that we can instantiate without errors"""
+        if self.request is None or self.account is None:
+            self.fail("Request and account must be set for the broker to work properly.")
 
-        broker = SAMSqlPluginBroker(request=self.request, account=self.account, file_path=self.good_manifest_path)
+        broker = SAMSqlPluginBroker(
+            request=self.request, account=self.account, file_path=self.good_manifest_path, manifest=None
+        )
         self.assertIsInstance(broker, SAMSqlPluginBroker)

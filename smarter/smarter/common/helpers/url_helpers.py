@@ -2,6 +2,7 @@
 url helper functions
 """
 
+from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
@@ -17,7 +18,7 @@ def clean_url(url: str) -> str:
     return retval
 
 
-def session_key_from_url(url: str) -> str:
+def session_key_from_url(url: str) -> Optional[str]:
     """
     Extract the session key from a URL.
 

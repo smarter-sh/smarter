@@ -2,10 +2,10 @@
 
 import re
 
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 
 
-class SAMExceptionBase(SmarterExceptionBase):
+class SAMExceptionBase(SmarterException):
     """Base exception for Smarter API Manifest handling."""
 
     @property

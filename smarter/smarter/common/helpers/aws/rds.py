@@ -2,7 +2,7 @@
 
 from smarter.common.conf import settings as smarter_settings
 
-from .aws import AWSBase
+from .aws import AWSBase, SmarterAWSException
 
 
 class AWSRds(AWSBase):
@@ -13,6 +13,8 @@ class AWSRds(AWSBase):
     @property
     def client(self):
         """Return the AWS DynamoDB client."""
+        if not self.aws_session:
+            raise SmarterAWSException("AWS session is not initialized.")
         if not self._client:
             self._client = self.aws_session.client("rds")
         return self._client

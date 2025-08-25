@@ -2,6 +2,7 @@
 """Test SAMApiPluginBroker."""
 
 import os
+from typing import Optional
 
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
@@ -15,8 +16,8 @@ from .base_classes import TestSAMPluginBrokerBase
 class TestSAMApiPluginBroker(TestSAMPluginBrokerBase, SqlConnectionTestMixin):
     """Test SAMApiPluginBroker"""
 
-    _model: SAMApiPlugin = None
-    good_manifest_path: str = None
+    _model: Optional[SAMApiPlugin] = None
+    good_manifest_path: Optional[str] = None
 
     @property
     def connection_loader(self) -> SAMLoader:
@@ -39,7 +40,7 @@ class TestSAMApiPluginBroker(TestSAMPluginBrokerBase, SqlConnectionTestMixin):
         return self.__class__.connection_model
 
     @property
-    def model(self) -> SAMApiPlugin:
+    def model(self) -> Optional[SAMApiPlugin]:
         # override to create a pydantic model from the loader
         if not self._model and self.loader:
             self._model = SAMApiPlugin(**self.loader.pydantic_model_dump())

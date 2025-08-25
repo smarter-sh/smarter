@@ -20,7 +20,7 @@ spec:
   # This module additionally makes limited use of natural language processing to attempt to account for variations in the user prompt and common misspellings.
   # ------------------------------------------------------------
   selector:
-    directive: searchTerms
+    directive: search_terms
     #------------------------------------------------------------
     # search terms that will trigger the chatbot to use this customized configuration.
     #------------------------------------------------------------

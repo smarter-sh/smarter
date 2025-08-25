@@ -2,9 +2,10 @@
 
 import datetime
 import json
+from typing import Union
 
 
-def formatted_json(json_obj: json) -> str:
+def formatted_json(json_obj: Union[dict, list]) -> str:
     def handle_datetime(obj):
         if isinstance(obj, datetime.datetime):
             return obj.isoformat()

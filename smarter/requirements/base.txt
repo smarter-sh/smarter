@@ -10,7 +10,7 @@ setuptools==78.1.1
 
 # General back end
 # ------------
-boto3==1.36.11                         # AWS CLI SDK
+boto3==1.36.11                          # AWS CLI SDK
 botocore                                # AWS CLI SDK
 cachetools==5.5.2                       # Python object caching library
 celery==5.5.3                           # asynchronous task queue. works with redis.
@@ -23,8 +23,7 @@ paramiko==3.5.1                         # SSH2 protocol library
 requests==2.32.4                        # HTTP requests library
 requests-cache==1.2.1                   # HTTP requests caching
 retry-requests==2.0.0                   # HTTP requests retry
-social-auth-app-django==5.4.2           # Social authentication for Django
-tldextract==5.1.3                       # Extracts the top-level domain from a URL
+tldextract==5.3.0                       # Extracts the top-level domain from a URL
 validators==0.34.0                      # Data validation library
 whitenoise==6.9.0                       # static file serving
 
@@ -32,17 +31,17 @@ whitenoise==6.9.0                       # static file serving
 # Django
 # ------------
 Django==5.1.7
-django-extensions==3.2.3
-django-debug-toolbar==5.2.0
+django-extensions==4.1
+django-debug-toolbar==6.0.0
 django-redis==5.4.0                     # object caching
-django-celery-beat==2.7.0               # scheduled asynchronous tasks
+django-celery-beat==2.8.1               # scheduled asynchronous tasks
 djangorestframework==3.15.2             # for creating REST APIs on top of Django
 django-filter==24.1                     # REST API filtering
 django-taggit==6.1.0                    # Smarter Plugin tagging
 django-rest-knox==5.0.2                 # Token authentication for REST APIs
-# dj-stripe==2.9.0                        # Stripe card processing integration
 django-cors-headers==4.7.0              # Cross-origin resource sharing
 django-waffle==4.2.0                    # Feature flagging
+social-auth-app-django==5.4.2           # Social authentication for Django
 
 # for working with data
 # ------------
@@ -56,8 +55,6 @@ pydantic-settings==2.9.1                # settings management
 openai==1.82.1                          # OpenAI API
 google-generativeai==0.8.5              # Google Generative AI API
 llamaai==0.1.27                         # Llama AI API
-# langchain==0.3.12                       # LLM abstractions library for building complex workflows
-# langchain-openai==0.2.12                # OpenAI plugin for Langchain
 
 # Natural language processing
 # ------------
@@ -78,10 +75,17 @@ mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to th
 # for platform documentation in /docs/
 # ------------
 beautifulsoup4==4.13.3                  # HTML parser for Wagtail page compression
-docutils==0.21.2                        # required by Django for django.contrib.admindocs
+docutils==0.22                        # required by Django for django.contrib.admindocs
 drf-yasg==1.21.10                        # Swagger API documentation
-lxml==5.2.2                             # parser for Wagtail page compression
+lxml==6.0.0                             # parser for Wagtail page compression
 markdown==3.8                           # Markdown reader/parser
 python-hcl2==7.0.1                      # Terraform hcl parser for reading Terraform tfvars files
-wagtail==6.4.1                          # Wagail CMS, for building static pages
+wagtail==7.0.1                          # Wagail CMS, for building static pages
 wagtail-transfer==0.9.4                 # https://github.com/wagtail/wagtail-transfer
+
+
+# removed
+# ------------
+# dj-stripe==2.9.0                      # Stripe card processing integration
+# langchain==0.3.12                       # LLM abstractions library for building complex workflows
+# langchain-openai==0.2.12                # OpenAI plugin for Langchain
