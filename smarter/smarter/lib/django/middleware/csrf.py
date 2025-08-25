@@ -85,7 +85,6 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         Process the request to set up the CSRF protection.
         If the request is for a ChatBot, then we'll exempt it from CSRF checks.
         """
-        url = self.smarter_build_absolute_uri(request)
         host = request.get_host()
         if not host:
             return SmarterHttpResponseServerError(
@@ -102,9 +101,11 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
-                url,
+                request.path,
             )
             return None
+
+        url = self.smarter_build_absolute_uri(request)
 
         # this is a workaround to not being able to inherit from
         # SmarterRequestMixin inside of middleware.

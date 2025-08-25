@@ -57,8 +57,11 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # 1.) If the request is from an internal ip address, allow it to pass through
         # these typically originate from health checks from load balancers.
         # ---------------------------------------------------------------------
+        # Short-circuit for health checks
+        if request.path in ["/healthz", "/readiness", "/liveness"]:
+            return None
+
         host = request.get_host()
-        url = self.smarter_build_absolute_uri(request)
         if not host:
             return SmarterHttpResponseServerError(
                 request=request,
@@ -69,9 +72,11 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
-                url,
+                request.path,
             )
             return None
+
+        url = self.smarter_build_absolute_uri(request)
 
         # 2.) If the request is from a local host, allow it to pass through
         # ---------------------------------------------------------------------
