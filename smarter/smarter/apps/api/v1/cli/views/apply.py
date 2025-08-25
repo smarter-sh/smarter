@@ -7,7 +7,15 @@ Smarter API command-line interface 'apply' view
 from django.core.handlers.wsgi import WSGIRequest
 from drf_yasg.utils import swagger_auto_schema
 
-from .base import CliBaseApiView
+from .base import APIV1CLIViewError, CliBaseApiView
+
+
+class APIV1CLIViewManifestNotFoundError(APIV1CLIViewError):
+    """Custom error for when a manifest is not found."""
+
+
+class APIV1CLIViewManifestMalFormedError(APIV1CLIViewError):
+    """Custom error for when a manifest is malformed."""
 
 
 class ApiV1CliApplyApiView(CliBaseApiView):
@@ -55,5 +63,9 @@ The response from this endpoint is a JSON object.
         Returns:
         Response: A JSON object representing the result of the 'apply' operation.
         """
+
+        if not self.manifest_data:
+            raise APIV1CLIViewManifestNotFoundError("No YAML manifest provided.")
+
         response = self.broker.apply(request=request, kwargs=kwargs)
         return response
