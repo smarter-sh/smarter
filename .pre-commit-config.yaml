@@ -65,7 +65,7 @@ repos:
       - id: check-xml
         exclude: "smarter/smarter/static/|smarter/smarter/templates/"
       - id: check-yaml
-        exclude: ^smarter/smarter/apps/api/v1/cli/tests/data/api-connection\.yaml$
+        exclude: ^smarter/smarter/apps/api/v1/cli/tests/data/api-connection\.yaml$|^helm/charts/smarter/templates/deployment_.*\.yaml$
       - id: destroyed-symlinks
       - id: detect-aws-credentials
         args: ["--allow-missing-credentials"]
