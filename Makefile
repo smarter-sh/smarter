@@ -120,7 +120,6 @@ docker-init:
 		python manage.py initialize_providers && \
 		python manage.py create_stackacademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user && \
 		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
-		python manage.py update_secret --name smarter_test_db --username admin && \
 		python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin && \
 		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
 	echo "Docker and Smarter are initialized." && \
@@ -137,7 +136,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "./manage.py test smarter.apps.api.v1.cli.tests.test_chatbot.TestApiCliV1ChatBot.test_apply"
+	docker exec smarter-app bash -c "./manage.py test smarter"
 
 docker-prune:
 	make docker-check && \
