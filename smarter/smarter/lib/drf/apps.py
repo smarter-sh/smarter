@@ -8,6 +8,7 @@ class DrfConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.lib.drf"
+    verbose_name = "Smarter DRF"
 
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):

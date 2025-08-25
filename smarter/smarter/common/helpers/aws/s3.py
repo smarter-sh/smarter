@@ -1,6 +1,8 @@
 """AWS S3 helper class."""
 
-from .aws import AWSBase
+from typing import Optional
+
+from .aws import AWSBase, SmarterAWSException
 
 
 class AWSSimpleStorageSystem(AWSBase):
@@ -11,11 +13,13 @@ class AWSSimpleStorageSystem(AWSBase):
     @property
     def client(self):
         """Return the AWS S3 client."""
+        if not self.aws_session:
+            raise SmarterAWSException("AWS session is not initialized.")
         if not self._client:
             self._client = self.aws_session.client("s3")
         return self._client
 
-    def get_bucket_by_prefix(self, bucket_prefix) -> str:
+    def get_bucket_by_prefix(self, bucket_prefix) -> Optional[str]:
         """Return the bucket name given the bucket prefix."""
         try:
             for bucket in self.client.list_buckets()["Buckets"]:

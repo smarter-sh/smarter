@@ -1,7 +1,7 @@
 """Chatbot exceptions."""
 
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 
 
-class SmarterChatBotException(SmarterExceptionBase):
+class SmarterChatBotException(SmarterException):
     """Base class for all chatbot exceptions."""

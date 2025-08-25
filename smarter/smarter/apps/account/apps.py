@@ -8,6 +8,7 @@ class AccountConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.apps.account"
+    verbose_name = "Smarter Account"
 
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):

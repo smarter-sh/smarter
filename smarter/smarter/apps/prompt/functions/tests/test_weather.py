@@ -3,14 +3,23 @@ Test mixins for the plugin module.
 """
 
 import json
-from logging import getLogger
+import logging
 
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..function_weather import get_current_weather, weather_tool_factory
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class GetCurrentWeather(SmarterTestBase):

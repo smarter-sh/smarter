@@ -2,6 +2,7 @@
 Base class for creating units tests of chat providers.
 """
 
+import logging
 import os
 
 # python stuff
@@ -10,20 +11,26 @@ import sys
 import time
 from pathlib import Path
 from time import sleep
-from typing import Callable
+from typing import Callable, Optional
 
+from django.db.utils import IntegrityError
 from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.models import PluginDataValueError
 from smarter.apps.plugin.nlp import does_refer_to
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.utils import get_readonly_yaml_file
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from ..models import Chat, ChatHistory, ChatPluginUsage
+from ..models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from ..providers.providers import chat_providers
 from ..signals import (
     chat_completion_response,
@@ -32,6 +39,15 @@ from ..signals import (
     chat_started,
 )
 from ..tests.test_setup import get_test_file, get_test_file_path
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -45,13 +61,13 @@ CELERY_WAIT = 1
 class ProviderBaseClass(TestAccountMixin):
     """Test Index Lambda function."""
 
-    _provider: str = None
-    handler: Callable
-    plugin: StaticPlugin
-    plugins: list[StaticPlugin]
-    chatbot: ChatBot
-    client: Client
-    chat: Chat
+    _provider: Optional[str] = None
+    handler: Optional[Callable]
+    plugin: Optional[PluginBase]
+    plugins: Optional[list[PluginBase]]
+    chatbot: Optional[ChatBot]
+    client: Optional[Client]
+    chat: Optional[Chat]
 
     _plugin_called = False
     _plugin_selected = False
@@ -139,7 +155,18 @@ class ProviderBaseClass(TestAccountMixin):
 
         print("Setting up plugin")
         if not self.plugin:
-            self.plugin = StaticPlugin(user_profile=self.user_profile, data=plugin_data)
+            plugin_controller = PluginController(
+                user_profile=self.user_profile,
+                account=self.account,
+                user=self.admin_user,
+                manifest=plugin_data,
+            )
+            if not plugin_controller or not plugin_controller.plugin:
+                raise PluginDataValueError(
+                    f"PluginController could not be created for plugin_id: {plugin_data.get('id')}, "
+                    f"user_profile: {self.user_profile}"
+                )
+            self.plugin = plugin_controller.plugin
             self.plugins = [self.plugin]
         print(f"plugin: {self.plugin}")
 
@@ -150,7 +177,7 @@ class ProviderBaseClass(TestAccountMixin):
         print(f"provider {self.provider} is setup")
 
         self.client = Client()
-        self.client.force_login(self.admin_user)
+        self.client.force_login(self.admin_user)  # type: ignore[call-arg]
 
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
@@ -169,7 +196,15 @@ class ProviderBaseClass(TestAccountMixin):
             # ChatHistory.objects.filter(chat=chat).delete()
             # ChatToolCall.objects.filter(chat=chat).delete()
             # ChatPluginUsage.objects.filter(chat=chat).delete()
-            chat.delete()
+            ChatHistory.objects.filter(chat=chat).delete()
+            ChatToolCall.objects.filter(chat=chat).delete()
+            ChatPluginUsage.objects.filter(chat=chat).delete()
+
+            try:
+                chat.delete()
+            except IntegrityError as e:
+                logger.debug("IntegrityError details: %s", e)
+
         if self.chatbot:
             self.chatbot.delete()
         if self.plugin:
@@ -179,7 +214,7 @@ class ProviderBaseClass(TestAccountMixin):
         super().tearDown()
 
     def chatbot_factory(self, provider: str = "openai"):
-        chatbot = ChatBot.objects.create(
+        chatbot, _ = ChatBot.objects.get_or_create(
             name="TestChatBot",
             account=self.account,
             description="Test ChatBot",
@@ -192,7 +227,7 @@ class ProviderBaseClass(TestAccountMixin):
             app_welcome_message="Welcome to Smarter!",
             provider=provider,
         )
-        ChatBotPlugin.objects.create(
+        ChatBotPlugin.objects.get_or_create(
             chatbot=chatbot,
             plugin_meta=self.plugin.plugin_meta,
         )
@@ -298,6 +333,9 @@ class ProviderBaseClass(TestAccountMixin):
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
         try:
+            if not self.handler:
+                raise ValueError("Handler is not set. Did you call chat_providers.get_handler(provider=...) ?")
+
             response = self.handler(
                 chat=self.chat, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user
             )
@@ -343,6 +381,9 @@ class ProviderBaseClass(TestAccountMixin):
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
         try:
+            if not self.handler:
+                raise ValueError("Handler is not set. Did you call chat_providers.get_handler(provider=...) ?")
+
             response = self.handler(
                 chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_weather
             )
@@ -356,6 +397,9 @@ class ProviderBaseClass(TestAccountMixin):
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
         try:
+            if not self.handler:
+                raise ValueError("Handler is not set. Did you call chat_providers.get_handler(provider=...) ?")
+
             response = self.handler(
                 chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_recipes
             )

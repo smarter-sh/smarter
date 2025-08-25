@@ -9,7 +9,7 @@ import subprocess
 import time
 from typing import Tuple
 
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import get_readonly_yaml_file
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 module_prefix = "smarter.common.helpers.k8s_helpers"
 
 
-class KubernetesHelperException(SmarterExceptionBase):
+class KubernetesHelperException(SmarterException):
     """Base class for Kubernetes helper exceptions."""
 
 

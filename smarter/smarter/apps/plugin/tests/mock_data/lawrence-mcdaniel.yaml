@@ -9,7 +9,7 @@ metadata:
   author: Lawrence McDaniel
 spec:
   selector:
-    directive: searchTerms
+    directive: search_terms
     searchTerms:
       - Lawrence
       - Lawrence's

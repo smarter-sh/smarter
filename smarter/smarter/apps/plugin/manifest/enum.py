@@ -10,6 +10,9 @@ class SAMPluginCommonMetadataClassValues(SmarterEnumAbstract):
     """Smarter API Plugin Metadata Class keys enumeration."""
 
     # a plugin that returns a static json response contained inside the plugin manifest
+    LEGACY = "static"
+
+    # a plugin that returns a static json response contained inside the plugin manifest
     STATIC = "static"
 
     # a plugin that returns a dynamic json response by
@@ -25,7 +28,7 @@ class SAMPluginCommonSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
     """Smarter API Plugin Spec Selector keys enumeration."""
 
     # Smarter handler applied key word search
-    SEARCHTERMS = "searchTerms"
+    SEARCHTERMS = "search_terms"
 
     # Plugin is always selected, for every prompt request
     ALWAYS = "always"
@@ -85,6 +88,13 @@ class SAMStaticPluginSpecDataKeys(SmarterEnumAbstract):
 
     DESCRIPTION = "description"
     STATIC = "staticData"
+
+
+class SAMSqlPluginSpecDataKeys(SmarterEnumAbstract):
+    """Smarter API Plugin Spec Data keys enumeration."""
+
+    DESCRIPTION = "description"
+    SQL = "sqlData"
 
 
 ###############################################################################
