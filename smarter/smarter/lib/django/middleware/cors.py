@@ -45,11 +45,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
 
-        # Short-circuit for health checks
-        if request.path in ["/healthz", "/readiness", "/liveness"]:
-            return super().__call__(request)
-
-        # Short-circuit for any requests born from internal IP address hosts
+        url = self.smarter_build_absolute_uri(request)
         host = request.get_host()
         if not host:
             return SmarterHttpResponseServerError(
@@ -57,15 +53,19 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
                 error_message="Internal error (500) - could not parse request.",
             )
 
+        # Short-circuit for health checks
+        if request.path in ["/healthz", "/readiness", "/liveness"]:
+            return super().__call__(request)
+
+        # Short-circuit for any requests born from internal IP address hosts
         if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
-                host,
+                url,
             )
             return super().__call__(request)
 
-        url = self.smarter_build_absolute_uri(request)
         logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
         self._url = None
         self._chatbot = None

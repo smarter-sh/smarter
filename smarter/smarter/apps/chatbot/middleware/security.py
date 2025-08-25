@@ -58,6 +58,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # these typically originate from health checks from load balancers.
         # ---------------------------------------------------------------------
         host = request.get_host()
+        url = self.smarter_build_absolute_uri(request)
         if not host:
             return SmarterHttpResponseServerError(
                 request=request,
@@ -66,9 +67,9 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
         if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
             logger.info(
-                "%s %s identified as an internal IP address, allowing request.",
+                "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
-                host,
+                url,
             )
             return None
 
@@ -94,7 +95,6 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             )
             return None
 
-        url = self.smarter_build_absolute_uri(request)
         parsed_url = urlparse(url)
 
         # 3.) readiness and liveness checks
