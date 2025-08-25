@@ -18,9 +18,7 @@ from django.http.response import HttpResponseBase
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseServerError,
-)
+from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
