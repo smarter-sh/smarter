@@ -17,7 +17,7 @@ else
     $(shell cp ./doc/example-dot-env .env)
 endif
 
-.PHONY: init activate build run clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test docker-compose-install docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server change-log help
+.PHONY: init activate build run test clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test docker-compose-install docker-init docker-build docker-run docker-test python-init python-lint python-clean keen-init keen-build keen-server change-log help
 
 # Default target executed when no arguments are given to make.
 all: help
@@ -46,6 +46,9 @@ build:
 # takes around 30 seconds to complete
 run:
 	make docker-run
+
+test:
+	make docker-test
 
 clean:
 	make python-clean
@@ -107,13 +110,18 @@ docker-init:
 		python manage.py create_smarter_admin --username admin --email admin@smarter.sh --password smarter && \
 		python manage.py create_user --account_number 3141-5926-5359 --username staff_user --email staff@smarter.sh --password smarter --first_name Smarter --last_name User --admin && \
 		python manage.py create_user --account_number 3141-5926-5359 --username customer_user --email customer@smarter.sh --password smarter --first_name Customer --last_name User && \
-		python manage.py add_plugin_examples admin && \
+		python manage.py add_plugin_examples --username admin && \
 		python manage.py verify_dns_configuration && \
 		python manage.py deploy_example_chatbot && \
 		python manage.py seed_chat_history && \
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo && \
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2 && \
 		python manage.py initialize_wagtail" && \
+		python manage.py initialize_providers && \
+		python manage.py create_stackacademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user && \
+		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
+		python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin && \
+		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
@@ -125,16 +133,10 @@ docker-run:
 	make docker-check && \
 	docker-compose up
 
-docker-collectstatic:
-	make docker-check && \
-	docker-compose up -d && \
-	(cd smarter/smarter/apps/chatapp/reactapp/ && npm run build) && \
-	(docker exec smarter-app bash -c "python manage.py  collectstatic --noinput") && \
-	docker-compose down
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "./manage.py test smarter.apps.api.v1.cli.tests.test_chat_config.TestApiCliV1ChatConfig.test_chat_config"
+	docker exec smarter-app bash -c "./manage.py test smarter"
 
 docker-prune:
 	make docker-check && \
@@ -233,7 +235,6 @@ help:
 	@echo 'docker-build           - Build all Docker containers using docker-compose'
 	@echo 'docker-run             - Start all Docker containers using docker-compose'
 	@echo 'docker-compose-install - Install Docker Compose'
-	@echo 'docker-collectstatic   - Run Django collectstatic in Docker'
 	@echo 'docker-test            - Run Python-Django unit tests in Docker'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'

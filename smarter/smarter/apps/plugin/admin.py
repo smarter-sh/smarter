@@ -6,7 +6,10 @@ from django.contrib import admin
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_account_for_user
-from smarter.lib.django.admin import RestrictedModelAdmin
+from smarter.apps.dashboard.admin import (
+    RestrictedModelAdmin,
+    smarter_restricted_admin_site,
+)
 
 from .models import (
     ApiConnection,
@@ -110,10 +113,10 @@ class PluginStaticAdmin(RestrictedModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
-            return qs.filter(plugindatastatic__isnull=False).distinct()
+            return qs.filter(plugin_class="static").distinct()
         try:
             account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account, plugindatastatic__isnull=False).distinct()
+            return qs.filter(account=account, plugin_class="static").distinct()
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -139,10 +142,10 @@ class PluginApiAdmin(RestrictedModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
-            return qs.filter(plugindataapi__isnull=False).distinct()
+            return qs.filter(plugin_class="api").distinct()
         try:
             account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account, plugindataapi__isnull=False).distinct()
+            return qs.filter(account=account, plugin_class="api").distinct()
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -168,10 +171,10 @@ class PluginSqlAdmin(RestrictedModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
-            return qs.filter(plugindatasql__isnull=False).distinct()
+            return qs.filter(plugin_class="sql").distinct()
         try:
             account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account, plugindatasql__isnull=False).distinct()
+            return qs.filter(account=account, plugin_class="sql").distinct()
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -269,3 +272,33 @@ class ApiConnectionAdmin(RestrictedModelAdmin):
             return qs.filter(account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
+
+
+# Plugin Models
+class PluginMetaStatic(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (Static)"
+        verbose_name_plural = "Plugin Meta (Static)"
+
+
+class PluginMetaApi(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (API)"
+        verbose_name_plural = "Plugin Meta (API)"
+
+
+class PluginMetaSql(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (SQL)"
+        verbose_name_plural = "Plugin Meta (SQL)"
+
+
+smarter_restricted_admin_site.register(PluginMetaStatic, PluginStaticAdmin)
+smarter_restricted_admin_site.register(PluginMetaApi, PluginApiAdmin)
+smarter_restricted_admin_site.register(PluginMetaSql, PluginSqlAdmin)
+smarter_restricted_admin_site.register(SqlConnection, SqlConnectionAdmin)
+smarter_restricted_admin_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
+smarter_restricted_admin_site.register(ApiConnection, ApiConnectionAdmin)

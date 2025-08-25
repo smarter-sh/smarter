@@ -2,11 +2,14 @@
 
 from logging import getLogger
 
+from django.apps import apps
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.admin.exceptions import AlreadyRegistered
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
+from waffle import get_waffle_switch_model
 from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail_transfer import urls as wagtailtransfer_urls
@@ -19,7 +22,10 @@ from smarter.apps.account.views.authentication import (
 )
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
-from smarter.apps.dashboard.admin import restricted_site
+from smarter.apps.dashboard.admin import (
+    SuperUserOnlyModelAdmin,
+    smarter_restricted_admin_site,
+)
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
 from smarter.apps.dashboard.views.dashboard import ComingSoon
 from smarter.apps.docs.const import namespace as docs_namespace
@@ -33,15 +39,39 @@ from smarter.apps.docs.views.webserver import (
 from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
+from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.lib.django.waffle import SmarterSwitchAdmin
 
 
 logger = getLogger(__name__)
 
-admin.site = restricted_site
-
-# Load the admin modules of all installed apps
-# and register their models with the custom admin site
+# -----------------------------------------------------------------------------
+# Initialize custom admin site for Smarter
+# -----------------------------------------------------------------------------
+admin.site = smarter_restricted_admin_site
 admin.autodiscover()
+
+Switch = get_waffle_switch_model()
+smarter_restricted_admin_site.register(Switch, SmarterSwitchAdmin)
+
+EXCLUDED_MODELS = [
+    "knox.AuthToken",  # We have our own admin for this
+    "waffle.Switch",
+    "waffle.Sample",
+    "waffle.Flag",
+]
+
+models = apps.get_models()
+for model in models:
+    model_label = f"{model._meta.app_label}.{model._meta.object_name}"
+    if model_label in EXCLUDED_MODELS:
+        continue
+
+    try:
+        smarter_restricted_admin_site.register(model, SuperUserOnlyModelAdmin)
+    except AlreadyRegistered:
+        pass
+
 
 name_prefix = "root"
 
@@ -64,6 +94,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
     path("plugin/", include("smarter.apps.plugin.urls", namespace=plugin_namespace)),
+    path("provider/", include("smarter.apps.provider.urls", namespace=provider_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
     # -----------------------------------
     # static routes

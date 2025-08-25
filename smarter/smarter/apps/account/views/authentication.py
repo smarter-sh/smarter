@@ -1,9 +1,12 @@
 # pylint: disable=W0613
 """Django Authentication views."""
+from typing import Optional
+
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
@@ -18,7 +21,6 @@ from smarter.lib.django.token_generators import (
     SmarterTokenIntegrityError,
     SmarterTokenParseError,
 )
-from smarter.lib.django.user import User, UserType
 from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedNeverCachedWebView,
     SmarterNeverCachedWebView,
@@ -41,7 +43,8 @@ class LoginView(SmarterNeverCachedWebView):
     template_path = "account/authentication/sign-in.html"
 
     def get(self, request):
-        if request.user.is_authenticated:
+        user = get_resolved_user(request.user)
+        if user and hasattr(user, "is_authenticated") and user.is_authenticated:
             return redirect_and_expire_cache(path="/")
         form = LoginView.LoginForm()
         context = {"form": form}
@@ -49,13 +52,13 @@ class LoginView(SmarterNeverCachedWebView):
 
     def post(self, request):
         form = LoginView.LoginForm(request.POST)
-        authenticated_user: UserType = None
+        authenticated_user: Optional[User] = None
         if form.is_valid():
             email = form.cleaned_data["email"]
             try:
                 user = User.objects.get(email=form.cleaned_data["email"])
                 password = form.cleaned_data["password"]
-                authenticated_user = authenticate(request, username=user.username, password=password)
+                authenticated_user = authenticate(request, username=user.username, password=password)  # type: ignore[assignment]
                 if authenticated_user is not None:
                     login(request, authenticated_user)
                     return redirect_and_expire_cache(path="/")
@@ -68,9 +71,7 @@ class LoginView(SmarterNeverCachedWebView):
                 )
             # pylint: disable=W0718
             except Exception as e:
-                return SmarterHttpResponseServerError(
-                    request=request, error_message=f"An unknown error occurred {e.description}"
-                )
+                return SmarterHttpResponseServerError(request=request, error_message=f"An unknown error occurred {e}")
         return SmarterHttpResponseBadRequest(request=request, error_message="Received invalid responses.")
 
 
@@ -98,7 +99,8 @@ class AccountRegisterView(SmarterNeverCachedWebView):
     template_path = "account/authentication/sign-up.html"
 
     def get(self, request):
-        if request.user.is_authenticated:
+        user = get_resolved_user(request.user)
+        if user and hasattr(user, "is_authenticated") and user.is_authenticated:
             return redirect_and_expire_cache(path="/")
 
         form = AccountRegisterView.SignUpForm()
@@ -132,7 +134,11 @@ class AccountActivationEmailView(SmarterNeverCachedWebView):
     def get(self, request):
 
         # generate and send the activation email
-        user = request.user
+        user = get_resolved_user(request.user)
+        if not isinstance(user, User) or not hasattr(user, "is_authenticated") or not user.is_authenticated:
+            return SmarterHttpResponseNotFound(
+                request=request, error_message="User not found. Please log in to activate your account."
+            )
         url = self.expiring_token.encode_link(request, user, "account_activate")
         context = {
             "account_activation": {

@@ -10,7 +10,7 @@ metadata:
     - MODIFIED
 spec:
   selector:
-    directive: searchTerms
+    directive: search_terms
     searchTerms:
       - MODIFIED
   prompt:

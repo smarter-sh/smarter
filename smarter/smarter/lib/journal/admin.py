@@ -1,6 +1,10 @@
 """Account admin."""
 
-from smarter.lib.django.admin import RestrictedModelAdmin
+from smarter.apps.dashboard.admin import (
+    RestrictedModelAdmin,
+    smarter_restricted_admin_site,
+)
+from smarter.lib.journal.models import SAMJournal
 
 
 # Register your models here.
@@ -23,3 +27,6 @@ class SAMJournalAdmin(RestrictedModelAdmin):
 
     command_display.admin_order_field = "command"
     command_display.short_description = "Command"
+
+
+smarter_restricted_admin_site.register(SAMJournal, SAMJournalAdmin)

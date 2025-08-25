@@ -1,6 +1,6 @@
 """Smarter API Plugin Manifest"""
 
-from typing import ClassVar
+from typing import ClassVar, Optional
 
 from pydantic import Field
 
@@ -21,7 +21,7 @@ class SAMApiConnection(SAMConnectionCommon):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    spec: SAMApiConnectionSpec = Field(
+    spec: Optional[SAMApiConnectionSpec] = Field(
         ...,
         description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {MANIFEST_KIND} specification.",
     )

@@ -10,6 +10,7 @@ class WebPlatformConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = f"smarter.apps.{app_name}"
+    verbose_name = "Smarter Dashboard"
 
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):

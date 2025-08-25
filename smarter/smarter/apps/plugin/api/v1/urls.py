@@ -20,7 +20,7 @@ class RequestRouter(View):
     """http method-based request router."""
 
     def dispatch(self, request, *args, **kwargs):
-        if request.method.lower() == "post":
+        if request and isinstance(request.method, str) and request.method.lower() == "post":
             return PluginView.as_view()(request, *args, **kwargs)
         return PluginListView.as_view()(request, *args, **kwargs)
 

@@ -1,8 +1,10 @@
 """This module is used to deploy a customer API."""
 
 import glob
+import json
 import os
 from http import HTTPStatus
+from typing import Optional
 from urllib.parse import urljoin
 
 import yaml
@@ -12,7 +14,7 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 from rest_framework.test import force_authenticate
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
@@ -22,7 +24,6 @@ from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -33,10 +34,10 @@ class Command(BaseCommand):
     Deploys to a URL of the form [chatbot-name].####-####-####.api.smarter.sh/chatbot/
     """
 
-    _url: str = None
-    user: UserType = None
-    account: Account = None
-    user_profile: UserProfile = None
+    _url: Optional[str] = None
+    user: User
+    account: Optional[Account] = None
+    user_profile: Optional[UserProfile] = None
 
     def __init__(self, stdout=None, stderr=None, no_color=False, force_color=False):
         super().__init__(stdout, stderr, no_color, force_color)
@@ -67,7 +68,7 @@ class Command(BaseCommand):
             data = file.read()
             return data
 
-    def parse_yaml(self, data: str) -> dict:
+    def parse_yaml(self, data: str) -> Optional[dict]:
         """
         Parse a yaml file.
         data: a string representing the yaml file.
@@ -86,9 +87,11 @@ class Command(BaseCommand):
         Account: The account to which the manifest applies.
         manifest_data: a string representation of a yaml manifest file
         """
+        if not self.account:
+            raise SmarterValueError("Account is required to apply a manifest.")
         self.stdout.write(f"Applying manifest for account {self.account.account_number} {self.account.company_name}.")
         request_factory = RequestFactory()
-        response: HttpResponse = None
+        response: HttpResponse
         self.url = urljoin(smarter_settings.environment_url, "/api/v1/cli/apply")
 
         try:
@@ -105,12 +108,14 @@ class Command(BaseCommand):
                 self.stderr.write(self.style.ERROR(f"Error in API response: {str(response)}"))
         except yaml.YAMLError as exc:
             self.stderr.write(self.style.ERROR(f"Error in yaml manifest file: {exc}"))
-            self.stdout.write(manifest_data)
+            self.stdout.write(json.dumps(manifest_data))
 
         return response
 
     def delete_chatbot(self, name: str):
         """Delete a chatbot by name."""
+        if not self.account:
+            raise SmarterValueError("Account is required to delete a chatbot.")
 
         try:
             chatbot = ChatBot.objects.get(account=self.account, name=name)
@@ -132,6 +137,8 @@ class Command(BaseCommand):
         - get a response
         - check the response
         """
+        if not self.account:
+            raise SmarterValueError("Account is required to create a plugin.")
         self.stdout.write(
             f"Creating plugin from manifest {yaml_file} for account {self.account.account_number} {self.account.company_name}."
         )
@@ -140,7 +147,11 @@ class Command(BaseCommand):
         if not parsed_manifest_data:
             self.stderr.write(self.style.ERROR(f"Error parsing yaml file {yaml_file}."))
             return False
-        response = self.apply_manifest(manifest_data=file_data)
+        try:
+            response = self.apply_manifest(manifest_data=json.loads(file_data))
+        except json.JSONDecodeError as exc:
+            self.stderr.write(self.style.ERROR(f"Error decoding JSON from yaml file {yaml_file}: {exc}"))
+            return False
         return response.status_code == HTTPStatus.OK
 
     def create_and_deploy_chatbot(self, yaml_file: str) -> bool:
@@ -153,10 +164,13 @@ class Command(BaseCommand):
         - get the chatbot by name
         - deploy the chatbot as a Celery task
         """
+        if not self.account:
+            raise SmarterValueError("Account is required to create and deploy a chatbot.")
+
         self.stdout.write(
             f"Creating and deploying chatbot from manifest {yaml_file} for account {self.account.account_number} {self.account.company_name}."
         )
-        chatbot: ChatBot = None
+        chatbot: ChatBot
 
         file_data = self.read_file(file_path=yaml_file)
         parsed_manifest_data = self.parse_yaml(file_data)
@@ -166,7 +180,7 @@ class Command(BaseCommand):
         chatbot_name = parsed_manifest_data.get("metadata", {}).get("name")
         try:
             chatbot = ChatBot.objects.get(account=self.account, name=chatbot_name)
-            if chatbot.deployed:
+            if chatbot.deployed and self.account:
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"You're all set! {chatbot.hostname} is already deployed for {self.account.account_number} {self.account.company_name}."
@@ -176,7 +190,11 @@ class Command(BaseCommand):
         except ChatBot.DoesNotExist:
             pass
 
-        response = self.apply_manifest(manifest_data=file_data)
+        try:
+            response = self.apply_manifest(manifest_data=json.loads(file_data))
+        except json.JSONDecodeError as exc:
+            self.stderr.write(self.style.ERROR(f"Error decoding JSON from yaml file {yaml_file}: {exc}"))
+            return False
         if response.status_code != HTTPStatus.OK:
             self.stderr.write(self.style.ERROR(f"Error in API response: {str(response)}"))
             return False
@@ -187,14 +205,14 @@ class Command(BaseCommand):
         except ChatBot.DoesNotExist:
             self.stderr.write(
                 self.style.ERROR(
-                    f"Internal error. ChatBot {chatbot_name} not found for account {self.account.account_number} {self.account.company_name}."
+                    f"Internal error. ChatBot {chatbot_name} not found for account {self.account.account_number if self.account else None} {self.account.company_name if self.account else None}."
                 )
             )
             return False
 
         # deploy the chatbot as a Celery task because this could take a while.
         self.stdout.write(self.style.NOTICE(f"Deploying {chatbot_name} as a Celery task."))
-        deploy_default_api.delay(chatbot_id=chatbot.id)
+        deploy_default_api.delay(chatbot_id=chatbot.id)  # type: ignore[arg-type]
         return True
 
     def handle(self, *args, **options):
@@ -204,7 +222,7 @@ class Command(BaseCommand):
 
         account_number = options["account_number"]
         self.account = get_cached_account(account_number=account_number)
-        self.user = get_cached_admin_user_for_account(account=self.account)
+        self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore[arg-type]
         self.stdout.write(self.style.NOTICE("=" * 80))
         self.stdout.write(self.style.NOTICE(f"{__file__}"))
         self.stdout.write(self.style.NOTICE(f"Deploying built-in plugins and chatbots for account {account_number}."))

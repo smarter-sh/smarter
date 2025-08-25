@@ -6,6 +6,8 @@ organized in directories by customer API name.
 import os
 import re
 import subprocess
+import sys
+from typing import Optional
 from urllib.parse import urljoin
 
 import yaml
@@ -13,7 +15,7 @@ from django.core.management.base import BaseCommand
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
@@ -21,21 +23,22 @@ from smarter.apps.account.utils import (
 from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
+from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.manifest.loader import SAMLoader
 
 
 # pylint: disable=E1101,too-many-instance-attributes
 class Command(BaseCommand):
     """Deploy customer APIs from a GitHub repository of plugin YAML files organized by customer API name."""
 
-    _url: str = None
-    user: UserType = None
-    account: Account = None
-    user_profile: UserProfile = None
+    _url: Optional[str] = None
+    user: User
+    account: Account
+    user_profile: UserProfile
 
     def __init__(self, stdout=None, stderr=None, no_color=False, force_color=False):
         super().__init__(stdout, stderr, no_color, force_color)
@@ -91,18 +94,20 @@ class Command(BaseCommand):
         if not self.user_profile:
             raise SmarterValueError("User profile is required.")
 
-        with open(filespec, encoding="utf-8") as file:
-            data = file.read()
+        loader = SAMLoader(
+            api_version=SmarterApiVersions.V1,
+            file_path=filespec,
+        )
 
-        if data:
-            try:
-                data = yaml.safe_load(data)
-            except yaml.YAMLError as exc:
-                print("Error in configuration file:", exc)
-        else:
-            raise SmarterValueError("Could not read the file.")
+        if not loader.ready:
+            self.stdout.write(self.style.ERROR("manage.py create_plugin. SAMLoader is not ready."))
+            sys.exit(1)
+        plugin_class = SAM_MAP[loader.manifest_kind]
+        manifest = plugin_class(**loader.pydantic_model_dump())
+        self.stdout.write(f"Creating {plugin_class.__name__} {manifest.metadata.name} for account {self.account}...")
 
-        plugin = StaticPlugin(data=data, user_profile=self.user_profile)
+        controller = PluginController(account=self.account, user=self.user, user_profile=self.user_profile, manifest=manifest)  # type: ignore
+        plugin = controller.obj
         return plugin
 
     def apply_manifest(self, manifest_data: str) -> HttpResponse:
@@ -169,7 +174,8 @@ class Command(BaseCommand):
 
             for _, _, files in os.walk(directory):
                 for file in files:
-                    if file.endswith(".yaml") or file.endswith(".yml"):
+
+                    if isinstance(file, str) and file.endswith(".yaml") or file.endswith(".yml"):
                         return True
             return False
 
@@ -197,11 +203,14 @@ class Command(BaseCommand):
                             if file.endswith(".yaml") or file.endswith(".yml"):
                                 filespec = os.path.join(directory_path, file)
                                 filename = os.path.basename(filespec)
-                                print(f"Loading plugin: {filename}")
+                                print(f"Loading plugin: {filespec}")
                                 plugin = self.load_plugin(filespec=filespec)
+                                if not plugin:
+                                    self.stderr.write(f"Error loading plugin: {filename}")
+                                    continue
                                 ChatBotPlugin.objects.get_or_create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
 
-                    deploy_default_api.delay(chatbot_id=chatbot.id, with_domain_verification=False)
+                    deploy_default_api.delay(chatbot_id=chatbot.id, with_domain_verification=False)  # type: ignore
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -235,14 +244,15 @@ class Command(BaseCommand):
             raise SmarterValueError("username and/or account_number is required.")
 
         if account_number:
-            self.account = get_cached_account(account_number=account_number)
+            self.account = get_cached_account(account_number=account_number)  # type: ignore
 
         if username:
             self.user = User.objects.get(username=username)
         else:
             self.user = get_cached_admin_user_for_account(account=self.account)
 
-        self.user_profile = UserProfile.objects.get(user=self.user, account=self.account) if self.user else None
+        if self.user is not None:
+            self.user_profile = UserProfile.objects.get(user=self.user, account=self.account)
 
         if repo_version == 2:
             # iterate repo and apply manifests
