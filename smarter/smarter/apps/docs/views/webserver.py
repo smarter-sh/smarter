@@ -50,8 +50,11 @@ class ReadinessView(View):
     View to serve the readiness endpoint. Instantiate a ChatBotHelper object to
     force readiness of platform. This is the most likely collection of Python
     objects that will be used in the early stages of the application lifecycle.
+
+    mcdaniel (aug-2025): squelching this idea for now as the overhead of instantiating
+    ChatBotHelper is not worth the benefit at this stage.
     """
 
     def get(self, request, *args, **kwargs):
-        ChatBotHelper(request=request)
+        # ChatBotHelper(request=request)
         return HttpResponse("OK", content_type="text/plain")

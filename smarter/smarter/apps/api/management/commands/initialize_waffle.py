@@ -23,10 +23,16 @@ class Command(BaseCommand):
             else:
                 print(f"Verified switch {switch_name}")
 
-        switches = SmarterWaffleSwitches().all
+        smarter_switches = SmarterWaffleSwitches().all.copy()
 
-        for switch in switches:
+        for switch in smarter_switches:
             verify_switch(switch)
+
+        waffle_switches = Switch.objects.all()
+        for switch in waffle_switches:
+            if not switch.name in smarter_switches:
+                self.stdout.write(self.style.NOTICE(f"Deleting orphaned switch {switch.name}."))
+                switch.delete()
 
         if smarter_settings.environment == SmarterEnvironments.LOCAL:
             call_command("waffle_switch", SmarterWaffleSwitches.REACTAPP_DEBUG_MODE, "on")

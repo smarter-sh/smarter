@@ -1,0 +1,19 @@
+apiVersion: smarter.sh/v1
+kind: SqlConnection
+metadata:
+  description: Sql database connection pwd for smarter_test_db at sql.lawrencemcdaniel.com:3306
+  name: smarter_test_db
+  tags: null
+  version: 0.1.0
+spec:
+  connection:
+    authenticationMethod: tcpip
+    database: smarter_test_db
+    dbEngine: django.db.backends.mysql
+    hostname: sql.lawrencemcdaniel.com
+    maxOverflow: 10
+    password: smarter_test_db
+    poolSize: 5
+    port: 3306
+    timeout: 30
+    useSsl: false

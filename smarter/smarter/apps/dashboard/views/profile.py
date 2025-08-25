@@ -1,11 +1,7 @@
 # pylint: disable=C0115
 """Django views"""
-import logging
 
 from smarter.lib.django.view_helpers import SmarterAuthenticatedWebView
-
-
-logger = logging.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------

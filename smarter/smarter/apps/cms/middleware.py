@@ -9,12 +9,23 @@ from django.utils.deprecation import MiddlewareMixin
 
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
+        and level >= logging.INFO
+    )
 
-if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-    logger.info("Loading smarter.apps.cms.middleware.HTMLMinifyMiddleware")
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+logger.info("Loading smarter.apps.cms.middleware.HTMLMinifyMiddleware")
 
 
 class HTMLMinifyMiddleware(MiddlewareMixin):
@@ -37,9 +48,10 @@ class HTMLMinifyMiddleware(MiddlewareMixin):
             soup = BeautifulSoup(response.content, "lxml")
 
             # strip comments from the HTML document
-            for comment in soup.findAll(text=lambda text: isinstance(text, Comment)):
+            for comment in soup.findAll(text=lambda text: isinstance(text, Comment)):  # type: ignore
                 comment.extract()
 
-            response.content = soup.prettify(formatter="minimal").encode("utf-8")
+            soup_string = soup.prettify(formatter="minimal")
+            response.content = soup_string.encode("utf-8") if isinstance(soup_string, str) else soup_string
             response["Content-Length"] = str(len(response.content))
         return response

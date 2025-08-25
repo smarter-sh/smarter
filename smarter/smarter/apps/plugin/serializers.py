@@ -20,6 +20,11 @@ from smarter.apps.plugin.models import (
 )
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
+from .manifest.enum import (
+    SAMPluginCommonMetadataClassValues,
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+)
+
 
 class TagListSerializerField(serializers.ListField):
     """Tag list serializer."""
@@ -56,7 +61,7 @@ class PluginSelectorSerializer(SmarterCamelCaseSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginSelector
-        fields = ["directive", "search_terms"]
+        fields = ["directive", SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value]
 
 
 class PluginPromptSerializer(SmarterCamelCaseSerializer):
@@ -153,14 +158,10 @@ class PluginApiSerializer(SmarterCamelCaseSerializer):
         model = PluginDataApi
         fields = [
             "connection",
-            "description",
-            "parameters",
-            "url",
             "method",
+            "endpoint",
+            "url_params",
             "headers",
-            "params",
-            "data",
-            "auth_type",
-            "username",
-            "password",
+            "body",
+            "limit",
         ]

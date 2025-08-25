@@ -8,3 +8,4 @@ class JournalConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.lib.journal"
+    verbose_name = "Smarter Journal"

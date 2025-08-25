@@ -14,7 +14,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.models import AbstractSAMBase
 
 from .const import MANIFEST_KIND
-from .spec import SAMSqlPluginSpec
+from .spec import SAMSqlConnectionSpec
 
 
 MODULE_IDENTIFIER = MANIFEST_KIND
@@ -29,7 +29,7 @@ class SAMSqlConnection(AbstractSAMBase):
         ...,
         description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {MANIFEST_KIND} metadata.",
     )
-    spec: SAMSqlPluginSpec = Field(
+    spec: SAMSqlConnectionSpec = Field(
         ...,
         description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {MANIFEST_KIND} specification.",
     )

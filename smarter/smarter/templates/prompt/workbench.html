@@ -17,20 +17,22 @@
       smarter-session-cookie-name="session_key">
     </div>
   -->
-  <div
-    id="{{ div_id }}"
-    class="smarter-chat"
-    style="height: 88vh;"
-    smarter-chatbot-api-url="{{ chatbot_api_url }}"
-    smarter-toggle-metadata="{{ toggle_metadata }}"
-    smarter-csrf-cookie-name="{{ csrf_cookie_name }}"
-    smarter-session-cookie-name="{{ smarter_session_cookie_name }}"
-    smarter-cookie-domain="{{ cookie_domain }}"
-    smarter-debug-mode="{{ debug_mode }}"
-    django-csrftoken="{{ csrf_token }}"
-    django-session-cookie-name="{{ django_session_cookie_name }}"
-    >
-  </div>
+  <section aria-label="Chat with your AI assistant" class="smarter-chat-section">
+    <div
+      id="{{ div_id }}"
+      class="smarter-chat"
+      style="height: 88vh;"
+      smarter-chatbot-api-url="{{ chatbot_api_url }}"
+      smarter-toggle-metadata="{{ toggle_metadata }}"
+      smarter-csrf-cookie-name="{{ csrf_cookie_name }}"
+      smarter-session-cookie-name="{{ smarter_session_cookie_name }}"
+      smarter-cookie-domain="{{ cookie_domain }}"
+      smarter-debug-mode="{{ debug_mode }}"
+      django-csrftoken="{{ csrf_token }}"
+      django-session-cookie-name="{{ django_session_cookie_name }}"
+      >
+    </div>
+  </section>
   <!--
     retrieve and inject the js/css artifacts of the react.js build into the DOM.
     example:
@@ -40,6 +42,6 @@
       src="https://cdn.platform.smarter.sh/ui-chat/app-loader.js">
     </script>
   -->
-  <script class="smarter-chat" async="" src="{{ app_loader_url }}"></script>
+  <script class="smarter-chat" async="" src="{{ app_loader_url }}" onerror="console.error('Failed to load:', this.src)"></script>
 
 {% endblock %}

@@ -19,6 +19,7 @@ SMARTER_PLATFORM_SUBDOMAIN = "platform"
 SMARTER_COMPANY_NAME = "Smarter"
 SMARTER_EXAMPLE_CHATBOT_NAME = "example"
 SMARTER_CUSTOMER_SUPPORT_EMAIL = "support@smarter.sh"
+SMARTER_CONTACT_EMAIL = "contact@smarter.sh"
 SMARTER_CUSTOMER_SUPPORT_PHONE = "+1 (512) 833-6955"
 SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
 
@@ -62,6 +63,8 @@ def load_version() -> Dict[str, str]:
     """Stringify the __version__ module."""
     version_file_path = os.path.join(PROJECT_ROOT, "__version__.py")
     spec = importlib.util.spec_from_file_location("__version__", version_file_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load version file: {version_file_path}")
     version_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(version_module)
     return version_module.__dict__

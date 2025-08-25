@@ -3,7 +3,7 @@
 # python stuff
 import json
 import logging
-from typing import Union
+from typing import Any, Optional, Union
 
 import yaml
 
@@ -19,27 +19,35 @@ from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.signals import (
     secret_created,
     secret_deleted,
-    secret_edited,
     secret_inializing,
     secret_ready,
 )
 from smarter.apps.account.utils import get_user_profiles_for_account
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 SMARTER_API_MANIFEST_COMPATIBILITY = [SmarterApiVersions.V1]
 SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1
 READ_ONLY_FIELDS = ["id", "user_profile", "last_accessed", "created_at", "modified_at"]
 
 
-class SmarterSecretTransformerError(SmarterExceptionBase):
+class SmarterSecretTransformerError(SmarterException):
     """Base exception for Smarter API Secret handling."""
 
 
@@ -56,22 +64,24 @@ class SecretSerializer(serializers.ModelSerializer):
 class SecretTransformer(SmarterHelperMixin):
     """A class for working with secrets."""
 
-    _name: str = None
-    _api_version: str = None
-    _manifest: SAMSecret = None
-    _secret: Secret = None
-    _secret_serializer: SecretSerializer = None
-    _user_profile: UserProfile = None
+    _name: Optional[str] = None
+    _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
+    _manifest: Optional[SAMSecret] = None
+    _secret: Optional[Secret] = None
+    _secret_serializer: Optional[SecretSerializer] = None
+    _user_profile: Optional[UserProfile] = None
 
     def __init__(
         self,
+        *args,
         user_profile: UserProfile,
-        name: str = None,
-        api_version: str = None,
-        manifest: SAMSecret = None,
-        secret_id: int = None,
-        secret: Secret = None,
-        data: Union[dict, str] = None,
+        name: Optional[str] = None,
+        api_version: Optional[str] = None,
+        manifest: Optional[SAMSecret] = None,
+        secret_id: Optional[int] = None,
+        secret: Optional[Secret] = None,
+        data: Optional[Union[dict, str]] = None,
+        **kwargs,
     ):
         """
         Options for initialization are:
@@ -81,38 +91,64 @@ class SecretTransformer(SmarterHelperMixin):
         - yaml manifest or json representation of a yaml manifest
         see ./tests/data/secret-good.yaml for an example.
         """
+        super().__init__(*args, **kwargs)
         if sum([bool(name), bool(data), bool(manifest), bool(secret_id), bool(secret)]) == 0:
             raise SmarterSecretTransformerError(
                 f"Must specify at least one of: name, manifest, data, secret_id, or secret. "
                 f"Received name: {bool(name)} data: {bool(data)}, manifest: {bool(manifest)}, "
                 f"secret_id: {bool(secret_id)}, secret: {bool(secret)}."
             )
+        self._secret = secret if secret else None
+        self._secret_serializer = None
+        self._user_profile = user_profile
+
         secret_inializing.send(sender=self.__class__, secret_name=name, user_profile=user_profile)
         self._user_profile = user_profile
         if not self._user_profile:
             raise SmarterSecretTransformerError("User profile is not set.")
         if name:
-            self.name = name
-        self.api_version = api_version or self.api_version
+            self._name = name
+        if api_version:
+            self._api_version = api_version
 
         #######################################################################
         # identifiers for existing secrets
         #######################################################################
         if secret_id:
+            logger.info(
+                "%s.__init__() Initializing secret transformer with secret_id: %s", self.formatted_class_name, secret_id
+            )
             self.id = secret_id
-
         if secret:
-            self.id = secret.id
+            logger.info(
+                "%s.__init__() Initializing secret transformer with secret: %s", self.formatted_class_name, secret
+            )
+            self.id = secret.id  # type: ignore[union-attr]
 
         #######################################################################
         # Smarter API Manifest based initialization
         #######################################################################
+        if api_version and api_version not in SMARTER_API_MANIFEST_COMPATIBILITY:
+            raise SmarterSecretTransformerError(f"API version {api_version} is not compatible.")
+        if api_version:
+            logger.info(
+                "%s.__init__() Initializing secret transformer with api_version: %s",
+                self.formatted_class_name,
+                api_version,
+            )
+            self._api_version = api_version
         if manifest:
+            logger.info(
+                "%s.__init__() Initializing secret transformer with manifest: %s", self.formatted_class_name, manifest
+            )
+            if not isinstance(manifest, SAMSecret):
+                raise SAMValidationError(f"Expected SAMSecret, but got {type(manifest)}.")
             # we received a Pydantic model from a manifest broker.
             self._manifest = manifest
             self.api_version = manifest.apiVersion
 
-        if data:
+        if isinstance(data, dict):
+            logger.info("%s.__init__() Initializing secret transformer with data: %s", self.formatted_class_name, data)
             # we received a yaml or json string representation of a manifest.
             self.api_version = data.get(SAMKeys.APIVERSION.value, self.api_version)
             if data.get(SAMKeys.KIND.value) != self.kind:
@@ -120,7 +156,7 @@ class SecretTransformer(SmarterHelperMixin):
             loader = SAMLoader(
                 api_version=self.api_version,
                 kind=self.kind,
-                manifest=data,
+                manifest=json.dumps(data),
             )
             if not loader.ready:
                 raise SAMValidationError("SAMLoader is not ready.")
@@ -143,7 +179,7 @@ class SecretTransformer(SmarterHelperMixin):
     ###########################################################################
     # pylint: disable=W0613
     @classmethod
-    def example_manifest(cls, kwargs: dict = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
         return {
             SAMKeys.APIVERSION.value: SMARTER_API_MANIFEST_DEFAULT_VERSION,
             SAMKeys.KIND.value: MANIFEST_KIND,
@@ -168,7 +204,7 @@ class SecretTransformer(SmarterHelperMixin):
     def api_version(self) -> str:
         """Return the api version of the secret."""
         if not self._api_version:
-            self._api_version = self.manifest.apiVersion if self._manifest else SMARTER_API_MANIFEST_DEFAULT_VERSION
+            self._api_version = self._manifest.apiVersion if self._manifest else SMARTER_API_MANIFEST_DEFAULT_VERSION
         return self._api_version
 
     @api_version.setter
@@ -186,37 +222,37 @@ class SecretTransformer(SmarterHelperMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMSecret:
+    def manifest(self) -> Optional[SAMSecret]:
         """Return the Pydandic model of the secret."""
         if not self._manifest and self.secret:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMSecret(**self.to_json())
+            self._manifest = SAMSecret(**self.to_json())  # type: ignore[call-arg]
         return self._manifest
 
     @property
-    def value(self) -> str:
+    def value(self) -> Optional[str]:
         """Return the secret value."""
         if self._manifest:
-            return self.manifest.spec.config.value
+            return self._manifest.spec.config.value if self._manifest.spec and self._manifest.spec.config else None
         if self.secret:
             return self.secret.get_secret(update_last_accessed=False)
         return None
 
     @property
-    def encrypted_value(self) -> bytes:
+    def encrypted_value(self) -> Optional[bytes]:
         """Return the encrypted secret value."""
         if self._manifest:
-            return Secret.encrypt(value=self.value)
+            return Secret.encrypt(value=self.value)  # type: ignore[return-value]
         if self.secret:
             return self.secret.encrypted_value
         return None
 
     @property
-    def description(self) -> str:
+    def description(self) -> Optional[str]:
         """Return the secret description."""
-        if self._manifest:
-            return self.manifest.metadata.description
+        if self._manifest and self._manifest.metadata:
+            return self._manifest.metadata.description
         if self.secret:
             return self.secret.description
         return None
@@ -224,46 +260,46 @@ class SecretTransformer(SmarterHelperMixin):
     @property
     def version(self) -> str:
         """Return the secret version."""
-        if self._manifest:
-            return self.manifest.metadata.version
+        if self._manifest and self._manifest.metadata:
+            return self._manifest.metadata.version
         return "1.0.0"
 
     @property
-    def tags(self) -> list:
+    def tags(self) -> list[str]:
         """Return the secret tags."""
-        if self._manifest:
-            return self.manifest.metadata.tags
+        if self._manifest and self._manifest.metadata and self._manifest.metadata.tags:
+            return self._manifest.metadata.tags
         return []
 
     @property
     def annotations(self) -> list:
         """Return the secret annotations."""
-        if self._manifest:
-            return self.manifest.metadata.annotations
+        if self._manifest and self._manifest.metadata and self._manifest.metadata.annotations:
+            return self._manifest.metadata.annotations
         return []
 
     @property
-    def created_at(self) -> str:
+    def created_at(self) -> Optional[str]:
         """Return the created date."""
         if self.secret:
             return self.secret.created_at.isoformat() if self.secret.created_at else None
         return None
 
     @property
-    def updated_at(self) -> str:
+    def updated_at(self) -> Optional[str]:
         """Return the updated date."""
         if self.secret:
             return self.secret.updated_at.isoformat() if self.secret.updated_at else None
         return None
 
     @property
-    def last_accessed(self) -> str:
+    def last_accessed(self) -> Optional[str]:
         """Return the last accessed date."""
         retval = None
-        if self._manifest:
+        if self._manifest and self._manifest.status and self._manifest.status.last_accessed:
             retval = (
-                self.manifest.status.last_accessed.isoformat()
-                if self._manifest.status and self.manifest.status.last_accessed
+                self._manifest.status.last_accessed.isoformat()
+                if self._manifest.status and self._manifest.status.last_accessed
                 else None
             )
         if self.secret:
@@ -271,11 +307,16 @@ class SecretTransformer(SmarterHelperMixin):
         return retval
 
     @property
-    def expires_at(self) -> str:
+    def expires_at(self) -> Optional[str]:
         """Return the expiration date in the format, YYYY-MM-DD"""
-        if self._manifest:
+        if (
+            self._manifest
+            and self._manifest.spec
+            and self._manifest.spec.config
+            and self._manifest.spec.config.expiration_date
+        ):
             return (
-                self.manifest.spec.config.expiration_date.isoformat()
+                self._manifest.spec.config.expiration_date.isoformat()
                 if self._manifest.spec.config.expiration_date
                 else None
             )
@@ -284,10 +325,10 @@ class SecretTransformer(SmarterHelperMixin):
         return None
 
     @property
-    def id(self) -> int:
+    def id(self) -> Optional[int]:
         """Return the id of the secret."""
         if self.secret:
-            return self.secret.id
+            return self.secret.id  # type: ignore[return-value]
         return None
 
     @id.setter
@@ -304,7 +345,7 @@ class SecretTransformer(SmarterHelperMixin):
             raise SmarterSecretTransformerError("Secret.DoesNotExist") from e
 
     @property
-    def secret(self) -> Secret:
+    def secret(self) -> Optional[Secret]:
         """Return the secret meta."""
         if self._secret:
             return self._secret
@@ -314,10 +355,16 @@ class SecretTransformer(SmarterHelperMixin):
             # if the secret does not exist for the user profile, then we still need to check
             # if the secret exists for the account, and if so, whether self.user_profile
             # is at least a staff user. otherwise, we raise an error.
-            other_user_profiles = get_user_profiles_for_account(self.user_profile.account)
+            other_user_profiles = (
+                get_user_profiles_for_account(self.user_profile.account) if self.user_profile else None
+            )
             secret = Secret.objects.filter(user_profile__in=other_user_profiles, name=self.name).first()
             if secret:
-                if not self.user_profile.user.is_staff and not self.user_profile.user.is_superuser:
+                if (
+                    self.user_profile
+                    and not self.user_profile.user.is_staff
+                    and not self.user_profile.user.is_superuser
+                ):
                     raise SmarterSecretTransformerError(
                         f"Secret {self.name} exists for user profile {secret.user_profile.user.username} "
                         f"but not for user profile {self.user_profile.user.username}."
@@ -327,7 +374,7 @@ class SecretTransformer(SmarterHelperMixin):
         return self._secret
 
     @property
-    def secret_serializer(self) -> SecretSerializer:
+    def secret_serializer(self) -> Optional[SecretSerializer]:
         """Return the secret meta serializer."""
         if self.secret and not self._secret_serializer:
 
@@ -335,7 +382,7 @@ class SecretTransformer(SmarterHelperMixin):
         return self._secret_serializer
 
     @property
-    def secret_django_model(self) -> dict:
+    def secret_django_model(self) -> Optional[dict[str, Any]]:
         """Return a dict for loading the secret Django ORM model."""
         if not self.manifest:
             return None
@@ -351,12 +398,12 @@ class SecretTransformer(SmarterHelperMixin):
         }
 
     @property
-    def user_profile(self) -> UserProfile:
+    def user_profile(self) -> Optional[UserProfile]:
         """Return the user profile."""
         return self._user_profile
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """
         Return the name of the secret.
         The manifest takes precedence over the secret ORM
@@ -364,11 +411,11 @@ class SecretTransformer(SmarterHelperMixin):
         if self._name:
             return self._name
         if self._manifest:
-            self._name = self.manifest.metadata.name
+            self._name = self._manifest.metadata.name
             self._secret = None
         else:
             if self._secret:
-                self._name = self.secret.name
+                self._name = self._secret.name
         return self._name
 
     @name.setter
@@ -418,14 +465,14 @@ class SecretTransformer(SmarterHelperMixin):
         return False
 
     @property
-    def data(self) -> dict:
+    def data(self) -> Optional[dict]:
         """Return the secret as a dictionary."""
         if self.ready:
             return self.to_json()
         return None
 
     @property
-    def yaml(self) -> str:
+    def yaml(self) -> Optional[str]:
         """Return the secret as a yaml string."""
         if self.ready:
             return yaml.dump(self.to_json())
@@ -434,7 +481,7 @@ class SecretTransformer(SmarterHelperMixin):
     def refresh(self) -> bool:
         """Refresh the secret."""
         if self.ready:
-            self.id = self.id
+            self.id = self.id  # type: ignore[assignment]
             return self.ready
         return False
 
@@ -466,17 +513,17 @@ class SecretTransformer(SmarterHelperMixin):
             return False
 
         if self.secret:
-            self.id = self.secret.id
+            self.id = self.secret.id  # type: ignore[assignment]
             logger.info(
                 "%s.create() Secret %s already exists. Updating secret %s instead.",
                 self.formatted_class_name,
                 secret_data["name"],
-                self.secret.id,
+                self.secret.id,  # type: ignore[union-attr]
             )
             return self.update()
 
         secret = Secret.objects.create(**secret_data)
-        self.id = secret.id
+        self.id = secret.id  # type: ignore[assignment]
         secret_created.send(sender=self.__class__, secret=self)
         logger.info("%s.create() secret %s: %s.", self.formatted_class_name, self.name, self.id)
 
@@ -502,24 +549,23 @@ class SecretTransformer(SmarterHelperMixin):
             if attr not in READ_ONLY_FIELDS:
                 setattr(self._secret, attr, value)
         self.secret.save()
-        secret_edited.send(sender=self.__class__, secret=self)
-        self.id = self.secret.id
+        self.id = self.secret.id  # type: ignore[assignment]
         logger.info("%s.update() secret %s: %s.", self.formatted_class_name, self.name, self.id)
 
         return True
 
-    def save(self):
+    def save(self) -> bool:
         """Save a secret."""
 
         if not self.ready:
             return False
 
-        self.secret.save()
-        secret_edited.send(sender=self.__class__, secret=self)
+        if isinstance(self.secret, Secret):
+            self.secret.save()
         logger.info("%s.save()) secret %s: %s.", self.formatted_class_name, self.name, self.id)
         return True
 
-    def delete(self):
+    def delete(self) -> bool:
         """Delete a secret."""
 
         if not self.ready:
@@ -527,14 +573,15 @@ class SecretTransformer(SmarterHelperMixin):
 
         secret_id = self.id
         secret_name = self.name
-        self.secret.delete()
+        if isinstance(self.secret, Secret):
+            self.secret.delete()
         self._secret = None
         self._secret_serializer = None
         secret_deleted.send(sender=self.__class__, secret_id=secret_id, secret_name=secret_name)
         logger.info("%s.delete() secret %s: %s.", self.formatted_class_name, secret_id, secret_name)
         return True
 
-    def to_json(self, version: str = "v1") -> dict:
+    def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
         """
         Serialize a secret in JSON format that is importable by Pydantic.
         """
@@ -559,8 +606,12 @@ class SecretTransformer(SmarterHelperMixin):
                     },
                 },
                 SAMKeys.STATUS.value: {
-                    SAMSecretStatusKeys.ACCOUNT_NUMBER.value: self.user_profile.account.account_number,
-                    SAMSecretStatusKeys.USERNAME.value: self.user_profile.user.get_username(),
+                    SAMSecretStatusKeys.ACCOUNT_NUMBER.value: (
+                        self.user_profile.account.account_number if self.user_profile else None
+                    ),
+                    SAMSecretStatusKeys.USERNAME.value: (
+                        self.user_profile.user.get_username() if self.user_profile else None
+                    ),
                     SAMSecretStatusKeys.CREATED.value: self.created_at,
                     SAMSecretStatusKeys.UPDATED.value: self.updated_at,
                     SAMSecretStatusKeys.LAST_ACCESSED.value: self.last_accessed,

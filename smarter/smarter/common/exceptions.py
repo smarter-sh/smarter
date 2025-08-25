@@ -2,12 +2,13 @@
 
 import logging
 import re
+from typing import Optional
 
 
 logger = logging.getLogger(__name__)
 
 
-class SmarterExceptionBase(Exception):
+class SmarterException(Exception):
     """Exception raised for errors in the configuration."""
 
     def __init__(self, message: str = ""):
@@ -25,21 +26,21 @@ class SmarterExceptionBase(Exception):
         return " ".join(word for word in words)
 
 
-class SmarterConfigurationError(SmarterExceptionBase):
+class SmarterConfigurationError(SmarterException):
     """Exception raised for errors in the configuration."""
 
 
-class SmarterValueError(SmarterExceptionBase):
+class SmarterValueError(SmarterException):
     """Exception raised for illegal or invalid values."""
 
 
-class SmarterInvalidApiKeyError(SmarterExceptionBase):
+class SmarterInvalidApiKeyError(SmarterException):
     """Exception raised when an invalid api key is received."""
 
 
-class SmarterIlligalInvocationError(SmarterExceptionBase):
+class SmarterIlligalInvocationError(SmarterException):
     """Exception raised when the service is illegally invoked."""
 
 
-class SmarterBusinessRuleViolation(SmarterExceptionBase):
+class SmarterBusinessRuleViolation(SmarterException):
     """Exception raised when policies are violated."""

@@ -30,11 +30,11 @@
       <!--begin::Col-->
       <div class="col-xl-8 mb-5 mb-xl-10">
         <!--begin::Row-->
-        <div class="row g-5 g-xl-10 mb-l-10">
+        <section class="row g-5 g-xl-10 mb-l-10">
 
           {% for chatbot_helper in chatbot_helpers %}
           <!--begin::Col Smarter Chatbot Card-->
-          <div class="col-lg-6 mb-4 p-5">
+          <article class="col-lg-6 mb-4 p-5">
             <!--begin::Chatbot card-->
             <a href="{% url 'prompt_workbench:by_name' chatbot_helper.name %}">
               <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card {% if chatbot_helper.user_profile == smarter_admin %}smarter-chatbot-card{% else %}user-chatbot-card{% endif %}">
@@ -70,11 +70,11 @@
               </div>
             </a>
             <!--end::Chatbot card-->
-          </div>
+          </article>
           <!--end::Col Smarter Chatbot Card-->
           {% endfor %}
 
-        </div>
+        </section>
         <!--end::Row-->
 
       </div>

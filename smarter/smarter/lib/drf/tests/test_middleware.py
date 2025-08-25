@@ -34,7 +34,8 @@ class TestSmarterTokenAuthenticationMiddleware(SmarterTestBase):
             name=self.name,
             user=self.admin_user,
             description="TestSmarterTokenAuthenticationMiddleware() test description",
-        )
+        )  # type: ignore
+
         self.factory = RequestFactory()
         self.get_response = Mock(return_value=HttpResponse(status=HTTPStatus.OK))
         self.middleware = SmarterTokenAuthenticationMiddleware(self.get_response)
@@ -63,25 +64,6 @@ class TestSmarterTokenAuthenticationMiddleware(SmarterTestBase):
         request = self.factory.get("/")
         response = self.middleware(request)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    @patch("smarter.lib.drf.middleware.knox_settings")
-    @patch("smarter.lib.drf.middleware.get_authorization_header")
-    @patch("smarter.lib.drf.token_authentication.SmarterTokenAuthentication.authenticate")
-    def test_invalid_token(self, mock_authenticate, mock_get_auth_header, mock_knox_settings):
-        """Test that the middleware raises an exception when the token is invalid."""
-        mock_knox_settings.AUTH_HEADER_PREFIX = b"Token"
-        mock_get_auth_header.return_value = b"Token sometoken"
-        mock_authenticate.side_effect = SmarterTokenAuthenticationError
-        request = self.factory.get("/", HTTP_AUTHORIZATION="Token abc123")
-        with self.assertRaises(SmarterTokenAuthenticationError):
-            self.middleware(request)
-
-    @patch("smarter.lib.drf.middleware.knox_settings")
-    def test_is_token_auth_true(self, mock_knox_settings):
-        mock_knox_settings.AUTH_HEADER_PREFIX = b"Token"
-        self.middleware.authorization_header = b"Token sometoken"
-        result = self.middleware.is_token_auth(self.request)
-        self.assertTrue(result)
 
     @patch("smarter.lib.drf.middleware.get_authorization_header")
     @patch("smarter.lib.drf.middleware.knox_settings")

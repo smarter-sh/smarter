@@ -3,9 +3,9 @@
 import abc
 import re
 from logging import getLogger
-from typing import List, Optional, Union
+from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
@@ -26,6 +26,14 @@ class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
         frozen=True,  # models are read-only
     )
 
+    @model_validator(mode="before")
+    def coerce_none_strings(cls, data):
+        if isinstance(data, dict):
+            for k, v in data.items():
+                if v in ("None", ""):
+                    data[k] = None
+        return data
+
 
 class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
@@ -36,11 +44,12 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     )
     version: str = Field(..., description="The semantic version of the manifest. Example: 0.1.0")
     tags: Optional[List[str]] = Field(
-        None,
+        default_factory=list,
         description="The tags of the manifest. These are fully functional but are not currently used. Example: ['tag1', 'tag2']",
     )
     annotations: Optional[List[str]] = Field(
-        None, description="The manifest annotations. These are fully functional but are not currently used."
+        default_factory=list,
+        description="The manifest annotations. These are fully functional but are not currently used.",
     )
 
     @field_validator("name")
@@ -81,7 +90,9 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         return v
 
     @field_validator("tags")
-    def validate_tags(cls, v) -> List[str]:
+    def validate_tags(cls, v) -> Optional[List[str]]:
+        if v is None:
+            return v
         if isinstance(v, list):
             for tag in v:
                 if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, tag):
@@ -91,7 +102,9 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         return v
 
     @field_validator("annotations")
-    def validate_annotations(cls, v) -> List[str]:
+    def validate_annotations(cls, v) -> Optional[List[str]]:
+        if v is None:
+            return v
         if isinstance(v, list):
             for annotation in v:
                 if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, annotation):
@@ -127,9 +140,7 @@ class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
         ...,
         description="kind[String]: Required. The kind of resource described by the manifest.",
     )
-    metadata: Union[AbstractSAMMetadataBase, dict] = Field(
-        ..., description="metadata[obj]: Required. The manifest metadata."
-    )
+    metadata: AbstractSAMMetadataBase = Field(..., description="metadata[obj]: Required. The manifest metadata.")
     spec: AbstractSAMSpecBase = Field(..., description="spec[obj]: Required. The manifest specification.")
     status: Optional[AbstractSAMStatusBase] = Field(
         default=None,

@@ -1,9 +1,9 @@
 """Custom exceptions for the AWS module."""
 
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 
 
-class SmarterAWSError(SmarterExceptionBase):
+class SmarterAWSError(SmarterException):
     """Base class for AWS errors."""
 
 

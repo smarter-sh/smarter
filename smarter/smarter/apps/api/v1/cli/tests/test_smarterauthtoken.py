@@ -1,8 +1,9 @@
 """Test Api v1 CLI commands for SmarterAuthToken"""
 
 import json
+import logging
 from http import HTTPStatus
-from logging import getLogger
+from typing import Tuple
 from urllib.parse import urlencode
 
 from django.urls import reverse
@@ -10,9 +11,12 @@ from django.urls import reverse
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthToken
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -20,7 +24,19 @@ from .base_class import ApiV1CliTestBase
 
 
 KIND = SAMKinds.AUTH_TOKEN.value
-logger = getLogger(__name__)
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+        and level >= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
@@ -58,7 +74,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
 
         super().tearDown()
 
-    def auth_token_factory(self) -> SmarterAuthToken:
+    def auth_token_factory(self) -> Tuple[SmarterAuthToken, str]:
         """Create a SmarterAuthToken record for testing"""
 
         auth_token_record, secret_token = SmarterAuthToken.objects.create(
@@ -66,7 +82,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
             user=self.admin_user,
             description=f"{self.__class__.__name__} Test API Key",
             is_active=True,
-        )
+        )  # type: ignore
         return auth_token_record, secret_token
 
     def validate_response(self, response: dict) -> None:
@@ -388,8 +404,8 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.assertIn("deleted successfully", response["message"])
         self.assertEqual(response["thing"], "AuthToken")
         self.assertEqual(response["api"], "smarter.sh/v1")
-        self.assertIn("metadata", response.keys())
-        self.assertIn("key", response["metadata"].keys())
+        self.assertIn("metadata", response)
+        self.assertIn("command", response["metadata"].keys())
 
         # verify the SmarterAuthToken was deleted
         try:

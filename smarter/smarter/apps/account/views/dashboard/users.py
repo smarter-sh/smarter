@@ -8,13 +8,22 @@ from django import forms, http
 from django.db import transaction
 from django.shortcuts import redirect
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.lib.django.user import User
+from smarter.lib.django import waffle
 from smarter.lib.django.view_helpers import SmarterAdminWebView
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
 excluded_fields = ["password", "date_joined"]
 
 
@@ -34,11 +43,12 @@ class UsersView(SmarterAdminWebView):
 
     template_path = "account/dashboard/users.html"
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         """
         Get the users for the account, but exclude any superusers.
         """
-        user_account = get_cached_user_profile(user=request.user).account
+        user_profile = get_cached_user_profile(user=request.user)
+        user_account = user_profile.account
         user_ids = (
             UserProfile.objects.filter(account=user_account)
             .exclude(user__is_superuser=True)
@@ -93,7 +103,7 @@ class UserView(SmarterAdminWebView):
         return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data=user_form.errors)
 
     # pylint: disable=W0221
-    def get(self, request, user_id=None):
+    def get(self, request, *args, user_id=None, **kwargs):
         """Get the user for the account. We also use this to create a new user."""
         try:
             user = User.objects.get(id=user_id)
@@ -109,23 +119,23 @@ class UserView(SmarterAdminWebView):
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request, user_id=None):
+    def post(self, request, *args, user_id=None, **kwargs):
         data = request.POST
         if user_id is None:
             return self._handle_create(request, data=data)
         return self._handle_write(request, user_id=user_id, data=data)
 
-    def patch(self, request, user_id):
+    def patch(self, request, user_id, *args, **kwargs):
         data = self.get_body_json(request)
         return self._handle_write(request, user_id=user_id, data=data)
 
-    def put(self, request, user_id=None):
+    def put(self, request, *args, user_id=None, **kwargs):
         data = self.get_body_json(request)
         if user_id is None:
             return self._handle_create(request, data=data)
         return self._handle_write(request, user_id=user_id, data=data)
 
-    def delete(self, request, user_id):
+    def delete(self, request, user_id, *args, **kwargs):
         user_profile = get_cached_user_profile(user=request.user)
         try:
             target_user = User.objects.get(id=user_id)
