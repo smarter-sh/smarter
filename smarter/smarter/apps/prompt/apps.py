@@ -8,7 +8,7 @@ class PromptConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.apps.prompt"
-    verbose_name = "Prompt"
+    verbose_name = "Smarter Prompt"
 
     # pylint: disable=C0415,W0611
     def ready(self):

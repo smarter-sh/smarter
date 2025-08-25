@@ -1,0 +1,19 @@
+apiVersion: smarter.sh/v1
+kind: ApiConnection
+metadata:
+  description: Api connection Stackademy courses catalogue /api/v1/tests/stackademy/course-catalogue/
+  name: smarter_test_api
+  tags: null
+  version: 0.1.0
+spec:
+  connection:
+    baseUrl: http://localhost:8000/api/v1/tests
+    headers: {}
+    method: GET
+    parameters: {}
+    timeout: 30
+    useSsl: false
+    authenticationMethod: none
+    maxOverflow: 10
+    poolSize: 5
+    port: 8000

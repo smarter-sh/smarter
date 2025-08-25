@@ -1,7 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test ChatBotHelper."""
 
-from logging import getLogger
+import logging
 
 from django.contrib.auth import authenticate
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -11,9 +11,19 @@ from django.test import RequestFactory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain, ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -167,14 +177,6 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
 
     def test_no_url(self):
         """Test no url."""
-        helper = ChatBotHelper(request=None)
 
-        self.assertTrue(helper.is_valid is False, f"Expected False, but got {helper.is_valid}")
-        self.assertTrue(helper.account is None, f"Expected None, but got {helper.account}")
-        self.assertTrue(helper.chatbot is None, f"Expected None, but got {helper.chatbot}")
-        self.assertTrue(helper.account_number is None, f"Expected None, but got {helper.account_number}")
-        self.assertTrue(helper.is_custom_domain is False, f"Expected False, but got {helper.is_custom_domain}")
-        self.assertTrue(helper.smarter_request is None, f"Expected None, but got {helper.smarter_request}")
-        self.assertTrue(helper.is_deployed is False, f"Expected False, but got {helper.is_deployed}")
-        self.assertTrue(helper.api_host is None, f"Expected None, but got {helper.api_host}")
-        self.assertTrue(helper.api_subdomain is None, f"Expected None, but got {helper.api_subdomain}")
+        with self.assertRaises((SmarterValueError, TypeError)):
+            ChatBotHelper()

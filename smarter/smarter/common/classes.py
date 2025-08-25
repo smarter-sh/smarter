@@ -1,14 +1,17 @@
 """Common classes"""
 
+import json
 from logging import getLogger
+from typing import Any, Optional, Union
 
+import yaml
 from django.http import HttpRequest
 
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
-from smarter.lib.django.validators import SmarterValidator
 
 
 logger = getLogger(__name__)
@@ -64,7 +67,7 @@ class SmarterHelperMixin:
         """
         return ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]
 
-    def to_json(self) -> dict:
+    def to_json(self) -> dict[str, Any]:
         """
         A placeholder method for converting the object to JSON.
         Should be overridden in subclasses.
@@ -82,4 +85,27 @@ class SmarterHelperMixin:
         :param request: The request object.
         :return: The request URL.
         """
-        return utils_smarter_build_absolute_uri(request)
+        retval = utils_smarter_build_absolute_uri(request)
+        if not retval:
+            raise SmarterValueError(
+                "Failed to build absolute URI from request. "
+                "Ensure the request object is valid and has the necessary attributes."
+            )
+        return retval
+
+    def data_to_dict(self, data: Union[dict, str]) -> dict:
+        """
+        Converts data to a dictionary, handling different types of input.
+        """
+        if isinstance(data, dict):
+            return data
+        elif isinstance(data, str):
+            try:
+                return json.loads(data)
+            except json.JSONDecodeError:
+                try:
+                    return yaml.safe_load(data)
+                except yaml.YAMLError as yaml_error:
+                    raise SmarterValueError("String data is neither valid JSON nor YAML.") from yaml_error
+        else:
+            raise SmarterValueError("Unsupported data type for conversion to dict.")

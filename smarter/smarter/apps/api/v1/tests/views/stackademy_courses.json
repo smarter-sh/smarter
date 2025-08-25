@@ -1,0 +1,386 @@
+[
+                {
+                    "course_id": 1,
+                    "course_code": "CS101",
+                    "course_name": "Introduction to Computer Science",
+                    "description": "Fundamental concepts of computer science and programming.",
+                    "cost": 500.00,
+                    "prerequisite_id": null
+                },
+                {
+                    "course_id": 2,
+                    "course_code": "CS102",
+                    "course_name": "Programming Fundamentals",
+                    "description": "Introduction to programming using Python.",
+                    "cost": 500.00,
+                    "prerequisite_id": 1
+                },
+                {
+                    "course_id": 3,
+                    "course_code": "CS103",
+                    "course_name": "Discrete Mathematics",
+                    "description": "Mathematical foundations for computer science.",
+                    "cost": 450.00,
+                    "prerequisite_id": 1
+                },
+                {
+                    "course_id": 4,
+                    "course_code": "CS104",
+                    "course_name": "Data Structures",
+                    "description": "Study of data organization and manipulation.",
+                    "cost": 550.00,
+                    "prerequisite_id": 2
+                },
+                {
+                    "course_id": 5,
+                    "course_code": "CS105",
+                    "course_name": "Computer Organization",
+                    "description": "Introduction to computer hardware and architecture.",
+                    "cost": 500.00,
+                    "prerequisite_id": 1
+                },
+                {
+                    "course_id": 6,
+                    "course_code": "CS106",
+                    "course_name": "Object-Oriented Programming",
+                    "description": "Principles of object-oriented design and programming.",
+                    "cost": 550.00,
+                    "prerequisite_id": 2
+                },
+                {
+                    "course_id": 7,
+                    "course_code": "CS107",
+                    "course_name": "Algorithms",
+                    "description": "Design and analysis of algorithms.",
+                    "cost": 600.00,
+                    "prerequisite_id": 4
+                },
+                {
+                    "course_id": 8,
+                    "course_code": "CS108",
+                    "course_name": "Operating Systems",
+                    "description": "Concepts of modern operating systems.",
+                    "cost": 600.00,
+                    "prerequisite_id": 5
+                },
+                {
+                    "course_id": 9,
+                    "course_code": "CS109",
+                    "course_name": "Database Systems",
+                    "description": "Introduction to relational databases and SQL.",
+                    "cost": 550.00,
+                    "prerequisite_id": 2
+                },
+                {
+                    "course_id": 10,
+                    "course_code": "CS110",
+                    "course_name": "Software Engineering",
+                    "description": "Software development lifecycle and methodologies.",
+                    "cost": 600.00,
+                    "prerequisite_id": 6
+                },
+                {
+                    "course_id": 11,
+                    "course_code": "CS201",
+                    "course_name": "Web Development",
+                    "description": "Building dynamic web applications.",
+                    "cost": 500.00,
+                    "prerequisite_id": 6
+                },
+                {
+                    "course_id": 12,
+                    "course_code": "CS202",
+                    "course_name": "Computer Networks",
+                    "description": "Principles of data communication and networking.",
+                    "cost": 600.00,
+                    "prerequisite_id": 5
+                },
+                {
+                    "course_id": 13,
+                    "course_code": "CS203",
+                    "course_name": "Theory of Computation",
+                    "description": "Automata, computability, and complexity.",
+                    "cost": 650.00,
+                    "prerequisite_id": 3
+                },
+                {
+                    "course_id": 14,
+                    "course_code": "CS204",
+                    "course_name": "Programming Languages",
+                    "description": "Design and implementation of programming languages.",
+                    "cost": 600.00,
+                    "prerequisite_id": 6
+                },
+                {
+                    "course_id": 15,
+                    "course_code": "CS205",
+                    "course_name": "Mobile App Development",
+                    "description": "Developing applications for mobile devices.",
+                    "cost": 600.00,
+                    "prerequisite_id": 6
+                },
+                {
+                    "course_id": 16,
+                    "course_code": "CS206",
+                    "course_name": "Human-Computer Interaction",
+                    "description": "Designing user-friendly interfaces.",
+                    "cost": 500.00,
+                    "prerequisite_id": 6
+                },
+                {
+                    "course_id": 17,
+                    "course_code": "CS207",
+                    "course_name": "Cloud Computing Fundamentals",
+                    "description": "Introduction to cloud platforms and services.",
+                    "cost": 650.00,
+                    "prerequisite_id": 9
+                },
+                {
+                    "course_id": 18,
+                    "course_code": "CS208",
+                    "course_name": "Distributed Systems",
+                    "description": "Principles of distributed computing.",
+                    "cost": 700.00,
+                    "prerequisite_id": 8
+                },
+                {
+                    "course_id": 19,
+                    "course_code": "CS209",
+                    "course_name": "Cybersecurity Basics",
+                    "description": "Fundamentals of computer and network security.",
+                    "cost": 600.00,
+                    "prerequisite_id": 5
+                },
+                {
+                    "course_id": 20,
+                    "course_code": "CS210",
+                    "course_name": "Artificial Intelligence",
+                    "description": "Introduction to AI concepts and techniques.",
+                    "cost": 700.00,
+                    "prerequisite_id": 7
+                },
+                {
+                    "course_id": 21,
+                    "course_code": "CS301",
+                    "course_name": "Machine Learning",
+                    "description": "Supervised and unsupervised learning algorithms.",
+                    "cost": 750.00,
+                    "prerequisite_id": 20
+                },
+                {
+                    "course_id": 22,
+                    "course_code": "CS302",
+                    "course_name": "Deep Learning",
+                    "description": "Neural networks and deep learning architectures.",
+                    "cost": 800.00,
+                    "prerequisite_id": 21
+                },
+                {
+                    "course_id": 23,
+                    "course_code": "CS303",
+                    "course_name": "Natural Language Processing",
+                    "description": "Computational techniques for language understanding.",
+                    "cost": 800.00,
+                    "prerequisite_id": 21
+                },
+                {
+                    "course_id": 24,
+                    "course_code": "CS304",
+                    "course_name": "Cloud Architecture",
+                    "description": "Designing scalable cloud solutions.",
+                    "cost": 750.00,
+                    "prerequisite_id": 17
+                },
+                {
+                    "course_id": 25,
+                    "course_code": "CS305",
+                    "course_name": "Big Data Analytics",
+                    "description": "Techniques for processing large datasets.",
+                    "cost": 800.00,
+                    "prerequisite_id": 17
+                },
+                {
+                    "course_id": 26,
+                    "course_code": "CS306",
+                    "course_name": "DevOps Practices",
+                    "description": "Continuous integration and deployment.",
+                    "cost": 700.00,
+                    "prerequisite_id": 17
+                },
+                {
+                    "course_id": 27,
+                    "course_code": "CS307",
+                    "course_name": "Cloud Security",
+                    "description": "Securing cloud-based applications.",
+                    "cost": 750.00,
+                    "prerequisite_id": 17
+                },
+                {
+                    "course_id": 28,
+                    "course_code": "CS308",
+                    "course_name": "AI Ethics",
+                    "description": "Ethical considerations in artificial intelligence.",
+                    "cost": 600.00,
+                    "prerequisite_id": 20
+                },
+                {
+                    "course_id": 29,
+                    "course_code": "CS309",
+                    "course_name": "Reinforcement Learning",
+                    "description": "Learning through interaction with environments.",
+                    "cost": 850.00,
+                    "prerequisite_id": 21
+                },
+                {
+                    "course_id": 30,
+                    "course_code": "CS310",
+                    "course_name": "Computer Vision",
+                    "description": "Image processing and computer vision techniques.",
+                    "cost": 800.00,
+                    "prerequisite_id": 21
+                },
+                {
+                    "course_id": 31,
+                    "course_code": "CS311",
+                    "course_name": "Parallel Computing",
+                    "description": "Techniques for parallel and high-performance computing.",
+                    "cost": 750.00,
+                    "prerequisite_id": 8
+                },
+                {
+                    "course_id": 32,
+                    "course_code": "CS312",
+                    "course_name": "Quantum Computing",
+                    "description": "Introduction to quantum algorithms and hardware.",
+                    "cost": 900.00,
+                    "prerequisite_id": 13
+                },
+                {
+                    "course_id": 33,
+                    "course_code": "CS313",
+                    "course_name": "Cloud Native Development",
+                    "description": "Building applications for the cloud.",
+                    "cost": 750.00,
+                    "prerequisite_id": 17
+                },
+                {
+                    "course_id": 34,
+                    "course_code": "CS314",
+                    "course_name": "Edge Computing",
+                    "description": "Computing at the edge of the network.",
+                    "cost": 700.00,
+                    "prerequisite_id": 17
+                },
+                {
+                    "course_id": 35,
+                    "course_code": "CS315",
+                    "course_name": "Data Mining",
+                    "description": "Extracting knowledge from large datasets.",
+                    "cost": 750.00,
+                    "prerequisite_id": 21
+                },
+                {
+                    "course_id": 36,
+                    "course_code": "CS316",
+                    "course_name": "AI for Robotics",
+                    "description": "Applying AI techniques to robotics.",
+                    "cost": 850.00,
+                    "prerequisite_id": 21
+                },
+                {
+                    "course_id": 37,
+                    "course_code": "CS317",
+                    "course_name": "Cloud Automation",
+                    "description": "Automating cloud infrastructure and services.",
+                    "cost": 700.00,
+                    "prerequisite_id": 17
+                },
+                {
+                    "course_id": 38,
+                    "course_code": "CS318",
+                    "course_name": "Serverless Computing",
+                    "description": "Building applications without managing servers.",
+                    "cost": 700.00,
+                    "prerequisite_id": 17
+                },
+                {
+                    "course_id": 39,
+                    "course_code": "CS319",
+                    "course_name": "AI in Healthcare",
+                    "description": "Applications of AI in healthcare.",
+                    "cost": 800.00,
+                    "prerequisite_id": 21
+                },
+                {
+                    "course_id": 40,
+                    "course_code": "CS320",
+                    "course_name": "Cloud Migration",
+                    "description": "Strategies for migrating to the cloud.",
+                    "cost": 700.00,
+                    "prerequisite_id": 17
+                },
+                {
+                    "course_id": 41,
+                    "course_code": "CS401",
+                    "course_name": "Advanced Algorithms",
+                    "description": "Advanced topics in algorithm design.",
+                    "cost": 850.00,
+                    "prerequisite_id": 7
+                },
+                {
+                    "course_id": 42,
+                    "course_code": "CS402",
+                    "course_name": "Advanced Database Systems",
+                    "description": "NoSQL, NewSQL, and distributed databases.",
+                    "cost": 850.00,
+                    "prerequisite_id": 9
+                },
+                {
+                    "course_id": 43,
+                    "course_code": "CS403",
+                    "course_name": "Advanced Operating Systems",
+                    "description": "Topics in modern OS design.",
+                    "cost": 850.00,
+                    "prerequisite_id": 8
+                },
+                {
+                    "course_id": 44,
+                    "course_code": "CS404",
+                    "course_name": "Advanced Computer Networks",
+                    "description": "Network protocols and architectures.",
+                    "cost": 850.00,
+                    "prerequisite_id": 12
+                },
+                {
+                    "course_id": 45,
+                    "course_code": "CS405",
+                    "course_name": "AI Capstone Project",
+                    "description": "Team-based AI project.",
+                    "cost": 1000.00,
+                    "prerequisite_id": 21
+                },
+                {
+                    "course_id": 46,
+                    "course_code": "CS406",
+                    "course_name": "Cloud Capstone Project",
+                    "description": "Team-based cloud computing project.",
+                    "cost": 1000.00,
+                    "prerequisite_id": 17
+                },
+                {
+                    "course_id": 47,
+                    "course_code": "CS407",
+                    "course_name": "Research Methods in CS",
+                    "description": "Research techniques and scientific writing.",
+                    "cost": 600.00,
+                    "prerequisite_id": 3
+                },
+                {
+                    "course_id": 48,
+                    "course_code": "CS408",
+                    "course_name": "Professional Practice",
+                    "description": "Ethics and professionalism in computing.",
+                    "cost": 600.00,
+                    "prerequisite_id": 10
+                }
+            ]

@@ -8,15 +8,25 @@ ensure that:
 """
 
 import json
-from logging import getLogger
+import logging
+from typing import Any, Optional
 
-from django.test import Client
+from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class ApiV1TestBase(TestAccountMixin):
@@ -29,7 +39,7 @@ class ApiV1TestBase(TestAccountMixin):
         super().setUpClass()
         instance = cls()
 
-        cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
+        cls.token_record, cls.token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
             name=instance.admin_user.username,
             user=instance.admin_user,
             description=instance.admin_user.username,
@@ -44,12 +54,23 @@ class ApiV1TestBase(TestAccountMixin):
             pass
         super().tearDownClass()
 
-    def get_response(self, path, manifest: str = None, data: dict = None) -> tuple[dict[str, any], int]:
+    def get_response(
+        self, path, manifest: Optional[str] = None, data: Optional[dict] = None
+    ) -> tuple[dict[str, Any], int]:
         """
         Prepare and get a response from an api/v1/ endpoint.
         """
-        client = Client()
+        client = APIClient()
+
         headers = {"Authorization": f"Token {self.token_key}"}
+
+        logger.info(
+            "ApiV1TestBase.get_response() with path: %s headers: %s manifest: %s, data: %s",
+            path,
+            headers,
+            manifest,
+            data,
+        )
 
         if manifest:
             logger.info(
@@ -64,4 +85,11 @@ class ApiV1TestBase(TestAccountMixin):
             response = client.post(path=path, content_type="application/json", data=None, headers=headers)
         response_content = response.content.decode("utf-8")
         response_json = json.loads(response_content)
+
+        logger.info(
+            "ApiV1TestBase.get_response() %s with status code: %d response: %s",
+            path,
+            response.status_code,
+            response_json,
+        )
         return response_json, response.status_code

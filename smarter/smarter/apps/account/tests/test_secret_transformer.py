@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test Secret Manager."""
 
-import logging
 import os
 
 import yaml
@@ -20,7 +19,6 @@ from .mixins import TestAccountMixin
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-logger = logging.getLogger(__name__)
 
 
 class TestSmarterSecretTransformer(TestAccountMixin):
@@ -34,7 +32,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         Test that the SecretTransformer cannot be initialized without any secret data.
         """
         with self.assertRaises(SmarterSecretTransformerError):
-            SecretTransformer(self.user_profile)
+            SecretTransformer(user_profile=self.user_profile)
 
     def test_manager_02_example_manifest(self):
         """

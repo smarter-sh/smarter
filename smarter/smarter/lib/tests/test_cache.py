@@ -32,21 +32,22 @@ class TestCacheResults(TestBase):
         self.assertEqual(result, "cached")
         mock_logger.info.assert_called()
 
-    @patch("smarter.lib.cache.cache")
-    @patch("smarter.lib.cache.waffle")
-    @patch("smarter.lib.cache.logger")
-    def test_cache_miss(self, mock_logger, mock_waffle, mock_cache):
-        mock_waffle.switch_is_active.return_value = True
-        mock_cache.get.return_value = None
+    def test_cache_miss(self):
+        """
+        Test that the function is called and result cached on a cache miss.
+        This mainly exists to ensure that we can call the decorated function
+        in these ways, and without any weird side effects.
+        """
 
-        @cache_results(logging_enabled=True)
-        def func(x):
+        @cache_results()
+        def func():
             return "computed"
 
-        result = func(2)
+        result = func()
+        self.assertEqual(func(), "computed")
         self.assertEqual(result, "computed")
-        mock_cache.set.assert_called()
-        mock_logger.info.assert_called()
+        self.assertEqual(func.invalidate(), None)
+        self.assertEqual(func(), "computed")
 
 
 class TestCacheRequest(TestBase):

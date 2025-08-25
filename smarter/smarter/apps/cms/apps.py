@@ -8,6 +8,7 @@ class ApiConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.apps.cms"
+    verbose_name = "Smarter CMS"
 
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):

@@ -2,6 +2,7 @@
 """Test SAMStaticPluginBroker."""
 
 import os
+from typing import Optional
 
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 
@@ -13,11 +14,11 @@ from .base_classes import TestSAMPluginBrokerBase
 class TestSAMStaticPluginBroker(TestSAMPluginBrokerBase):
     """Test SAMStaticPluginBroker"""
 
-    _model: SAMStaticPlugin = None
-    good_manifest_path: str = None
+    _model: Optional[SAMStaticPlugin] = None
+    good_manifest_path: Optional[str] = None
 
     @property
-    def model(self) -> SAMStaticPlugin:
+    def model(self) -> Optional[SAMStaticPlugin]:
         # override to create a pydantic model from the loader
         if not self._model and self.loader:
             self._model = SAMStaticPlugin(**self.loader.pydantic_model_dump())

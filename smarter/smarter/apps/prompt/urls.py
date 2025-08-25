@@ -1,5 +1,6 @@
 """
-Django URL patterns for the chatapp
+Django URL patterns for the prompt app. These are the
+endpoints for for the Workbench React app and chat configuration.
 
 how we got here:
  - /

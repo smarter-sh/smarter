@@ -3,7 +3,7 @@
 """Test lambda_openai_v2 function."""
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.utils import get_readonly_yaml_file
 
 from .test_setup import get_test_file_path
@@ -19,7 +19,15 @@ class TestStaticPlugin(TestAccountMixin):
         plugin_json = get_readonly_yaml_file(config_path)
         plugin_json["user_profile"] = self.user_profile
 
-        self.plugin = StaticPlugin(user_profile=self.user_profile, data=plugin_json)
+        plugin_controller = PluginController(
+            user_profile=self.user_profile,
+            account=self.account,
+            user=self.user_profile.user,  # type: ignore
+            manifest=plugin_json,
+        )
+        if not plugin_controller or not plugin_controller.plugin:
+            raise ValueError("PluginController could not be created or plugin is None")
+        self.plugin = plugin_controller.plugin
 
     def tearDown(self):
         """Tear down test fixtures."""
@@ -28,12 +36,15 @@ class TestStaticPlugin(TestAccountMixin):
 
     # pylint: disable=broad-exception-caught
     def test_get_additional_info(self):
-        """Test default return value of function_calling_plugin()"""
+        """Test default return value of tool_call_fetch_plugin_response()"""
         try:
             inquiry_type = inquiry_type = self.plugin.plugin_data.return_data_keys[0]
-            return_data = self.plugin.function_calling_plugin(inquiry_type=inquiry_type)
+            function_args = {
+                "inquiry_type": inquiry_type,
+            }
+            return_data = self.plugin.tool_call_fetch_plugin_response(function_args=function_args)
         except Exception:
-            self.fail("function_calling_plugin() raised ExceptionType")
+            self.fail("tool_call_fetch_plugin_response() raised ExceptionType")
 
         self.assertTrue(return_data is not None)
 

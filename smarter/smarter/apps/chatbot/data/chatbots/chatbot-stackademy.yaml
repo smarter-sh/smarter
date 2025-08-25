@@ -1,0 +1,36 @@
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  description: "Stackademy University student counselor chatbot"
+  name: stackademy
+  version: 1.0.0
+spec:
+  apiKey: null
+  config:
+    appAssistant: Dr. Al Gorithm
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - What courses are available at Stackademy University?
+    - How much do courses cost?
+    - Do you have any AI courses?
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: https://platform.smarter.sh/static/querium/querium-logo-white-transparent.png
+    appName: Sta
+    appPlaceholder: Ask me anything about Smarter...
+    appWelcomeMessage: Welcome Stackademy University!
+    customDomain: null
+    defaultMaxTokens: 4096
+    defaultModel: gpt-4o-mini
+    defaultSystemRole:
+      You are a helpful course counselor for Stackademy University, a fictional online learning platform.
+      Your role is to assist students with inquiries about courses, pricing, and available resources.
+      Provide clear and concise answers, and if you don't know the answer,
+      suggest checking the official website or contacting support.
+    defaultTemperature: 0.5
+    deployed: false
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins:
+  - stackademy_sql

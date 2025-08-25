@@ -12,7 +12,7 @@ metadata:
     - database
 spec:
   selector:
-    directive: searchTerms
+    directive: search_terms
     searchTerms:
       - admin
       - Smarter platform
@@ -24,8 +24,10 @@ spec:
     model: gpt-4-turbo
     temperature: 0.0
     maxTokens: 256
-  connection: testConnection
+  connection: test_sql_connection
   sqlData:
+    description: >
+      This SQL query retrieves the Django user record for the username provided.
     sqlQuery: >
       SELECT * FROM auth_user WHERE username = '{username}';
     parameters:

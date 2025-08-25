@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 ALLOWED_HOSTS = ["*"]
 SMARTER_ALLOWED_HOSTS = []
 LOCAL_HOSTS = smarter_settings.local_hosts
+INTERNAL_IP_PREFIXES = ["192.168."]
 
 # to disable redis/celery in collectstatic
 if "collectstatic" in sys.argv:
@@ -59,12 +60,12 @@ CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_SAMESITE = "lax"
 CSRF_COOKIE_AGE = 60 * 60 * 24
-CSRF_COOKIE_DOMAIN = smarter_settings.environment_domain
+CSRF_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
 CSRF_COOKIE_PATH = "/"
 CSRF_COOKIE_HTTPONLY = False
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 CSRF_TRUSTED_ORIGINS = [
-    smarter_settings.environment_domain,
+    smarter_settings.environment_platform_domain,
     smarter_settings.environment_api_domain,
 ]
 CSRF_USE_SESSIONS = False
@@ -82,7 +83,7 @@ SESSION_COOKIE_NAME = "sessionid"
 # Age of cookie, in seconds
 SESSION_COOKIE_AGE = CSRF_COOKIE_AGE
 # A string like "alpha.platform.smarter.sh", or None for standard domain cookie.
-SESSION_COOKIE_DOMAIN = smarter_settings.environment_domain
+SESSION_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
 # The path of the session cookie.
 SESSION_COOKIE_PATH = "/"
 # Whether to use the HttpOnly flag.
@@ -146,6 +147,7 @@ INSTALLED_APPS = [
     "smarter.apps.dashboard",
     "smarter.apps.docs",
     "smarter.apps.plugin",
+    "smarter.apps.provider",
     # 3rd party apps
     # -------------------------------
     "rest_framework",
@@ -325,17 +327,17 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.user.user_details",
 )
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = smarter_settings.social_auth_google_oauth2_key
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_secret
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = smarter_settings.social_auth_google_oauth2_key.get_secret_value()
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_secret.get_secret_value()
 SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(
     smarter_settings.environment_url, "/social-auth/complete/google-oauth2/"
 )
 
-SOCIAL_AUTH_GITHUB_KEY = smarter_settings.social_auth_github_key
-SOCIAL_AUTH_GITHUB_SECRET = smarter_settings.social_auth_github_secret
+SOCIAL_AUTH_GITHUB_KEY = smarter_settings.social_auth_github_key.get_secret_value()
+SOCIAL_AUTH_GITHUB_SECRET = smarter_settings.social_auth_github_secret.get_secret_value()
 
-SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = smarter_settings.social_auth_linkedin_oauth2_key
-SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = smarter_settings.social_auth_linkedin_oauth2_secret
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = smarter_settings.social_auth_linkedin_oauth2_key.get_secret_value()
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = smarter_settings.social_auth_linkedin_oauth2_secret.get_secret_value()
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = ["openid", "profile", "email"]
 SOCIAL_AUTH_LINKEDIN_OAUTH2_FIELD_SELECTORS = ["id", "first-name", "last-name", "email-address"]
 SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(

@@ -1,6 +1,7 @@
 """Test Api v1 CLI commands for ChatBot"""
 
 from http import HTTPStatus
+from typing import Optional
 from urllib.parse import urlencode
 
 import yaml
@@ -31,7 +32,7 @@ class TestApiCliV1ChatBot(ApiV1CliTestBase):
     Account.
     """
 
-    chatbot: ChatBot = None
+    chatbot: Optional[ChatBot] = None
 
     def setUp(self):
         super().setUp()

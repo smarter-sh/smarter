@@ -2,13 +2,13 @@
 
 import logging
 import re
+from typing import Optional
 
 from django import template
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.core.handlers.wsgi import WSGIRequest
-from django.http import HttpResponse
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
@@ -18,10 +18,20 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 # from django.views.decorators.csrf import ensure_csrf_cookie
 from htmlmin.main import minify
 
+from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
 register = template.Library()
 
 
@@ -45,6 +55,16 @@ class SmarterView(View, SmarterRequestMixin):
     template_path: str = ""
     context: dict = {}
 
+    def __init__(self, *args, **kwargs):
+        request: Optional[HttpRequest] = None
+        if args:
+            request = args[0]
+        elif "request" in kwargs:
+            request = kwargs["request"]
+
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        super().__init__(*args, **kwargs)
+
     @register.filter
     def remove_comments(self, html):
         """Remove HTML comments from an html string."""
@@ -54,7 +74,7 @@ class SmarterView(View, SmarterRequestMixin):
         """Minify an html string."""
         return minify(html, remove_empty_space=True)
 
-    def render_clean_html(self, request: WSGIRequest, template_path, context=None):
+    def render_clean_html(self, request: HttpRequest, template_path, context=None):
         """Render a template as a string, with comments removed and minified."""
         context = context or self.context
         response = None
@@ -76,7 +96,18 @@ class SmarterView(View, SmarterRequestMixin):
         minified_html = self.minify_html(html=html_no_comments)
         return minified_html
 
-    def setup(self, request: WSGIRequest, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs):
+        """
+        Setup the view with the request and any additional arguments.
+        This method initializes the SmarterRequestMixin with the request.
+        """
+        logger.info(
+            "%s.setup() - request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            self.smarter_build_absolute_uri(request),
+            args,
+            kwargs,
+        )
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         return super().setup(request, *args, **kwargs)
 
@@ -107,13 +138,15 @@ class SmarterWebHtmlView(SmarterView):
     """
 
     # pylint: disable=W0613
-    def clean_http_response(self, request: WSGIRequest, template_path, context=None):
+    def clean_http_response(self, request: HttpRequest, template_path, *args, context=None, **kwargs):
         """Render a template and return an HttpResponse with comments removed."""
         minified_html = self.render_clean_html(request, template_path, context)
         return HttpResponse(content=minified_html, content_type="text/html")
 
-    def get(self, request):
-        return self.clean_http_response(request, template_path=self.template_path)
+    def get(self, request, *args, **kwargs):
+        return self.clean_http_response(
+            request, template_path=self.template_path, context=self.context, *args, **kwargs
+        )
 
 
 @method_decorator(never_cache, name="dispatch")
@@ -130,7 +163,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     and forces a 404 response for users without a profile.
     """
 
-    def dispatch(self, request: WSGIRequest, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
 
         if request.user.is_anonymous:
             return redirect_and_expire_cache(path="/login/")
@@ -145,7 +178,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
 class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
     """An optimized and cached web view that requires authentication."""
 
-    def dispatch(self, request: WSGIRequest, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
             return response

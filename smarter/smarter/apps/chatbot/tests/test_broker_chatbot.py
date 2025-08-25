@@ -1,30 +1,37 @@
 """Test SAM Chatbot Broker"""
 
 import json
+import logging
 import os
 from http import HTTPStatus
-from logging import getLogger
 
-import requests
 import yaml
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
-from django.test import Client
+from django.test import Client, RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.common.utils import (
-    dict_is_contained_in,
-    dict_is_subset,
-    get_readonly_yaml_file,
-)
+from smarter.common.utils import get_readonly_yaml_file
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoader
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-logger = getLogger(__name__)
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -32,15 +39,15 @@ class TestSAMChatbotBroker(TestAccountMixin):
     """Test SAM Chatbot Broker"""
 
     @classmethod
-    def create_generic_request(cls):
-        url = "http://example.com"
-        headers = {"Content-Type": "application/json"}
+    def create_generic_request(cls) -> WSGIRequest:
+        factory = RequestFactory()
+        url = "/some-url/"
+        headers = {"CONTENT_TYPE": "application/json"}
         data = {}
 
-        request = requests.Request("GET", url, headers=headers, data=data)
-        prepared_request = request.prepare()
-
-        return prepared_request
+        # Create a GET request object
+        request = factory.get(url, data, **headers)
+        return request
 
     @classmethod
     def setUpClass(cls):
@@ -50,9 +57,11 @@ class TestSAMChatbotBroker(TestAccountMixin):
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
-        cls.broker = SAMChatbotBroker(request=cls.request, account=cls.account, manifest=cls.manifest)
+        cls.broker = SAMChatbotBroker(request=cls.request, account=cls.account, manifest=json.dumps(cls.manifest))
         cls.client = Client()
         cls.kwargs = {}
+
+        # Add example plugins to the user profile
         add_example_plugins(user_profile=cls.user_profile)
 
     def test_chatbot_broker_apply(self):
