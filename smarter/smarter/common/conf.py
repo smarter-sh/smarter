@@ -1,15 +1,16 @@
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801,too-many-lines
 """
-Configuration for Lambda functions.
+Smarter platform configuration settings.
 
-This module is used to configure the Lambda functions. It uses the pydantic_settings
-library to validate the configuration values. The configuration values are initialized
-according to the following prioritization sequence:
+This module is used to generate strongly typed settings values for the platform.
+It uses the pydantic_settings library to validate the configuration values.
+The configuration values are initialized according to the following
+prioritization sequence:
+
     1. constructor
     2. environment variables
     3. `.env` file
-    4. tfvars file
-    5. defaults
+    4. defaults
 
 The Settings class also provides a dump property that returns a dictionary of all
 configuration values. This is useful for debugging and logging.
@@ -27,6 +28,7 @@ import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
 import re
+from functools import lru_cache
 from typing import Any, List, Optional, Tuple, Union
 
 # 3rd party stuff
@@ -162,7 +164,37 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
+    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "SET-ME-PLEASE")
+
+    # aws auth
+    AWS_PROFILE = os.environ.get("AWS_PROFILE", TFVARS.get("aws_profile", None))
+    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", "SET-ME-PLEASE"))
+    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(os.environ.get("AWS_SECRET_ACCESS_KEY", "SET-ME-PLEASE"))
+    AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+
+    # aws api gateway defaults
+    AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = bool(os.environ.get("create_custom_domain", False))
+    AWS_APIGATEWAY_READ_TIMEOUT: int = int(os.environ.get("aws_apigateway_read_timeout", 70))
+    AWS_APIGATEWAY_CONNECT_TIMEOUT: int = int(os.environ.get("aws_apigateway_connect_timeout", 70))
+    AWS_APIGATEWAY_MAX_ATTEMPTS: int = int(os.environ.get("aws_apigateway_max_attempts", 10))
+
+    AWS_EKS_CLUSTER_NAME = os.environ.get(
+        "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
+    )
+    AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
+    DEBUG_MODE: bool = bool(os.environ.get("DEBUG_MODE", TFVARS.get("debug_mode", False)))
+    DUMP_DEFAULTS: bool = bool(os.environ.get("DUMP_DEFAULTS", TFVARS.get("dump_defaults", False)))
+    ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
+
+    FERNET_ENCRYPTION_KEY: str = os.environ.get("FERNET_ENCRYPTION_KEY", "SET-ME-PLEASE")
+
+    GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(
+        os.environ.get("GOOGLE_MAPS_API_KEY", os.environ.get("google_maps_api_key", "SET-ME-PLEASE"))
+    )
+    GEMINI_API_KEY: SecretStr = SecretStr(os.environ.get("GEMINI_API_KEY", "SET-ME-PLEASE"))
+    LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
+
+    LLAMA_API_KEY: SecretStr = SecretStr(os.environ.get("LLAMA_API_KEY", "SET-ME-PLEASE"))
 
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4o-mini"
@@ -177,99 +209,67 @@ class SettingsDefaults:
     LLM_DEFAULT_TEMPERATURE = 0.5
     LLM_DEFAULT_MAX_TOKENS = 2048
 
-    # defaults for this Python package
-    ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
+    LOCAL_HOSTS = ["localhost", "127.0.0.1"]
+    LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS.append("testserver")
+
+    LOGO: str = os.environ.get(
+        "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
+    )
+    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", "SET-ME-PLEASE")
+    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", "SET-ME-PLEASE")
+
+    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", "https://smarter.sh")
+
+    OPENAI_API_ORGANIZATION = os.environ.get("OPENAI_API_ORGANIZATION", "SET-ME-PLEASE")
+    OPENAI_API_KEY: SecretStr = SecretStr(os.environ.get("OPENAI_API_KEY", "SET-ME-PLEASE"))
+    OPENAI_ENDPOINT_IMAGE_N = 4
+    OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
+    PINECONE_API_KEY: SecretStr = SecretStr(os.environ.get("PINECONE_API_KEY", "SET-ME-PLEASE"))
+
     ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "smarter.sh"))
     SHARED_RESOURCE_IDENTIFIER = os.environ.get(
         "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
     )
-    DEBUG_MODE: bool = os.environ.get("DEBUG_MODE", bool(TFVARS.get("debug_mode", True)))
-    DUMP_DEFAULTS: bool = os.environ.get("DUMP_DEFAULTS", bool(TFVARS.get("dump_defaults", True)))
 
-    # aws auth
-    AWS_PROFILE = os.environ.get("AWS_PROFILE", TFVARS.get("aws_profile", None))
-    AWS_ACCESS_KEY_ID = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", TFVARS.get("aws_access_key_id", None)))
-    AWS_SECRET_ACCESS_KEY = SecretStr(
-        os.environ.get("AWS_SECRET_ACCESS_KEY", TFVARS.get("aws_secret_access_key", None))
+    SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = os.environ.get(
+        "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME",
+        "smarter_test_db",
     )
-    AWS_REGION = os.environ.get("AWS_REGION", TFVARS.get("aws_region", "us-east-1"))
-
-    # aws api gateway defaults
-    AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = TFVARS.get("create_custom_domain", False)
-    AWS_APIGATEWAY_READ_TIMEOUT: int = TFVARS.get("aws_apigateway_read_timeout", 70)
-    AWS_APIGATEWAY_CONNECT_TIMEOUT: int = TFVARS.get("aws_apigateway_connect_timeout", 70)
-    AWS_APIGATEWAY_MAX_ATTEMPTS: int = TFVARS.get("aws_apigateway_max_attempts", 10)
-
-    AWS_EKS_CLUSTER_NAME = os.environ.get(
-        "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
+    SMARTER_MYSQL_TEST_DATABASE_PASSWORD = os.environ.get(
+        "SMARTER_MYSQL_TEST_DATABASE_PASSWORD",
+        "SET-ME-PLEASE",
     )
-    AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
-    FERNET_ENCRYPTION_KEY = os.environ.get("FERNET_ENCRYPTION_KEY", None)
-
-    GOOGLE_MAPS_API_KEY: str = os.environ.get(
-        "GOOGLE_MAPS_API_KEY",
-        TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
-    )
-    GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", None)
-    LLAMA_API_KEY: str = os.environ.get("LLAMA_API_KEY", None)
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get(
-        "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
-        TFVARS.get("social_auth_google_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", None),
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: SecretStr = SecretStr(
+        os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "SET-ME-PLEASE")
     )
-    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get(
-        "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET",
-        TFVARS.get("social_auth_google_oauth2_secret", None)
-        or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", None),
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: SecretStr = SecretStr(
+        os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "SET-ME-PLEASE")
     )
     # -------------------------------------------------------------------------
     # see: https://github.com/settings/applications/2620957
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GITHUB_KEY = os.environ.get(
-        "SOCIAL_AUTH_GITHUB_KEY",
-        TFVARS.get("social_auth_github_key", None) or os.environ.get("SOCIAL_AUTH_GITHUB_KEY", None),
-    )
-    SOCIAL_AUTH_GITHUB_SECRET = os.environ.get(
-        "SOCIAL_AUTH_GITHUB_SECRET",
-        TFVARS.get("social_auth_github_secret", None) or os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", None),
-    )
+    SOCIAL_AUTH_GITHUB_KEY: SecretStr = SecretStr(os.environ.get("SOCIAL_AUTH_GITHUB_KEY", "SET-ME-PLEASE"))
+    SOCIAL_AUTH_GITHUB_SECRET: SecretStr = SecretStr(os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", "SET-ME-PLEASE"))
     # -------------------------------------------------------------------------
     # see:  https://www.linkedin.com/developers/apps/221422881/settings
     #       https://www.linkedin.com/developers/apps/221422881/products?refreshKey=1734980684455
     # verification url: https://www.linkedin.com/developers/apps/verification/3ac34414-09a4-433b-983a-0d529fa486f1
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.environ.get(
-        "SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY",
-        TFVARS.get("social_auth_linkedin_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", None),
+    SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(
+        os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", "SET-ME-PLEASE")
     )
-    SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = os.environ.get(
-        "SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET",
-        TFVARS.get("social_auth_linkedin_oauth2_secret", None)
-        or os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", None),
+    SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(
+        os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", "SET-ME-PLEASE")
     )
-
-    LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
-
-    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", None)
-    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", None)
-
-    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", "https://smarter.sh")
-    LOGO: str = os.environ.get(
-        "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
-    )
-
-    OPENAI_API_ORGANIZATION: str = os.environ.get("OPENAI_API_ORGANIZATION", None)
-    OPENAI_API_KEY = SecretStr(os.environ.get("TF_VAR_OPENAI_API_KEY", None))
-    OPENAI_ENDPOINT_IMAGE_N = 4
-    OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
-    PINECONE_API_KEY = SecretStr(None)
 
     SECRET_KEY = os.getenv("SECRET_KEY")
 
-    SMTP_SENDER = os.environ.get("SMTP_SENDER", None)
+    SMTP_SENDER = os.environ.get("SMTP_SENDER", "SET-ME-PLEASE")
     SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "no-reply@smarter.sh")
     SMTP_HOST = os.environ.get("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
@@ -280,10 +280,6 @@ class SettingsDefaults:
 
     STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "SET-ME-PLEASE")
     STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "SET-ME-PLEASE")
-
-    LOCAL_HOSTS = ["localhost", "127.0.0.1"]
-    LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
-    LOCAL_HOSTS.append("testserver")
 
     @classmethod
     def to_dict(cls):
@@ -333,9 +329,7 @@ class Settings(BaseSettings):
 
         frozen = True
 
-    _aws_access_key_id_source: str = "unset"
-    _aws_secret_access_key_source: str = "unset"
-    _dump: dict = None
+    _dump: dict
 
     # pylint: disable=too-many-branches,too-many-statements
     def __init__(self, **data: Any):  # noqa: C901
@@ -347,153 +341,113 @@ class Settings(BaseSettings):
         # pylint: disable=logging-fstring-interpolation
         logger.debug("Settings initialized")
 
-    shared_resource_identifier: Optional[str] = Field(
-        SettingsDefaults.SHARED_RESOURCE_IDENTIFIER, env="SHARED_RESOURCE_IDENTIFIER"
-    )
-    debug_mode: Optional[bool] = Field(
-        SettingsDefaults.DEBUG_MODE,
-        env="DEBUG_MODE",
-        pre=True,
-        getter=lambda v: empty_str_to_bool_default(v, SettingsDefaults.DEBUG_MODE),
-    )
-    dump_defaults: Optional[bool] = Field(
-        SettingsDefaults.DUMP_DEFAULTS,
-        env="DUMP_DEFAULTS",
-        pre=True,
-        getter=lambda v: empty_str_to_bool_default(v, SettingsDefaults.DUMP_DEFAULTS),
-    )
+    shared_resource_identifier: str = Field(SettingsDefaults.SHARED_RESOURCE_IDENTIFIER)
+    debug_mode: bool = Field(SettingsDefaults.DEBUG_MODE)
+    dump_defaults: bool = Field(SettingsDefaults.DUMP_DEFAULTS)
     aws_profile: Optional[str] = Field(
         SettingsDefaults.AWS_PROFILE,
-        env="AWS_PROFILE",
     )
-    aws_access_key_id: Optional[SecretStr] = Field(
+    aws_access_key_id: SecretStr = Field(
         SettingsDefaults.AWS_ACCESS_KEY_ID,
-        env="AWS_ACCESS_KEY_ID",
     )
-    aws_secret_access_key: Optional[SecretStr] = Field(
+    aws_secret_access_key: SecretStr = Field(
         SettingsDefaults.AWS_SECRET_ACCESS_KEY,
-        env="AWS_SECRET_ACCESS_KEY",
     )
-    aws_regions: Optional[List[str]] = Field(AWS_REGIONS, description="The list of AWS regions")
-    aws_region: Optional[str] = Field(
+    aws_regions: List[str] = Field(AWS_REGIONS, description="The list of AWS regions")
+    aws_region: str = Field(
         SettingsDefaults.AWS_REGION,
-        env="AWS_REGION",
     )
-    aws_apigateway_create_custom_domaim: Optional[bool] = Field(
+    aws_apigateway_create_custom_domaim: bool = Field(
         SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN,
-        env="AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN",
-        pre=True,
-        getter=lambda v: empty_str_to_bool_default(v, SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN),
     )
-    aws_eks_cluster_name: Optional[str] = Field(
+    aws_eks_cluster_name: str = Field(
         SettingsDefaults.AWS_EKS_CLUSTER_NAME,
-        env="AWS_EKS_CLUSTER_NAME",
     )
-    aws_db_instance_identifier: Optional[str] = Field(
+    aws_db_instance_identifier: str = Field(
         SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
-        env="AWS_RDS_DB_INSTANCE_IDENTIFIER",
     )
-    anthropic_api_key: Optional[str] = Field(
+    anthropic_api_key: SecretStr = Field(
         SettingsDefaults.ANTHROPIC_API_KEY,
-        env="ANTHROPIC_API_KEY",
     )
-    environment: Optional[str] = Field(
+    environment: str = Field(
         SettingsDefaults.ENVIRONMENT,
-        env="ENVIRONMENT",
     )
-    fernet_encryption_key: Optional[str] = Field(
+    fernet_encryption_key: str = Field(
         SettingsDefaults.FERNET_ENCRYPTION_KEY,
-        env="FERNET_ENCRYPTION_KEY",
     )
-    local_hosts: Optional[List[str]] = Field(
+    local_hosts: List[str] = Field(
         SettingsDefaults.LOCAL_HOSTS,
-        env="LOCAL_HOSTS",
     )
-    root_domain: Optional[str] = Field(
+    root_domain: str = Field(
         SettingsDefaults.ROOT_DOMAIN,
-        env="ROOT_DOMAIN",
     )
     init_info: Optional[str] = Field(
         None,
-        env="INIT_INFO",
     )
-    google_maps_api_key: Optional[SecretStr] = Field(
+    google_maps_api_key: SecretStr = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
-        env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
     )
-    gemini_api_key: Optional[SecretStr] = Field(
+    gemini_api_key: SecretStr = Field(
         SettingsDefaults.GEMINI_API_KEY,
-        env="GEMINI_API_KEY",
     )
-    llama_api_key: Optional[SecretStr] = Field(
+    llama_api_key: SecretStr = Field(
         SettingsDefaults.LLAMA_API_KEY,
-        env="LLAMA_API_KEY",
     )
-    social_auth_google_oauth2_key: Optional[str] = Field(
+    smarter_mysql_test_database_secret_name: Optional[str] = Field(
+        SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME,
+    )
+    smarter_mysql_test_database_password: Optional[str] = Field(
+        SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_PASSWORD,
+    )
+    social_auth_google_oauth2_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
-        env=["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"],
     )
-    social_auth_google_oauth2_secret: Optional[str] = Field(
+    social_auth_google_oauth2_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
-        env=["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"],
     )
-    social_auth_github_key: Optional[str] = Field(
+    social_auth_github_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY,
-        env=["SOCIAL_AUTH_GITHUB_KEY"],
     )
-    social_auth_github_secret: Optional[str] = Field(
+    social_auth_github_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET,
-        env=["SOCIAL_AUTH_GITHUB_SECRET"],
     )
-    social_auth_linkedin_oauth2_key: Optional[str] = Field(
+    social_auth_linkedin_oauth2_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY,
-        env=["SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY"],
     )
-    social_auth_linkedin_oauth2_secret: Optional[str] = Field(
+    social_auth_linkedin_oauth2_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET,
-        env=["SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET"],
     )
-    langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
-    logo: Optional[str] = Field(SettingsDefaults.LOGO, env="LOGO")
-    mailchimp_api_key: Optional[SecretStr] = Field(SettingsDefaults.MAILCHIMP_API_KEY, env="MAILCHIMP_API_KEY")
-    mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID, env="MAILCHIMP_LIST_ID")
-    marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL, env="MARKETING_SITE_URL")
-    openai_api_organization: Optional[str] = Field(
-        SettingsDefaults.OPENAI_API_ORGANIZATION, env="OPENAI_API_ORGANIZATION"
-    )
-    openai_api_key: Optional[SecretStr] = Field(SettingsDefaults.OPENAI_API_KEY, env="OPENAI_API_KEY")
-    openai_endpoint_image_n: Optional[int] = Field(
-        SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N, env="OPENAI_ENDPOINT_IMAGE_N"
-    )
-    openai_endpoint_image_size: Optional[str] = Field(
-        SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE, env="OPENAI_ENDPOINT_IMAGE_SIZE"
-    )
-    llm_default_provider: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_PROVIDER, env="LLM_DEFAULT_PROVIDER")
-    llm_default_model: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_MODEL, env="LLM_DEFAULT_MODEL")
-    llm_default_system_role: Optional[str] = Field(
-        SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE, env="LLM_DEFAULT_SYSTEM_ROLE"
-    )
-    llm_default_temperature: Optional[float] = Field(
-        SettingsDefaults.LLM_DEFAULT_TEMPERATURE, env="LLM_DEFAULT_TEMPERATURE"
-    )
-    llm_default_max_tokens: Optional[int] = Field(SettingsDefaults.LLM_DEFAULT_MAX_TOKENS, env="LLM_DEFAULT_MAX_TOKENS")
-    pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY, env="PINECONE_API_KEY")
-    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
-    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
+    langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY)
+    logo: Optional[str] = Field(SettingsDefaults.LOGO)
+    mailchimp_api_key: Optional[SecretStr] = Field(SettingsDefaults.MAILCHIMP_API_KEY)
+    mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID)
+    marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL)
+    openai_api_organization: Optional[str] = Field(SettingsDefaults.OPENAI_API_ORGANIZATION)
+    openai_api_key: SecretStr = Field(SettingsDefaults.OPENAI_API_KEY)
+    openai_endpoint_image_n: Optional[int] = Field(SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N)
+    openai_endpoint_image_size: Optional[str] = Field(SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
+    llm_default_provider: str = Field(SettingsDefaults.LLM_DEFAULT_PROVIDER)
+    llm_default_model: str = Field(SettingsDefaults.LLM_DEFAULT_MODEL)
+    llm_default_system_role: str = Field(SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE)
+    llm_default_temperature: float = Field(SettingsDefaults.LLM_DEFAULT_TEMPERATURE)
+    llm_default_max_tokens: int = Field(SettingsDefaults.LLM_DEFAULT_MAX_TOKENS)
+    pinecone_api_key: SecretStr = Field(SettingsDefaults.PINECONE_API_KEY)
+    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY)
+    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY)
 
-    secret_key: Optional[str] = Field(SettingsDefaults.SECRET_KEY, env="SECRET_KEY")
+    secret_key: Optional[str] = Field(SettingsDefaults.SECRET_KEY)
 
-    smtp_sender: Optional[str] = Field(SettingsDefaults.SMTP_SENDER, env="SMTP_SENDER")
-    smtp_from_email: Optional[str] = Field(SettingsDefaults.SMTP_FROM_EMAIL, env="SMTP_FROM_EMAIL")
-    smtp_host: Optional[str] = Field(SettingsDefaults.SMTP_HOST, env="SMTP_HOST")
-    smtp_password: Optional[str] = Field(SettingsDefaults.SMTP_PASSWORD, env="SMTP_PASSWORD")
-    smtp_port: Optional[int] = Field(SettingsDefaults.SMTP_PORT, env="SMTP_PORT")
-    smtp_use_ssl: Optional[bool] = Field(SettingsDefaults.SMTP_USE_SSL, env="SMTP_USE_SSL")
-    smtp_use_tls: Optional[bool] = Field(SettingsDefaults.SMTP_USE_TLS, env="SMTP_USE_TLS")
-    smtp_username: Optional[str] = Field(SettingsDefaults.SMTP_USERNAME, env="SMTP_USERNAME")
+    smtp_sender: Optional[str] = Field(SettingsDefaults.SMTP_SENDER)
+    smtp_from_email: Optional[str] = Field(SettingsDefaults.SMTP_FROM_EMAIL)
+    smtp_host: Optional[str] = Field(SettingsDefaults.SMTP_HOST)
+    smtp_password: Optional[str] = Field(SettingsDefaults.SMTP_PASSWORD)
+    smtp_port: Optional[int] = Field(SettingsDefaults.SMTP_PORT)
+    smtp_use_ssl: Optional[bool] = Field(SettingsDefaults.SMTP_USE_SSL)
+    smtp_use_tls: Optional[bool] = Field(SettingsDefaults.SMTP_USE_TLS)
+    smtp_username: Optional[str] = Field(SettingsDefaults.SMTP_USERNAME)
 
-    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
-    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
+    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY)
+    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY)
 
     @property
     def protocol(self) -> str:
@@ -513,90 +467,144 @@ class Settings(BaseSettings):
         return self.shared_resource_identifier + "-api"
 
     @property
-    def aws_apigateway_domain_name(self) -> str:
-        """Return the API domain."""
-        if self.aws_apigateway_create_custom_domaim:
-            return "api." + self.shared_resource_identifier + "." + self.root_domain
-
-        response = self.aws_apigateway_client.get_rest_apis()
-        for item in response["items"]:
-            if item["name"] == self.aws_apigateway_name:
-                api_id = item["id"]
-                return f"{api_id}.execute-api.{settings.aws_region}.amazonaws.com"
-        return None
-
-    @property
     def environment_cdn_domain(self) -> str:
         """Return the CDN domain."""
         if self.environment == SmarterEnvironments.LOCAL:
             return f"cdn.{SmarterEnvironments.ALPHA}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
-        return f"cdn.{self.environment_domain}"
+        return f"cdn.{self.environment_platform_domain}"
 
     @property
     def environment_cdn_url(self) -> str:
         """Return the CDN URL."""
         if self.environment == SmarterEnvironments.LOCAL:
-            return SmarterValidator.urlify(self.environment_cdn_domain, environment=SmarterEnvironments.ALPHA)
-        return SmarterValidator.urlify(self.environment_cdn_domain, environment=self.environment)
+            retval = SmarterValidator.urlify(self.environment_cdn_domain, environment=SmarterEnvironments.ALPHA)
+        else:
+            retval = SmarterValidator.urlify(self.environment_cdn_domain, environment=self.environment)
+        if retval is None:
+            raise SmarterConfigurationError(
+                f"Invalid environment_cdn_domain: {self.environment_cdn_domain}. "
+                "Please check your environment settings."
+            )
+        return retval
 
     @property
-    def environment_domain(self) -> str:
-        """Return the complete domain name."""
-        if self.environment == SmarterEnvironments.PROD:
-            return SMARTER_PLATFORM_SUBDOMAIN + "." + self.root_domain
-        if self.environment in SmarterEnvironments.aws_environments:
-            return self.environment + "." + SMARTER_PLATFORM_SUBDOMAIN + "." + self.root_domain
-        if self.environment == SmarterEnvironments.LOCAL:
-            return "localhost:8000"
-        # default domain format
-        return self.environment + "." + SMARTER_PLATFORM_SUBDOMAIN + "." + self.root_domain
-
-    @property
-    def environment_url(self) -> str:
-        return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
-
-    @property
-    def platform_name(self) -> str:
-        """Return the platform name."""
-        return self.root_domain.split(".")[0]
-
-    @property
-    def environment_namespace(self) -> str:
-        """Return the Kubernetes namespace for the environment."""
-        return f"{self.platform_name}-{SMARTER_PLATFORM_SUBDOMAIN}-{settings.environment}"
-
-    @property
-    def platform_domain(self) -> str:
+    def root_platform_domain(self) -> str:
         """Return the platform domain name. ie platform.smarter.sh"""
         return f"{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
     @property
-    def api_domain(self) -> str:
+    def platform_url(self) -> str:
+        """Return the platform URL."""
+        retval = SmarterValidator.urlify(self.root_platform_domain, environment=self.environment)
+        if retval is None:
+            raise SmarterConfigurationError(
+                f"Invalid root_platform_domain: {self.root_platform_domain}. " "Please check your environment settings."
+            )
+        return retval
+
+    @property
+    def environment_platform_domain(self) -> str:
+        """Return the complete domain name."""
+        if self.environment == SmarterEnvironments.PROD:
+            return self.root_platform_domain
+        if self.environment in SmarterEnvironments.aws_environments:
+            return f"{self.environment}.{self.root_platform_domain}"
+        if self.environment == SmarterEnvironments.LOCAL:
+            return "localhost:8000"
+        # default domain format
+        return f"{self.environment}.{self.root_platform_domain}"
+
+    @property
+    def all_domains(self) -> List[str]:
+        """Return all domains for the environment."""
+        environments = [
+            None,  # for root domains (no environment prefix)
+            SmarterEnvironments.ALPHA,
+            SmarterEnvironments.BETA,
+            SmarterEnvironments.NEXT,
+        ]
+        subdomains = [
+            SMARTER_PLATFORM_SUBDOMAIN,
+            SMARTER_API_SUBDOMAIN,
+        ]
+        domains = set()
+        # Add root domains
+        domains.add(self.root_domain)
+        domains.add(self.root_api_domain)
+        domains.add(self.root_platform_domain)
+        # Add environment/subdomain combinations
+        for subdomain in subdomains:
+            # example: platform.smarter.sh, api.platform.smarter.sh
+            domains.add(f"{subdomain}.{self.root_domain}")
+            for environment in environments[1:]:  # skip None for env-prefixed
+                # example: alpha.platform.smarter.sh, alpha.api.platform.smarter.sh
+                domains.add(f"{environment}.{subdomain}.{self.root_domain}")
+        return sorted(domains)
+
+    @property
+    def environment_url(self) -> str:
+        """Return the environment URL. example: https://alpha.platform.smarter.sh"""
+        retval = SmarterValidator.urlify(self.environment_platform_domain, environment=self.environment)
+        if retval is None:
+            raise SmarterConfigurationError(
+                f"Invalid environment_platform_domain: {self.environment_platform_domain}. "
+                "Please check your environment settings."
+            )
+        return retval
+
+    @property
+    def platform_name(self) -> str:
+        """Return the platform name. example: smarter"""
+        return self.root_domain.split(".")[0]
+
+    @property
+    def function_calling_identifier_prefix(self) -> str:
+        """Return the prefix for function calling identifiers. example: smarter_plugin"""
+        return f"{self.platform_name}_plugin"
+
+    @property
+    def environment_namespace(self) -> str:
+        """Return the Kubernetes namespace for the environment. example: smarter-pltaform-alpha"""
+        return f"{self.platform_name}-{SMARTER_PLATFORM_SUBDOMAIN}-{settings.environment}"
+
+    @property
+    def root_api_domain(self) -> str:
         """Return the root API domain name. ie api.smarter.sh"""
         return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def environment_api_domain(self) -> str:
-        """Return the customer API domain name. ie api.alpha.platform.smarter.sh"""
+        """
+        Return the customer API domain name.
+
+                examples:
+        - api.alpha.platform.smarter.sh
+        - api.localhost:8000
+        """
         if self.environment == SmarterEnvironments.PROD:
-            return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
+            return self.root_api_domain
         if self.environment in SmarterEnvironments.aws_environments:
-            return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
+            return f"{self.environment}.{self.root_api_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
             return f"{SMARTER_API_SUBDOMAIN}.localhost:8000"
         # default domain format
-        return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
+        return f"{self.environment}.{self.root_api_domain}"
 
     @property
     def environment_api_url(self) -> str:
-        if self.environment == SmarterEnvironments.LOCAL:
-            return SmarterValidator.urlify(self.environment_api_domain, environment=self.environment)
-        return SmarterValidator.urlify(self.environment_api_domain, environment=self.environment)
+        """Return the API URL for the environment. example: https://api.alpha.platform.smarter.sh"""
+        retval = SmarterValidator.urlify(self.environment_api_domain, environment=self.environment)
+        if retval is None:
+            raise SmarterConfigurationError(
+                f"Invalid environment_api_domain: {self.environment_api_domain}. "
+                "Please check your environment settings."
+            )
+        return retval
 
     @property
     def aws_s3_bucket_name(self) -> str:
-        """Return the S3 bucket name."""
-        return self.environment_domain
+        """Return the S3 bucket name. example: smarter-platform-alpha"""
+        return self.environment_platform_domain
 
     @property
     def is_using_dotenv_file(self) -> bool:
@@ -701,14 +709,14 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("aws_profile")
-    def validate_aws_profile(cls, v) -> str:
+    def validate_aws_profile(cls, v) -> Optional[str]:
         """Validate aws_profile"""
         if v in [None, ""]:
             return SettingsDefaults.AWS_PROFILE
         return v
 
     @field_validator("aws_access_key_id")
-    def validate_aws_access_key_id(cls, v, values: ValidationInfo) -> str:
+    def validate_aws_access_key_id(cls, v, values: ValidationInfo) -> SecretStr:
         """Validate aws_access_key_id"""
         if not isinstance(v, SecretStr):
             v = SecretStr(v)
@@ -722,7 +730,7 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("aws_secret_access_key")
-    def validate_aws_secret_access_key(cls, v, values: ValidationInfo) -> str:
+    def validate_aws_secret_access_key(cls, v, values: ValidationInfo) -> SecretStr:
         """Validate aws_secret_access_key"""
         if not isinstance(v, SecretStr):
             v = SecretStr(v)
@@ -736,7 +744,7 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("aws_region")
-    def validate_aws_region(cls, v, values: ValidationInfo, **kwargs) -> str:
+    def validate_aws_region(cls, v, values: ValidationInfo, **kwargs) -> Optional[str]:
         """Validate aws_region"""
         valid_regions = values.data.get("aws_regions", ["us-east-1"])
         if v in [None, ""]:
@@ -746,18 +754,21 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("environment")
-    def validate_environment(cls, v) -> str:
+    def validate_environment(cls, v) -> Optional[str]:
         """Validate environment"""
         if v in [None, ""]:
             return SettingsDefaults.ENVIRONMENT
         return v
 
     @field_validator("fernet_encryption_key")
-    def validate_fernet_encryption_key(cls, v) -> str:
+    def validate_fernet_encryption_key(cls, v) -> Optional[str]:
         """Validate fernet_encryption_key"""
 
         if v in [None, ""]:
             return SettingsDefaults.FERNET_ENCRYPTION_KEY
+
+        if v == "SET-ME-PLEASE":
+            return v
 
         try:
             # Decode the key using URL-safe base64
@@ -765,8 +776,8 @@ class Settings(BaseSettings):
             # Ensure the decoded key is exactly 32 bytes
             if len(decoded_key) != 32:
                 raise ValueError("Fernet key must be exactly 32 bytes when decoded.")
-        except (ValueError, base64.binascii.Error) as e:
-            raise SmarterValueError(f"Invalid Fernet encryption key: {e}") from e
+        except (TypeError, ValueError, base64.binascii.Error) as e:  # type: ignore[catch-base-exception]
+            raise SmarterValueError(f"Invalid Fernet encryption key: {v}. Error: {e}") from e
 
         return v
 
@@ -787,9 +798,11 @@ class Settings(BaseSettings):
     @field_validator("aws_apigateway_create_custom_domaim")
     def validate_aws_apigateway_create_custom_domaim(cls, v) -> bool:
         """Validate aws_apigateway_create_custom_domaim"""
+        if isinstance(v, bool):
+            return v
         if v in [None, ""]:
             return SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN
-        return v
+        return v.lower() in ["true", "1", "t", "y", "yes"]
 
     @field_validator("aws_eks_cluster_name")
     def validate_aws_eks_cluster_name(cls, v) -> str:
@@ -806,10 +819,10 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("anthropic_api_key")
-    def validate_anthropic_api_key(cls, v) -> str:
+    def validate_anthropic_api_key(cls, v) -> SecretStr:
         """Validate anthropic_api_key"""
         if v in [None, ""]:
-            return SettingsDefaults.ANTHROPIC_API_KEY
+            return SecretStr(SettingsDefaults.ANTHROPIC_API_KEY)
         return v
 
     @field_validator("debug_mode")
@@ -831,63 +844,63 @@ class Settings(BaseSettings):
         return v.lower() in ["true", "1", "t", "y", "yes"]
 
     @field_validator("google_maps_api_key")
-    def check_google_maps_api_key(cls, v) -> str:
+    def check_google_maps_api_key(cls, v) -> SecretStr:
         """Check google_maps_api_key"""
-        if v in [None, ""]:
+        if str(v) in [None, ""]:
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
         return v
 
     @field_validator("gemini_api_key")
-    def check_gemini_api_key(cls, v) -> str:
+    def check_gemini_api_key(cls, v) -> SecretStr:
         """Check gemini_api_key"""
-        if v in [None, ""]:
+        if str(v) in [None, ""]:
             return SettingsDefaults.GEMINI_API_KEY
         return v
 
     @field_validator("llama_api_key")
-    def check_llama_api_key(cls, v) -> str:
+    def check_llama_api_key(cls, v) -> SecretStr:
         """Check llama_api_key"""
-        if v in [None, ""]:
+        if str(v) in [None, ""]:
             return SettingsDefaults.LLAMA_API_KEY
         return v
 
     @field_validator("social_auth_google_oauth2_key")
-    def check_social_auth_google_oauth2_key(cls, v) -> str:
+    def check_social_auth_google_oauth2_key(cls, v) -> SecretStr:
         """Check social_auth_google_oauth2_key"""
-        if v in [None, ""]:
+        if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY:
             return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
         return v
 
     @field_validator("social_auth_google_oauth2_secret")
-    def check_social_auth_google_oauth2_secret(cls, v) -> str:
+    def check_social_auth_google_oauth2_secret(cls, v) -> SecretStr:
         """Check social_auth_google_oauth2_secret"""
-        if v in [None, ""]:
+        if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET is not None:
             return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
         return v
 
     @field_validator("social_auth_github_key")
-    def check_social_auth_github_key(cls, v) -> str:
+    def check_social_auth_github_key(cls, v) -> SecretStr:
         """Check social_auth_github_key"""
-        if v in [None, ""]:
+        if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY is not None:
             return SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY
         return v
 
     @field_validator("social_auth_github_secret")
-    def check_social_auth_github_secret(cls, v) -> str:
+    def check_social_auth_github_secret(cls, v) -> SecretStr:
         """Check social_auth_github_secret"""
         if v in [None, ""]:
             return SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET
         return v
 
     @field_validator("social_auth_linkedin_oauth2_key")
-    def check_social_auth_linkedin_oauth2_key(cls, v) -> str:
+    def check_social_auth_linkedin_oauth2_key(cls, v) -> SecretStr:
         """Check social_auth_linkedin_oauth2_key"""
         if v in [None, ""]:
             return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
         return v
 
     @field_validator("social_auth_linkedin_oauth2_secret")
-    def check_social_auth_linkedin_oauth2_secret(cls, v) -> str:
+    def check_social_auth_linkedin_oauth2_secret(cls, v) -> SecretStr:
         """Check social_auth_linkedin_oauth2_secret"""
         if v in [None, ""]:
             return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
@@ -896,11 +909,9 @@ class Settings(BaseSettings):
     @field_validator("langchain_memory_key")
     def check_langchain_memory_key(cls, v) -> str:
         """Check langchain_memory_key"""
-        if isinstance(v, int):
-            return v
-        if v in [None, ""]:
+        if v in [None, ""] and SettingsDefaults.LANGCHAIN_MEMORY_KEY:
             return SettingsDefaults.LANGCHAIN_MEMORY_KEY
-        return v
+        return str(v)
 
     @field_validator("logo")
     def check_logo(cls, v) -> str:
@@ -910,14 +921,14 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("mailchimp_api_key")
-    def check_mailchimp_api_key(cls, v) -> str:
+    def check_mailchimp_api_key(cls, v) -> SecretStr:
         """Check mailchimp_api_key"""
-        if v in [None, ""]:
-            return SettingsDefaults.MAILCHIMP_API_KEY
+        if v in [None, ""] and SettingsDefaults.MAILCHIMP_API_KEY is not None:
+            return SecretStr(SettingsDefaults.MAILCHIMP_API_KEY)
         return v
 
     @field_validator("mailchimp_list_id")
-    def check_mailchimp_list_id(cls, v) -> str:
+    def check_mailchimp_list_id(cls, v) -> Optional[str]:
         """Check mailchimp_list_id"""
         if v in [None, ""]:
             return SettingsDefaults.MAILCHIMP_LIST_ID
@@ -925,14 +936,14 @@ class Settings(BaseSettings):
 
     @field_validator("marketing_site_url")
     def check_marketing_site_url(cls, v) -> str:
-        """Check marketing_site_url"""
+        """Check marketing_site_url. example: https://smarter.sh"""
         if v in [None, ""]:
             return SettingsDefaults.MARKETING_SITE_URL
         SmarterValidator.validate_url(v)
         return v
 
     @field_validator("openai_api_organization")
-    def check_openai_api_organization(cls, v) -> str:
+    def check_openai_api_organization(cls, v) -> Optional[str]:
         """Check openai_api_organization"""
         if v in [None, ""]:
             return SettingsDefaults.OPENAI_API_ORGANIZATION
@@ -1024,12 +1035,12 @@ class Settings(BaseSettings):
     @field_validator("secret_key")
     def check_secret_key(cls, v) -> str:
         """Check secret_key"""
-        if v in [None, ""]:
+        if v in [None, ""] and SettingsDefaults.SECRET_KEY is not None:
             return SettingsDefaults.SECRET_KEY
         return v
 
     @field_validator("smtp_sender")
-    def check_smtp_sender(cls, v) -> str:
+    def check_smtp_sender(cls, v) -> Optional[str]:
         """Check smtp_sender"""
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_SENDER
@@ -1091,35 +1102,13 @@ class Settings(BaseSettings):
         return v
 
 
-class SingletonSettings:
-    """
-    Alternative Singleton pattern to resolve metaclass inheritance conflict
-    from Pydantic BaseSettings.
-
-    Traceback (most recent call last):
-    File "/smarter/manage.py", line 8, in <module>
-        from smarter.common.conf import settings as smarter_settings
-    File "/smarter/smarter/common/conf.py", line 262, in <module>
-        class Settings(BaseSettings, metaclass=Singleton):
-    TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
-    """
-
-    _instance = None
-
-    def __new__(cls):
-        """Create a new instance of Settings"""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            try:
-                cls._instance._settings = Settings()
-            except ValidationError as e:
-                raise SmarterConfigurationError("Invalid configuration: " + str(e)) from e
-        return cls._instance
-
-    @property
-    def settings(self) -> Settings:
-        """Return the settings"""
-        return self._settings
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    """Get the singleton settings instance."""
+    try:
+        return Settings()
+    except ValidationError as e:
+        raise SmarterConfigurationError("Invalid configuration: " + str(e)) from e
 
 
-settings = SingletonSettings().settings
+settings = get_settings()

@@ -2,15 +2,15 @@
 """This module is used to update an existing plugin using manage.py"""
 
 import sys
+from typing import Optional
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.django.user import User, UserType
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -30,12 +30,12 @@ class Command(BaseCommand):
         username = options["username"]
         file_path = options["file_path"]
 
-        account: Account = None
-        user: UserType = None
-        user_profile: UserProfile = None
+        account: Optional[Account] = None
+        user: Optional[User] = None
+        user_profile: Optional[UserProfile] = None
 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(username=username)  # type: ignore
         except User.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"manage.py retrieve_plugin: User {username} does not exist."))
             sys.exit(1)
@@ -47,7 +47,7 @@ class Command(BaseCommand):
             sys.exit(1)
 
         try:
-            user_profile = get_cached_user_profile(user=user, account=account)
+            user_profile = get_cached_user_profile(user=user, account=account)  # type: ignore
         except UserProfile.DoesNotExist:
             self.stdout.write(
                 self.style.ERROR(f"manage.py retrieve_plugin: UserProfile for {user} and {account} does not exist.")
@@ -62,10 +62,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("manage.py update_plugin: SAMLoader is not ready."))
             return
         manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
-        controller = PluginController(account=account, user=user, user_profile=user_profile, manifest=manifest)
+        controller = PluginController(account=account, user=user, user_profile=user_profile, manifest=manifest)  # type: ignore
         plugin = controller.obj
 
-        if plugin.ready:
+        if plugin and plugin.ready:
             print(plugin.to_json())
         else:
             self.stdout.write(self.style.ERROR("Could not open the file."))

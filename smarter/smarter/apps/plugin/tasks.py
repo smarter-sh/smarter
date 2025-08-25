@@ -1,6 +1,7 @@
 # pylint: disable=unused-argument
 
 import logging
+from typing import Optional
 
 from django.conf import settings
 
@@ -8,16 +9,30 @@ from smarter.apps.account.utils import (
     get_cached_user_for_user_id,
     get_cached_user_profile,
 )
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.smarter_celery import app
 
 from .models import PluginSelectorHistory
-from .plugin.static import StaticPlugin
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+        and level >= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 module_prefix = "smarter.apps.plugin.tasks."
 
 
@@ -38,9 +53,20 @@ def create_plugin_selector_history(*args, **kwargs):
         user_profile = get_cached_user_profile(user)
 
     plugin_id = kwargs.get("plugin_id")
+    plugin_meta = PluginMeta.objects.get(id=plugin_id) if plugin_id else None
     try:
         # to catch a race situation in unit tests.
-        plugin = StaticPlugin(plugin_id=plugin_id, user_profile=user_profile)
+        plugin_controller = PluginController(
+            user_profile=user_profile,
+            account=user_profile.account,  # type: ignore[arg-type]
+            user=user,  # type: ignore[arg-type]
+            plugin_meta=plugin_meta,
+        )
+        if not plugin_controller or not plugin_controller.plugin:
+            raise SmarterPluginError(
+                f"PluginController could not be created for plugin_id: {plugin_id}, user_profile: {user_profile}"
+            )
+        plugin = plugin_controller.plugin
     except SmarterPluginError as e:
         logger.error(
             "%s plugin_id: %s, user_profile: %s, error: %s",
@@ -57,10 +83,10 @@ def create_plugin_selector_history(*args, **kwargs):
         plugin.id,
         user_profile,
     )
-    input_text: str = kwargs.get("input_text")
-    messages: list[dict] = kwargs.get("messages")
-    search_term: str = kwargs.get("search_term")
-    session_key: str = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
+    input_text: Optional[str] = kwargs.get("input_text")
+    messages: Optional[list[dict]] = kwargs.get("messages")
+    search_term: Optional[str] = kwargs.get("search_term")
+    session_key: Optional[str] = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
 
     PluginSelectorHistory.objects.create(
         plugin_selector=plugin.plugin_selector,

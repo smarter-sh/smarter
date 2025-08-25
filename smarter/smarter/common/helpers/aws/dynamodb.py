@@ -1,6 +1,8 @@
 """AWS DynamoDB helper class."""
 
-from .aws import AWSBase
+from typing import Optional
+
+from .aws import AWSBase, SmarterAWSException
 
 
 class AWSDynamoDB(AWSBase):
@@ -11,11 +13,13 @@ class AWSDynamoDB(AWSBase):
     @property
     def client(self):
         """Return the AWS DynamoDB client."""
+        if not self.aws_session:
+            raise SmarterAWSException("AWS session is not initialized.")
         if not self._client:
             self._client = self.aws_session.client("dynamodb")
         return self._client
 
-    def get_dyanmodb_table_by_name(self, table_name) -> str:
+    def get_dyanmodb_table_by_name(self, table_name) -> Optional[str]:
         """Return the DynamoDB table given the table name."""
         response = self.client.list_tables()
         for table in response["TableNames"]:

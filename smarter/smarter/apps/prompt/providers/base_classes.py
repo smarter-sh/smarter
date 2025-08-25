@@ -4,12 +4,14 @@ Base class for chat providers.
 
 import json
 import logging
+import traceback
 from http import HTTPStatus
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 # 3rd party stuff
 import openai
 from openai.types.chat.chat_completion import ChatCompletion
+from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
@@ -18,8 +20,11 @@ from smarter.apps.account.models import (
     CHARGE_TYPE_PLUGIN,
     CHARGE_TYPE_PROMPT_COMPLETION,
     CHARGE_TYPE_TOOL,
+    User,
 )
-from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.prompt.functions.function_weather import (
     get_current_weather,
@@ -45,6 +50,7 @@ from smarter.apps.prompt.signals import (
     chat_response_failure,
     chat_started,
 )
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,
@@ -52,13 +58,21 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
-from smarter.lib.django.user import UserType
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .const import OpenAIMessageKeys
 from .mixins import ProviderDbMixin
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 # 1.) EXCEPTION_MAP: A dictionary that maps exceptions to HTTP status codes and error types.
 # Base exception map for chat providers. This maps internally raised exceptions to HTTP status codes.
@@ -172,42 +186,42 @@ class ChatProviderBase(ProviderDbMixin):
         "available_functions",
     )
 
-    _provider: str
-    _default_model: str
-    _default_system_role: str
-    _default_temperature: float
-    _default_max_tokens: int
+    _provider: Optional[str]
+    _default_model: Optional[str]
+    _default_system_role: Optional[str]
+    _default_temperature: Optional[float]
+    _default_max_tokens: Optional[int]
 
-    _valid_chat_completion_models: list[str]
-    _messages: List[Dict[str, str]]
+    _valid_chat_completion_models: Optional[list[str]]
+    _messages: Optional[List[Dict[str, str]]]
 
-    _base_url: str
-    _api_key: str
-    _chat: Chat
+    _base_url: Optional[str]
+    _api_key: Optional[str]
+    _chat: Optional[Chat]
 
-    data: dict
-    plugins: Optional[List[StaticPlugin]]
+    data: Optional[dict]
+    plugins: List[PluginBase]
 
-    model: str
-    temperature: float
-    max_tokens: int
-    input_text: str
+    model: Optional[str]
+    temperature: Optional[float]
+    max_tokens: Optional[int]
+    input_text: Optional[str]
 
-    completion_tokens: int
-    prompt_tokens: int
-    total_tokens: int
-    reference: str
+    completion_tokens: Optional[int]
+    prompt_tokens: Optional[int]
+    total_tokens: Optional[int]
+    reference: Optional[str]
 
     iteration: int
     request_meta_data: dict
     first_iteration: dict
-    first_response: ChatCompletion
-    second_response: ChatCompletion
-    second_iteration: dict
-    serialized_tool_calls: list[dict]
+    first_response: Optional[ChatCompletion]
+    second_response: Optional[ChatCompletion]
+    second_iteration: Optional[dict]
+    serialized_tool_calls: Optional[list[dict]]
 
     # built-in tools that we make available to all providers
-    tools: list[dict]
+    tools: Optional[list[dict]]
     available_functions: dict
 
     def __init__(
@@ -280,7 +294,7 @@ class ChatProviderBase(ProviderDbMixin):
         self._valid_chat_completion_models = valid_chat_completion_models
 
         weather_tool = weather_tool_factory()
-        self.tools: list[dict] = [weather_tool] if add_built_in_tools else None
+        self.tools = [weather_tool] if add_built_in_tools else None
         self.available_functions = (
             {
                 "get_current_weather": get_current_weather,
@@ -291,7 +305,7 @@ class ChatProviderBase(ProviderDbMixin):
 
         chat_provider_initialized.send(sender=self)
 
-    def prune_empty_values(self, data: dict) -> dict:
+    def prune_empty_values(self, data: dict) -> Optional[dict]:
         """
         Remove empty values from a dictionary. Some
         LLM providers, including MetaAI and GoogleAI
@@ -301,7 +315,7 @@ class ChatProviderBase(ProviderDbMixin):
         if not isinstance(data, dict):
             raise SmarterValueError(f"{self.formatted_class_name}: data must be a dictionary")
 
-        def _prune(obj):
+        def _prune(obj: Optional[dict]) -> Optional[dict]:
             if isinstance(obj, dict):
                 return {k: _prune(v) for k, v in obj.items() if v is not None}
             elif isinstance(obj, list):
@@ -328,7 +342,7 @@ class ChatProviderBase(ProviderDbMixin):
         if not self.default_max_tokens:
             raise SmarterValueError(f"{self.formatted_class_name}: default_max_tokens is required")
 
-        if self.default_model not in self.valid_chat_completion_models:
+        if self.valid_chat_completion_models and self.default_model not in self.valid_chat_completion_models:
             raise SmarterValueError(
                 f"Internal error. Invalid default model: {self.default_model} not found in list of valid {self.provider} models {self.valid_chat_completion_models}."
             )
@@ -341,7 +355,7 @@ class ChatProviderBase(ProviderDbMixin):
         return bool(self.chat) and bool(self.data) and bool(self.account)
 
     @property
-    def messages(self) -> List[Dict[str, str]]:
+    def messages(self) -> Optional[List[Dict[str, str]]]:
         return self._messages
 
     @messages.setter
@@ -358,35 +372,35 @@ class ChatProviderBase(ProviderDbMixin):
         return f"{inherited_class} ChatProviderBase()"
 
     @property
-    def provider(self) -> str:
+    def provider(self) -> Optional[str]:
         return self._provider
 
     @property
-    def base_url(self) -> str:
+    def base_url(self) -> Optional[str]:
         return self._base_url
 
     @property
-    def api_key(self) -> str:
+    def api_key(self) -> Optional[str]:
         return self._api_key
 
     @property
-    def default_model(self) -> str:
+    def default_model(self) -> Optional[str]:
         return self._default_model
 
     @property
-    def default_system_role(self) -> str:
+    def default_system_role(self) -> Optional[str]:
         return self._default_system_role
 
     @property
-    def default_temperature(self) -> float:
+    def default_temperature(self) -> Optional[float]:
         return self._default_temperature
 
     @property
-    def default_max_tokens(self) -> int:
+    def default_max_tokens(self) -> Optional[int]:
         return self._default_max_tokens
 
     @property
-    def valid_chat_completion_models(self) -> list[str]:
+    def valid_chat_completion_models(self) -> Optional[list[str]]:
         return self._valid_chat_completion_models
 
     def messages_set_is_new(self, messages: list[dict], is_new: bool = False) -> list[dict]:
@@ -406,9 +420,14 @@ class ChatProviderBase(ProviderDbMixin):
         and the incoming data.
         """
         default_system_role = get_date_time_string()
-        default_system_role += self.chat.chatbot.default_system_role_enhanced or self.default_system_role
+        if self.chat and self.chat.chatbot and self.chat.chatbot.default_system_role_enhanced:
+            default_system_role += self.chat.chatbot.default_system_role_enhanced
         request_body = get_request_body(data=data)
         client_message_thread, _ = parse_request(request_body)
+        if not isinstance(client_message_thread, list):
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: Invalid request body. Expected a list of messages, got: {type(client_message_thread)}"
+            )
         client_message_thread = ensure_system_role_present(
             messages=client_message_thread, default_system_role=default_system_role
         )
@@ -418,22 +437,30 @@ class ChatProviderBase(ProviderDbMixin):
     def get_input_text_prompt(self, data: dict) -> str:
         request_body = get_request_body(data=data)
         _, input_text = parse_request(request_body)
+        if not input_text:
+            raise SmarterValueError(f"{self.formatted_class_name}: input_text is required")
+        if not isinstance(input_text, str):
+            raise SmarterValueError(f"{self.formatted_class_name}: input_text must be a string")
         return input_text
 
-    def append_message(self, role: str, content: str, message: dict = None) -> None:
+    def append_message(self, role: str, content: Optional[str], message: Optional[dict] = None) -> None:
         if role not in OpenAIMessageKeys.all_roles:
             raise SmarterValueError(
                 f"Internal error. Invalid message role: {role} not found in list of valid {self.provider} message roles {OpenAIMessageKeys.all_roles}."
             )
         if not content and not message:
-            logger.warning("append_message() - content and message are both empty. Skipping.")
-            return
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: content or message must be provided. Both cannot be empty."
+            )
         message = message or {}
+        if not isinstance(message, dict):
+            raise SmarterValueError(f"{self.formatted_class_name}: message must be a dictionary")
         new_message = message.copy()
         new_message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] = role
         new_message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY] = content
         new_message[InternalKeys.SMARTER_IS_NEW] = True
-        self.messages.append(new_message)
+        if isinstance(self.messages, list):
+            self.messages.append(new_message)
 
     def append_message_plugin_selected(self, plugin: str) -> None:
         content = f"Smarter selected this plugin: {plugin}"
@@ -462,12 +489,31 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     """
 
     @property
-    def openai_messages(self) -> list:
-        filtered = [
-            message for message in self.messages if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all
-        ]
+    def openai_messages(self) -> list[dict[str, Any]]:
+        """
+        Sanitize the message list to ensure compatibility with OpenAI's chat completion API.
+        Principally, this removes Smarter annotations to the messages list, such
+        as meta data about tool calls and interim completion token charges.
+        """
+        if not isinstance(self.messages, list):
+            raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
+
+        if self.iteration == 1:
+            # ensure that we're not passing any tool call responses to the first request.
+            filtered_messages = [
+                message
+                for message in self.messages
+                if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.no_tools
+            ]
+        else:
+            filtered_messages = [
+                message
+                for message in self.messages
+                if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all
+            ]
+
         retval = []
-        for message in filtered:
+        for message in filtered_messages:
             message_copy = message.copy()
             if InternalKeys.SMARTER_IS_NEW in message_copy:
                 del message_copy[InternalKeys.SMARTER_IS_NEW]
@@ -475,7 +521,10 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         return retval
 
     @property
-    def new_messages(self) -> list:
+    def new_messages(self) -> list[dict[str, Any]]:
+        if self.messages is None:
+            return []
+
         try:
             return [message for message in self.messages if message[InternalKeys.SMARTER_IS_NEW]]
         except KeyError:
@@ -483,12 +532,13 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             logger.error(
                 "%s - KeyError: '%s' key not found in message: %s", prefix, InternalKeys.SMARTER_IS_NEW, self.messages
             )
-            return self.messages
+        return self.messages
 
     def prep_first_request(self):
         logger.info("%s %s", self.formatted_class_name, formatted_text("prep_first_request()"))
         # ensure that all message history is marked as not new
-        self.messages = self.messages_set_is_new(self.messages, is_new=False)
+        if isinstance(self.messages, list):
+            self.messages = self.messages_set_is_new(self.messages, is_new=False)
         tool_choice = OPENAI_TOOL_CHOICE
         self.first_iteration[InternalKeys.REQUEST_KEY] = {
             InternalKeys.MODEL_KEY: self.model,
@@ -532,7 +582,15 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
 
     def prep_second_request(self):
+        """
+        Prepare the second request for the chat completion. This is called
+        in response to a tool call that requires a second request to the LLM.
+        """
         logger.info("%s %s", self.formatted_class_name, formatted_text("prep_second_request()"))
+        if not isinstance(self.second_iteration, dict):
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
+            )
         self.second_iteration[InternalKeys.REQUEST_KEY] = {
             InternalKeys.MODEL_KEY: self.model,
             InternalKeys.MESSAGES_KEY: self.openai_messages,
@@ -547,7 +605,11 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     def append_openai_response(self, response: ChatCompletion) -> None:
         response_message = response.choices[0].message
         message_json = json.loads(response_message.model_dump_json())
-        self.append_message(role=response_message.role, content=response_message.content, message=message_json)
+        if not isinstance(response_message, ChatCompletionMessage):
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}: response_message or response_message.content is empty. Response: {response.model_dump_json()}"
+            )
+        self.append_message(role=response_message.role, content=response_message.content, message=message_json)  # type: ignore[call-arg]
 
     def handle_response(self) -> None:
         """
@@ -559,7 +621,14 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
 
         response = self.second_response if self.iteration == 2 else self.first_response
-
+        if not response:
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: response is required for iteration {self.iteration}, but was not set."
+            )
+        if not response.usage:
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: response.usage is required for iteration {self.iteration}, but was not set."
+            )
         self.prompt_tokens = response.usage.prompt_tokens
         self.completion_tokens = response.usage.completion_tokens
         self.total_tokens = response.usage.total_tokens
@@ -572,19 +641,31 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
 
         if self.iteration == 1:
+            if not self.first_response:
+                raise SmarterIlligalInvocationError(
+                    f"{self.formatted_class_name}: first_response is required for iteration 1, but was not set."
+                )
             self.first_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.first_response.model_dump_json())
         if self.iteration == 2:
+            if not self.second_response:
+                raise SmarterIlligalInvocationError(
+                    f"{self.formatted_class_name}: second_response is required for iteration 2, but was not set."
+                )
+            if not isinstance(self.second_iteration, dict):
+                raise SmarterValueError(
+                    f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
+                )
             self.second_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.second_response.model_dump_json())
 
         serialized_request = (
             self.first_iteration[InternalKeys.REQUEST_KEY]
             if self.iteration == 1
-            else self.second_iteration[InternalKeys.REQUEST_KEY]
+            else self.second_iteration[InternalKeys.REQUEST_KEY] if self.second_iteration else None
         )
         serialized_response = (
             self.first_iteration[InternalKeys.RESPONSE_KEY]
             if self.iteration == 1
-            else self.second_iteration[InternalKeys.RESPONSE_KEY]
+            else self.second_iteration[InternalKeys.RESPONSE_KEY] if self.second_iteration else None
         )
 
         chat_completion_response.send(
@@ -617,7 +698,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             function_name=function_name, function_args=function_args, request=request, response=response
         )
 
-    def handle_plugin_called(self, plugin: StaticPlugin) -> None:
+    def handle_plugin_called(self, plugin: PluginBase) -> None:
         logger.info("%s %s - %s", self.formatted_class_name, formatted_text("handle_plugin_called()"), plugin.name)
         chat_completion_plugin_called.send(
             sender=self.handler,
@@ -634,22 +715,16 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         """
         logger.info("%s %s", self.formatted_class_name, formatted_text("process_tool_call()"))
         if not tool_call:
-            logger.warning("process_tool_call() - tool_call is empty. Skipping.")
-            return
+            raise SmarterValueError(f"{self.formatted_class_name}: tool_call is required")
         serialized_tool_call = {}
-        plugin: StaticPlugin = None
+        plugin: Optional[PluginBase] = None
         function_name = tool_call.function.name
         try:
             function_to_call = self.available_functions[function_name]
-        except KeyError:
-            logger.error(
-                "%s %s - KeyError: '%s' not found in available functions: %s. Tool calls were: %s",
-                self.formatted_class_name,
-                formatted_text("process_tool_call()"),
-                function_name,
-                self.available_functions,
-                tool_call,
-            )
+        except KeyError as e:
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}: function '{function_name}' not found in available functions: {self.available_functions}"
+            ) from e
 
         function_args = json.loads(tool_call.function.arguments)
         serialized_tool_call["function_name"] = function_name
@@ -657,32 +732,75 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self.append_message_tool_called(function_name=function_name, function_args=function_args)
 
         function_response = None
+        # FIX NOTE: instead of a big switch, we should be attempting to call the
+        #
         if function_name == "get_current_weather":
             function_response = function_to_call(
                 location=function_args.get("location"),
                 unit=function_args.get("unit"),
             )
             self.handle_tool_called(function_name=function_name, function_args=function_args)
-        elif function_name.startswith("function_calling_plugin"):
-            # FIX NOTE: we should revisit this. technically, we're supposed to be calling
-            # function_to_call, assigned above. but just to play it safe,
-            # we're directly invoking the plugin's function_calling_plugin() method.
+
+        elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             plugin_id = int(function_name[-4:])
-            plugin = StaticPlugin(plugin_id=plugin_id, user_profile=self.user_profile)
+            try:
+                plugin_meta = PluginMeta.objects.get(id=plugin_id)
+            except PluginMeta.DoesNotExist as e:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: plugin with id {plugin_id} not found. This is a bug."
+                ) from e
+
+            if not self.account:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: account is required to handle plugin calls."
+                )
+            if not self.user:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: user is required to handle plugin calls."
+                )
+            if not self.user_profile:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: user_profile is required to handle plugin calls."
+                )
+            plugin_controller = PluginController(
+                account=self.account,
+                user=self.user,
+                user_profile=self.user_profile,
+                plugin_meta=plugin_meta,
+            )
+            if not plugin_controller or not plugin_controller.plugin:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: plugin with id {plugin_id} not found or not initialized."
+                )
+            plugin = plugin_controller.plugin
             plugin.params = function_args
-            function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
+            function_response = plugin.tool_call_fetch_plugin_response(function_args)
             serialized_tool_call[InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
             self.handle_plugin_called(plugin=plugin)
+        else:
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}: function '{function_name}' not recognized. Available functions: {self.available_functions}"
+            )
         tool_call_message = {
             "tool_call_id": tool_call.id,
             OpenAIMessageKeys.MESSAGE_NAME_KEY: function_name,
         }
-        self.append_message(
-            role=OpenAIMessageKeys.TOOL_MESSAGE_KEY, content=function_response, message=tool_call_message
+        if not isinstance(function_response, str):
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: function_response must be a string, got {type(function_response)}"
+            )
+        message_content = (
+            f"{str(plugin.__class__.__name__)} {plugin.name if plugin else function_name} response: "
+            + function_response
         )
+        self.append_message(role=OpenAIMessageKeys.TOOL_MESSAGE_KEY, content=message_content, message=tool_call_message)
+        if not isinstance(self.serialized_tool_calls, list):
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: serialized_tool_calls must be a list, got {type(self.serialized_tool_calls)}"
+            )
         self.serialized_tool_calls.append(serialized_tool_call)
 
-    def handle_plugin_selected(self, plugin: StaticPlugin) -> None:
+    def handle_plugin_selected(self, plugin: PluginBase) -> None:
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_plugin_selected()"))
@@ -692,27 +810,39 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self.model = plugin.plugin_prompt.model
         self.temperature = plugin.plugin_prompt.temperature
         self.max_tokens = plugin.plugin_prompt.max_tokens
-        self.messages = plugin.customize_prompt(self.messages)
-        self.tools.append(plugin.custom_tool)
-        self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
-        self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)
+        if isinstance(self.messages, list):
+            self.messages = plugin.customize_prompt(self.messages)
+        else:
+            raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
+        if isinstance(self.tools, list):
+            self.tools.append(plugin.custom_tool)
+        else:
+            raise SmarterValueError(f"{self.formatted_class_name}: tools must be a list, got {type(self.tools)}")
+        self.available_functions[plugin.function_calling_identifier] = plugin.tool_call_fetch_plugin_response
+        self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)  # type: ignore[call-arg]
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
 
     def handle_success(self) -> dict:
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_success()"))
+        if not isinstance(self.second_iteration, dict):
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
+            )
         response = self.second_iteration.get(InternalKeys.RESPONSE_KEY) or self.first_iteration.get(
             InternalKeys.RESPONSE_KEY
         )
+        if not isinstance(response, dict):
+            raise SmarterValueError(f"{self.formatted_class_name}: response must be a dictionary, got {type(response)}")
         response["metadata"] = {"tool_calls": self.serialized_tool_calls, **self.request_meta_data}
 
         response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
             "first_iteration": json.loads(json.dumps(self.first_iteration)),
             "second_iteration": json.loads(json.dumps(self.second_iteration)),
-            InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],
+            InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],  # type: ignore[call-arg]
             InternalKeys.MESSAGES_KEY: self.new_messages,
         }
         if self.tools:
-            response_extended = response.get(OpenAIMessageKeys.SMARTER_MESSAGE_KEY).copy() or {}
+            response_extended = response.get(OpenAIMessageKeys.SMARTER_MESSAGE_KEY).copy() or {}  # type: ignore[call-arg]
             response_extended[InternalKeys.TOOLS_KEY] = [tool["function"]["name"] for tool in self.tools]
             response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = response_extended
         return response
@@ -729,7 +859,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             "input_text": self.input_text,
         }
 
-    def handler(self, chat: Chat, data: dict, plugins: list[StaticPlugin], user: UserType) -> dict:
+    def handler(self, chat: Chat, data: dict, plugins: Optional[list[PluginBase]], user: User) -> Union[dict, list]:
         """
         Chat prompt handler. Responsible for processing incoming requests and
         invoking the appropriate OpenAI API endpoint based on the contents of
@@ -753,7 +883,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                         'content': "Welcome to Smarter!. Following are some example prompts: blah blah blah"
                     },
                     {   "role": "smarter",
-                        "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"}
+                        "content": "Tool call: smarter_plugin_0002({\"inquiry_type\":\"about\"})"}
                     {
                         'role': 'user',
                         'content': 'Hello, World!'
@@ -766,7 +896,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         if chat:
             self.account = chat.account
         self.data = data
-        self.plugins = plugins
+        if plugins:
+            self.plugins = plugins
         self.user = user
 
         chat_started.send(sender=self.handler, chat=self.chat, data=self.data)
@@ -801,6 +932,13 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 self.messages = self.get_message_thread(data=self.data)
 
             for plugin in self.plugins:
+                logger.info(
+                    "%s %s - handler() plugin: %s, type: %s",
+                    self.formatted_class_name,
+                    formatted_text("handler()"),
+                    plugin.name,
+                    type(plugin).__name__,
+                )
                 if plugin.selected(user=self.user, input_text=self.input_text, messages=self.messages):
                     self.handle_plugin_selected(plugin=plugin)
 
@@ -822,15 +960,20 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 completions_kwargs,
             )
 
-            self.first_response = openai.chat.completions.create(**completions_kwargs)
+            self.first_response = openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+            if not isinstance(self.first_response, ChatCompletion):
+                raise SmarterValueError(
+                    f"{self.formatted_class_name}: first_response must be a ChatCompletion, got {type(self.first_response)}"
+                )
             self.handle_response()
             self.append_openai_response(self.first_response)
             response_message = self.first_response.choices[0].message
-            tool_calls: list[ChatCompletionMessageToolCall] = response_message.tool_calls
+            if not isinstance(response_message, ChatCompletionMessage):
+                raise SmarterValueError(
+                    f"{self.formatted_class_name}: response_message must be a ChatCompletionMessage, got {type(response_message)}"
+                )
+            tool_calls: Optional[list[ChatCompletionMessageToolCall]] = response_message.tool_calls
             if tool_calls:
-                # extend conversation with assistant's reply
-                response = json.loads(response_message.model_dump_json())
-                response[InternalKeys.SMARTER_IS_NEW] = True
                 self.iteration = 2
                 self.serialized_tool_calls = []
 
@@ -839,9 +982,25 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
                 self.prep_second_request()
 
+                if not isinstance(self.model, str):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}: model must be a string, got {type(self.model)}"
+                    )
+                if not isinstance(self.openai_messages, list):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}: openai_messages must be a list, got {type(self.openai_messages)}"
+                    )
+                if not isinstance(self.temperature, (float, int)):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}: temperature must be a float or int, got {type(self.temperature)}"
+                    )
+                if not isinstance(self.max_tokens, int):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}: max_tokens must be an int, got {type(self.max_tokens)}"
+                    )
                 self.second_response = openai.chat.completions.create(
                     model=self.model,
-                    messages=self.openai_messages,
+                    messages=self.openai_messages,  # type: ignore[call-arg]
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                 )
@@ -851,6 +1010,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         # handle anything that went wrong
         # pylint: disable=broad-exception-caught
         except Exception as e:
+            stack_trace = traceback.format_exc()
             chat_response_failure.send(
                 sender=self.handler,
                 iteration=self.iteration,
@@ -860,14 +1020,20 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 first_iteration=self.first_iteration,
                 second_iteration=self.second_iteration,
                 messages=self.messages,
+                stack_trace=stack_trace,
             )
             status_code, _message = EXCEPTION_MAP.get(
                 type(e), (HTTPStatus.INTERNAL_SERVER_ERROR.value, "Internal server error")
             )
-            return http_response_factory(
+            retval = http_response_factory(
                 status_code=status_code,
                 body=exception_response_factory(exception=e, request_meta_data=self.request_meta_data),
             )
+            if not isinstance(retval, dict) and not isinstance(retval, list):
+                raise SmarterValueError(
+                    f"{self.formatted_class_name}: retval must be an HttpResponse, got {type(retval)}"
+                ) from e
+            return retval
 
         # success!! return the response
         response = self.handle_success()

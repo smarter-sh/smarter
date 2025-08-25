@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime, timedelta
 from logging import getLogger
+from typing import Optional
 
 from django.db import models
 from django.utils import timezone
@@ -10,9 +11,9 @@ from knox import crypto
 from knox.models import AuthToken, AuthTokenManager
 from knox.settings import CONSTANTS
 
+from smarter.apps.account.models import User
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import UserType
 
 
 logger = getLogger(__name__)
@@ -26,11 +27,11 @@ class SmarterAuthTokenManager(AuthTokenManager):
 
     def create(
         self,
-        user: UserType,
+        user: User,
         expiry=None,
         prefix=None,
-        name: str = None,
-        description: str = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
         is_active: bool = True,
         **kwargs,
     ) -> tuple["SmarterAuthToken", str]:

@@ -2,6 +2,7 @@
 
 import json
 import logging
+from typing import Any, Optional, Type
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -16,34 +17,56 @@ from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginStaticSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
+from ..manifest.enum import SAMPluginCommonSpecSelectorKeyDirectiveValues
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from ..manifest.models.static_plugin.model import SAMStaticPlugin
-from .base import PluginBase
+from ..signals import plugin_called, plugin_responded
+from .base import PluginBase, SmarterPluginError
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class StaticPlugin(PluginBase):
     """A PLugin that returns a static json object stored in the Plugin itself."""
 
-    _metadata_class = SAMPluginCommonMetadataClass.STATIC.value
-    _plugin_data: PluginDataStatic = None
-    _plugin_data_serializer: PluginStaticSerializer = None
+    SAMPluginType = SAMStaticPlugin
+
+    _manifest: Optional[SAMStaticPlugin] = None
+    _metadata_class: str = SAMPluginCommonMetadataClass.STATIC.value
+    _plugin_data: Optional[PluginDataStatic] = None
+    _plugin_data_serializer: Optional[PluginStaticSerializer] = None
+
+    def __init__(
+        self,
+        *args,
+        manifest: Optional[SAMStaticPlugin] = None,
+        **kwargs,
+    ):
+        super().__init__(*args, manifest=manifest, **kwargs)
 
     @property
-    def manifest(self) -> SAMStaticPlugin:
+    def manifest(self) -> Optional[SAMStaticPlugin]:
         """Return the Pydandic model of the plugin."""
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMStaticPlugin(**self.to_json())
+            self._manifest = SAMStaticPlugin(**self.to_json())  # type: ignore[call-arg]
         return self._manifest
 
     @property
-    def plugin_data(self) -> PluginDataStatic:
+    def plugin_data(self) -> Optional[PluginDataStatic]:
         """
         Return the plugin data as a Django ORM instance.
         """
@@ -54,7 +77,9 @@ class StaticPlugin(PluginBase):
         if self._manifest and self.plugin_meta:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
-            self._plugin_data = PluginDataStatic(**self.plugin_data_django_model)
+            self._plugin_data = (
+                PluginDataStatic(**self.plugin_data_django_model) if self.plugin_data_django_model else None
+            )
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
@@ -70,19 +95,19 @@ class StaticPlugin(PluginBase):
         return PluginDataStatic
 
     @property
-    def plugin_data_serializer(self) -> PluginStaticSerializer:
+    def plugin_data_serializer(self) -> Optional[PluginStaticSerializer]:
         """Return the plugin data serializer."""
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginStaticSerializer(self.plugin_data)
         return self._plugin_data_serializer
 
     @property
-    def plugin_data_serializer_class(self) -> PluginStaticSerializer:
+    def plugin_data_serializer_class(self) -> Type[PluginStaticSerializer]:
         """Return the plugin data serializer class."""
         return PluginStaticSerializer
 
     @property
-    def plugin_data_django_model(self) -> dict:
+    def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
         """
         transform the Pydantic model into a Django ORM model.
         Return the plugin data definition as a json object.
@@ -91,25 +116,33 @@ class StaticPlugin(PluginBase):
         if self._manifest:
             return {
                 "plugin": self.plugin_meta,
-                "description": self.manifest.spec.data.description,
-                "static_data": self.manifest.spec.data.staticData,
+                "description": (
+                    self.manifest.spec.data.description
+                    if self.manifest and self.manifest.spec and self.manifest.spec.data
+                    else None
+                ),
+                "static_data": (
+                    self.manifest.spec.data.staticData
+                    if self.manifest and self.manifest.spec and self.manifest.spec.data
+                    else None
+                ),
             }
 
     @property
-    def custom_tool(self) -> dict:
+    def custom_tool(self) -> Optional[dict[str, Any]]:
         """Return the plugin tool."""
         if self.ready:
             return {
                 "type": "function",
                 "function": {
                     "name": self.function_calling_identifier,
-                    "description": self.plugin_data.description,
+                    "description": self.plugin_data.description if self.plugin_data else "Static Plugin",
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "inquiry_type": {
                                 "type": "string",
-                                "enum": self.plugin_data.return_data_keys,
+                                "enum": self.plugin_data.return_data_keys if self.plugin_data else None,
                             },
                         },
                         "required": ["inquiry_type"],
@@ -119,7 +152,7 @@ class StaticPlugin(PluginBase):
         return None
 
     @classmethod
-    def example_manifest(cls, kwargs: dict = None) -> dict:
+    def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
         static_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
@@ -132,7 +165,7 @@ class StaticPlugin(PluginBase):
             },
             SAMKeys.SPEC.value: {
                 SAMPluginSpecKeys.SELECTOR.value: {
-                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value,
+                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
                     SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
                         "Gobstopper",
                         "Gobstoppers",
@@ -155,7 +188,7 @@ class StaticPlugin(PluginBase):
                             {"title": "Founder and CEO"},
                             {"location": "1234 Chocolate Factory Way, Chocolate City, Chocolate State, USA"},
                             {"phone": "+1 123-456-7890"},
-                            {"website": "https://wwcf.com"},
+                            {"website_url": "https://wwcf.com"},
                             {"whatsapp": 11234567890},
                             {"email": "ww@wwcf.com"},
                         ],
@@ -185,5 +218,59 @@ class StaticPlugin(PluginBase):
 
         # recast the Python dict to the Pydantic model
         # in order to validate our output
-        pydantic_model = SAMStaticPlugin(**static_plugin)
+        pydantic_model = cls.SAMPluginType(**static_plugin)
         return json.loads(pydantic_model.model_dump_json())
+
+    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> str:
+        """
+        Fetch the inquiry_type from a StaticPlugin.
+        """
+        inquiry_type = function_args.get("inquiry_type")
+        if not isinstance(inquiry_type, str):
+            raise SmarterPluginError(
+                f"Plugin {self.name} invalid inquiry_type. Expected a string, got {type(inquiry_type)}.",
+            )
+
+        if not self.ready:
+            raise SmarterPluginError(
+                f"Plugin {self.name} is not in a ready state.",
+            )
+
+        if not self.plugin_data:
+            raise SmarterPluginError(
+                f"Plugin {self.name} is not ready. Plugin data is not available.",
+            )
+
+        plugin_called.send(
+            sender=self.tool_call_fetch_plugin_response,
+            plugin=self,
+            inquiry_type=inquiry_type,
+        )
+
+        try:
+            return_data = self.plugin_data.sanitized_return_data(self.params)
+            if not isinstance(return_data, dict):
+                raise SmarterPluginError(
+                    f"Plugin {self.name} return data is not a dictionary.",
+                )
+            retval = return_data[inquiry_type]
+            retval = json.dumps(retval)
+            if not isinstance(retval, str):
+                raise SmarterPluginError(
+                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is not a string. Expected a string, got {type(retval)}.",
+                )
+            plugin_responded.send(
+                sender=self.tool_call_fetch_plugin_response,
+                plugin=self,
+                inquiry_type=inquiry_type,
+                response=retval,
+            )
+            return retval
+        except KeyError as e:
+            raise SmarterPluginError(
+                f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}.",
+            ) from e
+        except json.JSONDecodeError as e:
+            raise SmarterPluginError(
+                f"Plugin {self.name} contains Json data that could not be decoded: {e}.",
+            ) from e

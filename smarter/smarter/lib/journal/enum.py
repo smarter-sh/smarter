@@ -1,16 +1,17 @@
 """Smarter API Manifests Enumerations."""
 
 import logging
+from typing import Optional
 from urllib.parse import urlparse
 
 from smarter.common.enum import SmarterEnumAbstract
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 
 
 logger = logging.getLogger(__name__)
 
 
-class SmarterJournalEnumException(SmarterExceptionBase):
+class SmarterJournalEnumException(SmarterException):
     """Base exception for Smarter API Manifest enumerations."""
 
     @property
@@ -74,27 +75,29 @@ class SmarterJournalThings(SmarterEnumAbstract):
     CHAT_PLUGIN_USAGE = "ChatPluginUsage"
     CHAT_TOOL_CALL = "ChatToolCall"
     CHATBOT = "Chatbot"
+    PROVIDER = "Provider"
     SECRET = "Secret"
 
     @classmethod
-    def choices(cls) -> list[(str, str)]:
+    def choices(cls) -> list[tuple[str, str]]:
         """Django model choices for SmarterJournalThings."""
         return [
-            (cls.STATIC_PLUGIN, cls.STATIC_PLUGIN),
-            (cls.API_PLUGIN, cls.API_PLUGIN),
-            (cls.SQL_PLUGIN, cls.SQL_PLUGIN),
-            (cls.API_CONNECTION, cls.API_CONNECTION),
-            (cls.SQL_CONNECTION, cls.SQL_CONNECTION),
-            (cls.ACCOUNT, cls.ACCOUNT),
-            (cls.AUTH_TOKEN, cls.AUTH_TOKEN),
-            (cls.USER, cls.USER),
-            (cls.CHAT, cls.CHAT),
-            (cls.CHAT_CONFIG, cls.CHAT_CONFIG),
-            (cls.CHAT_HISTORY, cls.CHAT_HISTORY),
-            (cls.CHAT_PLUGIN_USAGE, cls.CHAT_PLUGIN_USAGE),
-            (cls.CHAT_TOOL_CALL, cls.CHAT_TOOL_CALL),
-            (cls.CHATBOT, cls.CHATBOT),
-            (cls.SECRET, cls.SECRET),
+            (cls.STATIC_PLUGIN.value, cls.STATIC_PLUGIN.value),
+            (cls.API_PLUGIN.value, cls.API_PLUGIN.value),
+            (cls.SQL_PLUGIN.value, cls.SQL_PLUGIN.value),
+            (cls.API_CONNECTION.value, cls.API_CONNECTION.value),
+            (cls.SQL_CONNECTION.value, cls.SQL_CONNECTION.value),
+            (cls.ACCOUNT.value, cls.ACCOUNT.value),
+            (cls.AUTH_TOKEN.value, cls.AUTH_TOKEN.value),
+            (cls.USER.value, cls.USER.value),
+            (cls.CHAT.value, cls.CHAT.value),
+            (cls.CHAT_CONFIG.value, cls.CHAT_CONFIG.value),
+            (cls.CHAT_HISTORY.value, cls.CHAT_HISTORY.value),
+            (cls.CHAT_PLUGIN_USAGE.value, cls.CHAT_PLUGIN_USAGE.value),
+            (cls.CHAT_TOOL_CALL.value, cls.CHAT_TOOL_CALL.value),
+            (cls.CHATBOT.value, cls.CHATBOT.value),
+            (cls.PROVIDER.value, cls.PROVIDER.value),
+            (cls.SECRET.value, cls.SECRET.value),
         ]
 
 
@@ -124,24 +127,24 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     WHOAMI = "whoami"
 
     @classmethod
-    def choices(cls) -> list[(str, str)]:
+    def choices(cls) -> list[tuple[str, str]]:
         """Django model choices for SmarterJournalCliCommands."""
         return [
-            (cls.APPLY, cls.APPLY),
-            (cls.CHAT, cls.CHAT),
-            (cls.CHAT_CONFIG, cls.CHAT_CONFIG),
-            (cls.DELETE, cls.DELETE),
-            (cls.DEPLOY, cls.DEPLOY),
-            (cls.DESCRIBE, cls.DESCRIBE),
-            (cls.GET, cls.GET),
-            (cls.JOURNAL, cls.JOURNAL),
-            (cls.LOGS, cls.LOGS),
-            (cls.MANIFEST_EXAMPLE, cls.MANIFEST_EXAMPLE),
-            (cls.STATUS, cls.STATUS),
-            (cls.SCHEMA, cls.SCHEMA),
-            (cls.VERSION, cls.VERSION),
-            (cls.UNDEPLOY, cls.UNDEPLOY),
-            (cls.WHOAMI, cls.WHOAMI),
+            (cls.APPLY.value, cls.APPLY.value),
+            (cls.CHAT.value, cls.CHAT.value),
+            (cls.CHAT_CONFIG.value, cls.CHAT_CONFIG.value),
+            (cls.DELETE.value, cls.DELETE.value),
+            (cls.DEPLOY.value, cls.DEPLOY.value),
+            (cls.DESCRIBE.value, cls.DESCRIBE.value),
+            (cls.GET.value, cls.GET.value),
+            (cls.JOURNAL.value, cls.JOURNAL.value),
+            (cls.LOGS.value, cls.LOGS.value),
+            (cls.MANIFEST_EXAMPLE.value, cls.MANIFEST_EXAMPLE.value),
+            (cls.STATUS.value, cls.STATUS.value),
+            (cls.SCHEMA.value, cls.SCHEMA.value),
+            (cls.VERSION.value, cls.VERSION.value),
+            (cls.UNDEPLOY.value, cls.UNDEPLOY.value),
+            (cls.WHOAMI.value, cls.WHOAMI.value),
         ]
 
     @classmethod
@@ -166,7 +169,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
         }
 
     @classmethod
-    def from_url(cls, url) -> str:
+    def from_url(cls, url) -> Optional[str]:
         """
         Parse a url and return the SmarterJournalCliCommands enum value
         if it exists in the url path.

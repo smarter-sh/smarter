@@ -6,9 +6,11 @@ from django.utils import timezone
 from knox.auth import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
+from smarter.apps.account.models import User
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 from smarter.common.utils import mask_string
+from smarter.lib.cache import cache_results
 
 from .models import SmarterAuthToken
 from .signals import (
@@ -18,10 +20,11 @@ from .signals import (
 )
 
 
+CACHE_TIMEOUT = 60 * 60 * 24  # 24 hours
 logger = logging.getLogger(__name__)
 
 
-class SmarterTokenAuthenticationError(SmarterExceptionBase):
+class SmarterTokenAuthenticationError(SmarterException):
     """Base class for all SmarterTokenAuthentication errors."""
 
     @property
@@ -38,18 +41,35 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
 
     model = SmarterAuthToken
 
-    def authenticate_credentials(self, token):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        logger.info(
+            "SmarterTokenAuthentication.__init__() called - %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+
+    @cache_results(CACHE_TIMEOUT)
+    def authenticate_credentials(self, token: bytes) -> tuple[User, SmarterAuthToken]:
         # authenticate the user using the normal token authentication
         # this will raise an AuthenticationFailed exception if the token is invalid
         if not isinstance(token, bytes):
-            raise AuthenticationFailed("Invalid token type. Expected bytes", 401)
-        masked_token = mask_string(string=token)
+            raise AuthenticationFailed("Invalid token type. Expected bytes")
+        masked_token = mask_string(string=token.decode())
         smarter_token_authentication_request.send(
             sender=self.__class__,
             token=masked_token,
         )
         logger.info("%s.authenticate_credentials() - %s", self.formatted_class_name, masked_token)
         user, auth_token = super().authenticate_credentials(token)
+        if not isinstance(user, User):
+            logger.warning(
+                "%s.authenticate_credentials() - failed to retrieve user for token: %s",
+                self.formatted_class_name,
+                masked_token,
+            )
+            raise AuthenticationFailed("Invalid token")
 
         # next, we need to ensure that the token is active, otherwise
         # we should raise an exception that exactly matches the one
@@ -61,7 +81,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
                 user=user,
                 token=masked_token,
             )
-            raise AuthenticationFailed("Api key is not activated.", 401)
+            raise AuthenticationFailed("Api key is not activated.")
 
         # update the last used time for the token
         smarter_auth_token.last_used_at = timezone.now()
@@ -75,3 +95,21 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
             token=masked_token,
         )
         return (user, smarter_auth_token)
+
+    @classmethod
+    def get_user_from_request(cls, request):
+        auth_header = request.META.get("HTTP_AUTHORIZATION")
+        if not auth_header or not auth_header.startswith("Token "):
+            return None
+        token_key = auth_header.split("Token ")[1]
+        # If your tokens are bytes, decode as needed
+        # token = token.encode()  # if needed
+        try:
+            auth_token = SmarterAuthToken.objects.get(token_key=token_key)
+            return auth_token.user
+        except SmarterAuthToken.DoesNotExist:
+            logger.warning(
+                "SmarterTokenAuthentication.get_user_from_request() failed to retrieve user for token_key: %s",
+                token_key,
+            )
+            return None

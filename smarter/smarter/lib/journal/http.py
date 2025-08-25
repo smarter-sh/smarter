@@ -4,6 +4,7 @@
 import json
 import logging
 from http import HTTPStatus
+from typing import Optional, Union
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
@@ -69,8 +70,8 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         data,
         encoder=DjangoJSONEncoder,
         safe=True,
-        thing: SmarterJournalThings = None,
-        command: SmarterJournalCliCommands = None,
+        thing: Optional[Union[SmarterJournalThings, str]] = None,
+        command: Optional[SmarterJournalCliCommands] = None,
         json_dumps_params=None,
         **kwargs,
     ):
@@ -193,26 +194,26 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         request: HttpRequest,
         e: Exception,
         encoder=DjangoJSONEncoder,
-        safe=True,
-        thing: SmarterJournalThings = None,
-        command: SmarterJournalCliCommands = None,
-        json_dumps_params=None,
+        safe: bool = True,
+        thing: Optional[Union[SmarterJournalThings, str]] = None,
+        command: Optional[SmarterJournalCliCommands] = None,
+        json_dumps_params: Optional[str] = None,
         stack_trace: str = "No stack trace available.",
-        description: str = None,
+        description: Optional[str] = None,
         **kwargs,
     ):
         status = kwargs.get("status", None)
         error_class = e.__class__.__name__ if e else "Unknown Exception"
         if description is None:
             if isinstance(e, Exception) and hasattr(e, "message"):
-                description = e.message
+                description = e.message  # type: ignore[union-attr]
             elif isinstance(e, dict) and hasattr(e, "args"):
                 description = e.args[0]
             elif isinstance(e, str):
                 description = e
 
         url = self.smarter_build_absolute_uri(request) or "Unknown URL"
-        status = str(status) if status else e.status if hasattr(e, "status") else "500"
+        status = str(status) if status else e.status if hasattr(e, "status") else 500  # type: ignore[union-attr]
         args = e.args if isinstance(e, dict) and hasattr(e, "args") else "url=" + url
         cause = str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else "Python Exception"
         context = (

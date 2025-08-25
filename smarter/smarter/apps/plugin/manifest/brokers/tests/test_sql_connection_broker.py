@@ -2,6 +2,7 @@
 """Test SAMSqlConnectionBroker."""
 
 import os
+from typing import Optional
 
 from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
@@ -12,11 +13,11 @@ from .base_classes import TestSAMConnectionBrokerBase
 class TestSAMSqlConnectionBroker(TestSAMConnectionBrokerBase):
     """Test SAMSqlConnectionBroker"""
 
-    _model: SAMSqlConnection = None
-    good_manifest_path: str = None
+    _model: Optional[SAMSqlConnection] = None
+    good_manifest_path: Optional[str] = None
 
     @property
-    def model(self) -> SAMSqlConnection:
+    def model(self) -> Optional[SAMSqlConnection]:
         # override to create a pydantic model from the loader
         if not self._model and self.loader:
             self._model = SAMSqlConnection(**self.loader.pydantic_model_dump())

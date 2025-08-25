@@ -9,7 +9,7 @@ from typing import List, Union
 from django.conf import settings
 
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterException
 from smarter.lib.django.validators import SmarterValidator
 
 from ..classes import Singleton
@@ -18,7 +18,7 @@ from ..classes import Singleton
 logger = logging.getLogger(__name__)
 
 
-class EmailHelperException(SmarterExceptionBase):
+class EmailHelperException(SmarterException):
     """Base class for Email helper exceptions."""
 
 

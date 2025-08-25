@@ -1,21 +1,27 @@
 # pylint: disable=W0718
 """Smarter API User Manifest handler"""
 
-import typing
-from logging import getLogger
+import logging
+from typing import Optional, Type
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
-from smarter.apps.account.manifest.models.user.model import SAMUser
-from smarter.apps.account.models import AccountContact, UserProfile
+from smarter.apps.account.manifest.models.user.model import (
+    SAMUser,
+    SAMUserMetadata,
+    SAMUserSpec,
+)
+from smarter.apps.account.models import AccountContact, User, UserProfile
+from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.lib.django.serializers import UserSerializer
-from smarter.lib.django.user import get_user_model
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
@@ -31,9 +37,18 @@ from smarter.lib.manifest.enum import (
 )
 
 
-User = get_user_model()
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
+    ) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
 MAX_RESULTS = 1000
-logger = getLogger(__name__)
 
 
 class SAMUserBrokerError(SAMBrokerError):
@@ -58,12 +73,12 @@ class SAMUserBroker(AbstractBroker):
     """
 
     # override the base abstract manifest model with the User model
-    _manifest: SAMUser = None
-    _pydantic_model: typing.Type[SAMUser] = SAMUser
-    _account_contact: AccountContact = None
+    _manifest: Optional[SAMUser] = None
+    _pydantic_model: Type[SAMUser] = SAMUser
+    _account_contact: Optional[AccountContact] = None
 
     @property
-    def account_contact(self) -> AccountContact:
+    def account_contact(self) -> Optional[AccountContact]:
         if self._account_contact:
             return self._account_contact
         if not self.user:
@@ -77,25 +92,27 @@ class SAMUserBroker(AbstractBroker):
         return self._account_contact
 
     @property
-    def username(self) -> str:
+    def username(self) -> Optional[str]:
         return self.user.username if self.user else None
 
     def manifest_to_django_orm(self) -> dict:
         """
         Transform the Smarter API User manifest into a Django ORM model.
         """
-        config_dump = self.manifest.spec.config.model_dump()
+        config_dump = self.manifest.spec.config.model_dump()  # type: ignore[return-value]
         config_dump = self.camel_to_snake(config_dump)
-        return config_dump
+        return config_dump  # type: ignore[return-value]
 
-    def django_orm_to_manifest_dict(self) -> dict:
+    def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
         Transform the Django ORM model into a Pydantic readable
         Smarter API User manifest dict.
         """
+        if not self.user:
+            raise SAMUserBrokerError("User is not set", thing=self.kind)
         user_dict = model_to_dict(self.user)
         user_dict = self.snake_to_camel(user_dict)
-        user_dict.pop("id")
+        user_dict.pop("id")  # type: ignore[assignment]
 
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -132,7 +149,7 @@ class SAMUserBroker(AbstractBroker):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMUser:
+    def manifest(self) -> Optional[SAMUser]:
         """
         SAMUser() is a Pydantic model
         that is used to represent the Smarter API User manifest. The Pydantic
@@ -148,9 +165,8 @@ class SAMUserBroker(AbstractBroker):
             self._manifest = SAMUser(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=self.loader.manifest_metadata,
-                spec=self.loader.manifest_spec,
-                status=self.loader.manifest_status,
+                metadata=SAMUserMetadata(**self.loader.manifest_metadata),
+                spec=SAMUserSpec(**self.loader.manifest_spec),
             )
         return self._manifest
 
@@ -188,7 +204,7 @@ class SAMUserBroker(AbstractBroker):
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        name: str = kwargs.get(SAMMetadataKeys.NAME.value, None)
+        name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
 
         if name:
@@ -243,12 +259,16 @@ class SAMUserBroker(AbstractBroker):
                 data.pop(field, None)
             for key, value in data.items():
                 setattr(self.user, key, value)
+            if not isinstance(self.user, User):
+                raise SAMUserBrokerError("User is not set", thing=self.kind, command=command)
             self.user.save()
         except Exception as e:
             raise SAMUserBrokerError(
-                f"Failed to apply {self.kind} {self.user.email}", thing=self.kind, command=command
+                f"Failed to apply {self.kind} {self.user.email if isinstance(self.user, User) else None}",
+                thing=self.kind,
+                command=command,
             ) from e
-        return self.json_response_ok(command=command, data={})
+        return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
@@ -289,6 +309,8 @@ class SAMUserBroker(AbstractBroker):
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
 
+        if not isinstance(self.params, dict):
+            raise SAMBrokerErrorNotImplemented(message="Params must be a dictionary", thing=self.kind, command=command)
         username = self.params.get("username")
         try:
             user = User.objects.get(username=username)
@@ -299,13 +321,11 @@ class SAMUserBroker(AbstractBroker):
 
         if user:
             try:
-                logger.info("Deleting user %s", user)
                 user.delete()
-                logger.info("Deleted user %s", username)
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(
-                    f"Failed to delete {self.kind} {self.user.email}", thing=self.kind, command=command
+                    f"Failed to delete {self.kind} {user.email}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 

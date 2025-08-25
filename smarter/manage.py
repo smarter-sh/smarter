@@ -8,7 +8,6 @@ import sys
 from smarter.common.conf import settings as smarter_settings
 
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

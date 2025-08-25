@@ -2,8 +2,6 @@
 
 from datetime import datetime, timedelta
 
-import requests
-
 from smarter.apps.account.models import Account, Secret, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
@@ -59,14 +57,3 @@ def plugin_meta_factory(plugin_class: str, account: Account, user_profile: UserP
     meta_data.save()
 
     return meta_data
-
-
-def create_generic_request():
-    url = "http://example.com"
-    headers = {"Content-Type": "application/json"}
-    data = {}
-
-    request = requests.Request("GET", url, headers=headers, data=data)
-    prepared_request = request.prepare()
-
-    return prepared_request
