@@ -75,7 +75,7 @@ spec:
               python manage.py initialize_providers
               python manage.py create_stackacademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user
               python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin
-              python manage.py update_secret --name smarter_test_db --username admin --value "{{ .Values.env.SMARTER_TEST_DB_PASSWORD }}"
+              python manage.py update_secret --name smarter_test_db --username admin --value "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
               python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin
               python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin
 
@@ -131,8 +131,8 @@ spec:
               value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
             - name: SECRET_KEY
               value: "{{ .Values.env.SECRET_KEY }}"
-            - name: SMARTER_TEST_DB_PASSWORD
-              value: "{{ .Values.env.SMARTER_TEST_DB_PASSWORD }}"
+            - name: SMARTER_MYSQL_TEST_DATABASE_PASSWORD
+              value: "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
             - name: CACHES_LOCATION
               value: "{{ .Values.env.CACHES_LOCATION }}"
             - name: CELERY_BROKER_URL
