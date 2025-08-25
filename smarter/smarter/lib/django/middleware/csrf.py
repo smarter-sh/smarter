@@ -85,11 +85,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         Process the request to set up the CSRF protection.
         If the request is for a ChatBot, then we'll exempt it from CSRF checks.
         """
-        # Short-circuit for health checks
-        if request.path in ["/healthz", "/readiness", "/liveness"]:
-            return None
-
-        # Short-circuit for any requests born from internal IP address hosts
+        url = self.smarter_build_absolute_uri(request)
         host = request.get_host()
         if not host:
             return SmarterHttpResponseServerError(
@@ -97,11 +93,16 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
                 error_message="Internal error (500) - could not parse request.",
             )
 
+        # Short-circuit for health checks
+        if request.path in ["/healthz", "/readiness", "/liveness"]:
+            return None
+
+        # Short-circuit for any requests born from internal IP address hosts
         if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
-                host,
+                url,
             )
             return None
 
@@ -125,7 +126,6 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
                 admin_user_profile,
             )
 
-        url = self.smarter_request.url if self.smarter_request else "unknown"
         logger.info("%s.__call__(): %s", self.formatted_class_name, url)
 
         if self.smarter_request.is_chatbot:
