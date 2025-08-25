@@ -545,13 +545,28 @@ class SmarterRequestMixin(AccountMixin):
             body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
             if body is not None:
                 body_str = body.decode("utf-8").strip()
-                self._data = json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
-                if self._data and waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+
+                try:
+                    self._data = json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
                     logger.info(
-                        "%s.data() - initialized from parsed request body as json: %s",
+                        "%s.data() - initialized json from request body: %s",
                         self.formatted_class_name,
                         body_str,
                     )
+                except json.JSONDecodeError:
+                    try:
+                        self._data = yaml.safe_load(body_str) if body_str else {}
+                        logger.info(
+                            "%s.data() - initialized json from parsed yaml request body: %s",
+                            self.formatted_class_name,
+                            body_str,
+                        )
+                    except yaml.YAMLError:
+                        logger.error(
+                            "%s.data() - failed to parse request body: %s",
+                            self.formatted_class_name,
+                            body_str,
+                        )
                 self._data = self._data or {}
         except json.JSONDecodeError:
             try:

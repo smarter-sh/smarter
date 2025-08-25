@@ -1,30 +1,26 @@
 """This module is used to deploy a customer API."""
 
 import glob
+import io
 import json
 import os
-from http import HTTPStatus
 from typing import Optional
-from urllib.parse import urljoin
 
-import yaml
-from django.core.handlers.wsgi import WSGIRequest
+from django.core.management import CommandError, call_command
 from django.core.management.base import BaseCommand
-from django.http import HttpResponse
-from django.test import RequestFactory
-from rest_framework.test import force_authenticate
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
 )
-from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
+from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.manifest.loader import SAMLoader
 
 
 # pylint: disable=E1101
@@ -58,60 +54,6 @@ class Command(BaseCommand):
         """Add arguments to the command."""
         parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
 
-    def read_file(self, file_path: str) -> str:
-        """
-        Read the data from a file.
-        file_path: The path to the file.
-        """
-        self.stdout.write(f"Reading file {file_path}.")
-        with open(file_path, encoding="utf-8") as file:
-            data = file.read()
-            return data
-
-    def parse_yaml(self, data: str) -> Optional[dict]:
-        """
-        Parse a yaml file.
-        data: a string representing the yaml file.
-        """
-        self.stdout.write("Parsing yaml file.")
-        try:
-            manifest_data: dict = yaml.safe_load(data)
-            return manifest_data
-        except yaml.YAMLError as exc:
-            self.stderr.write(self.style.ERROR(f"Error in yaml manifest file: {exc}"))
-            self.stdout.write(data)
-
-    def apply_manifest(self, manifest_data: dict) -> HttpResponse:
-        """
-        Apply a Smarter manifest.
-        Account: The account to which the manifest applies.
-        manifest_data: a string representation of a yaml manifest file
-        """
-        if not self.account:
-            raise SmarterValueError("Account is required to apply a manifest.")
-        self.stdout.write(f"Applying manifest for account {self.account.account_number} {self.account.company_name}.")
-        request_factory = RequestFactory()
-        response: HttpResponse
-        self.url = urljoin(smarter_settings.environment_url, "/api/v1/cli/apply")
-
-        try:
-            request: WSGIRequest = request_factory.post(self.url, data=manifest_data, content_type="application/json")
-            request.user = self.user
-            force_authenticate(request, user=self.user)
-            self.stdout.write(f"Sending POST request to {self.url} with authenticated user {request.user}.")
-            api_v1_cli_apply_view = ApiV1CliApplyApiView.as_view()
-            response: HttpResponse = api_v1_cli_apply_view(request=request)
-
-            if response.status_code == HTTPStatus.OK:
-                self.stdout.write(self.style.SUCCESS(f"Response: {str(response)}"))
-            else:
-                self.stderr.write(self.style.ERROR(f"Error in API response: {str(response)}"))
-        except yaml.YAMLError as exc:
-            self.stderr.write(self.style.ERROR(f"Error in yaml manifest file: {exc}"))
-            self.stdout.write(json.dumps(manifest_data))
-
-        return response
-
     def delete_chatbot(self, name: str):
         """Delete a chatbot by name."""
         if not self.account:
@@ -129,7 +71,7 @@ class Command(BaseCommand):
             )
         )
 
-    def create_plugin(self, yaml_file: str) -> bool:
+    def create_plugin(self, filespec: str) -> bool:
         """
         Create a plugin by name. Apply the Smarter yaml manifest:
         - Read and Parse the YAML file
@@ -140,21 +82,18 @@ class Command(BaseCommand):
         if not self.account:
             raise SmarterValueError("Account is required to create a plugin.")
         self.stdout.write(
-            f"Creating plugin from manifest {yaml_file} for account {self.account.account_number} {self.account.company_name}."
+            f"Creating plugin from manifest {filespec} for account {self.account.account_number} {self.account.company_name}."
         )
-        file_data = self.read_file(file_path=yaml_file)
-        parsed_manifest_data = self.parse_yaml(file_data)
-        if not parsed_manifest_data:
-            self.stderr.write(self.style.ERROR(f"Error parsing yaml file {yaml_file}."))
-            return False
+        manifest = SAMLoader(file_path=filespec)
+        output = io.StringIO()
         try:
-            response = self.apply_manifest(manifest_data=json.loads(file_data))
-        except json.JSONDecodeError as exc:
-            self.stderr.write(self.style.ERROR(f"Error decoding JSON from yaml file {yaml_file}: {exc}"))
+            call_command("apply_manifest", manifest=manifest.yaml_data, username="admin", stdout=output)
+            return True
+        except CommandError as e:
+            self.stderr.write(self.style.ERROR(f"apply_manifest raised CommandError: {e}"))
             return False
-        return response.status_code == HTTPStatus.OK
 
-    def create_and_deploy_chatbot(self, yaml_file: str) -> bool:
+    def create_and_deploy_chatbot(self, filespec: str) -> bool:
         """
         Create and deploy a chatbot by name. Apply the Smarter yaml manifest:
         - Read and Parse the YAML file
@@ -168,52 +107,29 @@ class Command(BaseCommand):
             raise SmarterValueError("Account is required to create and deploy a chatbot.")
 
         self.stdout.write(
-            f"Creating and deploying chatbot from manifest {yaml_file} for account {self.account.account_number} {self.account.company_name}."
+            f"Creating and deploying chatbot from manifest {filespec} for account {self.account.account_number} {self.account.company_name}."
         )
-        chatbot: ChatBot
 
-        file_data = self.read_file(file_path=yaml_file)
-        parsed_manifest_data = self.parse_yaml(file_data)
-        if not parsed_manifest_data:
-            self.stderr.write(self.style.ERROR(f"Error parsing yaml file {yaml_file}."))
-            return False
-        chatbot_name = parsed_manifest_data.get("metadata", {}).get("name")
+        manifest = SAMLoader(file_path=filespec)
+        output = io.StringIO()
         try:
-            chatbot = ChatBot.objects.get(account=self.account, name=chatbot_name)
-            if chatbot.deployed and self.account:
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f"You're all set! {chatbot.hostname} is already deployed for {self.account.account_number} {self.account.company_name}."
-                    )
-                )
-                return False
-        except ChatBot.DoesNotExist:
-            pass
+            call_command("apply_manifest", manifest=manifest.yaml_data, username="admin", stdout=output)
+        except CommandError as e:
+            self.stderr.write(self.style.ERROR(f"apply_manifest raised CommandError: {e}"))
+            return False
 
         try:
-            response = self.apply_manifest(manifest_data=json.loads(file_data))
-        except json.JSONDecodeError as exc:
-            self.stderr.write(self.style.ERROR(f"Error decoding JSON from yaml file {yaml_file}: {exc}"))
-            return False
-        if response.status_code != HTTPStatus.OK:
-            self.stderr.write(self.style.ERROR(f"Error in API response: {str(response)}"))
-            return False
+            sam_chatbot = SAMChatbot(**manifest.pydantic_model_dump())
+            chatbot = ChatBot.objects.get(account=self.account, name=sam_chatbot.metadata.name)
 
-        # the Smarter Chatbot should exist now as a Django model, but it is not yet deployed
-        try:
-            chatbot = ChatBot.objects.get(account=self.account, name=chatbot_name)
-        except ChatBot.DoesNotExist:
-            self.stderr.write(
-                self.style.ERROR(
-                    f"Internal error. ChatBot {chatbot_name} not found for account {self.account.account_number if self.account else None} {self.account.company_name if self.account else None}."
-                )
-            )
+            # deploy the chatbot as a Celery task because this could take a while.
+            self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.name} as a Celery task."))
+            deploy_default_api.delay(chatbot_id=chatbot.id)  # type: ignore[arg-type]
+            return True
+        # pylint: disable=W0718
+        except Exception as e:
+            self.stderr.write(self.style.ERROR(f"Error occurred while deploying chatbot: {e}"))
             return False
-
-        # deploy the chatbot as a Celery task because this could take a while.
-        self.stdout.write(self.style.NOTICE(f"Deploying {chatbot_name} as a Celery task."))
-        deploy_default_api.delay(chatbot_id=chatbot.id)  # type: ignore[arg-type]
-        return True
 
     def handle(self, *args, **options):
 
@@ -231,19 +147,19 @@ class Command(BaseCommand):
         plugins_path = os.path.join(smarter_settings.data_directory, "manifests/plugins/*.yaml")
         plugin_files = glob.glob(plugins_path)
         i = 0
-        for yaml_file in plugin_files:
+        for filespec in plugin_files:
             i += 1
             self.stdout.write(self.style.NOTICE(f"Creating Plugin {i} of {len(plugin_files)}"))
             self.stdout.write(self.style.NOTICE("-" * 80))
-            self.create_plugin(yaml_file=yaml_file)
+            self.create_plugin(filespec=filespec)
             self.stdout.write(self.style.NOTICE("\n"))
 
         chatbots_path = os.path.join(smarter_settings.data_directory, "manifests/chatbots/*.yaml")
         chatbot_files = glob.glob(chatbots_path)
         i = 0
-        for yaml_file in chatbot_files:
+        for filespec in chatbot_files:
             i += 1
             self.stdout.write(self.style.NOTICE(f"Creating ChatBot {i} of {len(chatbot_files)}"))
             self.stdout.write(self.style.NOTICE("-" * 80))
-            self.create_and_deploy_chatbot(yaml_file=yaml_file)
+            self.create_and_deploy_chatbot(filespec=filespec)
             self.stdout.write(self.style.NOTICE("\n"))

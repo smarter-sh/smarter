@@ -147,7 +147,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     _api_version: Optional[str] = None
     _loader: Optional[SAMLoader] = None
-    _manifest: Optional[AbstractSAMBase] = None
+    _manifest: Optional[Union[AbstractSAMBase, dict]] = None
     _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
     _name: Optional[str]
     _kind: Optional[str]
@@ -163,54 +163,35 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         name: Optional[str] = None,  # i suspect that this is always None bc DRF sets name later in the process
         kind: Optional[str] = None,
         loader: Optional[SAMLoader] = None,
-        api_version: Optional[str] = SmarterApiVersions.V1,
-        manifest: Optional[Union[AbstractSAMBase, str]] = None,
+        api_version: str = SmarterApiVersions.V1,
+        manifest: Optional[AbstractSAMBase] = None,
         file_path: Optional[str] = None,
         url: Optional[str] = None,
         **kwargs,
     ):
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
-        logger.info(
-            "AbstractBroker.__init__() initializing request: %s, args: %s, kwargs: %s", self.request, args, kwargs
-        )
-
-        self._name = name  # i suspect that this is always None bc DRF sets name later in the process
-        self._kind = kind
-        if manifest:
-            if not isinstance(manifest, AbstractSAMBase):
-                logger.info(
-                    "%s.__init__() received manifest of type %s. converting to SAM via SAMLoader()",
-                    self.formatted_class_name,
-                    type(manifest),
-                )
-                self._loader = loader or SAMLoader(
-                    api_version=api_version,
-                    kind=self.kind,
-                    manifest=manifest,
-                )
-            else:
-                self._manifest = manifest
-
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(
                 message=f"Unsupported apiVersion: {api_version}",
                 thing=SmarterJournalThings.ACCOUNT,
             )
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        logger.info(
+            "AbstractBroker.__init__() initializing request: %s, args: %s, kwargs: %s", self.request, args, kwargs
+        )
         self._api_version = api_version
-
-        if self.manifest:
-            self._validated = True
-        else:
-            try:
-                self._loader = loader or SAMLoader(
-                    api_version=api_version,
-                    kind=self.kind,
-                    manifest=json.dumps(manifest.model_dump()) if manifest else None,
-                    file_path=file_path,
-                    url=url,
-                )
-            except SAMLoaderError as e:
-                logger.error("%s.__init__() failed to initialize loader: %s", self.formatted_class_name, str(e))
+        self._name = name  # i suspect that this is always None bc DRF sets name later in the process
+        self._kind = kind
+        if isinstance(manifest, AbstractSAMBase):
+            self._manifest = manifest
+            logger.info("%s.__init__() successfully initialized manifest: %s", self.formatted_class_name, self.manifest)
+        if isinstance(loader, SAMLoader):
+            self._loader = loader
+            logger.info("%s.__init__() received %s loader", self.formatted_class_name, self._loader.manifest_kind)
+            logger.info(
+                "%s.__init__() loader initialized with manifest kind: %s",
+                self.formatted_class_name,
+                self._loader.manifest_kind,
+            )
 
         if self.user:
             logger.info("%s.__init__() received user: %s", self.formatted_class_name, self.user_profile)
@@ -218,23 +199,18 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if self._name:
             logger.info("%s.__init__() set name to %s", self.formatted_class_name, self._name)
 
-        if self._loader:
-            logger.info("%s.__init__() received %s loader", self.formatted_class_name, self._loader.manifest_kind)
-            self._validated = True
-            logger.info(
-                "%s.__init__() loader initialized with manifest kind: %s",
-                self.formatted_class_name,
-                self._loader.manifest_kind,
-            )
-
         self._kind = self._kind or self.loader.manifest_kind if self.loader else None
         self._created = False
+        self._validated = bool(manifest) or bool(self.loader and self.loader.ready)
         logger.info(
-            "AbstractBroker.__init__() finished initializing %s with api_version: %s, user: %s, name: %s",
+            "AbstractBroker.__init__() finished initializing %s with api_version: %s, user: %s, name: %s, validated: %s, manifest: %s, loader: %s",
             self.kind,
             self.api_version,
             self.user_profile,
             self.name,
+            self._validated,
+            bool(self.manifest),
+            bool(self.loader),
         )
 
     ###########################################################################
