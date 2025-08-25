@@ -1,3 +1,41 @@
+# [0.13.0](https://github.com/smarter-sh/smarter/compare/v0.12.0...v0.13.0) (2025-08-25)
+
+
+### Bug Fixes
+
+* authenticate if not already done, and we find an Authentication token in the header ([a84f0f5](https://github.com/smarter-sh/smarter/commit/a84f0f50e20ce1a885b35b74a77725473ce517b8))
+* cache authenticate_credentials() ([f1a2eb4](https://github.com/smarter-sh/smarter/commit/f1a2eb4c4df06ef5fc61e2bb2d78058c6dbccb93))
+* cannot assume that request objects always have a META attribute ([452ebab](https://github.com/smarter-sh/smarter/commit/452ebaba2f5fad9f4545a21b2b6f66bcb027c6ae))
+* cannot include tool responses in 1st iteration ([9c5b828](https://github.com/smarter-sh/smarter/commit/9c5b828e662ec1345deb914a84e8b0d1e1e1c603))
+* container resource memory settings ([f7d300a](https://github.com/smarter-sh/smarter/commit/f7d300a35932c586b55c0b583c9534ff77cc7531))
+* dns verification should be based on cascading hosted zones ([0de5ddf](https://github.com/smarter-sh/smarter/commit/0de5ddfad7d4a7bd326f85b3e65d00fb6444542b))
+* environment NS records belong in platform.domain.com and api.domain.com ([f26977c](https://github.com/smarter-sh/smarter/commit/f26977c0c3da881e8f2cdedb32b05b0064be2e7f))
+* is Kind is missing then say so ([8d38a78](https://github.com/smarter-sh/smarter/commit/8d38a78ad710af1a33e9327856617f133695db61))
+* recast DRF Request as HttpRequest ([a3f39ac](https://github.com/smarter-sh/smarter/commit/a3f39ac5f922d97129f073b9d29f11cc0f111b0e))
+* setup cache invalidations and implement for Account, User, UserProfile and related SAM objects ([3fb8de7](https://github.com/smarter-sh/smarter/commit/3fb8de7f2a19a275e8b615e861b1463a33d62fb7))
+* should_log() should ensure that log level is >= logging.INFO ([fdda0fc](https://github.com/smarter-sh/smarter/commit/fdda0fc334cfcaa28981aed4f261a69dc7c574ec))
+* trouble shoot ChatConfigView initialization ([71c2b37](https://github.com/smarter-sh/smarter/commit/71c2b37af7fadda8a32835ecfce56cfefda25697))
+* trouble shoot ChatConfigView initialization ([46104b8](https://github.com/smarter-sh/smarter/commit/46104b8ed3faefc47d990be088a8e666c25f4aff))
+
+
+### Features
+
+* add /api/v1/providers/ end points ([dba2ad9](https://github.com/smarter-sh/smarter/commit/dba2ad9692eab4c50f09a738389a68ac37261cef))
+* add serializers ([60201f7](https://github.com/smarter-sh/smarter/commit/60201f70488827864f0a80afbeb92062617770c1))
+* code get_model_for_provider() ([15df290](https://github.com/smarter-sh/smarter/commit/15df2907e5d21ca28125bdf396dd30abf03665db))
+* code provider verification ([e2cdb18](https://github.com/smarter-sh/smarter/commit/e2cdb18c7468f90c5ebd2b697ee2b672b0268492))
+* code provider verification ([0c3161b](https://github.com/smarter-sh/smarter/commit/0c3161ba1ed82a37d039f82b853c9bc97c345d08))
+* create manage.py create_sqldb_connection ([0369ebd](https://github.com/smarter-sh/smarter/commit/0369ebd96f0d7e0acec77e267e849d7c578ff249))
+* create manage.py initialize_providers ([110edf3](https://github.com/smarter-sh/smarter/commit/110edf31c8518df2a008d95358d450a5b0b843cc))
+* create ProviderModelTypedDict ([1ff8992](https://github.com/smarter-sh/smarter/commit/1ff8992656e0272f1009afb03a0fb90bf04f1ba7))
+* create ProviderVerification model and ProviderVerificationTypes ([b52fa08](https://github.com/smarter-sh/smarter/commit/b52fa08fe54015a8e80fc5404b6e2209f0cef9f3))
+* create Pydantic model ([308560a](https://github.com/smarter-sh/smarter/commit/308560a53f8b5ac342968e86a8f2fef4eb73520d))
+* generalize instantiation of Plugin classes based on manifest type ([3a77e2b](https://github.com/smarter-sh/smarter/commit/3a77e2bd25e24010e70d67706ac61970ba82e155))
+* register admin models ([77ef5d3](https://github.com/smarter-sh/smarter/commit/77ef5d3504be2bb582b8605417f3d56824c0c3c9))
+* scaffold provider app ([cb8975b](https://github.com/smarter-sh/smarter/commit/cb8975b53f7e1008cc516467d4f40d4d8929de15))
+* scaffold provider verifications ([036da3d](https://github.com/smarter-sh/smarter/commit/036da3dd56e57aada21972920804153f78e835ff))
+* setup Broker base classes for Connection and Plugin ([601bc99](https://github.com/smarter-sh/smarter/commit/601bc99b046072d4e3b4616c8c9e29032c28b5b9))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.

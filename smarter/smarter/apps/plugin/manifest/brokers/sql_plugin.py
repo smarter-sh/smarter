@@ -122,16 +122,12 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     def plugin(self) -> Optional[SqlPlugin]:
         if self._plugin:
             return self._plugin
-        if isinstance(self.plugin_meta, PluginMeta):
-            self._plugin = SqlPlugin(
-                plugin_meta=self.plugin_meta,
-                user_profile=self.user_profile,
-            )
-        elif isinstance(self.manifest, SAMSqlPlugin):
-            self._plugin = SqlPlugin(
-                user_profile=self.user_profile,
-                manifest=self.manifest,
-            )
+        self._plugin = SqlPlugin(
+            plugin_meta=self.plugin_meta,
+            user_profile=self.user_profile,
+            manifest=self.manifest,
+            name=self.name,
+        )
         return self._plugin
 
     @property
