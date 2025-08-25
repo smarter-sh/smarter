@@ -45,7 +45,6 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
 
-        url = self.smarter_build_absolute_uri(request)
         host = request.get_host()
         if not host:
             return SmarterHttpResponseServerError(
@@ -62,10 +61,11 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
-                url,
+                request.path,
             )
             return super().__call__(request)
 
+        url = self.smarter_build_absolute_uri(request)
         logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
         self._url = None
         self._chatbot = None
