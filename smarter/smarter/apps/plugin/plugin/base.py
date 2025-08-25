@@ -129,12 +129,11 @@ class PluginBase(ABC, SmarterHelperMixin):
         see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
         super().__init__(*args, **kwargs)
-        if sum([bool(data), bool(manifest), bool(plugin_id), bool(plugin_meta), bool(name)]) != 1:
-            raise SmarterPluginError(
-                f"Must specify one and only one of: manifest, data, plugin_id, plugin_meta, or name. "
-                f"Received: data {bool(data)}, manifest {bool(manifest)}, "
-                f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}, name {bool(name)}."
-            )
+        msg = (
+            f"{self.formatted_class_name}__init__() Received: data {bool(data)}, manifest {bool(manifest)}, "
+            f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}, name {bool(name)}."
+        )
+        logger.info(msg)
         self._api_version = api_version or self.api_version
         self._selected = selected
         self._user_profile = user_profile

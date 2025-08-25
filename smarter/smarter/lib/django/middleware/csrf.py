@@ -18,9 +18,7 @@ from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseServerError,
-)
+from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

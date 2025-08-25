@@ -123,21 +123,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     def plugin(self) -> Optional[StaticPlugin]:
         if self._plugin:
             return self._plugin
-        if isinstance(self.plugin_meta, PluginMeta):
-            self._plugin = StaticPlugin(
-                plugin_meta=self.plugin_meta,
-                user_profile=self.user_profile,
-            )
-        elif isinstance(self.manifest, SAMStaticPlugin):
-            self._plugin = StaticPlugin(
-                user_profile=self.user_profile,
-                manifest=self.manifest,
-            )
-        elif self.name:
-            self._plugin = StaticPlugin(
-                user_profile=self.user_profile,
-                name=self.name,
-            )
+        self._plugin = StaticPlugin(
+            plugin_meta=self.plugin_meta,
+            user_profile=self.user_profile,
+            manifest=self.manifest,
+            name=self.name,
+        )
         return self._plugin
 
     @property

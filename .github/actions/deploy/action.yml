@@ -36,6 +36,9 @@ inputs:
   llama-api-key:
     description: "The MetaAI Llama API key"
     required: true
+  smarter-mysql-test_database_password:
+    description: "The MySQL test database password"
+    required: true
   social-auth-google-oauth2-key:
     description: "The Google OAuth2 key"
     required: true
@@ -291,6 +294,7 @@ runs:
         --set env.GEMINI_API_KEY=${{ inputs.gemini-api-key }} \
         --set env.LLAMA_API_KEY=${{ inputs.llama-api-key }} \
         --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=${{ inputs.social-auth-google-oauth2-key }} \
+        --set env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD=${{ inputs.smarter-mysql-test_database_password }} \
         --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=${{ inputs.social-auth-google-oauth2-secret }} \
         --set env.SOCIAL_AUTH_GITHUB_KEY=${{ inputs.social-auth-github-key }} \
         --set env.SOCIAL_AUTH_GITHUB_SECRET=${{ inputs.social-auth-github-secret }} \
