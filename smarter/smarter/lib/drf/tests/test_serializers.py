@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta, timezone
 from logging import getLogger
-from unittest.mock import Mock
 
 from dateutil.parser import isoparse
 
@@ -10,10 +9,10 @@ from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
 )
+from smarter.lib.drf.manifest.brokers.auth_token import SmarterAuthTokenSerializer
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..models import SmarterAuthToken
-from ..serializers import SmarterAuthTokenSerializer
 
 
 logger = getLogger(__name__)
@@ -30,7 +29,7 @@ class TestSmarterAuthTokenSerializer(SmarterTestBase):
             name=self.admin_user.username,
             user=self.admin_user,
             description=self.admin_user.username,
-        )
+        )  # type: ignore
 
     def tearDown(self) -> None:
         try:

@@ -12,7 +12,7 @@ metadata:
     - database
 spec:
   selector:
-    directive: searchTerms
+    directive: search_terms
     searchTerms:
       - admin
       - Smarter platform

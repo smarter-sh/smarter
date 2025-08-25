@@ -276,12 +276,12 @@ runs:
         --set env.AWS_REGION=${{ inputs.aws-region }} \
         --set env.AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }} \
         --set env.AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }} \
+        --set env.FERNET_ENCRYPTION_KEY=${{inputs.fernet-encryption-key}} \
         --set env.NAMESPACE=${{ env.NAMESPACE }} \
         --set env.SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }} \
         --set env.ROOT_DOMAIN=smarter.sh \
         --set env.DEBUG_MODE="false" \
         --set env.DUMP_DEFAULTS="True" \
-        --set env.FERNET_ENCRYPTION_KEY=${{ inputs.FERNET_ENCRYPTION_KEY }} \
         --set env.MAILCHIMP_API_KEY=${{ inputs.mailchimp-api-key }} \
         --set env.MAILCHIMP_LIST_ID=${{ inputs.mailchimp-list-id }} \
         --set env.OPENAI_API_KEY=${{ inputs.openai-api-key }} \

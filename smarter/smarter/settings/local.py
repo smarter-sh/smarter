@@ -17,7 +17,7 @@ from .base import *
 
 logger.info("Loading smarter.settings.local")
 
-ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
+ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
 
 SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS

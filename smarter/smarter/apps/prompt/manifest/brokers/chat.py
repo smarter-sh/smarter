@@ -12,8 +12,11 @@ from smarter.apps.prompt.manifest.models.chat.const import MANIFEST_KIND
 from smarter.apps.prompt.manifest.models.chat.model import SAMChat
 from smarter.apps.prompt.models import Chat
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
@@ -29,7 +32,16 @@ from smarter.lib.manifest.enum import (
 )
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
+    ) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 MAX_RESULTS = 1000
 

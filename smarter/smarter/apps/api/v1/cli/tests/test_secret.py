@@ -1,10 +1,10 @@
 """Test Api v1 CLI commands for secret"""
 
 import json
+import logging
 import os
 from datetime import datetime
 from http import HTTPStatus
-from logging import getLogger
 from urllib.parse import urlencode
 
 from dateutil.relativedelta import relativedelta
@@ -15,7 +15,10 @@ from smarter.apps.account.models import Secret
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import (
     SAMKeys,
     SAMMetadataKeys,
@@ -27,7 +30,17 @@ from smarter.lib.manifest.loader import SAMLoader
 from .base_class import ApiV1CliTestBase
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+        and level >= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 KIND = SAMKinds.SECRET.value
@@ -141,6 +154,8 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         # dump the manifest to json
         manifest_json = json.loads(manifest.model_dump_json())
 
+        logger.info("manifest_json=%s", json.dumps(manifest_json, indent=4))
+
         # retrieve the current manifest by calling "describe"
         path = reverse(self.namespace + ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, data=manifest_json)
@@ -178,8 +193,14 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertEqual(response["api"], SmarterApiVersions.V1)
         self.assertEqual(response["thing"], SAMKinds.SECRET.value)
         self.assertIsInstance(response["metadata"], dict)
-        self.assertIn("key", response["metadata"])
+
         data: dict = response["data"]
+        self.assertIsInstance(data, dict)
+        self.assertIn("name", data["data"]["metadata"])
+        self.assertIn("description", data["data"]["metadata"])
+        self.assertIn("version", data["data"]["metadata"])
+
+        data: dict = response["data"]["data"]
         self.assertIsInstance(data, dict)
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SECRET.value)
@@ -188,7 +209,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("description", None), "A secret for testing purposes")
         self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("version", None), "0.1.0")
         self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("tags", None), [])
-        self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("annotations", None), None)
+        self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("annotations"), [])
 
     def test_03_describe(self):
         """

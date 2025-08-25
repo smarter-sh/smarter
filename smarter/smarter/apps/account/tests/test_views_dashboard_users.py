@@ -10,9 +10,10 @@ from django.contrib.auth import authenticate
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.test import RequestFactory
 
+from smarter.apps.account.models import User
+
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.lib.django.user import User
 
 from ..views.dashboard.users import UsersView, UserView
 
@@ -52,7 +53,7 @@ class TestAPIKeys(TestAccountMixin):
         self.assertIsInstance(response, HttpResponseRedirect)
 
         # url should be of the form: /account/dashboard/users/649/
-        url = response.url
+        url = response.url  # type: ignore[assignment]
         parsed_url = urlparse(url)
         user_id = parsed_url.path.rstrip("/").split("/")[-1]
         self.assertIsInstance(int(user_id), int, f"User ID should be an integer. response.url: {url}")

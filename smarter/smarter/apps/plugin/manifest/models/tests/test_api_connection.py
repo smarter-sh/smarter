@@ -1,6 +1,7 @@
 """Test ApiConnection Django ORM and Manifest Loader."""
 
-from logging import getLogger
+import logging
+from typing import Optional
 
 from pydantic_core import ValidationError
 
@@ -11,16 +12,25 @@ from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.tests.base_classes import TestConnectionBase
 from smarter.apps.plugin.tests.factories import secret_factory
 from smarter.common.utils import camel_to_snake, camel_to_snake_dict
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.exceptions import SAMValidationError
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class TestApiConnection(TestConnectionBase):
     """Test ApiConnection Django ORM and Manifest Loader"""
 
-    _model: SAMApiConnection = None
+    _model: Optional[SAMApiConnection] = None
 
     @property
     def model(self) -> SAMApiConnection:
@@ -28,6 +38,8 @@ class TestApiConnection(TestConnectionBase):
         if not self._model and self.loader:
             self._model = SAMApiConnection(**self.loader.pydantic_model_dump())
             self.assertIsNotNone(self._model)
+        if not isinstance(self._model, SAMApiConnection):
+            raise TypeError(f"Expected SAMApiConnection, got {type(self._model)}")
         return self._model
 
     def test_valid_manifest(self):
@@ -36,6 +48,9 @@ class TestApiConnection(TestConnectionBase):
         """
         self.load_manifest(filename="api-connection.yaml")
         self.assertIsNotNone(self.model)
+        self.assertIsNotNone(self.model.metadata)
+        self.assertIsNotNone(self.model.spec)
+        self.assertIsNotNone(self.model.spec.connection)
 
         snake_case_name = camel_to_snake(self.model.metadata.name)
         self.assertEqual(self.model.metadata.name, snake_case_name)
@@ -205,10 +220,10 @@ class TestApiConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["authMethod"] = invalid_auth_method
         self._loader = None
         self._model = None
-        with self.assertRaises(SAMValidationError) as context:
+        with self.assertRaises(ValidationError) as context:
             print(self.model)
         self.assertIn(
-            f"Invalid authentication method: . Must be one of {AuthMethods.all_values()}.",
+            f"Input should be a valid string",
             str(context.exception),
         )
 

@@ -1,7 +1,8 @@
 """Test Api v1 CLI commands for ApiConnection"""
 
+import logging
 from http import HTTPStatus
-from logging import getLogger
+from typing import Optional
 from urllib.parse import urlencode
 
 import yaml
@@ -17,14 +18,29 @@ from smarter.apps.plugin.manifest.enum import (
 )
 from smarter.apps.plugin.models import ApiConnection
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from .base_class import ApiV1CliTestBase
 
 
 KIND = SAMKinds.API_CONNECTION.value
-logger = getLogger(__name__)
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
+        and level >= logging.INFO
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class TestApiCliV1ApiConnection(ApiV1CliTestBase):
@@ -39,13 +55,13 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
     Account.
     """
 
-    apiconnection: ApiConnection = None
+    apiconnection: Optional[ApiConnection] = None
 
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
         self.query_params = urlencode({"name": self.name})
-        self.api_key: Secret = None
+        self.api_key: Optional[Secret] = None
 
     def tearDown(self):
         if self.apiconnection is not None:
@@ -174,7 +190,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         data[SAMKeys.METADATA.value]["description"] = new_description
 
         # pop the status bc its read-only
-        data.pop(SAMKeys.STATUS.value)
+        # data.pop(SAMKeys.STATUS.value)
 
         # convert the data back to yaml, since this is what the cli usually sends
         manifest = yaml.dump(data)

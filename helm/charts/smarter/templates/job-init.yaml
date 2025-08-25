@@ -41,7 +41,7 @@ spec:
       containers:
         - resources:
             requests:
-              memory: "500m"
+              memory: "500Mi"
               cpu: "100m"
             limits:
               memory: "2Gi"
@@ -68,10 +68,17 @@ spec:
               python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/examples --repo_version 2
               python manage.py load_from_github --account_number 5680-6558-6577 --url https://github.com/smarter-sh/examples --repo_version 2
               python manage.py load_from_github --account_number 4386-2072-3294 --url https://github.com/smarter-sh/examples --repo_version 2
-              python manage.py add_plugin_examples admin
+              python manage.py add_plugin_examples --username admin
               python manage.py deploy_builtin_chatbots --account_number 3141-5926-5359
               python manage.py deploy_builtin_chatbots --account_number 4386-2072-3294
               python manage.py deploy_builtin_chatbots --account_number 5680-6558-6577
+              python manage.py initialize_providers
+              python manage.py create_stackacademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user
+              python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin
+              python manage.py update_secret --name smarter_test_db --username admin --value "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
+              python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin
+              python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin
+
           command:
             - /bin/sh
             - -c
@@ -124,6 +131,8 @@ spec:
               value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
             - name: SECRET_KEY
               value: "{{ .Values.env.SECRET_KEY }}"
+            - name: SMARTER_MYSQL_TEST_DATABASE_PASSWORD
+              value: "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
             - name: CACHES_LOCATION
               value: "{{ .Values.env.CACHES_LOCATION }}"
             - name: CELERY_BROKER_URL

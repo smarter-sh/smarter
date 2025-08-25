@@ -20,7 +20,8 @@ to avoid repeated API calls, and to retry failed API calls.
 """
 
 import json
-from logging import getLogger
+import logging
+from typing import Optional
 
 import googlemaps
 import openmeteo_requests
@@ -29,16 +30,30 @@ import requests_cache
 from retry_requests import retry
 
 from smarter.common.conf import settings
+from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from ..signals import get_current_weather_request, get_current_weather_response
+from ..signals import llm_tool_presented, llm_tool_requested, llm_tool_responded
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # Google Maps API key
 gmaps = None
 try:
+    if not settings.google_maps_api_key:
+        raise SmarterConfigurationError(
+            "Google Maps API key is not set. Please set GOOGLE_MAPS_API_KEY in your .env file."
+        )
     gmaps = googlemaps.Client(key=settings.google_maps_api_key.get_secret_value())
 # pylint: disable=broad-exception-caught
 except ValueError as value_error:
@@ -58,7 +73,7 @@ openmeteo = openmeteo_requests.Client(session=WEATHER_API_RETRY_SESSION)
 # pylint: disable=too-many-locals
 def get_current_weather(location, unit="METRIC") -> str:
     """Get the current weather in a given location as a 24-hour forecast"""
-    get_current_weather_request.send(sender=get_current_weather, location=location, unit=unit)
+    llm_tool_requested.send(sender=get_current_weather, location=location, unit=unit)
     if gmaps is None:
         retval = {
             "error": "Google Maps Geolocation service is not initialized. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview, and add your GOOGLE_MAPS_API_KEY to .env"
@@ -69,11 +84,11 @@ def get_current_weather(location, unit="METRIC") -> str:
     location = location or "Cambridge, MA, near Kendall Square"
     latitude: float = 0.0
     longitude: float = 0.0
-    address: str = None
+    address: Optional[str] = None
 
     # use Google Maps API to get the latitude and longitude of the location
     try:
-        geocode_result = gmaps.geocode(location)
+        geocode_result = gmaps.geocode(location)  # type: ignore
         latitude = geocode_result[0]["geometry"]["location"]["lat"] or 0
         longitude = geocode_result[0]["geometry"]["location"]["lng"] or 0
         address = geocode_result[0]["formatted_address"]
@@ -94,26 +109,26 @@ def get_current_weather(location, unit="METRIC") -> str:
 
     # Process hourly data. The order of variables needs to be the same as requested.
     hourly = response.Hourly()
-    hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
-    hourly_precipitation_2m = hourly.Variables(1).ValuesAsNumpy()
+    hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()  # type: ignore
+    hourly_precipitation_2m = hourly.Variables(1).ValuesAsNumpy()  # type: ignore
     if unit.upper() == "USCS":
         hourly_temperature_2m = hourly_temperature_2m * 9 / 5 + 32
         hourly_precipitation_2m = hourly_precipitation_2m / 2.54
 
     hourly_data = {
         "date": pd.date_range(
-            start=pd.to_datetime(hourly.Time(), unit="s"),
-            end=pd.to_datetime(hourly.TimeEnd(), unit="s"),
-            freq=pd.Timedelta(seconds=hourly.Interval()),
+            start=pd.to_datetime(hourly.Time(), unit="s"),  # type: ignore
+            end=pd.to_datetime(hourly.TimeEnd(), unit="s"),  # type: ignore
+            freq=pd.Timedelta(seconds=hourly.Interval()),  # type: ignore
             inclusive="left",
         )
     }
-    hourly_data["temperature"] = hourly_temperature_2m
-    hourly_data["precipitation"] = hourly_precipitation_2m
+    hourly_data["temperature"] = hourly_temperature_2m  # type: ignore
+    hourly_data["precipitation"] = hourly_precipitation_2m  # type: ignore
     hourly_dataframe = pd.DataFrame(data=hourly_data).head(24)  # Only return the first 24 hours
     hourly_dataframe["date"] = hourly_dataframe["date"].dt.strftime("%Y-%m-%d %H:%M")
     hourly_json = hourly_dataframe.to_json(orient="records")
-    get_current_weather_response.send(
+    llm_tool_responded.send(
         sender=get_current_weather,
         location=location,
         unit=unit,
@@ -147,4 +162,5 @@ def weather_tool_factory() -> dict:
             },
         },
     }
+    llm_tool_presented.send(sender=weather_tool_factory, tool=tool)
     return tool

@@ -1,7 +1,7 @@
 """Test the Serializers class."""
 
+from smarter.apps.account.serializers import UserMiniSerializer, UserSerializer
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.lib.django.serializers import UserMiniSerializer, UserSerializer
 
 
 class TestUserSerializers(TestAccountMixin):

@@ -1,5 +1,6 @@
 """Test Api v1 CLI commands for account"""
 
+import logging
 from http import HTTPStatus
 
 import yaml
@@ -8,13 +9,25 @@ from django.urls import reverse
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from .base_class import ApiV1CliTestBase
 
 
 KIND = SAMKinds.ACCOUNT.value
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class TestApiCliV1Account(ApiV1CliTestBase):
@@ -96,45 +109,227 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         self.validate_spec(data)
 
     def test_apply(self) -> None:
-        """Test apply command"""
+        """
+        Test apply command as follows:
+        - call describe() and store the result
+        - edit the result and call apply() and verify the results against our control set
+        - call describe to verify that the changes were persisted.
+        """
 
-        # retrieve the current manifest by calling 'describe'
+        logger.info("1.) get the manifest schema from the existing Account that we created in setup()")
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
+
+        logger.info(f"base response: {response}, Status: {status}")
+        expected = {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "Account",
+                "metadata": {
+                    "name": "6031-2057-0556",
+                    "description": "TestAccount_AdminUser_b0ead1318ceae5be",
+                    "version": "1.0.0",
+                },
+                "spec": {
+                    "config": {
+                        "accountNumber": "6031-2057-0556",
+                        "isDefaultAccount": False,
+                        "companyName": "TestAccount_AdminUser_b0ead1318ceae5be",
+                        "phoneNumber": "123-456-789",
+                        "address1": None,
+                        "address2": None,
+                        "city": None,
+                        "state": None,
+                        "postalCode": None,
+                        "country": "USA",
+                        "language": "EN",
+                        "timezone": None,
+                        "currency": "USD",
+                        "isActive": True,
+                    }
+                },
+                "status": {
+                    "created": "2025-08-23T16:22:03.853792+00:00",
+                    "modified": "2025-08-23T16:22:03.853816+00:00",
+                },
+            },
+            "message": "Account None described successfully",
+            "api": "smarter.sh/v1",
+            "thing": "Account",
+            "metadata": {"command": "describe"},
+        }
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
 
-        # muck up the manifest with some test data
+        # modify the existing address information for the account
         data = response[SmarterJournalApiResponseKeys.DATA]
-        data[SAMKeys.SPEC.value] = {
-            "companyName": "test data",
-            "phoneNumber": "+1 617 834 6172",
-            "address1": "Avenida Reforma 222",
-            "address2": "Piso 19",
-            "city": "CDMX",
-            "state": "CDMX",
-            "postalCode": "06600",
-            "country": "Mexico",
-            "language": "es-ES",
-            "timezone": "America/Mexico_City",
-            "currency": "MXN",
-        }
+        change_set = data[SAMKeys.SPEC.value]["config"]
+        change_set["address1"] = "Avenida Reforma 222"
+        change_set["address2"] = "Piso 19"
+        change_set["city"] = "CDMX"
+        change_set["companyName"] = "test data"
+        change_set["country"] = "Mexico"
+        change_set["currency"] = "MXN"
+        change_set["language"] = "es-ES"
+        change_set["phoneNumber"] = "+1 617 834 6172"
+        change_set["postalCode"] = "06600"
+        change_set["state"] = "CDMX"
+        change_set["timezone"] = "America/Mexico_City"
+        data[SAMKeys.SPEC.value] = change_set
 
         # pop the status bc its read-only
         data.pop(SAMKeys.STATUS.value)
 
-        # convert the data back to yaml, since this is what the cli usually sends
+        # convert the data back to yaml, since this is what the cli usually receives
         manifest = yaml.dump(data)
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply)
+
+        logger.info("2.) apply the modified manifest to update the existing Account")
         response, status = self.get_response(path=path, manifest=manifest)
+        logger.info(f"Modified response: {response}, Status: {status}")
+        expected = {
+            "data": {
+                "ready": True,
+                "url": "http://testserver/api/v1/cli/apply/",
+                "session_key": "841f08da12a1060d1fcd035094c96fe54dc666e30b97d5a6c99943200ff27217",
+                "auth_header": "Token e667****",
+                "api_token": "****8b35",
+                "data": {
+                    "apiVersion": "smarter.sh/v1",
+                    "kind": "Account",
+                    "metadata": {
+                        "description": "TestAccount_AdminUser_b0ead1318ceae5be",
+                        "name": "6031-2057-0556",
+                        "version": "1.0.0",
+                    },
+                    "spec": {
+                        "accountNumber": "6031-2057-0556",
+                        "address1": "Avenida Reforma 222",
+                        "address2": "Piso 19",
+                        "city": "CDMX",
+                        "companyName": "test data",
+                        "country": "Mexico",
+                        "currency": "MXN",
+                        "isActive": True,
+                        "isDefaultAccount": False,
+                        "language": "es-ES",
+                        "phoneNumber": "+1 617 834 6172",
+                        "postalCode": "06600",
+                        "state": "CDMX",
+                        "timezone": "America/Mexico_City",
+                    },
+                },
+                "chatbot_id": None,
+                "chatbot_name": None,
+                "is_smarter_api": True,
+                "is_chatbot": False,
+                "is_chatbot_smarter_api_url": False,
+                "is_chatbot_named_url": False,
+                "is_chatbot_sandbox_url": False,
+                "is_chatbot_cli_api_url": False,
+                "is_default_domain": False,
+                "path": "/api/v1/cli/apply/",
+                "root_domain": "testserver",
+                "subdomain": "",
+                "api_subdomain": None,
+                "domain": "testserver",
+                "timestamp": "2025-08-23T16:22:04.803599",
+                "unique_client_string": "6031-2057-0556.http://testserver/api/v1/cli/apply/.user_agent.127.0.0.1.2025-08-23T16:22:04.803599",
+                "client_key": "841f08da12a1060d1fcd035094c96fe54dc666e30b97d5a6c99943200ff27217",
+                "ip_address": "127.0.0.1",
+                "user_agent": "user_agent",
+                "parsed_url": "ParseResult(scheme='http', netloc='testserver', path='/api/v1/cli/apply/', params='', query='', fragment='')",
+                "request": True,
+                "qualified_request": True,
+                "url_path_parts": ["api", "v1", "cli", "apply"],
+                "params": {},
+                "uid": None,
+                "cache_key": "c034ca0d717de16ce710620ac59813d06632f5cd11942af4f40bfc1a4880d4f8",
+                "is_config": False,
+                "is_dashboard": False,
+                "is_workbench": False,
+                "is_environment_root_domain": False,
+                "account": {"accountNumber": "6031-2057-0556"},
+                "user": {
+                    "username": "test_admin_user_b0ead1318ceae5be",
+                    "email": "test-admin-b0ead1318ceae5be@mail.com",
+                },
+                "user_profile": {
+                    "user": {
+                        "username": "test_admin_user_b0ead1318ceae5be",
+                        "email": "test-admin-b0ead1318ceae5be@mail.com",
+                    },
+                    "account": {"accountNumber": "6031-2057-0556"},
+                },
+                "class_name": "SAMAccountBroker",
+            },
+            "message": "Account 6031-2057-0556 applied successfully",
+            "api": "smarter.sh/v1",
+            "thing": "Account",
+            "metadata": {"command": "apply"},
+        }
+
         self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
 
-        # requery and validate our changes
+        # top level apply response
+        self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
+        self.assertIn(SmarterJournalApiResponseKeys.MESSAGE, response.keys())
+        self.assertIn(SmarterJournalApiResponseKeys.API, response.keys())
+        self.assertIn(SmarterJournalApiResponseKeys.THING, response.keys())
+        self.assertIn(SmarterJournalApiResponseKeys.METADATA, response.keys())
+
+        # validate the data that we just modified and applied
+        spec = response[SmarterJournalApiResponseKeys.DATA]["data"]["spec"]
+        for key, value in change_set.items():
+            self.assertIn(key, spec)
+            self.assertEqual(spec[key], value)
+
+        logger.info("3.) re-query and validate that our changes are present when we call describe.")
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
+        logger.info(f"Re-queried response: {response}, Status: {status}")
+
+        expected = {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "Account",
+                "metadata": {
+                    "name": "6031-2057-0556",
+                    "description": "TestAccount_AdminUser_b0ead1318ceae5be",
+                    "version": "1.0.0",
+                },
+                "spec": {
+                    "config": {
+                        "accountNumber": "6031-2057-0556",
+                        "isDefaultAccount": False,
+                        "companyName": "TestAccount_AdminUser_b0ead1318ceae5be",
+                        "phoneNumber": "123-456-789",
+                        "address1": None,
+                        "address2": None,
+                        "city": None,
+                        "state": None,
+                        "postalCode": None,
+                        "country": "USA",
+                        "language": "EN",
+                        "timezone": None,
+                        "currency": "USD",
+                        "isActive": True,
+                    }
+                },
+                "status": {
+                    "created": "2025-08-23T16:22:03.853792+00:00",
+                    "modified": "2025-08-23T16:22:03.853816+00:00",
+                },
+            },
+            "message": "Account None described successfully",
+            "api": "smarter.sh/v1",
+            "thing": "Account",
+            "metadata": {"command": "describe"},
+        }
+
         self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
 

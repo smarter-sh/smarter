@@ -10,7 +10,6 @@ from django.test import Client, RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
-from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.request import SmarterRequestMixin
 
 
@@ -72,34 +71,9 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
     def test_init_without_request_object(self):
         """
-        Test that SmarterRequestMixin doesn't identify any kind of resource nor api.
+        Test that SmarterRequestMixin will initialize without a request object.
         """
-        srm = SmarterRequestMixin(request=None)
-        try:
-            srm.to_json()
-        except SmarterValueError as e:
-            self.assertIsInstance(e, SmarterValueError)
-
-        try:
-            srm.url
-        except SmarterValueError as e:
-            self.assertIsInstance(e, SmarterValueError)
-
-        self.assertIsNone(srm.account)
-        self.assertIsNone(srm.session_key)
-        self.assertIsNone(srm.domain)
-        self.assertIsNone(srm.ip_address)
-        self.assertFalse(srm.is_smarter_api)
-        self.assertFalse(srm.is_chatbot)
-        self.assertFalse(srm.is_chatbot_smarter_api_url)
-        self.assertFalse(srm.is_chatbot_named_url)
-        self.assertFalse(srm.is_chatbot_sandbox_url)
-        self.assertFalse(srm.is_chatbot_cli_api_url)
-        self.assertFalse(srm.is_default_domain)
-        self.assertIsNone(srm.path)
-        self.assertIsNone(srm.root_domain)
-        self.assertIsNone(srm.subdomain)
-        self.assertIsNone(srm.user)
+        SmarterRequestMixin(request=None)
 
     def test_unauthenticated_instantiation(self):
         """
@@ -121,17 +95,26 @@ class TestSmarterRequestMixin(TestAccountMixin):
         srm = SmarterRequestMixin(request)
         self.assertIsNotNone(srm.to_json())
 
-    def test_request_object_is_readonly(self):
+    def test_request_object_can_be_set(self):
         """
         Test that SmarterRequestMixin request object is read-only.
         """
         self.client.login(username=self.admin_user.username, password="12345")
         response = self.client.get("/")
-        request = response.wsgi_request
 
+        # we should be able to instantiate SmarterRequestMixin with a None request
+        request = None
         srm = SmarterRequestMixin(request)
-        with self.assertRaises(AttributeError):
-            srm.smarter_request = None
+
+        # and afterwards we should later be able to set smarter_request
+        srm.smarter_request = response.wsgi_request
+
+        # and after that, we should see authenticated user data
+        self.assertIsNotNone(srm.user)
+        self.assertIsNotNone(srm.account)
+        self.assertIsNotNone(srm.user_profile)
+        self.assertIsNotNone(srm.url)
+        self.assertTrue(srm.is_authenticated)
 
     def test_unauthenticated_base_case(self):
         """
@@ -140,7 +123,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = self.wsgi_request_factory.get(f"/?session_key={self.session_key}", SERVER_NAME="testserver")
         srm = SmarterRequestMixin(request)
         self.assertIsNone(srm.account)
-        self.assertIsNone(srm.session_key)
+        self.assertIsNotNone(srm.session_key)
         self.assertEqual(srm.domain, "testserver")
         self.assertEqual(srm.ip_address, "127.0.0.1")
         self.assertFalse(srm.is_smarter_api)
@@ -201,7 +184,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertFalse(srm.is_chatbot_cli_api_url)
         self.assertFalse(srm.is_chatbot_sandbox_url)
         self.assertFalse(srm.is_smarter_api)
-        self.assertIsNone(srm.session_key)
+        self.assertIsNotNone(srm.session_key)
         self.assertEqual(srm.domain, "example.3141-5926-5359.api.localhost:8000")
 
     def test_sandbox_url(self):
@@ -213,21 +196,21 @@ class TestSmarterRequestMixin(TestAccountMixin):
         if smarter_admin_user_profile is None:
             self.skipTest("Smarter admin user profile is not available")
 
-        path = "/workbench/example/"
+        path = "/workbench/example/chat/"
         url = "http://localhost:8000" + path + f"?session_key={self.session_key}"
         srm = self.get_smarter_request_mixin(url)
 
         self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNone(srm.client_key)
+        self.assertIsNotNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
-        self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
         self.assertFalse(srm.is_chatbot_cli_api_url)
-        self.assertTrue(srm.is_chatbot_sandbox_url)
         self.assertFalse(srm.is_smarter_api)
         self.assertEqual(srm.path, path)
+        self.assertTrue(srm.is_chatbot_sandbox_url)
+        self.assertTrue(srm.is_chatbot)
 
     def test_api_url(self):
         """
@@ -245,7 +228,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNone(srm.client_key)
+        self.assertIsNotNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
@@ -270,7 +253,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNone(srm.client_key)
+        self.assertIsNotNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)

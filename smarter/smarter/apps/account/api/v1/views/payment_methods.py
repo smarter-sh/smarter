@@ -1,29 +1,46 @@
 # pylint: disable=W0707,W0718
 """Account Payment method views for smarter api."""
+import json
 import logging
 from http import HTTPStatus
+from typing import Optional
 
 from django.core.exceptions import ValidationError
+from django.core.handlers.wsgi import WSGIRequest
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    PaymentMethod,
+    User,
+    UserProfile,
+    get_resolved_user,
+)
 from smarter.apps.account.serializers import PaymentMethodSerializer
 from smarter.apps.account.utils import get_cached_account_for_user
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base import AccountListViewBase, AccountViewBase
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class PaymentMethodView(AccountViewBase):
     """Payment method view for smarter api."""
 
-    def get(self, request, payment_method_id: int = None):
+    def get(self, request, payment_method_id: Optional[int] = None):
         return get_payment_method(request, payment_method_id)
 
     def post(self, request):
@@ -32,7 +49,7 @@ class PaymentMethodView(AccountViewBase):
     def patch(self, request):
         return update_payment_method(request)
 
-    def delete(self, request, payment_method_id: int = None):
+    def delete(self, request, payment_method_id: Optional[int] = None):
         return delete_payment_method(request, payment_method_id)
 
 
@@ -42,7 +59,8 @@ class PaymentMethodsListView(AccountListViewBase):
     serializer_class = PaymentMethodSerializer
 
     def get_queryset(self):
-        if self.request.user.is_superuser or self.request.user.is_staff:
+        user = get_resolved_user(self.request.user)
+        if user is None or user.is_superuser or user.is_staff:
             account = get_object_or_404(UserProfile, user=self.request.user).account
             return PaymentMethod.objects.filter(account=account)
         return HttpResponse("Unauthorized", status=HTTPStatus.UNAUTHORIZED.value)
@@ -66,10 +84,13 @@ def validate_request_body(request):
 
 
 def get_payment_method(request, payment_method_id: int):
-    payment_method: PaymentMethod = None
-    account: Account = None
+    payment_method: PaymentMethod
+    account: Optional[Account]
 
-    if not request.user.is_superuser and not request.user.is_staff:
+    user = get_resolved_user(request.user)
+    if user is None:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+    if not user.is_superuser and not user.is_staff:
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
@@ -78,8 +99,10 @@ def get_payment_method(request, payment_method_id: int):
     except PaymentMethod.DoesNotExist:
         return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND.value)
 
-    if isinstance(request.user, User):
-        account = get_cached_account_for_user(user=request.user)
+    user = get_resolved_user(request.user)
+    if user is None:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+    account = get_cached_account_for_user(user=user)
 
     # staff can manage payment methods for their account
     if isinstance(request.user, User) and request.user.is_superuser or (account == account and request.user.is_staff):
@@ -91,16 +114,23 @@ def get_payment_method(request, payment_method_id: int):
     )
 
 
-def create_payment_method(request):
+def create_payment_method(request: WSGIRequest):
     """Create an account from a json representation in the body of the request."""
-    account: Account = None
-    data: dict = None
+    account: Account
+    data: dict
 
-    if not request.user.is_superuser and not request.user.is_staff:
+    user = get_resolved_user(request.user)
+    if user is None:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+
+    if not user.is_superuser and not user.is_staff:
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     validate_request_body(request)
-    data = request.data
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
 
     # the new payment method will be associated with the account of the current user
     try:
@@ -114,22 +144,32 @@ def create_payment_method(request):
     except Exception as e:
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
 
-    return HttpResponseRedirect(request.path_info + str(payment_method.id) + "/")
+    return HttpResponseRedirect(request.path_info + str(payment_method.id) + "/")  # type: ignore[return-value]
 
 
-def update_payment_method(request):
+def update_payment_method(request: WSGIRequest):
     """update an account from a json representation in the body of the request."""
-    data: dict = None
-    payment_method_to_update: UserType = None
+    data: dict
+    payment_method_to_update: Optional[User] = None
 
-    if not request.user.is_superuser and not request.user.is_staff:
+    user = get_resolved_user(request.user)
+    if user is None:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+    if not user.is_superuser and not user.is_staff:
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     validate_request_body(request)
-    data = request.data
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
+    if not isinstance(data, dict):
+        return JsonResponse(
+            {"error": "Invalid request data. Was expecting a dictionary."}, status=HTTPStatus.BAD_REQUEST.value
+        )
 
     try:
-        payment_method = PaymentMethod.objects.get(id=request.data.get("id"))
+        payment_method = PaymentMethod.objects.get(id=data.get("id"))
         account = payment_method.account
     except PaymentMethod.DoesNotExist:
         return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND.value)
@@ -160,10 +200,13 @@ def update_payment_method(request):
     return HttpResponseRedirect(request.path_info)
 
 
-def delete_payment_method(request, payment_method_id: int = None):
+def delete_payment_method(request: WSGIRequest, payment_method_id: Optional[int] = None):
     """delete a plugin by id."""
 
-    if not request.user.is_superuser and not request.user.is_staff:
+    user = get_resolved_user(request.user)
+    if user is None:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
+    if not user.is_superuser and not user.is_staff:
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
