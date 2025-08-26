@@ -771,9 +771,12 @@ class SmarterRequestMixin(AccountMixin):
             return False
 
         path_parts = self.url_path_parts
-        if path_parts[2] != "cli":
-            return False
-        if path_parts[3] != "chat":
+        try:
+            if path_parts[2] != "cli":
+                return False
+            if path_parts[3] != "chat":
+                return False
+        except IndexError:
             return False
 
         return True
