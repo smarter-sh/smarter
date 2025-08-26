@@ -46,7 +46,7 @@ def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
+        or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
     ) and level >= logging.INFO
 
 
