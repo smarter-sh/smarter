@@ -1,3 +1,13 @@
+## [0.13.1](https://github.com/smarter-sh/smarter/compare/v0.13.0...v0.13.1) (2025-08-26)
+
+
+### Bug Fixes
+
+* broken yaml manifest style on drill-down pages ([364238e](https://github.com/smarter-sh/smarter/commit/364238e08be7beba010a7208828ae890b2900d87))
+* log apply ([f7c8355](https://github.com/smarter-sh/smarter/commit/f7c8355496ff4be2f0641681320d42c18910b550))
+* logging switch logic ([6fd93ab](https://github.com/smarter-sh/smarter/commit/6fd93abb1e5963ebb0eb24369008b83f5733c5c7))
+* plugin apply update manifest initialization bug ([86c5061](https://github.com/smarter-sh/smarter/commit/86c5061c08306212108dc533e39e4d430cf234b0))
+
 # [0.13.0](https://github.com/smarter-sh/smarter/compare/v0.12.0...v0.13.0) (2025-08-25)
 
 
