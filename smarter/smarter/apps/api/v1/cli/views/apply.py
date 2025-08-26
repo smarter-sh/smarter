@@ -3,11 +3,29 @@
 Smarter API command-line interface 'apply' view
 /api/v1/cli/apply/
 """
+import logging
+from http import HTTPStatus
 
 from django.core.handlers.wsgi import WSGIRequest
 from drf_yasg.utils import swagger_auto_schema
 
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
 from .base import APIV1CLIViewError, CliBaseApiView
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
+        or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
+    ) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class APIV1CLIViewManifestNotFoundError(APIV1CLIViewError):
@@ -67,5 +85,12 @@ The response from this endpoint is a JSON object.
         if not self.manifest_data:
             raise APIV1CLIViewManifestNotFoundError("No YAML manifest provided.")
 
+        logger.info(
+            f"{self.formatted_class_name}.post(): Applying {self.manifest_kind} manifest for {self.manifest_name}"
+        )
         response = self.broker.apply(request=request, kwargs=kwargs)
+        if response and response.status_code == HTTPStatus.OK:
+            logger.info(
+                f"{self.formatted_class_name}.post(): Applied {self.manifest_kind} manifest for {self.manifest_name}"
+            )
         return response
