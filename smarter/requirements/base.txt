@@ -6,53 +6,53 @@
 
 # python stuff
 # ------------
-setuptools==78.1.1
+setuptools==80.9.0
 
 # General back end
 # ------------
-boto3==1.36.11                          # AWS CLI SDK
+boto3==1.40.16                          # AWS CLI SDK
 botocore                                # AWS CLI SDK
 cachetools==5.5.2                       # Python object caching library
 celery==5.5.3                           # asynchronous task queue. works with redis.
-celery-redbeat==2.2.0                   # scheduled asynchronous tasks
+celery-redbeat==2.3.3                   # scheduled asynchronous tasks
 dnspython==2.7.0                        # DNS toolkit for Python
 inflect==7.4.0                          # Pluralization and singularization
 htmlmin==0.1.12                         # HTML minification, for browser performance optimization
 mysqlclient==2.2.7                      # MySQL client
-paramiko==3.5.1                         # SSH2 protocol library
-requests==2.32.4                        # HTTP requests library
+paramiko==4.0.0                         # SSH2 protocol library
+requests==2.32.5                        # HTTP requests library
 requests-cache==1.2.1                   # HTTP requests caching
 retry-requests==2.0.0                   # HTTP requests retry
 tldextract==5.3.0                       # Extracts the top-level domain from a URL
-validators==0.34.0                      # Data validation library
+validators==0.35.0                      # Data validation library
 whitenoise==6.9.0                       # static file serving
 
 
 # Django
 # ------------
-Django==5.1.7
+Django==5.2.5
 django-extensions==4.1
 django-debug-toolbar==6.0.0
-django-redis==5.4.0                     # object caching
+django-redis==6.0.0                     # object caching
 django-celery-beat==2.8.1               # scheduled asynchronous tasks
-djangorestframework==3.15.2             # for creating REST APIs on top of Django
+djangorestframework==3.16.1             # for creating REST APIs on top of Django
 django-filter==24.1                     # REST API filtering
 django-taggit==6.1.0                    # Smarter Plugin tagging
 django-rest-knox==5.0.2                 # Token authentication for REST APIs
 django-cors-headers==4.7.0              # Cross-origin resource sharing
-django-waffle==4.2.0                    # Feature flagging
+django-waffle==5.0.0                    # Feature flagging
 social-auth-app-django==5.4.2           # Social authentication for Django
 
 # for working with data
 # ------------
-pandas==2.2.3                           # Data manipulation for data science stuff
+pandas==2.3.2                           # Data manipulation for data science stuff
 python-dotenv==1.0.1                    # for reading environment variables from .env files
-pydantic==2.9.2                         # best data validation library ever!
-pydantic-settings==2.9.1                # settings management
+pydantic==2.11.7                         # best data validation library ever!
+pydantic-settings==2.10.1                # settings management
 
 # LLM support
 # ------------
-openai==1.82.1                          # OpenAI API
+openai==1.101.0                          # OpenAI API
 google-generativeai==0.8.5              # Google Generative AI API
 llamaai==0.1.27                         # Llama AI API
 
@@ -75,8 +75,8 @@ mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to th
 # for platform documentation in /docs/
 # ------------
 beautifulsoup4==4.13.3                  # HTML parser for Wagtail page compression
-docutils==0.22                        # required by Django for django.contrib.admindocs
-drf-yasg==1.21.10                        # Swagger API documentation
+docutils==0.22                          # required by Django for django.contrib.admindocs
+drf-yasg==1.21.10                       # Swagger API documentation
 lxml==6.0.0                             # parser for Wagtail page compression
 markdown==3.8                           # Markdown reader/parser
 python-hcl2==7.0.1                      # Terraform hcl parser for reading Terraform tfvars files
