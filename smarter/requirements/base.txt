@@ -10,7 +10,7 @@ setuptools==78.1.1
 
 # General back end
 # ------------
-boto3==1.36.11                          # AWS CLI SDK
+boto3==1.40.16                          # AWS CLI SDK
 botocore                                # AWS CLI SDK
 cachetools==5.5.2                       # Python object caching library
 celery==5.5.3                           # asynchronous task queue. works with redis.
