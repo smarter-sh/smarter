@@ -41,7 +41,7 @@ django-taggit==6.1.0                    # Smarter Plugin tagging
 django-rest-knox==5.0.2                 # Token authentication for REST APIs
 django-cors-headers==4.7.0              # Cross-origin resource sharing
 django-waffle==4.2.0                    # Feature flagging
-social-auth-app-django==5.4.2           # Social authentication for Django
+social-auth-app-django==5.4.3           # Social authentication for Django
 
 # for working with data
 # ------------
