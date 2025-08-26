@@ -2,52 +2,6 @@
 {% load static %}
 
 {% block dashboard_content %}
-  <style>
-  .smarter-health-checks {
-    color: green;
-    background-color: lightgray;
-    border-radius: 5px;
-  }
-  .code-sample-body {
-  position: relative;
-  background-color: #333333;
-  border-radius: 10px;
-  }
-
-  .code-sample-body pre {
-    display: block;
-    justify-content: flex-start;
-    text-align: left;
-    width: auto;
-    word-wrap: break-word !important;
-    unicode-bidi: isolate;
-    white-space: pre-wrap;
-    padding: 15px;
-  }
-
-  .code-sample-copy {
-    position: relative;
-    top: 10px;
-    right: 10px;
-  }
-
-  .code-snippet {
-    --bs-code-color: #f1f1f1;
-    /* Text color */
-    --bs-code-border-color: transparent;
-    /* Border color */
-    --bs-code-bg: #333333;
-    /* Background color */
-    --bs-code-shadow: 0px 3px 9px rgba(0, 0, 0, 0.08);
-    /* Box shadow */
-    white-space: pre;
-    /* This is usually the default for <pre>, but it's good to ensure it's not being overridden */
-    overflow-x: auto;
-    /* Adds a horizontal scrollbar if the content is too wide */
-  }
-
-
-  </style>
   <div id="kt_app_content" class="app-content flex-column-fluid">
   <!--begin::Content container-->
   <div id="kt_app_content_container" class="app-container container-xxl">
