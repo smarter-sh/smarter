@@ -52,7 +52,7 @@ pydantic-settings==2.10.1                # settings management
 
 # LLM support
 # ------------
-openai==1.101.0                          # OpenAI API
+openai==1.101.0                         # OpenAI API
 google-generativeai==0.8.5              # Google Generative AI API
 llamaai==0.1.27                         # Llama AI API
 
