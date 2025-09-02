@@ -46,7 +46,7 @@ social-auth-app-django==5.4.2           # Social authentication for Django
 # for working with data
 # ------------
 pandas==2.3.2                           # Data manipulation for data science stuff
-python-dotenv==1.0.1                    # for reading environment variables from .env files
+python-dotenv==1.1.1                    # for reading environment variables from .env files
 pydantic==2.11.7                         # best data validation library ever!
 pydantic-settings==2.10.1                # settings management
 
