@@ -10,7 +10,7 @@
 
 -r base.txt
 
-pip-tools==7.4.1
+pip-tools==7.5.0
 
 
 # tests
