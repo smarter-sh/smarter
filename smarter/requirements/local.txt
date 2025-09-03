@@ -36,5 +36,5 @@ pre-commit==4.0.1
 pydocstringformatter==0.7.3
 pylint==3.3.4
 pylint-django==2.6.1
-tox==4.23.2
+tox==4.29.0
 watchdog==4.0.1
