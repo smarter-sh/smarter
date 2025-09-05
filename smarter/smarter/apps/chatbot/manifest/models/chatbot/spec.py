@@ -73,7 +73,7 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
     )
     defaultMaxTokens: Optional[int] = Field(
         None,
-        description=f"{class_identifier}.default_max_tokens[int]. Optional. The default max tokens to use for the chatbot. This defaults to {SettingsDefaults.LLM_DEFAULT_MAX_TOKENS}.\nThe max tokens is an integer value that controls the maximum number of tokens in the chatbot's response. The maximum number of tokens is the sum of the tokens in the prompt and the tokens in the response. The maximum number of tokens varies by provider. Refer to vendor documentation as this value routinely changes as new models are released.",
+        description=f"{class_identifier}.default_max_completion_tokens[int]. Optional. The default max tokens to use for the chatbot. This defaults to {SettingsDefaults.LLM_DEFAULT_MAX_COMPLETION_TOKENS}.\nThe max tokens is an integer value that controls the maximum number of tokens in the chatbot's response. The maximum number of tokens is the sum of the tokens in the prompt and the tokens in the response. The maximum number of tokens varies by provider. Refer to vendor documentation as this value routinely changes as new models are released.",
     )
 
     appName: Optional[str] = Field(

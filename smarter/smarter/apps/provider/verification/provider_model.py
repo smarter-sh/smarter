@@ -65,7 +65,7 @@ def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
             model=provider_model.name,
             messages=[{"role": "user", "content": "Hello"}],
             stream=True,
-            max_tokens=10,
+            max_completion_tokens=10,
         )
         # Try to get the first chunk from the stream
         first_chunk = next(iter(response), None)
@@ -111,7 +111,7 @@ def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
                     },
                 }
             ],
-            max_tokens=10,
+            max_completion_tokens=10,
         )
         success = True
     except Exception:
@@ -140,7 +140,7 @@ def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
         openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "Hello"}],
-            max_tokens=5,
+            max_completion_tokens=5,
         )
         success = True
     except Exception:
@@ -183,7 +183,7 @@ def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
                     ],
                 }
             ],
-            max_tokens=5,
+            max_completion_tokens=5,
         )
         success = True
     except Exception:
@@ -406,7 +406,7 @@ def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
         response = openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "Translate this to Spanish: Hello"}],
-            max_tokens=10,
+            max_completion_tokens=10,
         )
         content = response.choices[0].message.content.strip().lower()
         success = "hola" in content
@@ -444,7 +444,7 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
         response = openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": f"Summarize this into 10 words or less: {long_text}"}],
-            max_tokens=30,
+            max_completion_tokens=30,
         )
         summary = response.choices[0].message.content.strip()
         success = len(summary) <= 10

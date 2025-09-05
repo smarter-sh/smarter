@@ -482,7 +482,9 @@ class PluginBase(ABC, SmarterHelperMixin):
                 "system_role": self.manifest.spec.prompt.systemRole if self.manifest and self.manifest.spec else None,
                 "model": self.manifest.spec.prompt.model if self.manifest and self.manifest.spec else None,
                 "temperature": self.manifest.spec.prompt.temperature if self.manifest and self.manifest.spec else None,
-                "max_tokens": self.manifest.spec.prompt.maxTokens if self.manifest and self.manifest.spec else None,
+                "max_completion_tokens": (
+                    self.manifest.spec.prompt.maxTokens if self.manifest and self.manifest.spec else None
+                ),
             }
 
     @property

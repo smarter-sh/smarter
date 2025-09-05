@@ -46,7 +46,7 @@
       ],
       "model": "gpt-5-nano",
       "temperature": 0.5,
-      "max_tokens": 256,
+      "max_completion_tokens": 256,
       "input_text": "What is the weather in San Francisco?"
   },
   "smarter": {
@@ -146,7 +146,7 @@
                   }
               ],
               "temperature": 0.5,
-              "max_tokens": 256,
+              "max_completion_tokens": 256,
               "tool_choice": "auto"
           },
           "response": {
@@ -290,7 +290,7 @@
                   ],
                   "model": "gpt-5-nano",
                   "temperature": 0.5,
-                  "max_tokens": 256,
+                  "max_completion_tokens": 256,
                   "input_text": "What is the weather in San Francisco?"
               }
           },
@@ -307,7 +307,7 @@
       "messages": [
           {
               "role": "smarter",
-              "content": "Prompt configuration: llm=openai, model=gpt-5-nano, temperature=0.5, max_tokens=256, tool_choice=auto.",
+              "content": "Prompt configuration: llm=openai, model=gpt-5-nano, temperature=0.5, max_completion_tokens=256, tool_choice=auto.",
               "smarter_is_new": true
           },
           {

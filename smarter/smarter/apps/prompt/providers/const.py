@@ -75,9 +75,9 @@ class OpenAIRequestKeys:
     MODEL_KEY = "model"
     TOOLS_KEY = "tools"
     MESSAGES_KEY = "messages"
-    MAX_TOKENS_KEY = "max_tokens"
+    MAX_COMPLETION_TOKENS_KEY = "max_completion_tokens"
     TEMPERATURE_KEY = "temperature"
-    all = [MODEL_KEY, TOOLS_KEY, MESSAGES_KEY, MAX_TOKENS_KEY, TEMPERATURE_KEY]
+    all = [MODEL_KEY, TOOLS_KEY, MESSAGES_KEY, MAX_COMPLETION_TOKENS_KEY, TEMPERATURE_KEY]
 
 
 class OpenAIResponseKeys:

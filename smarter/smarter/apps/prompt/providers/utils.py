@@ -19,7 +19,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .const import OpenAIMessageKeys
 from .validators import (
     validate_endpoint,
-    validate_max_tokens,
+    validate_max_completion_tokens,
     validate_messages,
     validate_object_types,
     validate_request_body,
@@ -120,9 +120,9 @@ def get_request_body(data) -> dict:
         temperature = request_body["temperature"]
         validate_temperature(temperature=temperature)
 
-    if hasattr(request_body, "max_tokens"):
-        max_tokens = request_body["max_tokens"]
-        validate_max_tokens(max_tokens=max_tokens)
+    if hasattr(request_body, "max_completion_tokens"):
+        max_completion_tokens = request_body["max_completion_tokens"]
+        validate_max_completion_tokens(max_completion_tokens=max_completion_tokens)
 
     if hasattr(request_body, "end_point"):
         end_point = request_body["end_point"]
