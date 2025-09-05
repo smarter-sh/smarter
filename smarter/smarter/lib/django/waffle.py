@@ -9,13 +9,15 @@ from functools import wraps
 
 import waffle as waffle_orig
 from django.core.cache import cache
-from django.db.utils import OperationalError, ProgrammingError
 from django.db import connections
+from django.db.utils import OperationalError, ProgrammingError
 from waffle.admin import SwitchAdmin
+
 
 # Also catch MySQLdb.OperationalError for lower-level DB errors
 try:
     import MySQLdb
+
     MySQLdbOperationalError = MySQLdb.OperationalError
 except ImportError:
     MySQLdbOperationalError = None
@@ -27,8 +29,12 @@ from smarter.common.helpers.console_helpers import formatted_text_green
 logger = logging.getLogger(__name__)
 CACHE_EXPIRATION = 60  # seconds
 prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")
+
+
 class DbState:
     ready = False
+
+
 db_state = DbState()
 
 
@@ -111,7 +117,8 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
 
     return decorator
 
-def is_database_ready(alias='default'):
+
+def is_database_ready(alias="default"):
 
     if db_state.ready:
         return True
@@ -120,7 +127,7 @@ def is_database_ready(alias='default'):
         connection = connections[alias]
         connection.ensure_connection()
         # Check if the waffle_switch table exists
-        if 'waffle_switch' not in connection.introspection.table_names():
+        if "waffle_switch" not in connection.introspection.table_names():
             return False
         db_state.ready = True
         return db_state.ready
@@ -142,8 +149,7 @@ def switch_is_active(switch_name: str) -> bool:
         logger.error("%s switch_name '%s' is not a valid SmarterWaffleSwitches attribute", prefix, switch_name)
         return False
     db_exceptions = tuple(
-        t for t in (OperationalError, ProgrammingError, MySQLdbOperationalError)
-        if t is not None
+        t for t in (OperationalError, ProgrammingError, MySQLdbOperationalError) if t is not None
     ) or (Exception,)
     try:
         switch = waffle_orig.get_waffle_switch_model().get(switch_name)

@@ -184,7 +184,9 @@ class ChatBot(TimestampedModel):
     default_model = models.CharField(max_length=255, blank=True, null=True)
     default_system_role = models.TextField(default=smarter_settings.llm_default_system_role, blank=True, null=True)
     default_temperature = models.FloatField(default=smarter_settings.llm_default_temperature, blank=True, null=True)
-    default_max_tokens = models.IntegerField(default=smarter_settings.llm_default_max_tokens, blank=True, null=True)
+    default_max_completion_tokens = models.IntegerField(
+        default=smarter_settings.llm_default_max_completion_tokens, blank=True, null=True
+    )
 
     app_name = models.CharField(default="chatbot", max_length=255, blank=True, null=True)
     app_assistant = models.CharField(default="Smarter", max_length=255, blank=True, null=True)

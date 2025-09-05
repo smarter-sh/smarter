@@ -62,7 +62,7 @@ class ProviderModelTypedDict(TypedDict):
     provider_id: int
     base_url: str
     model: str
-    max_tokens: int
+    max_completion_tokens: int
     temperature: float
     top_p: float
     supports_streaming: bool
@@ -450,7 +450,7 @@ class ProviderModel(TimestampedModel):
     is_suspended = models.BooleanField(default=False, blank=False, null=False)
 
     # model configuration
-    max_tokens = models.PositiveIntegerField(default=4096, blank=False, null=False)
+    max_completion_tokens = models.PositiveIntegerField(default=4096, blank=False, null=False)
     temperature = models.FloatField(default=0.7, blank=False, null=False)
     top_p = models.FloatField(default=1.0, blank=False, null=False)
 
@@ -623,7 +623,7 @@ def get_model_for_provider(provider_name: str, model_name: Optional[str] = None)
         ProviderModelEnum.PROVIDER_ID.value: provider.id,  # type: ignore[union-attr]
         ProviderModelEnum.BASE_URL.value: provider.base_url,
         ProviderModelEnum.MODEL.value: model.name,
-        ProviderModelEnum.MAX_TOKENS.value: model.max_tokens,
+        ProviderModelEnum.MAX_TOKENS.value: model.max_completion_tokens,
         ProviderModelEnum.TEMPERATURE.value: model.temperature,
         ProviderModelEnum.TOP_P.value: model.top_p,
         ProviderModelEnum.SUPPORTS_STREAMING.value: model.supports_streaming,

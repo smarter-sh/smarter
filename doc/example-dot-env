@@ -31,6 +31,7 @@ SMTP_FROM_EMAIL=no-reply@alpha.platform.smarter.sh
 # - https://console.mistral.ai/api-keys/
 # - https://platform.openai.com/api-keys
 # - https://api.together.ai/settings/api-keys
+# - https://www.llama.ai/api-keys
 # ----------------------------------------------------------
 GEMINI_API_KEY=SET-ME-PLEASE
 ANTHROPIC_API_KEY=SET-ME-PLEASE
@@ -39,6 +40,7 @@ FIREWORKS_API_KEY=SET-ME-PLEASE
 MISTRAL_API_KEY=SET-ME-PLEASE
 OPENAI_API_KEY=SET-ME-PLEASE
 TOGETHERAI_API_KEY=SET-ME-PLEASE
+LLAMA_API_KEY=SET-ME-PLEASE
 
 GOOGLE_MAPS_API_KEY=SET-ME-PLEASE
 

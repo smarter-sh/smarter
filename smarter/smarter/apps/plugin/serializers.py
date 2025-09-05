@@ -70,7 +70,7 @@ class PluginPromptSerializer(SmarterCamelCaseSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginPrompt
-        fields = ["provider", "system_role", "model", "temperature", "max_tokens"]
+        fields = ["provider", "system_role", "model", "temperature", "max_completion_tokens"]
 
 
 class PluginStaticSerializer(SmarterCamelCaseSerializer):

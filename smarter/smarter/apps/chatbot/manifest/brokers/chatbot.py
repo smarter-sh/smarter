@@ -297,7 +297,7 @@ class SAMChatbotBroker(AbstractBroker):
                         "that you are unable to help them at this time."
                     ),
                     "defaultTemperature": SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-                    "defaultMaxTokens": SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+                    "defaultMaxTokens": SettingsDefaults.LLM_DEFAULT_MAX_COMPLETION_TOKENS,
                     "appName": "Example Chatbot",
                     "appAssistant": "Elle",
                     "appWelcomeMessage": "Welcome to the Example Chatbot! How can I help you today?",
