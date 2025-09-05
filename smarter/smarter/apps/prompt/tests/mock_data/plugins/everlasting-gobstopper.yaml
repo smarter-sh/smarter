@@ -27,7 +27,7 @@ spec:
       You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).
       You should only use data from tool calls for any inquiries about everlasting gobstoppers.
       Otherwise you should respond that you cannot assist with the request.
-    model: gpt-4-turbo
+    model: gpt-5-nano
     temperature: 1.0
     maxTokens: 256
   data:

@@ -15,7 +15,7 @@
       "custom_domain": null,
       "deployed": true,
       "provider": "openai",
-      "default_model": "gpt-4-turbo",
+      "default_model": "gpt-5-nano",
       "default_system_role": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
       "default_temperature": 0.5,
       "default_max_tokens": 256,
@@ -70,11 +70,11 @@
         },
         {
           "role": "assistant",
-          "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+          "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
         },
         {
           "role": "assistant",
-          "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+          "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
         },
         {
           "role": "user",
@@ -86,11 +86,11 @@
         },
         {
           "role": "assistant",
-          "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+          "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
         },
         {
           "role": "assistant",
-          "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+          "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
         },
         {
           "role": "user",
@@ -132,7 +132,7 @@
           "function_name": "get_current_weather",
           "function_args": "{'location': 'San Francisco, CA', 'unit': 'USCS'}",
           "request": {
-            "model": "gpt-4-turbo",
+            "model": "gpt-5-nano",
             "messages": [
               {
                 "role": "system",
@@ -156,11 +156,11 @@
               },
               {
                 "role": "assistant",
-                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
               },
               {
                 "role": "assistant",
-                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
               },
               {
                 "role": "user",
@@ -172,11 +172,11 @@
               },
               {
                 "role": "assistant",
-                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
               },
               {
                 "role": "assistant",
-                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
               },
               {
                 "role": "user",
@@ -197,7 +197,7 @@
           },
           "response": {
             "id": "chatcmpl-AnwFCOf3HT3zfdsa8E78te6ZXfrKj",
-            "model": "gpt-4-turbo-2024-04-09",
+            "model": "gpt-5-nano-2024-04-09",
             "usage": {
               "total_tokens": 1922,
               "prompt_tokens": 1875,
@@ -253,7 +253,7 @@
           "function_name": "function_calling_plugin_0002",
           "function_args": "{'inquiry_type': 'about'}",
           "request": {
-            "model": "gpt-4-turbo",
+            "model": "gpt-5-nano",
             "messages": [
               {
                 "role": "system",
@@ -277,11 +277,11 @@
               },
               {
                 "role": "assistant",
-                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
               },
               {
                 "role": "assistant",
-                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
               },
               {
                 "role": "user",
@@ -295,14 +295,14 @@
               {
                 "name": "function_calling_plugin_0002",
                 "role": "tool",
-                "content": "\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\\n\"",
+                "content": "\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\\n\"",
                 "tool_call_id": "call_3wv44ZppbjvRYJKWIOBz9Z7k"
               }
             ]
           },
           "response": {
             "id": "chatcmpl-Ana3Y8B8bcKfo4Tf2hL9dksTsRPBr",
-            "model": "gpt-4-turbo-2024-04-09",
+            "model": "gpt-5-nano-2024-04-09",
             "usage": {
               "total_tokens": 1065,
               "prompt_tokens": 878,
@@ -325,7 +325,7 @@
                 "message": {
                   "role": "assistant",
                   "audio": null,
-                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\"",
+                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\"",
                   "refusal": null,
                   "tool_calls": null,
                   "function_call": null
@@ -358,7 +358,7 @@
           "function_name": "function_calling_plugin_0002",
           "function_args": "{'inquiry_type': 'about'}",
           "request": {
-            "model": "gpt-4-turbo",
+            "model": "gpt-5-nano",
             "messages": [
               {
                 "role": "system",
@@ -384,14 +384,14 @@
               {
                 "name": "function_calling_plugin_0002",
                 "role": "tool",
-                "content": "\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\\n\"",
+                "content": "\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\\n\"",
                 "tool_call_id": "call_2Y72Smqx7aDTp7y00sonImhV"
               }
             ]
           },
           "response": {
             "id": "chatcmpl-AnZT2ZtFUkhVMAr1HyAiahr4oGbF7",
-            "model": "gpt-4-turbo-2024-04-09",
+            "model": "gpt-5-nano-2024-04-09",
             "usage": {
               "total_tokens": 602,
               "prompt_tokens": 415,
@@ -414,7 +414,7 @@
                 "message": {
                   "role": "assistant",
                   "audio": null,
-                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\"",
+                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\"",
                   "refusal": null,
                   "tool_calls": null,
                   "function_call": null

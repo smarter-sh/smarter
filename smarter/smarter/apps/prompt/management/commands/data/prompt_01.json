@@ -1,5 +1,5 @@
 {
-  "model": "gpt-4-turbo",
+  "model": "gpt-5-nano",
   "end_point": "ChatCompletion",
   "temperature": 0.5,
   "max_tokens": 256,
