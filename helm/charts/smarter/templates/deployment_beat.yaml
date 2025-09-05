@@ -106,6 +106,8 @@ spec:
               value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
             - name: SECRET_KEY
               value: "{{ .Values.env.SECRET_KEY }}"
+            - name: SMARTER_MYSQL_TEST_DATABASE_PASSWORD
+              value: "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
             - name: SMTP_HOST
               value: "{{ .Values.env.SMTP_HOST }}"
             - name: SMTP_PORT
