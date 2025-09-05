@@ -70,6 +70,7 @@ AWS_ACCESS_KEY_ID=SET-ME-PLEASE
 AWS_SECRET_ACCESS_KEY=SET-ME-PLEASE
 # AWS_PROFILE=lawrence
 
+SMARTER_MYSQL_TEST_DATABASE_PASSWORD=SET-ME-PLEASE
 # -----------------------------------
 # FOR TESTING HELM CHARTS
 # Kubernetes secrets - smarter-platform-alpha
