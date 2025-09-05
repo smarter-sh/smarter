@@ -25,6 +25,7 @@ configuration values. This is useful for debugging and logging.
 # python stuff
 import base64
 import importlib.metadata
+import json
 import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
@@ -34,9 +35,10 @@ from typing import Any, List, Optional, Tuple, Union
 
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
-from build._compat import importlib
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
+from build._compat import importlib
 from dotenv import load_dotenv
+from google.oauth2 import service_account
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 
@@ -192,6 +194,13 @@ class SettingsDefaults:
     GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(
         os.environ.get("GOOGLE_MAPS_API_KEY", os.environ.get("google_maps_api_key", "SET-ME-PLEASE"))
     )
+
+    if os.environ.get("GOOGLE_SERVICE_ACCOUNT_B64"):
+        google_svc_acct_b64 = os.environ.get("GOOGLE_SERVICE_ACCOUNT_B64", "")
+        GOOGLE_SERVICE_ACCOUNT: dict = json.loads(base64.b64decode(google_svc_acct_b64))
+    else:
+        GOOGLE_SERVICE_ACCOUNT = {}
+
     GEMINI_API_KEY: SecretStr = SecretStr(os.environ.get("GEMINI_API_KEY", "SET-ME-PLEASE"))
     LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
 
@@ -208,7 +217,7 @@ class SettingsDefaults:
         "that you are unable to help them at this time."
     )
     LLM_DEFAULT_TEMPERATURE = 0.5
-    LLM_DEFAULT_MAX_TOKENS = 2048
+    LLM_DEFAULT_MAX_COMPLETION_TOKENS = 2048
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
     LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
@@ -388,6 +397,9 @@ class Settings(BaseSettings):
     google_maps_api_key: SecretStr = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
     )
+    google_service_account: dict = Field(
+        SettingsDefaults.GOOGLE_SERVICE_ACCOUNT,
+    )
     gemini_api_key: SecretStr = Field(
         SettingsDefaults.GEMINI_API_KEY,
     )
@@ -431,7 +443,7 @@ class Settings(BaseSettings):
     llm_default_model: str = Field(SettingsDefaults.LLM_DEFAULT_MODEL)
     llm_default_system_role: str = Field(SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE)
     llm_default_temperature: float = Field(SettingsDefaults.LLM_DEFAULT_TEMPERATURE)
-    llm_default_max_tokens: int = Field(SettingsDefaults.LLM_DEFAULT_MAX_TOKENS)
+    llm_default_max_completion_tokens: int = Field(SettingsDefaults.LLM_DEFAULT_MAX_COMPLETION_TOKENS)
     pinecone_api_key: SecretStr = Field(SettingsDefaults.PINECONE_API_KEY)
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY)
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY)
@@ -639,10 +651,8 @@ class Settings(BaseSettings):
     def dump(self) -> dict:
         """Dump all settings."""
 
-
         def get_installed_packages():
-            return [(dist.metadata['Name'], dist.version) for dist in importlib.metadata.distributions()]
-
+            return [(dist.metadata["Name"], dist.version) for dist in importlib.metadata.distributions()]
 
         if self._dump:
             return self._dump
@@ -673,6 +683,7 @@ class Settings(BaseSettings):
             "google": {
                 "google_maps_api_key": self.google_maps_api_key,
                 "gemini_api_key": self.gemini_api_key,
+                "google_service_account": self.google_service_account,
             },
             "metaai": {
                 "llama_api_key": self.llama_api_key,
@@ -850,6 +861,13 @@ class Settings(BaseSettings):
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
         return v
 
+    @field_validator("google_service_account")
+    def check_google_service_account(cls, v) -> dict:
+        """Check google_service_account"""
+        if v in [None, {}]:
+            return SettingsDefaults.GOOGLE_SERVICE_ACCOUNT
+        return v
+
     @field_validator("gemini_api_key")
     def check_gemini_api_key(cls, v) -> SecretStr:
         """Check gemini_api_key"""
@@ -1002,13 +1020,13 @@ class Settings(BaseSettings):
             return SettingsDefaults.LLM_DEFAULT_TEMPERATURE
         return float(v)
 
-    @field_validator("llm_default_max_tokens")
-    def check_openai_default_max_tokens(cls, v) -> int:
-        """Check llm_default_max_tokens"""
+    @field_validator("llm_default_max_completion_tokens")
+    def check_openai_default_max_completion_tokens(cls, v) -> int:
+        """Check llm_default_max_completion_tokens"""
         if isinstance(v, int):
             return v
         if v in [None, ""]:
-            return SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
+            return SettingsDefaults.LLM_DEFAULT_MAX_COMPLETION_TOKENS
         return int(v)
 
     @field_validator("pinecone_api_key")
