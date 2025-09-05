@@ -19,7 +19,7 @@ from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT
 HERE = Path(__file__).resolve().parent
 
 OPENAI_API = "OpenAI"
-OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
+OPENAI_DEFAULT_MODEL = "gpt-5-nano"
 OPENAI_API_KEY_NAME = "openai_api_key"
 
 GOOGLE_API = "GoogleAI"

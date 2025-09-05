@@ -24,6 +24,7 @@ configuration values. This is useful for debugging and logging.
 
 # python stuff
 import base64
+import importlib.metadata
 import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
@@ -33,7 +34,7 @@ from typing import Any, List, Optional, Tuple, Union
 
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
-import pkg_resources
+from build._compat import importlib
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from dotenv import load_dotenv
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
@@ -197,7 +198,7 @@ class SettingsDefaults:
     LLAMA_API_KEY: SecretStr = SecretStr(os.environ.get("LLAMA_API_KEY", "SET-ME-PLEASE"))
 
     LLM_DEFAULT_PROVIDER = "openai"
-    LLM_DEFAULT_MODEL = "gpt-4o-mini"
+    LLM_DEFAULT_MODEL = "gpt-5-nano"
     LLM_DEFAULT_SYSTEM_ROLE = (
         "You are a helpful chatbot. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "
@@ -638,11 +639,10 @@ class Settings(BaseSettings):
     def dump(self) -> dict:
         """Dump all settings."""
 
+
         def get_installed_packages():
-            installed_packages = pkg_resources.working_set
-            # pylint: disable=not-an-iterable
-            package_list = [(d.project_name, d.version) for d in installed_packages]
-            return package_list
+            return [(dist.metadata['Name'], dist.version) for dist in importlib.metadata.distributions()]
+
 
         if self._dump:
             return self._dump

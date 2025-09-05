@@ -182,7 +182,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 "prompt": {
                     "provider": "openai",
                     "systemRole": "Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n",
-                    "model": "gpt-4-turbo",
+                    "model": "gpt-5-nano",
                     "temperature": 0.5,
                     "maxTokens": 256
                 },
@@ -199,7 +199,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     "staticData": {
                         "description": "an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
                         "staticData": {
-                            "about": "In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\n",
+                            "about": "In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-5-nano and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\n",
                             "links": [
                                 {
                                     "documentation": "https://platform.openai.com/docs/guides/function-calling"
