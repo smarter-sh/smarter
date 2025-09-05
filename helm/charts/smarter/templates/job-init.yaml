@@ -134,8 +134,6 @@ spec:
               value: "{{ .Values.env.SECRET_KEY }}"
             - name: SMARTER_MYSQL_TEST_DATABASE_PASSWORD
               value: "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
-            - name: SMARTER_MYSQL_TEST_DATABASE_PASSWORD
-              value: "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
             - name: CACHES_LOCATION
               value: "{{ .Values.env.CACHES_LOCATION }}"
             - name: CELERY_BROKER_URL
