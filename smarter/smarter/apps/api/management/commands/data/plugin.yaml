@@ -20,7 +20,7 @@ spec:
     systemRole: >
       Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response:
       "This is a verification of /api/v1/cli/ end points. Here is the additional information that you requested:"
-    model: gpt-4-turbo
+    model: gpt-5-nano
     temperature: 0.0
     maxTokens: 256
 

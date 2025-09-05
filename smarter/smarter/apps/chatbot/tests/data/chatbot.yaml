@@ -9,7 +9,7 @@ spec:
   config:
     deployed: true
     provider: openai
-    defaultModel: gpt-4-turbo
+    defaultModel: gpt-5-nano
     defaultTemperature: 0.5
     defaultMaxTokens: 512
     defaultSystemRole: >
