@@ -21,7 +21,7 @@ PYTHONPATH=./venv:./smarter
 SMTP_SENDER=local.platform.smarter.sh
 SMTP_PASSWORD=SET-ME-PLEASE
 SMTP_USERNAME=SET-ME-PLEASE
-SMTP_FROM_EMAIL=no-reply@smarter.sh
+SMTP_FROM_EMAIL=no-reply@alpha.platform.smarter.sh
 
 # Api Keys
 # - https://aistudio.google.com/app/apikey
