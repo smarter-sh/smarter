@@ -19,12 +19,12 @@ django-debug-toolbar==6.0.0             # a configurable set of panels that disp
 # type annotations for packages that don't include them
 # ------------
 pandas-stubs==2.3.2.250827
-types-cachetools
+types-cachetools==6.2.0.20250827
 types-lxml==2025.8.25
 types-Markdown==3.9.0.20250906
 types-paramiko==4.0.0.20250822
 types-PyYAML==6.0.12.20250822
-types-requests
+types-requests==2.32.4.20250809
 
 
 # tests
