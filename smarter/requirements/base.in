@@ -7,10 +7,6 @@
 
 -r constraints.txt
 
-# python stuff
-# ------------
-setuptools~=80.9
-
 # General back end
 # ------------
 cachetools<6.0                       # Python object caching library
