@@ -563,6 +563,3 @@ yarl==1.20.1
     # via
     #   -r smarter/requirements/constraints.txt
     #   aiohttp
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
