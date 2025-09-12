@@ -32,7 +32,7 @@ flake8-coding==1.3.2
 isort==6.0.1
 mypy_extensions==1.1.0                  # Type annotations for Python
 mypy==1.15.0
-pre-commit==4.0.1
+pre-commit==4.3.0
 pydocstringformatter==0.7.3
 pylint==3.3.4
 pylint-django==2.6.1
