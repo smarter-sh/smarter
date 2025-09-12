@@ -47,6 +47,10 @@ build:
 run:
 	make docker-run
 
+requirements:
+	pip-compile smarter/requirements/base.in -o smarter/requirements/base.txt
+	pip-compile smarter/requirements/local.in -o smarter/requirements/local.txt
+
 test:
 	make docker-test
 
