@@ -48,6 +48,7 @@ run:
 	make docker-run
 
 requirements:
+	pip install --upgrade pip setuptools wheel pip-tools
 	pip-compile smarter/requirements/base.in -o smarter/requirements/base.txt
 	pip-compile smarter/requirements/local.in -o smarter/requirements/local.txt
 
