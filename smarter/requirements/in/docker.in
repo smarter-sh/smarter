@@ -1,0 +1,11 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      Python requirements for running platform via Docker
+#             container environment.
+# -----------------------------------------------------------------------------
+
+-r base.in
+
+gunicorn==23.0.0

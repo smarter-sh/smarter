@@ -2,10 +2,10 @@
 # written by: Lawrence McDaniel
 #             https://lawrencemcdaniel.com
 #
-# usage:      pip-compile smarter/requirements/base.in -o smarter/requirements/base.txt
+# usage:      pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
 # -----------------------------------------------------------------------------
 
--r constraints.txt
+-r constraints.in
 
 # General back end
 # ------------
