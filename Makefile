@@ -49,8 +49,8 @@ run:
 
 requirements:
 	pip install --upgrade pip setuptools wheel pip-tools
-	pip-compile smarter/requirements/base.in -o smarter/requirements/base.txt
-	pip-compile smarter/requirements/local.in -o smarter/requirements/local.txt
+	pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
+	pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
 
 test:
 	make docker-test
@@ -220,6 +220,8 @@ help:
 	@echo 'activate               - activates Python virtual environment'
 	@echo 'build                  - Build Docker containers'
 	@echo 'run                    - run web application from Docker'
+	@echo 'test                   - run Python-Django unit tests in Docker'
+	@echo 'requirements           - compile and update Python dependency files'
 	@echo 'clean                  - delete all local artifacts, virtual environment, node_modules, and Docker containers'
 	@echo 'tear-down              - destroy all docker build and local artifacts'
 	@echo '<************************** Code Management **************************>'

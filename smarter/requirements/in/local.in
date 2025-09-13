@@ -2,11 +2,10 @@
 # written by: Lawrence McDaniel
 #             https://lawrencemcdaniel.com
 #
-# usage:      pip-compile smarter/requirements/local.in -o smarter/requirements/local.txt
+# usage:      pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
 # -----------------------------------------------------------------------------
 
--r constraints.txt
--r base.txt
+-r base.in
 
 pip-tools==7.5.0
 
