@@ -2,31 +2,32 @@
 # written by: Lawrence McDaniel
 #             https://lawrencemcdaniel.com
 #
-# usage:      pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
+# usage:      The common platform requirements.
+#
+# pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
 # -----------------------------------------------------------------------------
 
 -r constraints.in
 
 # General back end
 # ------------
-cachetools<6.0                       # Python object caching library
+boto3~=1.40                             # AWS CLI SDK
+botocore~=1.40                          # AWS CLI SDK core
+cachetools                              # Python object caching library
 celery==5.5.3                           # asynchronous task queue. works with redis.
 celery-redbeat==2.3.3                   # scheduled asynchronous tasks
 dnspython==2.7.0                        # DNS toolkit for Python
-htmlmin==0.1.12                         # HTML minification, for browser performance optimization and sanitization
 mysqlclient==2.2.7                      # MySQL client
 paramiko==4.0.0                         # SSH2 protocol library
+python-hcl2==7.3.1                      # Terraform hcl parser for reading Terraform tfvars files
+python-dotenv==1.1.1                    # for reading environment variables from .env files
 requests==2.32.5                        # HTTP requests library
 requests-cache==1.2.1                   # HTTP requests caching
 retry-requests==2.0.0                   # HTTP requests retry
 tldextract==5.3.0                       # Extracts the top-level domain from a URL
 validators==0.35.0                      # Data validation library
-whitenoise==6.9.0                       # static file serving
+mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to the mailing list
 
-# AWS stuff. Rapidly changing.
-# ------------
-boto3~=1.40                             # AWS CLI SDK
-botocore~=1.40                          # AWS CLI SDK core
 
 # Django
 # ------------
@@ -41,10 +42,9 @@ django-cors-headers==4.7.0              # Cross-origin resource sharing
 django-waffle==5.0.0                    # Feature flagging
 social-auth-app-django==5.4.2           # Social authentication for Django
 
-# for working with data
+# Manifest support, and for working with data
 # ------------
 pandas==2.3.2                           # Data manipulation for data science stuff
-python-dotenv==1.1.1                    # for reading environment variables from .env files
 pydantic==2.11.7                        # best data validation library ever!
 pydantic-settings==2.10.1               # settings management
 
@@ -53,6 +53,8 @@ pydantic-settings==2.10.1               # settings management
 openai==1.101.0                         # OpenAI API
 google-generativeai==0.8.5              # Google Generative AI API
 llamaai==0.1.27                         # Llama AI API
+googlemaps==4.10.0                      # Google Maps API for weather function calling feature
+openmeteo-requests==1.3.0               # OpenMeteo API for weather data for weather function calling feature
 
 # Natural language processing
 # ------------
@@ -62,29 +64,14 @@ nltk==3.9.1                             # Natural Language Toolkit
 textblob==0.19.0                        # Text processing library
 inflect==7.4.0                          # Pluralization and singularization
 
-# weather function calling feature
-# ------------
-googlemaps==4.10.0                      # Google Maps API
-openmeteo-requests==1.3.0               # OpenMeteo API for weather data
-
-# for working with email
-# ------------
-mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to the mailing list
-
-# for platform documentation in /docs/
+# CMS and web publishing tools
 # ------------
 beautifulsoup4==4.13.3                  # HTML parser for Wagtail page compression
 docutils==0.22                          # required by Django for django.contrib.admindocs
 drf-yasg==1.21.10                       # Swagger API documentation
+htmlmin==0.1.12                         # HTML minification, for browser performance optimization and sanitization
 lxml==6.0.0                             # parser for Wagtail page compression
 markdown==3.8                           # Markdown reader/parser
-python-hcl2==7.3.1                      # Terraform hcl parser for reading Terraform tfvars files
 wagtail==7.1.1                          # Wagail CMS, for building static pages
 wagtail-transfer==0.9.4                 # https://github.com/wagtail/wagtail-transfer
-
-
-# removed
-# ------------
-# dj-stripe==2.9.0                      # Stripe card processing integration
-# langchain==0.3.12                       # LLM abstractions library for building complex workflows
-# langchain-openai==0.2.12                # OpenAI plugin for Langchain
+whitenoise==6.9.0                       # static file serving

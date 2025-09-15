@@ -2,10 +2,13 @@
 # written by: Lawrence McDaniel
 #             https://lawrencemcdaniel.com
 #
-# usage:      Python requirements for running platform via Docker
-#             container environment.
+# usage:      for all cloud-based non-development environments. Adds
+#             a WSGI HTTP server for running web applications. This
+#             handshakes with the cloud proxy server Nginx to manage
+#             http requests and responses.
 # -----------------------------------------------------------------------------
 
+-r constraints.in
 -r base.in
 
 gunicorn==23.0.0
