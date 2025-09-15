@@ -2,9 +2,13 @@
 # written by: Lawrence McDaniel
 #             https://lawrencemcdaniel.com
 #
-# usage:      pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
+# usage: developer support packages for code syntax and type checking, testing,
+#        formatting, security, quality, vanity, debugging, build & packaging
+#
+#      pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
 # -----------------------------------------------------------------------------
 
+-r constraints.in
 -r base.in
 
 pip-tools==7.5.0
@@ -24,6 +28,9 @@ types-Markdown==3.9.0.20250906
 types-paramiko==4.0.0.20250822
 types-PyYAML==6.0.12.20250822
 types-requests==2.32.4.20250809
+django-stubs==5.2.2                 # Type annotations for Django
+djangorestframework-stubs==3.16.0   # type annotations for djangorestframework
+mypy_extensions==1.1.0              # Type annotations for Python
 
 
 # tests
@@ -38,12 +45,9 @@ bandit==1.8.6                       # security linter
 black==25.1.0                       # code formatter
 codespell==2.4.1                    # typo checker
 coverage==7.10.5                    # test coverage
-django-stubs==5.2.2                 # Type annotations for Django
-djangorestframework-stubs==3.16.0   # type annotations for djangorestframework
 flake8==7.3.0                       # code linter
 flake8-coding==1.3.2                # coding style linter
 isort==6.0.1                        # import sorter
-mypy_extensions==1.1.0              # Type annotations for Python
 mypy==1.15.0                        # static type checker
 pre-commit==4.3.0                   # git hook manager
 pydocstringformatter==0.7.3         # docstring formatter

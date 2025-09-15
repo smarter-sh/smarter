@@ -5,6 +5,8 @@
 # usage:      referenced by base.in and local.in to constrain versions
 # -----------------------------------------------------------------------------
 
+cachetools<6.0
+
 # Indirect dependency, constrained for compatibility. Update as needed.
 certifi>=2025.8.0,<2026.0.0
 
