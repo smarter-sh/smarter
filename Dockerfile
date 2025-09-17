@@ -9,11 +9,17 @@
 
 # Use the official Python image as a parent image
 ################################## base #######################################
-FROM --platform=linux/amd64 python:3.12-bookworm AS base
+FROM --platform=linux/amd64 python:3.12-bookworm AS linux_base
 LABEL maintainer="Lawrence McDaniel <lawrence@querium.com>" \
-      description="Docker image for the Smarter application." \
+      description="Docker image for the Smarter Api" \
       license="MIT" \
-      vcs-url="https://github.com/smarter-sh/smarter"
+      vcs-url="https://github.com/smarter-sh/smarter" \
+      org.opencontainers.image.title="Smarter API" \
+      org.opencontainers.image.version="0.13.1" \
+      org.opencontainers.image.authors="Lawrence McDaniel <lawrence@querium.com>" \
+      org.opencontainers.image.url="https://smarter-sh.github.io/smarter/" \
+      org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
+      org.opencontainers.image.documentation="https://platform.smarter.sh/docs/"
 
 
 # Environment: local, alpha, beta, next, or production
@@ -34,21 +40,11 @@ RUN mkdir -p /home/smarter_user/data/.kube && \
 # Set the KUBECONFIG environment variable
 ENV KUBECONFIG=/home/smarter_user/data/.kube/config
 
-# Setup our file system.
-# so that the Docker file system matches up with the local file system.
-WORKDIR /smarter
-COPY ./smarter/requirements ./requirements
-RUN chown smarter_user:smarter_user -R .
-
-COPY ./scripts/pull_s3_env.sh .
-RUN chown smarter_user:smarter_user -R . && \
-    chmod +x pull_s3_env.sh
-
 ############################## systempackages #################################
-FROM base AS systempackages
+FROM linux_base AS systempackages
 
 # bring Ubuntu up to date and install dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     ca-certificates \
     curl \
     gnupg \
@@ -81,14 +77,26 @@ RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o 
     ./aws/install && \
     rm -rf awscliv2.zip aws
 
-    # Set permissions for the non-root user
+FROM systempackages AS requirements
+# Setup our file system.
+# so that the Docker file system matches up with the local file system.
+WORKDIR /smarter
+COPY ./smarter/requirements ./requirements
+RUN chown smarter_user:smarter_user -R .
+
+COPY ./scripts/pull_s3_env.sh .
+RUN chown smarter_user:smarter_user -R . && \
+    chmod +x pull_s3_env.sh
+
+# Set permissions for the non-root user
 RUN chown -R smarter_user:smarter_user /smarter
 
 # Switch to non-root user
 USER smarter_user
 
+
 ############################## pythonpackages #################################
-FROM systempackages AS pythonpackages
+FROM requirements AS pythonpackages
 # Create and activate a virtual environment in the user's home directory
 RUN python -m venv /home/smarter_user/venv
 ENV PATH="/home/smarter_user/venv/bin:$PATH"
@@ -108,7 +116,7 @@ FROM pythonpackages AS data
 # caching mechanism.
 WORKDIR /home/smarter_user/
 
-COPY --chown=smarter_user:smarter_user ./doc ./data/doc
+COPY --chown=smarter_user:smarter_user ./docs ./data/doc
 COPY --chown=smarter_user:smarter_user ./README.md ./data/docs/README.md
 COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/docs/CHANGELOG.md
 COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/docs/CODE_OF_CONDUCT.md
