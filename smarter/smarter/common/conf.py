@@ -167,7 +167,9 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "SET-ME-PLEASE")
+    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "smarter.sh"))
+
+    ANTHROPIC_API_KEY: SecretStr = SecretStr(os.environ.get("ANTHROPIC_API_KEY", "SET-ME-PLEASE"))
 
     # aws auth
     AWS_PROFILE = os.environ.get("AWS_PROFILE", TFVARS.get("aws_profile", None))
@@ -226,10 +228,10 @@ class SettingsDefaults:
     LOGO: str = os.environ.get(
         "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
     )
-    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", "SET-ME-PLEASE")
+    MAILCHIMP_API_KEY: SecretStr = SecretStr(os.environ.get("MAILCHIMP_API_KEY", "SET-ME-PLEASE"))
     MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", "SET-ME-PLEASE")
 
-    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", "https://smarter.sh")
+    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", f"https://{ROOT_DOMAIN}")
 
     OPENAI_API_ORGANIZATION = os.environ.get("OPENAI_API_ORGANIZATION", "SET-ME-PLEASE")
     OPENAI_API_KEY: SecretStr = SecretStr(os.environ.get("OPENAI_API_KEY", "SET-ME-PLEASE"))
@@ -237,7 +239,6 @@ class SettingsDefaults:
     OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
     PINECONE_API_KEY: SecretStr = SecretStr(os.environ.get("PINECONE_API_KEY", "SET-ME-PLEASE"))
 
-    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "smarter.sh"))
     SHARED_RESOURCE_IDENTIFIER = os.environ.get(
         "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
     )
@@ -280,7 +281,7 @@ class SettingsDefaults:
     SECRET_KEY = os.getenv("SECRET_KEY")
 
     SMTP_SENDER = os.environ.get("SMTP_SENDER", "SET-ME-PLEASE")
-    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "no-reply@smarter.sh")
+    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
     SMTP_HOST = os.environ.get("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(os.environ.get("SMTP_USE_SSL", False))
@@ -833,7 +834,7 @@ class Settings(BaseSettings):
     def validate_anthropic_api_key(cls, v) -> SecretStr:
         """Validate anthropic_api_key"""
         if v in [None, ""]:
-            return SecretStr(SettingsDefaults.ANTHROPIC_API_KEY)
+            return SettingsDefaults.ANTHROPIC_API_KEY
         return v
 
     @field_validator("debug_mode")
@@ -942,7 +943,7 @@ class Settings(BaseSettings):
     def check_mailchimp_api_key(cls, v) -> SecretStr:
         """Check mailchimp_api_key"""
         if v in [None, ""] and SettingsDefaults.MAILCHIMP_API_KEY is not None:
-            return SecretStr(SettingsDefaults.MAILCHIMP_API_KEY)
+            return SettingsDefaults.MAILCHIMP_API_KEY
         return v
 
     @field_validator("mailchimp_list_id")
