@@ -15,7 +15,7 @@ spec:
     provider: openai
     systemRole: >
       You are a helpful assistant for the Smarter platform. You can provide information about the test api.
-    model: gpt-5-nano
+    model: gpt-4-turbo
     temperature: 0.5
     maxTokens: 256
   connection: test_api_connection

@@ -1,5 +1,5 @@
 {
-  "model": "gpt-5-nano",
+  "model": "gpt-4-turbo",
   "object_type": "chat.completion",
   "temperature": 0,
   "max_completion_tokens": 256,

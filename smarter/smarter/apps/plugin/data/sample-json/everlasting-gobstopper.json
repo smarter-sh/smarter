@@ -51,7 +51,7 @@
   "prompt": {
     "provider": "openai",
     "systemRole": "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.",
-    "model": "gpt-5-nano",
+    "model": "gpt-4-turbo",
     "temperature": 1.0,
     "max_completion_tokens": 256,
     "id": 1

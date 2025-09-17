@@ -298,7 +298,7 @@ def verify_model_code_interpreter(provider_model: ProviderModel, **kwargs) -> bo
     # List of known models that support code interpreter as of June-2025
     code_interpreter_models = [
         "gpt-4o",
-        "gpt-5-nano",
+        "gpt-4-turbo",
     ]
 
     success = provider_model.name in code_interpreter_models
