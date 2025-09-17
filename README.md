@@ -130,7 +130,7 @@ _AWS Infrastructure Engineers: you additionally will need [AWS Account](https://
 
 ## Documentation
 
-Detailed documentation for each endpoint is available here: [Documentation](./doc/examples/)
+Detailed documentation for each endpoint is available here: [Documentation](./docs/examples/)
 
 ## Support
 
@@ -141,6 +141,6 @@ Please report bugs to the [GitHub Issues Page](https://github.com/QueriumCorp/sm
 Please see:
 
 - the [Developer Setup Guide](./CONTRIBUTING.md)
-- and these [commit comment guidelines](./doc/SEMANTIC_VERSIONING.md) 😬😬😬 for managing CI rules for automated semantic releases.
+- and these [commit comment guidelines](./docs/SEMANTIC_VERSIONING.md) 😬😬😬 for managing CI rules for automated semantic releases.
 
 You can also contact [Lawrence McDaniel](https://lawrencemcdaniel.com/contact) directly.

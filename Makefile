@@ -14,7 +14,7 @@ PIP := $(PYTHON) -m pip
 
 ifneq ("$(wildcard .env)","")
 else
-    $(shell cp ./doc/example-dot-env .env)
+    $(shell cp ./docs/example-dot-env .env)
 endif
 
 .PHONY: init activate build run test clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test docker-compose-install docker-init docker-build docker-run docker-test python-init python-lint python-clean keen-init keen-build keen-server change-log help
