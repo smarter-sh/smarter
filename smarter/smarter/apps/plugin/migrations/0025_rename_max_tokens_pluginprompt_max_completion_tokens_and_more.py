@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             model_name="pluginprompt",
             name="model",
             field=models.CharField(
-                default="gpt-5-nano",
+                default="gpt-4-turbo",
                 help_text="The model to use for the completion.",
                 max_length=255,
             ),

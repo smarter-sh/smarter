@@ -1,4 +1,10 @@
-# [0.13.0](https://github.com/smarter-sh/smarter/compare/v0.12.0...v0.13.0) (2025-08-25)
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.13.0](https://github.com/smarter-sh/smarter/compare/v0.12.0...v0.13.0) (2025-08-25)
 
 ### Bug Fixes
 
@@ -33,17 +39,6 @@
 - scaffold provider app ([cb8975b](https://github.com/smarter-sh/smarter/commit/cb8975b53f7e1008cc516467d4f40d4d8929de15))
 - scaffold provider verifications ([036da3d](https://github.com/smarter-sh/smarter/commit/036da3dd56e57aada21972920804153f78e835ff))
 - setup Broker base classes for Connection and Plugin ([601bc99](https://github.com/smarter-sh/smarter/commit/601bc99b046072d4e3b4616c8c9e29032c28b5b9))
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
-
-## [0.13.0](https://github.com/smarter-sh/smarter/compare/v0.12.0...v0.13.0) (2025-08-25)
-
-- Implements Secret, ApiConnection, ApiPlugin, SqlConnection, SqlPlugin.
-- Major refactor of RequestMixin, Caching.
 
 ## [0.12.0](https://github.com/smarter-sh/smarter/compare/v0.11.0...v0.12.0) (2025-06-02)
 

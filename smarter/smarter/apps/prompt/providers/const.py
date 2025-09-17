@@ -134,10 +134,10 @@ VALID_CHAT_COMPLETION_MODELS = [
     "o1-mini",
     "o1-preview",
     "gpt-4o",
-    "gpt-5-nano",
+    "gpt-4-turbo",
     "chatgpt-4o-latest",
     "gpt-4",
-    "gpt-5-nano",
+    "gpt-4-turbo",
     "o1-preview",
     "o1-mini",
 ]

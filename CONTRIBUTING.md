@@ -13,15 +13,33 @@
 [![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)
 [![Terraform](https://a11ybadges.com/badge?logo=terraform)](https://www.terraform.io/)
 
-You should be able to work unencumbered in any of Linux, macOS or Windows. This repository contains five distinct projects, respectively, written in:
+Thank you for considering contributing to this project! You should be able to work unencumbered in any of Linux, macOS or Windows. There are various technology-specific resources that you'll need to initialize in your development environment. See setup instructions below for each technology.
 
-- [Docker](#docker-setup)
-- [Python](#python-setup)
-- [ReactJS](#reactjs-setup)
-- [Terraform](#terraform-setup)
-- [Keen Bootstrap Theme](#keen-bootstrap-theme-setup)
+## How to Contribute
 
-In each case there are various technology-specific resources that you'll need to initialize in your development environment. See setup instructions below for each technology.
+- **Fork the repository** and create your branch from `main`.
+- **Describe your changes** clearly in your pull request.
+- **Write tests** for your changes if applicable.
+- **Follow the code style** used in the project.
+
+### Governance
+
+Please see [smarter-sh/community](https://github.com/smarter-sh/community)
+
+### Reporting Issues
+
+- Search for existing issues before opening a new one.
+- Include steps to reproduce, expected behavior, and screenshots if helpful.
+
+### Pull Requests
+
+- Ensure your branch is up to date with `main`.
+- Reference related issues in your PR description.
+- Be responsive to feedback and requested changes.
+
+### Code of Conduct
+
+Please see our [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
 
 ## Quick Start
 
@@ -167,31 +185,6 @@ Coverage measurement is typically used to gauge the effectiveness of tests. It c
 Note the following shortcut for running a Coverage report: `make coverage`.
 
 **Our goal for this project is to maintain an overall Coverage score of at least 80%.**
-
-## ReactJS Setup
-
-Please refer to this detailed [ReactJS setup guide](./client/README.md) for how to use vite.js to initialize the ReactJS development environment.
-
-Note that this project leverages Dependabot for managing version numbers of all NPM packages that are used in this project, regardless of where and how. Versions should always be up to date at the moment that you clone the repo. It therefore should never be necessary for you to manually bump package.json version numbers.
-
-```console
-make react-init
-```
-
-## Terraform Setup
-
-If you're new to Terraform then refer to this [Terraform Getting Started Guide](./TERRAFORM_GETTING_STARTED_GUIDE.md) for detailed setup instructions.
-
-Note that this project leverages Dependabot for managing version numbers of all Terraform modules that are used in this project. Versions should always be up to date at the moment that you clone the repo. It therefore should not be necessary for you to manually bump module version numbers.
-
-Also be aware that Terraform is a high-level scripting tool running on top of [AWS CLI](https://aws.amazon.com/cli/), and hence, it's capabilities are ultimately limited to the permissions granted to the [AWS IAM](https://aws.amazon.com/iam/) user account that you're using in your AWS CLI configuration.
-
-```console
-cd aws/dev
-terragrunt init
-terragrunt plan
-terragrunt apply
-```
 
 ## Keen Bootstrap Theme Setup
 

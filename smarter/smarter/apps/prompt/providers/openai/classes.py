@@ -17,7 +17,7 @@ from ..const import VALID_CHAT_COMPLETION_MODELS
 
 BASE_URL = "https://api.openai.com/v1/"  # don't forget the trailing slash
 PROVIDER_NAME = "openai"
-DEFAULT_MODEL = "gpt-5-nano"
+DEFAULT_MODEL = "gpt-4-turbo"
 
 
 def should_log(level):

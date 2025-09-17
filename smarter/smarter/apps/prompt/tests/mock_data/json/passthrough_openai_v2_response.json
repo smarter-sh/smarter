@@ -21,7 +21,7 @@
         }
       ],
       "created": 1702849975,
-      "model": "gpt-5-nano",
+      "model": "gpt-4-turbo",
       "object_type": "chat.completion",
       "system_fingerprint": null,
       "usage": {
@@ -31,7 +31,7 @@
       },
       "request_meta_data": {
         "lambda": "openai_passthrough",
-        "model": "gpt-5-nano",
+        "model": "gpt-4-turbo",
         "object_type": "chat.completion",
         "temperature": 0,
         "max_completion_tokens": 256

@@ -36,7 +36,7 @@
             }
           ],
           "created": 1717593772,
-          "model": "gpt-5-nano",
+          "model": "gpt-4-turbo",
           "object": "chat.completion",
           "system_fingerprint": null,
           "usage": {
@@ -46,7 +46,7 @@
           },
           "metadata": {
             "tool_calls": null,
-            "model": "gpt-5-nano",
+            "model": "gpt-4-turbo",
             "temperature": 0.5,
             "max_completion_tokens": 256,
             "input_text": "Hello, World!"

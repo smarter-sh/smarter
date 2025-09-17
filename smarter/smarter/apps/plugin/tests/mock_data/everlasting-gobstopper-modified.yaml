@@ -17,7 +17,7 @@ spec:
     provider: openai
     systemRole: >
       MODIFIED
-    model: gpt-5-nano
+    model: gpt-4-turbo
     temperature: 1.0
     maxTokens: 256
 

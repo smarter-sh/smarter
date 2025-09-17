@@ -44,7 +44,7 @@ Generated when DEBUG_MODEL=true
 ```json
 {
   "event": {
-    "model": "gpt-5-nano",
+    "model": "gpt-4-turbo",
     "end_point": "ChatCompletion",
     "messages": [
       {
@@ -76,7 +76,7 @@ Generated when DEBUG_MODEL=true
             "id": "chatcmpl-7yLQhuumejaNNSCzKqDD6SPgOCHfe",
             "object": "chat.completion",
             "created": 1694616411,
-            "model": "gpt-5-nano",
+            "model": "gpt-4-turbo",
             "choices": [
                 {
                     "index": 0,
