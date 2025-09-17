@@ -88,7 +88,7 @@ f3bf3acbd087   smarter        "bash -c 'watchmedo …"   About a minute ago   Up
 
 ## Good Coding Best Practices
 
-This project demonstrates a wide variety of good coding best practices for managing mission-critical cloud-based micro services in a team environment, namely its adherence to [12-Factor Methodology](./doc/12-FACTOR.md). Please see this [Code Management Best Practices](./doc/GOOD_CODING_PRACTICE.md) for additional details.
+This project demonstrates a wide variety of good coding best practices for managing mission-critical cloud-based micro services in a team environment, namely its adherence to [12-Factor Methodology](./docs/12-FACTOR.md). Please see this [Code Management Best Practices](./docs/GOOD_CODING_PRACTICE.md) for additional details.
 
 We want to make this project more accessible to students and learners as an instructional tool while not adding undue code review workloads to anyone with merge authority for the project. To this end we've also added several pre-commit code linting and code style enforcement tools, as well as automated procedures for version maintenance of package dependencies, pull request evaluations, and semantic releases.
 
@@ -110,7 +110,7 @@ make pre-commit
 
 Output should look similar to the following:
 
-![pre-commit output](./doc/img/pre-commit.png)
+![pre-commit output](./docs/img/pre-commit.png)
 
 ### Github Secrets setup
 
@@ -118,13 +118,13 @@ Common secrets for automated CD/CD processes are managed with [GitHub Secrets](h
 
 On the other hand, if you've forked this repo and are working on your own independent project, then you'll need to initialize each of these yourself.
 
-![Github Secrets](./doc/img/github-secrets.png)
+![Github Secrets](./docs/img/github-secrets.png)
 
 ### Kubernetes Secrets
 
 The Terraform code in this repo generates several sets of sensitive data that are persisted to [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/). This configuration data is tightly integrated to the CI/CD build and deploy workflows, and fully automates configuration of all back end services on which Smarter relies including for example, MySQL, SMTP Email, AWS S3, AWS Elastic Container Registry, and Kubernetes itself.
 
-![Kubernetes Secrets](./doc/img/kubernetes-secrets.png)
+![Kubernetes Secrets](./docs/img/kubernetes-secrets.png)
 
 ### GitHub Actions
 
@@ -139,7 +139,7 @@ This project depends heavily on GitHub Actions to automate routine activities, s
 
 A typical pull request will look like the following:
 
-![Automated pull request](./doc/img/automated-pr.png)
+![Automated pull request](./docs/img/automated-pr.png)
 
 ## Docker Setup
 
