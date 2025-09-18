@@ -36,35 +36,35 @@ ENV ENVIRONMENT=$ENVIRONMENT
 RUN echo "ENVIRONMENT: $ENVIRONMENT"
 
 ############################## install system packages #################################
+# build-essential           needed to build some python packages, but not included in 3.12-slim-trixie
+# libssl-dev                ... ditto ...
+# libffi-dev                ... ditto ...
+# python3-dev               ... ditto ...
+# pkg-config                ... ditto ...
+# ------
 # ca-certificates           needed for SSL/TLS support in http requests but not included in 3.12-slim-trixie
-# curl                      needed by Dockerfile to download files from the internet
-# gnupg                     needed to add the NodeSource APT repository for Node.js
-# default-mysql-client      needed to run manage.py commands that interact with the database
-# libmariadb-dev            needed for mysqlclient python package
-# build-essential           needed to build some python packages, not included in 3.12-slim-trixie
-# libssl-dev                needed to build some python packages, not included in 3.12-slim-trixie
-# libffi-dev                needed to build some python packages, not included in 3.12-slim-trixie
-# python3-dev               needed to build some python packages, not included in 3.12-slim-trixie
-# python-dev-is-python3     ensures that the 'python' command points to python3
-# unzip                     needed to install aws cli
-# pkg-config                needed to build some python packages, not included in 3.12-slim-trixie
-# git                       used in manage.py commands but not included in 3.12-slim-trixie
+# python-dev-is-python3     helper package to ensure that the 'python' command points to python3
+# default-mysql-client      needed for Django mysql backend support
+# libmariadb-dev            needed for default-mysql-client python package
+# git                       used in manage.py commands
+# ------
+# curl                      used below in this Dockerfile to download files
+# unzip                     used below in this Dockerfile to install aws cli
 FROM linux_base AS system_packages
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
-  ca-certificates \
-  curl \
-  gnupg \
-  default-mysql-client \
-  libmariadb-dev \
   build-essential \
   libssl-dev \
   libffi-dev \
   python3-dev \
-  python-dev-is-python3 \
-  unzip \
   pkg-config \
-  git && \
+  ca-certificates \
+  python-dev-is-python3 \
+  default-mysql-client \
+  libmariadb-dev \
+  git \
+  curl \
+  unzip && \
   rm -rf /var/lib/apt/lists/*
 
 # Install kubectl, required for smarter/common/helpers/k8s_helpers.py
@@ -116,8 +116,21 @@ RUN pip install --upgrade pip && \
 # we're going to run python unit tests in the Docker container.
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
+############################## application ##################################
+FROM venv AS application
+# do this last so that we can take advantage of Docker's caching mechanism.
+WORKDIR /home/smarter_user/
+COPY --chown=smarter_user:smarter_user ./smarter ./smarter
+COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
+
+# Collect static files
+############################## collect_assets ##################################
+FROM application AS collect_assets
+WORKDIR /home/smarter_user/smarter
+RUN python manage.py collectstatic --noinput
+
 ################################# data #################################
-FROM venv AS data
+FROM collect_assets AS data
 # Add our source code and make the 'smarter' directory the working directory
 # we want this to be the last step so that we can take advantage of Docker's
 # caching mechanism.
@@ -131,23 +144,19 @@ COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
 COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
-############################## application ##################################
-FROM data AS application
-# do this last so that we can take advantage of Docker's caching mechanism.
-WORKDIR /home/smarter_user/
-COPY --chown=smarter_user:smarter_user ./smarter ./smarter
-COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
-
-# Collect static files
-############################## collect_assets ##################################
-FROM application AS collect_assets
-WORKDIR /home/smarter_user/smarter
-RUN python manage.py collectstatic --noinput
 
 ################################# final #######################################
-FROM collect_assets AS final
+FROM data AS final
 
-# ensure that the smarter_user owns everything in the /home/smarter_user directory.
+# these are redundant but are here for clarity.
+WORKDIR /home/smarter_user/smarter
+USER smarter_user
+
+# ensure that smarter_user, and only smarter_user owns everything
+# and has read, write and execute permissions on everything
+# in /home/smarter_user. this is important because by default Debian adds
+# read-only and execute permissions to the group and to public.
+# We don't want either of these.
 RUN chown -R smarter_user:smarter_user /home/smarter_user/ && \
   chmod -R 700 /home/smarter_user/
 
