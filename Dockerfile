@@ -147,16 +147,13 @@ COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
 
-################################# final #######################################
-FROM data AS final
+################################# permissuions #######################################
+FROM data AS permissions
 
-# these are redundant but are here for clarity.
-WORKDIR /home/smarter_user/smarter
-
-# ensure that smarter_user, and only smarter_user owns everything
-# and has the minimum permissions needed to run the application
-# and to manage files that the application needs to write to
-# in /home/smarter_user. this is important because by default Debian adds
+# ensure that smarter_user owns everything and has the minimum
+# permissions needed to run the application and to manage files
+# that the application needs to write to in /home/smarter_user.
+# this is important because by default Debian adds
 # read-only and execute permissions to the group and to public.
 # We don't want either of these.
 #
@@ -174,7 +171,10 @@ RUN chown -R smarter_user:smarter_user /home/smarter_user/ && \
   chmod 700 /home/smarter_user/data/celery && \
   rm -rf /home/smarter_user/.cache
 
-# serve the application
+################################# final #######################################
+FROM permissions AS serve_application
+
+WORKDIR /home/smarter_user/smarter
 USER smarter_user
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 EXPOSE 8000
