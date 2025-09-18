@@ -28,6 +28,8 @@ services:
 
   smarter-app:
     container_name: smarter-app
+    mem_limit: 4g
+    cpus: 2
     user: smarter_user
     x-build:
       type: docker
@@ -53,6 +55,8 @@ services:
 
   smarter-worker:
     container_name: smarter-worker
+    mem_limit: 4g
+    cpus: 2
     user: smarter_user
     x-build:
       type: docker
@@ -83,6 +87,8 @@ services:
 
   smarter-beat:
     container_name: smarter-beat
+    mem_limit: 4g
+    cpus: 2
     user: smarter_user
     x-build:
       type: docker
