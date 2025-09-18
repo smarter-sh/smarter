@@ -24,7 +24,7 @@ SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS
 
 # dev only:
 # Bootstrap theme source files and static assets.
-keen_source = glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))
+keen_source = [Path(p) for p in glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))]
 STATICFILES_DIRS.extend(keen_source)
 STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
 

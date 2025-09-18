@@ -104,6 +104,14 @@ docker-shell:
 docker-init:
 	make docker-check && \
 	make docker-prune && \
+
+	rm -rf ./mysql-data && \
+	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
+	docker system prune -a --volumes && \
+	docker volume prune -f && \
+	docker network prune -f && \
+	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove"
+
 	echo "Building Docker images..." && \
 	docker-compose up -d && \
 	echo "Initializing Docker..." && \
@@ -146,13 +154,8 @@ docker-test:
 docker-prune:
 	make docker-check && \
 	docker-compose down && \
-	rm -rf ./mysql-data && \
-	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
-	docker system prune -a --volumes && \
-	docker volume prune -f && \
 	docker builder prune -a -f && \
-	docker network prune -f && \
-	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove"
+	docker image prune -a -f
 
 # ---------------------------------------------------------
 # Python
