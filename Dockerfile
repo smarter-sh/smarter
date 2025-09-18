@@ -10,6 +10,7 @@
 # Use the official Python image as a parent image
 ################################## base #######################################
 FROM --platform=linux/amd64 python:3.12-bookworm AS linux_base
+
 LABEL maintainer="Lawrence McDaniel <lawrence@querium.com>" \
       description="Docker image for the Smarter Api" \
       license="MIT" \
@@ -27,21 +28,8 @@ ARG ENVIRONMENT
 ENV ENVIRONMENT=$ENVIRONMENT
 RUN echo "ENVIRONMENT: $ENVIRONMENT"
 
-# Create a non-root user to run the application
-RUN adduser --disabled-password --gecos '' smarter_user
-
-# create a data directory for the smarter_user that
-# the application can use to store data.
-RUN mkdir -p /home/smarter_user/data/.kube && \
-    touch /home/smarter_user/data/.kube/config && \
-    chown -R smarter_user:smarter_user /home/smarter_user/data && \
-    chmod -R 755 /home/smarter_user/data
-
-# Set the KUBECONFIG environment variable
-ENV KUBECONFIG=/home/smarter_user/data/.kube/config
-
-############################## systempackages #################################
-FROM linux_base AS systempackages
+############################## install system packages #################################
+FROM linux_base AS system_packages
 
 # bring Ubuntu up to date and install dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
@@ -77,7 +65,25 @@ RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o 
     ./aws/install && \
     rm -rf awscliv2.zip aws
 
-FROM systempackages AS requirements
+############################## create app user #################################
+FROM system_packages AS user_setup
+
+# Create a non-root user to run the application
+RUN adduser --disabled-password --gecos '' smarter_user
+
+# create a data directory for the smarter_user that
+# the application can use to store data.
+RUN mkdir -p /home/smarter_user/data/.kube && \
+    touch /home/smarter_user/data/.kube/config && \
+    chown -R smarter_user:smarter_user /home/smarter_user/data && \
+    chmod -R 755 /home/smarter_user/data
+
+# Set the KUBECONFIG environment variable
+ENV KUBECONFIG=/home/smarter_user/data/.kube/config
+
+
+############################## python requirements #################################
+FROM user_setup AS requirements
 # Setup our file system.
 # so that the Docker file system matches up with the local file system.
 WORKDIR /smarter
@@ -95,8 +101,8 @@ RUN chown -R smarter_user:smarter_user /smarter
 USER smarter_user
 
 
-############################## pythonpackages #################################
-FROM requirements AS pythonpackages
+############################## install python packages #################################
+FROM requirements AS venv
 # Create and activate a virtual environment in the user's home directory
 RUN python -m venv /home/smarter_user/venv
 ENV PATH="/home/smarter_user/venv/bin:$PATH"
@@ -110,7 +116,7 @@ RUN pip install --upgrade pip && \
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
 ################################# data #################################
-FROM pythonpackages AS data
+FROM venv AS data
 # Add our source code and make the 'smarter' directory the working directory
 # we want this to be the last step so that we can take advantage of Docker's
 # caching mechanism.
@@ -132,12 +138,12 @@ COPY --chown=smarter_user:smarter_user ./smarter ./smarter
 COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
 
 # Collect static files
-############################## collectassets ##################################
-FROM application AS collectassets
+############################## collect_assets ##################################
+FROM application AS collect_assets
 WORKDIR /home/smarter_user/smarter
 RUN python manage.py collectstatic --noinput
 
 ################################# final #######################################
-FROM collectassets AS final
+FROM collect_assets AS final
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 EXPOSE 8000
