@@ -57,7 +57,6 @@ test:
 
 clean:
 	make python-clean
-	make terraform-clean
 	make docker-prune
 
 # destroy all Docker build and local artifacts
