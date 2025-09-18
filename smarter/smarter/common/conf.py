@@ -167,7 +167,7 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "smarter.sh"))
+    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
 
     ANTHROPIC_API_KEY: SecretStr = SecretStr(os.environ.get("ANTHROPIC_API_KEY", "SET-ME-PLEASE"))
 
@@ -503,7 +503,7 @@ class Settings(BaseSettings):
 
     @property
     def root_platform_domain(self) -> str:
-        """Return the platform domain name. ie platform.smarter.sh"""
+        """Return the platform domain name. ie platform.example.com"""
         return f"{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
     @property
@@ -548,16 +548,16 @@ class Settings(BaseSettings):
         domains.add(self.root_platform_domain)
         # Add environment/subdomain combinations
         for subdomain in subdomains:
-            # example: platform.smarter.sh, api.platform.smarter.sh
+            # example: platform.example.com, api.platform.example.com
             domains.add(f"{subdomain}.{self.root_domain}")
             for environment in environments[1:]:  # skip None for env-prefixed
-                # example: alpha.platform.smarter.sh, alpha.api.platform.smarter.sh
+                # example: alpha.platform.example.com, alpha.api.platform.example.com
                 domains.add(f"{environment}.{subdomain}.{self.root_domain}")
         return sorted(domains)
 
     @property
     def environment_url(self) -> str:
-        """Return the environment URL. example: https://alpha.platform.smarter.sh"""
+        """Return the environment URL. example: https://alpha.platform.example.com"""
         retval = SmarterValidator.urlify(self.environment_platform_domain, environment=self.environment)
         if retval is None:
             raise SmarterConfigurationError(
@@ -583,7 +583,7 @@ class Settings(BaseSettings):
 
     @property
     def root_api_domain(self) -> str:
-        """Return the root API domain name. ie api.smarter.sh"""
+        """Return the root API domain name. ie api.example.com"""
         return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
@@ -592,7 +592,7 @@ class Settings(BaseSettings):
         Return the customer API domain name.
 
                 examples:
-        - api.alpha.platform.smarter.sh
+        - api.alpha.platform.example.com
         - api.localhost:8000
         """
         if self.environment == SmarterEnvironments.PROD:
@@ -606,7 +606,7 @@ class Settings(BaseSettings):
 
     @property
     def environment_api_url(self) -> str:
-        """Return the API URL for the environment. example: https://api.alpha.platform.smarter.sh"""
+        """Return the API URL for the environment. example: https://api.alpha.platform.example.com"""
         retval = SmarterValidator.urlify(self.environment_api_domain, environment=self.environment)
         if retval is None:
             raise SmarterConfigurationError(
@@ -955,7 +955,7 @@ class Settings(BaseSettings):
 
     @field_validator("marketing_site_url")
     def check_marketing_site_url(cls, v) -> str:
-        """Check marketing_site_url. example: https://smarter.sh"""
+        """Check marketing_site_url. example: https://example.com"""
         if v in [None, ""]:
             return SettingsDefaults.MARKETING_SITE_URL
         SmarterValidator.validate_url(v)

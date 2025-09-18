@@ -15,7 +15,6 @@ from django.http import HttpRequest
 from pydantic import SecretStr
 from rest_framework.request import Request
 
-from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.validators import SmarterValidator
 
