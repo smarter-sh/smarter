@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
-import json
 import logging
 import re
 import traceback
@@ -35,7 +34,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
+from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import (
     AbstractSAMBase,
     AbstractSAMMetadataBase,
@@ -775,26 +774,26 @@ class BrokerNotImplemented(AbstractBroker):
             command=None,
         )
 
-    def chat(self, request, kwargs):
-        super().chat(request, kwargs)
+    def chat(self, request, *args, **kwargs):
+        super().chat(request, args, kwargs)
 
-    def delete(self, request, kwargs):
-        super().delete(request, kwargs)
+    def delete(self, request, *args, **kwargs):
+        super().delete(request, args, kwargs)
 
-    def deploy(self, request, kwargs):
-        super().deploy(request, kwargs)
+    def deploy(self, request, *args, **kwargs):
+        super().deploy(request, args, kwargs)
 
-    def describe(self, request, kwargs):
-        super().describe(request, kwargs)
+    def describe(self, request, *args, **kwargs):
+        super().describe(request, args, kwargs)
 
-    def example_manifest(self, request, kwargs):
-        super().example_manifest(request, kwargs)
+    def example_manifest(self, request, *args, **kwargs):
+        super().example_manifest(request, args, kwargs)
 
-    def get(self, request, kwargs):
-        super().get(request, kwargs)
+    def get(self, request, *args, **kwargs):
+        super().get(request, args, kwargs)
 
-    def logs(self, request, kwargs):
-        super().logs(request, kwargs)
+    def logs(self, request, *args, **kwargs):
+        super().logs(request, args, kwargs)
 
-    def undeploy(self, request, kwargs):
-        super().undeploy(request, kwargs)
+    def undeploy(self, request, *args, **kwargs):
+        super().undeploy(request, args, kwargs)

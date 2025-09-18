@@ -9,7 +9,7 @@
 
 # Use the official Python image as a parent image
 ################################## base #######################################
-FROM --platform=linux/amd64 python:3.12-bookworm AS linux_base
+FROM --platform=linux/amd64 python:3.12-slim-trixie AS linux_base
 
 LABEL maintainer="Lawrence McDaniel <lawrence@querium.com>" \
   description="Docker image for the Smarter Api" \
@@ -42,7 +42,9 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   libffi-dev \
   python3-dev \
   python-dev-is-python3 \
-  unzip && \
+  unzip \
+  pkg-config \
+  libmariadb-dev && \
   rm -rf /var/lib/apt/lists/*
 
 # install Node
