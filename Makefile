@@ -30,9 +30,9 @@ init:
 	make tear-down			# start w a clean environment
 	make python-init		# create/replace Python virtual environment and install dependencies
 	make docker-build		# build Docker containers
-	make docker-run			# start all Docker containers
 	make docker-init		# initialize MySQL and create the smarter database
 	make pre-commit-init	# install and configure pre-commit
+	make docker-run			# start all Docker containers
 
 activate:
 	./scripts/activate.sh

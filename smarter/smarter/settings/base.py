@@ -94,20 +94,24 @@ SECURE_PROXY_SSL_HEADER = None
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 BASE_DIR = Path(os.path.join(PROJECT_ROOT, "smarter")).resolve()
-print("PROJECT_ROOT: ", PROJECT_ROOT)
-print("BASE_DIR: ", BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-print("SECRET_KEY: ", smarter_settings.secret_key)
 SECRET_KEY = smarter_settings.secret_key
+
 if not SECRET_KEY:
     random_string = secrets.token_urlsafe(64)
     random_bytes = random_string.encode("utf-8")
     hash_object = hashlib.sha256(random_bytes)
     SECRET_KEY = hash_object.hexdigest()
     logger.warning("SECRET_KEY not set. Using randomized value: %s", SECRET_KEY)
+
+logger.debug("PROJECT_ROOT: %s", PROJECT_ROOT)
+logger.debug("BASE_DIR: %s", BASE_DIR)
+logger.debug("SECRET_KEY: %s", SECRET_KEY)
+
+
 DEBUG = smarter_settings.debug_mode
 
 CACHES = {
