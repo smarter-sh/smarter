@@ -89,7 +89,7 @@ RUN adduser --disabled-password --gecos '' smarter_user
 # - add a .kube directory and an empty config file
 # - add a celery directory for celerybeat to use to store its schedule.
 RUN mkdir -p /home/smarter_user/data/.kube && touch /home/smarter_user/data/.kube/config && \
-  mkdir -p /home/smarter_user/celery
+  mkdir -p /home/smarter_user/data/celery
 
 # Set the KUBECONFIG environment variable
 ENV KUBECONFIG=/home/smarter_user/data/.kube/config
@@ -139,9 +139,9 @@ FROM collect_assets AS data
 WORKDIR /home/smarter_user/
 
 COPY --chown=smarter_user:smarter_user ./docs ./data/doc
-COPY --chown=smarter_user:smarter_user ./README.md ./data/docs/README.md
-COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/docs/CHANGELOG.md
-COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/docs/CODE_OF_CONDUCT.md
+COPY --chown=smarter_user:smarter_user ./README.md ./data/doc/README.md
+COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/doc/CHANGELOG.md
+COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/doc/CODE_OF_CONDUCT.md
 COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
 COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
@@ -154,7 +154,8 @@ FROM data AS final
 WORKDIR /home/smarter_user/smarter
 
 # ensure that smarter_user, and only smarter_user owns everything
-# and has read, write and execute permissions on everything
+# and has the minimum permissions needed to run the application
+# and to manage files that the application needs to write to
 # in /home/smarter_user. this is important because by default Debian adds
 # read-only and execute permissions to the group and to public.
 # We don't want either of these.
@@ -163,12 +164,15 @@ WORKDIR /home/smarter_user/smarter
 # files:        r-------- so that smarter_user can read them
 # venv/bin/*:   r-x------ so that smarter_user can execute them
 # celery:       r-x------ so that smarter_user can manage the celery beat schedule file.
+#
+# also, remove the pip cache directory to save space.
 USER root
 RUN chown -R smarter_user:smarter_user /home/smarter_user/ && \
   find /home/smarter_user/ -type d -exec chmod 500 {} + && \
   find /home/smarter_user/ -type f -exec chmod 400 {} + && \
   find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
-  chmod 700 /home/smarter_user/celery
+  chmod 700 /home/smarter_user/data/celery && \
+  rm -rf /home/smarter_user/.cache
 
 # serve the application
 USER smarter_user
