@@ -27,6 +27,8 @@ from corsheaders.defaults import default_headers
 from django import get_version
 from social_core.backends.linkedin import LinkedinOAuth2
 
+from smarter.__version__ import __version__ as smarter_version
+
 # Add proprietary settings for the project
 from .smarter import *  # noqa: E402, F401, W0401
 
@@ -529,22 +531,13 @@ WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = 30
 ###############################################################################
 # System information logging for all environments
 ###############################################################################
-debian_version = "not found"
-try:
-    with open("/etc/debian_version", encoding="utf-8") as f:
-        debian_version = f.read().strip()
-except FileNotFoundError:
-    logger.error("Debian version file not found")
-except OSError as e:
-    logger.error("Error reading Debian version: %s", e)
-
 logger.info("=" * 80)
 
 try:
     with open("/proc/uptime", encoding="utf-8") as f:
         uptime_seconds = float(f.readline().split()[0])
         uptime_str = time.strftime("%H:%M:%S", time.gmtime(uptime_seconds))
-        logger.info("Container Uptime: %s", uptime_str)
+        logger.info("Container uptime: %s", uptime_str)
 except FileNotFoundError:
     logger.warning("Container uptime not available")
 except OSError as e:
@@ -555,10 +548,10 @@ try:
     mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
     mem_kib = int(mem_total_line.split()[1])  # MemTotal value in kB
     mem_gib = mem_kib / 1024 / 1024
-    logger.info("CPU Limit: %s cores", cpu_limit)
+    logger.info("CPU limit: %s cores", cpu_limit)
     if cpu_limit < 2:
         logger.warning("Recommended minimum CPU limit is 2. Detected: %s cores", cpu_limit)
-    logger.info("Memory Limit: %.2f GiB", mem_gib)
+    logger.info("Memory limit: %.2f GiB", mem_gib)
     if mem_gib < 4.0:
         logger.warning("Recommended minimum memory limit is 4 GiB. Detected: %.2f GiB", mem_gib)
 except (subprocess.CalledProcessError, OSError) as e:
@@ -566,7 +559,17 @@ except (subprocess.CalledProcessError, OSError) as e:
 except (ValueError, IndexError) as e:
     logger.error("Error parsing resource limits: %s", e)
 
-logger.info("Debian: %s %s", debian_version, os.uname().version)
-logger.info("Python: %s", sys.version)
-logger.info("Django version: %s", get_version())
+try:
+    debian_version = "not found"
+    with open("/etc/debian_version", encoding="utf-8") as f:
+        debian_version = f.read().strip()
+    logger.info("Debian v%s %s", debian_version, os.uname().version)
+except FileNotFoundError:
+    logger.error("Debian version file not found")
+except OSError as e:
+    logger.error("Error reading Debian version: %s", e)
+
+logger.info("Python v%s", sys.version)
+logger.info("Django v%s", get_version())
+logger.info("Smarter v%s", smarter_version)
 logger.info("=" * 80)

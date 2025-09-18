@@ -141,6 +141,7 @@ docker-init:
 docker-build:
 	make docker-check && \
 	docker-compose build
+	docker image prune -f
 
 docker-run:
 	make docker-check && \
