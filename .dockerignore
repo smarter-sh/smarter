@@ -1,1 +1,77 @@
-**/venv
+**/.DS_Store
+**/.coverage
+**/.coveragerc
+**/htmlcov/
+
+.DS_Store
+.coverage
+.coveragerc
+htmlcov/
+
+node_modules/
+
+# Python cache and build artifacts
+.pypi_cache/
+.pytest_cache/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+**/venv/
+**/.env/
+**/.envrc
+
+venv/
+.env/
+.envrc
+
+# Test and coverage output
+**/.coverage.*
+**/.cache/
+**/.tox/
+
+.coverage.*
+.cache/
+.tox/
+
+# OS and editor files
+**/*.swp
+**/*.swo
+**/*.log
+**/*.tmp
+**/*.bak
+**/Thumbs.db
+
+*.swp
+*.swo
+*.log
+*.tmp
+*.bak
+Thumbs.db
+
+# Git and VCS
+**/.git/
+**/.gitignore
+
+.git/
+.gitignore
+
+# Node and frontend
+**/node_modules/
+**/npm-debug.log
+**/yarn-error.log
+
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Misc
+**/*.sqlite3
+*.sqlite3
