@@ -86,8 +86,10 @@ RUN adduser --disabled-password --gecos '' smarter_user
 
 # create a data directory for the smarter_user that
 # the application can use to store data.
-RUN mkdir -p /home/smarter_user/data/.kube && \
-  touch /home/smarter_user/data/.kube/config
+# - add a .kube directory and an empty config file
+# - add a celery directory for celerybeat to use to store its schedule.
+RUN mkdir -p /home/smarter_user/data/.kube && touch /home/smarter_user/data/.kube/config && \
+  mkdir -p /home/smarter_user/celery
 
 # Set the KUBECONFIG environment variable
 ENV KUBECONFIG=/home/smarter_user/data/.kube/config
@@ -150,16 +152,25 @@ FROM data AS final
 
 # these are redundant but are here for clarity.
 WORKDIR /home/smarter_user/smarter
-USER smarter_user
 
 # ensure that smarter_user, and only smarter_user owns everything
 # and has read, write and execute permissions on everything
 # in /home/smarter_user. this is important because by default Debian adds
 # read-only and execute permissions to the group and to public.
 # We don't want either of these.
+#
+# directories:  r-x------ so that smarter_user can cd into them
+# files:        r-------- so that smarter_user can read them
+# venv/bin/*:   r-x------ so that smarter_user can execute them
+# celery:       r-x------ so that smarter_user can manage the celery beat schedule file.
+USER root
 RUN chown -R smarter_user:smarter_user /home/smarter_user/ && \
-  chmod -R 700 /home/smarter_user/
+  find /home/smarter_user/ -type d -exec chmod 500 {} + && \
+  find /home/smarter_user/ -type f -exec chmod 400 {} + && \
+  find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
+  chmod 700 /home/smarter_user/celery
 
 # serve the application
+USER smarter_user
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 EXPOSE 8000

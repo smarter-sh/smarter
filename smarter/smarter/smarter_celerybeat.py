@@ -30,3 +30,4 @@ app.conf.beat_schedule = {
         "options": {"queue": "beat_tasks"},
     },
 }
+app.conf.beat_schedule_filename = "/home/smarter_user/celery/celerybeat-schedule"
