@@ -81,6 +81,12 @@ class Command(BaseCommand):
             default=None,
             help="Username of the admin user to use when applying the manifest.",
         )
+        parser.add_argument(
+            "--verbose",
+            type=bool,
+            default=False,
+            help="Enable verbose output.",
+        )
 
     def handle(self, *args, **options):
         """
@@ -92,6 +98,7 @@ class Command(BaseCommand):
         self.filespec = options.get("filespec")
         self.manifest = options.get("manifest")
         username = options.get("username")
+        verbose = options.get("verbose", False)
 
         if not isinstance(username, str) or not username.strip():
             self.stderr.write(self.style.ERROR("No username provided."))
@@ -127,9 +134,12 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.NOTICE(
-                f"manage.py apply_manifest - Applying manifest via api endpoint {url}. manifest: {self.data}"
+                f"manage.py apply_manifest - Applying manifest via api endpoint {url} as user {user.username} (verbose={verbose})"
             )
         )
+        if verbose:
+            self.stdout.write(self.style.NOTICE(f"manifest: {self.data}"))
+            self.stdout.write(self.style.NOTICE(f"headers: {headers}"))
 
         self.stdout.write(self.style.NOTICE("Applying manifest ..."))
         httpx_response = httpx.post(url, data=self.data, headers=headers)  # type: ignore[call-arg]
@@ -147,8 +157,9 @@ class Command(BaseCommand):
 
         response = json.dumps(response_json, indent=4) + "\n"
         if httpx_response.status_code == httpx.codes.OK:
-            self.stdout.write("response: " + self.style.SUCCESS(response))
             self.stdout.write(self.style.SUCCESS("manifest applied."))
+            if verbose:
+                self.stdout.write(self.style.SUCCESS(response))
         else:
             msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {self.data}\nresponse: {response}"
             raise CommandError(msg)

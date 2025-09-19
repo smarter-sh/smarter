@@ -27,11 +27,10 @@ all: help
 init:
 	make check-python		# verify Python 3.11 is installed
 	make docker-check		# verify Docker is installed and running
-	make tear-down			# start w a clean environment
 	make python-init		# create/replace Python virtual environment and install dependencies
-	make docker-build		# build Docker containers
 	make docker-init		# initialize MySQL and create the smarter database
 	make pre-commit-init	# install and configure pre-commit
+	make docker-build		# build Docker containers
 	make docker-run			# start all Docker containers
 
 activate:
@@ -101,16 +100,18 @@ docker-shell:
 
 
 docker-init:
+	@read -p "AWS keypair and OpenAI Api key must be present in your .env file. Continue? [y/N]: " ans; \
+		if [ "$$ans" != "y" ] && [ "$$ans" != "Y" ]; then \
+			echo "Aborted."; exit 1; \
+		fi && \
 	make docker-check && \
 	make docker-prune && \
-
 	rm -rf ./mysql-data && \
 	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
 	docker system prune -a --volumes && \
 	docker volume prune -f && \
 	docker network prune -f && \
-	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove"
-
+	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove" && \
 	echo "Building Docker images..." && \
 	docker-compose up -d && \
 	echo "Initializing Docker..." && \

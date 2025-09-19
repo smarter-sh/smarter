@@ -102,7 +102,7 @@ class SAMPluginCommonSpecPrompt(BaseModel):
     DEFAULT_PROVIDER: ClassVar[str] = SettingsDefaults.LLM_DEFAULT_PROVIDER
     DEFAULT_MODEL: ClassVar[str] = SettingsDefaults.LLM_DEFAULT_MODEL
     DEFAULT_TEMPERATURE: ClassVar[float] = SettingsDefaults.LLM_DEFAULT_TEMPERATURE
-    DEFAULT_MAXTOKENS: ClassVar[int] = SettingsDefaults.LLM_DEFAULT_MAX_COMPLETION_TOKENS
+    DEFAULT_MAXTOKENS: ClassVar[int] = SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
 
     provider: str = Field(
         DEFAULT_PROVIDER,
