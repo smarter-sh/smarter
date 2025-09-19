@@ -30,12 +30,12 @@ import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
 import re
 from functools import lru_cache
+from importlib.metadata import distributions
 from typing import Any, List, Optional, Tuple, Union
 
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
-from build._compat import importlib
 from dotenv import load_dotenv
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
@@ -45,7 +45,6 @@ from ..lib.django.validators import SmarterValidator
 # our stuff
 from .const import (
     IS_USING_TFVARS,
-    PYTHON_ROOT,
     SMARTER_API_SUBDOMAIN,
     SMARTER_PLATFORM_SUBDOMAIN,
     TFVARS,
@@ -658,7 +657,7 @@ class Settings(BaseSettings):
         """Dump all settings."""
 
         def get_installed_packages():
-            return [(dist.metadata["Name"], dist.version) for dist in importlib.metadata.distributions()]
+            return [(dist.metadata["Name"], dist.version) for dist in distributions()]
 
         if self._dump:
             return self._dump
