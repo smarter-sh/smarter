@@ -75,6 +75,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"{log_prefix} Failed to fetch provider models. Error: {e}"))
             return
 
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            self.stdout.write(
+                self.style.WARNING(f"{log_prefix} Provider models endpoint not found for this provider: {url}")
+            )
+            return
+
         if response.status_code != HTTPStatus.OK:
             try:
                 error_message = response.json().get("error", {}).get("message", response.text)
@@ -124,8 +130,9 @@ class Command(BaseCommand):
         """
         Initialize OpenAI provider and its models.
         """
+        logger.info("initialize_openai")
         if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
+            self.stdout.write(self.style.ERROR("initialize_openai: User profile is not set."))
             return
 
         openai_api_key, _ = Secret.objects.update_or_create(
@@ -179,8 +186,9 @@ class Command(BaseCommand):
         """
         Initialize Google AI provider and its models.
         """
+        logger.info("initialize_googleai")
         if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
+            self.stdout.write(self.style.ERROR("initialize_googleai: User profile is not set."))
             return
 
         googleai_api_key, _ = Secret.objects.update_or_create(
@@ -198,7 +206,6 @@ class Command(BaseCommand):
             "https://www.googleapis.com/auth/generative-language",
         ]
 
-        # logger.info(f"initialize_googleai: {smarter_settings.google_service_account}")
         credentials = service_account.Credentials.from_service_account_info(
             smarter_settings.google_service_account, scopes=SCOPES
         )
@@ -245,6 +252,7 @@ class Command(BaseCommand):
         """
         Initialize Meta AI provider and its models.
         """
+        logger.info("initialize_metaai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
             return
