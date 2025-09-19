@@ -41,8 +41,8 @@ SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 5  # 5 minutes
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)  # smarter
+REPO_ROOT = str(Path(PYTHON_ROOT).parent)  # ./
 TERRAFORM_ROOT = str(Path(PROJECT_ROOT).parent.parent)  # ./
-REPO_ROOT = str(Path(PYTHON_ROOT).parent.parent)  # ./
 
 TERRAFORM_TFVARS = os.path.join(TERRAFORM_ROOT, "terraform.tfvars")
 if not os.path.exists(TERRAFORM_TFVARS):

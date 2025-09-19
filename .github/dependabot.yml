@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "pip"
-    directory: "/smarter/requirements"
+    directory: "/smarter/requirements/in"
     schedule:
       interval: "monthly"
     target-branch: "alpha"

@@ -93,7 +93,7 @@ runs:
     # Checkout all code referenced by this action
     - name: Checkout code
       id: checkout_code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     # authenticate AWS CLI
     - name: Configure AWS credentials

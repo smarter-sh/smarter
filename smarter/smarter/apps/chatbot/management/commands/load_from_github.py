@@ -10,7 +10,6 @@ import sys
 from typing import Optional
 from urllib.parse import urljoin
 
-import yaml
 from django.core.management.base import BaseCommand
 from django.http import HttpResponse
 from django.test import RequestFactory
@@ -110,23 +109,22 @@ class Command(BaseCommand):
         plugin = controller.obj
         return plugin
 
-    def apply_manifest(self, manifest_data: str) -> HttpResponse:
+    def apply_manifest(self, manifest_data: str) -> None:
         """
         Apply a manifest to the Smarter API.
         """
         if not manifest_data:
             raise SmarterValueError("Manifest data is missing.")
 
-        request_factory = RequestFactory()
-        self.url = urljoin(smarter_settings.environment_url, "/api/v1/cli/apply")
-        self.stdout.write(
-            f"Applying manifest to {self.url} for account {self.account.account_number} {self.account.company_name}."
+        result = subprocess.call(
+            ["python", "manage.py", "apply_manifest", "--username", self.user.username, "--manifest", manifest_data]
         )
-        request = request_factory.post(self.url, data=manifest_data, content_type="application/json")
-        request.user = self.user
-        api_v1_cli_apply_view = ApiV1CliApplyApiView.as_view()
-        response = api_v1_cli_apply_view(request=request)
-        return response
+        if result != 0:
+            raise subprocess.CalledProcessError(
+                returncode=result,
+                cmd=f"python manage.py apply_manifest --username {self.user.username} --manifest {manifest_data}",
+                output="Failed to apply manifest",
+            )
 
     def process_repo_v2(self):
         """
@@ -134,28 +132,40 @@ class Command(BaseCommand):
         Folders are optional and can be used to organize the manifest files, but otherwise
         do not contain any special meaning.
         """
+
+        def process_directory(directory) -> None:
+            directory_path = os.path.join(root, directory)
+            for _, _, files in os.walk(directory_path):
+                for file in files:
+                    if file.endswith(".yaml") or file.endswith(".yml"):
+                        filespec = os.path.join(directory_path, file)
+                        filename = os.path.basename(filespec)
+                        with open(filespec, encoding="utf-8") as file:
+                            try:
+                                manifest_data = file.read()
+                                self.apply_manifest(manifest_data=manifest_data)
+                                self.stdout.write(
+                                    f"Applied manifest: {directory}/{filename} for account {self.account.account_number}."
+                                )
+                            # pylint: disable=broad-except
+                            except Exception as e:
+                                self.stderr.write(
+                                    f"Error applying manifest: {filename} for account {self.account.account_number}: {e}"
+                                )
+
         if not self.user_profile:
             raise SmarterValueError("User profile is required.")
         self.clone_repo()
 
         # pylint: disable=too-many-nested-blocks
         for root, directory_names, _ in os.walk(self.local_path):
-            for directory in [d for d in directory_names if not d.startswith(".")]:
-                # note: we're not currently doing anything with the directory names,
-                directory_path = os.path.join(root, directory)
-                for _, _, files in os.walk(directory_path):
-                    for file in files:
-                        if file.endswith(".yaml") or file.endswith(".yml"):
-                            filespec = os.path.join(directory_path, file)
-                            filename = os.path.basename(filespec)
-                            with open(filespec, encoding="utf-8") as file:
-                                try:
-                                    manifest_data = file.read()
-                                    self.apply_manifest(manifest_data=manifest_data)
-                                    self.stdout.write(f"Applied manifest: {directory}/{filename}")
-                                # pylint: disable=broad-except
-                                except Exception as e:
-                                    self.stderr.write(f"Error applying manifest: {filename} {e}")
+            if "plugins" in directory_names:
+                # we need to process plugins first as these can be dependencies for chatbots
+                self.stdout.write(f"Processing plugins for account {self.account.account_number}...")
+                process_directory(directory="plugins")
+            if "chatbots" in directory_names:
+                self.stdout.write(f"Processing chatbots for account {self.account.account_number}...")
+                process_directory(directory="chatbots")
 
     def process_repo_v1(self):
         """

@@ -15,14 +15,20 @@ import glob
 import hashlib
 import logging
 import logging.config
+import math
 import os
 import secrets
+import subprocess
 import sys
+import time
 import urllib.parse
 from pathlib import Path
 
 from corsheaders.defaults import default_headers
+from django import get_version
 from social_core.backends.linkedin import LinkedinOAuth2
+
+from smarter.__version__ import __version__ as smarter_version
 
 # Add proprietary settings for the project
 from .smarter import *  # noqa: E402, F401, W0401
@@ -77,37 +83,64 @@ CSRF_USE_SESSIONS = False
 # Whether to set the flag restricting cookie leaks on cross-site requests.
 # This can be 'Lax', 'Strict', 'None', or False to disable the flag.
 SESSION_COOKIE_SAMESITE = "lax"
-# Whether the session cookie should be secure (https:// only).
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_NAME = "sessionid"
-# Age of cookie, in seconds
 SESSION_COOKIE_AGE = CSRF_COOKIE_AGE
-# A string like "alpha.platform.smarter.sh", or None for standard domain cookie.
 SESSION_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
-# The path of the session cookie.
 SESSION_COOKIE_PATH = "/"
-# Whether to use the HttpOnly flag.
 SESSION_COOKIE_HTTPONLY = True
 
 SECURE_PROXY_SSL_HEADER = None
 
+# -------------------------------
+# Django storages settings for AWS S3
+# -------------------------------
+# See https://django-storages.readthedocs.io/en/latest/backends/amazon
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key": smarter_settings.aws_access_key_id.get_secret_value(),
+            "secret_key": smarter_settings.aws_secret_access_key.get_secret_value(),
+            "bucket_name": smarter_settings.aws_s3_bucket_name,
+            "region_name": smarter_settings.aws_region,
+            "default_acl": "public-read",
+            "querystring_auth": False,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "OPTIONS": {},
+    },
+}
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+AWS_ACCESS_KEY_ID = smarter_settings.aws_access_key_id.get_secret_value()
+AWS_SECRET_ACCESS_KEY = smarter_settings.aws_secret_access_key.get_secret_value()
+AWS_STORAGE_BUCKET_NAME = smarter_settings.aws_s3_bucket_name
+AWS_S3_REGION_NAME = smarter_settings.aws_region
+AWS_QUERYSTRING_AUTH = False  # disable querystring auth for public files
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 BASE_DIR = Path(os.path.join(PROJECT_ROOT, "smarter")).resolve()
-print("PROJECT_ROOT: ", PROJECT_ROOT)
-print("BASE_DIR: ", BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-print("SECRET_KEY: ", smarter_settings.secret_key)
 SECRET_KEY = smarter_settings.secret_key
+
 if not SECRET_KEY:
     random_string = secrets.token_urlsafe(64)
     random_bytes = random_string.encode("utf-8")
     hash_object = hashlib.sha256(random_bytes)
     SECRET_KEY = hash_object.hexdigest()
     logger.warning("SECRET_KEY not set. Using randomized value: %s", SECRET_KEY)
+
+logger.debug("PROJECT_ROOT: %s", PROJECT_ROOT)
+logger.debug("BASE_DIR: %s", BASE_DIR)
+logger.debug("SECRET_KEY: %s", SECRET_KEY)
+
+
 DEBUG = smarter_settings.debug_mode
 
 CACHES = {
@@ -135,6 +168,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "storages",
     # smarter apps
     # -------------------------------
     "smarter.lib.drf",
@@ -391,7 +425,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 # ReactJS integration with Django. Add all reactapp/dist directories in Django apps
 django_apps_dir = BASE_DIR / "apps"
-reactapp_dirs = glob.glob(os.path.join(django_apps_dir, "*", "reactapp", "dist"))
+reactapp_dirs = [Path(p) for p in glob.glob(os.path.join(django_apps_dir, "*", "reactapp", "dist"))]
 STATICFILES_DIRS.extend(reactapp_dirs)
 
 # Default primary key field type
@@ -518,3 +552,93 @@ WAGTAILTRANSFER_SOURCES = {
 
 WAGTAILTRANSFER_SECRET_KEY = "8egf3jj8ib64j00gomz270wgzqwrfyed"
 WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = 30
+
+###############################################################################
+# System information logging for all environments
+###############################################################################
+logger.info("=" * 80)
+
+try:
+    with open("/proc/uptime", encoding="utf-8") as f:
+        uptime_seconds = float(f.readline().split()[0])
+        uptime_str = time.strftime("%H:%M:%S", time.gmtime(uptime_seconds))
+        logger.info("Container uptime: %s", uptime_str)
+except FileNotFoundError:
+    logger.warning("Container uptime not available")
+except OSError as e:
+    logger.error("Error reading container uptime: %s", e)
+
+# try:
+#     cpu_limit = int(subprocess.check_output("nproc", shell=True).decode().strip())
+#     mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
+#     mem_kib = int(mem_total_line.split()[1])  # MemTotal value in kB
+#     mem_gib = mem_kib / 1024 / 1024
+#     logger.info("CPU limit: %s cores", cpu_limit)
+#     if cpu_limit < 2:
+#         logger.warning("Recommended minimum CPU limit is 2. Detected: %s cores", cpu_limit)
+#     logger.info("Memory limit: %.2f GiB", mem_gib)
+#     if mem_gib < 4.0:
+#         logger.warning("Recommended minimum memory limit is 4 GiB. Detected: %.2f GiB", mem_gib)
+# except (subprocess.CalledProcessError, OSError) as e:
+#     logger.warning("Resource limits not available: %s", e)
+# except (ValueError, IndexError) as e:
+#     logger.error("Error parsing resource limits: %s", e)
+
+try:
+    # CPU limit (cgroup v2)
+    cpu_limit = None
+    cpu_max_path = "/sys/fs/cgroup/cpu.max"
+    if os.path.exists(cpu_max_path):
+        with open(cpu_max_path, encoding="utf-8") as f:
+            quota, period = f.read().strip().split()
+            if quota != "max":
+                cpu_limit = math.ceil(int(quota) / int(period))
+            else:
+                cpu_limit = int(subprocess.check_output("nproc", shell=True).decode().strip())
+    else:
+        cpu_limit = int(subprocess.check_output("nproc", shell=True).decode().strip())
+
+    # Memory limit (cgroup v2)
+    mem_limit = None
+    mem_max_path = "/sys/fs/cgroup/memory.max"
+    if os.path.exists(mem_max_path):
+        with open(mem_max_path, encoding="utf-8") as f:
+            mem_bytes = int(f.read().strip())
+            if mem_bytes < 1 << 60:  # If not unlimited
+                mem_gib = mem_bytes / 1024 / 1024 / 1024
+                mem_limit = mem_gib
+            else:
+                # Fallback to /proc/meminfo
+                mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
+                mem_kib = int(mem_total_line.split()[1])
+                mem_limit = mem_kib / 1024 / 1024
+    else:
+        mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
+        mem_kib = int(mem_total_line.split()[1])
+        mem_limit = mem_kib / 1024 / 1024
+
+    logger.info("CPU limit: %s cores", cpu_limit)
+    if cpu_limit < 2:
+        logger.warning("Recommended minimum CPU limit is 2. Detected: %s cores", cpu_limit)
+    logger.info("Memory limit: %.2f GiB", mem_limit)
+    if mem_limit < 4.0:
+        logger.warning("Recommended minimum memory limit is 4 GiB. Detected: %.2f GiB", mem_limit)
+except (OSError, subprocess.CalledProcessError) as e:
+    logger.warning("Resource limits not available: %s", e)
+except (ValueError, IndexError) as e:
+    logger.error("Error parsing resource limits: %s", e)
+
+try:
+    debian_version = "not found"
+    with open("/etc/debian_version", encoding="utf-8") as f:
+        debian_version = f.read().strip()
+    logger.info("Debian v%s %s", debian_version, os.uname().version)
+except FileNotFoundError:
+    logger.error("Debian version file not found")
+except OSError as e:
+    logger.error("Error reading Debian version: %s", e)
+
+logger.info("Python v%s", sys.version)
+logger.info("Django v%s", get_version())
+logger.info("Smarter v%s", smarter_version)
+logger.info("=" * 80)

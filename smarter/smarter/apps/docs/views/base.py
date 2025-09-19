@@ -27,7 +27,7 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 logger = getLogger(__name__)
 
 # note: this is the path from the Docker container, not the GitHub repo.
-DOCS_PATH = "/home/smarter_user/data/doc/"
+DOCS_PATH = "/home/smarter_user/data/docs/"
 
 
 class DocsError(SmarterException):

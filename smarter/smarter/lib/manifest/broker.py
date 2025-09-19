@@ -1,9 +1,7 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
-import json
 import logging
-import re
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -18,8 +16,9 @@ from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.common.api import SmarterApiVersions
-from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import camel_to_snake as util_camel_to_snake
+from smarter.common.utils import snake_to_camel as util_snake_to_camel
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
@@ -35,7 +34,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
+from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import (
     AbstractSAMBase,
     AbstractSAMMetadataBase,
@@ -667,55 +666,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
         """Converts camelCase dict keys to snake_case."""
 
-        def convert(name: str):
-            s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-            return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
-
-        if isinstance(data, str):
-            return convert(data)
-        if isinstance(data, list):
-            return [self.camel_to_snake(item) for item in data]
-        if not isinstance(data, dict):
-            raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
-        dictionary: dict = data if isinstance(data, dict) else {}
-        retval = {}
-        for key, value in dictionary.items():
-            if isinstance(value, dict):
-                value = self.camel_to_snake(value)
-            new_key = convert(key)
-            retval[new_key] = value
-        return retval
+        return util_camel_to_snake(data)
 
     def snake_to_camel(
         self, data: Union[str, dict, list], convert_values: bool = False
     ) -> Optional[Union[str, dict, list]]:
         """Converts snake_case dict keys to camelCase."""
 
-        def convert(name: str) -> str:
-            components = name.split("_")
-            return components[0] + "".join(x.title() for x in components[1:])
-
-        if isinstance(data, str):
-            return convert(data)
-
-        if isinstance(data, list):
-            return [self.snake_to_camel(item, convert_values=convert_values) for item in data]
-
-        if not isinstance(data, dict):
-            raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
-
-        dictionary: dict = data if isinstance(data, dict) else {}
-        retval = {}
-        for key, value in dictionary.items():
-            if isinstance(value, dict):
-                value = self.snake_to_camel(data=value, convert_values=convert_values)
-            new_key = convert(key)
-            if convert_values:
-                new_value = convert(value) if isinstance(value, str) else value
-            else:
-                new_value = value
-            retval[new_key] = new_value
-        return retval
+        return util_snake_to_camel(data, convert_values)
 
     def clean_cli_param(self, param, param_name: str = "unknown", url: Optional[str] = None) -> Optional[str]:
         """
@@ -775,26 +733,26 @@ class BrokerNotImplemented(AbstractBroker):
             command=None,
         )
 
-    def chat(self, request, kwargs):
-        super().chat(request, kwargs)
+    def chat(self, request, *args, **kwargs):
+        super().chat(request, args, kwargs)
 
-    def delete(self, request, kwargs):
-        super().delete(request, kwargs)
+    def delete(self, request, *args, **kwargs):
+        super().delete(request, args, kwargs)
 
-    def deploy(self, request, kwargs):
-        super().deploy(request, kwargs)
+    def deploy(self, request, *args, **kwargs):
+        super().deploy(request, args, kwargs)
 
-    def describe(self, request, kwargs):
-        super().describe(request, kwargs)
+    def describe(self, request, *args, **kwargs):
+        super().describe(request, args, kwargs)
 
-    def example_manifest(self, request, kwargs):
-        super().example_manifest(request, kwargs)
+    def example_manifest(self, request, *args, **kwargs):
+        super().example_manifest(request, args, kwargs)
 
-    def get(self, request, kwargs):
-        super().get(request, kwargs)
+    def get(self, request, *args, **kwargs):
+        super().get(request, args, kwargs)
 
-    def logs(self, request, kwargs):
-        super().logs(request, kwargs)
+    def logs(self, request, *args, **kwargs):
+        super().logs(request, args, kwargs)
 
-    def undeploy(self, request, kwargs):
-        super().undeploy(request, kwargs)
+    def undeploy(self, request, *args, **kwargs):
+        super().undeploy(request, args, kwargs)

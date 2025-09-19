@@ -13,15 +13,33 @@
 [![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)
 [![Terraform](https://a11ybadges.com/badge?logo=terraform)](https://www.terraform.io/)
 
-You should be able to work unencumbered in any of Linux, macOS or Windows. This repository contains five distinct projects, respectively, written in:
+Thank you for considering contributing to this project! You should be able to work unencumbered in any of Linux, macOS or Windows. There are various technology-specific resources that you'll need to initialize in your development environment. See setup instructions below for each technology.
 
-- [Docker](#docker-setup)
-- [Python](#python-setup)
-- [ReactJS](#reactjs-setup)
-- [Terraform](#terraform-setup)
-- [Keen Bootstrap Theme](#keen-bootstrap-theme-setup)
+## How to Contribute
 
-In each case there are various technology-specific resources that you'll need to initialize in your development environment. See setup instructions below for each technology.
+- **Fork the repository** and create your branch from `main`.
+- **Describe your changes** clearly in your pull request.
+- **Write tests** for your changes if applicable.
+- **Follow the code style** used in the project.
+
+### Governance
+
+Please see [smarter-sh/community](https://github.com/smarter-sh/community)
+
+### Reporting Issues
+
+- Search for existing issues before opening a new one.
+- Include steps to reproduce, expected behavior, and screenshots if helpful.
+
+### Pull Requests
+
+- Ensure your branch is up to date with `main`.
+- Reference related issues in your PR description.
+- Be responsive to feedback and requested changes.
+
+### Code of Conduct
+
+Please see our [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md)
 
 ## Quick Start
 
@@ -70,7 +88,7 @@ f3bf3acbd087   smarter        "bash -c 'watchmedo …"   About a minute ago   Up
 
 ## Good Coding Best Practices
 
-This project demonstrates a wide variety of good coding best practices for managing mission-critical cloud-based micro services in a team environment, namely its adherence to [12-Factor Methodology](./doc/12-FACTOR.md). Please see this [Code Management Best Practices](./doc/GOOD_CODING_PRACTICE.md) for additional details.
+This project demonstrates a wide variety of good coding best practices for managing mission-critical cloud-based micro services in a team environment, namely its adherence to [12-Factor Methodology](./docs/12-FACTOR.md). Please see this [Code Management Best Practices](./docs/GOOD_CODING_PRACTICE.md) for additional details.
 
 We want to make this project more accessible to students and learners as an instructional tool while not adding undue code review workloads to anyone with merge authority for the project. To this end we've also added several pre-commit code linting and code style enforcement tools, as well as automated procedures for version maintenance of package dependencies, pull request evaluations, and semantic releases.
 
@@ -92,7 +110,7 @@ make pre-commit
 
 Output should look similar to the following:
 
-![pre-commit output](./doc/img/pre-commit.png)
+![pre-commit output](./docs/img/pre-commit.png)
 
 ### Github Secrets setup
 
@@ -100,13 +118,13 @@ Common secrets for automated CD/CD processes are managed with [GitHub Secrets](h
 
 On the other hand, if you've forked this repo and are working on your own independent project, then you'll need to initialize each of these yourself.
 
-![Github Secrets](./doc/img/github-secrets.png)
+![Github Secrets](./docs/img/github-secrets.png)
 
 ### Kubernetes Secrets
 
 The Terraform code in this repo generates several sets of sensitive data that are persisted to [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/). This configuration data is tightly integrated to the CI/CD build and deploy workflows, and fully automates configuration of all back end services on which Smarter relies including for example, MySQL, SMTP Email, AWS S3, AWS Elastic Container Registry, and Kubernetes itself.
 
-![Kubernetes Secrets](./doc/img/kubernetes-secrets.png)
+![Kubernetes Secrets](./docs/img/kubernetes-secrets.png)
 
 ### GitHub Actions
 
@@ -121,7 +139,7 @@ This project depends heavily on GitHub Actions to automate routine activities, s
 
 A typical pull request will look like the following:
 
-![Automated pull request](./doc/img/automated-pr.png)
+![Automated pull request](./docs/img/automated-pr.png)
 
 ## Docker Setup
 
@@ -167,31 +185,6 @@ Coverage measurement is typically used to gauge the effectiveness of tests. It c
 Note the following shortcut for running a Coverage report: `make coverage`.
 
 **Our goal for this project is to maintain an overall Coverage score of at least 80%.**
-
-## ReactJS Setup
-
-Please refer to this detailed [ReactJS setup guide](./client/README.md) for how to use vite.js to initialize the ReactJS development environment.
-
-Note that this project leverages Dependabot for managing version numbers of all NPM packages that are used in this project, regardless of where and how. Versions should always be up to date at the moment that you clone the repo. It therefore should never be necessary for you to manually bump package.json version numbers.
-
-```console
-make react-init
-```
-
-## Terraform Setup
-
-If you're new to Terraform then refer to this [Terraform Getting Started Guide](./TERRAFORM_GETTING_STARTED_GUIDE.md) for detailed setup instructions.
-
-Note that this project leverages Dependabot for managing version numbers of all Terraform modules that are used in this project. Versions should always be up to date at the moment that you clone the repo. It therefore should not be necessary for you to manually bump module version numbers.
-
-Also be aware that Terraform is a high-level scripting tool running on top of [AWS CLI](https://aws.amazon.com/cli/), and hence, it's capabilities are ultimately limited to the permissions granted to the [AWS IAM](https://aws.amazon.com/iam/) user account that you're using in your AWS CLI configuration.
-
-```console
-cd aws/dev
-terragrunt init
-terragrunt plan
-terragrunt apply
-```
 
 ## Keen Bootstrap Theme Setup
 

@@ -14,7 +14,7 @@ PIP := $(PYTHON) -m pip
 
 ifneq ("$(wildcard .env)","")
 else
-    $(shell cp ./doc/example-dot-env .env)
+    $(shell cp ./docs/example-dot-env .env)
 endif
 
 .PHONY: init activate build run test clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test docker-compose-install docker-init docker-build docker-run docker-test python-init python-lint python-clean keen-init keen-build keen-server change-log help
@@ -27,10 +27,7 @@ all: help
 init:
 	make check-python		# verify Python 3.11 is installed
 	make docker-check		# verify Docker is installed and running
-	make tear-down			# start w a clean environment
 	make python-init		# create/replace Python virtual environment and install dependencies
-	make docker-build		# build Docker containers
-	make docker-run			# start all Docker containers
 	make docker-init		# initialize MySQL and create the smarter database
 	make pre-commit-init	# install and configure pre-commit
 
@@ -47,12 +44,16 @@ build:
 run:
 	make docker-run
 
+requirements:
+	pip install --upgrade pip setuptools wheel pip-tools
+	pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
+	pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
+
 test:
 	make docker-test
 
 clean:
 	make python-clean
-	make terraform-clean
 	make docker-prune
 
 # destroy all Docker build and local artifacts
@@ -97,8 +98,18 @@ docker-shell:
 
 
 docker-init:
+	@read -p "AWS keypair and OpenAI Api key must be present in your .env file. Continue? [y/N]: " ans; \
+		if [ "$$ans" != "y" ] && [ "$$ans" != "Y" ]; then \
+			echo "Aborted."; exit 1; \
+		fi && \
 	make docker-check && \
 	make docker-prune && \
+	rm -rf ./mysql-data && \
+	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
+	docker system prune -a --volumes && \
+	docker volume prune -f && \
+	docker network prune -f && \
+	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove" && \
 	echo "Building Docker images..." && \
 	docker-compose up -d && \
 	echo "Initializing Docker..." && \
@@ -116,18 +127,19 @@ docker-init:
 		python manage.py seed_chat_history && \
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo && \
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2 && \
-		python manage.py initialize_wagtail" && \
+		python manage.py initialize_wagtail && \
 		python manage.py initialize_providers && \
 		python manage.py create_stackacademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user && \
 		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
 		python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin && \
-		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
+		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin" && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
 docker-build:
 	make docker-check && \
 	docker-compose build
+	docker image prune -f
 
 docker-run:
 	make docker-check && \
@@ -141,13 +153,8 @@ docker-test:
 docker-prune:
 	make docker-check && \
 	docker-compose down && \
-	rm -rf ./mysql-data && \
-	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
-	docker system prune -a --volumes && \
-	docker volume prune -f && \
 	docker builder prune -a -f && \
-	docker network prune -f && \
-	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove"
+	docker image prune -a -f
 
 # ---------------------------------------------------------
 # Python
@@ -215,6 +222,8 @@ help:
 	@echo 'activate               - activates Python virtual environment'
 	@echo 'build                  - Build Docker containers'
 	@echo 'run                    - run web application from Docker'
+	@echo 'test                   - run Python-Django unit tests in Docker'
+	@echo 'requirements           - compile and update Python dependency files'
 	@echo 'clean                  - delete all local artifacts, virtual environment, node_modules, and Docker containers'
 	@echo 'tear-down              - destroy all docker build and local artifacts'
 	@echo '<************************** Code Management **************************>'

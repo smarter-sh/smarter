@@ -3,6 +3,7 @@
 # pylint: disable=W0613
 
 import logging
+from typing import Union
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -96,8 +97,8 @@ def handle_model_verification_success(
 @receiver(model_verification_failure, dispatch_uid="model_verification_failure_receiver")
 def handle_model_verification_failure(
     sender,
-    provider_model: ProviderModel = None,
-    provider_model_verification: ProviderModelVerification = None,
+    provider_model: Union[ProviderModel, None] = None,
+    provider_model_verification: Union[ProviderModelVerification, None] = None,
     **kwargs,
 ):
     """Handle model verification failure signal."""
@@ -106,11 +107,13 @@ def handle_model_verification_failure(
         logger.error(
             "%s Model verification failed for model: %s with verification: %s",
             prefix,
-            provider_model.name,
-            provider_model_verification.verification_type,
+            provider_model.name if provider_model else "Unknown",
+            provider_model_verification.verification_type if provider_model_verification else "Unknown",
         )
     elif provider_model:
-        logger.error("%s Model verification failed for model: %s", prefix, provider_model.name)
+        logger.error(
+            "%s Model verification failed for model: %s", prefix, provider_model.name if provider_model else "Unknown"
+        )
     else:
         logger.error("%s Model verification failed for an unknown model for an unknown reason", prefix)
 

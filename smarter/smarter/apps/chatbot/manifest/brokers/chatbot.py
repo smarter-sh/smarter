@@ -444,7 +444,7 @@ class SAMChatbotBroker(AbstractBroker):
                         "SmarterAuthToken %s attached to ChatBot %s", self.manifest.spec.apiKey, self.chatbot.name
                     )
 
-            # ChatBotPlugin: add what's missing, remove what in the model but not in the manifest
+            # ChatBotPlugin: add what's missing, remove what is in the model but is not in the manifest
             # -------------
             for plugin in ChatBotPlugin.objects.filter(chatbot=self.chatbot):
                 if self.manifest and plugin.plugin_meta.name not in self.manifest.spec.plugins:
@@ -452,6 +452,7 @@ class SAMChatbotBroker(AbstractBroker):
                     logger.info("Detached Plugin %s from ChatBot %s", plugin.plugin_meta.name, self.chatbot.name)
             if self.manifest.spec.plugins:
                 for plugin_name in self.manifest.spec.plugins:
+                    plugin_name = self.camel_to_snake(plugin_name)
                     try:
                         plugin = PluginMeta.objects.get(name=plugin_name, account=self.account)
                     except PluginMeta.DoesNotExist as e:
@@ -462,7 +463,9 @@ class SAMChatbotBroker(AbstractBroker):
                             exc_info=True,
                         )
                         raise SAMBrokerErrorNotFound(
-                            f"Plugin {plugin_name} not found", thing=self.kind, command=command
+                            f"Plugin {plugin_name} not found for account {self.account.account_number if self.account else 'unknown'}",
+                            thing=self.kind,
+                            command=command,
                         ) from e
                     _, created = ChatBotPlugin.objects.get_or_create(chatbot=self.chatbot, plugin_meta=plugin)
                     if created:

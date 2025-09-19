@@ -8,6 +8,8 @@
 services:
   smarter-mysql:
     container_name: smarter-mysql
+    mem_limit: 2g
+    cpus: 0.5
     image: mysql:8
     command: ["mysqld", "--mysql-native-password=ON"]
     restart: always
@@ -23,11 +25,15 @@ services:
 
   smarter-redis:
     container_name: smarter-redis
+    mem_limit: 1g
+    cpus: 0.25
     image: redis:latest
     command: redis-server --requirepass smarter
 
   smarter-app:
     container_name: smarter-app
+    mem_limit: 4g
+    cpus: 1
     user: smarter_user
     x-build:
       type: docker
@@ -53,6 +59,8 @@ services:
 
   smarter-worker:
     container_name: smarter-worker
+    mem_limit: 2g
+    cpus: 0.5
     user: smarter_user
     x-build:
       type: docker
@@ -83,6 +91,8 @@ services:
 
   smarter-beat:
     container_name: smarter-beat
+    mem_limit: 1g
+    cpus: 0.5
     user: smarter_user
     x-build:
       type: docker
