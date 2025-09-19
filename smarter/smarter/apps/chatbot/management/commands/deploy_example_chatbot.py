@@ -33,7 +33,7 @@ class Command(BaseCommand):
         chatbot.default_model = SettingsDefaults.LLM_DEFAULT_MODEL
         chatbot.default_system_role = SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE
         chatbot.default_temperature = SettingsDefaults.LLM_DEFAULT_TEMPERATURE
-        chatbot.default_max_completion_tokens = SettingsDefaults.LLM_DEFAULT_MAX_COMPLETION_TOKENS
+        chatbot.default_max_tokens = SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
 
         chatbot.app_name = "Smarter Demo"
         chatbot.app_assistant = "Kent"

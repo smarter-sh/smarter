@@ -157,19 +157,21 @@ FROM data AS permissions
 # read-only and execute permissions to the group and to public.
 # We don't want either of these.
 #
-# directories:  r-x------ so that smarter_user can cd into them
-# files:        r-------- so that smarter_user can read them
-# venv/bin/*:   r-x------ so that smarter_user can execute them
-# celery:       r-x------ so that smarter_user can manage the celery beat schedule file.
-#
-# also, remove the pip cache directory to save space.
+# files:                    r-------- so that smarter_user can read them
+# directories:              r-x------ so that smarter_user can cd into them
+# venv/bin/*:               r-x------ so that smarter_user can execute them
+# smarter/**/migrations:    rwx------ so that smarter_user can manage migration files.
+# data:                     rwx------ so that smarter_user can manage the data directory.
+# .cache:                   rwx------ bc some python packages want to write to .cache, like tldextract
+
 USER root
 RUN chown -R smarter_user:smarter_user /home/smarter_user/ && \
-  find /home/smarter_user/ -type d -exec chmod 500 {} + && \
   find /home/smarter_user/ -type f -exec chmod 400 {} + && \
+  find /home/smarter_user/ -type d -exec chmod 500 {} + && \
   find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
-  chmod 700 /home/smarter_user/data/celery && \
-  rm -rf /home/smarter_user/.cache
+  find /home/smarter_user/smarter/smarter/ -type d -name migrations -exec chmod 700 {} + && \
+  chmod -R 700 /home/smarter_user/data && \
+  chmod -R 700 /home/smarter_user/.cache
 
 ################################# final #######################################
 FROM permissions AS serve_application

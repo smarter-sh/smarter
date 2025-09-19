@@ -232,7 +232,7 @@ class ChatProviderBase(ProviderDbMixin):
         default_model: str,
         default_system_role: str,
         default_temperature: float,
-        default_max_completion_tokens: int,
+        default_max_tokens: int,
         valid_chat_completion_models: list[str],
         add_built_in_tools: bool,
         *args,
@@ -290,7 +290,7 @@ class ChatProviderBase(ProviderDbMixin):
         self._default_model = default_model
         self._default_system_role = default_system_role
         self._default_temperature = default_temperature
-        self._default_max_completion_tokens = default_max_completion_tokens
+        self._default_max_completion_tokens = default_max_tokens
         self._valid_chat_completion_models = valid_chat_completion_models
 
         weather_tool = weather_tool_factory()
@@ -339,8 +339,8 @@ class ChatProviderBase(ProviderDbMixin):
             raise SmarterValueError(f"{self.formatted_class_name}: default_system_role is required")
         if not self.default_temperature:
             raise SmarterValueError(f"{self.formatted_class_name}: default_temperature is required")
-        if not self.default_max_completion_tokens:
-            raise SmarterValueError(f"{self.formatted_class_name}: default_max_completion_tokens is required")
+        if not self.default_max_tokens:
+            raise SmarterValueError(f"{self.formatted_class_name}: default_max_tokens is required")
 
         if self.valid_chat_completion_models and self.default_model not in self.valid_chat_completion_models:
             raise SmarterValueError(
@@ -396,7 +396,7 @@ class ChatProviderBase(ProviderDbMixin):
         return self._default_temperature
 
     @property
-    def default_max_completion_tokens(self) -> Optional[int]:
+    def default_max_tokens(self) -> Optional[int]:
         return self._default_max_completion_tokens
 
     @property
@@ -909,9 +909,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.validate()
             self.model = self.chat.chatbot.default_model or self.default_model
             self.temperature = self.chat.chatbot.default_temperature or self.default_temperature
-            self.max_completion_tokens = (
-                self.chat.chatbot.default_max_completion_tokens or self.default_max_completion_tokens
-            )
+            self.max_completion_tokens = self.chat.chatbot.default_max_tokens or self.default_max_tokens
             self.input_text = self.get_input_text_prompt(data=self.data)
             self.request_meta_data = self.request_meta_data_factory()
 

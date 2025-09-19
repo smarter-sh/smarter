@@ -460,7 +460,7 @@ class PluginPrompt(TimestampedModel):
     )
     max_completion_tokens = models.IntegerField(
         help_text="The maximum number of tokens for both input and output.",
-        default=SettingsDefaults.LLM_DEFAULT_MAX_COMPLETION_TOKENS,
+        default=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
         validators=[MinValueValidator(0), MaxValueValidator(8192)],
     )
 

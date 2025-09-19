@@ -159,8 +159,13 @@ class PluginBase(ABC, SmarterHelperMixin):
             try:
                 self._plugin_meta = PluginMeta.objects.get(account=self.user_profile.account, name=name)
                 self.id = self._plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
-            except PluginMeta.DoesNotExist as e:
-                raise SmarterPluginError(f"PluginMeta with name {name} does not exist for this account.") from e
+            except PluginMeta.DoesNotExist:
+                logger.warning(
+                    "%s.__init__() PluginMeta with name %s does not exist for account %s.",
+                    self.formatted_class_name,
+                    name,
+                    self.user_profile.account if self.user_profile else "unknown",
+                )
 
         #######################################################################
         # Smarter API Manifest based initialization

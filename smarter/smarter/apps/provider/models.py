@@ -174,7 +174,7 @@ class Provider(TimestampedModel, SmarterHelperMixin):
 
     # Provider metadata
     logo = models.ImageField(
-        upload_to="provider_logos/",
+        upload_to="provider/provider_logos/",
         blank=True,
         null=True,
         help_text="The logo of the provider.",
