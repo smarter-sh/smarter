@@ -1,5 +1,15 @@
 """
-Script to bump version in pyproject.toml and Dockerfile.
+Script to update the semantic version in pyproject.toml and Dockerfile.
+Called automatically from semantic-release hooks.
+see: release.config.js in the root directory.
+
+Usage:
+    python scripts/bump_version.py <new_version>
+
+Updates:
+- smarter/smarter/__version__.py
+- pyproject.toml
+- Dockerfile
 """
 
 import re
