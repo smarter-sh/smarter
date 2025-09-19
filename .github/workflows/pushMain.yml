@@ -22,6 +22,15 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+        shell: bash
+
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v5
         id: semantic
