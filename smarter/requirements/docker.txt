@@ -47,6 +47,7 @@ botocore==1.40.30
 cachetools==5.5.2
     # via
     #   -r smarter/requirements/in/base.in
+    #   -r smarter/requirements/in/constraints.in
     #   google-auth
 cattrs==25.2.0
     # via requests-cache
@@ -112,6 +113,7 @@ django==5.2.6
     #   django-permissionedforms
     #   django-redis
     #   django-rest-knox
+    #   django-storages
     #   django-stubs-ext
     #   django-taggit
     #   django-tasks
@@ -138,6 +140,8 @@ django-permissionedforms==0.1
 django-redis==6.0.0
     # via -r smarter/requirements/in/base.in
 django-rest-knox==5.0.2
+    # via -r smarter/requirements/in/base.in
+django-storages==1.14.6
     # via -r smarter/requirements/in/base.in
 django-stubs-ext==5.2.5
     # via django-tasks
