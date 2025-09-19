@@ -83,19 +83,42 @@ CSRF_USE_SESSIONS = False
 # Whether to set the flag restricting cookie leaks on cross-site requests.
 # This can be 'Lax', 'Strict', 'None', or False to disable the flag.
 SESSION_COOKIE_SAMESITE = "lax"
-# Whether the session cookie should be secure (https:// only).
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_NAME = "sessionid"
-# Age of cookie, in seconds
 SESSION_COOKIE_AGE = CSRF_COOKIE_AGE
-# A string like "alpha.platform.smarter.sh", or None for standard domain cookie.
 SESSION_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
-# The path of the session cookie.
 SESSION_COOKIE_PATH = "/"
-# Whether to use the HttpOnly flag.
 SESSION_COOKIE_HTTPONLY = True
 
 SECURE_PROXY_SSL_HEADER = None
+
+# -------------------------------
+# Django storages settings for AWS S3
+# -------------------------------
+# See https://django-storages.readthedocs.io/en/latest/backends/amazon
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key": smarter_settings.aws_access_key_id,
+            "secret_key": smarter_settings.aws_secret_access_key,
+            "bucket_name": smarter_settings.aws_s3_bucket_name,
+            "region_name": smarter_settings.aws_region,
+            "default_acl": "public-read",
+            "querystring_auth": False,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "OPTIONS": {},
+    },
+}
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+AWS_ACCESS_KEY_ID = smarter_settings.aws_access_key_id
+AWS_SECRET_ACCESS_KEY = smarter_settings.aws_secret_access_key
+AWS_STORAGE_BUCKET_NAME = smarter_settings.aws_s3_bucket_name
+AWS_S3_REGION_NAME = smarter_settings.aws_region
+AWS_QUERYSTRING_AUTH = False  # disable querystring auth for public files
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -145,6 +168,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "storages",
     # smarter apps
     # -------------------------------
     "smarter.lib.drf",

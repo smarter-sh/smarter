@@ -219,7 +219,7 @@ class SettingsDefaults:
         "that you are unable to help them at this time."
     )
     LLM_DEFAULT_TEMPERATURE = 0.5
-    LLM_DEFAULT_MAX_COMPLETION_TOKENS = 2048
+    LLM_DEFAULT_MAX_TOKENS = 2048
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
     LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
@@ -444,7 +444,7 @@ class Settings(BaseSettings):
     llm_default_model: str = Field(SettingsDefaults.LLM_DEFAULT_MODEL)
     llm_default_system_role: str = Field(SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE)
     llm_default_temperature: float = Field(SettingsDefaults.LLM_DEFAULT_TEMPERATURE)
-    llm_default_max_completion_tokens: int = Field(SettingsDefaults.LLM_DEFAULT_MAX_COMPLETION_TOKENS)
+    llm_default_max_tokens: int = Field(SettingsDefaults.LLM_DEFAULT_MAX_TOKENS)
     pinecone_api_key: SecretStr = Field(SettingsDefaults.PINECONE_API_KEY)
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY)
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY)
@@ -1021,13 +1021,13 @@ class Settings(BaseSettings):
             return SettingsDefaults.LLM_DEFAULT_TEMPERATURE
         return float(v)
 
-    @field_validator("llm_default_max_completion_tokens")
+    @field_validator("llm_default_max_tokens")
     def check_openai_default_max_completion_tokens(cls, v) -> int:
-        """Check llm_default_max_completion_tokens"""
+        """Check llm_default_max_tokens"""
         if isinstance(v, int):
             return v
         if v in [None, ""]:
-            return SettingsDefaults.LLM_DEFAULT_MAX_COMPLETION_TOKENS
+            return SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
         return int(v)
 
     @field_validator("pinecone_api_key")
