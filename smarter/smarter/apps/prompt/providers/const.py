@@ -135,8 +135,6 @@ VALID_CHAT_COMPLETION_MODELS = [
     "codex-mini-latest",
     "computer-use-preview",
     "computer-use-preview-2025-03-11",
-    "dall-e-2",
-    "dall-e-3",
     "davinci-002",
     "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125",
@@ -210,14 +208,10 @@ VALID_CHAT_COMPLETION_MODELS = [
     "o4-mini-deep-research-2025-06-26",
     "omni-moderation-2024-09-26",
     "omni-moderation-latest",
-    "text-embedding-3-large",
-    "text-embedding-3-small",
-    "text-embedding-ada-002",
     "tts-1",
     "tts-1-1106",
     "tts-1-hd",
     "tts-1-hd-1106",
-    "whisper-1",
 ]
 
 VALID_EMBEDDING_MODELS = [
