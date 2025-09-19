@@ -8,13 +8,14 @@ import logging
 import random
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 import yaml
 from django.http import HttpRequest
 from pydantic import SecretStr
 from rest_framework.request import Request
 
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.validators import SmarterValidator
 
@@ -54,41 +55,6 @@ class DateTimeEncoder(json.JSONEncoder):
             return "*** REDACTED ***"
 
         return super().default(o)
-
-
-def camel_to_snake(name):
-    """
-    Converts camelCase or incorrectly formatted names to snake_case.
-    examples:
-        camel_to_snake("camelCase") -> "camel_case"
-        camel_to_snake("CamelCase") -> "camel_case"
-        camel_to_snake("Camel Case") -> "camel_case"
-        camel_to_snake("camel case") -> "camel_case"
-        camel_to_snake("camelCaseWithSpaces") -> "camel_case_with_spaces"
-        camel_to_snake("CamelCaseWithSpaces") -> "camel_case_with_spaces"
-        camel_to_snake("Camel Case With Spaces") -> "camel_case_with_spaces"
-        camel_to_snake("MYEverlastingSUPERDUPERGobstopper") -> "my_everlasting_superduper_gobstopper"
-    Args:
-        name (str): The name to convert.
-    Returns:
-        str: The converted name in snake_case.
-    """
-    name = str(name or "")
-    name = name.replace(" ", "_").replace("-", "_")
-
-    # Split lowercase-uppercase boundary
-    name = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
-
-    # Handle consecutive uppercase letters followed by lowercase letters
-    name = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
-
-    # Reduce multiple underscores to a single underscore
-    name = re.sub(r"_+", "_", name)
-
-    # Remove non-alphanumeric characters except underscores
-    name = re.sub(r"[^\w]", "", name)
-
-    return name.lower()
 
 
 def camel_to_snake_dict(dictionary: dict) -> dict:
@@ -246,3 +212,91 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
     # Fallback: synthesize a generic test URL
     logger.warning("smarter_build_absolute_uri() could not determine URL, returning fallback test URL")
     return "http://testserver/unknown/"
+
+
+def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -> Optional[Union[str, dict, list]]:
+    """Converts snake_case dict keys to camelCase."""
+
+    def convert(name: str) -> str:
+        components = name.split("_")
+        return components[0] + "".join(x.title() for x in components[1:])
+
+    if isinstance(data, str):
+        return convert(data)
+
+    if isinstance(data, list):
+        return [snake_to_camel(item, convert_values=convert_values) for item in data]
+
+    if not isinstance(data, dict):
+        raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
+
+    dictionary: dict = data if isinstance(data, dict) else {}
+    retval = {}
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            value = snake_to_camel(data=value, convert_values=convert_values)
+        new_key = convert(key)
+        if convert_values:
+            new_value = convert(value) if isinstance(value, str) else value
+        else:
+            new_value = value
+        retval[new_key] = new_value
+    return retval
+
+
+def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
+    """Converts camelCase dict keys to snake_case."""
+
+    def convert(name: str):
+        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+    if isinstance(data, str):
+        return convert(data)
+    if isinstance(data, list):
+        return [camel_to_snake(item) for item in data]
+    if not isinstance(data, dict):
+        raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
+    dictionary: dict = data if isinstance(data, dict) else {}
+    retval = {}
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            value = camel_to_snake(value)
+        new_key = convert(key)
+        retval[new_key] = value
+    return retval
+
+
+# def camel_to_snake(name):
+#     """
+#     Converts camelCase or incorrectly formatted names to snake_case.
+#     examples:
+#         camel_to_snake("camelCase") -> "camel_case"
+#         camel_to_snake("CamelCase") -> "camel_case"
+#         camel_to_snake("Camel Case") -> "camel_case"
+#         camel_to_snake("camel case") -> "camel_case"
+#         camel_to_snake("camelCaseWithSpaces") -> "camel_case_with_spaces"
+#         camel_to_snake("CamelCaseWithSpaces") -> "camel_case_with_spaces"
+#         camel_to_snake("Camel Case With Spaces") -> "camel_case_with_spaces"
+#         camel_to_snake("MYEverlastingSUPERDUPERGobstopper") -> "my_everlasting_superduper_gobstopper"
+#     Args:
+#         name (str): The name to convert.
+#     Returns:
+#         str: The converted name in snake_case.
+#     """
+#     name = str(name or "")
+#     name = name.replace(" ", "_").replace("-", "_")
+
+#     # Split lowercase-uppercase boundary
+#     name = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
+
+#     # Handle consecutive uppercase letters followed by lowercase letters
+#     name = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
+
+#     # Reduce multiple underscores to a single underscore
+#     name = re.sub(r"_+", "_", name)
+
+#     # Remove non-alphanumeric characters except underscores
+#     name = re.sub(r"[^\w]", "", name)
+
+#     return name.lower()
