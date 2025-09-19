@@ -1,42 +1,36 @@
-## [0.13.2](https://github.com/smarter-sh/smarter/compare/v0.13.1...v0.13.2) (2025-09-19)
-
-
-### Bug Fixes
-
-* do not raise exception on missing UserProfile since this happens during bootstrap on fresh installs ([d5946ee](https://github.com/smarter-sh/smarter/commit/d5946eed7b3a484a51820b29d3d28525fff67bc3))
-* downgrade default model to gpt-4-turbo ([e7c0a0c](https://github.com/smarter-sh/smarter/commit/e7c0a0c7d462f7990ddfa745e539c56cb49cb568))
-* downgrade to gpt-4-turbo ([29f5483](https://github.com/smarter-sh/smarter/commit/29f5483d746cc22cb3f3f86009270038d7fe20fe))
-* ensure that db is initialized and that waffle table exists ([c71dddc](https://github.com/smarter-sh/smarter/commit/c71dddccfeefce2fa5d4e1cbd275746af5b1cd5c))
-* ensure that name is snake_case ([8a43478](https://github.com/smarter-sh/smarter/commit/8a4347842f2fb900cf197925597495df5b09dd63))
-* ensure that only smarter_user has permissions ([b2c612d](https://github.com/smarter-sh/smarter/commit/b2c612d0b2fcbfc073fb326d1f5d6d6825cdf0bf))
-* further restrict permissions, and ignore any non-build files ([c0356cc](https://github.com/smarter-sh/smarter/commit/c0356ccadbe1eca7e56dcd96e47849104544a7a7))
-* ignore anything that is not explicitly needed inside the container. ([38c5818](https://github.com/smarter-sh/smarter/commit/38c5818fda7872dde91d33929a189ff71b3868db))
-* IndexError: list index out of range error ([f309963](https://github.com/smarter-sh/smarter/commit/f309963cc1a7c1e2bc32ac551b11615e8a3e2cbb))
-* setup GOOGLE_SERVICE_ACCOUNT_B64 in .env ([d43f149](https://github.com/smarter-sh/smarter/commit/d43f149270d793de73bee6f050950672334d8578))
-* switch to importlib.metadata import distributions() ([4c68753](https://github.com/smarter-sh/smarter/commit/4c68753d306c3adac5ef77f9baa75153c8cc9c29))
-* syntax error in docker-init ([ca7060d](https://github.com/smarter-sh/smarter/commit/ca7060d6b68f69fb331f7a96a0c4cbd3c8bdab5f))
-* tool_call_fetch_plugin_response() needs to fetch from staticData key ([0b8f90e](https://github.com/smarter-sh/smarter/commit/0b8f90e2a9d9351427157d6c07055b8955db3aea))
-* uniformly update all occurances of version ([a60fa43](https://github.com/smarter-sh/smarter/commit/a60fa431108984d705d8c19d957c2747904453d2))
-
 # Change Log
-## [0.13.1](https://github.com/smarter-sh/smarter/compare/v0.13.0...v0.13.1) (2025-08-26)
-
-
-### Bug Fixes
-
-* broken yaml manifest style on drill-down pages ([364238e](https://github.com/smarter-sh/smarter/commit/364238e08be7beba010a7208828ae890b2900d87))
-* log apply ([f7c8355](https://github.com/smarter-sh/smarter/commit/f7c8355496ff4be2f0641681320d42c18910b550))
-* logging switch logic ([6fd93ab](https://github.com/smarter-sh/smarter/commit/6fd93abb1e5963ebb0eb24369008b83f5733c5c7))
-* plugin apply update manifest initialization bug ([86c5061](https://github.com/smarter-sh/smarter/commit/86c5061c08306212108dc533e39e4d430cf234b0))
-
-# [0.13.0](https://github.com/smarter-sh/smarter/compare/v0.12.0...v0.13.0) (2025-08-25)
-
-
-### Bug Fixes
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.13.2](https://github.com/smarter-sh/smarter/compare/v0.13.1...v0.13.2) (2025-09-19)
+
+### Bug Fixes
+
+- do not raise exception on missing UserProfile since this happens during bootstrap on fresh installs ([d5946ee](https://github.com/smarter-sh/smarter/commit/d5946eed7b3a484a51820b29d3d28525fff67bc3))
+- downgrade default model to gpt-4-turbo ([e7c0a0c](https://github.com/smarter-sh/smarter/commit/e7c0a0c7d462f7990ddfa745e539c56cb49cb568))
+- downgrade to gpt-4-turbo ([29f5483](https://github.com/smarter-sh/smarter/commit/29f5483d746cc22cb3f3f86009270038d7fe20fe))
+- ensure that db is initialized and that waffle table exists ([c71dddc](https://github.com/smarter-sh/smarter/commit/c71dddccfeefce2fa5d4e1cbd275746af5b1cd5c))
+- ensure that name is snake_case ([8a43478](https://github.com/smarter-sh/smarter/commit/8a4347842f2fb900cf197925597495df5b09dd63))
+- ensure that only smarter_user has permissions ([b2c612d](https://github.com/smarter-sh/smarter/commit/b2c612d0b2fcbfc073fb326d1f5d6d6825cdf0bf))
+- further restrict permissions, and ignore any non-build files ([c0356cc](https://github.com/smarter-sh/smarter/commit/c0356ccadbe1eca7e56dcd96e47849104544a7a7))
+- ignore anything that is not explicitly needed inside the container. ([38c5818](https://github.com/smarter-sh/smarter/commit/38c5818fda7872dde91d33929a189ff71b3868db))
+- IndexError: list index out of range error ([f309963](https://github.com/smarter-sh/smarter/commit/f309963cc1a7c1e2bc32ac551b11615e8a3e2cbb))
+- setup GOOGLE_SERVICE_ACCOUNT_B64 in .env ([d43f149](https://github.com/smarter-sh/smarter/commit/d43f149270d793de73bee6f050950672334d8578))
+- switch to importlib.metadata import distributions() ([4c68753](https://github.com/smarter-sh/smarter/commit/4c68753d306c3adac5ef77f9baa75153c8cc9c29))
+- syntax error in docker-init ([ca7060d](https://github.com/smarter-sh/smarter/commit/ca7060d6b68f69fb331f7a96a0c4cbd3c8bdab5f))
+- tool_call_fetch_plugin_response() needs to fetch from staticData key ([0b8f90e](https://github.com/smarter-sh/smarter/commit/0b8f90e2a9d9351427157d6c07055b8955db3aea))
+- uniformly update all occurrences of version ([a60fa43](https://github.com/smarter-sh/smarter/commit/a60fa431108984d705d8c19d957c2747904453d2))
+
+## [0.13.1](https://github.com/smarter-sh/smarter/compare/v0.13.0...v0.13.1) (2025-08-26)
+
+### Bug Fixes
+
+- broken yaml manifest style on drill-down pages ([364238e](https://github.com/smarter-sh/smarter/commit/364238e08be7beba010a7208828ae890b2900d87))
+- log apply ([f7c8355](https://github.com/smarter-sh/smarter/commit/f7c8355496ff4be2f0641681320d42c18910b550))
+- logging switch logic ([6fd93ab](https://github.com/smarter-sh/smarter/commit/6fd93abb1e5963ebb0eb24369008b83f5733c5c7))
+- plugin apply update manifest initialization bug ([86c5061](https://github.com/smarter-sh/smarter/commit/86c5061c08306212108dc533e39e4d430cf234b0))
 
 ## [0.13.0](https://github.com/smarter-sh/smarter/compare/v0.12.0...v0.13.0) (2025-08-25)
 
