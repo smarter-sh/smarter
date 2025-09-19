@@ -282,7 +282,7 @@ class PluginMeta(TimestampedModel):
 
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
-        if not SmarterValidator.is_valid_snake_case(self.name):
+        if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
             snake_case_name = camel_to_snake(self.name)
             logger.warning(
                 "PluginMeta.save(): name %s was not in snake_case. Converted to snake_case: %s",
@@ -1101,7 +1101,7 @@ class SqlConnection(ConnectionBase):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return self.name + " - " + self.get_connection_string()
+        return self.name + " - " + self.get_connection_string() if isinstance(self.name, str) else "unassigned"
 
 
 class PluginDataSql(PluginDataBase):
@@ -1378,7 +1378,7 @@ class ApiConnection(ConnectionBase):
 
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
-        if not SmarterValidator.is_valid_snake_case(self.name):
+        if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
             snake_case_name = camel_to_snake(self.name)
             logger.warning(
                 "ApiConnection.save(): name %s was not in snake_case. Converted to snake_case: %s",
@@ -1448,7 +1448,7 @@ class ApiConnection(ConnectionBase):
             return False
 
     def __str__(self) -> str:
-        return self.name + " - " + self.get_connection_string()
+        return self.name + " - " + self.get_connection_string() if isinstance(self.name, str) else "unassigned"
 
 
 class PluginDataApi(PluginDataBase):

@@ -253,8 +253,37 @@ class StaticPlugin(PluginBase):
                 raise SmarterPluginError(
                     f"Plugin {self.name} return data is not a dictionary.",
                 )
-            retval = return_data[inquiry_type]
-            retval = json.dumps(retval)
+
+            try:
+                return_data = (
+                    return_data[SAMStaticPluginSpecDataKeys.STATIC.value]
+                    if isinstance(return_data, dict)
+                    else return_data
+                )
+            except KeyError as e:
+                raise SmarterPluginError(
+                    f"Plugin {self.name} is missing a top-level key '{SAMStaticPluginSpecDataKeys.STATIC.value}' in return_data {json.dumps(return_data, indent=4)}",
+                ) from e
+
+            try:
+                retval = return_data[inquiry_type]
+            except KeyError as e:
+                raise SmarterPluginError(
+                    f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}. Available keys are: {list(return_data.keys())} from return_data {json.dumps(return_data, indent=4)}",
+                ) from e
+
+            if retval is None:
+                raise SmarterPluginError(
+                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is None.",
+                )
+
+            try:
+                retval = json.dumps(retval)
+            except (TypeError, ValueError) as e:
+                raise SmarterPluginError(
+                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} could not be serialized to JSON: {e}.",
+                ) from e
+
             if not isinstance(retval, str):
                 raise SmarterPluginError(
                     f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is not a string. Expected a string, got {type(retval)}.",

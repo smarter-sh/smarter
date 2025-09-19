@@ -27,6 +27,8 @@ from smarter.common.exceptions import (
     SmarterException,
     SmarterValueError,
 )
+from smarter.common.utils import camel_to_snake as util_camel_to_snake
+from smarter.common.utils import snake_to_camel as util_snake_to_camel
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -999,6 +1001,16 @@ class PluginBase(ABC, SmarterHelperMixin):
                 )
             retval["enum"] = enum
         return retval
+
+    def snake_to_camel(
+        self, data: Union[str, dict, list], convert_values: bool = False
+    ) -> Optional[Union[str, dict, list]]:
+        """Convert snake_case to camelCase."""
+        return util_snake_to_camel(data, convert_values)
+
+    def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
+        """Convert camelCase to snake_case."""
+        return util_camel_to_snake(data)
 
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
         """
