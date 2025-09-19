@@ -14,7 +14,7 @@ class ProviderModelEnum(SmarterEnumAbstract):
     PROVIDER_ID = "provider_id"
     BASE_URL = "base_url"
     MODEL = "model"
-    MAX_TOKENS = "max_tokens"
+    MAX_TOKENS = "max_completion_tokens"
     TEMPERATURE = "temperature"
     TOP_P = "top_p"
 

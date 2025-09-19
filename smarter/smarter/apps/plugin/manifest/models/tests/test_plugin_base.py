@@ -187,7 +187,7 @@ class TestPluginBase(TestAccountMixin):
             ],
         )
         self.assertEqual(
-            plugin.plugin_prompt.max_tokens,
+            plugin.plugin_prompt.max_completion_tokens,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
             ],
@@ -460,7 +460,7 @@ class TestPluginBase(TestAccountMixin):
         self.assertEqual(plugin.plugin_prompt.system_role, plugin_clone.plugin_prompt.system_role)  # type: ignore
         self.assertEqual(plugin.plugin_prompt.model, plugin_clone.plugin_prompt.model)  # type: ignore
         self.assertEqual(plugin.plugin_prompt.temperature, plugin_clone.plugin_prompt.temperature)  # type: ignore
-        self.assertEqual(plugin.plugin_prompt.max_tokens, plugin_clone.plugin_prompt.max_tokens)  # type: ignore
+        self.assertEqual(plugin.plugin_prompt.max_completion_tokens, plugin_clone.plugin_prompt.max_completion_tokens)  # type: ignore
 
         self.assertEqual(plugin.plugin_data.description, plugin_clone.plugin_data.description)  # type: ignore
         self.assertEqual(plugin.plugin_data.static_data, plugin_clone.plugin_data.static_data)  # type: ignore

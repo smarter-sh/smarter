@@ -366,7 +366,9 @@ def cache_invalidate(user: Optional[User] = None, account: Optional[Account] = N
     else:
         user_profile = UserProfile.objects.filter(user=resolved_user).first()
         if not user_profile:
-            raise SmarterValueError(f"did not find a UserProfile for {resolved_user}")
+            # this can happen during new platform bootstrap initialization, so just log a warning and return
+            logger.warning("cache_invalidate() no UserProfile found for user: %s", resolved_user)
+            return
         account = user_profile.account
 
     logger.info("cache_invalidate() invalidating cache for user: %s account: %s", resolved_user, account)

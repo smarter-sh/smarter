@@ -28,7 +28,7 @@ React app that leverages [Vite.js](https://github.com/QueriumCorp/smarter), [@ch
 
 ### Django Integration
 
-Be aware that there are many considerations for getting React to work inside a Django project. You can read more [here](./doc/DJANGO-REACT-INTEGRATION.md).
+Be aware that there are many considerations for getting React to work inside a Django project. You can read more [here](./docs/DJANGO-REACT-INTEGRATION.md).
 
 ### Webapp design features
 
@@ -78,11 +78,11 @@ Cloud engineers:
 - [AWS account](https://aws.amazon.com/)
 - [AWS Command Line Interface](https://aws.amazon.com/cli/)
 - [Terraform](https://www.terraform.io/).
-  _If you're new to Terraform then see [Getting Started With AWS and Terraform](./doc/TERRAFORM_GETTING_STARTED_GUIDE.md)_
+  _If you're new to Terraform then see [Getting Started With AWS and Terraform](./docs/TERRAFORM_GETTING_STARTED_GUIDE.md)_
 
 Optional requirements:
 
 - [OpenAI platform API key](https://platform.openai.com/).
-  _If you're new to OpenAI API then see [How to Get an OpenAI API Key](./doc/OPENAI_API_GETTING_STARTED_GUIDE.md)_
+  _If you're new to OpenAI API then see [How to Get an OpenAI API Key](./docs/OPENAI_API_GETTING_STARTED_GUIDE.md)_
 - [Google Maps API key](https://developers.google.com/maps/documentation/geocoding/overview). This is used the OpenAI API Function Calling coding example, "[get_current_weather()](https://platform.openai.com/docs/guides/function-calling)".
 - [Pinecone API key](https://docs.pinecone.io/docs/quickstart). This is used for OpenAI API Embedding examples.

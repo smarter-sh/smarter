@@ -24,16 +24,17 @@ configuration values. This is useful for debugging and logging.
 
 # python stuff
 import base64
+import json
 import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
 import re
 from functools import lru_cache
+from importlib.metadata import distributions
 from typing import Any, List, Optional, Tuple, Union
 
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
-import pkg_resources
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from dotenv import load_dotenv
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
@@ -164,7 +165,9 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "SET-ME-PLEASE")
+    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
+
+    ANTHROPIC_API_KEY: SecretStr = SecretStr(os.environ.get("ANTHROPIC_API_KEY", "SET-ME-PLEASE"))
 
     # aws auth
     AWS_PROFILE = os.environ.get("AWS_PROFILE", TFVARS.get("aws_profile", None))
@@ -191,13 +194,24 @@ class SettingsDefaults:
     GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(
         os.environ.get("GOOGLE_MAPS_API_KEY", os.environ.get("google_maps_api_key", "SET-ME-PLEASE"))
     )
+
+    try:
+        GOOGLE_SERVICE_ACCOUNT_B64 = os.environ.get("GOOGLE_SERVICE_ACCOUNT_B64", "")
+        GOOGLE_SERVICE_ACCOUNT = json.loads(base64.b64decode(GOOGLE_SERVICE_ACCOUNT_B64).decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        logger.error("Failed to load Google service account: %s", e)
+        logger.error(
+            "See https://console.cloud.google.com/projectselector2/iam-admin/serviceaccounts?supportedpurview=project"
+        )
+        GOOGLE_SERVICE_ACCOUNT = {}
+
     GEMINI_API_KEY: SecretStr = SecretStr(os.environ.get("GEMINI_API_KEY", "SET-ME-PLEASE"))
     LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
 
     LLAMA_API_KEY: SecretStr = SecretStr(os.environ.get("LLAMA_API_KEY", "SET-ME-PLEASE"))
 
     LLM_DEFAULT_PROVIDER = "openai"
-    LLM_DEFAULT_MODEL = "gpt-4o-mini"
+    LLM_DEFAULT_MODEL = "gpt-4-turbo"
     LLM_DEFAULT_SYSTEM_ROLE = (
         "You are a helpful chatbot. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "
@@ -216,10 +230,10 @@ class SettingsDefaults:
     LOGO: str = os.environ.get(
         "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
     )
-    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", "SET-ME-PLEASE")
+    MAILCHIMP_API_KEY: SecretStr = SecretStr(os.environ.get("MAILCHIMP_API_KEY", "SET-ME-PLEASE"))
     MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", "SET-ME-PLEASE")
 
-    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", "https://smarter.sh")
+    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", f"https://{ROOT_DOMAIN}")
 
     OPENAI_API_ORGANIZATION = os.environ.get("OPENAI_API_ORGANIZATION", "SET-ME-PLEASE")
     OPENAI_API_KEY: SecretStr = SecretStr(os.environ.get("OPENAI_API_KEY", "SET-ME-PLEASE"))
@@ -227,7 +241,6 @@ class SettingsDefaults:
     OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
     PINECONE_API_KEY: SecretStr = SecretStr(os.environ.get("PINECONE_API_KEY", "SET-ME-PLEASE"))
 
-    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "smarter.sh"))
     SHARED_RESOURCE_IDENTIFIER = os.environ.get(
         "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
     )
@@ -270,7 +283,7 @@ class SettingsDefaults:
     SECRET_KEY = os.getenv("SECRET_KEY")
 
     SMTP_SENDER = os.environ.get("SMTP_SENDER", "SET-ME-PLEASE")
-    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "no-reply@smarter.sh")
+    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
     SMTP_HOST = os.environ.get("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(os.environ.get("SMTP_USE_SSL", False))
@@ -387,6 +400,9 @@ class Settings(BaseSettings):
     google_maps_api_key: SecretStr = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
     )
+    google_service_account: dict = Field(
+        SettingsDefaults.GOOGLE_SERVICE_ACCOUNT,
+    )
     gemini_api_key: SecretStr = Field(
         SettingsDefaults.GEMINI_API_KEY,
     )
@@ -489,7 +505,7 @@ class Settings(BaseSettings):
 
     @property
     def root_platform_domain(self) -> str:
-        """Return the platform domain name. ie platform.smarter.sh"""
+        """Return the platform domain name. ie platform.example.com"""
         return f"{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
     @property
@@ -534,16 +550,16 @@ class Settings(BaseSettings):
         domains.add(self.root_platform_domain)
         # Add environment/subdomain combinations
         for subdomain in subdomains:
-            # example: platform.smarter.sh, api.platform.smarter.sh
+            # example: platform.example.com, api.platform.example.com
             domains.add(f"{subdomain}.{self.root_domain}")
             for environment in environments[1:]:  # skip None for env-prefixed
-                # example: alpha.platform.smarter.sh, alpha.api.platform.smarter.sh
+                # example: alpha.platform.example.com, alpha.api.platform.example.com
                 domains.add(f"{environment}.{subdomain}.{self.root_domain}")
         return sorted(domains)
 
     @property
     def environment_url(self) -> str:
-        """Return the environment URL. example: https://alpha.platform.smarter.sh"""
+        """Return the environment URL. example: https://alpha.platform.example.com"""
         retval = SmarterValidator.urlify(self.environment_platform_domain, environment=self.environment)
         if retval is None:
             raise SmarterConfigurationError(
@@ -569,7 +585,7 @@ class Settings(BaseSettings):
 
     @property
     def root_api_domain(self) -> str:
-        """Return the root API domain name. ie api.smarter.sh"""
+        """Return the root API domain name. ie api.example.com"""
         return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
@@ -578,7 +594,7 @@ class Settings(BaseSettings):
         Return the customer API domain name.
 
                 examples:
-        - api.alpha.platform.smarter.sh
+        - api.alpha.platform.example.com
         - api.localhost:8000
         """
         if self.environment == SmarterEnvironments.PROD:
@@ -592,7 +608,7 @@ class Settings(BaseSettings):
 
     @property
     def environment_api_url(self) -> str:
-        """Return the API URL for the environment. example: https://api.alpha.platform.smarter.sh"""
+        """Return the API URL for the environment. example: https://api.alpha.platform.example.com"""
         retval = SmarterValidator.urlify(self.environment_api_domain, environment=self.environment)
         if retval is None:
             raise SmarterConfigurationError(
@@ -603,7 +619,9 @@ class Settings(BaseSettings):
 
     @property
     def aws_s3_bucket_name(self) -> str:
-        """Return the S3 bucket name. example: smarter-platform-alpha"""
+        """Return the S3 bucket name. example: alpha.platform.smarter.sh"""
+        if self.environment == SmarterEnvironments.LOCAL:
+            return f"{SmarterEnvironments.ALPHA}.{self.root_platform_domain}"
         return self.environment_platform_domain
 
     @property
@@ -639,10 +657,7 @@ class Settings(BaseSettings):
         """Dump all settings."""
 
         def get_installed_packages():
-            installed_packages = pkg_resources.working_set
-            # pylint: disable=not-an-iterable
-            package_list = [(d.project_name, d.version) for d in installed_packages]
-            return package_list
+            return [(dist.metadata["Name"], dist.version) for dist in distributions()]
 
         if self._dump:
             return self._dump
@@ -673,6 +688,7 @@ class Settings(BaseSettings):
             "google": {
                 "google_maps_api_key": self.google_maps_api_key,
                 "gemini_api_key": self.gemini_api_key,
+                "google_service_account": self.google_service_account,
             },
             "metaai": {
                 "llama_api_key": self.llama_api_key,
@@ -822,7 +838,7 @@ class Settings(BaseSettings):
     def validate_anthropic_api_key(cls, v) -> SecretStr:
         """Validate anthropic_api_key"""
         if v in [None, ""]:
-            return SecretStr(SettingsDefaults.ANTHROPIC_API_KEY)
+            return SettingsDefaults.ANTHROPIC_API_KEY
         return v
 
     @field_validator("debug_mode")
@@ -848,6 +864,13 @@ class Settings(BaseSettings):
         """Check google_maps_api_key"""
         if str(v) in [None, ""]:
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
+        return v
+
+    @field_validator("google_service_account")
+    def check_google_service_account(cls, v) -> dict:
+        """Check google_service_account"""
+        if v in [None, {}]:
+            return SettingsDefaults.GOOGLE_SERVICE_ACCOUNT
         return v
 
     @field_validator("gemini_api_key")
@@ -924,7 +947,7 @@ class Settings(BaseSettings):
     def check_mailchimp_api_key(cls, v) -> SecretStr:
         """Check mailchimp_api_key"""
         if v in [None, ""] and SettingsDefaults.MAILCHIMP_API_KEY is not None:
-            return SecretStr(SettingsDefaults.MAILCHIMP_API_KEY)
+            return SettingsDefaults.MAILCHIMP_API_KEY
         return v
 
     @field_validator("mailchimp_list_id")
@@ -936,7 +959,7 @@ class Settings(BaseSettings):
 
     @field_validator("marketing_site_url")
     def check_marketing_site_url(cls, v) -> str:
-        """Check marketing_site_url. example: https://smarter.sh"""
+        """Check marketing_site_url. example: https://example.com"""
         if v in [None, ""]:
             return SettingsDefaults.MARKETING_SITE_URL
         SmarterValidator.validate_url(v)
@@ -1003,7 +1026,7 @@ class Settings(BaseSettings):
         return float(v)
 
     @field_validator("llm_default_max_tokens")
-    def check_openai_default_max_tokens(cls, v) -> int:
+    def check_openai_default_max_completion_tokens(cls, v) -> int:
         """Check llm_default_max_tokens"""
         if isinstance(v, int):
             return v

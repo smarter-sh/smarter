@@ -63,7 +63,7 @@ from .views.views import JsonSchemasView, ManifestsView
 app_name = namespace
 urlpatterns = [
     # -------------------------------------------------------------------------
-    # Developers docs rendered from markdown in /data/doc/ in the Dockeer container
+    # Developers docs rendered from markdown in /data/docs/ in the Dockeer container
     # -------------------------------------------------------------------------
     path("developer/README.md/", DeveloperDocsReadme.as_view(), name="developer-readme"),
     path("developer/CHANGELOG.md/", DeveloperDocsChangelog.as_view(), name="developer-changelog"),

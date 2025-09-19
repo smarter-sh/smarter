@@ -1,7 +1,7 @@
 [project]
 name = "Smarter"
-version = "0.10.24"
-requires-python = ">=3.10"
+version = "0.13.1"
+requires-python = ">=3.12"
 
 [project.urls]
 homepage = "https://smarter.sh/"

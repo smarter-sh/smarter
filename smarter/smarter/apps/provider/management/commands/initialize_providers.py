@@ -1,13 +1,16 @@
 """This module is used to generate seed records for the chat history models."""
 
+import logging
 from http import HTTPStatus
 from pathlib import Path
 from urllib.parse import urljoin
 
+import google.auth.transport.requests
 import requests
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from google.oauth2 import service_account
 
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
@@ -16,10 +19,12 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
 
 
+logger = logging.getLogger(__name__)
+
 HERE = Path(__file__).resolve().parent
 
 OPENAI_API = "OpenAI"
-OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
+OPENAI_DEFAULT_MODEL = "gpt-4-turbo"
 OPENAI_API_KEY_NAME = "openai_api_key"
 
 GOOGLE_API = "GoogleAI"
@@ -42,7 +47,7 @@ class Command(BaseCommand):
 
     user_profile: UserProfile | None = None
 
-    def initialize_provider_models(self, provider: Provider, default_model: str):
+    def initialize_provider_models(self, provider: Provider, bearer_token: str, default_model: str):
         """
         Initialize models by fetching them from the OpenAI compatible API end point.
         example response:
@@ -57,35 +62,44 @@ class Command(BaseCommand):
                 },
             ]
         """
-        end_point = "v1/models"
+        log_prefix = f"initialize_provider_models({provider.name}):"
+        self.stdout.write("-" * 80)
+        end_point = "models"
         url = urljoin(provider.base_url, end_point)
-        headers = {"Authorization": f"Bearer {smarter_settings.openai_api_key.get_secret_value()}"}
+        headers = {"Authorization": f"Bearer {bearer_token}"}
 
         try:
+            self.stdout.write(f"{log_prefix} Fetching provider models from {url}")
             response = requests.get(url, headers=headers, timeout=10)
         except requests.RequestException as e:
+            self.stdout.write(self.style.ERROR(f"{log_prefix} Failed to fetch provider models. Error: {e}"))
+            return
+
+        if response.status_code == HTTPStatus.NOT_FOUND:
             self.stdout.write(
-                self.style.ERROR(f"initialize_provider_models: Failed to fetch OpenAI models. Error: {e}")
+                self.style.WARNING(f"{log_prefix} Provider models endpoint not found for this provider: {url}")
             )
             return
+
         if response.status_code != HTTPStatus.OK:
+            try:
+                error_message = response.json().get("error", {}).get("message", response.text)
+            # pylint: disable=broad-except
+            except Exception:
+                error_message = response.text
             self.stdout.write(
                 self.style.ERROR(
-                    f"initialize_provider_models: Failed to fetch OpenAI models. Status code: {response.status_code}"
+                    f"{log_prefix} Failed to fetch provider models. {url} Response {response.status_code}: {error_message}"
                 )
             )
             return
 
         models = response.json().get("data", [])
         if len(models) == 0:
-            self.stdout.write(
-                self.style.WARNING(
-                    "initialize_provider_models: No OpenAI models found. Please check your API key and network connection."
-                )
-            )
+            self.stdout.write(self.style.WARNING(f"{log_prefix} No provider models found."))
             return
 
-        self.stdout.write(f"initialize_provider_models: Found {len(models)} OpenAI models.")
+        self.stdout.write(f"{log_prefix} Found {len(models)} provider models.")
 
         for model in models:
             model_name = model.get("id")
@@ -94,9 +108,7 @@ class Command(BaseCommand):
                     provider=provider, model_name=model_name, is_default=model_name == default_model
                 )
         self.stdout.write(
-            self.style.SUCCESS(
-                f"initialize_provider_models: OpenAI models initialized {len(models)} models successfully."
-            )
+            self.style.SUCCESS(f"{log_prefix} provider models initialized {len(models)} models successfully.")
         )
 
     def initialize_provider_model(self, provider: Provider, model_name: str, is_default: bool = False):
@@ -109,7 +121,6 @@ class Command(BaseCommand):
             name=model_name,
             defaults={
                 "description": f"{model_name} model for {provider.name}.",
-                "status": ProviderStatus.VERIFIED,
                 "is_active": True,
                 "is_default": is_default,
             },
@@ -119,8 +130,9 @@ class Command(BaseCommand):
         """
         Initialize OpenAI provider and its models.
         """
+        logger.info("initialize_openai")
         if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
+            self.stdout.write(self.style.ERROR("initialize_openai: User profile is not set."))
             return
 
         openai_api_key, _ = Secret.objects.update_or_create(
@@ -128,7 +140,7 @@ class Command(BaseCommand):
             defaults={
                 "description": "API key for OpenAI services.",
                 "user_profile": self.user_profile,
-                "encrypted_value": Secret.encrypt("your-openai-api-key"),
+                "encrypted_value": Secret.encrypt(smarter_settings.openai_api_key.get_secret_value()),
             },
         )
 
@@ -164,14 +176,19 @@ class Command(BaseCommand):
                 },
             )
 
-            self.initialize_provider_models(provider=provider, default_model=OPENAI_DEFAULT_MODEL)
+            self.initialize_provider_models(
+                provider=provider,
+                bearer_token=smarter_settings.openai_api_key.get_secret_value(),
+                default_model=OPENAI_DEFAULT_MODEL,
+            )
 
     def initialize_googleai(self):
         """
         Initialize Google AI provider and its models.
         """
+        logger.info("initialize_googleai")
         if self.user_profile is None:
-            self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
+            self.stdout.write(self.style.ERROR("initialize_googleai: User profile is not set."))
             return
 
         googleai_api_key, _ = Secret.objects.update_or_create(
@@ -179,9 +196,22 @@ class Command(BaseCommand):
             defaults={
                 "description": "API key for Google AI services.",
                 "user_profile": self.user_profile,
-                "encrypted_value": Secret.encrypt("your-google-ai-api-key"),
+                "encrypted_value": Secret.encrypt(smarter_settings.gemini_api_key.get_secret_value()),
             },
         )
+
+        SCOPES = [
+            "https://www.googleapis.com/auth/cloud-platform",
+            "https://www.googleapis.com/auth/generative-language.retriever",
+            "https://www.googleapis.com/auth/generative-language",
+        ]
+
+        credentials = service_account.Credentials.from_service_account_info(
+            smarter_settings.google_service_account, scopes=SCOPES
+        )
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+        bearer_token = credentials.token
 
         filename = "google-ai.png"
         google_logo = HERE / "data" / "logos" / "googleai" / filename
@@ -198,7 +228,7 @@ class Command(BaseCommand):
                     "is_deprecated": False,
                     "is_flagged": False,
                     "is_suspended": False,
-                    "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+                    "base_url": "https://generativelanguage.googleapis.com/v1beta/",
                     "api_key": googleai_api_key,
                     "connectivity_test_path": "chat/completions",
                     "logo": ContentFile(logo_file.read(), name=filename),
@@ -214,12 +244,15 @@ class Command(BaseCommand):
                     "tos_accepted_by": self.user_profile.user,
                 },
             )
-            self.initialize_provider_models(provider=provider, default_model=GOOGLE_DEFAULT_MODEL)
+            self.initialize_provider_models(
+                provider=provider, bearer_token=bearer_token, default_model=GOOGLE_DEFAULT_MODEL
+            )
 
     def initialize_metaai(self):
         """
         Initialize Meta AI provider and its models.
         """
+        logger.info("initialize_metaai")
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR("initialize_metaai: User profile is not set."))
             return
@@ -229,7 +262,7 @@ class Command(BaseCommand):
             defaults={
                 "description": "API key for Meta AI services.",
                 "user_profile": self.user_profile,
-                "encrypted_value": Secret.encrypt("your-meta-ai-api-key"),
+                "encrypted_value": Secret.encrypt(smarter_settings.llama_api_key.get_secret_value()),
             },
         )
         filename = "Meta_lockup_mono_white_RGB.svg"
@@ -264,7 +297,11 @@ class Command(BaseCommand):
                     "tos_accepted_by": self.user_profile.user,
                 },
             )
-            self.initialize_provider_models(provider=provider, default_model=META_DEFAULT_MODEL)
+            self.initialize_provider_models(
+                provider=provider,
+                bearer_token=smarter_settings.llama_api_key.get_secret_value(),
+                default_model=META_DEFAULT_MODEL,
+            )
 
     def handle(self, *args, **options):
         """

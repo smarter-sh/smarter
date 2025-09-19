@@ -18,7 +18,7 @@
           "default_model": "gpt-4-turbo",
           "default_system_role": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
           "default_temperature": 0.5,
-          "default_max_tokens": 256,
+          "default_max_completion_tokens": 256,
           "app_name": "Smarter Demo",
           "app_assistant": "Kent",
           "app_welcome_message": "Welcome to the Smarter demo!",

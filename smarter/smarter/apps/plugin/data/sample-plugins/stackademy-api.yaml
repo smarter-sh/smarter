@@ -58,7 +58,7 @@ spec:
   connection: smarter_test_api
   prompt:
     maxTokens: 2048
-    model: gpt-4o-mini
+    model: gpt-4-turbo
     provider: openai
     systemRole: You are a helpful assistant for Smarter platform. You can provide
       information about the admin account of the Smarter platform.

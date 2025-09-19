@@ -39,7 +39,7 @@
       "tool_calls": null,
       "model": "gpt-4-turbo",
       "temperature": 0.5,
-      "max_tokens": 256,
+      "max_completion_tokens": 256,
       "input_text": "example function calling configuration"
   },
   "smarter": {
