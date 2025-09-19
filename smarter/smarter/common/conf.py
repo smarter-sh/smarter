@@ -24,7 +24,6 @@ configuration values. This is useful for debugging and logging.
 
 # python stuff
 import base64
-import importlib.metadata
 import json
 import logging
 import os  # library for interacting with the operating system
@@ -38,7 +37,6 @@ import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from build._compat import importlib
 from dotenv import load_dotenv
-from google.oauth2 import service_account
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 
@@ -47,6 +45,7 @@ from ..lib.django.validators import SmarterValidator
 # our stuff
 from .const import (
     IS_USING_TFVARS,
+    PYTHON_ROOT,
     SMARTER_API_SUBDOMAIN,
     SMARTER_PLATFORM_SUBDOMAIN,
     TFVARS,
@@ -197,10 +196,14 @@ class SettingsDefaults:
         os.environ.get("GOOGLE_MAPS_API_KEY", os.environ.get("google_maps_api_key", "SET-ME-PLEASE"))
     )
 
-    if os.environ.get("GOOGLE_SERVICE_ACCOUNT_B64"):
-        google_svc_acct_b64 = os.environ.get("GOOGLE_SERVICE_ACCOUNT_B64", "")
-        GOOGLE_SERVICE_ACCOUNT: dict = json.loads(base64.b64decode(google_svc_acct_b64))
-    else:
+    try:
+        GOOGLE_SERVICE_ACCOUNT_B64 = os.environ.get("GOOGLE_SERVICE_ACCOUNT_B64", "")
+        GOOGLE_SERVICE_ACCOUNT = json.loads(base64.b64decode(GOOGLE_SERVICE_ACCOUNT_B64).decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        logger.error("Failed to load Google service account: %s", e)
+        logger.error(
+            "See https://console.cloud.google.com/projectselector2/iam-admin/serviceaccounts?supportedpurview=project"
+        )
         GOOGLE_SERVICE_ACCOUNT = {}
 
     GEMINI_API_KEY: SecretStr = SecretStr(os.environ.get("GEMINI_API_KEY", "SET-ME-PLEASE"))
@@ -617,7 +620,9 @@ class Settings(BaseSettings):
 
     @property
     def aws_s3_bucket_name(self) -> str:
-        """Return the S3 bucket name. example: smarter-platform-alpha"""
+        """Return the S3 bucket name. example: alpha.platform.smarter.sh"""
+        if self.environment == SmarterEnvironments.LOCAL:
+            return f"{SmarterEnvironments.ALPHA}.{self.root_platform_domain}"
         return self.environment_platform_domain
 
     @property

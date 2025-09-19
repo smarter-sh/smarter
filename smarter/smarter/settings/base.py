@@ -100,8 +100,8 @@ STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
-            "access_key": smarter_settings.aws_access_key_id,
-            "secret_key": smarter_settings.aws_secret_access_key,
+            "access_key": smarter_settings.aws_access_key_id.get_secret_value(),
+            "secret_key": smarter_settings.aws_secret_access_key.get_secret_value(),
             "bucket_name": smarter_settings.aws_s3_bucket_name,
             "region_name": smarter_settings.aws_region,
             "default_acl": "public-read",
@@ -114,8 +114,8 @@ STORAGES = {
     },
 }
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-AWS_ACCESS_KEY_ID = smarter_settings.aws_access_key_id
-AWS_SECRET_ACCESS_KEY = smarter_settings.aws_secret_access_key
+AWS_ACCESS_KEY_ID = smarter_settings.aws_access_key_id.get_secret_value()
+AWS_SECRET_ACCESS_KEY = smarter_settings.aws_secret_access_key.get_secret_value()
 AWS_STORAGE_BUCKET_NAME = smarter_settings.aws_s3_bucket_name
 AWS_S3_REGION_NAME = smarter_settings.aws_region
 AWS_QUERYSTRING_AUTH = False  # disable querystring auth for public files

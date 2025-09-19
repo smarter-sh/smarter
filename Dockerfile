@@ -160,7 +160,7 @@ FROM data AS permissions
 # files:                    r-------- so that smarter_user can read them
 # directories:              r-x------ so that smarter_user can cd into them
 # venv/bin/*:               r-x------ so that smarter_user can execute them
-# smarter/**/migrations:    rwx------ so that smarter_user can manage migration files.
+# smarter/**/migrations:    rwx------ so that smarter_user can write django migration files.
 # data:                     rwx------ so that smarter_user can manage the data directory.
 # .cache:                   rwx------ bc some python packages want to write to .cache, like tldextract
 
