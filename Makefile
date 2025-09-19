@@ -30,8 +30,6 @@ init:
 	make python-init		# create/replace Python virtual environment and install dependencies
 	make docker-init		# initialize MySQL and create the smarter database
 	make pre-commit-init	# install and configure pre-commit
-	make docker-build		# build Docker containers
-	make docker-run			# start all Docker containers
 
 activate:
 	./scripts/activate.sh
@@ -129,12 +127,12 @@ docker-init:
 		python manage.py seed_chat_history && \
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo && \
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2 && \
-		python manage.py initialize_wagtail" && \
+		python manage.py initialize_wagtail && \
 		python manage.py initialize_providers && \
 		python manage.py create_stackacademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user && \
 		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
 		python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin && \
-		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
+		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin" && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
