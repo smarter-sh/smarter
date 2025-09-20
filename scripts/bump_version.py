@@ -50,7 +50,16 @@ def main():
         f'org.opencontainers.image.version="{new_version}"',
     )
 
-    print(f"Version updated to {new_version} in __version__.py, pyproject.toml, and Dockerfile.")
+    print(
+        f"Version updated to {new_version} in __version__.py, pyproject.toml, Dockerfile and helm/charts/smarter/Chart.yaml"
+    )
+
+    # Update Helm chart
+    update_version_in_file(
+        "helm/charts/smarter/Chart.yaml",
+        r'appVersion:\s*["\']?[\w\.\-]+["\']?',
+        f"appVersion: {new_version}",
+    )
 
 
 if __name__ == "__main__":

@@ -614,7 +614,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
     # authenticated urls
     - https://alpha.api.smarter.sh/smarter/example/
-    - https://example.smarter.querium.com/chatbot/
+    - https://example.smarter.sh/chatbot/
     - https://alpha.api.smarter.sh/workbench/1/
     - https://alpha.api.smarter.sh/workbench/example/
 
@@ -853,8 +853,8 @@ class ChatBotHelper(SmarterRequestMixin):
           return 'api.localhost:8000'
 
         custom domain url:
-        - https://hr.smarter.querium.com/chatbot/
-          return 'hr.smarter.querium.com'
+        - https://hr.smarter.sh/chatbot/
+          return 'hr.smarter.sh'
 
         """
         if not self.smarter_request:
@@ -938,8 +938,8 @@ class ChatBotHelper(SmarterRequestMixin):
         Returns a lazy instance of the ChatBotCustomDomain
 
         examples:
-        - https://hr.smarter.querium.com/chatbot/
-          returns ChatBotCustomDomain(domain_name='smarter.querium.com')
+        - https://hr.smarter.sh/chatbot/
+          returns ChatBotCustomDomain(domain_name='smarter.sh')
         """
         if self._chatbot_custom_domain:
             return self._chatbot_custom_domain

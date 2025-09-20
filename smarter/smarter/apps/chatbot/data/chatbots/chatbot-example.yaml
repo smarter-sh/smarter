@@ -15,7 +15,7 @@ spec:
     - example function calling configuration
     appFileAttachment: false
     appInfoUrl: https://smarter.sh
-    appLogoUrl: https://platform.smarter.sh/static/querium/querium-logo-white-transparent.png
+    appLogoUrl: https://platform.smarter.sh/static/images/logo/smarter-crop.png
     appName: Smarter Demo
     appPlaceholder: Ask me anything...
     appWelcomeMessage: Welcome to the Smarter demo!

@@ -426,7 +426,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     The url is expected to be in one of three formats.
 
     Sandbox mode:
-    - http://smarter.querium.com/workbench/hr/
+    - http://smarter.sh/workbench/hr/
     - http://127.0.0.1:8000/workbench/<str:name>/
 
     Production mode:

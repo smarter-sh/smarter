@@ -14,8 +14,8 @@ api_info = openapi.Info(
     description=settings.SMARTER_API_DESCRIPTION,
     terms_of_service="https:/smarter.sh/tos/",
     contact=openapi.Contact(
-        name="Querium Corporation",
-        email="lawrence@querium.com",
+        name="Smarter Support",
+        email="lpm0073@gmail.com",
         url="https://smarter.sh/contact/",
     ),
     license=openapi.License(
