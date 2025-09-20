@@ -15,7 +15,7 @@ spec:
     - Do you have any AI courses?
     appFileAttachment: false
     appInfoUrl: https://smarter.sh
-    appLogoUrl: https://platform.smarter.sh/static/querium/querium-logo-white-transparent.png
+    appLogoUrl: https://platform.smarter.sh/static/images/logo/smarter-crop.png
     appName: Sta
     appPlaceholder: Ask me anything about Smarter...
     appWelcomeMessage: Welcome Stackademy University!

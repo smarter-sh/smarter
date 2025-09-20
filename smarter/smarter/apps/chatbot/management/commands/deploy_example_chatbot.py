@@ -46,7 +46,7 @@ class Command(BaseCommand):
         chatbot.app_placeholder = "Ask me anything..."
         chatbot.app_info_url = "https://smarter.sh"
         chatbot.app_background_image_url = None
-        chatbot.app_logo_url = "https://platform.smarter.sh/static/querium/querium-logo-white-transparent.png"
+        chatbot.app_logo_url = "https://platform.smarter.sh/static/images/logo/smarter-crop.png"
         chatbot.save()
 
         if chatbot.deployed and chatbot.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
