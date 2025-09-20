@@ -1,4 +1,4 @@
-# Querium Smarter
+# Smarter
 
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
 [![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)<br>
@@ -62,7 +62,7 @@ make docker-run     # runs all docker containers and starts a local web server h
 
 See these onboarding videos:
 
-- [Querium Smarter Developer Onboarding #1](https://youtu.be/-hZEO9sMm1s)
+- [Smarter Developer Onboarding #1](https://youtu.be/-hZEO9sMm1s)
 - [Smarter Developer Workflow Tutorial](https://youtu.be/XolFLX1u9Kg)
 
 ## Local Development Minimum Requirements
