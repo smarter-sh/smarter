@@ -59,9 +59,9 @@ class CardDeclinedView(SmarterAuthenticatedWebView):
                 "transaction_date": "01/01/2020",
                 "transaction_amount": "$100.00",
                 "phone_number": "+1 (512) 833-6955",
-                "contact_url": "https://www.querium.com/contact/",
-                "main_url": "https://www.querium.com/",
-                "support_email": "support“querium.com",
+                "contact_url": "https://lawrencemcdaniel/contact/",
+                "main_url": "https://smarter.sh/",
+                "support_email": "lpm0073@gmail.com",
             }
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)

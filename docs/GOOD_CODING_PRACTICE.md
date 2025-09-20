@@ -16,12 +16,12 @@ We leverage automations using Github Actions, third party services, make, bash a
 
 Of note:
 
-- [Automated Pull Requests](https://github.com/QueriumCorp/smarter/pulls?q=is%3Apr+is%3Aclosed): Github Actions are triggered on pull requests to run any of several different kinds of technology-specific unit tests depending on the contents of the commits included in the PR.
+- [Automated Pull Requests](https://github.com/smarter-sh/smarter/pulls?q=is%3Apr+is%3Aclosed): Github Actions are triggered on pull requests to run any of several different kinds of technology-specific unit tests depending on the contents of the commits included in the PR.
 - [python-dotenv](https://pypi.org/project/python-dotenv/) for storing sensitive data for local development
 - [.gitignore](./.gitignore) ensures that no sensitive nor useless data accidentally gets pushed to GitHub.
 - [tox.ini](./tox.ini) file for configuring behaviors of Python testing tools
 - [GitHub Actions](https://github.com/features/actions) automates unit testing, semantic release rule checking, and dependabot actions.
-- [GitHub Secrets](https://github.com/QueriumCorp/smarter/settings/secrets/actions) to provide sensitive data to Github Actions workflows
+- [GitHub Secrets](https://github.com/smarter-sh/smarter/settings/secrets/actions) to provide sensitive data to Github Actions workflows
 - [GitHub Issues](https://github.com/features/issues)
 - [Makefile](./Makefile) automates procedures like init, build, test, release and linting for Python, ReactJS and Terraform.
 - [pre-commit](https://pre-commit.com/) automatically enforces a multitude of code quality, coding style and security policies.

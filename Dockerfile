@@ -18,13 +18,13 @@
 # It is commonly used for production deployments where a lightweight Python environment is preferred.
 FROM --platform=linux/amd64 python:3.12-slim-trixie AS linux_base
 
-LABEL maintainer="Lawrence McDaniel <lawrence@querium.com>" \
+LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
   description="Docker image for the Smarter Api" \
   license="MIT" \
   vcs-url="https://github.com/smarter-sh/smarter" \
   org.opencontainers.image.title="Smarter API" \
   org.opencontainers.image.version="0.13.2" \
-  org.opencontainers.image.authors="Lawrence McDaniel <lawrence@querium.com>" \
+  org.opencontainers.image.authors="Lawrence McDaniel <lpm0073@gmail.com>" \
   org.opencontainers.image.url="https://smarter-sh.github.io/smarter/" \
   org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
   org.opencontainers.image.documentation="https://platform.smarter.sh/docs/"

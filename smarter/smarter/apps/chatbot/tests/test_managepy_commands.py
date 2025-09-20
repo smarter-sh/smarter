@@ -244,7 +244,7 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
             "--account_number",
             f"{self.account.account_number}",
             "--url",
-            "https://github.com/QueriumCorp/smarter-demo",
+            "https://github.com/smarter-sh/smarter-demo",
             "--username",
             self.admin_user.get_username(),
         )

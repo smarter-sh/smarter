@@ -784,7 +784,7 @@ This is a major low-level refactoring of business logic for Account and WSGI req
 - scaffold ApiV1CliChatApiView() ([6f127bb](https://github.com/smarter-sh/smarter/commit/6f127bbc53ae1ad2164ad89cba3852a442011ac8))
 - create SmarterTokenAuthenticationMiddleware to automate api key authentication
 
-## [0.2.1](https://github.com/QueriumCorp/smarter/compare/v0.2.0...v0.2.1) (2024-05-19)
+## [0.2.1](https://github.com/smarter-sh/smarter/compare/v0.2.0...v0.2.1) (2024-05-19)
 
 A refactor of the Django chatbot app.
 
@@ -802,19 +802,19 @@ A refactor of the Django chatbot app.
 - refactor Dockerfile to improve layer caching
 - refactor docker-compose.yaml and Helm chart to enable multiple worker threads
 
-## [0.2.0](https://github.com/QueriumCorp/smarter/compare/v0.1.2...v0.2.0) (2024-05-16)
+## [0.2.0](https://github.com/smarter-sh/smarter/compare/v0.1.2...v0.2.0) (2024-05-16)
 
 Introduces remote Sql server integration to the Plugin class. New Django ORMs PluginSql and SqlConnection have been added for persinsting remote sql server connections, and parameterized sql queries. SAMPluginDataSqlConnectionBroker is added to fully integrate these models to /api/v1/cli.
 
 ### Features
 
-- add SAMPluginDataSqlConnectionBroker to api/v1/cli ([f120cfd](https://github.com/QueriumCorp/smarter/commit/f120cfd3600a8e865e9dd43f9cde41a0312591df))
-- add SAMPluginDataSqlConnectionBroker to api/v1/cli ([54fa4da](https://github.com/QueriumCorp/smarter/commit/54fa4da9f91d010adef4b737d0f7887e154767ac))
-- add unit tests ([2c9e355](https://github.com/QueriumCorp/smarter/commit/2c9e35501d1824da521eb51cb937567627ab0dcb))
-- scaffold PluginSql and Pydantic model ([e1bb076](https://github.com/QueriumCorp/smarter/commit/e1bb076ad428853c97505203cf35b476fc6dd30d))
-- scaffold PluginSql models ([17daf61](https://github.com/QueriumCorp/smarter/commit/17daf615e74ed3f826fbf21db97d10d5174879bd))
+- add SAMPluginDataSqlConnectionBroker to api/v1/cli ([f120cfd](https://github.com/smarter-sh/smarter/commit/f120cfd3600a8e865e9dd43f9cde41a0312591df))
+- add SAMPluginDataSqlConnectionBroker to api/v1/cli ([54fa4da](https://github.com/smarter-sh/smarter/commit/54fa4da9f91d010adef4b737d0f7887e154767ac))
+- add unit tests ([2c9e355](https://github.com/smarter-sh/smarter/commit/2c9e35501d1824da521eb51cb937567627ab0dcb))
+- scaffold PluginSql and Pydantic model ([e1bb076](https://github.com/smarter-sh/smarter/commit/e1bb076ad428853c97505203cf35b476fc6dd30d))
+- scaffold PluginSql models ([17daf61](https://github.com/smarter-sh/smarter/commit/17daf615e74ed3f826fbf21db97d10d5174879bd))
 
-## [0.1.2](https://github.com/QueriumCorp/smarter/compare/v0.1.1...v0.1.2) (2024-05-14)
+## [0.1.2](https://github.com/smarter-sh/smarter/compare/v0.1.1...v0.1.2) (2024-05-14)
 
 Introduces a powerful new architecture for processing Kubernetes-style manifests for managing Smarter resources. The new Broker class architecture facilitates lightweight implementations of the smarter command-line implementation and the REST API that backs it.
 
@@ -827,7 +827,7 @@ Introduces a powerful new architecture for processing Kubernetes-style manifests
 - implement all Plugin cli services
 - add a Controller class to Plugin, facilitating the future introduction of new data classes to support remote SQl databases and REST API data sources.
 
-## [0.1.1](https://github.com/QueriumCorp/smarter/compare/v0.1.0...v0.1.1) (2024-04-02)
+## [0.1.1](https://github.com/smarter-sh/smarter/compare/v0.1.0...v0.1.1) (2024-04-02)
 
 ### New features
 
@@ -836,23 +836,23 @@ Introduces a powerful new architecture for processing Kubernetes-style manifests
 - add Makefile commands to automate local developer setup
 - implement final chat REST API, referenced as http://{host}/admin/chat/chathistory/config/ which returns a context dict for a chat session. Enables a single authenticated Smarter user to manage multiple chat sessions in the sandbox.
 
-## [0.1.0](https://github.com/QueriumCorp/smarter/compare/v0.0.1...v0.1.0) (2024-04-01)
+## [0.1.0](https://github.com/smarter-sh/smarter/compare/v0.0.1...v0.1.0) (2024-04-01)
 
 ### New features
 
-- add FQDM's to CSRF_TRUSTED_ORIGINS ([6d6bd92](https://github.com/QueriumCorp/smarter/commit/6d6bd92dc8e9c5d162d3bd4359afbd58ef1a72ee))
-- pass user to function_calling_plugin() ([0e6b1fa](https://github.com/QueriumCorp/smarter/commit/0e6b1fa94d853f1d4295ede704a3204adb53d24a))
-- remove custom login.html ([b4f091f](https://github.com/QueriumCorp/smarter/commit/b4f091fd0a271cb1e12950e6ca4e5a1cdb8c038e))
-- set CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS ([62a8ca3](https://github.com/QueriumCorp/smarter/commit/62a8ca38cd4d46207392c5839718abb981808da2))
-- STATIC_URL = '/static/' ([277fff3](https://github.com/QueriumCorp/smarter/commit/277fff3aa2fe2aa32faf8699d3128398c36024a4))
-- STATIC_URL = '/static/' ([89a2e0c](https://github.com/QueriumCorp/smarter/commit/89a2e0c5705064b878b254e83ac874d5c7fd6699))
-- values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme ([dc9ca5e](https://github.com/QueriumCorp/smarter/commit/dc9ca5e09d289bd33d15723a0b4352bbc08478b2))
-- add api-key authentication ([491927f](https://github.com/QueriumCorp/smarter/commit/491927fe9d51594905ad1a1542e8e9b00de22871))
-- add chat history models and signals ([07e5f82](https://github.com/QueriumCorp/smarter/commit/07e5f8223f96c886a35f1344a52d3ca748231310))
-- automate build/deploy by environment ([f808ed5](https://github.com/QueriumCorp/smarter/commit/f808ed50d6148d193c73088696407db219cff008))
-- restore most recent chat history when app starts up ([118d884](https://github.com/QueriumCorp/smarter/commit/118d88450a63bcf0ee1649fece7db0fbbac1c50d))
+- add FQDM's to CSRF_TRUSTED_ORIGINS ([6d6bd92](https://github.com/smarter-sh/smarter/commit/6d6bd92dc8e9c5d162d3bd4359afbd58ef1a72ee))
+- pass user to function_calling_plugin() ([0e6b1fa](https://github.com/smarter-sh/smarter/commit/0e6b1fa94d853f1d4295ede704a3204adb53d24a))
+- remove custom login.html ([b4f091f](https://github.com/smarter-sh/smarter/commit/b4f091fd0a271cb1e12950e6ca4e5a1cdb8c038e))
+- set CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS ([62a8ca3](https://github.com/smarter-sh/smarter/commit/62a8ca38cd4d46207392c5839718abb981808da2))
+- STATIC_URL = '/static/' ([277fff3](https://github.com/smarter-sh/smarter/commit/277fff3aa2fe2aa32faf8699d3128398c36024a4))
+- STATIC_URL = '/static/' ([89a2e0c](https://github.com/smarter-sh/smarter/commit/89a2e0c5705064b878b254e83ac874d5c7fd6699))
+- values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme ([dc9ca5e](https://github.com/smarter-sh/smarter/commit/dc9ca5e09d289bd33d15723a0b4352bbc08478b2))
+- add api-key authentication ([491927f](https://github.com/smarter-sh/smarter/commit/491927fe9d51594905ad1a1542e8e9b00de22871))
+- add chat history models and signals ([07e5f82](https://github.com/smarter-sh/smarter/commit/07e5f8223f96c886a35f1344a52d3ca748231310))
+- automate build/deploy by environment ([f808ed5](https://github.com/smarter-sh/smarter/commit/f808ed50d6148d193c73088696407db219cff008))
+- restore most recent chat history when app starts up ([118d884](https://github.com/smarter-sh/smarter/commit/118d88450a63bcf0ee1649fece7db0fbbac1c50d))
 
-## [0.0.1](https://github.com/QueriumCorp/smarter/releases/tag/v0.0.1) (2024-02-21)
+## [0.0.1](https://github.com/smarter-sh/smarter/releases/tag/v0.0.1) (2024-02-21)
 
 Django based REST API and ReactJS web app hosting an MVP plugin platform for OpenAI API Function Calling. This release implements the following features:
 
