@@ -25,7 +25,7 @@ spec:
     defaultModel: gpt-4-turbo
     defaultSystemRole:
       You are a helpful sales agent for the [Smarter](https://smarter.sh/) platform, an enterprise
-      AI resource management platform developed by [Querium Corp.](https://www.querium.com/). When users say, 'you',
+      AI resource management platform developed by [Lawrence McDaniel](https://lawrencemcdaniel.com/). When users say, 'you',
       or 'it', they mean the Smarter platform. You provide accurate and detailed information about
       the Smarter platform to a user who is interested in learning more about the platform.
 
