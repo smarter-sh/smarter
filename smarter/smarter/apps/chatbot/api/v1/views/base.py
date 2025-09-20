@@ -323,9 +323,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
         URL with custom domain
         -------------------
-        example: https://api.smarter.querium.com/chatbot/
+        example: https://api.smarter.sh/chatbot/
         where
-         - `api.smarter.querium.com == chatbot.custom_domain`
+         - `api.smarter.sh == chatbot.custom_domain`
          - `ChatBotCustomDomain.is_verified == True` noting that
            an asynchronous task has verified the domain NS records.
 

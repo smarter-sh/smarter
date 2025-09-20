@@ -61,7 +61,7 @@ class Command(BaseCommand):
     def get_url_filename(self, url) -> str:
         """
         Get the filename from a URL.
-        example: https://github.com/QueriumCorp/smarter_demo/blob/main/hr/shrm_fmla.yaml
+        example: https://github.com/smarter-sh/smarter_demo/blob/main/hr/shrm_fmla.yaml
         returns "shrm_fmla.yaml"
         """
         return url.split("/")[-1]

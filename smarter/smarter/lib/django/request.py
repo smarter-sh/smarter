@@ -119,7 +119,7 @@ class SmarterRequestMixin(AccountMixin):
     - http://example.3141-5926-5359.api.localhost:8000/config/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
     - http://localhost:8000/api/v1/workbench/1/chat/
     - http://localhost:8000/api/v1/cli/chat/smarter/?new_session=false&uid=mcdaniel
-    - https://hr.smarter.querium.com/
+    - https://hr.smarter.sh/
 
     session_key is a unique identifier for a chat session.
     It originates from generate_session_key() in this class.
