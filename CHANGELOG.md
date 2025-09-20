@@ -1,3 +1,10 @@
+## [0.13.3](https://github.com/smarter-sh/smarter/compare/v0.13.2...v0.13.3) (2025-09-20)
+
+
+### Bug Fixes
+
+* prep for open source ([2f814f6](https://github.com/smarter-sh/smarter/commit/2f814f626974723fde916792a9ce778bbefcbc16))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
