@@ -30,7 +30,7 @@
           "app_placeholder": "Ask me anything...",
           "app_info_url": "https://smarter.sh",
           "app_background_image_url": null,
-          "app_logo_url": "/static/querium/querium-logo-white-transparent.png",
+          "app_logo_url": "/static/images/logo/smarter-crop.png",
           "app_file_attachment": false,
           "dns_verification_status": "Not Verified",
           "url_chatbot": "https://platform.smarter.sh/api/v1/chatbots/smarter/example/"
