@@ -1,44 +1,79 @@
 # Querium Smarter
 
-[![OpenAI](https://a11ybadges.com/badge?logo=openai)](https://platform.openai.com/)
-[![LangChain](https://a11ybadges.com/badge?text=LangChain&badgeColor=0834ac)](https://www.langchain.com/)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
 [![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)<br>
-[![Unit Tests](https://github.com/QueriumCorp/smarter/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/QueriumCorp/smarter/actions/workflows/releaseController.yml)
-![Release Status](https://github.com/QueriumCorp/smarter/actions/workflows/release.yml/badge.svg?branch=main)
-![Auto Assign](https://github.com/QueriumCorp/smarter/actions/workflows/auto-assign.yml/badge.svg)
+[![Unit Tests](https://github.com/smarter-sh/smarter/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/smarter-sh/smarter/actions/workflows/releaseController.yml)
+![Release Status](https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main)
+![Auto Assign](https://github.com/smarter-sh/smarter/actions/workflows/auto-assign.yml/badge.svg)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-**Smarter is an enterprise-class batteries-included platform for managing AI resources.**
+**Smarter is a platform for managing and orchestrating AI resources.**
 
 - declarative manifest based resource management
 - command-line interface for Windows, macOS, Linux and Docker
-- web console / prompt engineer workbench
 - rest api
+- web console / prompt engineer workbench
+- extensible: PyPi, NPM, VS Code Extension and more
 - publicly accessible online documentation and self onboarding resources
 - open source UI components for jump starting projects
 
-Smarter gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful AI resources for common corporate use cases including customer facing chat solutions, back office workflow automation and more. It is compatible with a wide variety of chatbot UI front ends for technology ecosystems including NPM, Wordpress, Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and SAP. It is developed to support prompt engineering teams working in large organizations. Accordindly, Smarter provides common enterprise features such as security, accounting cost codes, and audit capabilities.
+**Smarter** is the best way to manage the disparate resources that are required for creating and managing AI resources integrate to other enterprise resources like REST Api's and Sql databases. And it gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful AI resources for common corporate use cases including agentic workflows, customer facing chat solutions, and more. It is compatible with a wide variety of chatbot UI front ends for technology ecosystems including NPM, Wordpress, Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and SAP. It is developed to support prompt engineering teams working in large organizations. Accordingly, **Smarter** provides common enterprise features such as credentials management, team workgroup management, role-based security, accounting cost codes, and logging and audit capabilities.
 
-Smarter provides seamless integration and interoperation between LLms from DeepSeek, Google AI, Meta AI and OpenAI. It is LLM provider-agnostic, and provides seamless integrations to a continuously evolving list of value added services for security management, prompt content moderation, audit, cost accounting, and workflow management. It can be used as a pay-as-you-go, platform as a service, or, installed in your own AWS cloud account and supported by Querium's professional services team. It can also be installed on-premise in a hybrid model.
+**Smarter** provides seamless integration and interoperation between LLMs from DeepSeek, Google AI, Meta AI and OpenAI. It is LLM provider-agnostic, and provides seamless integrations to a continuously evolving list of value added services for security management, prompt content moderation, audit, cost accounting, and workflow management. **Smarter** is cloud native and runs on Kubernetes, on-site in your data center or in the cloud.
 
-Smarter is cost effective when running at scale. It is extensible and architected on the philosophy of a compact core that does not require customization nor forking. It is horizontally scalable. It is natively multi-tenant, and can be installed alongside your existing systems. The principal technologies in the Smarter platform stack include:
+**Smarter** is cost effective when running at scale. It is extensible and architected on the philosophy of a compact core that does not require customization nor forking. It is horizontally scalable. It is natively multi-tenant, and can be installed alongside your existing systems. The principal technologies in the **Smarter** platform stack include:
 
-- Ubuntu Linux
+- Amazon Web Services
+- Debian, Ubuntu or Amazon Linux
 - Docker/Kubernetes/Helm
 - MySQL
 - Redis
 - Terraform/awscli/Boto3
 - Python/Django
 - Pytest/Pluggy
-- Langchain
-- Pydantic
+- Pydantic/Pandas/NumPy
 - react.js
 - Bootstrap
 - Go lang
 - GitHub Actions
-- Amazon Web Services
+
+## Quickstart
+
+You can spin up the platform locally in Docker in around 10 minutes. Works with Linux, Windows and macOS.
+
+1. Verify project requirements: [Python 3.12](https://www.python.org/), [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/).
+
+2. Run `make` and add your credentials to the newly created `.env` file in the root of the repo.
+
+3. Initialize, build and run the application locally.
+
+```console
+git clone https://github.com/smarter-sh/smarter.git
+make                # scaffold a .env file in the root of the repo
+                    #
+                    # ****************************
+                    # STOP HERE!
+                    # ****************************
+                    # Add your credentials to .env located in the project root folder.
+                    #
+make init           # initialize Python virtual environment, build the Docker container, and seed the platform with test data
+make docker-run     # runs all docker containers and starts a local web server http://127.0.0.1:8000/
+```
+
+See these onboarding videos:
+
+- [Querium Smarter Developer Onboarding #1](https://youtu.be/-hZEO9sMm1s)
+- [Smarter Developer Workflow Tutorial](https://youtu.be/XolFLX1u9Kg)
+
+## Local Development Minimum Requirements
+
+- 4 cpu cores + 8Gib RAM + Internet access
+- terminal access
+- Docker or Docker Desktop + Docker Compose
+- Python 3.12
+- Node 20.x
+- Any code editor
 
 ## Designed by and for prompt engineers
 
@@ -96,51 +131,24 @@ Customers can deploy personalized ChatBots with a choice of domain. The default 
 
 Customers can optionally register a custom domain which typically can be verified and activated in around 4 hours.
 
-## Developer Quickstart
-
-See onboarding videos:
-
-- [Querium Smarter Developer Onboarding #1](https://youtu.be/-hZEO9sMm1s)
-- [Smarter Developer Workflow Tutorial](https://youtu.be/XolFLX1u9Kg)
-
-Works with Linux, Windows and macOS environments.
-
-1. Verify project requirements: [Python 3.11](https://www.python.org/), [NPM](https://www.npmjs.com/) [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/). Docker will need around 1 vCPU, 2Gib memory, and 30Gib of storage space.
-
-2. Run `make` and add your credentials to the newly created `.env` file in the root of the repo.
-
-3. Initialize, build and run the application locally.
-
-```console
-git clone https://github.com/QueriumCorp/smarter.git
-make                # scaffold a .env file in the root of the repo
-                    #
-                    # ****************************
-                    # STOP HERE!
-                    # ****************************
-                    # Add your credentials to .env located in the project root folder.
-                    #
-make python-init    # initialize Python virtual environment used for code auto-completion and linting
-make docker-init    # initialize dev environment, build & init docker.
-make docker-build   # builds and configures all docker containers
-make docker-run     # runs all docker containers and starts a local web server http://127.0.0.1:8000/
-```
-
-_AWS Infrastructure Engineers: you additionally will need [AWS Account](https://aws.amazon.com/free/) and [CLI](https://aws.amazon.com/cli/) access, and [Terraform](https://www.terraform.io/). Make sure to eview and edit the master [Terraform configuration](./api/terraform/terraform.tfvars) file._
-
 ## Documentation
 
 Detailed documentation for each endpoint is available here: [Documentation](./docs/examples/)
 
 ## Support
 
-Please report bugs to the [GitHub Issues Page](https://github.com/QueriumCorp/smarter/issues) for this project.
+Please report bugs to the [GitHub Issues Page](https://github.com/smarter-sh/smarter/issues) for this project.
 
-## Developers
+## Contributing
 
-Please see:
+Please see the [project documentation](./docs/) and these tutorials:
 
 - the [Developer Setup Guide](./CONTRIBUTING.md)
-- and these [commit comment guidelines](./docs/SEMANTIC_VERSIONING.md) 😬😬😬 for managing CI rules for automated semantic releases.
+- this [Platform Architecture Summary](./docs/ARCHITECTURE.md)
+- these [Good Coding Practices](./docs/GOOD_CODING_PRACTICE.md)
+- this getting started guide for [12-factor Development Principals](./docs/12-FACTOR.md)
+- these [git Commit Comment Guidelines](./docs/SEMANTIC_VERSIONING.md) 😬😬😬 for managing CI rules for automated semantic releases.
 
-You can also contact [Lawrence McDaniel](https://lawrencemcdaniel.com/contact) directly.
+Contact: [Lawrence McDaniel](https://lawrencemcdaniel.com/contact)
+
+![Lines of Code](https://cdn.platform.smarter.sh/github.com/smarter-sh/lines-of-code.png)
