@@ -132,7 +132,7 @@ Customers can optionally register a custom domain which typically can be verifie
 
 ## Documentation
 
-Detailed documentation for each endpoint is available here: [Documentation](./docs/examples/)
+Detailed documentation for this repo is available here: [Documentation](./docs/) and for the [overall platform here](https://platform.smarter.sh/docs/)
 
 ## Support
 
