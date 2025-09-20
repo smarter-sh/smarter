@@ -24,7 +24,7 @@ Most of Smarter is developed using Python's Django web framework with the follow
 
 The chat app in the dashboard sandbox is written in React. Complete source code and documentation is located [here](./smarter/smarter/apps/chatapp/reactapp/).
 
-React app that leverages [Vite.js](https://github.com/QueriumCorp/smarter), [@chatscope/chat-ui-kit-react](https://www.npmjs.com/package/@chatscope/chat-ui-kit-react), and [react-pro-sidebar](https://www.npmjs.com/package/react-pro-sidebar).
+React app that leverages [Vite.js](https://github.com/smarter-sh/smarter), [@chatscope/chat-ui-kit-react](https://www.npmjs.com/package/@chatscope/chat-ui-kit-react), and [react-pro-sidebar](https://www.npmjs.com/package/react-pro-sidebar).
 
 ### Django Integration
 
