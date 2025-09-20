@@ -1,7 +1,7 @@
 apiVersion: v2
-appVersion: 0.10.20
+appVersion: 0.13.2
 name: smarter
-description: A Helm chart for deploying Querium Smarter API and web console
+description: A Helm chart for deploying Smarter API and web console
 type: application
 version: 0.7.3
 home: https://smarter.sh
@@ -14,12 +14,21 @@ maintainers:
     email: kent@querium.com
 dependencies:
   - name: redis
-    version: 20.6.1
+    version: 22.0.7
     repository: https://charts.bitnami.com/bitnami
 icon: https://www.querium.com/wp-content/uploads/2022/04/Querium-logo_white_transparency.png
 keywords:
-  - Querium
   - smarter
   - plugins
+  - api
+  - web
+  - console
+  - education
+  - cloud
+  - deployment
+  - k8s
+  - kubernetes
+  - redis
+  - scalable
 annotations:
   "helm.sh/chart": "smarter-0.7.3"

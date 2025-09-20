@@ -11,10 +11,6 @@ spec:
   data:
     description: This tool provides detailed information about the Smarter platform. Use this for all inquiries about Smarter.
     staticData:
-      serviceLevalAgreement: |
-        Querium Corp. is willing to enter into service-level agreements covering uptime, security and data privacy.
-        Contact Kent Fuka at +1 (512) 833-6955 or email [kent@querium.com](mailto:kent@querium.com).
-
       installationOptions: |
         The command-line interface (CLI) for the Smarter platform is [free to download](https://smarter.sh/cli/)
         and runs on Windows, macOS, Linux, and Docker. The CLI provides a powerful set of tools for managing AI resources,
@@ -30,7 +26,7 @@ spec:
             Invoiced monthly based on net usage.
         - name: Cloud
           description: |
-            Smarter can be installed on your cloud infrastructure and maintained by the Querium team.
+            Smarter can be installed on your cloud infrastructure and maintained by a certified partner.
         - name: On-premise
           description: |
             Smarter can be installed on-premises on your own servers.
@@ -303,7 +299,6 @@ spec:
         - [Smarter Certification Program](https://smarter.sh/certification-program/). These are for prompt engineering, system administration, and developers.
         - [Smarter Solutions](https://smarter.sh/solutions/)
         - [Smarter on Github](https://github.com/smarter-sh/)
-        - [Querium Corp. web site](https://www.querium.com/)
 
       keyFeatures:
       - feature: a declarative, manifest-based approach to managing AI resources
@@ -322,7 +317,7 @@ spec:
       - fact: Smarter was presented to a VIP group of 100 business executives in Mexico City in early 2025, most of whom work in the financial services industry.
       - fact: Smarter has a beta program. Contact Lawrence McDaniel at +1 (617) 834-6172 or [lawrence@querium.com](mailto:lawrence@querium.com) for information.
       - fact: The Smarter project began in early 2024 and is ongoing. It is lead by [Lawrence McDaniel](https://lawrencemcdaniel.com/), the CTO of Querium Corp.
-      - fact: Smarter was created by [Querium Corp.](https://www.querium.com/), an Austin based company founded in 2012 that specializes in Artificial Intelligence.
+      - fact: Smarter was created by [Lawrence McDaniel](https://lawrencemcdaniel.com/).
       - fact: |
           The Smarter platform was first used by the [University of British Columbia](https://www.ubc.ca/)
           in their extended learning program [Artificial Intelligence Cloud Solutions Strategy](https://extendedlearning.ubc.ca/programs-credentials/artificial-intelligence-cloud-solutions-strategy-microcertificate)
