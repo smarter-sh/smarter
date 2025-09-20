@@ -17,7 +17,7 @@
 - publicly accessible online documentation and self onboarding resources
 - open source UI components for jump starting projects
 
-**Smarter** is the best way to manage the disparate resources that are required for creating and managing AI resources that integrate to other enterprise resources like REST Api's and Sql databases. And it gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful AI resources for common corporate use cases including agentic workflows, customer facing chat solutions, and more. It is compatible with a wide variety of chatbot UI front ends for technology ecosystems including NPM, Wordpress, Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and SAP. It is developed to support prompt engineering teams working in large organizations. Accordingly, **Smarter** provides common enterprise features such as credentials management, team workgroup management, role-based security, accounting cost codes, and logging and audit capabilities.
+**Smarter** is the best way to manage the disparate resources that are required for creating and managing AI resources that integrate to other enterprise resources like REST Api's and Sql databases. And it gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful AI resources for common corporate use cases including agentic workflows, customer facing chat solutions, and more. It is compatible with a wide variety of chat UI front ends for technology ecosystems including NPM, Wordpress, Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and SAP. It is developed to support prompt engineering teams working in large organizations. Accordingly, **Smarter** provides common enterprise features such as credentials management, team workgroup management, role-based security, accounting cost codes, and logging and audit capabilities.
 
 **Smarter** provides seamless integration and interoperation between LLMs from DeepSeek, Google AI, Meta AI and OpenAI. It is LLM provider-agnostic, and provides seamless integrations to a continuously evolving list of value added services for security management, prompt content moderation, audit, cost accounting, and workflow management. **Smarter** is cloud native and runs on Kubernetes, on-site in your data center or in the cloud.
 
@@ -99,9 +99,9 @@ Smarter features a unique Plugin architecture for extending the native LLM funct
 
 Smarter brings a [yaml-based manifest file](./smarter/smarter/apps/plugin/data/sample-plugins/example-configuration.yaml) approach to prompt engineering, originally inspired by the [kubectl](https://kubernetes.io/docs/reference/kubectl/) command-line interface for [Kubernetes](https://kubernetes.io/).
 
-### Smarter ChatBot APIs
+### Smarter Agentic Intent APIs
 
-The following collection of rest api url endpoints are implemented for all Smarter chatbot, where `example` is the name of the chatbot. The chatbot sandbox React app and configuration api are available via these two url's, both of which require authentication and are only available to user associated with the Account to which the chatbot belongs.
+The following collection of rest api url endpoints are implemented for all Smarter agentic intents, where `example` is the name of the intent. The intent sandbox React app and configuration api are available via these two url's, both of which require authentication and are only available to user associated with the Account to which the agentic intent belongs.
 
 ```console
 https://platform.smarter.sh/chatapp/example/
@@ -111,22 +111,22 @@ https://platform.smarter.sh/chatapp/example/config/
 Chatbot REST api's are available at several different styles of url endpoint depending on your needs. Deployed chatbots are accessible via either of these two styles. These url's do not require authentication (ie they are publicly accessible) unless the customer chooses to add an optional api key.
 
 ```console
-https://example.3141-5926-5359.api.platform.smarter.sh/chatbot/
-https://custom-domain.com/chatbot/
+https://example.3141-5926-5359.api.platform.smarter.sh/intent/
+https://custom-domain.com/intent/
 ```
 
-Additionally, there's a sandbox url which works with Django authentication and is accessible regardless of the chatbot's deployment status.
+Additionally, there's a sandbox url which works with Django authentication and is accessible regardless of the agentic intent's deployment status.
 
 ```console
-https://platform.smarter.sh/api/v0/chatbots/1/chatbot/
+https://platform.smarter.sh/api/v0/chatbots/1/intent/
 ```
 
-### ChatBot API
+### Intent API
 
-Customers can deploy personalized ChatBots with a choice of domain. The default URL format is as follows.
+Customers can deploy personalized Intents with a choice of domain. The default URL format is as follows.
 
-- api: [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/
-- webapp: [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/webapp/
+- api: [user-defined-subdomain].####-####-####.api.smarter.sh/intent/
+- webapp: [user-defined-subdomain].####-####-####.api.smarter.sh/intent/webapp/
 
 Customers can optionally register a custom domain which typically can be verified and activated in around 4 hours.
 
