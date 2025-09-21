@@ -100,10 +100,16 @@ TOGETHERAI_API_KEY=SET-ME-PLEASE
 GOOGLE_SERVICE_ACCOUNT_B64=SET-ME-PLEASE
 GOOGLE_MAPS_API_KEY=SET-ME-PLEASE
 
+# OAuth2 settings for social authentication
+# see: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=SET-ME-PLEASE
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=SET-ME-PLEASE
+
+# see: https://python-social-auth.readthedocs.io/en/latest/backends/github.html
 SOCIAL_AUTH_GITHUB_KEY=SET-ME-PLEASE
 SOCIAL_AUTH_GITHUB_SECRET=SET-ME-PLEASE
+
+# see: https://python-social-auth.readthedocs.io/en/latest/backends/linkedin
 SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY=SET-ME-PLEASE
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET=SET-ME-PLEASE
 
