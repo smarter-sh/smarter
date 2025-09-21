@@ -78,7 +78,7 @@ Please report bugs to the [GitHub Issues Page](https://github.com/smarter-sh/sma
 
 ## Contributing
 
-Please see the [project documentation](./docs/) and these tutorials:
+Please see the [CONTRIBUTING](./.github/CONTRIBUTING.md) page, the [project documentation](./docs/) and these tutorials:
 
 - the [Developer Setup Guide](./CONTRIBUTING.md)
 - this [Platform Architecture Summary](./docs/ARCHITECTURE.md)
