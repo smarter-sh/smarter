@@ -1,7 +1,17 @@
 ---
 #------------------------------------------------------------------------------
 # - Build from Dockerfile
-# - Run manage.py unit tests
+# - Push to AWS ECR
+#
+# IMPORTANT: Before running this workflow, ensure that you have first built your
+# AWS infrastructure using the [Smarter Infrastructure repository](https://github.com/smarter-sh/smarter-infrastructure).
+# Additionally, make sure the following secrets are configured in your
+# [GitHub repository settings](https://github.com/smarter-sh/smarter/settings/secrets/actions):
+#
+# AWS_ACCESS_KEY_ID
+# AWS_REGION
+# AWS_SECRET_ACCESS_KEY
+# PAT
 #------------------------------------------------------------------------------
 name: Build
 
