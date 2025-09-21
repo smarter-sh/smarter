@@ -46,7 +46,9 @@ You can spin up the platform locally in Docker in around 10 minutes. Runs on Lin
 
 1. Verify project requirements: [Python 3.12](https://www.python.org/), [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/).
 
-2. Initialize, build and run the application locally.
+2. Add your credentials to [.env](./docs/example-dot-env) in the root of this repo.
+
+3. Initialize, build and run the application locally.
 
 ```console
 git clone https://github.com/smarter-sh/smarter.git
