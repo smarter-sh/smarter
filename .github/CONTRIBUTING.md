@@ -105,13 +105,13 @@ Common secrets for automated CD/CD processes are managed with [GitHub Secrets](h
 
 On the other hand, if you've forked this repo and are working on your own independent project, then you'll need to initialize each of these yourself.
 
-![Github Secrets](./docs/img/github-secrets.png)
+![Github Secrets](../docs/img/github-secrets.png)
 
 ### Kubernetes Secrets
 
 The Terraform code in this repo generates several sets of sensitive data that are persisted to [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/). This configuration data is tightly integrated to the CI/CD build and deploy workflows, and fully automates configuration of all back end services on which Smarter relies including for example, MySQL, SMTP Email, AWS S3, AWS Elastic Container Registry, and Kubernetes itself.
 
-![Kubernetes Secrets](./docs/img/kubernetes-secrets.png)
+![Kubernetes Secrets](../docs/img/kubernetes-secrets.png)
 
 ### GitHub Actions
 
@@ -126,7 +126,7 @@ This project depends heavily on GitHub Actions to automate routine activities, s
 
 A typical pull request will look like the following:
 
-![Automated pull request](./docs/img/automated-pr.png)
+![Automated pull request](../docs/img/automated-pr.png)
 
 ## Docker Setup
 
