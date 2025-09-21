@@ -10,7 +10,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-**Smarter is a platform for managing and orchestrating AI resources.**
+**Smarter is a platform for managing and orchestrating AI resources. This repo contains source code for the REST Api and the web console.**
 
 - declarative manifest based resource management
 - command-line interface for Windows, macOS, Linux and Docker
