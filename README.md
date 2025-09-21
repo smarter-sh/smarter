@@ -39,13 +39,11 @@
 
 ## Quickstart
 
-You can spin up the platform locally in Docker in around 10 minutes. Works with Linux, Windows and macOS.
+You can spin up the platform locally in Docker in around 10 minutes. Runs on Linux, Windows and macOS.
 
 1. Verify project requirements: [Python 3.12](https://www.python.org/), [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/).
 
-2. Run `make` and add your credentials to the newly created `.env` file in the root of the repo.
-
-3. Initialize, build and run the application locally.
+2. Initialize, build and run the application locally.
 
 ```console
 git clone https://github.com/smarter-sh/smarter.git
@@ -64,71 +62,6 @@ See these onboarding videos:
 
 - [Smarter Developer Onboarding #1](https://youtu.be/-hZEO9sMm1s)
 - [Smarter Developer Workflow Tutorial](https://youtu.be/XolFLX1u9Kg)
-
-## Local Development Minimum Requirements
-
-- 4 cpu cores + 8Gib RAM + Internet access
-- terminal access
-- Docker or Docker Desktop + Docker Compose
-- Python 3.12
-- Node 20.x
-- Any code editor
-
-## Designed by and for prompt engineers
-
-Smarter provides design teams with a web console, and a convenient yaml manifest-based command-line interface for Windows, macOS, and Linux.
-
-### LLM Providers
-
-Smarter is currently compatible with the following LLM providers:
-
-- Google AI: Gemini, Aqa
-- Meta AI: Llama, Phi 3, Gema, Mistral, Qwen, nous-hermes
-- OpenAI: chatGPT, o1
-- DeepSeek R1, V3
-
-### Plugin Architecture
-
-Smarter features a unique Plugin architecture for extending the native LLM function-calling feature. Smarter Plugins are uncharacteristically accurate, highly cost effective, and have been designed around the needs of enterprise customers. Its unique 'selector' feature gives prompt engineers a sosphisticated strategy for managing when and how LLM's can make use of Smarter Plugin's powerful data integrations, which include the following:
-
-- **Static**: an easy to implement scheme in which your private data is simply included in yaml Plugin manifest file.
-- **Sql**: a flexible parameterized manifest scheme that exposes query parameters to the LLM, enabling it to make precise requests via proxy to your corporate databases.
-- **Rest Api**: Similarly, you can also configure proxy connections to your Rest Api's, enabling the LLM to make precise requests to an unlimited range of private data sources.
-
-### Yaml Manifest Resource Management
-
-Smarter brings a [yaml-based manifest file](./smarter/smarter/apps/plugin/data/sample-plugins/example-configuration.yaml) approach to prompt engineering, originally inspired by the [kubectl](https://kubernetes.io/docs/reference/kubectl/) command-line interface for [Kubernetes](https://kubernetes.io/).
-
-### Smarter Agentic Intent APIs
-
-The following collection of rest api url endpoints are implemented for all Smarter agentic intents, where `example` is the name of the intent. The intent sandbox React app and configuration api are available via these two url's, both of which require authentication and are only available to user associated with the Account to which the agentic intent belongs.
-
-```console
-https://platform.smarter.sh/chatapp/example/
-https://platform.smarter.sh/chatapp/example/config/
-```
-
-Chatbot REST api's are available at several different styles of url endpoint depending on your needs. Deployed chatbots are accessible via either of these two styles. These url's do not require authentication (ie they are publicly accessible) unless the customer chooses to add an optional api key.
-
-```console
-https://example.3141-5926-5359.api.platform.smarter.sh/intent/
-https://custom-domain.com/intent/
-```
-
-Additionally, there's a sandbox url which works with Django authentication and is accessible regardless of the agentic intent's deployment status.
-
-```console
-https://platform.smarter.sh/api/v0/chatbots/1/intent/
-```
-
-### Intent API
-
-Customers can deploy personalized Intents with a choice of domain. The default URL format is as follows.
-
-- api: [user-defined-subdomain].####-####-####.api.smarter.sh/intent/
-- webapp: [user-defined-subdomain].####-####-####.api.smarter.sh/intent/webapp/
-
-Customers can optionally register a custom domain which typically can be verified and activated in around 4 hours.
 
 ## Documentation
 
