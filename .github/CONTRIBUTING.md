@@ -97,7 +97,7 @@ make pre-commit
 
 Output should look similar to the following:
 
-![pre-commit output](./docs/img/pre-commit.png)
+![pre-commit output](../docs/img/pre-commit.png)
 
 ### Github Secrets setup
 
