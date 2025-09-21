@@ -59,19 +59,6 @@ config.json
 *.p7b
 *.p7c
 
-# Local .terraform directories
-# -------------------------------------
-.terragrunt-cache/
-.terraform.lock.hcl
-*.tfstate
-*.tfstate.*
-.terraform/
-.terraform.lock.hcl
-*.tfstate
-*.tfstate.*
-# don't ignore this file
-!tfmodule-template.tf
-
 
 # Python
 # -------------------------------------

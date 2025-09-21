@@ -1,39 +1,83 @@
-# -----------------------------------
-# Smarter.sh Environment Variables
+################################################################
+# Smarter Environment Variables. These are consumed by
+# smarter.common.conf and validated and strongly typed by Pydantic
+# for use everywhere in the Smarter platform. Morover, these
+# exactly match the settings in the Helm charts used for AWS deployments.
 #
-# Python:
+# Copy this file to the root of your project as .env and
+# fill in the values.
+#
+# IMPORTANT: DO NOT CHECK IN YOUR .env FILE TO SOURCE CONTROL!!!
+#
+################################################################
+
+# The base domain for the Smarter platform.
+# This should be a domain that you own and have
+# configured in your DNS provider to point to your
+# AWS resources via Route 53 using https://github.com/smarter-sh/smarter-infrastructure
+ROOT_DOMAIN=SET-ME-PLEASE
+
+# AWS settings. The key-pair need sufficient permissions to manage
+# all resources created by https://github.com/smarter-sh/smarter-infrastructure
+AWS_REGION=us-east-2
+AWS_ACCOUNT_ID=SET-ME-PLEASE
+AWS_ACCESS_KEY_ID=SET-ME-PLEASE
+AWS_SECRET_ACCESS_KEY=SET-ME-PLEASE
+
+# -----------------------------------
+# FOR TESTING HELM CHARTS
+# Kubernetes secrets - smarter-platform-alpha
+# -----------------------------------
+NAMESPACE=smarter-platform-alpha
+MYSQL_HOST=SET-ME-PLEASE
+MYSQL_PORT=3306
+SMARTER_MYSQL_DATABASE=SET-ME-PLEASE
+SMARTER_MYSQL_PASSWORD=SET-ME-PLEASE
+SMARTER_MYSQL_USERNAME=SET-ME-PLEASE
+MYSQL_ROOT_USERNAME=SET-ME-PLEASE
+MYSQL_ROOT_PASSWORD=SET-ME-PLEASE
+SMARTER_LOGIN_URL=https://alpha.platform.smarter.sh/login/
+SMARTER_ADMIN_PASSWORD=SET-ME-PLEASE
+SMARTER_ADMIN_USERNAME=admin
+SMARTER_DOCKER_IMAGE=012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-api-alpha:latest
+
+# GitHub Personal Access Token
+# see: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
+PAT=SET-ME-PLEASE
+
+# Django secret key.
+# python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+SECRET_KEY=SET-ME-PLEASE
+
+# Fernet encryption key. for encrypting credentials in the Secrets model
+FERNET_ENCRYPTION_KEY=SET-ME-PLEASE
+
+################################################################
+# For unit tests
+################################################################
+
+# the name a MySql database for running unit tests.
+SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME=smarter_test_db
+SMARTER_MYSQL_TEST_DATABASE_PASSWORD=SET-ME-PLEASE
+
+# operating environment. This should be set to 'local' for local development.
+ENVIRONMENT=local
+
 # We need to explicitly set the PYTHONPATH
 # for Pylint so that it can find the smarter module
 # in your local file system when running pylint, flake8, or Cornflakes
 # from inside of VS Code. This is unrelated to actually
 # running the Django app from Docker, which sets the
 # PYTHONPATH in the Dockerfile.
-# -----------------------------------
-PAT=SET-ME-PLEASE
-
-################################################################
-# For local development
-################################################################
-SECRET_KEY=SET-ME-PLEASE
-
-# see: https://fernetkeygen.com/
-FERNET_ENCRYPTION_KEY=SET-ME-PLEASE
-
-################################################################
-# For unit tests
-################################################################
-SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME=smarter_test_db
-SMARTER_MYSQL_TEST_DATABASE_PASSWORD=SET-ME-PLEASE
-
-ENVIRONMENT=local
 PYTHONPATH=./venv:./smarter
 
+# SMTP settings for development and testing
 SMTP_SENDER=local.platform.smarter.sh
 SMTP_PASSWORD=SET-ME-PLEASE
 SMTP_USERNAME=SET-ME-PLEASE
 SMTP_FROM_EMAIL=no-reply@SET-ME-PLEASE
 
-# Api Keys
+# Generative AI text completion Api Keys
 # - https://aistudio.google.com/app/apikey
 # - https://docs.anthropic.com/en/api/getting-started
 # - https://dashboard.cohere.com/api-keys
@@ -63,37 +107,14 @@ SOCIAL_AUTH_GITHUB_SECRET=SET-ME-PLEASE
 SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY=SET-ME-PLEASE
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET=SET-ME-PLEASE
 
-
+# Optional Mailchimp settings for newsletter signups. We used this for
+# an early preview of the Smarter platform in 2023. It is not currently
+# used in the platform, but you can enable it if you want to collect
+# newsletter signups.
 MAILCHIMP_API_KEY=SET-ME-PLEASE
 MAILCHIMP_LIST_ID=SET-ME-PLEASE
 
+# Optional Pinecone settings for vector database support
+# see: https://docs.pinecone.io/docs/quickstart
 PINECONE_API_KEY=SET-ME-PLEASE
 PINECONE_ENVIRONMENT=gcp-starter
-
-################################################################
-# For AWS, Helm, and Terraform
-################################################################
-ROOT_DOMAIN=SET-ME-PLEASE
-
-# AWS settings
-AWS_REGION=us-east-2
-AWS_ACCOUNT_ID=SET-ME-PLEASE
-AWS_ACCESS_KEY_ID=SET-ME-PLEASE
-AWS_SECRET_ACCESS_KEY=SET-ME-PLEASE
-
-# -----------------------------------
-# FOR TESTING HELM CHARTS
-# Kubernetes secrets - smarter-platform-alpha
-# -----------------------------------
-NAMESPACE=smarter-platform-alpha
-MYSQL_HOST=SET-ME-PLEASE
-MYSQL_PORT=3306
-SMARTER_MYSQL_DATABASE=SET-ME-PLEASE
-SMARTER_MYSQL_PASSWORD=SET-ME-PLEASE
-SMARTER_MYSQL_USERNAME=SET-ME-PLEASE
-MYSQL_ROOT_USERNAME=SET-ME-PLEASE
-MYSQL_ROOT_PASSWORD=SET-ME-PLEASE
-SMARTER_LOGIN_URL=https://alpha.platform.smarter.sh/login/
-SMARTER_ADMIN_PASSWORD=SET-ME-PLEASE
-SMARTER_ADMIN_USERNAME=admin
-SMARTER_DOCKER_IMAGE=012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-api-alpha:latest
