@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 # * text eol=lf
+smarter/smarter/static/assets/*
+staticfiles/* linguist-vendored
+node_modules/* linguist-vendored
+build/* linguist-vendored
+dist/* linguist-vendored
+keen_v3.0.6/* linguist-vendored
+htmlcov/* linguist-vendored
