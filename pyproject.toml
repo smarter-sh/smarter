@@ -8,6 +8,10 @@ homepage = "https://smarter.sh/"
 documentation = "https://platform.smarter.sh/docs/"
 repository = "https://github.com/smarter-sh/smarter"
 
+[build-system]
+requires = ["setuptools>=80.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [tool.isort]
 profile = "black"
 lines_after_imports = 2

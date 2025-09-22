@@ -1,6 +1,17 @@
+# -------------------------------------
+# WARNING: everything is in here for a reason. Edit with care.
+# -------------------------------------
+
+# Keen Bootstrap theme, raw source files.
+# These are VERY LARGE and absolutely do not
+# belong in GitHub.
+# -------------------------------------
+keen_**
+
+# Google service account raw files.
+# -------------------------------------
 service-account.json
 service-account.b64
-keen_**
 
 # application data
 # -------------------------------------
