@@ -15,7 +15,7 @@ from smarter.common.const import PROJECT_ROOT
 from smarter.common.exceptions import SmarterValueError
 
 
-KIND = SAMKinds.SQL_CONNECTION.value
+KIND = SAMKinds.API_CONNECTION.value
 
 
 class Command(BaseCommand):
