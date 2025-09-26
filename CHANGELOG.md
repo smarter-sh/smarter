@@ -1,15 +1,14 @@
-## [0.13.5](https://github.com/smarter-sh/smarter/compare/v0.13.4...v0.13.5) (2025-09-26)
-
-
-### Bug Fixes
-
-* release.config.js @semantic-release/git assets list needs __version__.py and helm/charts/smarter/Chart.yaml ([cee493a](https://github.com/smarter-sh/smarter/commit/cee493ae6f408ed510cbec94663846226c847de0))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.13.5](https://github.com/smarter-sh/smarter/compare/v0.13.4...v0.13.5) (2025-09-26)
+
+### Bug Fixes
+
+- release.config.js @semantic-release/git assets list needs **version**.py and helm/charts/smarter/Chart.yaml ([cee493a](https://github.com/smarter-sh/smarter/commit/cee493ae6f408ed510cbec94663846226c847de0))
 
 ## [0.13.4](https://github.com/smarter-sh/smarter/compare/v0.13.3...v0.13.4) (2025-09-26)
 
