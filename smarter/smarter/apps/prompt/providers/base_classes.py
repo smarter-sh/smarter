@@ -40,6 +40,11 @@ from smarter.apps.prompt.providers.utils import (
     http_response_factory,
     parse_request,
 )
+from smarter.apps.prompt.receivers import (
+    llm_tool_presented,
+    llm_tool_requested,
+    llm_tool_responded,
+)
 from smarter.apps.prompt.signals import (
     chat_completion_plugin_called,
     chat_completion_request,
@@ -713,7 +718,12 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         """
         tool_call: List[ChatCompletionMessageToolCall]
         """
+        if not isinstance(tool_call, ChatCompletionMessageToolCall):
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: tool_call must be a ChatCompletionMessageToolCall, got {type(tool_call)}. This is a bug."
+            )
         logger.info("%s %s", self.formatted_class_name, formatted_text("process_tool_call()"))
+        llm_tool_requested.send(sender=self.process_tool_call, tool_call=tool_call.model_dump())
         if not tool_call:
             raise SmarterValueError(f"{self.formatted_class_name}: tool_call is required")
         serialized_tool_call = {}
@@ -762,6 +772,10 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 raise SmarterConfigurationError(
                     f"{self.formatted_class_name}: user_profile is required to handle plugin calls."
                 )
+            if not isinstance(self.user, User):
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: user must be an instance of User, got {type(self.user)}. This is a bug."
+                )
             plugin_controller = PluginController(
                 account=self.account,
                 user=self.user,
@@ -799,6 +813,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 f"{self.formatted_class_name}: serialized_tool_calls must be a list, got {type(self.serialized_tool_calls)}"
             )
         self.serialized_tool_calls.append(serialized_tool_call)
+        llm_tool_responded.send(
+            sender=self.process_tool_call, tool_call=tool_call.model_dump(), tool_response=function_response
+        )
 
     def handle_plugin_selected(self, plugin: PluginBase) -> None:
         # does the prompt have anything to do with any of the search terms defined in a plugin?
@@ -820,6 +837,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             raise SmarterValueError(f"{self.formatted_class_name}: tools must be a list, got {type(self.tools)}")
         self.available_functions[plugin.function_calling_identifier] = plugin.tool_call_fetch_plugin_response
         self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)  # type: ignore[call-arg]
+        llm_tool_presented.send(sender=self.handle_plugin_selected, tool=plugin.custom_tool, plugin=plugin)
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
 
     def handle_success(self) -> dict:
