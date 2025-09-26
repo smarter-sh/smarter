@@ -796,7 +796,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 f"{self.formatted_class_name}: function '{function_name}' not recognized. Available functions: {self.available_functions}"
             )
         tool_call_message = {
-            "tool_call_id": tool_call.id,
+            OpenAIMessageKeys.TOOL_CALL_ID: tool_call.id,
             OpenAIMessageKeys.MESSAGE_NAME_KEY: function_name,
         }
         if not isinstance(function_response, str):

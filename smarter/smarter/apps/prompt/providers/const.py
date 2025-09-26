@@ -49,6 +49,7 @@ class OpenAIMessageKeys:
     ASSISTANT_MESSAGE_KEY = "assistant"
     USER_MESSAGE_KEY = "user"
     TOOL_MESSAGE_KEY = "tool"
+    TOOL_CALL_ID = "tool_call_id"
 
     SMARTER_MESSAGE_KEY = "smarter"
 
