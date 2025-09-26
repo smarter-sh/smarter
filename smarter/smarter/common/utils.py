@@ -267,6 +267,45 @@ def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, li
     return retval
 
 
+def rfc1034_compliant_str(val) -> str:
+    """
+    Returns a RFC 1034 compliant name for the ChatBot.
+    - lower case
+    - alphanumeric characters and hyphens only
+    - starts and ends with an alphanumeric character
+    - max length of 63 characters
+    """
+    if not isinstance(val, str):
+        raise SmarterValueError(f"Could not generate RFC 1034 compliant name from {type(val)}")
+    # Replace underscores with hyphens
+    label = val.lower().replace("_", "-")
+    # Remove invalid characters
+    label = re.sub(r"[^a-z0-9-]", "", label)
+    # Remove leading/trailing hyphens
+    label = label.strip("-")
+    # Truncate to 63 characters
+    if label:
+        return label[:63]
+    else:
+        raise SmarterValueError("Could not generate RFC 1034 compliant name from empty string")
+
+
+def rfc1034_compliant_to_snake(val) -> str:
+    """
+    Converts a RFC 1034 compliant name to a more human-readable snake_case name.
+    - replaces hyphens with underscores
+    Args:
+        val (str): The RFC 1034 compliant name to convert.
+    Returns:
+        str: The converted name in snake_case.
+    """
+    if not isinstance(val, str):
+        raise SmarterValueError(f"Could not convert RFC 1034 compliant name from {type(val)}")
+    # Replace hyphens with underscores
+    name = val.replace("-", "_")
+    return name
+
+
 # def camel_to_snake(name):
 #     """
 #     Converts camelCase or incorrectly formatted names to snake_case.
