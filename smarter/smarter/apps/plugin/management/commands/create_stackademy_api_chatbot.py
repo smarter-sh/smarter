@@ -46,6 +46,8 @@ class Command(BaseCommand):
                 "apply_manifest",
                 username=admin_user_profile.user.username,
                 filespec=file_path,
+                stdout=output,
+                stderr=error_output,
             )
             if error_output.getvalue():
                 print(f"Command completed with warnings: {error_output.getvalue()}")
