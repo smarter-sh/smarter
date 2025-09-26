@@ -9,6 +9,7 @@ metadata:
     "helm.sh/hook": post-upgrade,post-install
     "helm.sh/hook-delete-policy": hook-succeeded
 spec:
+  ttlSecondsAfterFinished: 3600
   template:
     metadata:
       labels:
