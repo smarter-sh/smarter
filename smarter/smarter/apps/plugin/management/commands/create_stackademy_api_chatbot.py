@@ -32,11 +32,11 @@ class Command(BaseCommand):
             "apps",
             "plugin",
             "data",
-            "sample-plugins",
+            "stackademy",
             "chatbot-stackademy-api.yaml",
         )
 
-        # python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-plugins/chatbot-stackademy-api.yaml' --username admin
+        # python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/stackademy/chatbot-stackademy-api.yaml' --username admin
         call_command(
             "apply_manifest",
             account_number=admin_user_profile.account.account_number,
