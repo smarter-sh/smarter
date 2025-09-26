@@ -4,6 +4,7 @@ import fnmatch
 import logging
 import re
 
+from django.core.cache import cache
 from django.http import HttpResponseForbidden
 from django.utils.deprecation import MiddlewareMixin
 
@@ -15,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
     """Block requests for common sensitive files."""
+
+    THROTTLE_LIMIT = 5
+    THROTTLE_TIMEOUT = 600  # seconds (10 minutes)
 
     def __init__(self, get_response):
         super().__init__(get_response)
@@ -107,25 +111,52 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
             "ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application",
         }
 
+    def get_client_ip(self, request):
+        """Get client IP address from request."""
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(",")[0]
+        else:
+            ip = request.META.get("REMOTE_ADDR")
+        return ip
+
     def __call__(self, request):
         request_path = request.path.lower()
+        client_ip = self.get_client_ip(request)
 
-        # Check for sensitive files using glob patterns
+        # Throttle check
+        throttle_key = f"sensitive_files_throttle:{client_ip}"
+        blocked_count = cache.get(throttle_key, 0)
+        if blocked_count >= self.THROTTLE_LIMIT:
+            logger.warning(
+                "%s Throttled client %s after %d blocked requests", self.formatted_class_name, client_ip, blocked_count
+            )
+            return HttpResponseForbidden(
+                "You have been blocked due to too many suspicious requests from your IP. Try again later or contact support@smarter.sh."
+            )
+
         path_basename = request_path.rsplit("/", 1)[-1]
         for sensitive_file in self.sensitive_files:
             sensitive_file = sensitive_file.lower()
             if (
                 fnmatch.fnmatch(path_basename, sensitive_file)
                 or fnmatch.fnmatch(request_path, sensitive_file)
-                or sensitive_file in request_path  # fallback for legacy entries
+                or sensitive_file in request_path
             ):
-                # Allow specific patterns to pass through
                 for pattern in self.allowed_patterns:
                     if pattern.match(request_path):
                         logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
                         return self.get_response(request)
 
                 logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
+
+                try:
+                    blocked_count = cache.incr(throttle_key)
+                except ValueError:
+                    cache.set(throttle_key, 1, timeout=self.THROTTLE_TIMEOUT)
+                    blocked_count = 1
+                else:
+                    cache.set(throttle_key, blocked_count, timeout=self.THROTTLE_TIMEOUT)
                 return HttpResponseForbidden(
                     "Your request has been blocked by Smarter. Contact support@smarter.sh for assistance."
                 )
