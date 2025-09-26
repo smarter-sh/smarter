@@ -64,7 +64,7 @@ spec:
               python manage.py initialize_waffle
               python manage.py initialize_wagtail
               python manage.py verify_dns_configuration
-              python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/smarter-demo
+              python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/QueriumCorp/smarter-demo
               python manage.py load_from_github --account_number 3141-5926-5359 --url https://github.com/smarter-sh/examples --repo_version 2
               python manage.py load_from_github --account_number 5680-6558-6577 --url https://github.com/smarter-sh/examples --repo_version 2
               python manage.py load_from_github --account_number 4386-2072-3294 --url https://github.com/smarter-sh/examples --repo_version 2
