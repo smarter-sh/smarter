@@ -99,7 +99,7 @@ urlpatterns = [
     # -----------------------------------
     # static routes
     # -----------------------------------
-    path("favicon.ico", FaviconView.as_view(), name=f"{name_prefix}_favicon"),
+    path("favicon.png", FaviconView.as_view(), name=f"{name_prefix}_favicon"),
     path("robots.txt", RobotsTxtView.as_view(), name=f"{name_prefix}_robots_txt"),
     path("sitemap.xml", SitemapXmlView.as_view(), name=f"{name_prefix}_sitemap_xml"),
     path("healthz/", HealthzView.as_view(), name=f"{name_prefix}_healthz"),

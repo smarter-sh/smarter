@@ -30,7 +30,7 @@ from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.common.helpers.url_helpers import clean_url
-from smarter.common.utils import smarter_build_absolute_uri
+from smarter.common.utils import rfc1034_compliant_str, smarter_build_absolute_uri
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -214,6 +214,17 @@ class ChatBot(TimestampedModel):
         return self.url if self.url else "undefined"
 
     @property
+    def rfc1034_compliant_name(self) -> str:
+        """
+        Returns a RFC 1034 compliant name for the ChatBot.
+        - lower case
+        - alphanumeric characters and hyphens only
+        - starts and ends with an alphanumeric character
+        - max length of 63 characters
+        """
+        return rfc1034_compliant_str(self.name)
+
+    @property
     def default_system_role_enhanced(self):
         """
         prepends a date/time string to the default_system_role
@@ -227,7 +238,9 @@ class ChatBot(TimestampedModel):
         self.account.account_number: '1234-5678-9012'
         smarter_settings.environment_api_domain: 'alpha.api.smarter.sh'
         """
-        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.environment_api_domain}"
+        domain = (
+            f"{self.rfc1034_compliant_name}.{self.account.account_number}.{smarter_settings.environment_api_domain}"
+        )
         SmarterValidator.validate_domain(domain)
         return domain
 
@@ -242,7 +255,7 @@ class ChatBot(TimestampedModel):
         self.custom_domain.domain_name: 'example.com'
         """
         if self.custom_domain and self.custom_domain.is_verified:
-            domain = f"{self.name}.{self.custom_domain.domain_name}"
+            domain = f"{self.rfc1034_compliant_name}.{self.custom_domain.domain_name}"
             SmarterValidator.validate_domain(domain)
             return domain
         return None
@@ -339,7 +352,7 @@ class ChatBot(TimestampedModel):
         if self.dns_verification_status != self.DnsVerificationStatusChoices.VERIFIED:
             logger.warning(
                 "ChatBot %s is not ready. DNS verification status is %s",
-                self.name,
+                self.rfc1034_compliant_name,
                 self.dns_verification_status,
             )
             return False
@@ -347,13 +360,13 @@ class ChatBot(TimestampedModel):
         if self.tls_certificate_issuance_status != self.TlsCertificateIssuanceStatusChoices.ISSUED:
             logger.warning(
                 "ChatBot %s is not ready. TLS certificate issuance status is %s",
-                self.name,
+                self.rfc1034_compliant_name,
                 self.tls_certificate_issuance_status,
             )
             return False
 
         if not self.deployed:
-            logger.warning("ChatBot %s is not ready. It is not deployed.", self.name)
+            logger.warning("ChatBot %s is not ready. It is not deployed.", self.rfc1034_compliant_name)
             return False
 
         return True

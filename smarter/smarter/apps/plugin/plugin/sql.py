@@ -410,6 +410,10 @@ class SqlPlugin(PluginBase):
         if not sql.endswith(";"):
             sql += ";"
 
+        logger.info(
+            "%s.tool_call_fetch_plugin_response() executing remote SQL query: %s", self.formatted_class_name, sql
+        )
+
         retval = sql_connection.execute_query(
             sql=sql,
             limit=(

@@ -28,6 +28,7 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
             re.compile(r"^/plugin(/.*)?$"),
             re.compile(r"^/docs/manifest(/.*)?$"),
             re.compile(r"^/docs/json-schema(/.*)?$"),
+            re.compile(r".*stackademy.*"),
         ]
         self.sensitive_files = {
             ".env",
