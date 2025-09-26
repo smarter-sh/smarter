@@ -22,8 +22,8 @@ module.exports = {
       {
         assets: [
           "CHANGELOG.md",
-          "smarter/smarter/apps/chatapp/reactapp/package.json",
-          "smarter/smarter/apps/chatapp/reactapp/package-lock.json",
+          "helm/charts/smarter/Chart.yaml",
+          "smarter/smarter/__version__.py",
           "smarter/requirements/**/*",
           "pyproject.toml",
           "Dockerfile",
