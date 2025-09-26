@@ -35,6 +35,7 @@ from smarter.apps.account.utils import get_cached_account_for_user
 
 # smarter stuff
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.plugin.manifest.enum import SAMStaticPluginSpecDataKeys
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake
@@ -588,8 +589,15 @@ class PluginDataStatic(PluginDataBase):
 
         retval: Optional[list[Any]] = []
         if isinstance(self.static_data, dict):
-            retval = dict_keys_to_list(data=self.static_data)
-            retval = list(retval)
+            data = self.static_data.get(SAMStaticPluginSpecDataKeys.STATIC.value)
+            if data is None:
+                logger.error(
+                    "PluginDataStatic.return_data_keys: static_data missing '%s' key: %s",
+                    SAMStaticPluginSpecDataKeys.STATIC.value,
+                    self.static_data,
+                )
+            retval = dict_keys_to_list(data=data) if isinstance(data, dict) else None
+            retval = list(retval) if retval else None
         elif isinstance(self.static_data, list):
             retval = self.static_data
             if isinstance(retval, list) and len(retval) > 0:
