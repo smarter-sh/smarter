@@ -1,3 +1,17 @@
+## [0.13.7](https://github.com/smarter-sh/smarter/compare/v0.13.6...v0.13.7) (2025-09-26)
+
+
+### Bug Fixes
+
+* ensure that chatbot name is rfc1034_compliant_str ([a1f486a](https://github.com/smarter-sh/smarter/commit/a1f486a84f2ebd27109ab1c63ccdc295475ba923))
+
+## [0.13.6](https://github.com/smarter-sh/smarter/compare/v0.13.5...v0.13.6) (2025-09-26)
+
+
+### Bug Fixes
+
+* logo and favicon ([8a5194b](https://github.com/smarter-sh/smarter/commit/8a5194b5f335f106bd37bc119c9943e67544aa93))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
