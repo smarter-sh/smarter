@@ -8,18 +8,14 @@ import re
 import subprocess
 import sys
 from typing import Optional
-from urllib.parse import urljoin
 
 from django.core.management.base import BaseCommand
-from django.http import HttpResponse
-from django.test import RequestFactory
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
 )
-from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
