@@ -10,6 +10,7 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from requests import Response
 
+from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -396,6 +397,10 @@ def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, error
         error,
     )
 
+    raise SmarterConfigurationError(
+        f"Remote SQL Connection {connection.get_connection_string()} failed: {error}"
+    ) from None
+
 
 @receiver(plugin_sql_connection_query_attempted, dispatch_uid="plugin_sql_connection_query_attempted")
 def handle_plugin_sql_connection_query_attempted(sender, connection: SqlConnection, sql: str, limit: int, **kwargs):
@@ -436,6 +441,10 @@ def handle_plugin_sql_connection_query_failed(
         sql,
         limit,
         error,
+    )
+
+    raise SmarterConfigurationError(
+        f"Remote SQL {connection.get_connection_string()} query execution failed {sql}: {error}"
     )
 
 
