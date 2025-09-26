@@ -1,3 +1,10 @@
+## [0.13.4](https://github.com/smarter-sh/smarter/compare/v0.13.3...v0.13.4) (2025-09-26)
+
+
+### Bug Fixes
+
+* return_data_keys() should only return staticData key value. Providers should send signals for the complete tool_call lifecycle ([7611f35](https://github.com/smarter-sh/smarter/commit/7611f356edd362d9614ae270527a4e9b84d5c738))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
