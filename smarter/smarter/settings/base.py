@@ -221,6 +221,7 @@ MIDDLEWARE = [
     # like .env, private key files, etc.
     # -------------------------------
     "smarter.lib.django.middleware.sensitive_files.BlockSensitiveFilesMiddleware",
+    "smarter.lib.django.middleware.excessive_404.BlockExcessive404Middlewar",
     #
     # -------------------------------
     "whitenoise.middleware.WhiteNoiseMiddleware",
