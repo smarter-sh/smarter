@@ -39,7 +39,12 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
-from smarter.common.utils import hash_factory, mask_string, smarter_build_absolute_uri
+from smarter.common.utils import (
+    hash_factory,
+    mask_string,
+    rfc1034_compliant_to_snake,
+    smarter_build_absolute_uri,
+)
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -249,7 +254,7 @@ class SmarterRequestMixin(AccountMixin):
                     self.__dict__.pop(name, None)
 
     @property
-    def smarter_request(self) -> HttpRequest:
+    def smarter_request(self) -> Optional[HttpRequest]:
         """renaming this to avoid potential name collisions in child classes"""
         return self._smarter_request
 
@@ -481,12 +486,14 @@ class SmarterRequestMixin(AccountMixin):
         if self.is_chatbot_named_url and self.parsed_url is not None:
             netloc_parts = self.parsed_url.netloc.split(".") if self.parsed_url and self.parsed_url.netloc else None
             retval = netloc_parts[0] if netloc_parts else None
+            retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
             return retval
 
         # 2.) example: http://localhost:8000/workbench/<str:name>/config/
         if self.is_chatbot_sandbox_url:
             try:
                 retval = self.url_path_parts[1]
+                retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
                 return retval
             # pylint: disable=broad-except
             except Exception:
@@ -505,6 +512,7 @@ class SmarterRequestMixin(AccountMixin):
         if self.is_chatbot_cli_api_url:
             try:
                 retval = self.url_path_parts[-1]
+                retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
                 return retval
             # pylint: disable=broad-except
             except Exception:
