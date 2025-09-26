@@ -1,3 +1,12 @@
+## [0.13.8](https://github.com/smarter-sh/smarter/compare/v0.13.7...v0.13.8) (2025-09-26)
+
+
+### Bug Fixes
+
+* should be cloning https://github.com/QueriumCorp/smarter-demo ([d9bd0a9](https://github.com/smarter-sh/smarter/commit/d9bd0a9805f1f7700b87a10cf6e73de9b19f6f74))
+* should be cloning https://github.com/QueriumCorp/smarter-demo ([2944098](https://github.com/smarter-sh/smarter/commit/29440980ed7e21d0b991cedbbdae1caef4b0f8e1))
+* sql syntax error ([c4b6dfe](https://github.com/smarter-sh/smarter/commit/c4b6dfe0e72fe224b897224b756f8a289cce761d))
+
 ## [0.13.7](https://github.com/smarter-sh/smarter/compare/v0.13.6...v0.13.7) (2025-09-26)
 
 
