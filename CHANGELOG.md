@@ -1,3 +1,10 @@
+## [0.13.6](https://github.com/smarter-sh/smarter/compare/v0.13.5...v0.13.6) (2025-09-26)
+
+
+### Bug Fixes
+
+* logo and favicon ([8a5194b](https://github.com/smarter-sh/smarter/commit/8a5194b5f335f106bd37bc119c9943e67544aa93))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
