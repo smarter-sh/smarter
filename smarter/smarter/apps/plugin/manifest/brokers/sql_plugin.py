@@ -133,7 +133,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     @property
     def plugin_data(self) -> Optional[PluginDataSql]:
         """
-        Returns the PluginDataStatic object for this broker.
+        Returns the PluginDataSql object for this broker.
         This is used to store the plugin data in the database.
         """
         if self._plugin_data:
@@ -146,7 +146,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             self._plugin_data = PluginDataSql.objects.get(plugin=self.plugin_meta)
         except PluginDataSql.DoesNotExist:
             logger.warning(
-                "%s.plugin_data() PluginDataStatic object does not exist for %s %s",
+                "%s.plugin_data() PluginDataSql object does not exist for %s %s",
                 self.formatted_class_name,
                 self.kind,
                 self.plugin_meta.name,
