@@ -135,7 +135,7 @@ class Command(BaseCommand):
             "apps",
             "plugin",
             "data",
-            "sample-plugins",
+            "stackademy",
             "stackademy-sql.yaml",
         )
         call_command(
