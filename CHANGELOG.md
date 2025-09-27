@@ -1,3 +1,10 @@
+## [0.13.9](https://github.com/smarter-sh/smarter/compare/v0.13.8...v0.13.9) (2025-09-27)
+
+
+### Bug Fixes
+
+* we have to allow 'tool' role messages to pass to openai on thread history. otherwise we get a 400 response ([2ee2444](https://github.com/smarter-sh/smarter/commit/2ee24448aea1727ece585fadb57b40e5e1baff72))
+
 ## [0.13.8](https://github.com/smarter-sh/smarter/compare/v0.13.7...v0.13.8) (2025-09-26)
 
 
