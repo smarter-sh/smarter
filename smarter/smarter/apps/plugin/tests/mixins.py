@@ -7,6 +7,7 @@ import logging
 import os
 from typing import Optional
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest
 from django.test import Client
 
@@ -92,7 +93,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         connection_manifest = get_readonly_yaml_file(connection_manifest_path)
         if not isinstance(connection_manifest, dict):
             raise ValueError(f"Connection manifest not found at {connection_manifest_path}")
-        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest))
+        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest, cls=DjangoJSONEncoder))
         connection_model = SAMApiConnection(**connection_loader.pydantic_model_dump())
         if not isinstance(connection_model, SAMApiConnection):
             raise ValueError("Connection model is not an instance of SAMApiConnection")
@@ -184,7 +185,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         connection_manifest = get_readonly_yaml_file(connection_manifest_path)
         if not isinstance(connection_manifest, dict):
             raise ValueError(f"Connection manifest not found at {connection_manifest_path}")
-        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest))
+        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest, cls=DjangoJSONEncoder))
         connection_model = SAMSqlConnection(**connection_loader.pydantic_model_dump())
 
         # 2.) transform the manifest for a django model

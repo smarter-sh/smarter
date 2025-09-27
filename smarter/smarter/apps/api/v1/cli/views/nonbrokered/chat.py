@@ -8,6 +8,7 @@ from http import HTTPStatus
 from typing import Any, Optional
 
 from django.core.cache import cache
+from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
 from django.test import RequestFactory
 from django.views.decorators.csrf import csrf_exempt
@@ -194,9 +195,9 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             if isinstance(self.data, dict):
                 new_body = self.data.copy()
                 new_body[SMARTER_CHAT_SESSION_KEY_NAME] = self.session_key
-                new_body = json.dumps(new_body)
+                new_body = json.dumps(new_body, cls=DjangoJSONEncoder)
             else:
-                new_body = json.dumps({SMARTER_CHAT_SESSION_KEY_NAME: self.session_key})
+                new_body = json.dumps({SMARTER_CHAT_SESSION_KEY_NAME: self.session_key}, cls=DjangoJSONEncoder)
 
             # pylint: disable=W0212
             request._body = new_body.encode("utf-8")
@@ -423,7 +424,11 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         except TypeError as e:
             raise APIV1CLIViewError(f"Internal error. Chat config 'content' is missing: {chat_config}") from e
 
-        logger.info("%s.handler() 3. config: %s", self.formatted_class_name, json.dumps(self.chat_config, indent=4))
+        logger.info(
+            "%s.handler() 3. config: %s",
+            self.formatted_class_name,
+            json.dumps(self.chat_config, indent=4, cls=DjangoJSONEncoder),
+        )
 
         # create a Smarter chatbot request body
         request_body = self.chat_request_body_factory()
@@ -438,7 +443,11 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response = json.loads(chat_response.content)
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
-        logger.info("%s.handler() 4. response_data: %s", self.formatted_class_name, json.dumps(response_data, indent=4))
+        logger.info(
+            "%s.handler() 4. response_data: %s",
+            self.formatted_class_name,
+            json.dumps(response_data, indent=4, cls=DjangoJSONEncoder),
+        )
         try:
             if not response_data:
                 raise APIV1CLIChatViewError(f"Internal error. Chat response key 'data' is missing: {chat_response}")
@@ -466,7 +475,9 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
 
         data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
-        logger.info("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data, indent=4))
+        logger.info(
+            "%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data, indent=4, cls=DjangoJSONEncoder)
+        )
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,

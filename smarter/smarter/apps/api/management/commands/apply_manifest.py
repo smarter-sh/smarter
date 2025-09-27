@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 import httpx
 from django.core.management import CommandError
 from django.core.management.base import BaseCommand
+from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
@@ -155,7 +156,7 @@ class Command(BaseCommand):
         else:
             response_json = {"error": "unable to decode response content"}
 
-        response = json.dumps(response_json, indent=4) + "\n"
+        response = json.dumps(response_json, indent=4, cls=DjangoJSONEncoder) + "\n"
         if httpx_response.status_code == httpx.codes.OK:
             self.stdout.write(self.style.SUCCESS("manifest applied."))
             if verbose:

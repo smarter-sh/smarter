@@ -6,6 +6,7 @@ import json
 
 from django import forms
 from django.core.handlers.wsgi import WSGIRequest
+from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -60,7 +61,7 @@ class ComingSoon(SmarterWebHtmlView):
                 }
             )
         html_error = html.escape(form.errors)
-        return JsonResponse({"error": json.dumps(html_error)})
+        return JsonResponse({"error": json.dumps(html_error, cls=DjangoJSONEncoder)})
 
 
 class EmailAdded(SmarterWebHtmlView):

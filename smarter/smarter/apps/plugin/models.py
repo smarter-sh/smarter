@@ -20,6 +20,7 @@ import requests
 from django.core.exceptions import ImproperlyConfigured
 
 # django stuff
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
@@ -1060,7 +1061,7 @@ class SqlConnection(ConnectionBase):
             # Convert each row to a dict
             result = [dict(zip(columns, row)) for row in rows]
             # Convert to JSON string (optional)
-            return json.dumps(result)
+            return json.dumps(result, indent=2, cls=DjangoJSONEncoder)
 
         if not isinstance(self.connection, BaseDatabaseWrapper):
             return False

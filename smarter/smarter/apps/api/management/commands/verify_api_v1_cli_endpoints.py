@@ -6,6 +6,7 @@ import os
 
 import yaml
 from django.core.management.base import BaseCommand
+from django.core.serializers.json import DjangoJSONEncoder
 from django.test import Client
 from django.urls import reverse
 
@@ -115,7 +116,7 @@ class Command(BaseCommand):
             response_json = json.loads(response_content)
 
             self.stdout.write("url: " + self.style.NOTICE(url))
-            response = json.dumps(response_json, indent=4) + "\n"
+            response = json.dumps(response_json, indent=4, cls=DjangoJSONEncoder) + "\n"
             self.stdout.write("response: " + self.style.SUCCESS(response))
 
         path = reverse(ApiV1CliReverseViews.namespace + "apply_view", kwargs={})

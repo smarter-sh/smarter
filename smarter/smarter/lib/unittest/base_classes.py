@@ -9,6 +9,7 @@ import unittest
 from typing import Union
 
 import yaml
+from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest
 from django.test import RequestFactory
 
@@ -80,7 +81,7 @@ class SmarterTestBase(unittest.TestCase):
                 {"role": "user", "content": "Hello, World!"},
             ],
         }
-        json_data = json.dumps(json_data).encode("utf-8")
+        json_data = json.dumps(json_data, cls=DjangoJSONEncoder).encode("utf-8")
 
         headers = {}
         data = {}

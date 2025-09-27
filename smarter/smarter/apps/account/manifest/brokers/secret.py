@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Optional, Type, Union
 
 from dateutil.relativedelta import relativedelta
+from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework import serializers
@@ -112,7 +113,7 @@ class SAMSecretBroker(AbstractBroker):
                     )
                 if isinstance(manifest, dict):
                     self._loader = SAMLoader(
-                        manifest=json.dumps(manifest),
+                        manifest=json.dumps(manifest, cls=DjangoJSONEncoder),
                     )
             else:
                 self._manifest = manifest

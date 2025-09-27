@@ -4,6 +4,8 @@ import json
 import logging
 from typing import Any, Optional, Type
 
+from django.core.serializers.json import DjangoJSONEncoder
+
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
@@ -262,14 +264,14 @@ class StaticPlugin(PluginBase):
                 )
             except KeyError as e:
                 raise SmarterPluginError(
-                    f"Plugin {self.name} is missing a top-level key '{SAMStaticPluginSpecDataKeys.STATIC.value}' in return_data {json.dumps(return_data, indent=4)}",
+                    f"Plugin {self.name} is missing a top-level key '{SAMStaticPluginSpecDataKeys.STATIC.value}' in return_data {json.dumps(return_data, indent=4, cls=DjangoJSONEncoder)}.",
                 ) from e
 
             try:
                 retval = return_data[inquiry_type]
             except KeyError as e:
                 raise SmarterPluginError(
-                    f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}. Available keys are: {list(return_data.keys())} from return_data {json.dumps(return_data, indent=4)}",
+                    f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}. Available keys are: {list(return_data.keys())} from return_data {json.dumps(return_data, indent=4, cls=DjangoJSONEncoder)}.",
                 ) from e
 
             if retval is None:
@@ -278,7 +280,7 @@ class StaticPlugin(PluginBase):
                 )
 
             try:
-                retval = json.dumps(retval)
+                retval = json.dumps(retval, cls=DjangoJSONEncoder)
             except (TypeError, ValueError) as e:
                 raise SmarterPluginError(
                     f"Plugin {self.name} return value for inquiry_type: {inquiry_type} could not be serialized to JSON: {e}.",

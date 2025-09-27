@@ -8,8 +8,10 @@ import traceback
 from http import HTTPStatus
 from typing import Any, Dict, List, Optional, Union
 
-# 3rd party stuff
 import openai
+
+# 3rd party stuff
+from django.core.serializers.json import DjangoJSONEncoder
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.chat.chat_completion_message_tool_call import (
@@ -896,8 +898,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         response["metadata"] = {"tool_calls": self.serialized_tool_calls, **self.request_meta_data}
 
         response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
-            "first_iteration": json.loads(json.dumps(self.first_iteration)),
-            "second_iteration": json.loads(json.dumps(self.second_iteration)),
+            "first_iteration": json.loads(json.dumps(self.first_iteration, cls=DjangoJSONEncoder)),
+            "second_iteration": json.loads(json.dumps(self.second_iteration, cls=DjangoJSONEncoder)),
             InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],  # type: ignore[call-arg]
             InternalKeys.MESSAGES_KEY: self.new_messages,
         }

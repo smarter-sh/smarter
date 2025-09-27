@@ -5,6 +5,7 @@ import json
 import logging
 
 from django.contrib.auth.signals import user_logged_in
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
@@ -110,7 +111,7 @@ def user_profile_post_delete(sender, instance, **kwargs):
 def account_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of Account model."""
     model_prefix = formatted_text(f"{module_prefix}.account_post_save() signal received.")
-    account_json = json.dumps(model_to_dict(instance), default=str)
+    account_json = json.dumps(model_to_dict(instance), default=str, cls=DjangoJSONEncoder)
     if created:
         logger.info("%s Account created: %s", model_prefix, instance)
     else:
@@ -133,7 +134,7 @@ def account_post_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=Charge)
 def charge_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of Charge model."""
-    charge_json = json.dumps(model_to_dict(instance), default=str)
+    charge_json = json.dumps(model_to_dict(instance), default=str, cls=DjangoJSONEncoder)
     logger.info(
         "%s Charge post_save signal received. instance: %s, created: %s",
         formatted_text(f"{module_prefix}.charge_post_save()"),
@@ -145,7 +146,7 @@ def charge_post_save(sender, instance, created, **kwargs):
 @receiver(post_save, sender=DailyBillingRecord)
 def daily_billing_record_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of DailyBillingRecord model."""
-    daily_billing_record_json = json.dumps(model_to_dict(instance), default=str)
+    daily_billing_record_json = json.dumps(model_to_dict(instance), default=str, cls=DjangoJSONEncoder)
     logger.info(
         "%s DailyBillingRecord post_save signal received. instance: %s, created: %s",
         formatted_text(f"{module_prefix}.daily_billing_record_post_save()"),
@@ -157,7 +158,7 @@ def daily_billing_record_post_save(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Secret)
 def secret_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of Secret model."""
-    secret_json = json.dumps(model_to_dict(instance), default=str)
+    secret_json = json.dumps(model_to_dict(instance), default=str, cls=DjangoJSONEncoder)
     logger.info(
         "%s Secret post_save signal received. instance: %s, id: %s created: %s",
         formatted_text(f"{module_prefix}.secret_post_save()"),

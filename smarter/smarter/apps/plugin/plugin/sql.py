@@ -5,6 +5,8 @@ import logging
 import re
 from typing import Any, Optional, Type, Union
 
+from django.core.serializers.json import DjangoJSONEncoder
+
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
@@ -431,7 +433,7 @@ class SqlPlugin(PluginBase):
             return ""
         if isinstance(retval, list) or isinstance(retval, dict):
             # convert the result to a JSON string
-            retval = json.dumps(retval, indent=2)
+            retval = json.dumps(retval, indent=2, cls=DjangoJSONEncoder)
         elif not isinstance(retval, str):
             raise SmarterSqlPluginError(
                 f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query returned an unexpected type: {type(retval)}. Expected str, list, or dict."
@@ -458,6 +460,6 @@ class SqlPlugin(PluginBase):
                 retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.SQL_DATA.value] = (
                     self.plugin_data_serializer.data if self.plugin_data_serializer else None
                 )
-                return json.loads(json.dumps(retval))
+                return json.loads(json.dumps(retval, cls=DjangoJSONEncoder))
             raise SmarterPluginError(f"Invalid version: {version}")
         return None

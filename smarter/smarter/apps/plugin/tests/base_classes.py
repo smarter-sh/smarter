@@ -7,6 +7,8 @@ import logging
 import os
 from typing import Optional
 
+from django.core.serializers.json import DjangoJSONEncoder
+
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.plugin.manifest.models.common.connection.model import (
     SAMConnectionCommon,
@@ -84,7 +86,7 @@ class TestPluginClassBase(TestAccountMixin):
         # initialize a SAMLoader object with the manifest raw data
         if not self._loader and self.manifest:
             logger.info("initializing SAMLoader from manifest data")
-            self._loader = SAMLoader(manifest=json.dumps(self.manifest))
+            self._loader = SAMLoader(manifest=json.dumps(self.manifest, cls=DjangoJSONEncoder))
             self.assertIsNotNone(self._loader)
         return self._loader
 

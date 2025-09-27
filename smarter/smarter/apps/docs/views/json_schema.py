@@ -2,6 +2,7 @@
 """Django REST framework views for the API admin app."""
 import json
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
@@ -25,7 +26,7 @@ class DocsJsonSchemaBaseView(DocsBaseView):
         json_response = self.get_brokered_json_response(
             ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.schema, view, request, *args, **kwargs
         )
-        json_response = json.dumps(json_response, indent=4)
+        json_response = json.dumps(json_response, indent=4, cls=DjangoJSONEncoder)
         self.context["json_schema"] = json_response
         return render(request, self.template_path, context=self.context)
 
