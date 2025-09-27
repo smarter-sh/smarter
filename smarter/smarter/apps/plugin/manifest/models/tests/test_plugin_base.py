@@ -206,8 +206,10 @@ class TestPluginBase(TestAccountMixin):
 
         plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
         to_json = plugin.to_json()
+
         if not isinstance(to_json, dict):
             self.fail("Expected JSON output to be a dict.")
+
         logger.info("TestPluginBase().test_to_json() data: %s", self.data)
         logger.info("TestPluginBase().test_to_json() to_json: %s", to_json)
 
@@ -216,56 +218,78 @@ class TestPluginBase(TestAccountMixin):
 
         self.assertIsInstance(to_json, dict)
 
+        # Helper function to create assertion error messages with JSON dump
+        def assert_equal_with_dump(actual, expected, field_description):
+            try:
+                self.assertEqual(actual, expected)
+            except AssertionError as e:
+                logger.error("Assertion failed for %s", field_description)
+                logger.error("to_json dump: %s", json.dumps(to_json, indent=2, cls=DjangoJSONEncoder))
+                raise AssertionError(
+                    f"{field_description} assertion failed. to_json: {json.dumps(to_json, indent=2, cls=DjangoJSONEncoder)}"
+                ) from e
+
         # ensure that we can go from json output to a string and back to json without error
         # taking into account that the PluginMeta name will always save in snake_case format.
         snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
-        self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], snake_case_name)
+        assert_equal_with_dump(to_json[SAMKeys.METADATA.value]["name"], snake_case_name, "Plugin name (snake_case)")
 
-        self.assertEqual(
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ].strip(),
+            "Selector directive",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.PROVIDER.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.PROVIDER.value
             ].strip(),
+            "Prompt provider",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
             ].strip(),
+            "Prompt system role",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MODEL.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MODEL.value
             ].strip(),
+            "Prompt model",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
             ],
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
             ],
+            "Prompt temperature",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.MAXTOKENS.value],
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
             ],
+            "Prompt max tokens",
         )
 
     def test_delete(self):

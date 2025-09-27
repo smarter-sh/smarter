@@ -17,9 +17,9 @@ from urllib.parse import urljoin
 
 import paramiko
 import requests
-from django.core.exceptions import ImproperlyConfigured
 
 # django stuff
+from django.core.exceptions import ImproperlyConfigured
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
@@ -385,7 +385,7 @@ class PluginSelector(TimestampedModel, SmarterHelperMixin):
     )
 
     def __str__(self) -> str:
-        search_terms = json.dumps(self.search_terms)[:50]
+        search_terms = json.dumps(self.search_terms, cls=DjangoJSONEncoder)[:50]
         return f"{str(self.directive)} - {search_terms}"
 
 
