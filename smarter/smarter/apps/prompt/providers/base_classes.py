@@ -497,18 +497,61 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     def openai_messages(self) -> list[dict[str, Any]]:
         """
         Sanitize the message list to ensure compatibility with OpenAI's chat completion API.
-        Principally, this removes Smarter annotations to the messages list, such
+        Principally, this removes Smarter annotations from the messages list, such
         as meta data about tool calls and interim completion token charges.
+
+        mcdaniel 2025-09-26:
+            {
+                'message': \"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_TRlKNPrjLZJnaZoggJiJnmYe\",
+                'type': 'invalid_request_error',
+                'param': 'messages.[5].role',
+                'code': None
+            }
+
+            Example input messages:
+            {
+                    "role": "assistant",
+                    "audio": null,
+                    "content": null,
+                    "refusal": null,
+                    "tool_calls": [                     <- IF THIS IS PRESENT
+                        {
+                            "id": "call_TRlKNPrjLZJnaZoggJiJnmYe",
+                            "type": "function",
+                            "function": {
+                                "name": "smarter_plugin_0000000045",
+                                "arguments": "{\"description\":\"AI\"}"
+                            }
+                        }
+                    ],
+                    "annotations": [],
+                    "function_call": null,
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "smarter",
+                    "content": "openai called this tool: smarter_plugin_0000000045({'description': 'AI'})",
+                    "smarter_is_new": true
+                },
+                {                                       <- THEN OPENAI EXPECTS TO SEE THIS IMMEDIATELY AFTER
+                    "name": "smarter_plugin_0000000045",
+                    "role": "tool",
+                    "content": "SqlPlugin stackademy_sql response: [{\"course_code\": \"CS210\", \"course_name\": \"Artificial Intelligence\", \"description\": \"Introduction to AI concepts and techniques.\", \"prerequisite_course_code\": \"CS107\"}, {\"course_code\": \"CS316\", \"course_name\": \"AI for Robotics\", \"description\": \"Applying AI techniques to robotics.\", \"prerequisite_course_code\": \"CS301\"}, {\"course_code\": \"CS319\", \"course_name\": \"AI in Healthcare\", \"description\": \"Applications of AI in healthcare.\", \"prerequisite_course_code\": \"CS301\"}, {\"course_code\": \"CS405\", \"course_name\": \"AI Capstone Project\", \"description\": \"Team-based AI project.\", \"prerequisite_course_code\": \"CS301\"}]",
+                    "tool_call_id": "call_TRlKNPrjLZJnaZoggJiJnmYe",
+                    "smarter_is_new": true
+                },
+            }
         """
         if not isinstance(self.messages, list):
             raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
 
         if self.iteration == 1:
             # ensure that we're not passing any tool call responses to the first request.
+            # mcdaniel 2025-09-26: this was causing issues with OpenAI's API.
             filtered_messages = [
                 message
                 for message in self.messages
-                if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.no_tools
+                if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all
             ]
         else:
             filtered_messages = [
