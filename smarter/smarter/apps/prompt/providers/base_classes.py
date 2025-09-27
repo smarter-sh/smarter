@@ -785,10 +785,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self.append_message_tool_called(function_name=function_name, function_args=function_args)
 
         function_response = None
-        # FIX NOTE: instead of a big switch, we should be attempting to call the
-        #
         if function_name == "get_current_weather":
             function_response = function_to_call(
+                tool_call=tool_call,
                 location=function_args.get("location"),
                 unit=function_args.get("unit"),
             )
