@@ -1,3 +1,10 @@
+## [0.13.10](https://github.com/smarter-sh/smarter/compare/v0.13.9...v0.13.10) (2025-09-27)
+
+
+### Bug Fixes
+
+* realign receiver params ([f4e0331](https://github.com/smarter-sh/smarter/commit/f4e03312a367894a1ebb44c34732cb85cab27a50))
+
 ## [0.13.9](https://github.com/smarter-sh/smarter/compare/v0.13.8...v0.13.9) (2025-09-27)
 
 
