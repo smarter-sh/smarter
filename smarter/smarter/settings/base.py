@@ -221,6 +221,9 @@ MIDDLEWARE = [
     # like .env, private key files, etc.
     # -------------------------------
     "smarter.lib.django.middleware.sensitive_files.BlockSensitiveFilesMiddleware",
+    # to log and block excessive 404 errors, which is a growing problem
+    # from botnets probing for vulnerabilities.
+    # -------------------------------
     "smarter.lib.django.middleware.excessive_404.BlockExcessive404Middleware",
     #
     # -------------------------------
