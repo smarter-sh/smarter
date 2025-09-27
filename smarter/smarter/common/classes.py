@@ -2,7 +2,7 @@
 
 import json
 from logging import getLogger
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 import yaml
 from django.http import HttpRequest

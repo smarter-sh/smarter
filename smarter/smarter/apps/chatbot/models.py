@@ -8,6 +8,7 @@ from urllib.parse import ParseResult, urljoin
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.http import HttpRequest
 from django.urls import reverse
@@ -997,7 +998,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         horizontal_line = "-" * (80 - 15)
         self.helper_logger(horizontal_line)
-        self.helper_logger(json.dumps(self.to_json(), indent=4))
+        self.helper_logger(json.dumps(self.to_json(), indent=4, cls=DjangoJSONEncoder))
         self.helper_logger(horizontal_line)
 
 

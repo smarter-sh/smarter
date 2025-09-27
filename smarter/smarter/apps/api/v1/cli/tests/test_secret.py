@@ -8,6 +8,7 @@ from http import HTTPStatus
 from urllib.parse import urlencode
 
 from dateutil.relativedelta import relativedelta
+from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
 
 from smarter.apps.account.manifest.brokers.secret import SAMSecret
@@ -154,7 +155,7 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         # dump the manifest to json
         manifest_json = json.loads(manifest.model_dump_json())
 
-        logger.info("manifest_json=%s", json.dumps(manifest_json, indent=4))
+        logger.info("manifest_json=%s", json.dumps(manifest_json, indent=4, cls=DjangoJSONEncoder))
 
         # retrieve the current manifest by calling "describe"
         path = reverse(self.namespace + ApiV1CliReverseViews.apply)

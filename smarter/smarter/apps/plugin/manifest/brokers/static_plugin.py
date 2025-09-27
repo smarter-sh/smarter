@@ -5,6 +5,7 @@ import json
 import logging
 from typing import Optional, Type
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
@@ -228,7 +229,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         if not isinstance(self.plugin, StaticPlugin):
             raise SAMBrokerErrorNotReady(
-                message=f"No plugin found. url: {request.build_absolute_uri()}, args={json.dumps(args)}, kwargs={json.dumps(kwargs)}",
+                message=f"No plugin found. url: {request.build_absolute_uri()}, args={json.dumps(args, cls=DjangoJSONEncoder)}, kwargs={json.dumps(kwargs, cls=DjangoJSONEncoder)}",
                 thing=self.kind,
                 command=command,
             )

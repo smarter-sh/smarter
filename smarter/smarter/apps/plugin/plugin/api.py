@@ -5,6 +5,8 @@ import json
 import logging
 from typing import Any, Optional, Type
 
+from django.core.serializers.json import DjangoJSONEncoder
+
 # smarter stuff
 from smarter.apps.plugin.manifest.models.common import Parameter
 from smarter.common.api import SmarterApiVersions
@@ -333,6 +335,6 @@ class ApiPlugin(PluginBase):
                 retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.API_DATA.value] = (
                     self.plugin_data_serializer.data if self.plugin_data_serializer else None
                 )
-                return json.loads(json.dumps(retval))
+                return json.loads(json.dumps(retval, cls=DjangoJSONEncoder))
             raise SmarterPluginError(f"Invalid version: {version}")
         return None

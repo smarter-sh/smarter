@@ -27,6 +27,7 @@ import googlemaps
 import openmeteo_requests
 import pandas as pd
 import requests_cache
+from django.core.serializers.json import DjangoJSONEncoder
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
@@ -81,7 +82,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit
         retval = {
             "error": "Google Maps Geolocation service is not initialized. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview, and add your GOOGLE_MAPS_API_KEY to .env"
         }
-        return json.dumps(retval)
+        return json.dumps(retval, cls=DjangoJSONEncoder)
 
     unit = unit or "METRIC"
     location = location or "Cambridge, MA, near Kendall Square"
@@ -136,7 +137,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit
         tool_call=tool_call.model_dump(),
         tool_response=hourly_json,
     )
-    return json.dumps(hourly_json)
+    return json.dumps(hourly_json, cls=DjangoJSONEncoder)
 
 
 def weather_tool_factory() -> dict:

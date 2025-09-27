@@ -7,6 +7,8 @@ import os
 import sys
 from pathlib import Path
 
+from django.core.serializers.json import DjangoJSONEncoder
+
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -44,7 +46,7 @@ class TestUtils(SmarterTestBase):
         """Test test_http_response_factory."""
         retval = http_response_factory(200, self.response)
         self.assertEqual(retval["statusCode"], 200)
-        self.assertEqual(retval["body"], json.dumps(self.response))
+        self.assertEqual(retval["body"], json.dumps(self.response, cls=DjangoJSONEncoder))
         self.assertEqual(retval["isBase64Encoded"], False)
         self.assertEqual(retval["headers"]["Content-Type"], "application/json")
 

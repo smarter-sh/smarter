@@ -7,6 +7,7 @@ from typing import Any, Optional, Union
 
 import requests
 import yaml
+from django.core.serializers.json import DjangoJSONEncoder
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
@@ -123,7 +124,7 @@ class SAMLoader(SmarterHelperMixin):
                 # if manifest is a string, assume it's a JSON/YAML string
                 self._raw_data = manifest
             elif isinstance(manifest, dict):
-                self._raw_data = json.dumps(manifest)
+                self._raw_data = json.dumps(manifest, cls=DjangoJSONEncoder)
             else:
                 raise SAMLoaderError(f"Invalid manifest format. Expected JSON string or dict but got {type(manifest)}")
         elif file_path:
@@ -206,7 +207,7 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def formatted_data(self) -> str:
-        return json.dumps(self.json_data, indent=4)
+        return json.dumps(self.json_data, indent=4, cls=DjangoJSONEncoder)
 
     def pydantic_model_dump(self) -> dict:
         """

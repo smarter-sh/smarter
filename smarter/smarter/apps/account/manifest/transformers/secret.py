@@ -8,6 +8,7 @@ from typing import Any, Optional, Union
 import yaml
 
 # 3rd party stuff
+from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework import serializers
 
 from smarter.apps.account.manifest.enum import SAMSecretSpecKeys, SAMSecretStatusKeys
@@ -156,7 +157,7 @@ class SecretTransformer(SmarterHelperMixin):
             loader = SAMLoader(
                 api_version=self.api_version,
                 kind=self.kind,
-                manifest=json.dumps(data),
+                manifest=json.dumps(data, cls=DjangoJSONEncoder),
             )
             if not loader.ready:
                 raise SAMValidationError("SAMLoader is not ready.")
@@ -617,5 +618,5 @@ class SecretTransformer(SmarterHelperMixin):
                     SAMSecretStatusKeys.LAST_ACCESSED.value: self.last_accessed,
                 },
             }
-            return json.loads(json.dumps(retval))
+            return json.loads(json.dumps(retval, cls=DjangoJSONEncoder))
         raise SmarterSecretTransformerError(f"Invalid version: {version}")

@@ -4,6 +4,7 @@ import json
 import logging
 import os
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest
 from django.test import RequestFactory
 from rest_framework.test import APIClient
@@ -51,7 +52,7 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
                 {"role": "user", "content": "Hello, World!"},
             ],
         }
-        json_data = json.dumps(json_data).encode("utf-8")
+        json_data = json.dumps(json_data, cls=DjangoJSONEncoder).encode("utf-8")
         request: HttpRequest = factory.post(path=url, data=json_data, content_type="application/json")
         return request
 
@@ -62,7 +63,9 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
         cls.broker = SAMChatbotBroker(
-            request=cls.create_generic_request("/anywhere/"), account=cls.account, manifest=json.dumps(cls.manifest)
+            request=cls.create_generic_request("/anywhere/"),
+            account=cls.account,
+            manifest=json.dumps(cls.manifest, cls=DjangoJSONEncoder),
         )
         cls.request = cls.create_generic_request(url=cls.broker.chatbot.url_chatbot)
 

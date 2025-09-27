@@ -2,6 +2,8 @@
 
 import json
 
+from django.core.serializers.json import DjangoJSONEncoder
+
 from smarter.common.exceptions import SmarterValueError
 
 from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
@@ -68,14 +70,18 @@ def validate_messages(request_body):
         if not isinstance(message, dict):
             raise SmarterValueError(f"invalid object type {type(message)} {message} found in messages list {messages}")
         if "role" not in message:
-            raise SmarterValueError(f"dict key 'role' not found in message {json.dumps(message, indent=4)}")
+            raise SmarterValueError(
+                f"dict key 'role' not found in message {json.dumps(message, indent=4, cls=DjangoJSONEncoder)}"
+            )
         if message["role"] not in OpenAIMessageKeys.all_roles:
             raise SmarterValueError(
-                f"invalid role {message['role']} found in message {json.dumps(message, indent=4)}. "
+                f"invalid role {message['role']} found in message {json.dumps(message, indent=4, cls=DjangoJSONEncoder)}. "
                 f"Should be one of {OpenAIMessageKeys.all_roles}"
             )
         if "content" not in message:
-            raise SmarterValueError(f"dict key 'content' not found in message {json.dumps(message, indent=4)}")
+            raise SmarterValueError(
+                f"dict key 'content' not found in message {json.dumps(message, indent=4, cls=DjangoJSONEncoder)}"
+            )
 
 
 def validate_completion_request(request_body, version: str = "v1") -> None:

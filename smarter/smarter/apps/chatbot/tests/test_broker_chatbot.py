@@ -7,6 +7,7 @@ from http import HTTPStatus
 
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
+from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
 from django.test import Client, RequestFactory
 
@@ -57,7 +58,9 @@ class TestSAMChatbotBroker(TestAccountMixin):
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
-        cls.broker = SAMChatbotBroker(request=cls.request, account=cls.account, manifest=json.dumps(cls.manifest))
+        cls.broker = SAMChatbotBroker(
+            request=cls.request, account=cls.account, manifest=json.dumps(cls.manifest, cls=DjangoJSONEncoder)
+        )
         cls.client = Client()
         cls.kwargs = {}
 

@@ -6,6 +6,7 @@ import json
 import logging
 from time import sleep
 
+from django.core.serializers.json import DjangoJSONEncoder
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import UserProfile
@@ -479,7 +480,7 @@ class TestPluginBase(TestAccountMixin):
         self.assertTrue(self.signals["plugin_ready"])
 
         # ensure that we can go from json output to a string and back to json without error
-        to_json = json.loads(json.dumps(to_json))
+        to_json = json.loads(json.dumps(to_json, cls=DjangoJSONEncoder))
 
         # ensure that the json output still matches the original data
         self.assertIsInstance(to_json, dict)

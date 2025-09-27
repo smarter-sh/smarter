@@ -7,6 +7,7 @@ import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
+from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -169,7 +170,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 self._loader = SAMLoader(
                     api_version=SMARTER_API_VERSION,
                     kind=self.manifest_kind,
-                    manifest=json.dumps(self.manifest_data),
+                    manifest=json.dumps(self.manifest_data, cls=DjangoJSONEncoder),
                 )
                 if not self._loader or not self._loader.ready:
                     raise APIV1CLIViewError("SAMLoader is not ready.")

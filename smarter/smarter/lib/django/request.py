@@ -26,6 +26,7 @@ from urllib.parse import ParseResult, urlparse, urlunsplit
 import tldextract
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
+from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, QueryDict
 from rest_framework.request import Request as RestFrameworkRequest
 
@@ -1224,4 +1225,4 @@ class SmarterRequestMixin(AccountMixin):
         """
         Dump the object to the console.
         """
-        return json.dumps(self.to_json(), indent=4)
+        return json.dumps(self.to_json(), indent=4, cls=DjangoJSONEncoder)
