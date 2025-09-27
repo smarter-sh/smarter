@@ -97,7 +97,7 @@ make pre-commit
 
 Output should look similar to the following:
 
-![pre-commit output](../docs/img/pre-commit.png)
+![pre-commit output](https://github.com/smarter-sh/smarter/blob/main/docs/img/pre-commit.png)
 
 ### Github Secrets setup
 
@@ -105,13 +105,13 @@ Common secrets for automated CD/CD processes are managed with [GitHub Secrets](h
 
 On the other hand, if you've forked this repo and are working on your own independent project, then you'll need to initialize each of these yourself.
 
-![Github Secrets](../docs/img/github-secrets.png)
+![Github Secrets](https://github.com/smarter-sh/smarter/blob/main/docs/img/github-secrets.png)
 
 ### Kubernetes Secrets
 
 The Terraform code in this repo generates several sets of sensitive data that are persisted to [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/). This configuration data is tightly integrated to the CI/CD build and deploy workflows, and fully automates configuration of all back end services on which Smarter relies including for example, MySQL, SMTP Email, AWS S3, AWS Elastic Container Registry, and Kubernetes itself.
 
-![Kubernetes Secrets](../docs/img/kubernetes-secrets.png)
+![Kubernetes Secrets](https://github.com/smarter-sh/smarter/blob/main/docs/img/kubernetes-secrets.png)
 
 ### GitHub Actions
 
@@ -126,24 +126,24 @@ This project depends heavily on GitHub Actions to automate routine activities, s
 
 A typical pull request will look like the following:
 
-![Automated pull request](../docs/img/automated-pr.png)
+![Automated pull request](https://github.com/smarter-sh/smarter/blob/main/docs/img/automated-pr.png)
 
 ## Docker Setup
 
 You can leverage Docker Community Edition and Docker Compose to stand up the entire Smarter platforn in your local development environment. This closely approximates the Kubernetes production environment in which Smarter actually runs. Everything is substantially created with two files located in the root of this repo:
 
-- [Dockerfile](../Dockerfile): This defines the contents and configuration of the Docker container used to deploy the Smarter application, worker, and Celery Beat service in all Kubernetes environments as well as in your local Docker CE environment. Thus, think twice before pushing modifications to this file, as there could be unintended consequences.
-- [docker-compose.yml](../docker-compose.yml): This simulates the Helm deployment charts used for Kubernetes based staging and production environment. It defines all services that makeup the application stack, including MySQL and Redis.
-- [Helm Chart](../helm/charts/smarter/): Smarter is deployed to Kubernetes via this locally managed Helm chart. You can use this as a reference for questions regarding ports, network configuration, horizontal and vertical scaling configuration, and Docker Container configurations for each service.
+- [Dockerfile](https://github.com/smarter-sh/smarter/blob/main/Dockerfile): This defines the contents and configuration of the Docker container used to deploy the Smarter application, worker, and Celery Beat service in all Kubernetes environments as well as in your local Docker CE environment. Thus, think twice before pushing modifications to this file, as there could be unintended consequences.
+- [docker-compose.yml](https://github.com/smarter-sh/smarter/blob/main/docker-compose.yml): This simulates the Helm deployment charts used for Kubernetes based staging and production environment. It defines all services that makeup the application stack, including MySQL and Redis.
+- [Helm Chart](https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/): Smarter is deployed to Kubernetes via this locally managed Helm chart. You can use this as a reference for questions regarding ports, network configuration, horizontal and vertical scaling configuration, and Docker Container configurations for each service.
 
 ## Python Setup
 
 Smarter is built on the [Django](https://www.djangoproject.com/) web development framework for Python. Moreover, the API is implemented with [Django REST Framework](https://www.django-rest-framework.org/). Smarter strictly follows generally accepted best practices and coding conventions for both of these. Thus, to work effectively on this project you'll need familiarity with both of these third party code libraries. Also note that this project leverages [Dependabot](https://github.com/dependabot) and [Mergify](https://mergify.com/) for managing version numbers of all Python dependencies that are used in this project. These two services monitor all of the Python (and NPM and Terraform) dependencies for the project, automatically bumping package versions as well as running unit-tests in order to guard the main branch against breaking changes. Versions should therefore always be up to date at the moment that you clone the repo, and it should not be necessary for you to manually bump PyPi package version numbers inside the Python requirements files.
 
-- Python requirements: [smarter/requirements](../smarter/requirements/).
-- Django settings: [smarter/smarter/settings](../smarter/smarter/settings/)
-- Dependabot configuration: [.github/dependabot.yml](../.github/dependabot.yml)
-- Mergify configuration: [.mergify.yml](../.mergify.yml)
+- Python requirements: [smarter/requirements](https://github.com/smarter-sh/smarter/blob/main/smarter/requirements/).
+- Django settings: [smarter/smarter/settings](https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/)
+- Dependabot configuration: [.github/dependabot.yml](https://github.com/smarter-sh/smarter/blob/main/.github/dependabot.yml)
+- Mergify configuration: [.mergify.yml](https://github.com/smarter-sh/smarter/blob/main/.mergify.yml)
 
 ```console
 make django-init
@@ -153,7 +153,7 @@ source venv/bin/activate
 
 ### Configuration Data
 
-Smarter generally follows Django's convention of storing most configuration data in environment-specific python modules that are accessible via `django.conf.settings`. However, in light of the fact that Smarter uses a **LOT** of configuration data, and that this configuration data necessarily lives in many different locations, we also have our own propriety configuration module which is based on [Pydantic](https://docs.pydantic.dev/). The module can be found [here](../smarter/smarter/apps/common/conf.py) and is accessed as follows:
+Smarter generally follows Django's convention of storing most configuration data in environment-specific python modules that are accessible via `django.conf.settings`. However, in light of the fact that Smarter uses a **LOT** of configuration data, and that this configuration data necessarily lives in many different locations, we also have our own propriety configuration module which is based on [Pydantic](https://docs.pydantic.dev/). The module can be found [here](https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/common/conf.py) and is accessed as follows:
 
 ```python
 from smarter.apps.common.conf import settings as smarter_settings
@@ -177,11 +177,11 @@ Note the following shortcut for running a Coverage report: `make coverage`.
 
 The Smarter dashboard UX is created with this [Bootstrap-based theme package](https://themes.getbootstrap.com/product/keen-the-ultimate-bootstrap-admin-theme/) authored and maintained by [KeenThemes](https://keenthemes.com/).
 
-The complete, unmodified original set of resource files are located in this [keen_v3.0.6](../keen_v3.0.6/) folder in this repo.
+The complete, unmodified original set of resource files are located in this [keen_v3.0.6](https://github.com/smarter-sh/smarter/blob/main/keen_v3.0.6/) folder in this repo.
 
-These assets have been fully integrated into Django's templating system, which means that the html has been normalized, and that other static assets like fonts, svg, css, js and images are served from this [static](../smarter/smarter/static/) folder.
+These assets have been fully integrated into Django's templating system, which means that the html has been normalized, and that other static assets like fonts, svg, css, js and images are served from this [static](https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/static/) folder.
 
-[SASS variables](../keen_v3.0.6/demo1/src/sass/layout/_variables.custom.scss)
+[SASS variables](https://github.com/smarter-sh/smarter/blob/main/keen_v3.0.6/demo1/src/sass/layout/_variables.custom.scss)
 
 Note the following helper commands:
 
