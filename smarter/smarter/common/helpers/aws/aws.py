@@ -98,8 +98,6 @@ class AWSBase(SmarterHelperMixin):
         self._environment_domain = environment_domain or smarter_settings.environment_platform_domain
         self._debug_mode = debug_mode or smarter_settings.debug_mode
 
-        if self.debug_mode:
-            logger.setLevel(logging.DEBUG)
         if init_info:
             logger.debug(init_info)
 
