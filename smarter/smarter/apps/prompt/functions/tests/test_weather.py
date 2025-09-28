@@ -4,6 +4,11 @@ Test mixins for the plugin module.
 
 import logging
 
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+    Function,
+)
+
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -31,7 +36,11 @@ class GetCurrentWeather(SmarterTestBase):
         """Test get_current_weather() function."""
         location = "Cambridge, MA, near Kendall Square"
         unit = "METRIC"
-        json_string_result = get_current_weather(location=location, unit=unit)
+        function = Function(
+            name="get_current_weather", arguments='{"location": "Cambridge, MA, near Kendall Square", "unit": "METRIC"}'
+        )
+        tool_call = ChatCompletionMessageToolCall(id="test_get_current_weather", function=function, type="function")
+        json_string_result = get_current_weather(tool_call=tool_call, location=location, unit=unit)
         json_result = json.loads(json.loads(json_string_result))
         logger.info("json_result: %s", json_result)
         logger.info("type of json_result: %s", type(json_result))
@@ -40,7 +49,11 @@ class GetCurrentWeather(SmarterTestBase):
     def test_get_current_weather2(self):
         """Test get_current_weather() function with default unit."""
         location = "Cambridge, MA, near Kendall Square"
-        json_string_result = get_current_weather(location=location)
+        function = Function(
+            name="get_current_weather", arguments='{"location": "Cambridge, MA, near Kendall Square", "unit": "METRIC"}'
+        )
+        tool_call = ChatCompletionMessageToolCall(id="test_get_current_weather", function=function, type="function")
+        json_string_result = get_current_weather(tool_call, location=location)
         json_result = json.loads(json.loads(json_string_result))
         logger.info("json_result: %s", json_result)
         logger.info("type of json_result: %s", type(json_result))
