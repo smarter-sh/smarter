@@ -138,10 +138,10 @@ FROM collect_assets AS data
 # caching mechanism.
 WORKDIR /home/smarter_user/
 
-COPY --chown=smarter_user:smarter_user ./docs ./data/doc
-COPY --chown=smarter_user:smarter_user ./README.md ./data/doc/README.md
-COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/doc/CHANGELOG.md
-COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/doc/CODE_OF_CONDUCT.md
+COPY --chown=smarter_user:smarter_user ./docs ./data/docs
+COPY --chown=smarter_user:smarter_user ./README.md ./data/docs/README.md
+COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/docs/CHANGELOG.md
+COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/docs/CODE_OF_CONDUCT.md
 COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
 COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
