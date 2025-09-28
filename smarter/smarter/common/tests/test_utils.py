@@ -54,7 +54,7 @@ class TestUtils(SmarterTestBase):
         data = {"date": datetime(2024, 1, 1), "secret": SecretStr("abc")}
         encoded = json.dumps(data, cls=DateTimeEncoder)
         self.assertIn("2024-01-01", encoded)
-        self.assertIn("*** REDACTED ***", encoded)
+        self.assertIn("**********", encoded)
 
     def test_camel_to_snake(self):
         self.assertEqual(camel_to_snake("camelCase"), "camel_case")
