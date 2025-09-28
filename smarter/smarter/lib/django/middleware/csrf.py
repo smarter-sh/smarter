@@ -120,7 +120,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
             # the ChatBotHelper.
             admin_user_profile = get_cached_smarter_admin_user_profile()
             request.user = admin_user_profile.user
-            logger.warning(
+            logger.debug(
                 "%s: request is not (yet) authenticated. Using admin user as a proxy for evaluating CSRF_TRUSTED_ORIGINS: %s",
                 self.formatted_class_name,
                 admin_user_profile,
