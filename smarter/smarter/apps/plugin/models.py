@@ -594,15 +594,7 @@ class PluginDataStatic(PluginDataBase):
 
         retval: Optional[list[Any]] = []
         if isinstance(self.static_data, dict):
-            data = self.static_data.get(SAMStaticPluginSpecDataKeys.STATIC.value)
-            if data is None:
-                logger.error(
-                    "%s.return_data_keys: static_data missing '%s' key: %s",
-                    self.formatted_class_name,
-                    SAMStaticPluginSpecDataKeys.STATIC.value,
-                    self.static_data,
-                )
-            retval = dict_keys_to_list(data=data) if isinstance(data, dict) else None
+            retval = dict_keys_to_list(data=self.static_data)
             retval = list(retval) if retval else None
         elif isinstance(self.static_data, list):
             retval = self.static_data
