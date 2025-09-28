@@ -4,7 +4,9 @@ import logging
 import os
 from typing import Optional
 
-from django.test import Client
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.http import HttpResponse
+from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.const import PYTHON_ROOT
@@ -35,7 +37,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
     """
 
     good_manifest_path: Optional[str] = None
-    good_manifest_text: Optional[str] = None
+    good_manifest_dict: Optional[dict] = None
     broker: Optional[SAMTestBroker] = None
 
     @classmethod
@@ -44,22 +46,29 @@ class TestAbstractBrokerClass(TestAccountMixin):
         super().setUpClass()
         path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "cli", "tests", "data")
         cls.good_manifest_path = os.path.join(path, "good-plugin-manifest.yaml")
-        cls.good_manifest_text = cls.get_readonly_yaml_file(cls.good_manifest_path)  # type: ignore[assignment]
+        cls.good_manifest_dict = cls.get_readonly_yaml_file(cls.good_manifest_path)
 
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        client = Client()
-        client.force_login(self.non_admin_user)
-        response = client.get("/")
-        request = response.wsgi_request
+
+        def get_response(request):
+            return HttpResponse()
+
+        factory = RequestFactory()
+        request = factory.get("/")
+
+        SessionMiddleware(get_response).process_request(request)
+        request.session.save()
+
+        request.user = self.non_admin_user
 
         if not hasattr(request, "user"):
             raise ValueError("Request does not have a user attribute")
 
         self.broker = SAMTestBroker(
             request,
-            manifest=self.good_manifest_text,
+            manifest=self.good_manifest_dict,
             kind=SmarterJournalThings.STATIC_PLUGIN.value,
         )
 

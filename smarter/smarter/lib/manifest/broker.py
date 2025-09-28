@@ -163,7 +163,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         kind: Optional[str] = None,
         loader: Optional[SAMLoader] = None,
         api_version: str = SmarterApiVersions.V1,
-        manifest: Optional[AbstractSAMBase] = None,
+        manifest: Optional[Union[dict, AbstractSAMBase]] = None,
         file_path: Optional[str] = None,
         url: Optional[str] = None,
         **kwargs,
@@ -183,6 +183,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if isinstance(manifest, AbstractSAMBase):
             self._manifest = manifest
             logger.info("%s.__init__() successfully initialized manifest: %s", self.formatted_class_name, self.manifest)
+        if isinstance(manifest, dict):
+            if not isinstance(loader, SAMLoader):
+                loader = SAMLoader(manifest=manifest)
+                logger.info(
+                    "%s.__init__() initialized loader from manifest data: %s", self.formatted_class_name, self.manifest
+                )
         if isinstance(loader, SAMLoader):
             self._loader = loader
             logger.info("%s.__init__() received %s loader", self.formatted_class_name, self._loader.manifest_kind)
@@ -225,7 +231,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return f"{parent_class}.AbstractBroker()"
 
     @property
-    def request(self) -> HttpRequest:
+    def request(self) -> Optional[HttpRequest]:
         """Return the request object."""
         return self.smarter_request
 
