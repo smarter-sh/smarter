@@ -28,11 +28,7 @@ from .utils import cache_invalidate, get_cached_default_account, get_cached_user
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-        and level >= logging.INFO
-    )
+    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING) and level >= logging.INFO
 
 
 base_logger = logging.getLogger(__name__)
