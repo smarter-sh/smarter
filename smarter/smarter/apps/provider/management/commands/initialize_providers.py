@@ -10,6 +10,7 @@ import requests
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from google.auth.exceptions import GoogleAuthError
 from google.oauth2 import service_account
 
 from smarter.apps.account.models import Secret, UserProfile
@@ -206,10 +207,14 @@ class Command(BaseCommand):
             "https://www.googleapis.com/auth/generative-language",
         ]
 
-        credentials = service_account.Credentials.from_service_account_info(
-            smarter_settings.google_service_account, scopes=SCOPES
-        )
-        auth_req = google.auth.transport.requests.Request()
+        try:
+            credentials = service_account.Credentials.from_service_account_info(
+                smarter_settings.google_service_account, scopes=SCOPES
+            )
+            auth_req = google.auth.transport.requests.Request()
+        except GoogleAuthError as e:
+            self.stdout.write(self.style.ERROR(f"initialize_googleai: Error loading Google credentials: {e}"))
+            return
         credentials.refresh(auth_req)
         bearer_token = credentials.token
 
