@@ -8,6 +8,7 @@ future high-traffic scenarios.
 """
 # python stuff
 import logging
+from typing import Optional
 
 # django stuff
 from django.conf import settings
@@ -55,7 +56,7 @@ module_prefix = "smarter.apps.account.tasks."
 def create_charge(*args, **kwargs):
     """Create a charge record."""
 
-    account: Account = None
+    account: Optional[Account] = None
     user = None
     user_profile = None
 
