@@ -50,7 +50,7 @@ def create_plugin_selector_history(*args, **kwargs):
     user_id = kwargs.get("user_id")
     if user_id:
         user = get_cached_user_for_user_id(user_id)
-        user_profile = get_cached_user_profile(user)
+        user_profile = get_cached_user_profile(user) if user else None
 
     plugin_id = kwargs.get("plugin_id")
     plugin_meta = PluginMeta.objects.get(id=plugin_id) if plugin_id else None

@@ -202,22 +202,26 @@ def get_cached_user_profile(
     return None
 
 
-def get_cached_user_for_user_id(user_id: int, invalidate: bool = False) -> User:
+def get_cached_user_for_user_id(user_id: int, invalidate: bool = False) -> Optional[User]:
     """
     Returns the user for the given user_id.
     """
 
     @cache_results()
-    def _in_memory_user(user_id) -> User:
+    def _in_memory_user(user_id) -> Optional[User]:
         """
         In-memory cache for user objects.
         """
-        user = User.objects.get(id=user_id)
-        logger.info("_in_memory_user() retrieving and caching user %s", user)
-        return user  # type: ignore[return-value]
+        try:
+            user = User.objects.get(id=user_id)
+            logger.info("_in_memory_user() retrieving and caching user %s", user)
+            return user  # type: ignore[return-value]
+        except User.DoesNotExist:
+            logger.error("get_cached_user_for_user_id() user with ID %s does not exist", user_id)
 
     user = _in_memory_user(user_id) if not invalidate else _in_memory_user.invalidate(user_id)
-    logger.info("get_cached_user_for_user_id() retrieving and caching user %s", user)
+    if user:
+        logger.info("get_cached_user_for_user_id() retrieving and caching user %s", user)
     return user
 
 
