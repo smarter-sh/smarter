@@ -57,7 +57,7 @@ spec:
           resources:
             requests:
               memory: "1Gi"
-              cpu: "225m"
+              cpu: "200m"
             limits:
               memory: "3Gi"
               cpu: "2"
@@ -86,15 +86,12 @@ spec:
           readinessProbe:
             exec:
               command:
-                - celery
-                - -A
-                - smarter.smarter_celery.app
-                - inspect
-                - ping
-                - --timeout=5
+                - /bin/sh
+                - -c
+                - "pgrep -f 'celery.*worker' > /dev/null"
             initialDelaySeconds: 45
             periodSeconds: 15
-            timeoutSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 3
             successThreshold: 1
           env:
