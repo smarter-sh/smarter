@@ -3,7 +3,7 @@ appVersion: 0.13.13
 name: smarter
 description: A Helm chart for deploying Smarter API and web console
 type: application
-version: 0.7.3
+version: 0.7.4
 home: https://smarter.sh
 sources:
   - https://github.com/smarter-sh/smarter
