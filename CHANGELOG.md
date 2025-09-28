@@ -1,3 +1,10 @@
+## [0.13.12](https://github.com/smarter-sh/smarter/compare/v0.13.11...v0.13.12) (2025-09-28)
+
+
+### Bug Fixes
+
+* collect assets after permissions to improve caching ([ce932c8](https://github.com/smarter-sh/smarter/commit/ce932c87f7be9a71b156397db9cf961f8532c5f6))
+
 ## [0.13.11](https://github.com/smarter-sh/smarter/compare/v0.13.10...v0.13.11) (2025-09-28)
 
 
