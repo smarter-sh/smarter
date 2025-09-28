@@ -1,11 +1,19 @@
 """
-JSON utilities.
+Overridden JSON utilities. The effective modifications are
+- Use DjangoJSONEncoder as the default encoder
+- Standardize indentation to 2 characters
+- Use str as the default for non-serializable objects
 """
 
 import json
 
 # pylint: disable=unused-import
-from json import JSONDecodeError, JSONDecoder, JSONEncoder
+from json import (  # unmodified re-export
+    JSONDecodeError,
+    JSONDecoder,
+    JSONEncoder,
+    loads,
+)
 
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -42,32 +50,5 @@ def dumps(
         separators=separators,
         default=default or str,
         sort_keys=sort_keys,
-        **kw,
-    )
-
-
-def loads(
-    s,
-    *,
-    cls=None,
-    object_hook=None,
-    parse_float=None,
-    parse_int=None,
-    parse_constant=None,
-    object_pairs_hook=None,
-    **kw,
-):
-    """
-    JSON load with
-    """
-
-    return json.loads(
-        s,
-        cls=cls,
-        object_hook=object_hook,
-        parse_float=parse_float,
-        parse_int=parse_int,
-        parse_constant=parse_constant,
-        object_pairs_hook=object_pairs_hook,
         **kw,
     )

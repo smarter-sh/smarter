@@ -255,17 +255,6 @@ class StaticPlugin(PluginBase):
                 )
 
             try:
-                return_data = (
-                    return_data[SAMStaticPluginSpecDataKeys.STATIC.value]
-                    if isinstance(return_data, dict)
-                    else return_data
-                )
-            except KeyError as e:
-                raise SmarterPluginError(
-                    f"Plugin {self.name} is missing a top-level key '{SAMStaticPluginSpecDataKeys.STATIC.value}' in return_data {json.dumps(return_data)}.",
-                ) from e
-
-            try:
                 retval = return_data[inquiry_type]
             except KeyError as e:
                 raise SmarterPluginError(

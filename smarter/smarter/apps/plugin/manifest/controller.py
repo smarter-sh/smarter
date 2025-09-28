@@ -21,7 +21,6 @@ from smarter.lib.manifest.exceptions import SAMExceptionBase
 # plugin
 from ..models import PluginMeta
 from ..plugin.api import ApiPlugin
-from ..plugin.base import PluginBase
 from ..plugin.sql import SqlPlugin
 from ..plugin.static import StaticPlugin
 
@@ -35,7 +34,9 @@ from .models.static_plugin.model import SAMStaticPlugin
 
 VALID_MANIFEST_KINDS = [SAMKinds.STATIC_PLUGIN.value, SAMKinds.SQL_PLUGIN.value, SAMKinds.API_PLUGIN.value]
 PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin]
+Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin]]
 SAMPluginType = type[SAMApiPlugin] | type[SAMSqlPlugin] | type[SAMStaticPlugin]
+SAMPlugins = Optional[Union[dict, SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin]]
 PLUGIN_MAP: dict[str, PluginType] = {
     SAMKinds.API_PLUGIN.value: ApiPlugin,
     SAMKinds.SQL_PLUGIN.value: SqlPlugin,
@@ -69,8 +70,8 @@ class SAMPluginControllerError(SAMExceptionBase):
 class PluginController(AbstractController):
     """Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
-    _manifest: Optional[Union[ApiPlugin, SqlPlugin, StaticPlugin]] = None
-    _plugin: Optional[PluginBase] = None
+    _manifest: SAMPlugins = None
+    _plugin: Plugins = None
     _plugin_meta: Optional[PluginMeta] = None
     _name: Optional[str] = None
 
@@ -80,7 +81,7 @@ class PluginController(AbstractController):
         user: User,
         *args,
         user_profile: Optional[UserProfile] = None,
-        manifest: Optional[Union[ApiPlugin, SqlPlugin, StaticPlugin]] = None,
+        manifest: SAMPlugins = None,
         plugin_meta: Optional[PluginMeta] = None,
         name: Optional[str] = None,
         **kwargs,
@@ -181,7 +182,7 @@ class PluginController(AbstractController):
         return None
 
     @property
-    def plugin(self) -> Optional[PluginBase]:
+    def plugin(self) -> Plugins:
         return self.obj
 
     @cached_property
@@ -198,7 +199,7 @@ class PluginController(AbstractController):
         return SAM_MAP
 
     @property
-    def obj(self) -> Optional[PluginBase]:
+    def obj(self) -> Plugins:
         if self._plugin:
             return self._plugin
         if self._plugin_meta:
