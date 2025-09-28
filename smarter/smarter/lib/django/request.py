@@ -226,7 +226,7 @@ class SmarterRequestMixin(AccountMixin):
                     )
 
             if self.account and not self._user:
-                logger.warning(
+                logger.debug(
                     "%s.init() - account (%s) is set but user is not.",
                     self.formatted_class_name,
                     self.account,
