@@ -242,3 +242,10 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
             pass
         cls.connection_django_model = None
         super().tearDownClass()
+
+    def test_00_sql_connection_mixin(self):
+        """Test the SqlConnection itself, lest we get ahead of ourselves"""
+        self.assertIsInstance(self.connection_django_model, SqlConnection)
+        self.assertIsInstance(self.connection_loader, SAMLoader)
+        self.assertIsInstance(self.connection_manifest, dict)
+        self.assertIsInstance(self.connection_manifest_path, str)

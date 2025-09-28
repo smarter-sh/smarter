@@ -66,15 +66,12 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
     @property
     def sql_connection_model(self) -> Optional[SAMSqlConnection]:
         # override to create a SAMSqlPlugin pydantic model from the loader
-        if not self._sql_connection_model and self.loader:
-            if self.loader.manifest_kind == SmarterJournalThings.SQL_CONNECTION.value:
-                self._sql_connection_model = SAMSqlConnection(**self.loader.pydantic_model_dump())
-            else:
-                raise SmarterValueError(
-                    f"{self.__class__.__name__}.sql_connection_model() received an invalid manifest kind {self.loader.manifest_kind} for SQL connection"
-                )
-            self.assertIsNotNone(self._sql_connection_model)
-        return self._sql_connection_model
+        # sep-2025 mcdaniel: WHY IS THIS NEEDED?
+        if not isinstance(self.connection_model, SAMSqlConnection):
+            raise SmarterValueError(
+                f"connection_model is not an instance of SAMSqlConnection: {type(self.connection_model)} {self.connection_model}"
+            )
+        return self.connection_model
 
     @property
     def sql_plugin_model(self) -> Optional[SAMSqlPlugin]:
@@ -86,11 +83,11 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin, 
 
     def test_00_sql_connection_mixin(self):
         """Test the SqlConnection itself, lest we get ahead of ourselves"""
-        self.assertIsInstance(self.connection_django_model, SqlConnection)
-        self.assertIsInstance(self.sql_connection_model, SAMSqlConnection)
-        self.assertIsInstance(self.connection_loader, SAMLoader)
-        self.assertIsInstance(self.connection_manifest, dict)
-        self.assertIsInstance(self.connection_manifest_path, str)
+        self.assertIsInstance(
+            self.sql_connection_model,
+            SAMSqlConnection,
+            f"sql_connection_model is not an instance of SAMSqlConnection: {type(self.sql_connection_model)} {self.sql_connection_model}",
+        )
 
     def test_validate_api_connection_invalid_value(self):
         """Test that the timeout validator raises an error for negative values."""
