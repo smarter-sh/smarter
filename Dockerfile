@@ -125,14 +125,8 @@ WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
 COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
 
-# Collect static files
-############################## collect_assets ##################################
-FROM application AS collect_assets
-WORKDIR /home/smarter_user/smarter
-RUN python manage.py collectstatic --noinput
-
 ################################# data #################################
-FROM collect_assets AS data
+FROM application AS data
 # Add our source code and make the 'smarter' directory the working directory
 # we want this to be the last step so that we can take advantage of Docker's
 # caching mechanism.
@@ -173,8 +167,15 @@ RUN chown -R smarter_user:smarter_user /home/smarter_user/ && \
   chmod -R 700 /home/smarter_user/data && \
   chmod -R 700 /home/smarter_user/.cache
 
+# Collect static files
+############################## collect_assets ##################################
+FROM permissions AS collect_assets
+WORKDIR /home/smarter_user/smarter
+RUN python manage.py collectstatic --noinput
+
+
 ################################# final #######################################
-FROM permissions AS serve_application
+FROM collect_assets AS serve_application
 
 WORKDIR /home/smarter_user/smarter
 USER smarter_user
