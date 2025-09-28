@@ -66,7 +66,7 @@ spec:
               command:
                 - celery
                 - -A
-                - smarter
+                - smarter.smarter_celery.app
                 - inspect
                 - ping
             initialDelaySeconds: 30
@@ -79,7 +79,7 @@ spec:
               command:
                 - celery
                 - -A
-                - smarter
+                - smarter.smarter_celery.app
                 - inspect
                 - ping
             initialDelaySeconds: 10

@@ -64,7 +64,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   libmariadb-dev \
   git \
   curl \
-  unzip && \
+  unzip \
+  procps && \
   rm -rf /var/lib/apt/lists/*
 
 # Install kubectl, required for smarter/common/helpers/k8s_helpers.py
