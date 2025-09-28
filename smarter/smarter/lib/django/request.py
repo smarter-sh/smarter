@@ -13,7 +13,6 @@ known url patterns for Smarter chatbots. key features include:
 
 import hashlib
 import inspect
-import json
 import logging
 import re
 import warnings
@@ -46,6 +45,7 @@ from smarter.common.utils import (
     rfc1034_compliant_to_snake,
     smarter_build_absolute_uri,
 )
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -1225,4 +1225,4 @@ class SmarterRequestMixin(AccountMixin):
         """
         Dump the object to the console.
         """
-        return json.dumps(self.to_json(), indent=4, cls=DjangoJSONEncoder)
+        return json.dumps(self.to_json())

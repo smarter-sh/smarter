@@ -19,7 +19,6 @@ openmeteo_requests Python package, which is a wrapper for the requests package. 
 to avoid repeated API calls, and to retry failed API calls.
 """
 
-import json
 import logging
 from typing import Optional
 
@@ -27,7 +26,6 @@ import googlemaps
 import openmeteo_requests
 import pandas as pd
 import requests_cache
-from django.core.serializers.json import DjangoJSONEncoder
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
@@ -35,6 +33,7 @@ from retry_requests import retry
 
 from smarter.common.conf import settings
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -82,7 +81,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit
         retval = {
             "error": "Google Maps Geolocation service is not initialized. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview, and add your GOOGLE_MAPS_API_KEY to .env"
         }
-        return json.dumps(retval, cls=DjangoJSONEncoder)
+        return json.dumps(retval)
 
     unit = unit or "METRIC"
     location = location or "Cambridge, MA, near Kendall Square"
@@ -137,7 +136,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit
         tool_call=tool_call.model_dump(),
         tool_response=hourly_json,
     )
-    return json.dumps(hourly_json, cls=DjangoJSONEncoder)
+    return json.dumps(hourly_json)
 
 
 def weather_tool_factory() -> dict:

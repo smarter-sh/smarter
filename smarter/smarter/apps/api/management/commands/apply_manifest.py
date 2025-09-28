@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """utility for applying any Smarter manifest using the api/v1/cli endpoint."""
 
-import json
 import os
 from typing import Optional
 from urllib.parse import urljoin
@@ -9,7 +8,6 @@ from urllib.parse import urljoin
 import httpx
 from django.core.management import CommandError
 from django.core.management.base import BaseCommand
-from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
@@ -17,6 +15,7 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import json
 from smarter.lib.drf.models import SmarterAuthToken
 
 
@@ -156,7 +155,7 @@ class Command(BaseCommand):
         else:
             response_json = {"error": "unable to decode response content"}
 
-        response = json.dumps(response_json, indent=4, cls=DjangoJSONEncoder) + "\n"
+        response = json.dumps(response_json) + "\n"
         if httpx_response.status_code == httpx.codes.OK:
             self.stdout.write(self.style.SUCCESS("manifest applied."))
             if verbose:

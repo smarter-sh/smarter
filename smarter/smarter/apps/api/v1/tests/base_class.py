@@ -7,13 +7,13 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
-import json
 import logging
 from typing import Any, Optional
 
 from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken

@@ -2,9 +2,9 @@
 Test mixins for the plugin module.
 """
 
-import json
 import logging
 
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

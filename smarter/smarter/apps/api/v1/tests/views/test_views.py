@@ -1,6 +1,5 @@
 # pylint: disable=W0707,W0718,W0613
 """Views for unit tests."""
-import json
 import logging
 
 from rest_framework import serializers, status
@@ -8,6 +7,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib import json
 from smarter.lib.drf.view_helpers import (
     SmarterUnauthenticatedAPIListView,
     SmarterUnauthenticatedAPIView,

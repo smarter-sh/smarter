@@ -2,16 +2,15 @@
 """Django views"""
 
 import html
-import json
 
 from django import forms
 from django.core.handlers.wsgi import WSGIRequest
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
+from smarter.lib import json
 from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,
@@ -61,7 +60,7 @@ class ComingSoon(SmarterWebHtmlView):
                 }
             )
         html_error = html.escape(form.errors)
-        return JsonResponse({"error": json.dumps(html_error, cls=DjangoJSONEncoder)})
+        return JsonResponse({"error": json.dumps(html_error)})
 
 
 class EmailAdded(SmarterWebHtmlView):

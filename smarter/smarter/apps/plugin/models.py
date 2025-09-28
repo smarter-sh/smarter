@@ -4,7 +4,6 @@
 # python stuff
 import ast
 import io
-import json
 import logging
 import re
 import tempfile
@@ -20,7 +19,6 @@ import requests
 
 # django stuff
 from django.core.exceptions import ImproperlyConfigured
-from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
@@ -41,6 +39,7 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake
+from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -385,7 +384,7 @@ class PluginSelector(TimestampedModel, SmarterHelperMixin):
     )
 
     def __str__(self) -> str:
-        search_terms = json.dumps(self.search_terms, cls=DjangoJSONEncoder)[:50]
+        search_terms = json.dumps(self.search_terms)[:50]
         return f"{str(self.directive)} - {search_terms}"
 
 
@@ -1061,7 +1060,7 @@ class SqlConnection(ConnectionBase):
             # Convert each row to a dict
             result = [dict(zip(columns, row)) for row in rows]
             # Convert to JSON string (optional)
-            return json.dumps(result, indent=2, cls=DjangoJSONEncoder)
+            return json.dumps(result)
 
         if not isinstance(self.connection, BaseDatabaseWrapper):
             return False

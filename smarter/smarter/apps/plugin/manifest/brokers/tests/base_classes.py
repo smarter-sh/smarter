@@ -1,6 +1,5 @@
 """Test base classes for the plugin API tests."""
 
-import json
 import os
 from typing import Any, Optional
 
@@ -11,6 +10,7 @@ from smarter.apps.plugin.tests.base_classes import (
     TestPluginBase,
     TestPluginClassBase,
 )
+from smarter.lib import json
 from smarter.lib.drf.models import SmarterAuthToken
 
 

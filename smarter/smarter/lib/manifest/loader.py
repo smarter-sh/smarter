@@ -1,16 +1,15 @@
 """Smarter API Manifest Loader base class."""
 
-import json
 import logging
 from enum import Enum
 from typing import Any, Optional, Union
 
 import requests
 import yaml
-from django.core.serializers.json import DjangoJSONEncoder
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
+from smarter.lib import json
 
 from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
 from .exceptions import SAMExceptionBase
@@ -124,7 +123,7 @@ class SAMLoader(SmarterHelperMixin):
                 # if manifest is a string, assume it's a JSON/YAML string
                 self._raw_data = manifest
             elif isinstance(manifest, dict):
-                self._raw_data = json.dumps(manifest, cls=DjangoJSONEncoder)
+                self._raw_data = json.dumps(manifest)
             else:
                 raise SAMLoaderError(f"Invalid manifest format. Expected JSON string or dict but got {type(manifest)}")
         elif file_path:
@@ -207,7 +206,7 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def formatted_data(self) -> str:
-        return json.dumps(self.json_data, indent=4, cls=DjangoJSONEncoder)
+        return json.dumps(self.json_data)
 
     def pydantic_model_dump(self) -> dict:
         """

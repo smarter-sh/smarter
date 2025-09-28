@@ -1,13 +1,11 @@
 """Smarter API command-line interface Base class API view"""
 
-import json
 import logging
 import re
 import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
-from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -36,6 +34,7 @@ from smarter.common.exceptions import (
 from smarter.common.helpers.aws.exceptions import SmarterAWSError
 from smarter.common.helpers.k8s_helpers import KubernetesHelperException
 from smarter.common.utils import mask_string, smarter_build_absolute_uri
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
@@ -170,7 +169,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 self._loader = SAMLoader(
                     api_version=SMARTER_API_VERSION,
                     kind=self.manifest_kind,
-                    manifest=json.dumps(self.manifest_data, cls=DjangoJSONEncoder),
+                    manifest=json.dumps(self.manifest_data),
                 )
                 if not self._loader or not self._loader.ready:
                     raise APIV1CLIViewError("SAMLoader is not ready.")

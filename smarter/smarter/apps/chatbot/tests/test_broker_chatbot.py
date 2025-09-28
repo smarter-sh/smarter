@@ -1,13 +1,11 @@
 """Test SAM Chatbot Broker"""
 
-import json
 import logging
 import os
 from http import HTTPStatus
 
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
 from django.test import Client, RequestFactory
 
@@ -16,6 +14,7 @@ from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.utils import get_readonly_yaml_file
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -58,9 +57,7 @@ class TestSAMChatbotBroker(TestAccountMixin):
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
-        cls.broker = SAMChatbotBroker(
-            request=cls.request, account=cls.account, manifest=json.dumps(cls.manifest, cls=DjangoJSONEncoder)
-        )
+        cls.broker = SAMChatbotBroker(request=cls.request, account=cls.account, manifest=json.dumps(cls.manifest))
         cls.client = Client()
         cls.kwargs = {}
 

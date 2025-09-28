@@ -1,6 +1,5 @@
 """Views for the account settings."""
 
-import json
 import logging
 from http import HTTPStatus
 
@@ -10,6 +9,7 @@ from django.shortcuts import redirect
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.view_helpers import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches

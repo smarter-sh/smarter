@@ -1,7 +1,6 @@
 # pylint: disable=W0718
 """PluginMeta views."""
 
-import json
 from http import HTTPStatus
 from typing import Optional
 from urllib.parse import urljoin
@@ -25,6 +24,7 @@ from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import json
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,

@@ -1,9 +1,8 @@
 """Serializers for converting objects to JSON."""
 
 import datetime
-import json
 
-from django.core.serializers.json import DjangoJSONEncoder
+from smarter.lib import json
 
 
 __all__ = ["dumps", "serialize_python_dict"]
@@ -16,7 +15,7 @@ def datetime_handler(x):
 
 
 def dumps(data):
-    return json.dumps(data, default=datetime_handler, cls=DjangoJSONEncoder)
+    return json.dumps(data, default=datetime_handler)
 
 
 def serialize_python_dict(data: dict) -> dict:

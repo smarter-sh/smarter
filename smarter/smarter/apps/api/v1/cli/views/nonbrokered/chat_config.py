@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'chat' config view"""
 
-import json
 import logging
 from typing import Optional
 
@@ -11,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys

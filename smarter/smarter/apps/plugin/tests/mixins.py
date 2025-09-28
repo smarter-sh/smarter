@@ -2,12 +2,10 @@
 Test mixins for the plugin module.
 """
 
-import json
 import logging
 import os
 from typing import Optional
 
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest
 from django.test import Client
 
@@ -16,6 +14,7 @@ from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConne
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import ApiConnection, SqlConnection
 from smarter.common.utils import camel_to_snake_dict, get_readonly_yaml_file
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -93,7 +92,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         connection_manifest = get_readonly_yaml_file(connection_manifest_path)
         if not isinstance(connection_manifest, dict):
             raise ValueError(f"Connection manifest not found at {connection_manifest_path}")
-        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest, cls=DjangoJSONEncoder))
+        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest))
         connection_model = SAMApiConnection(**connection_loader.pydantic_model_dump())
         if not isinstance(connection_model, SAMApiConnection):
             raise ValueError("Connection model is not an instance of SAMApiConnection")
@@ -185,7 +184,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         connection_manifest = get_readonly_yaml_file(connection_manifest_path)
         if not isinstance(connection_manifest, dict):
             raise ValueError(f"Connection manifest not found at {connection_manifest_path}")
-        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest, cls=DjangoJSONEncoder))
+        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest))
         connection_model = SAMSqlConnection(**connection_loader.pydantic_model_dump())
 
         # 2.) transform the manifest for a django model

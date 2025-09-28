@@ -1,11 +1,9 @@
 # pylint: disable=W0718
 """Smarter API StaticPlugin Manifest handler"""
 
-import json
 import logging
 from typing import Optional, Type
 
-from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
@@ -33,6 +31,7 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -229,7 +228,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         if not isinstance(self.plugin, StaticPlugin):
             raise SAMBrokerErrorNotReady(
-                message=f"No plugin found. url: {request.build_absolute_uri()}, args={json.dumps(args, cls=DjangoJSONEncoder)}, kwargs={json.dumps(kwargs, cls=DjangoJSONEncoder)}",
+                message=f"No plugin found. url: {request.build_absolute_uri()}, args={json.dumps(args)}, kwargs={json.dumps(kwargs)}",
                 thing=self.kind,
                 command=command,
             )

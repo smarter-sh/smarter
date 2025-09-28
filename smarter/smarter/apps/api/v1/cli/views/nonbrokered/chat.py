@@ -1,14 +1,12 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'chat' view"""
 
-import json
 import logging
 import traceback
 from http import HTTPStatus
 from typing import Any, Optional
 
 from django.core.cache import cache
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
 from django.test import RequestFactory
 from django.views.decorators.csrf import csrf_exempt
@@ -22,6 +20,7 @@ from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -195,9 +194,9 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             if isinstance(self.data, dict):
                 new_body = self.data.copy()
                 new_body[SMARTER_CHAT_SESSION_KEY_NAME] = self.session_key
-                new_body = json.dumps(new_body, cls=DjangoJSONEncoder)
+                new_body = json.dumps(new_body)
             else:
-                new_body = json.dumps({SMARTER_CHAT_SESSION_KEY_NAME: self.session_key}, cls=DjangoJSONEncoder)
+                new_body = json.dumps({SMARTER_CHAT_SESSION_KEY_NAME: self.session_key})
 
             # pylint: disable=W0212
             request._body = new_body.encode("utf-8")
@@ -427,7 +426,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         logger.info(
             "%s.handler() 3. config: %s",
             self.formatted_class_name,
-            json.dumps(self.chat_config, indent=4, cls=DjangoJSONEncoder),
+            json.dumps(self.chat_config),
         )
 
         # create a Smarter chatbot request body
@@ -446,7 +445,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         logger.info(
             "%s.handler() 4. response_data: %s",
             self.formatted_class_name,
-            json.dumps(response_data, indent=4, cls=DjangoJSONEncoder),
+            json.dumps(response_data),
         )
         try:
             if not response_data:
@@ -475,9 +474,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
 
         data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
-        logger.info(
-            "%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data, indent=4, cls=DjangoJSONEncoder)
-        )
+        logger.info("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data))
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,

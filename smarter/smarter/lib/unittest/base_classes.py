@@ -3,17 +3,16 @@ Project level base classes for unit tests.
 """
 
 import csv
-import json
 import logging
 import unittest
 from typing import Union
 
 import yaml
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest
 from django.test import RequestFactory
 
 from smarter.common.utils import camel_to_snake, hash_factory
+from smarter.lib import json
 
 
 logger = logging.getLogger(__name__)
@@ -81,7 +80,7 @@ class SmarterTestBase(unittest.TestCase):
                 {"role": "user", "content": "Hello, World!"},
             ],
         }
-        json_data = json.dumps(json_data, cls=DjangoJSONEncoder).encode("utf-8")
+        json_data = json.dumps(json_data).encode("utf-8")
 
         headers = {}
         data = {}

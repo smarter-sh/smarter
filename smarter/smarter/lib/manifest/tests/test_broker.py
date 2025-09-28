@@ -1,6 +1,5 @@
 """Test abstract Broker class"""
 
-import json
 import logging
 import os
 from typing import Optional
@@ -9,6 +8,7 @@ from django.test import Client
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.const import PYTHON_ROOT
+from smarter.lib import json
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (

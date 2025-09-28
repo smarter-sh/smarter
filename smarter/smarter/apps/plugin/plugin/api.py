@@ -1,11 +1,8 @@
 """A Plugin that uses a REST API to retrieve its return data"""
 
 # python stuff
-import json
 import logging
 from typing import Any, Optional, Type
-
-from django.core.serializers.json import DjangoJSONEncoder
 
 # smarter stuff
 from smarter.apps.plugin.manifest.models.common import Parameter
@@ -13,6 +10,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -335,6 +333,6 @@ class ApiPlugin(PluginBase):
                 retval[SAMKeys.SPEC.value][SAMPluginSpecKeys.API_DATA.value] = (
                     self.plugin_data_serializer.data if self.plugin_data_serializer else None
                 )
-                return json.loads(json.dumps(retval, cls=DjangoJSONEncoder))
+                return json.loads(json.dumps(retval))
             raise SmarterPluginError(f"Invalid version: {version}")
         return None
