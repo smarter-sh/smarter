@@ -1,6 +1,5 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
-import json
 import logging
 from functools import cached_property
 from typing import Any, List, Optional, Type
@@ -31,6 +30,7 @@ from smarter.common.exceptions import SmarterConfigurationError, SmarterValueErr
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.common.utils import rfc1034_compliant_str, smarter_build_absolute_uri
+from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -997,7 +997,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         horizontal_line = "-" * (80 - 15)
         self.helper_logger(horizontal_line)
-        self.helper_logger(json.dumps(self.to_json(), indent=4))
+        self.helper_logger(json.dumps(self.to_json()))
         self.helper_logger(horizontal_line)
 
 

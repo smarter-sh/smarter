@@ -1,6 +1,5 @@
 # pylint: disable=W0718,W0613
 """ChatBot api/v1/chatbots CRUD views."""
-import json
 import logging
 from http import HTTPStatus
 from typing import Optional
@@ -28,6 +27,7 @@ from smarter.apps.chatbot.serializers import (
 )
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken

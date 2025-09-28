@@ -1,12 +1,11 @@
 # pylint: disable=W0613
 """Django REST framework views for the API admin app."""
-import json
-
 from django.shortcuts import render
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.schema import ApiV1CliSchemaApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib import json
 
 from .base import DocsBaseView
 
@@ -25,7 +24,7 @@ class DocsJsonSchemaBaseView(DocsBaseView):
         json_response = self.get_brokered_json_response(
             ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.schema, view, request, *args, **kwargs
         )
-        json_response = json.dumps(json_response, indent=4)
+        json_response = json.dumps(json_response)
         self.context["json_schema"] = json_response
         return render(request, self.template_path, context=self.context)
 

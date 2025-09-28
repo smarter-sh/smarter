@@ -1,6 +1,5 @@
 """A PLugin that returns a static json object stored in the Plugin itself."""
 
-import json
 import logging
 from typing import Any, Optional, Type
 
@@ -17,6 +16,7 @@ from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginStaticSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -255,21 +255,10 @@ class StaticPlugin(PluginBase):
                 )
 
             try:
-                return_data = (
-                    return_data[SAMStaticPluginSpecDataKeys.STATIC.value]
-                    if isinstance(return_data, dict)
-                    else return_data
-                )
-            except KeyError as e:
-                raise SmarterPluginError(
-                    f"Plugin {self.name} is missing a top-level key '{SAMStaticPluginSpecDataKeys.STATIC.value}' in return_data {json.dumps(return_data, indent=4)}",
-                ) from e
-
-            try:
                 retval = return_data[inquiry_type]
             except KeyError as e:
                 raise SmarterPluginError(
-                    f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}. Available keys are: {list(return_data.keys())} from return_data {json.dumps(return_data, indent=4)}",
+                    f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}. Available keys are: {list(return_data.keys())} from return_data {json.dumps(return_data)}.",
                 ) from e
 
             if retval is None:

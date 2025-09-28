@@ -2,7 +2,6 @@
 
 # pylint: disable=W0613
 
-import json
 import logging
 import os
 import subprocess
@@ -12,6 +11,7 @@ from typing import Tuple
 from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import get_readonly_yaml_file
+from smarter.lib import json
 
 from ..classes import Singleton, SmarterHelperMixin
 from ..conf import settings as smarter_settings

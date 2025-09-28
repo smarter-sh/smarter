@@ -63,6 +63,8 @@ make init           # initialize Python virtual environment, build the Docker co
 make docker-run     # runs all docker containers and starts a local web server http://127.0.0.1:8000/
 ```
 
+4. Login at http://localhost:8000/admin/login/ with user `admin` and password `smarter`.
+
 See these onboarding videos:
 
 - [Smarter Developer Onboarding #1](https://youtu.be/-hZEO9sMm1s)

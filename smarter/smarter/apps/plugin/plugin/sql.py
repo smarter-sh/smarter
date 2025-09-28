@@ -1,6 +1,5 @@
 """A PLugin that uses a remote SQL database server to retrieve its return data"""
 
-import json
 import logging
 import re
 from typing import Any, Optional, Type, Union
@@ -21,6 +20,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -431,7 +431,7 @@ class SqlPlugin(PluginBase):
             return ""
         if isinstance(retval, list) or isinstance(retval, dict):
             # convert the result to a JSON string
-            retval = json.dumps(retval, indent=2)
+            retval = json.dumps(retval)
         elif not isinstance(retval, str):
             raise SmarterSqlPluginError(
                 f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query returned an unexpected type: {type(retval)}. Expected str, list, or dict."

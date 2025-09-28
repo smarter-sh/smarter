@@ -2,14 +2,14 @@
 Base class for chat providers.
 """
 
-import json
 import logging
 import traceback
 from http import HTTPStatus
 from typing import Any, Dict, List, Optional, Union
 
-# 3rd party stuff
 import openai
+
+# 3rd party stuff
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.chat.chat_completion_message_tool_call import (
@@ -63,6 +63,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

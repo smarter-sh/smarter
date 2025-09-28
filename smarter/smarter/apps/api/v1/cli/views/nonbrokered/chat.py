@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'chat' view"""
 
-import json
 import logging
 import traceback
 from http import HTTPStatus
@@ -21,6 +20,7 @@ from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -423,7 +423,11 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         except TypeError as e:
             raise APIV1CLIViewError(f"Internal error. Chat config 'content' is missing: {chat_config}") from e
 
-        logger.info("%s.handler() 3. config: %s", self.formatted_class_name, json.dumps(self.chat_config, indent=4))
+        logger.info(
+            "%s.handler() 3. config: %s",
+            self.formatted_class_name,
+            json.dumps(self.chat_config),
+        )
 
         # create a Smarter chatbot request body
         request_body = self.chat_request_body_factory()
@@ -438,7 +442,11 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response = json.loads(chat_response.content)
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
-        logger.info("%s.handler() 4. response_data: %s", self.formatted_class_name, json.dumps(response_data, indent=4))
+        logger.info(
+            "%s.handler() 4. response_data: %s",
+            self.formatted_class_name,
+            json.dumps(response_data),
+        )
         try:
             if not response_data:
                 raise APIV1CLIChatViewError(f"Internal error. Chat response key 'data' is missing: {chat_response}")
@@ -466,7 +474,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
 
         data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
-        logger.info("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data, indent=4))
+        logger.info("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data))
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,

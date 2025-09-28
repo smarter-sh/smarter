@@ -1,12 +1,12 @@
 """Billing Views for the account dashboard."""
 
 import datetime
-import json
 import logging
 import os
 from pathlib import Path
 
 from smarter.common.utils import get_readonly_csv_file
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.view_helpers import SmarterAdminWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches

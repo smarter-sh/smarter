@@ -3,7 +3,6 @@
 # python stuff
 import copy
 import datetime
-import json
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -29,6 +28,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.utils import camel_to_snake as util_camel_to_snake
 from smarter.common.utils import snake_to_camel as util_snake_to_camel
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

@@ -1,7 +1,8 @@
 """Serializers for converting objects to JSON."""
 
 import datetime
-import json
+
+from smarter.lib import json
 
 
 __all__ = ["dumps", "serialize_python_dict"]

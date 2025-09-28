@@ -11,7 +11,6 @@ from typing import Any, Optional, Union
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.utils import DateTimeEncoder
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -61,10 +60,10 @@ def http_response_factory(status_code: int, body, debug_mode: bool = False) -> U
     if debug_mode:
         retval["body"] = body
         # log our output to the CloudWatch log for this Lambda
-        logger.info(json.dumps({"retval": retval}, cls=DateTimeEncoder))
+        logger.info(json.dumps({"retval": retval}))
 
     # see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
-    retval["body"] = json.dumps(body, cls=DateTimeEncoder)
+    retval["body"] = json.dumps(body)
 
     return retval
 

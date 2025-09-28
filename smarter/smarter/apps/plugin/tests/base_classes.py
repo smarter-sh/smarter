@@ -2,7 +2,6 @@
 
 # pylint: disable=W0104
 
-import json
 import logging
 import os
 from typing import Optional
@@ -13,7 +12,9 @@ from smarter.apps.plugin.manifest.models.common.connection.model import (
 )
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.models import PluginMeta
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -82,7 +83,9 @@ class TestPluginClassBase(TestAccountMixin):
     @property
     def loader(self) -> Optional[SAMLoader]:
         # initialize a SAMLoader object with the manifest raw data
-        if not self._loader and self.manifest:
+        if not self._loader:
+            if not self.manifest:
+                raise SmarterValueError(f"{self.__class__.__name__}.loader() called but manifest is None")
             logger.info("initializing SAMLoader from manifest data")
             self._loader = SAMLoader(manifest=json.dumps(self.manifest))
             self.assertIsNotNone(self._loader)

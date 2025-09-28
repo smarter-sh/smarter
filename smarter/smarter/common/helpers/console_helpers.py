@@ -1,11 +1,12 @@
 """Console helpers for formatting output."""
 
-import json
 from typing import Union
+
+from smarter.lib import json
 
 
 def formatted_json(json_obj: Union[dict, list]) -> str:
-    pretty_json = json.dumps(json_obj, indent=4)
+    pretty_json = json.dumps(json_obj)
     return f"\033[32m{pretty_json}\033[0m"
 
 

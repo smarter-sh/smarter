@@ -1,6 +1,5 @@
 """Test SAM Chatbot Broker"""
 
-import json
 import logging
 import os
 from http import HTTPStatus
@@ -15,6 +14,7 @@ from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.utils import get_readonly_yaml_file
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

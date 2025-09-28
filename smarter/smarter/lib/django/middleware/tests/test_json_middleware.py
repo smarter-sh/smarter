@@ -1,10 +1,10 @@
 """test JsonErrorMiddleware class"""
 
-import json
 from unittest.mock import MagicMock
 
 from django.http import HttpResponse, JsonResponse
 
+from smarter.lib import json
 from smarter.lib.django.middleware.json import JsonErrorMiddleware
 from smarter.lib.unittest.base_classes import SmarterTestBase
 

@@ -1,9 +1,9 @@
 """Test the SmarterJournaledJsonResponse class."""
 
-import json
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..http import SmarterJournaledJsonErrorResponse, SmarterJournaledJsonResponse
