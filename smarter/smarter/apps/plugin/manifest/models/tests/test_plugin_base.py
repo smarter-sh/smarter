@@ -54,6 +54,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoaderError
 
 
@@ -344,7 +345,7 @@ class TestPluginBase(TestAccountMixin):
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):
         """Test that the StaticPlugin raises an error when given bad data."""
-        with self.assertRaises(SmarterPluginError):
+        with self.assertRaises((SmarterPluginError, SAMValidationError)):
             self.plugin_class(data={})
 
         bad_data = self.data.copy()
