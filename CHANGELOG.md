@@ -1,3 +1,20 @@
+## [0.13.11](https://github.com/smarter-sh/smarter/compare/v0.13.10...v0.13.11) (2025-09-28)
+
+
+### Bug Fixes
+
+* AbstractBroker must be able to initialize from a manifest passed as a dict ([b3532a6](https://github.com/smarter-sh/smarter/commit/b3532a6adde3c0743dfba8f32f9ab1481f9210a2))
+* add DjangoJSONEncoder to every json.dumps() ([9306237](https://github.com/smarter-sh/smarter/commit/9306237cdcc0445afc77ea8b17a7df85eb97767f))
+* get_cached_user_for_user_id() needs to consider that User might not exist ([3152910](https://github.com/smarter-sh/smarter/commit/3152910c8e3e8849d252a226e2b53ff5c1955bad))
+* initialization error in TestSqlPlugin.sql_plugin_model() ([1ad9cbf](https://github.com/smarter-sh/smarter/commit/1ad9cbf8687d6fdd6e66ba4949c5563c5f6a7850))
+* key error in StaticPlugin.tool_call_fetch_plugin_response() ([681f8f8](https://github.com/smarter-sh/smarter/commit/681f8f8a0eed43f3d6050779026dfe0b61caa0e0))
+* leave the logger level bc WaffleSwitchedLoggerWrapper() manages this now ([66b6d57](https://github.com/smarter-sh/smarter/commit/66b6d57622e8720b688dd35e580a919b2b4123af))
+* new docs path inside Docker file system ([cb0bac9](https://github.com/smarter-sh/smarter/commit/cb0bac9a0dc0c39634fd9cc211190717c8242847))
+* reverts to using a data/docs/ folder ([770fb61](https://github.com/smarter-sh/smarter/commit/770fb6176cafccaf2d890249fa2e9f945cbeaca5))
+* temp patch of PluginPrompt.max_completion_tokens until gpt 4 models are deprecated ([51a5e14](https://github.com/smarter-sh/smarter/commit/51a5e14f46edae83a5a0403e55fe2a779269636f))
+* test_camel_to_snake() ([f5d9101](https://github.com/smarter-sh/smarter/commit/f5d9101befbe14379911ba9b44b43e4e4144d3c0))
+* tool_call is required ([b4b1fd4](https://github.com/smarter-sh/smarter/commit/b4b1fd495f8aabcb336f5a1403fe3d468bd086a4))
+
 ## [0.13.10](https://github.com/smarter-sh/smarter/compare/v0.13.9...v0.13.10) (2025-09-27)
 
 
