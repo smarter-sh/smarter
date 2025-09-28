@@ -670,7 +670,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         if not self.is_chatbot:
             self._err = f"ChatBotHelper.__init__() not a chatbot. Quitting. {self.url}"
-            logger.warning(self._err)
+            logger.debug(self._err)
             return None
 
         chatbot_helper_logger.info(
@@ -816,7 +816,7 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         if not isinstance(self._chatbot, ChatBot):
             self._err = f"{self.formatted_class_name}.is_chatbothelper_ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
-            logger.warning(self._err)
+            logger.debug(self._err)
             return False
         return True
 
@@ -825,7 +825,7 @@ class ChatBotHelper(SmarterRequestMixin):
         retval = bool(super().ready)
         if not retval:
             self._err = f"{self.formatted_class_name}.ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
-            logger.warning(self._err)
+            logger.debug(self._err)
         return retval and self.is_chatbothelper_ready
 
     def to_json(self) -> dict[str, Any]:
