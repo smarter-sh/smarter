@@ -52,41 +52,41 @@ spec:
       containers:
         - name: {{ .Values.appName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
-          command: ["gunicorn", "smarter.wsgi:application", "--bind", "0.0.0.0:{{ .Values.deployment.containerPort }}"]
+          command: ["gunicorn", "smarter.wsgi:application", "--bind", "0.0.0.0:{{ .Values.deployment.containerPort }}", "--workers=2", "--timeout=60", "--worker-class=sync"]
           imagePullPolicy: Always
           resources:
             requests:
-              memory: "500Mi"
-              cpu: "100m"
+              memory: "1Gi"
+              cpu: "400m"
             limits:
-              memory: "2Gi"
-              cpu: "1"
+              memory: "3Gi"
+              cpu: "2"
           livenessProbe:
             httpGet:
               path: /healthz
               port: {{ .Values.deployment.containerPort }}
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
             failureThreshold: 3
             successThreshold: 1
           readinessProbe:
             httpGet:
               path: /readiness
               port: {{ .Values.deployment.containerPort }}
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            timeoutSeconds: 3
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 3
             successThreshold: 1
           startupProbe:
             httpGet:
               path: /healthz
               port: {{ .Values.deployment.containerPort }}
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 30
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
             successThreshold: 1
           ports:
             - containerPort: {{ .Values.deployment.containerPort }}
