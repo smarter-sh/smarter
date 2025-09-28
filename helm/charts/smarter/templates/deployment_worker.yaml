@@ -52,40 +52,50 @@ spec:
       containers:
         - name: {{ .Values.workerName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
-          command: ["celery", "-A", "smarter.smarter_celery.app", "worker", "--concurrency=4", "--loglevel=info", "-Q", "default_celery_task_queue", "-E"]
+          command: ["celery", "-A", "smarter.smarter_celery.app", "worker", "--concurrency=2", "--loglevel=info", "-Q", "default_celery_task_queue", "-E"]
           imagePullPolicy: Always
           resources:
             requests:
-              memory: "500Mi"
-              cpu: "100m"
+              memory: "1Gi"
+              cpu: "225m"
             limits:
-              memory: "2Gi"
-              cpu: "1"
+              memory: "3Gi"
+              cpu: "2"
           livenessProbe:
             exec:
               command:
-                - celery
-                - -A
-                - smarter.smarter_celery.app
-                - inspect
-                - ping
-            initialDelaySeconds: 30
+                - /bin/sh
+                - -c
+                - "pgrep -f 'celery.*worker' > /dev/null"
+            initialDelaySeconds: 60
             periodSeconds: 30
-            timeoutSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 3
             successThreshold: 1
           startupProbe:
             exec:
               command:
+                - /bin/sh
+                - -c
+                - "pgrep -f 'celery.*worker' > /dev/null"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+            successThreshold: 1
+          readinessProbe:
+            exec:
+              command:
                 - celery
                 - -A
                 - smarter.smarter_celery.app
                 - inspect
                 - ping
-            initialDelaySeconds: 10
-            periodSeconds: 5
+                - --timeout=5
+            initialDelaySeconds: 45
+            periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 3
             successThreshold: 1
           env:
             - name: ROOT_DOMAIN
