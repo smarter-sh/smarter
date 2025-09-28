@@ -12,6 +12,7 @@ from json import (  # unmodified re-export
     JSONDecodeError,
     JSONDecoder,
     JSONEncoder,
+    load,
     loads,
 )
 
