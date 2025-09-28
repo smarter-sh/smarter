@@ -93,7 +93,7 @@ class AccountMixin(SmarterHelperMixin):
         if not request and args:
             for arg in args:
                 if isinstance(arg, RequestType):
-                    logger.info(
+                    logger.debug(
                         "%s.__init__(): received a request object: %s",
                         self.formatted_class_name,
                         self.smarter_build_absolute_uri(arg),
@@ -127,7 +127,7 @@ class AccountMixin(SmarterHelperMixin):
         # evaluate these in reverse order, so that the first one wins.
         if request is not None:
             url: str = self.smarter_build_absolute_uri(request)
-            logger.info("%s.__init__(): received a request object: %s", self.formatted_class_name, url)
+            logger.debug("%s.__init__(): received a request object: %s", self.formatted_class_name, url)
             if hasattr(request, "user") and not isinstance(request.user, AnonymousUser):
                 self._user = request.user  # type: ignore[union-attr]
                 if not isinstance(self._user, User):
