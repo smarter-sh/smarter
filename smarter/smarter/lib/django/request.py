@@ -160,7 +160,7 @@ class SmarterRequestMixin(AccountMixin):
         if request:
             self.init(request, *args, **kwargs)
         else:
-            logger.warning(
+            logger.debug(
                 "%s.__init__() - request is None. SmarterRequestMixin will be partially initialized. This might affect request processing.",
                 self.formatted_class_name,
             )
@@ -172,7 +172,7 @@ class SmarterRequestMixin(AccountMixin):
         from __init__() iif the request object is passed. It is also called
         from the smarter_request setter.
         """
-        url = smarter_build_absolute_uri(self.smarter_request)
+        url = smarter_build_absolute_uri(self.smarter_request) if self.smarter_request else None
 
         logger.info(
             "%s.init() - initializing with request=%s, args=%s, kwargs=%s", self.formatted_class_name, url, args, kwargs
