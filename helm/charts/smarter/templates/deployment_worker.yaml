@@ -61,6 +61,32 @@ spec:
             limits:
               memory: "2Gi"
               cpu: "1"
+          livenessProbe:
+            exec:
+              command:
+                - celery
+                - -A
+                - smarter
+                - inspect
+                - ping
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          startupProbe:
+            exec:
+              command:
+                - celery
+                - -A
+                - smarter
+                - inspect
+                - ping
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 10
+            failureThreshold: 30
+            successThreshold: 1
           env:
             - name: ROOT_DOMAIN
               value: "{{ .Values.env.ROOT_DOMAIN }}"
