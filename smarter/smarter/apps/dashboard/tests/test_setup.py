@@ -2,10 +2,11 @@
 # pylint: disable=duplicate-code
 """Test Search Lambda function."""
 
-# python stuff
-import json
 import os
 import sys
+
+# python stuff
+from smarter.lib import json
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))

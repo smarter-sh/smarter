@@ -1,7 +1,6 @@
 """Views for the account settings."""
 
 # python stuff
-import json
 import logging
 from http import HTTPStatus
 
@@ -12,6 +11,7 @@ from django.core.handlers.wsgi import WSGIRequest
 # our stuff
 from smarter.apps.account.admin import SecretAdminForm as SecretForm
 from smarter.apps.account.models import Secret
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,

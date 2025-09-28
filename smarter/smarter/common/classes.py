@@ -1,6 +1,5 @@
 """Common classes"""
 
-import json
 from logging import getLogger
 from typing import Any, Union
 
@@ -12,6 +11,7 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
+from smarter.lib import json
 
 
 logger = getLogger(__name__)

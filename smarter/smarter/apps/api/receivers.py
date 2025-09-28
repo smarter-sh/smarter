@@ -3,13 +3,13 @@
 # pylint: disable=W0613
 
 
-import json
 import logging
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

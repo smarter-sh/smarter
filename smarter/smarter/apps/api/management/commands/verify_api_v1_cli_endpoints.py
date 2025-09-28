@@ -1,12 +1,10 @@
 # pylint: disable=W0613
 """utility for running api/v1 cli endpoints to verify that they work."""
 
-import json
 import os
 
 import yaml
 from django.core.management.base import BaseCommand
-from django.core.serializers.json import DjangoJSONEncoder
 from django.test import Client
 from django.urls import reverse
 
@@ -18,6 +16,7 @@ from smarter.apps.account.utils import (
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
+from smarter.lib import json
 from smarter.lib.drf.models import SmarterAuthToken
 
 
@@ -116,7 +115,7 @@ class Command(BaseCommand):
             response_json = json.loads(response_content)
 
             self.stdout.write("url: " + self.style.NOTICE(url))
-            response = json.dumps(response_json, indent=4, cls=DjangoJSONEncoder) + "\n"
+            response = json.dumps(response_json) + "\n"
             self.stdout.write("response: " + self.style.SUCCESS(response))
 
         path = reverse(ApiV1CliReverseViews.namespace + "apply_view", kwargs={})

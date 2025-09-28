@@ -1,6 +1,5 @@
 """Test utility functions."""
 
-import json
 import os
 import tempfile
 from datetime import datetime
@@ -8,6 +7,7 @@ from datetime import datetime
 import yaml
 from pydantic import SecretStr
 
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..utils import (

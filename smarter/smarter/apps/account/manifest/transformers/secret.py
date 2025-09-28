@@ -1,14 +1,12 @@
 """A class for working with Secret manifests and the Secret Django ORM."""
 
 # python stuff
-import json
 import logging
 from typing import Any, Optional, Union
 
 import yaml
 
 # 3rd party stuff
-from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework import serializers
 
 from smarter.apps.account.manifest.enum import SAMSecretSpecKeys, SAMSecretStatusKeys
@@ -27,6 +25,7 @@ from smarter.apps.account.utils import get_user_profiles_for_account
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterException
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -157,7 +156,7 @@ class SecretTransformer(SmarterHelperMixin):
             loader = SAMLoader(
                 api_version=self.api_version,
                 kind=self.kind,
-                manifest=json.dumps(data, cls=DjangoJSONEncoder),
+                manifest=json.dumps(data),
             )
             if not loader.ready:
                 raise SAMValidationError("SAMLoader is not ready.")
@@ -618,5 +617,5 @@ class SecretTransformer(SmarterHelperMixin):
                     SAMSecretStatusKeys.LAST_ACCESSED.value: self.last_accessed,
                 },
             }
-            return json.loads(json.dumps(retval, cls=DjangoJSONEncoder))
+            return json.loads(json.dumps(retval))
         raise SmarterSecretTransformerError(f"Invalid version: {version}")

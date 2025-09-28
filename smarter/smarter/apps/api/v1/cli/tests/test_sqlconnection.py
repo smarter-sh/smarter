@@ -1,6 +1,5 @@
 """Test Api v1 CLI commands for SqlConnection"""
 
-import json
 import logging
 from http import HTTPStatus
 from typing import Optional
@@ -19,6 +18,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.enum import (
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys

@@ -1,12 +1,9 @@
 # pylint: disable=R0801,W0613
 """Test plugin base class."""
 
-# python stuff
-import json
 import logging
 from time import sleep
 
-from django.core.serializers.json import DjangoJSONEncoder
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import UserProfile
@@ -50,6 +47,9 @@ from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.utils import camel_to_snake, get_readonly_yaml_file
+
+# python stuff
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -224,10 +224,8 @@ class TestPluginBase(TestAccountMixin):
                 self.assertEqual(actual, expected)
             except AssertionError as e:
                 logger.error("Assertion failed for %s", field_description)
-                logger.error("to_json dump: %s", json.dumps(to_json, indent=2, cls=DjangoJSONEncoder))
-                raise AssertionError(
-                    f"{field_description} assertion failed. to_json: {json.dumps(to_json, indent=2, cls=DjangoJSONEncoder)}"
-                ) from e
+                logger.error("to_json dump: %s", json.dumps(to_json))
+                raise AssertionError(f"{field_description} assertion failed. to_json: {json.dumps(to_json)}") from e
 
         # ensure that we can go from json output to a string and back to json without error
         # taking into account that the PluginMeta name will always save in snake_case format.
@@ -504,7 +502,7 @@ class TestPluginBase(TestAccountMixin):
         self.assertTrue(self.signals["plugin_ready"])
 
         # ensure that we can go from json output to a string and back to json without error
-        to_json = json.loads(json.dumps(to_json, cls=DjangoJSONEncoder))
+        to_json = json.loads(json.dumps(to_json))
 
         # ensure that the json output still matches the original data
         self.assertIsInstance(to_json, dict)

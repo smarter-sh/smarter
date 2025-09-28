@@ -1,6 +1,5 @@
 # pylint: disable=W0707,W0718
 """User views for smarter api."""
-import json
 from http import HTTPStatus
 from typing import Optional
 
@@ -13,6 +12,7 @@ from rest_framework.response import Response
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.serializers import UserSerializer
+from smarter.lib import json
 
 from .base import AccountListViewBase, AccountViewBase
 

@@ -2,13 +2,13 @@
 Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models.
 """
 
-import json
 import logging
 from functools import cached_property
 from typing import Dict, Optional, Union
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 

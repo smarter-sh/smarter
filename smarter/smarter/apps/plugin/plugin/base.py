@@ -3,7 +3,6 @@
 # python stuff
 import copy
 import datetime
-import json
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -11,7 +10,6 @@ from typing import Any, Optional, Type, Union
 
 # 3rd party stuff
 import yaml
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.db.models.query import QuerySet
 from rest_framework import serializers
@@ -30,6 +28,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.utils import camel_to_snake as util_camel_to_snake
 from smarter.common.utils import snake_to_camel as util_snake_to_camel
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -191,7 +190,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             loader = SAMLoader(
                 api_version=data[SAMKeys.APIVERSION.value],
                 kind=self.kind,
-                manifest=json.dumps(data, cls=DjangoJSONEncoder) if isinstance(data, dict) else data,
+                manifest=json.dumps(data) if isinstance(data, dict) else data,
             )
             if not loader.ready:
                 raise SAMValidationError("Loader is not ready. SAMLoader is not ready.")
@@ -1073,6 +1072,6 @@ class PluginBase(ABC, SmarterHelperMixin):
                     raise SmarterConfigurationError(
                         f"{self.formatted_class_name}.to_json() error: {self.name} plugin_data_serializer.data is not a dict."
                     )
-                return json.loads(json.dumps(retval, cls=DjangoJSONEncoder))
+                return json.loads(json.dumps(retval))
             raise SmarterPluginError(f"Invalid version: {version}")
         return None
