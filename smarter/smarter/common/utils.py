@@ -248,8 +248,11 @@ def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, li
     """Converts camelCase dict keys to snake_case."""
 
     def convert(name: str):
+        name = name.replace(" ", "_")
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+        result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+        result = re.sub("_+", "_", result)
+        return result
 
     if isinstance(data, str):
         return convert(data)
