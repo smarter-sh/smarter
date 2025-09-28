@@ -50,6 +50,7 @@ RUN echo "ENVIRONMENT: $ENVIRONMENT"
 # ------
 # curl                      used below in this Dockerfile to download files
 # unzip                     used below in this Dockerfile to install aws cli
+# procps                    provides the 'ps' command, used for liveness/readiness probes of the beat pod in kubernetes
 FROM linux_base AS system_packages
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
@@ -64,7 +65,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   libmariadb-dev \
   git \
   curl \
-  unzip && \
+  unzip \
+  procps && \
   rm -rf /var/lib/apt/lists/*
 
 # Install kubectl, required for smarter/common/helpers/k8s_helpers.py
