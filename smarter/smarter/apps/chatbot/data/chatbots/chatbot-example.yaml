@@ -7,7 +7,7 @@ metadata:
 spec:
   apiKey: null
   config:
-    appAssistant: Kent
+    appAssistant: Lawrence
     appBackgroundImageUrl: null
     appExamplePrompts:
     - What is the weather in San Francisco?
