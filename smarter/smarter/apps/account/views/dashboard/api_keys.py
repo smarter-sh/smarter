@@ -1,6 +1,5 @@
 """Views for the account settings."""
 
-import json
 import logging
 from http import HTTPStatus
 from uuid import UUID
@@ -10,6 +9,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 from smarter.apps.account.utils import get_cached_user_profile
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,

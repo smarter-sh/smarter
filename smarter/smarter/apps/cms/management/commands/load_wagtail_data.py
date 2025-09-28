@@ -8,8 +8,6 @@ which is a more comprehensive tool for transferring
 Wagtail content between environments.
 """
 
-import json
-
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from wagtail.documents.models import Document
@@ -19,6 +17,7 @@ from wagtail.models import Page, Revision
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.cms.const import WAGTAIL_DUMP
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
+from smarter.lib import json
 
 
 # pylint: disable=E1101

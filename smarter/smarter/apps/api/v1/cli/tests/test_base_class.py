@@ -1,6 +1,5 @@
 """Test Api v1 CLI base class for brokered commands"""
 
-import json
 import logging
 from http import HTTPStatus
 from typing import Any
@@ -11,6 +10,7 @@ from rest_framework.test import APIClient
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys

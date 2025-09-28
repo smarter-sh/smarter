@@ -1,7 +1,6 @@
 """Django Signal Receivers for chatbot."""
 
 # pylint: disable=W0613,C0115
-import json
 import logging
 from typing import Optional
 
@@ -12,6 +11,7 @@ from django.http import HttpRequest
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import plugin_deleting
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

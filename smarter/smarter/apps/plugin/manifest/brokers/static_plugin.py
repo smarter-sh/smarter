@@ -1,7 +1,6 @@
 # pylint: disable=W0718
 """Smarter API StaticPlugin Manifest handler"""
 
-import json
 import logging
 from typing import Optional, Type
 
@@ -32,6 +31,7 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands

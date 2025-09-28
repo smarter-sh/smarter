@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Django signal receivers for plugin app."""
 
-import json
 import logging
 from typing import Optional, Union
 
@@ -12,6 +11,7 @@ from requests import Response
 
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

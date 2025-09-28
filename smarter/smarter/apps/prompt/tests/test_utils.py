@@ -1,12 +1,12 @@
 # pylint: disable=wrong-import-position
 """Test configuration Settings class."""
 
-# python stuff
-import json
 import os
 import sys
 from pathlib import Path
 
+# python stuff
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 

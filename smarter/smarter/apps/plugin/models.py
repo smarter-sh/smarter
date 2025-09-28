@@ -4,7 +4,6 @@
 # python stuff
 import ast
 import io
-import json
 import logging
 import re
 import tempfile
@@ -17,9 +16,9 @@ from urllib.parse import urljoin
 
 import paramiko
 import requests
-from django.core.exceptions import ImproperlyConfigured
 
 # django stuff
+from django.core.exceptions import ImproperlyConfigured
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
@@ -40,6 +39,7 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake
+from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -594,15 +594,7 @@ class PluginDataStatic(PluginDataBase):
 
         retval: Optional[list[Any]] = []
         if isinstance(self.static_data, dict):
-            data = self.static_data.get(SAMStaticPluginSpecDataKeys.STATIC.value)
-            if data is None:
-                logger.error(
-                    "%s.return_data_keys: static_data missing '%s' key: %s",
-                    self.formatted_class_name,
-                    SAMStaticPluginSpecDataKeys.STATIC.value,
-                    self.static_data,
-                )
-            retval = dict_keys_to_list(data=data) if isinstance(data, dict) else None
+            retval = dict_keys_to_list(data=self.static_data)
             retval = list(retval) if retval else None
         elif isinstance(self.static_data, list):
             retval = self.static_data

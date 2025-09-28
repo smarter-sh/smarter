@@ -55,7 +55,7 @@ spec:
       name: description
       required: false
       type: string
-    sqlQuery: SELECT c.course_code, c.course_name, c.description, prerequisite.course_code AS prerequisite_course_code
+    sqlQuery: SELECT c.course_code, c.course_name, c.description, c.cost, prerequisite.course_code AS prerequisite_course_code, prerequisite.course_name AS prerequisite_course_name
       FROM courses c
       LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id
       WHERE ((c.description LIKE CONCAT('%', {description}, '%')) OR ({description} IS NULL))

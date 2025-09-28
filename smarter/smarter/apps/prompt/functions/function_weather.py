@@ -19,7 +19,6 @@ openmeteo_requests Python package, which is a wrapper for the requests package. 
 to avoid repeated API calls, and to retry failed API calls.
 """
 
-import json
 import logging
 from typing import Optional
 
@@ -34,6 +33,7 @@ from retry_requests import retry
 
 from smarter.common.conf import settings
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

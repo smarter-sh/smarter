@@ -1,8 +1,9 @@
 """Logger helpers."""
 
 import datetime
-import json
 from typing import Union
+
+from smarter.lib import json
 
 
 def formatted_json(json_obj: Union[dict, list]) -> str:
@@ -11,7 +12,7 @@ def formatted_json(json_obj: Union[dict, list]) -> str:
             return obj.isoformat()
         raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
-    pretty_json = json.dumps(json_obj, indent=4, default=handle_datetime)
+    pretty_json = json.dumps(json_obj, default=handle_datetime)
     return f"\033[32m{pretty_json}\033[0m"
 
 

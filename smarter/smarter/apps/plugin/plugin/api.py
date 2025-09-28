@@ -1,7 +1,6 @@
 """A Plugin that uses a REST API to retrieve its return data"""
 
 # python stuff
-import json
 import logging
 from typing import Any, Optional, Type
 
@@ -11,6 +10,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

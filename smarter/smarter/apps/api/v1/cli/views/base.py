@@ -1,6 +1,5 @@
 """Smarter API command-line interface Base class API view"""
 
-import json
 import logging
 import re
 import traceback
@@ -35,6 +34,7 @@ from smarter.common.exceptions import (
 from smarter.common.helpers.aws.exceptions import SmarterAWSError
 from smarter.common.helpers.k8s_helpers import KubernetesHelperException
 from smarter.common.utils import mask_string, smarter_build_absolute_uri
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError

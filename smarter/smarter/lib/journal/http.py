@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
-import json
 import logging
 from http import HTTPStatus
 from typing import Optional, Union
@@ -11,6 +10,7 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.serializers import (
     HttpAnonymousRequestSerializer,

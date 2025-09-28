@@ -2,7 +2,6 @@
 """Django views"""
 
 import html
-import json
 
 from django import forms
 from django.core.handlers.wsgi import WSGIRequest
@@ -11,6 +10,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
+from smarter.lib import json
 from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,

@@ -24,7 +24,6 @@ configuration values. This is useful for debugging and logging.
 
 # python stuff
 import base64
-import json
 import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
@@ -39,6 +38,8 @@ from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from dotenv import load_dotenv
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
+
+from smarter.lib import json
 
 from ..lib.django.validators import SmarterValidator
 

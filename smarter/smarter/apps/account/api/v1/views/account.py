@@ -1,7 +1,6 @@
 # pylint: disable=W0707,W0718
 """Account views for smarter api."""
 
-import json
 import logging
 from http import HTTPStatus
 
@@ -13,6 +12,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

@@ -7,7 +7,6 @@ TODO: add `import validators` and study this library to see what can be removed 
       see https://python-validators.github.io/validators/
 """
 
-import json
 import logging
 import re
 import warnings
@@ -20,6 +19,7 @@ from django.core.validators import URLValidator, validate_email, validate_ipv4_a
 
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import json
 
 
 logger = logging.getLogger(__name__)
