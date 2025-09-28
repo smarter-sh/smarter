@@ -36,7 +36,7 @@ VALID_MANIFEST_KINDS = [SAMKinds.STATIC_PLUGIN.value, SAMKinds.SQL_PLUGIN.value,
 PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin]
 Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin]]
 SAMPluginType = type[SAMApiPlugin] | type[SAMSqlPlugin] | type[SAMStaticPlugin]
-SAMPlugins = Optional[Union[dict, SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin]]
+SAMPlugins = Optional[Union[dict, SAMPluginCommon, SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin]]
 PLUGIN_MAP: dict[str, PluginType] = {
     SAMKinds.API_PLUGIN.value: ApiPlugin,
     SAMKinds.SQL_PLUGIN.value: SqlPlugin,
