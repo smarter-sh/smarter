@@ -125,24 +125,8 @@ WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
 COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
 
-################################# data #################################
-FROM application AS data
-# Add our source code and make the 'smarter' directory the working directory
-# we want this to be the last step so that we can take advantage of Docker's
-# caching mechanism.
-WORKDIR /home/smarter_user/
-
-COPY --chown=smarter_user:smarter_user ./docs ./data/docs
-COPY --chown=smarter_user:smarter_user ./README.md ./data/docs/README.md
-COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/docs/CHANGELOG.md
-COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/docs/CODE_OF_CONDUCT.md
-COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
-COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
-COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
-
-
 ################################# permissuions #######################################
-FROM data AS permissions
+FROM application AS permissions
 
 # ensure that smarter_user owns everything and has the minimum
 # permissions needed to run the application and to manage files
@@ -167,9 +151,25 @@ RUN chown -R smarter_user:smarter_user /home/smarter_user/ && \
   chmod -R 700 /home/smarter_user/data && \
   chmod -R 700 /home/smarter_user/.cache
 
+################################# data #################################
+FROM permissions AS data
+# Add our source code and make the 'smarter' directory the working directory
+# we want this to be the last step so that we can take advantage of Docker's
+# caching mechanism.
+WORKDIR /home/smarter_user/
+
+COPY --chown=smarter_user:smarter_user ./docs ./data/docs
+COPY --chown=smarter_user:smarter_user ./README.md ./data/docs/README.md
+COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/docs/CHANGELOG.md
+COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/docs/CODE_OF_CONDUCT.md
+COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
+COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
+COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
+
+
 # Collect static files
 ############################## collect_assets ##################################
-FROM permissions AS collect_assets
+FROM data AS collect_assets
 WORKDIR /home/smarter_user/smarter
 RUN python manage.py collectstatic --noinput
 
