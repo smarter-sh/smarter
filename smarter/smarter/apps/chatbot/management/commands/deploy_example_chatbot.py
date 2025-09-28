@@ -36,7 +36,7 @@ class Command(BaseCommand):
         chatbot.default_max_tokens = SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
 
         chatbot.app_name = "Smarter Demo"
-        chatbot.app_assistant = "Kent"
+        chatbot.app_assistant = "Lawrence"
         chatbot.app_welcome_message = "Welcome to the Smarter demo!"
         chatbot.app_example_prompts = [
             "What is the weather in San Francisco?",

@@ -19,7 +19,7 @@ See this complete [example config](./json/reactapp.config.json) json dict, based
     "account": {},
     "name": "example",
     "app_name": "Smarter Demo",
-    "app_assistant": "Kent",
+    "app_assistant": "Lawrence",
     "app_welcome_message": "Welcome to the Smarter demo!",
     "app_example_prompts": [
       "What is the weather in San Francisco?",

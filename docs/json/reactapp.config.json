@@ -20,7 +20,7 @@
       "default_temperature": 0.5,
       "default_max_completion_tokens": 256,
       "app_name": "Smarter Demo",
-      "app_assistant": "Kent",
+      "app_assistant": "Lawrence",
       "app_welcome_message": "Welcome to the Smarter demo!",
       "app_example_prompts": [
         "What is the weather in San Francisco?",
