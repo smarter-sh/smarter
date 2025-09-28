@@ -1,3 +1,10 @@
+## [0.13.13](https://github.com/smarter-sh/smarter/compare/v0.13.12...v0.13.13) (2025-09-28)
+
+
+### Bug Fixes
+
+* wrap google authentication in try block ([6c07f63](https://github.com/smarter-sh/smarter/commit/6c07f6350e28be3d06c450d713a35cc2c650c60d))
+
 ## [0.13.12](https://github.com/smarter-sh/smarter/compare/v0.13.11...v0.13.12) (2025-09-28)
 
 
