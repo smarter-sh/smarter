@@ -135,6 +135,7 @@ docker-init:
 		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin" && \
 		python manage.py create_stackademy_sql_chatbot && \
 		python manage.py create_stackademy_api_chatbot && \
+		python manage.py update_secret --name smarter_test_db --username admin --value smarter_test_user && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
