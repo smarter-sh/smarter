@@ -1,83 +1,74 @@
-## [0.13.14](https://github.com/smarter-sh/smarter/compare/v0.13.13...v0.13.14) (2025-10-07)
-
-
-### Bug Fixes
-
-* favicon url ([6947591](https://github.com/smarter-sh/smarter/commit/6947591fa0414e147d76067ba1e6298269bc8ff0))
-
-## [0.13.13](https://github.com/smarter-sh/smarter/compare/v0.13.12...v0.13.13) (2025-09-28)
-
-
-### Bug Fixes
-
-* wrap google authentication in try block ([6c07f63](https://github.com/smarter-sh/smarter/commit/6c07f6350e28be3d06c450d713a35cc2c650c60d))
-
-## [0.13.12](https://github.com/smarter-sh/smarter/compare/v0.13.11...v0.13.12) (2025-09-28)
-
-
-### Bug Fixes
-
-* collect assets after permissions to improve caching ([ce932c8](https://github.com/smarter-sh/smarter/commit/ce932c87f7be9a71b156397db9cf961f8532c5f6))
-
-## [0.13.11](https://github.com/smarter-sh/smarter/compare/v0.13.10...v0.13.11) (2025-09-28)
-
-
-### Bug Fixes
-
-* AbstractBroker must be able to initialize from a manifest passed as a dict ([b3532a6](https://github.com/smarter-sh/smarter/commit/b3532a6adde3c0743dfba8f32f9ab1481f9210a2))
-* add DjangoJSONEncoder to every json.dumps() ([9306237](https://github.com/smarter-sh/smarter/commit/9306237cdcc0445afc77ea8b17a7df85eb97767f))
-* get_cached_user_for_user_id() needs to consider that User might not exist ([3152910](https://github.com/smarter-sh/smarter/commit/3152910c8e3e8849d252a226e2b53ff5c1955bad))
-* initialization error in TestSqlPlugin.sql_plugin_model() ([1ad9cbf](https://github.com/smarter-sh/smarter/commit/1ad9cbf8687d6fdd6e66ba4949c5563c5f6a7850))
-* key error in StaticPlugin.tool_call_fetch_plugin_response() ([681f8f8](https://github.com/smarter-sh/smarter/commit/681f8f8a0eed43f3d6050779026dfe0b61caa0e0))
-* leave the logger level bc WaffleSwitchedLoggerWrapper() manages this now ([66b6d57](https://github.com/smarter-sh/smarter/commit/66b6d57622e8720b688dd35e580a919b2b4123af))
-* new docs path inside Docker file system ([cb0bac9](https://github.com/smarter-sh/smarter/commit/cb0bac9a0dc0c39634fd9cc211190717c8242847))
-* reverts to using a data/docs/ folder ([770fb61](https://github.com/smarter-sh/smarter/commit/770fb6176cafccaf2d890249fa2e9f945cbeaca5))
-* temp patch of PluginPrompt.max_completion_tokens until gpt 4 models are deprecated ([51a5e14](https://github.com/smarter-sh/smarter/commit/51a5e14f46edae83a5a0403e55fe2a779269636f))
-* test_camel_to_snake() ([f5d9101](https://github.com/smarter-sh/smarter/commit/f5d9101befbe14379911ba9b44b43e4e4144d3c0))
-* tool_call is required ([b4b1fd4](https://github.com/smarter-sh/smarter/commit/b4b1fd495f8aabcb336f5a1403fe3d468bd086a4))
-
-## [0.13.10](https://github.com/smarter-sh/smarter/compare/v0.13.9...v0.13.10) (2025-09-27)
-
-
-### Bug Fixes
-
-* realign receiver params ([f4e0331](https://github.com/smarter-sh/smarter/commit/f4e03312a367894a1ebb44c34732cb85cab27a50))
-
-## [0.13.9](https://github.com/smarter-sh/smarter/compare/v0.13.8...v0.13.9) (2025-09-27)
-
-
-### Bug Fixes
-
-* we have to allow 'tool' role messages to pass to openai on thread history. otherwise we get a 400 response ([2ee2444](https://github.com/smarter-sh/smarter/commit/2ee24448aea1727ece585fadb57b40e5e1baff72))
-
-## [0.13.8](https://github.com/smarter-sh/smarter/compare/v0.13.7...v0.13.8) (2025-09-26)
-
-
-### Bug Fixes
-
-* should be cloning https://github.com/QueriumCorp/smarter-demo ([d9bd0a9](https://github.com/smarter-sh/smarter/commit/d9bd0a9805f1f7700b87a10cf6e73de9b19f6f74))
-* should be cloning https://github.com/QueriumCorp/smarter-demo ([2944098](https://github.com/smarter-sh/smarter/commit/29440980ed7e21d0b991cedbbdae1caef4b0f8e1))
-* sql syntax error ([c4b6dfe](https://github.com/smarter-sh/smarter/commit/c4b6dfe0e72fe224b897224b756f8a289cce761d))
-
-## [0.13.7](https://github.com/smarter-sh/smarter/compare/v0.13.6...v0.13.7) (2025-09-26)
-
-
-### Bug Fixes
-
-* ensure that chatbot name is rfc1034_compliant_str ([a1f486a](https://github.com/smarter-sh/smarter/commit/a1f486a84f2ebd27109ab1c63ccdc295475ba923))
-
-## [0.13.6](https://github.com/smarter-sh/smarter/compare/v0.13.5...v0.13.6) (2025-09-26)
-
-
-### Bug Fixes
-
-* logo and favicon ([8a5194b](https://github.com/smarter-sh/smarter/commit/8a5194b5f335f106bd37bc119c9943e67544aa93))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.13.14](https://github.com/smarter-sh/smarter/compare/v0.13.13...v0.13.14) (2025-10-07)
+
+### Bug Fixes
+
+- favicon url ([6947591](https://github.com/smarter-sh/smarter/commit/6947591fa0414e147d76067ba1e6298269bc8ff0))
+
+## [0.13.13](https://github.com/smarter-sh/smarter/compare/v0.13.12...v0.13.13) (2025-09-28)
+
+### Bug Fixes
+
+- wrap google authentication in try block ([6c07f63](https://github.com/smarter-sh/smarter/commit/6c07f6350e28be3d06c450d713a35cc2c650c60d))
+
+## [0.13.12](https://github.com/smarter-sh/smarter/compare/v0.13.11...v0.13.12) (2025-09-28)
+
+### Bug Fixes
+
+- collect assets after permissions to improve caching ([ce932c8](https://github.com/smarter-sh/smarter/commit/ce932c87f7be9a71b156397db9cf961f8532c5f6))
+
+## [0.13.11](https://github.com/smarter-sh/smarter/compare/v0.13.10...v0.13.11) (2025-09-28)
+
+### Bug Fixes
+
+- AbstractBroker must be able to initialize from a manifest passed as a dict ([b3532a6](https://github.com/smarter-sh/smarter/commit/b3532a6adde3c0743dfba8f32f9ab1481f9210a2))
+- add DjangoJSONEncoder to every json.dumps() ([9306237](https://github.com/smarter-sh/smarter/commit/9306237cdcc0445afc77ea8b17a7df85eb97767f))
+- get_cached_user_for_user_id() needs to consider that User might not exist ([3152910](https://github.com/smarter-sh/smarter/commit/3152910c8e3e8849d252a226e2b53ff5c1955bad))
+- initialization error in TestSqlPlugin.sql_plugin_model() ([1ad9cbf](https://github.com/smarter-sh/smarter/commit/1ad9cbf8687d6fdd6e66ba4949c5563c5f6a7850))
+- key error in StaticPlugin.tool_call_fetch_plugin_response() ([681f8f8](https://github.com/smarter-sh/smarter/commit/681f8f8a0eed43f3d6050779026dfe0b61caa0e0))
+- leave the logger level bc WaffleSwitchedLoggerWrapper() manages this now ([66b6d57](https://github.com/smarter-sh/smarter/commit/66b6d57622e8720b688dd35e580a919b2b4123af))
+- new docs path inside Docker file system ([cb0bac9](https://github.com/smarter-sh/smarter/commit/cb0bac9a0dc0c39634fd9cc211190717c8242847))
+- reverts to using a data/docs/ folder ([770fb61](https://github.com/smarter-sh/smarter/commit/770fb6176cafccaf2d890249fa2e9f945cbeaca5))
+- temp patch of PluginPrompt.max_completion_tokens until gpt 4 models are deprecated ([51a5e14](https://github.com/smarter-sh/smarter/commit/51a5e14f46edae83a5a0403e55fe2a779269636f))
+- test_camel_to_snake() ([f5d9101](https://github.com/smarter-sh/smarter/commit/f5d9101befbe14379911ba9b44b43e4e4144d3c0))
+- tool_call is required ([b4b1fd4](https://github.com/smarter-sh/smarter/commit/b4b1fd495f8aabcb336f5a1403fe3d468bd086a4))
+
+## [0.13.10](https://github.com/smarter-sh/smarter/compare/v0.13.9...v0.13.10) (2025-09-27)
+
+### Bug Fixes
+
+- realign receiver params ([f4e0331](https://github.com/smarter-sh/smarter/commit/f4e03312a367894a1ebb44c34732cb85cab27a50))
+
+## [0.13.9](https://github.com/smarter-sh/smarter/compare/v0.13.8...v0.13.9) (2025-09-27)
+
+### Bug Fixes
+
+- we have to allow 'tool' role messages to pass to openai on thread history. otherwise we get a 400 response ([2ee2444](https://github.com/smarter-sh/smarter/commit/2ee24448aea1727ece585fadb57b40e5e1baff72))
+
+## [0.13.8](https://github.com/smarter-sh/smarter/compare/v0.13.7...v0.13.8) (2025-09-26)
+
+### Bug Fixes
+
+- should be cloning https://github.com/QueriumCorp/smarter-demo ([d9bd0a9](https://github.com/smarter-sh/smarter/commit/d9bd0a9805f1f7700b87a10cf6e73de9b19f6f74))
+- should be cloning https://github.com/QueriumCorp/smarter-demo ([2944098](https://github.com/smarter-sh/smarter/commit/29440980ed7e21d0b991cedbbdae1caef4b0f8e1))
+- sql syntax error ([c4b6dfe](https://github.com/smarter-sh/smarter/commit/c4b6dfe0e72fe224b897224b756f8a289cce761d))
+
+## [0.13.7](https://github.com/smarter-sh/smarter/compare/v0.13.6...v0.13.7) (2025-09-26)
+
+### Bug Fixes
+
+- ensure that chatbot name is rfc1034_compliant_str ([a1f486a](https://github.com/smarter-sh/smarter/commit/a1f486a84f2ebd27109ab1c63ccdc295475ba923))
+
+## [0.13.6](https://github.com/smarter-sh/smarter/compare/v0.13.5...v0.13.6) (2025-09-26)
+
+### Bug Fixes
+
+- logo and favicon ([8a5194b](https://github.com/smarter-sh/smarter/commit/8a5194b5f335f106bd37bc119c9943e67544aa93))
 
 ## [0.13.5](https://github.com/smarter-sh/smarter/compare/v0.13.4...v0.13.5) (2025-09-26)
 
