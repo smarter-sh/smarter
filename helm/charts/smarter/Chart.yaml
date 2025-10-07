@@ -12,7 +12,7 @@ maintainers:
     email: lpm0073@gmail.com
 dependencies:
   - name: redis
-    version: 22.0.7
+    version: 23.1.1
     repository: https://charts.bitnami.com/bitnami
 icon: https://platform.smarter.sh/static/images/logo/smarter-crop.png
 keywords:
