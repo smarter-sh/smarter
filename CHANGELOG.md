@@ -1,3 +1,10 @@
+## [0.13.14](https://github.com/smarter-sh/smarter/compare/v0.13.13...v0.13.14) (2025-10-07)
+
+
+### Bug Fixes
+
+* favicon url ([6947591](https://github.com/smarter-sh/smarter/commit/6947591fa0414e147d76067ba1e6298269bc8ff0))
+
 ## [0.13.13](https://github.com/smarter-sh/smarter/compare/v0.13.12...v0.13.13) (2025-09-28)
 
 
