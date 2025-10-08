@@ -3,7 +3,7 @@
 import logging
 from functools import cached_property
 from typing import Any, List, Optional, Type
-from urllib.parse import ParseResult, urljoin
+from urllib.parse import ParseResult, urljoin, urlparse
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -377,25 +377,33 @@ class ChatBot(TimestampedModel):
             return self.Modes.UNKNOWN
         SmarterValidator.validate_url(url)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
+        parsed_url = urlparse(url)
+        input_hostname = parsed_url.netloc
 
         try:
             custom_url = SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-            if custom_url and custom_url in url:
-                return self.Modes.CUSTOM
+            if custom_url:
+                custom_hostname = urlparse(custom_url).netloc
+                if custom_hostname and input_hostname == custom_hostname:
+                    return self.Modes.CUSTOM
         except SmarterValueError:
             pass
 
         try:
             default_url = SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-            if default_url and default_url in url:
-                return self.Modes.DEFAULT
+            if default_url:
+                default_hostname = urlparse(default_url).netloc
+                if default_hostname and input_hostname == default_hostname:
+                    return self.Modes.DEFAULT
         except SmarterValueError:
             pass
 
         try:
             sandbox_url = SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-            if sandbox_url and sandbox_url in url:
-                return self.Modes.SANDBOX
+            if sandbox_url:
+                sandbox_hostname = urlparse(sandbox_url).netloc
+                if sandbox_hostname and input_hostname == sandbox_hostname:
+                    return self.Modes.SANDBOX
         except SmarterValueError:
             pass
 
