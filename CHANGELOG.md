@@ -1,3 +1,10 @@
+## [0.13.18](https://github.com/smarter-sh/smarter/compare/v0.13.17...v0.13.18) (2025-10-08)
+
+
+### Bug Fixes
+
+* add ingressClassName ([c9e6daa](https://github.com/smarter-sh/smarter/commit/c9e6daaebea8cd80bf3a10d1bfaabdc5d0802ee8))
+
 ## [0.13.17](https://github.com/smarter-sh/smarter/compare/v0.13.16...v0.13.17) (2025-10-08)
 
 
