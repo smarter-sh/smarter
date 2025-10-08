@@ -21,6 +21,10 @@ class BlockExcessive404Middleware(SmarterMiddlewareMixin):
 
     def process_response(self, request, response):
         if response.status_code == 404:
+            # skip this for authenticated users
+            if hasattr(request, "user") and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
+                return response
+
             client_ip = self.get_client_ip(request)
             throttle_key = f"excessive_404_throttle:{client_ip}"
             blocked_count = cache.get(throttle_key, 0)
