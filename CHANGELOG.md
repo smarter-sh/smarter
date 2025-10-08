@@ -1,3 +1,10 @@
+## [0.13.17](https://github.com/smarter-sh/smarter/compare/v0.13.16...v0.13.17) (2025-10-08)
+
+
+### Bug Fixes
+
+* ensure that plugin and chatbot urls are always rfc1034 compliant ([71eb6a1](https://github.com/smarter-sh/smarter/commit/71eb6a1352d2c0ffe570f0ce8a3d189ff55144fb))
+
 ## [0.13.16](https://github.com/smarter-sh/smarter/compare/v0.13.15...v0.13.16) (2025-10-08)
 
 
