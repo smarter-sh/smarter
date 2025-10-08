@@ -380,15 +380,7 @@ class ChatBot(TimestampedModel):
         parsed_url = urlparse(url)
         input_hostname = parsed_url.netloc
 
-        try:
-            custom_url = SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-            if custom_url:
-                custom_hostname = urlparse(custom_url).netloc
-                if custom_hostname and input_hostname == custom_hostname:
-                    return self.Modes.CUSTOM
-        except SmarterValueError:
-            pass
-
+        # most likely case first when running in production, at scale.
         try:
             default_url = SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)  # type: ignore[return-value]
             if default_url:
@@ -398,12 +390,23 @@ class ChatBot(TimestampedModel):
         except SmarterValueError:
             pass
 
+        # workbench sandbox mode
         try:
             sandbox_url = SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)  # type: ignore[return-value]
             if sandbox_url:
                 sandbox_hostname = urlparse(sandbox_url).netloc
                 if sandbox_hostname and input_hostname == sandbox_hostname:
                     return self.Modes.SANDBOX
+        except SmarterValueError:
+            pass
+
+        # custom domain mode. Least likely case.
+        try:
+            custom_url = SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)  # type: ignore[return-value]
+            if custom_url:
+                custom_hostname = urlparse(custom_url).netloc
+                if custom_hostname and input_hostname == custom_hostname:
+                    return self.Modes.CUSTOM
         except SmarterValueError:
             pass
 
