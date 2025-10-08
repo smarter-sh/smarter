@@ -1,3 +1,10 @@
+## [0.13.15](https://github.com/smarter-sh/smarter/compare/v0.13.14...v0.13.15) (2025-10-08)
+
+
+### Bug Fixes
+
+* ignore http protocol when determining mode() ([28b2b50](https://github.com/smarter-sh/smarter/commit/28b2b5073247075d569d34912f01e8e1d57d7ba5))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
