@@ -1,21 +1,19 @@
 """This module is used to suppress DisallowedHost exception and return HttpResponseForbidden instead."""
 
 import fnmatch
-import ipaddress
 import logging
 import re
 
 from django.core.cache import cache
 from django.http import HttpResponseForbidden
-from django.utils.deprecation import MiddlewareMixin
 
-from smarter.common.classes import SmarterHelperMixin
+from smarter.common.classes import SmarterMiddlewareMixin
 
 
 logger = logging.getLogger(__name__)
 
 
-class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
+class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     """Block requests for common sensitive files."""
 
     THROTTLE_LIMIT = 5
@@ -111,31 +109,6 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
             "*.pidfile",
             "ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application",
         }
-
-    def get_client_ip(self, request):
-        """Get client IP address from request."""
-        # Check for real IP from various proxy headers in order of preference
-        for header in ["HTTP_X_REAL_IP", "HTTP_X_FORWARDED_FOR", "HTTP_CF_CONNECTING_IP"]:
-            ip = request.META.get(header)
-            if ip:
-                # X-Forwarded-For can contain multiple IPs, take the first (original client)
-                if header == "HTTP_X_FORWARDED_FOR":
-                    ip = ip.split(",")[0].strip()
-                # Skip internal/private IP ranges (Kubernetes pods, load balancers)
-                if not self._is_private_ip(ip.strip()):
-                    return ip.strip()
-
-        # Fallback to REMOTE_ADDR (should not be used in production behind proxies)
-        return request.META.get("REMOTE_ADDR", "127.0.0.1")
-
-    def _is_private_ip(self, ip):
-        """Check if IP is in private/internal ranges."""
-        try:
-            ip_obj = ipaddress.ip_address(ip)
-            return ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local
-        except ValueError:
-            # Invalid IP format
-            return True
 
     def __call__(self, request):
         request_path = request.path.lower()
