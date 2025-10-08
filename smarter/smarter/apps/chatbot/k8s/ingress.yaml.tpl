@@ -25,6 +25,7 @@ metadata:
   name: ${domain}
   namespace: ${environment_namespace}
 spec:
+  ingressClassName: "default"
   rules:
     - host: ${domain}
       http:
