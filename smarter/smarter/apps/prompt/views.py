@@ -47,7 +47,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.helpers.url_helpers import clean_url
-from smarter.lib.cache import cache_results
+from smarter.common.utils import rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
@@ -476,7 +476,9 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         retval = super().dispatch(request, *args, **kwargs)
         if retval.status_code >= 400:
             return retval
+
         name = kwargs.pop("name", None)
+        name = rfc1034_compliant_to_snake(name) if name else None
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
         if self.user_profile is None:
             raise SmarterValueError("User profile is not set. Cannot proceed with ChatAppWorkbenchView dispatch.")
