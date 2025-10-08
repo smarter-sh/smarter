@@ -34,11 +34,10 @@ from smarter.apps.account.utils import get_cached_account_for_user
 
 # smarter stuff
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.plugin.manifest.enum import SAMStaticPluginSpecDataKeys
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import camel_to_snake, rfc1034_compliant_str
 from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -269,6 +268,22 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
         max_length=255,
         validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
     )
+
+    @property
+    def rfc1034_compliant_name(self) -> Optional[str]:
+        """
+        Returns a url friendly name for the chatbot.
+        This is a convenience property that returns
+        a RFC 1034 compliant name for the chatbot.
+
+        example:
+        - self.name: 'Example ChatBot 1'
+        - self.rfc1034_compliant_name: 'example-chatbot-1'
+        """
+        if self.name:
+            return rfc1034_compliant_str(self.name)
+        return None
+
     description = models.TextField(
         help_text="A brief description of the plugin. Be verbose, but not too verbose.",
     )
@@ -310,6 +325,21 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
             return SAMKinds.API_PLUGIN
         else:
             raise SmarterValueError(f"Unsupported plugin class: {self.plugin_class}")
+
+    @property
+    def rfc1034_compliant_kind(self) -> Optional[str]:
+        """
+        Returns a url friendly kind for the chatbot.
+        This is a convenience property that returns
+        a RFC 1034 compliant kind for the chatbot.
+
+        example:
+        - self.kind: 'Static'
+        - self.rfc1034_compliant_kind: 'static'
+        """
+        if self.kind:
+            return rfc1034_compliant_str(self.kind.value)
+        return None
 
     @classmethod
     @cache_results()
