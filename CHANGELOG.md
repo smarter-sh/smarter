@@ -1,3 +1,10 @@
+## [0.13.16](https://github.com/smarter-sh/smarter/compare/v0.13.15...v0.13.16) (2025-10-08)
+
+
+### Bug Fixes
+
+* evaluate the http request IP address rather than the internal ip of the pod ([8a68e05](https://github.com/smarter-sh/smarter/commit/8a68e05ffb147d6a15f264402181403199857799))
+
 ## [0.13.15](https://github.com/smarter-sh/smarter/compare/v0.13.14...v0.13.15) (2025-10-08)
 
 
