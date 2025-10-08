@@ -6,27 +6,18 @@ import logging
 
 from django.core.cache import cache
 from django.http import HttpResponseForbidden
-from django.utils.deprecation import MiddlewareMixin
 
-from smarter.common.classes import SmarterHelperMixin
+from smarter.common.classes import SmarterMiddlewareMixin
 
 
 logger = logging.getLogger(__name__)
 
 
-class BlockExcessive404Middleware(MiddlewareMixin, SmarterHelperMixin):
+class BlockExcessive404Middleware(SmarterMiddlewareMixin):
     """Block clients that trigger excessive 404 responses."""
 
     THROTTLE_LIMIT = 25
     THROTTLE_TIMEOUT = 600  # seconds (10 minutes)
-
-    def get_client_ip(self, request):
-        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(",")[0]
-        else:
-            ip = request.META.get("REMOTE_ADDR")
-        return ip
 
     def process_response(self, request, response):
         if response.status_code == 404:
