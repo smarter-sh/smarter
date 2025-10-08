@@ -1,7 +1,7 @@
 """Common classes"""
 
 import ipaddress
-from logging import getLogger
+import logging
 from typing import Any, Union
 
 import yaml
@@ -14,9 +14,18 @@ from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
 from smarter.lib import json
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= logging.INFO
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class Singleton(type):
@@ -119,33 +128,82 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
     def get_client_ip(self, request):
         """Get client IP address from request."""
 
-        # Temporary debugging - remove after fixing
-        ip_headers = {
-            k: v
-            for k, v in request.META.items()
-            if any(x in k.upper() for x in ["IP", "FORWARD", "CLIENT", "REAL", "REMOTE"])
-        }
-        logger.warning("Available IP headers: %s", ip_headers)
+        # In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
+        # Client -> CLB -> Nginx Ingress -> Django
+        # CLB adds X-Forwarded-For with original client IP
+        # Nginx may add X-Real-IP or modify X-Forwarded-For
 
-        # Check for real IP from various proxy headers in order of preference
-        for header in ["HTTP_X_REAL_IP", "HTTP_X_FORWARDED_FOR", "HTTP_CF_CONNECTING_IP"]:
-            ip = request.META.get(header)
-            if ip:
-                # X-Forwarded-For can contain multiple IPs, take the first (original client)
-                if header == "HTTP_X_FORWARDED_FOR":
-                    ip = ip.split(",")[0].strip()
-                # Skip internal/private IP ranges (Kubernetes pods, load balancers)
-                if not self._is_private_ip(ip.strip()):
-                    return ip.strip()
+        # First check X-Forwarded-For (most reliable for CLB)
+        forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if forwarded_for:
+            # X-Forwarded-For format: "client_ip, proxy1_ip, proxy2_ip"
+            # The leftmost IP is the original client IP
+            client_ip = forwarded_for.split(",")[0].strip()
+            # Validate it's not a private IP (load balancer/proxy IP)
+            if not self._is_private_ip(client_ip):
+                return client_ip
 
-        # Fallback to REMOTE_ADDR (should not be used in production behind proxies)
-        return request.META.get("REMOTE_ADDR", "127.0.0.1")
+        # Check X-Real-IP (set by Nginx ingress controller)
+        real_ip = request.META.get("HTTP_X_REAL_IP")
+        if real_ip and not self._is_private_ip(real_ip.strip()):
+            return real_ip.strip()
+
+        # Check Cloudflare connecting IP if using Cloudflare
+        cf_ip = request.META.get("HTTP_CF_CONNECTING_IP")
+        if cf_ip and not self._is_private_ip(cf_ip.strip()):
+            return cf_ip.strip()
+
+        # Fallback to REMOTE_ADDR (will be load balancer IP in AWS)
+        remote_addr = request.META.get("REMOTE_ADDR", "127.0.0.1")
+
+        # Log for debugging in case we're getting unexpected IPs
+        logger.info(
+            "%s.get_client_ip() - X-Forwarded-For: %s, X-Real-IP: %s, Remote-Addr: %s, returning: %s",
+            self.formatted_class_name,
+            forwarded_for,
+            real_ip,
+            remote_addr,
+            remote_addr,
+        )
+
+        return remote_addr
 
     def _is_private_ip(self, ip):
         """Check if IP is in private/internal ranges."""
         try:
             ip_obj = ipaddress.ip_address(ip)
+            logger.info(
+                "%s._is_private_ip() - Checking IP: %s, is_private: %s",
+                self.formatted_class_name,
+                ip,
+                ip_obj.is_private,
+            )
             return ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local
-        except ValueError:
-            # Invalid IP format
+        except ValueError as e:
+            logger.warning("%s._is_private_ip() - Invalid IP address: %s, error: %s", self.formatted_class_name, ip, e)
             return True
+
+    def has_auth_indicators(self, request):
+        """Check if request has authentication indicators (cookies, headers, etc.)."""
+
+        # Check for Django session cookie
+        if request.COOKIES.get("sessionid"):
+            return True
+
+        # Check for CSRF token (indicates active session)
+        if request.COOKIES.get("csrftoken"):
+            return True
+
+        # Check for Authorization header
+        if request.META.get("HTTP_AUTHORIZATION"):
+            return True
+
+        # Check for API key header
+        if request.META.get("HTTP_X_API_KEY"):
+            return True
+
+        # Check if user is authenticated (Django built-in)
+        if hasattr(request, "user") and request.user.is_authenticated:
+            return True
+
+        return False
