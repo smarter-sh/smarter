@@ -803,7 +803,7 @@ class ChatBotHelper(SmarterRequestMixin):
         return self.name
 
     @property
-    def name(self):
+    def name(self) -> Optional[str]:
         """
         Returns the name of the chatbot.
         valid possibilities:
@@ -817,6 +817,21 @@ class ChatBotHelper(SmarterRequestMixin):
 
         if self._name:
             return self._name
+
+    @property
+    def rfc1034_compliant_name(self) -> Optional[str]:
+        """
+        Returns a url friendly name for the chatbot.
+        This is a convenience property that returns
+        a RFC 1034 compliant name for the chatbot.
+
+        example:
+        - self.name: 'Example ChatBot 1'
+        - self.rfc1034_compliant_name: 'example-chatbot-1'
+        """
+        if self._chatbot:
+            return self._chatbot.rfc1034_compliant_name
+        return None
 
     @property
     def is_chatbothelper_ready(self) -> bool:

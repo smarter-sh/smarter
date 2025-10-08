@@ -17,6 +17,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
+from smarter.common.utils import rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
@@ -48,7 +49,8 @@ class PluginDetailView(DocsBaseView):
         if self.user is None:
             logger.error("Request user is None. This should not happen.")
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.name = kwargs.pop("name", None)
+        name = kwargs.pop("name", None)
+        self.name = rfc1034_compliant_to_snake(name) if name else None
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
         if self.kind is None:
             logger.error("Plugin kind is required but not provided.")

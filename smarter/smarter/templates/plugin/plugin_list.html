@@ -36,7 +36,7 @@
           <!--begin::Col Smarter plugin Card-->
           <div class="col-lg-6 mb-4 p-5">
             <!--begin::plugin card-->
-            <a href="{% url 'plugin:plugin_by_name' plugin.kind plugin.name %}">
+            <a href="{% url 'plugin:plugin_by_name' plugin.rfc1034_compliant_kind plugin.rfc1034_compliant_name %}">
               <div id="plugin_id_{{ plugin.id }}" class="card card-flush h-xl-100 plugin-card {% if plugin.user_profile == smarter_admin %}smarter-plugin-card{% else %}user-plugin-card{% endif %}">
                 <!--begin::Header-->
                 <div class="p-5">
