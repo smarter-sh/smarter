@@ -118,6 +118,15 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
 
     def get_client_ip(self, request):
         """Get client IP address from request."""
+
+        # Temporary debugging - remove after fixing
+        ip_headers = {
+            k: v
+            for k, v in request.META.items()
+            if any(x in k.upper() for x in ["IP", "FORWARD", "CLIENT", "REAL", "REMOTE"])
+        }
+        logger.warning("Available IP headers: %s", ip_headers)
+
         # Check for real IP from various proxy headers in order of preference
         for header in ["HTTP_X_REAL_IP", "HTTP_X_FORWARDED_FOR", "HTTP_CF_CONNECTING_IP"]:
             ip = request.META.get(header)
