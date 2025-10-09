@@ -127,6 +127,11 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
 
     def get_client_ip(self, request):
         """Get client IP address from request."""
+        logger.info(
+            "%s.get_client_ip() - ALL HEADERS: %s",
+            self.formatted_class_name,
+            {k: v for k, v in request.META.items() if k.startswith("HTTP_")},
+        )
 
         # In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
         # Client -> CLB -> Nginx Ingress -> Django
