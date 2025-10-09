@@ -28,11 +28,6 @@ class BlockExcessive404Middleware(SmarterMiddlewareMixin):
 
             client_ip = self.get_client_ip(request)
             if not client_ip:
-                logger.warning(
-                    "%s.process_response() - Could not determine client IP: %s",
-                    self.formatted_class_name,
-                    self.smarter_build_absolute_uri(request=request),
-                )
                 return response
 
             throttle_key = f"excessive_404_throttle:{client_ip}"
