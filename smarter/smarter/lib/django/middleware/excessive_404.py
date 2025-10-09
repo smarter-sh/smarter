@@ -5,6 +5,7 @@ Middleware to block clients that trigger excessive 404 responses.
 import logging
 
 from django.core.cache import cache
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseForbidden
 
 from smarter.common.classes import SmarterMiddlewareMixin
@@ -19,13 +20,16 @@ class BlockExcessive404Middleware(SmarterMiddlewareMixin):
     THROTTLE_LIMIT = 25
     THROTTLE_TIMEOUT = 600  # seconds (10 minutes)
 
-    def process_response(self, request, response):
+    def process_response(self, request: WSGIRequest, response):
         if response.status_code == 404:
             # skip this for authenticated users
             if hasattr(request, "user") and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
                 return response
 
             client_ip = self.get_client_ip(request)
+            if not client_ip:
+                return response
+
             throttle_key = f"excessive_404_throttle:{client_ip}"
             blocked_count = cache.get(throttle_key, 0)
             if blocked_count >= self.THROTTLE_LIMIT:
