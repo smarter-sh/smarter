@@ -177,25 +177,25 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
         )
 
         if not self._is_private_ip(remote_addr):
+            logger.info(
+                "%s.get_client_ip() - Using REMOTE_ADDR: %s",
+                self.formatted_class_name,
+                remote_addr,
+            )
             return remote_addr
 
-        logger.warning(
-            "%s __call()__ - Could not determine client IP: %s",
-            self.formatted_class_name,
-            self.smarter_build_absolute_uri(request=request),
-        )
+        if request.path.replace("/", "") not in self.amnesty_urls:
+            logger.warning(
+                "%s __call()__ - Could not determine client IP: %s",
+                self.formatted_class_name,
+                self.smarter_build_absolute_uri(request=request),
+            )
         return None
 
     def _is_private_ip(self, ip):
         """Check if IP is in private/internal ranges."""
         try:
             ip_obj = ipaddress.ip_address(ip)
-            logger.info(
-                "%s._is_private_ip() - Checking IP: %s, is_private: %s",
-                self.formatted_class_name,
-                ip,
-                ip_obj.is_private,
-            )
             return ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local
         except ValueError as e:
             logger.warning("%s._is_private_ip() - Invalid IP address: %s, error: %s", self.formatted_class_name, ip, e)
