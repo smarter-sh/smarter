@@ -127,11 +127,6 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
 
     def get_client_ip(self, request):
         """Get client IP address from request."""
-        logger.info(
-            "%s.get_client_ip() - ALL HEADERS: %s",
-            self.formatted_class_name,
-            {k: v for k, v in request.META.items() if k.startswith("HTTP_")},
-        )
 
         # In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
         # Client -> CLB -> Nginx Ingress -> Django
@@ -146,31 +141,40 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             client_ip = forwarded_for.split(",")[0].strip()
             # Validate it's not a private IP (load balancer/proxy IP)
             if not self._is_private_ip(client_ip):
+                logger.info(
+                    "%s.get_client_ip() - Using X-Forwarded-For: %s",
+                    self.formatted_class_name,
+                    client_ip,
+                )
                 return client_ip
 
         # Check X-Real-IP (set by Nginx ingress controller)
         real_ip = request.META.get("HTTP_X_REAL_IP")
         if real_ip and not self._is_private_ip(real_ip.strip()):
+            logger.info(
+                "%s.get_client_ip() - Using X-Real-IP: %s",
+                self.formatted_class_name,
+                real_ip.strip(),
+            )
             return real_ip.strip()
 
         # Check Cloudflare connecting IP if using Cloudflare
         cf_ip = request.META.get("HTTP_CF_CONNECTING_IP")
         if cf_ip and not self._is_private_ip(cf_ip.strip()):
+            logger.info(
+                "%s.get_client_ip() - Using CF-Connecting-IP: %s",
+                self.formatted_class_name,
+                cf_ip.strip(),
+            )
             return cf_ip.strip()
 
         # Fallback to REMOTE_ADDR (will be load balancer IP in AWS)
         remote_addr = request.META.get("REMOTE_ADDR", "127.0.0.1")
-
-        # Log for debugging in case we're getting unexpected IPs
         logger.info(
-            "%s.get_client_ip() - X-Forwarded-For: %s, X-Real-IP: %s, Remote-Addr: %s, returning: %s",
+            "%s.get_client_ip() - Falling back to REMOTE_ADDR: %s",
             self.formatted_class_name,
-            forwarded_for,
-            real_ip,
-            remote_addr,
             remote_addr,
         )
-
         return remote_addr
 
     def _is_private_ip(self, ip):
