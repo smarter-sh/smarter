@@ -112,8 +112,11 @@ class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
     def __call__(self, request):
         request_path = request.path.lower()
-        client_ip = self.get_client_ip(request)
+        if request_path in self.amnesty_urls:
+            logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
+            return self.get_response(request)
 
+        client_ip = self.get_client_ip(request)
         if not client_ip:
             return self.get_response(request)
 
