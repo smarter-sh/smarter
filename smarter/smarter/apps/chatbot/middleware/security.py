@@ -58,7 +58,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # these typically originate from health checks from load balancers.
         # ---------------------------------------------------------------------
         # Short-circuit for health checks
-        if request.path.replace("/", "") in ["healthz", "readiness", "liveness"]:
+        if request.path.replace("/", "") in self.amnesty_urls:
             return None
 
         host = request.get_host()
