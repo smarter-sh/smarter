@@ -112,7 +112,7 @@ class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
     def __call__(self, request):
         request_path = request.path.lower()
-        if request_path in self.amnesty_urls:
+        if request_path.replace("/", "") in self.amnesty_urls:
             logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
             return self.get_response(request)
 

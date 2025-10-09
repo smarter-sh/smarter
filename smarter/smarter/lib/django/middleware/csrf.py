@@ -91,7 +91,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
             )
 
         # Short-circuit for health checks
-        if request.path.replace("/", "") in ["healthz", "readiness", "liveness"]:
+        if request.path.replace("/", "") in self.amnesty_urls:
             return None
 
         # Short-circuit for any requests born from internal IP address hosts.
