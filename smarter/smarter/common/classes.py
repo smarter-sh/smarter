@@ -2,7 +2,7 @@
 
 import ipaddress
 import logging
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import yaml
 from django.http import HttpRequest
@@ -125,7 +125,7 @@ class SmarterHelperMixin:
 class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
     """A mixin for middleware classes with helper functions."""
 
-    def get_client_ip(self, request):
+    def get_client_ip(self, request) -> Optional[str]:
         """Get client IP address from request."""
 
         # In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
@@ -175,7 +175,9 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             self.formatted_class_name,
             remote_addr,
         )
-        return remote_addr
+
+        if not self._is_private_ip(remote_addr):
+            return remote_addr
 
     def _is_private_ip(self, ip):
         """Check if IP is in private/internal ranges."""
