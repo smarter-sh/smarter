@@ -114,6 +114,14 @@ class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         request_path = request.path.lower()
         client_ip = self.get_client_ip(request)
 
+        if not client_ip:
+            logger.warning(
+                "%s __call()__ - Could not determine client IP: %s",
+                self.formatted_class_name,
+                self.smarter_build_absolute_uri(request=request),
+            )
+            return self.get_response(request)
+
         # Throttle check
         throttle_key = f"sensitive_files_throttle:{client_ip}"
         blocked_count = cache.get(throttle_key, 0)
