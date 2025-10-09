@@ -2,7 +2,7 @@
 
 import ipaddress
 import logging
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import yaml
 from django.http import HttpRequest
@@ -125,7 +125,7 @@ class SmarterHelperMixin:
 class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
     """A mixin for middleware classes with helper functions."""
 
-    def get_client_ip(self, request):
+    def get_client_ip(self, request) -> Optional[str]:
         """Get client IP address from request."""
 
         # In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
@@ -141,32 +141,50 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             client_ip = forwarded_for.split(",")[0].strip()
             # Validate it's not a private IP (load balancer/proxy IP)
             if not self._is_private_ip(client_ip):
+                logger.info(
+                    "%s.get_client_ip() - Using X-Forwarded-For: %s",
+                    self.formatted_class_name,
+                    client_ip,
+                )
                 return client_ip
 
         # Check X-Real-IP (set by Nginx ingress controller)
         real_ip = request.META.get("HTTP_X_REAL_IP")
         if real_ip and not self._is_private_ip(real_ip.strip()):
+            logger.info(
+                "%s.get_client_ip() - Using X-Real-IP: %s",
+                self.formatted_class_name,
+                real_ip.strip(),
+            )
             return real_ip.strip()
 
         # Check Cloudflare connecting IP if using Cloudflare
         cf_ip = request.META.get("HTTP_CF_CONNECTING_IP")
         if cf_ip and not self._is_private_ip(cf_ip.strip()):
+            logger.info(
+                "%s.get_client_ip() - Using CF-Connecting-IP: %s",
+                self.formatted_class_name,
+                cf_ip.strip(),
+            )
             return cf_ip.strip()
 
         # Fallback to REMOTE_ADDR (will be load balancer IP in AWS)
         remote_addr = request.META.get("REMOTE_ADDR", "127.0.0.1")
-
-        # Log for debugging in case we're getting unexpected IPs
         logger.info(
-            "%s.get_client_ip() - X-Forwarded-For: %s, X-Real-IP: %s, Remote-Addr: %s, returning: %s",
+            "%s.get_client_ip() - Falling back to REMOTE_ADDR: %s",
             self.formatted_class_name,
-            forwarded_for,
-            real_ip,
-            remote_addr,
             remote_addr,
         )
 
-        return remote_addr
+        if not self._is_private_ip(remote_addr):
+            return remote_addr
+
+        logger.warning(
+            "%s __call()__ - Could not determine client IP: %s",
+            self.formatted_class_name,
+            self.smarter_build_absolute_uri(request=request),
+        )
+        return None
 
     def _is_private_ip(self, ip):
         """Check if IP is in private/internal ranges."""
