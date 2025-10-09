@@ -179,6 +179,13 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
         if not self._is_private_ip(remote_addr):
             return remote_addr
 
+        logger.warning(
+            "%s __call()__ - Could not determine client IP: %s",
+            self.formatted_class_name,
+            self.smarter_build_absolute_uri(request=request),
+        )
+        return None
+
     def _is_private_ip(self, ip):
         """Check if IP is in private/internal ranges."""
         try:
