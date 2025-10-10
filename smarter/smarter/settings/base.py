@@ -17,6 +17,7 @@ import logging
 import logging.config
 import math
 import os
+import re
 import secrets
 import subprocess
 import sys
@@ -489,6 +490,16 @@ DJSTRIPE_WEBHOOK_SECRET = (
 )
 DJSTRIPE_USE_NATIVE_JSONFIELD = True  # We recommend setting to True for new installations
 DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
+
+SENSITIVE_FILES_AMNESTY_PATTERNS = [
+    re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
+    re.compile(r"^/api(/.*)?$"),
+    re.compile(r"^/admin(/.*)?$"),
+    re.compile(r"^/plugin(/.*)?$"),
+    re.compile(r"^/docs/manifest(/.*)?$"),
+    re.compile(r"^/docs/json-schema(/.*)?$"),
+    re.compile(r".*stackademy.*"),
+]
 
 SMTP_SENDER = smarter_settings.smtp_sender
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email
