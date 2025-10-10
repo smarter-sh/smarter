@@ -7,6 +7,7 @@ from typing import ClassVar, Optional
 from pydantic import EmailStr, Field, field_validator
 
 from smarter.apps.provider.manifest.models.provider.const import MANIFEST_KIND
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -20,7 +21,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
+        and level >= smarter_settings.log_level
     )
 
 

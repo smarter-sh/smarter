@@ -19,6 +19,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.enum import (
 )
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -49,7 +50,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
         or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= logging.INFO
+    ) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

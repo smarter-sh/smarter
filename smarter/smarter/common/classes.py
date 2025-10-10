@@ -8,6 +8,7 @@ import yaml
 from django.http import HttpRequest
 from django.utils.deprecation import MiddlewareMixin
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import (
@@ -22,7 +23,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return (
-        waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= logging.INFO
+        waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= smarter_settings.log_level
     ) or level >= logging.WARNING
 
 

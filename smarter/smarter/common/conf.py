@@ -228,6 +228,8 @@ class SettingsDefaults:
     LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
     LOCAL_HOSTS.append("testserver")
 
+    LOG_LEVEL: int = logging.DEBUG if DEBUG_MODE else logging.INFO
+
     LOGO: str = os.environ.get(
         "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
     )
@@ -349,14 +351,16 @@ class Settings(BaseSettings):
     def __init__(self, **data: Any):  # noqa: C901
         super().__init__(**data)
 
-        if self.debug_mode:
-            logger.setLevel(logging.DEBUG)
+        logger.setLevel(SettingsDefaults.LOG_LEVEL)
 
         # pylint: disable=logging-fstring-interpolation
         logger.debug("Settings initialized")
 
     shared_resource_identifier: str = Field(SettingsDefaults.SHARED_RESOURCE_IDENTIFIER)
     debug_mode: bool = Field(SettingsDefaults.DEBUG_MODE)
+    log_level: int = Field(
+        SettingsDefaults.LOG_LEVEL
+    )  # e.g., logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
     dump_defaults: bool = Field(SettingsDefaults.DUMP_DEFAULTS)
     aws_profile: Optional[str] = Field(
         SettingsDefaults.AWS_PROFILE,
