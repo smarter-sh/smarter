@@ -4,6 +4,7 @@ import fnmatch
 import logging
 import re
 
+from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponseForbidden
 
@@ -33,15 +34,9 @@ class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         self.get_response = get_response
 
         # grant amnesty for specific patterns
-        self.allowed_patterns = [
-            re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
-            re.compile(r"^/api(/.*)?$"),
-            re.compile(r"^/admin(/.*)?$"),
-            re.compile(r"^/plugin(/.*)?$"),
-            re.compile(r"^/docs/manifest(/.*)?$"),
-            re.compile(r"^/docs/json-schema(/.*)?$"),
-            re.compile(r".*stackademy.*"),
-        ]
+        self.allowed_patterns = (
+            settings.SENSITIVE_FILES_AMNESTY_PATTERNS if hasattr(settings, "SENSITIVE_FILES_AMNESTY_PATTERNS") else []
+        )
         self.sensitive_files = {
             ".env",
             "config.php",
@@ -122,7 +117,7 @@ class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     def __call__(self, request):
         request_path = request.path.lower()
         if request_path.replace("/", "") in self.amnesty_urls:
-            logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
+            logger.debug("%s amnesty granted to: %s", self.formatted_class_name, request.path)
             return self.get_response(request)
 
         client_ip = self.get_client_ip(request)
@@ -150,7 +145,7 @@ class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
             ):
                 for pattern in self.allowed_patterns:
                     if pattern.match(request_path):
-                        logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
+                        logger.debug("%s amnesty granted to: %s", self.formatted_class_name, request.path)
                         return self.get_response(request)
 
                 logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
