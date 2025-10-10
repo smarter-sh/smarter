@@ -17,6 +17,7 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import ConnectionBase
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.django import waffle
@@ -28,7 +29,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

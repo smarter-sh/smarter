@@ -10,6 +10,7 @@ from smarter.apps.account.models import User
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -26,7 +27,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
+        and level >= smarter_settings.log_level
     )
 
 

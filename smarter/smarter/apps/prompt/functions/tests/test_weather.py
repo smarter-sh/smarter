@@ -9,6 +9,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
     Function,
 )
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -20,7 +21,7 @@ from ..function_weather import get_current_weather, weather_tool_factory
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

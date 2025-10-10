@@ -10,6 +10,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
@@ -27,7 +28,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
-    ) and level >= logging.INFO
+    ) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

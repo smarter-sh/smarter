@@ -19,6 +19,7 @@ from typing import Any, Optional
 from django.contrib.auth.models import AnonymousUser
 
 from smarter.apps.account.models import User, get_resolved_user
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -36,7 +37,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
         or waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
-    ) and level >= logging.INFO
+    ) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
