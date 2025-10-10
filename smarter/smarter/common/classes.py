@@ -129,12 +129,24 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
     """A mixin for middleware classes with helper functions."""
 
     def get_client_ip(self, request) -> Optional[str]:
-        """Get client IP address from request."""
+        """
+        Get client IP address from request.
 
-        # In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
-        # Client -> CLB -> Nginx Ingress -> Django
-        # CLB adds X-Forwarded-For with original client IP
-        # Nginx may add X-Real-IP or modify X-Forwarded-For
+        This is harder than it seems due to proxies, load balancers,
+        and CDNs. This implementation checks common headers set by
+        proxies and falls back to REMOTE_ADDR.
+
+        Note the following:
+        - In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
+        - Client -> CLB -> Nginx Ingress -> Django
+        - CLB adds X-Forwarded-For with original client IP
+        - Nginx may add X-Real-IP or modify X-Forwarded-For
+        - Django sees REMOTE_ADDR as the Nginx IP (not useful for client IP)
+
+        - If using Cloudflare, it adds CF-Connecting-IP header with original client IP
+        - Always validate IPs to avoid trusting spoofed headers
+
+        """
 
         # First check X-Forwarded-For (most reliable for CLB)
         forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
