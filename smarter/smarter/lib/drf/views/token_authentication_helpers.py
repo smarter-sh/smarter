@@ -232,5 +232,11 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
             smarter_build_absolute_uri(self.request),
             self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
         )
-        api_request_completed.send(sender=self.__class__, instance=self, request=self.request, response=response)
         return response
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        logger.info(
+            "%s.finalize_response() called for %s", self.formatted_class_name, smarter_build_absolute_uri(request)
+        )
+        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+        return super().finalize_response(request, response, *args, **kwargs)
