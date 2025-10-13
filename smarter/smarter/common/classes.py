@@ -199,7 +199,7 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             )
             return remote_addr
 
-        if request.path.replace("/", "") not in self.amnesty_urls:
+        if request.path.replace("/", "") not in self.amnesty_urls and not smarter_settings.environment_is_local:
             logger.warning(
                 "%s __call()__ - Could not determine client IP: %s",
                 self.formatted_class_name,

@@ -30,6 +30,7 @@ from django import get_version
 from social_core.backends.linkedin import LinkedinOAuth2
 
 from smarter.__version__ import __version__ as smarter_version
+from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
 
 # Add proprietary settings for the project
 from .smarter import *  # noqa: E402, F401, W0401
@@ -169,6 +170,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_hosts",
     "storages",
     # smarter apps
     # -------------------------------
@@ -215,6 +217,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django_hosts.middleware.HostsRequestMiddleware",
     # this replaces corsheaders.middleware.CorsMiddleware"
     "smarter.lib.django.middleware.cors.CorsMiddleware",
     # this replaces django.middleware.security.SecurityMiddleware
@@ -255,10 +258,13 @@ MIDDLEWARE = [
     # -------------------------------
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "smarter.apps.cms.middleware.HTMLMinifyMiddleware",
+    "django_hosts.middleware.HostsResponseMiddleware",
     #
 ]
 
+ROOT_HOSTCONF = "smarter.hosts"
 ROOT_URLCONF = "smarter.urls"
+DEFAULT_HOST = SMARTER_PLATFORM_SUBDOMAIN
 
 TEMPLATES = [
     {

@@ -486,6 +486,11 @@ class Settings(BaseSettings):
         return "/home/smarter_user/data"
 
     @property
+    def environment_is_local(self) -> bool:
+        """Return True if the environment is local"""
+        return self.environment == SmarterEnvironments.LOCAL
+
+    @property
     def environment_cdn_domain(self) -> str:
         """
         Return the CDN domain.
