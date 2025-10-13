@@ -2,8 +2,6 @@
 """Account views for smarter api."""
 import logging
 
-from django.shortcuts import get_object_or_404
-
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.serializers import AccountSerializer
 from smarter.common.conf import settings as smarter_settings
@@ -34,7 +32,8 @@ class AccountViewBase(SmarterAdminAPIView):
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code < 300 and isinstance(request.user, User):
-            self.user_profile = get_object_or_404(UserProfile, user=request.user)
+            # we now have to consider superuser accounts that are associated with multiple accounts
+            self.user_profile = UserProfile.objects.filter(user=request.user).first()
         return response
 
 
@@ -52,7 +51,8 @@ class AccountListViewBase(SmarterAdminListAPIView):
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
         )
         if response.status_code < 300 and isinstance(request.user, User):
-            self.user_profile = get_object_or_404(UserProfile, user=request.user)
+            # we now have to consider superuser accounts that are associated with multiple accounts
+            self.user_profile = UserProfile.objects.filter(user=request.user).first()
         return response
 
     def setup(self, request, *args, **kwargs):
