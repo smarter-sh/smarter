@@ -20,12 +20,18 @@ host_patterns = patterns(
         rf"{SMARTER_API_SUBDOMAIN}", "smarter.urls_api", name=SMARTER_API_SUBDOMAIN
     ),  # for https://api.platform.smarter.sh/
     host(
-        rf"{SmarterEnvironments.ALPHA}.{SMARTER_API_SUBDOMAIN}", "smarter.urls_api", name=SMARTER_API_SUBDOMAIN
+        rf"{SmarterEnvironments.ALPHA}.{SMARTER_API_SUBDOMAIN}",
+        "smarter.urls_api",
+        name=f"{SmarterEnvironments.ALPHA}_{SMARTER_API_SUBDOMAIN}",
     ),  # for https://alpha.api.platform.smarter.sh/
     host(
-        rf"{SmarterEnvironments.BETA}.{SMARTER_API_SUBDOMAIN}", "smarter.urls_api", name=SMARTER_API_SUBDOMAIN
+        rf"{SmarterEnvironments.BETA}.{SMARTER_API_SUBDOMAIN}",
+        "smarter.urls_api",
+        name=f"{SmarterEnvironments.BETA}_{SMARTER_API_SUBDOMAIN}",
     ),  # for https://beta.api.platform.smarter.sh/
     host(
-        rf"{SmarterEnvironments.NEXT}.{SMARTER_API_SUBDOMAIN}", "smarter.urls_api", name=SMARTER_API_SUBDOMAIN
+        rf"{SmarterEnvironments.NEXT}.{SMARTER_API_SUBDOMAIN}",
+        "smarter.urls_api",
+        name=f"{SmarterEnvironments.NEXT}_{SMARTER_API_SUBDOMAIN}",
     ),  # for https://next.api.platform.smarter.sh/
 )
