@@ -166,7 +166,8 @@ class SmarterRequestMixin(AccountMixin):
                 self.formatted_class_name,
             )
             super().__init__(request, *args, api_token=self.api_token, **kwargs)
-        self.smarter_request.user = self.user
+        if self.smarter_request:
+            self.smarter_request.user = self.user
 
     def init(self, request: HttpRequest, *args, **kwargs):
         """
