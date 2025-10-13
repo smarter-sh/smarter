@@ -4,6 +4,7 @@
 
 
 import logging
+from typing import Optional
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.dispatch import receiver
@@ -43,23 +44,24 @@ def handle_api_request_initiated(sender, instance: CliBaseApiView, request: WSGI
 @receiver(api_request_completed, dispatch_uid="api_request_completed")
 def handle_api_request_completed(sender, instance: CliBaseApiView, request: WSGIRequest, response, **kwargs):
     """Handle API request completed signal."""
-    json_content: dict
+    json_content: Optional[dict]
     try:
         json_content = json.loads(response.content)
     # pylint: disable=W0718
     except Exception:
-        logger.warning("recasting json response.content failed. attempting to decode as utf-8")
+        logger.warning(
+            "handle_api_request_completed: recasting json response.content failed. attempting to decode as utf-8"
+        )
         try:
             json_content = response.content.decode("utf-8", errors="replace")
             json_content = json.loads(json_content) if isinstance(json_content, str) else json_content
         except Exception:
-            logger.error("handle_api_request_completed() failed to decode json content")
-            return None
+            json_content = None
 
     logger.info(
         "%s - %s - %s\n%s",
         formatted_text("smarter.apps.api.receivers.api_request_completed"),
         instance.__class__.__name__,
         request.path,
-        formatted_json(json_content),
+        formatted_json(json_content) if isinstance(json_content, dict) else json_content,
     )

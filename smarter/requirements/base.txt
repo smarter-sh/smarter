@@ -133,6 +133,8 @@ django-filter==25.1
     # via
     #   -r smarter/requirements/in/base.in
     #   wagtail
+django-hosts==7.0.0
+    # via -r smarter/requirements/in/base.in
 django-modelcluster==6.4
     # via wagtail
 django-permissionedforms==0.1

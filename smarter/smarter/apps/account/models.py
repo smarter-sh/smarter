@@ -106,6 +106,7 @@ def get_resolved_user(
     Maps the various kinds of Django user subclasses and mutations to the User.
     Used for resolving type annotations and ensuring type safety.
     """
+    logger.info("get_resolved_user() called for user type: %s", type(user))
     if user is None:
         return None
 

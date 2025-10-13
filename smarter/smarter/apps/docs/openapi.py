@@ -2,6 +2,7 @@
 
 from django.conf import settings
 from drf_yasg import openapi
+from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
@@ -25,10 +26,28 @@ api_info = openapi.Info(
     ),
 )
 
+
+class ApiKeySchemaGenerator(OpenAPISchemaGenerator):
+    """Custom schema generator to add API key auth while preserving default session auth."""
+
+    def get_security_definitions(self):
+        security_defs = super().get_security_definitions()
+        if not isinstance(security_defs, dict):
+            security_defs = {}
+        security_defs["ApiKeyAuth"] = {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "Enter your token as: Token <your_token>",
+        }
+        return security_defs
+
+
 schema_view = get_schema_view(
     info=api_info,
     url=smarter_settings.environment_api_url,
     public=True,
     permission_classes=(permissions.AllowAny,),
     patterns=api_urls.urlpatterns,
+    generator_class=ApiKeySchemaGenerator,
 )

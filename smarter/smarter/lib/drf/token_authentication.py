@@ -8,9 +8,13 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.apps.account.models import User
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterException
 from smarter.common.utils import mask_string
 from smarter.lib.cache import cache_results
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import SmarterAuthToken
 from .signals import (
@@ -21,7 +25,15 @@ from .signals import (
 
 
 CACHE_TIMEOUT = 60 * 60 * 24  # 24 hours
-logger = logging.getLogger(__name__)
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= smarter_settings.log_level
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SmarterTokenAuthenticationError(SmarterException):
@@ -44,7 +56,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         logger.info(
-            "SmarterTokenAuthentication.__init__() called - %s, args: %s, kwargs: %s",
+            "%s.__init__() called args: %s, kwargs: %s",
             self.formatted_class_name,
             args,
             kwargs,
@@ -81,6 +93,12 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
                 user=user,
                 token=masked_token,
             )
+            logger.warning(
+                "%s.authenticate_credentials() - token is not active for user %s, token: %s",
+                self.formatted_class_name,
+                user,
+                masked_token,
+            )
             raise AuthenticationFailed("Api key is not activated.")
 
         # update the last used time for the token
@@ -94,6 +112,9 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
             user=user,
             token=masked_token,
         )
+        logger.info(
+            "%s.authenticate_credentials() - successfully authenticated user %s", self.formatted_class_name, user
+        )
         return (user, smarter_auth_token)
 
     @classmethod
@@ -106,6 +127,11 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         # token = token.encode()  # if needed
         try:
             auth_token = SmarterAuthToken.objects.get(token_key=token_key)
+            logger.info(
+                "SmarterTokenAuthentication.get_user_from_request() retrieved user %s for token_key: %s",
+                auth_token.user,
+                token_key,
+            )
             return auth_token.user
         except SmarterAuthToken.DoesNotExist:
             logger.warning(

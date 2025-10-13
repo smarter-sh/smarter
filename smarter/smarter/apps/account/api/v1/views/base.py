@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.serializers import AccountSerializer
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
@@ -44,6 +45,37 @@ class AccountListViewBase(SmarterAdminListAPIView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
+        logger.info(
+            "%s.dispatch() - request: %s, user: %s",
+            self.formatted_class_name,
+            request,
+            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
+        )
         if response.status_code < 300 and isinstance(request.user, User):
             self.user_profile = get_object_or_404(UserProfile, user=request.user)
         return response
+
+    def setup(self, request, *args, **kwargs):
+        """Setup the view. This is called by Django before dispatch() and is used to set up the view for the request."""
+        super().setup(request, *args, **kwargs)
+        if not hasattr(self.request, "user") or not isinstance(self.request.user, User):
+            logger.warning(
+                "%s.setup() - request has no user or user is not an instance of User: %s",
+                self.formatted_class_name,
+                self.request.user,
+            )
+        else:
+            if not self.request.user.is_authenticated:
+                logger.warning(
+                    "%s.setup() - request user is not authenticated: %s",
+                    self.formatted_class_name,
+                    self.request.user,
+                )
+        logger.info(
+            "%s.setup() - request: %s, user: %s, user_profile: %s is_authenticated: %s",
+            self.formatted_class_name,
+            smarter_build_absolute_uri(self.request),
+            self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
+            self.user_profile,
+            self.request.user.is_authenticated,
+        )

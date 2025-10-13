@@ -36,6 +36,7 @@ django-redis==6.0.0                     # object caching
 django-celery-beat==2.8.1               # scheduled asynchronous tasks
 djangorestframework==3.16.1             # for creating REST APIs on top of Django
 django-filter==25.1                     # REST API filtering
+django-hosts==7.0.0                     # Dynamic and static host resolving for Django. Maps hostnames to URLconfs.
 django-taggit==6.1.0                    # Smarter Plugin tagging
 django-rest-knox==5.0.2                 # Token authentication for REST APIs
 django-cors-headers==4.7.0              # Cross-origin resource sharing

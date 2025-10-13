@@ -55,6 +55,12 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     def process_request(self, request: WSGIRequest):
 
+        logger.info(
+            "%s.process_request() called for %s",
+            self.formatted_class_name,
+            self.smarter_build_absolute_uri(request),
+        )
+
         # 1.) If the request is from an internal ip address, allow it to pass through
         # these typically originate from health checks from load balancers.
         # ---------------------------------------------------------------------
