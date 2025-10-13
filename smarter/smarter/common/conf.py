@@ -472,31 +472,38 @@ class Settings(BaseSettings):
 
     @property
     def protocol(self) -> str:
-        """Return the protocol"""
+        """Return the protocol: http or https"""
         if self.environment in SmarterEnvironments.aws_environments:
             return "https"
         return "http"
 
     @property
     def data_directory(self) -> str:
-        """Data directory"""
+        """
+        Return the path to the data directory:
+        - /home/smarter_user/data
+        """
         return "/home/smarter_user/data"
 
     @property
-    def aws_apigateway_name(self) -> str:
-        """Return the API name."""
-        return self.shared_resource_identifier + "-api"
-
-    @property
     def environment_cdn_domain(self) -> str:
-        """Return the CDN domain."""
+        """
+        Return the CDN domain.
+        examples:
+        - cdn.alpha.platform.example.com
+        - cdn.localhost:8000
+        """
         if self.environment == SmarterEnvironments.LOCAL:
             return f"cdn.{SmarterEnvironments.ALPHA}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
         return f"cdn.{self.environment_platform_domain}"
 
     @property
     def environment_cdn_url(self) -> str:
-        """Return the CDN URL."""
+        """
+        Return the CDN URL.
+        example: https://cdn.alpha.platform.example.com
+        or https://cdn.localhost:8000
+        """
         if self.environment == SmarterEnvironments.LOCAL:
             retval = SmarterValidator.urlify(self.environment_cdn_domain, environment=SmarterEnvironments.ALPHA)
         else:
@@ -510,12 +517,18 @@ class Settings(BaseSettings):
 
     @property
     def root_platform_domain(self) -> str:
-        """Return the platform domain name. ie platform.example.com"""
+        """
+        Return the platform domain name.
+        example: platform.example.com
+        """
         return f"{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def platform_url(self) -> str:
-        """Return the platform URL."""
+        """
+        Return the platform URL.
+        example: https://platform.example.com
+        """
         retval = SmarterValidator.urlify(self.root_platform_domain, environment=self.environment)
         if retval is None:
             raise SmarterConfigurationError(
@@ -525,7 +538,12 @@ class Settings(BaseSettings):
 
     @property
     def environment_platform_domain(self) -> str:
-        """Return the complete domain name."""
+        """
+        Return the complete domain name.
+        examples:
+        - alpha.platform.example.com
+        - localhost:8000
+        """
         if self.environment == SmarterEnvironments.PROD:
             return self.root_platform_domain
         if self.environment in SmarterEnvironments.aws_environments:
@@ -537,7 +555,23 @@ class Settings(BaseSettings):
 
     @property
     def all_domains(self) -> List[str]:
-        """Return all domains for the environment."""
+        """
+        Return all domains for the environment.
+        example:
+        [
+            'api.example.com',
+            'api.alpha.platform.example.com',
+            'api.beta.platform.example.com',
+            'api.localhost:8000',
+            'api.next.platform.example.com',
+            'example.com',
+            'platform.example.com',
+            'alpha.platform.example.com',
+            'beta.platform.example.com',
+            'localhost:8000',
+            'next.platform.example.com'
+        ]
+        """
         environments = [
             None,  # for root domains (no environment prefix)
             SmarterEnvironments.ALPHA,
@@ -564,7 +598,10 @@ class Settings(BaseSettings):
 
     @property
     def environment_url(self) -> str:
-        """Return the environment URL. example: https://alpha.platform.example.com"""
+        """
+        Return the environment URL.
+        example: https://alpha.platform.example.com
+        """
         retval = SmarterValidator.urlify(self.environment_platform_domain, environment=self.environment)
         if retval is None:
             raise SmarterConfigurationError(
@@ -575,31 +612,42 @@ class Settings(BaseSettings):
 
     @property
     def platform_name(self) -> str:
-        """Return the platform name. example: smarter"""
+        """
+        Return the platform name.
+        example: smarter
+        """
         return self.root_domain.split(".")[0]
 
     @property
     def function_calling_identifier_prefix(self) -> str:
-        """Return the prefix for function calling identifiers. example: smarter_plugin"""
+        """
+        Return the prefix for function calling identifiers.
+        example: smarter_plugin
+        """
         return f"{self.platform_name}_plugin"
 
     @property
     def environment_namespace(self) -> str:
-        """Return the Kubernetes namespace for the environment. example: smarter-pltaform-alpha"""
+        """
+        Return the Kubernetes namespace for the environment.
+        example: smarter-platform-alpha
+        """
         return f"{self.platform_name}-{SMARTER_PLATFORM_SUBDOMAIN}-{settings.environment}"
 
     @property
     def root_api_domain(self) -> str:
-        """Return the root API domain name. ie api.example.com"""
+        """
+        Return the root API domain name.
+        example: api.example.com
+        """
         return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def environment_api_domain(self) -> str:
         """
         Return the customer API domain name.
-
-                examples:
-        - api.alpha.platform.example.com
+        examples:
+        - alpha.api.platform.example.com
         - api.localhost:8000
         """
         if self.environment == SmarterEnvironments.PROD:
@@ -613,7 +661,10 @@ class Settings(BaseSettings):
 
     @property
     def environment_api_url(self) -> str:
-        """Return the API URL for the environment. example: https://api.alpha.platform.example.com"""
+        """
+        Return the API URL for the environment.
+        example: https://alpha.api.platform.example.com
+        """
         retval = SmarterValidator.urlify(self.environment_api_domain, environment=self.environment)
         if retval is None:
             raise SmarterConfigurationError(
@@ -624,29 +675,42 @@ class Settings(BaseSettings):
 
     @property
     def aws_s3_bucket_name(self) -> str:
-        """Return the S3 bucket name. example: alpha.platform.smarter.sh"""
+        """
+        Return the S3 bucket name.
+        example: alpha.platform.smarter.sh
+        """
         if self.environment == SmarterEnvironments.LOCAL:
             return f"{SmarterEnvironments.ALPHA}.{self.root_platform_domain}"
         return self.environment_platform_domain
 
     @property
     def is_using_dotenv_file(self) -> bool:
-        """Is the dotenv file being used?"""
+        """
+        Is the dotenv file being used?
+        True if a .env file was loaded, False otherwise.
+        """
         return DOT_ENV_LOADED
 
     @property
     def environment_variables(self) -> List[str]:
-        """Environment variables"""
+        """
+        List of all set environment variables
+        """
         return list(os.environ.keys())
 
     @property
     def is_using_tfvars_file(self) -> bool:
-        """Is the tfvars file being used?"""
+        """
+        Is the tfvars file being used?
+        True if a tfvars file was loaded, False otherwise.
+        """
         return IS_USING_TFVARS
 
     @property
     def tfvars_variables(self) -> dict:
-        """Terraform variables"""
+        """
+        Lists all Terraform variables
+        """
         masked_tfvars = TFVARS.copy()
         if "aws_account_id" in masked_tfvars:
             masked_tfvars["aws_account_id"] = "****"
@@ -654,12 +718,19 @@ class Settings(BaseSettings):
 
     @property
     def version(self) -> str:
-        """OpenAI API version"""
+        """
+        Current version of the Smarter platform codebase.
+        example: 0.1.17
+        Note: this is necessarily not the same as the version of the deployed platform.
+        """
         return get_semantic_version()
 
     @property
     def dump(self) -> dict:
-        """Dump all settings."""
+        """
+        Dump all settings.
+        This is useful for debugging and logging.
+        """
 
         def get_installed_packages():
             return [(dist.metadata["Name"], dist.version) for dist in distributions()]
