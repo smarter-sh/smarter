@@ -103,116 +103,148 @@ urlpatterns = [
     # JSON Schemas
     # -------------------------------------------------------------------------
     path(
-        json_schema_path(SAMKinds.ACCOUNT), DocsJsonSchemaAccountView.as_view(), name=json_schema_name(SAMKinds.ACCOUNT)
+        json_schema_path(SAMKinds.ACCOUNT.value),
+        DocsJsonSchemaAccountView.as_view(),
+        name=json_schema_name(SAMKinds.ACCOUNT.value),
     ),
     path(
-        json_schema_path(SAMKinds.AUTH_TOKEN),
+        json_schema_path(SAMKinds.AUTH_TOKEN.value),
         DocsJsonSchemaApiKeyView.as_view(),
-        name=json_schema_name(SAMKinds.AUTH_TOKEN),
+        name=json_schema_name(SAMKinds.AUTH_TOKEN.value),
     ),
-    path(json_schema_path(SAMKinds.CHAT), DocsJsonSchemaChatView.as_view(), name=json_schema_name(SAMKinds.CHAT)),
     path(
-        json_schema_path(SAMKinds.CHAT_HISTORY),
+        json_schema_path(SAMKinds.CHAT.value),
+        DocsJsonSchemaChatView.as_view(),
+        name=json_schema_name(SAMKinds.CHAT.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.CHAT_HISTORY.value),
         DocsJsonSchemaChatHistoryView.as_view(),
-        name=json_schema_name(SAMKinds.CHAT_HISTORY),
+        name=json_schema_name(SAMKinds.CHAT_HISTORY.value),
     ),
     path(
-        json_schema_path(SAMKinds.CHAT_PLUGIN_USAGE),
+        json_schema_path(SAMKinds.CHAT_PLUGIN_USAGE.value),
         DocsJsonSchemaChatPluginUsageView.as_view(),
-        name=json_schema_name(SAMKinds.CHAT_PLUGIN_USAGE),
+        name=json_schema_name(SAMKinds.CHAT_PLUGIN_USAGE.value),
     ),
     path(
-        json_schema_path(SAMKinds.CHAT_TOOL_CALL),
+        json_schema_path(SAMKinds.CHAT_TOOL_CALL.value),
         DocsJsonSchemaChatToolCallView.as_view(),
-        name=json_schema_name(SAMKinds.CHAT_TOOL_CALL),
+        name=json_schema_name(SAMKinds.CHAT_TOOL_CALL.value),
     ),
     path(
-        json_schema_path(SAMKinds.CHATBOT), DocsJsonSchemaChatBotView.as_view(), name=json_schema_name(SAMKinds.CHATBOT)
+        json_schema_path(SAMKinds.CHATBOT.value),
+        DocsJsonSchemaChatBotView.as_view(),
+        name=json_schema_name(SAMKinds.CHATBOT.value),
     ),
     path(
-        json_schema_path(SAMKinds.STATIC_PLUGIN),
+        json_schema_path(SAMKinds.STATIC_PLUGIN.value),
         DocsJsonSchemaPluginView.as_view(),
-        name=json_schema_name(SAMKinds.STATIC_PLUGIN),
+        name=json_schema_name(SAMKinds.STATIC_PLUGIN.value),
     ),
     path(
-        json_schema_path(SAMKinds.API_CONNECTION),
+        json_schema_path(SAMKinds.API_CONNECTION.value),
         DocsJsonSchemaApiConnectionView.as_view(),
-        name=json_schema_name(SAMKinds.API_CONNECTION),
+        name=json_schema_name(SAMKinds.API_CONNECTION.value),
     ),
     path(
-        json_schema_path(SAMKinds.API_PLUGIN),
+        json_schema_path(SAMKinds.API_PLUGIN.value),
         DocsJsonSchemaApiView.as_view(),
-        name=json_schema_name(SAMKinds.API_PLUGIN),
+        name=json_schema_name(SAMKinds.API_PLUGIN.value),
     ),
     path(
-        json_schema_path(SAMKinds.SQL_CONNECTION),
+        json_schema_path(SAMKinds.SQL_CONNECTION.value),
         DocsJsonSchemaSqlConnectionView.as_view(),
-        name=json_schema_name(SAMKinds.SQL_CONNECTION),
+        name=json_schema_name(SAMKinds.SQL_CONNECTION.value),
     ),
     path(
-        json_schema_path(SAMKinds.SQL_PLUGIN),
+        json_schema_path(SAMKinds.SQL_PLUGIN.value),
         DocsJsonSchemaSqlView.as_view(),
-        name=json_schema_name(SAMKinds.SQL_PLUGIN),
+        name=json_schema_name(SAMKinds.SQL_PLUGIN.value),
     ),
-    path(json_schema_path(SAMKinds.USER), DocsJsonSchemaUserView.as_view(), name=json_schema_name(SAMKinds.USER)),
-    path(json_schema_path(SAMKinds.SECRET), DocsJsonSchemaSecretView.as_view(), name=json_schema_name(SAMKinds.SECRET)),
+    path(
+        json_schema_path(SAMKinds.USER.value),
+        DocsJsonSchemaUserView.as_view(),
+        name=json_schema_name(SAMKinds.USER.value),
+    ),
+    path(
+        json_schema_path(SAMKinds.SECRET.value),
+        DocsJsonSchemaSecretView.as_view(),
+        name=json_schema_name(SAMKinds.SECRET.value),
+    ),
     # -------------------------------------------------------------------------
     # example manifests
     # -------------------------------------------------------------------------
     path(
-        manifest_path(SAMKinds.ACCOUNT), DocsExampleManifestAccountView.as_view(), name=manifest_name(SAMKinds.ACCOUNT)
+        manifest_path(SAMKinds.ACCOUNT.value),
+        DocsExampleManifestAccountView.as_view(),
+        name=manifest_name(SAMKinds.ACCOUNT.value),
     ),
     path(
-        manifest_path(SAMKinds.AUTH_TOKEN),
+        manifest_path(SAMKinds.AUTH_TOKEN.value),
         DocsExampleManifestApiKeyView.as_view(),
-        name=manifest_name(SAMKinds.AUTH_TOKEN),
+        name=manifest_name(SAMKinds.AUTH_TOKEN.value),
     ),
-    path(manifest_path(SAMKinds.CHAT), DocsExampleManifestChatView.as_view(), name=manifest_name(SAMKinds.CHAT)),
     path(
-        manifest_path(SAMKinds.CHAT_HISTORY),
+        manifest_path(SAMKinds.CHAT.value),
+        DocsExampleManifestChatView.as_view(),
+        name=manifest_name(SAMKinds.CHAT.value),
+    ),
+    path(
+        manifest_path(SAMKinds.CHAT_HISTORY.value),
         DocsExampleManifestChatHistoryView.as_view(),
-        name=manifest_name(SAMKinds.CHAT_HISTORY),
+        name=manifest_name(SAMKinds.CHAT_HISTORY.value),
     ),
     path(
-        manifest_path(SAMKinds.CHAT_PLUGIN_USAGE),
+        manifest_path(SAMKinds.CHAT_PLUGIN_USAGE.value),
         DocsExampleManifestChatPluginUsageView.as_view(),
-        name=manifest_name(SAMKinds.CHAT_PLUGIN_USAGE),
+        name=manifest_name(SAMKinds.CHAT_PLUGIN_USAGE.value),
     ),
     path(
-        manifest_path(SAMKinds.CHAT_TOOL_CALL),
+        manifest_path(SAMKinds.CHAT_TOOL_CALL.value),
         DocsExampleManifestChatToolCallView.as_view(),
-        name=manifest_name(SAMKinds.CHAT_TOOL_CALL),
+        name=manifest_name(SAMKinds.CHAT_TOOL_CALL.value),
     ),
     path(
-        manifest_path(SAMKinds.CHATBOT), DocsExampleManifestChatBotView.as_view(), name=manifest_name(SAMKinds.CHATBOT)
+        manifest_path(SAMKinds.CHATBOT.value),
+        DocsExampleManifestChatBotView.as_view(),
+        name=manifest_name(SAMKinds.CHATBOT.value),
     ),
     path(
-        manifest_path(SAMKinds.STATIC_PLUGIN),
+        manifest_path(SAMKinds.STATIC_PLUGIN.value),
         DocsExampleManifestPluginView.as_view(),
-        name=manifest_name(SAMKinds.STATIC_PLUGIN),
+        name=manifest_name(SAMKinds.STATIC_PLUGIN.value),
     ),
     path(
-        manifest_path(SAMKinds.SQL_CONNECTION),
+        manifest_path(SAMKinds.SQL_CONNECTION.value),
         DocsExampleManifestSqlConnectionView.as_view(),
-        name=manifest_name(SAMKinds.SQL_CONNECTION),
+        name=manifest_name(SAMKinds.SQL_CONNECTION.value),
     ),
     path(
-        manifest_path(SAMKinds.SQL_PLUGIN),
+        manifest_path(SAMKinds.SQL_PLUGIN.value),
         DocsExampleManifestSqlView.as_view(),
-        name=manifest_name(SAMKinds.SQL_PLUGIN),
+        name=manifest_name(SAMKinds.SQL_PLUGIN.value),
     ),
     path(
-        manifest_path(SAMKinds.API_CONNECTION),
+        manifest_path(SAMKinds.API_CONNECTION.value),
         DocsExampleManifestApiConnectionView.as_view(),
-        name=manifest_name(SAMKinds.API_CONNECTION),
+        name=manifest_name(SAMKinds.API_CONNECTION.value),
     ),
     path(
-        manifest_path(SAMKinds.API_PLUGIN),
+        manifest_path(SAMKinds.API_PLUGIN.value),
         DocsExampleManifestApiView.as_view(),
-        name=manifest_name(SAMKinds.API_PLUGIN),
+        name=manifest_name(SAMKinds.API_PLUGIN.value),
     ),
-    path(manifest_path(SAMKinds.USER), DocsExampleManifestUserView.as_view(), name=manifest_name(SAMKinds.USER)),
-    path(manifest_path(SAMKinds.SECRET), DocsExampleManifestSecretView.as_view(), name=manifest_name(SAMKinds.SECRET)),
+    path(
+        manifest_path(SAMKinds.USER.value),
+        DocsExampleManifestUserView.as_view(),
+        name=manifest_name(SAMKinds.USER.value),
+    ),
+    path(
+        manifest_path(SAMKinds.SECRET.value),
+        DocsExampleManifestSecretView.as_view(),
+        name=manifest_name(SAMKinds.SECRET.value),
+    ),
     # -------------------------------------------------------------------------
     # manifests landing page
     # -------------------------------------------------------------------------
