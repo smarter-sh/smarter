@@ -27,7 +27,7 @@ api_info = openapi.Info(
 
 schema_view = get_schema_view(
     info=api_info,
-    url=smarter_settings.environment_api_domain,
+    url=smarter_settings.environment_api_url,
     public=True,
     permission_classes=(permissions.AllowAny,),
     patterns=api_urls.urlpatterns,
