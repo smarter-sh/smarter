@@ -6,6 +6,7 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from smarter.apps.api import urls as api_urls
+from smarter.common.conf import settings as smarter_settings
 
 
 api_info = openapi.Info(
@@ -26,6 +27,7 @@ api_info = openapi.Info(
 
 schema_view = get_schema_view(
     info=api_info,
+    url=smarter_settings.environment_api_domain,
     public=True,
     permission_classes=(permissions.AllowAny,),
     patterns=api_urls.urlpatterns,
