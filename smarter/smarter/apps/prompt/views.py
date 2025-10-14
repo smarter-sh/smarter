@@ -47,7 +47,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.helpers.url_helpers import clean_url
-from smarter.common.utils import rfc1034_compliant_to_snake
+from smarter.common.utils import is_authenticated_request, rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
@@ -302,7 +302,11 @@ class ChatConfigView(SmarterNeverCachedWebView):
 
         logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
 
-        if self.chatbot_helper and self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
+        if (
+            self.chatbot_helper
+            and self.chatbot_helper.is_authentication_required
+            and not is_authenticated_request(request)
+        ):
             try:
                 raise SmarterChatappViewError(
                     "Authentication failed. Are you logged in? Smarter sessions automatically expire after 24 hours."

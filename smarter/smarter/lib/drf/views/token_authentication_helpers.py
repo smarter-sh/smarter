@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from smarter.apps.api.signals import api_request_completed, api_request_initiated
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.utils import smarter_build_absolute_uri
+from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -98,7 +98,7 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
             smarter_build_absolute_uri(self.request),
             self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
-            self.request.user.is_authenticated,
+            is_authenticated_request(self.request),
         )
 
 
@@ -159,7 +159,7 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
             smarter_build_absolute_uri(self.request),
             self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
-            self.request.user.is_authenticated,
+            is_authenticated_request(self.request),
         )
         super().setup(self.request, *args, **kwargs)
 
@@ -207,7 +207,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
             smarter_build_absolute_uri(self.request),
             self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
-            self.request.user.is_authenticated,
+            is_authenticated_request(self.request),
         )
 
     def initial(self, request, *args, **kwargs):

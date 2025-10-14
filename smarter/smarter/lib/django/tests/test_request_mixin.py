@@ -10,6 +10,7 @@ from django.test import Client, RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from smarter.common.utils import is_authenticated_request
 from smarter.lib.django.request import SmarterRequestMixin
 
 
@@ -171,7 +172,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         self.assertEqual(request.user, smarter_admin_user_profile.user)
         self.assertEqual(url, request.build_absolute_uri())
-        if not request.user.is_authenticated:
+        if not is_authenticated_request(request):
             self.skipTest("User is not authenticated")
 
         srm = SmarterRequestMixin(request)

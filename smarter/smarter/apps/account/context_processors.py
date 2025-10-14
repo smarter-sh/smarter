@@ -4,6 +4,8 @@ import logging
 
 from django.conf import settings
 
+from smarter.common.utils import is_authenticated_request
+
 from .models import UserProfile
 from .utils import get_cached_user_profile
 
@@ -27,12 +29,7 @@ def base(request):
             "forgot_password_url": "/dashboard/account/password-reset-request/",
         }
     }
-    if (
-        request
-        and hasattr(request, "user")
-        and hasattr(request.user, "is_authenticated")
-        and request.user.is_authenticated
-    ):
+    if is_authenticated_request(request):
         try:
             user_profile = get_cached_user_profile(user=request.user)
         except UserProfile.DoesNotExist:

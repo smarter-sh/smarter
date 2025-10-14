@@ -34,7 +34,11 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.aws.exceptions import SmarterAWSError
 from smarter.common.helpers.k8s_helpers import KubernetesHelperException
-from smarter.common.utils import mask_string, smarter_build_absolute_uri
+from smarter.common.utils import (
+    is_authenticated_request,
+    mask_string,
+    smarter_build_absolute_uri,
+)
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
@@ -310,7 +314,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             smarter_build_absolute_uri(request),
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
-            request.user.is_authenticated,
+            is_authenticated_request(request),
         )
 
     def initial(self, request: Request, *args, **kwargs):
@@ -346,7 +350,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 url,
                 request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
                 self.user_profile,
-                request.user.is_authenticated,
+                is_authenticated_request(request),
                 mask_string(str(request.META.get("HTTP_AUTHORIZATION"))),
             )
         except NotAuthenticated as e:
