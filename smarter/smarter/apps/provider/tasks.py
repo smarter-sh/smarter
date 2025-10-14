@@ -14,7 +14,7 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.smarter_celery import app
+from smarter.workers.celery import app
 
 from .verification import verify_provider as verification_verify_provider
 from .verification import verify_provider_model as verification_verify_provider_model

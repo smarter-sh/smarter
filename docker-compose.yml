@@ -70,7 +70,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
-    command: celery -A smarter.smarter_celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
+    command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
     depends_on:
       - smarter-mysql
       - smarter-redis
@@ -84,7 +84,7 @@ services:
         consistency: cached
     healthcheck:
       test:
-        ["CMD", "celery", "-A", "smarter.smarter_celery.app", "inspect", "ping"]
+        ["CMD", "celery", "-A", "smarter.workers.celery.app", "inspect", "ping"]
       interval: 30s
       timeout: 30s
       retries: 3
@@ -102,7 +102,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
-    command: celery -A smarter.smarter_celerybeat.app beat --loglevel=info
+    command: celery -A smarter.workers.celerybeat.app beat --loglevel=info
     depends_on:
       - smarter-mysql
       - smarter-redis
@@ -120,7 +120,7 @@ services:
           "CMD",
           "celery",
           "-A",
-          "smarter.smarter_celerybeat.app",
+          "smarter.workers.celerybeat.app",
           "inspect",
           "ping",
         ]

@@ -52,7 +52,7 @@ spec:
       containers:
         - name: {{ .Values.workerName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
-          command: ["celery", "-A", "smarter.smarter_celery.app", "worker", "--concurrency=2", "--loglevel=info", "-Q", "default_celery_task_queue", "-E"]
+          command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency=2", "--loglevel=info", "-Q", "default_celery_task_queue", "-E"]
           imagePullPolicy: Always
           resources:
             requests:
