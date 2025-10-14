@@ -87,6 +87,7 @@ class SmarterView(View, SmarterRequestMixin):
                 self.smarter_build_absolute_uri(request),
                 template_path,
                 e,
+                exc_info=True,
             )
             return HttpResponse(status=500)
 

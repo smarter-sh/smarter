@@ -1,5 +1,6 @@
 # pylint: disable=W0613
 """Django Authentication views."""
+import logging
 from typing import Optional
 
 from django import forms
@@ -8,7 +9,9 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 
 from smarter.apps.account.models import User, get_resolved_user
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
@@ -27,6 +30,21 @@ from smarter.lib.django.view_helpers import (
     SmarterNeverCachedWebView,
     redirect_and_expire_cache,
 )
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
+        and level >= smarter_settings.log_level
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # ------------------------------------------------------------------------------
@@ -44,7 +62,14 @@ class LoginView(SmarterNeverCachedWebView):
     template_path = "account/authentication/sign-in.html"
 
     def get(self, request, *args, **kwargs) -> HttpResponseRedirect | HttpResponse:
-        user = get_resolved_user(request.user)
+        logger.info(
+            "%s.LoginView.get() called with request type: %s %s", self.formatted_class_name, type(request), request
+        )
+        user = (
+            get_resolved_user(request.user)
+            if request and hasattr(request, "user") and request.user is not None
+            else None
+        )
         if user and hasattr(user, "is_authenticated") and user.is_authenticated:
             return redirect_and_expire_cache(path="/")
         form = LoginView.LoginForm()

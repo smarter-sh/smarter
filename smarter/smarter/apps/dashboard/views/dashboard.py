@@ -94,6 +94,6 @@ class DashboardView(SmarterWebHtmlView):
     template_path = "dashboard/authenticated.html"
 
     def get(self, request: WSGIRequest, *args, **kwargs):
-        if request.user.is_authenticated:
+        if request and request.user and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
             return super().get(request, *args, **kwargs)
         return redirect(reverse("login_view"))

@@ -31,7 +31,6 @@ from openai.types.chat.chat_completion_message_tool_call import (
 )
 from retry_requests import retry
 
-from smarter.common.conf import settings
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib import json
@@ -54,11 +53,11 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 # Google Maps API key
 gmaps = None
 try:
-    if not settings.google_maps_api_key:
+    if not smarter_settings.google_maps_api_key:
         raise SmarterConfigurationError(
             "Google Maps API key is not set. Please set GOOGLE_MAPS_API_KEY in your .env file."
         )
-    gmaps = googlemaps.Client(key=settings.google_maps_api_key.get_secret_value())
+    gmaps = googlemaps.Client(key=smarter_settings.google_maps_api_key.get_secret_value())
 # pylint: disable=broad-exception-caught
 except ValueError as value_error:
     logger.error(

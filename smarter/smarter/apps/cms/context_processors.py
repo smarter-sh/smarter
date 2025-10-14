@@ -7,7 +7,12 @@ from smarter.common.conf import settings as smarter_settings
 # pylint: disable=W0613
 def base(request):
     """Base context processor for templates that inherit from docs/base.html"""
-    if request.user.is_authenticated:
+    if (
+        request
+        and hasattr(request, "user")
+        and hasattr(request.user, "is_authenticated")
+        and request.user.is_authenticated
+    ):
         smarter_home_url = "/"
     else:
         smarter_home_url = smarter_settings.marketing_site_url
