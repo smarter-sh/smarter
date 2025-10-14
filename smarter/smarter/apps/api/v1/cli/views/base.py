@@ -482,6 +482,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 SmarterAPIV1CLIViewErrorNotAuthenticated,
                 SmarterInvalidApiKeyError,
                 SmarterTokenError,
+                AttributeError,  # can be raised by a django admin decorator if request or request.user is None
             ):
                 status = HTTPStatus.FORBIDDEN.value
             elif type(e) in (
