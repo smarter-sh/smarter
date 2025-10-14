@@ -10,6 +10,8 @@ from django.core.cache import cache
 from django.http import HttpRequest, JsonResponse
 from django.test import RequestFactory
 from django.views.decorators.csrf import csrf_exempt
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
 
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
@@ -37,6 +39,11 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMMetadataKeys, SCLIResponseGet
 
 from ..base import APIV1CLIViewError, CliBaseApiView
+from ..const import (
+    COMMON_SWAGGER_PARAMETERS,
+    COMMON_SWAGGER_RESPONSES,
+    CliChatSerializer,
+)
 
 
 # for establishing a lifetime for chat sessions. we create a session_key, then cache it
@@ -517,31 +524,62 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             SmarterValidator.validate_session_key(session_key=session_key)
 
     # pylint: disable=too-many-locals
+    @swagger_auto_schema(
+        operation_description="""
+Smarter API command-line interface 'chat' view. This is a non-brokered view
+that sends chat sessions to a ChatBot by creating a http post request
+to the ChatBot's published url. The chatbot is expected to be a Smarter chatbot
+that is capable of receiving a list of messages and returning a response in the
+smarter.sh/v1 protocol.
+
+Chats are based on sticky sessions that are identified by a cached session_key. The session_key is
+generated ....
+
+Args:
+- request: an authenticated Django HttpRequest object
+- name: str. the name of a ChatBot associated with the Account to which the authenticated user belongs.
+
+request body:
+- session_key: str. optional. the session_key for the chat session. if not provided then a new session_key will be generated.
+- prompt: str. the raw text of the prompt to send to the chatbot. This will be appended to the message list, if this is not a new session.
+
+url params:
+- new_session: str. optional flag. if present then the cache_key and session_key will be deleted.
+- uid: str. required. a unique identifier for the client. this is assumed to be a combination of the machine mac address and the hostname.
+
+Api v1 post method for chat config view. Returns the configuration
+dict used to configure the React chat component.
+
+The client must send `uid` and optionally `session_key` as form data (`application/x-www-form-urlencoded`).
+
+The client making the HTTP request to this endpoint is expected to be the Smarter CLI, emulating the Smarter Chat React component, which is written in Golang and available on Windows, macOS, and Linux.
+
+The response from this endpoint is a JSON object.
+
+This is a Non-brokered operation.
+""",
+        responses={**COMMON_SWAGGER_RESPONSES, 200: "Chat generated successfully"},
+        request_body=CliChatSerializer,
+        manual_parameters=[
+            COMMON_SWAGGER_PARAMETERS["name"],
+            openapi.Parameter(
+                "new_session",
+                openapi.IN_QUERY,
+                description="If present then a new session will be created.",
+                type=openapi.TYPE_STRING,
+                required=False,
+            ),
+            openapi.Parameter(
+                "uid",
+                openapi.IN_QUERY,
+                description="a unique identifier for the client. this is assumed to be a combination of the machine mac address and the hostname.",
+                type=openapi.TYPE_STRING,
+                required=True,
+            ),
+        ],
+    )
     @csrf_exempt
     def post(self, request, name, *args, **kwargs):
-        """
-        Smarter API command-line interface 'chat' view. This is a non-brokered view
-        that sends chat sessions to a ChatBot by creating a http post request
-        to the ChatBot's published url. The chatbot is expected to be a Smarter chatbot
-        that is capable of receiving a list of messages and returning a response in the
-        smarter.sh/v1 protocol.
-
-        Chats are based on sticky sessions that are identified by a cached session_key. The session_key is
-        generated ....
-
-        Args:
-        - request: an authenticated Django HttpRequest object
-        - name: str. the name of a ChatBot associated with the Account to which the authenticated user belongs.
-
-        request body:
-        - session_key: str. optional. the session_key for the chat session. if not provided then a new session_key will be generated.
-        - prompt: str. the raw text of the prompt to send to the chatbot. This will be appended to the message list, if this is not a new session.
-
-        url params:
-        - new_session: str. optional flag. if present then the cache_key and session_key will be deleted.
-        - uid: str. required. a unique identifier for the client. this is assumed to be a combination of the machine mac address and the hostname.
-
-        """
 
         # validate the chatbot name, as this is the most likely point of failure
         try:

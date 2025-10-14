@@ -1,9 +1,15 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'manifest' view"""
 
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from .base import CliBaseApiView
+from .const import (
+    COMMON_SWAGGER_PARAMETERS,
+    COMMON_SWAGGER_RESPONSES,
+    EXAMPLE_MANIFEST_PLUGIN,
+)
 
 
 class ApiV1CliManifestApiView(CliBaseApiView):
@@ -41,20 +47,19 @@ This is the API endpoint for the 'manifest' command in the Smarter command-line 
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
 
 The response from this endpoint is a JSON object containing an example manifest of the resource.
-"""
+
+This is a brokered operation, so the actual work is delegated to the appropriate broker based on the resource kind specified in the manifest. See smarter.apps.api.v1.cli.brokers.Brokers
+""",
+        responses={
+            **COMMON_SWAGGER_RESPONSES,
+            200: openapi.Response(
+                description="Plugin example manifest successfully generated",
+                examples=EXAMPLE_MANIFEST_PLUGIN,
+            ),
+        },
+        manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def post(self, request, kind, *args, **kwargs):
-        """
-        Handles the POST HTTP request for the 'manifest' command.
-
-        Parameters:
-        request (Request): The request object.
-        *args: Variable length argument list.
-        **kwargs: the kind of resource to get an example manifest for
-
-        Returns:
-        Response: a JSON object containing an example manifest of the resource.
-        """
         return self.broker.example_manifest(request=request, kwargs=kwargs)
 
     @swagger_auto_schema(
@@ -66,19 +71,16 @@ This is the API endpoint for the 'manifest' command in the Smarter command-line 
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
 
 The response from this endpoint is a JSON object containing an example manifest of the resource.
-"""
+""",
+        responses={
+            **COMMON_SWAGGER_RESPONSES,
+            200: openapi.Response(
+                description="Plugin example manifest successfully generated",
+                examples=EXAMPLE_MANIFEST_PLUGIN,
+            ),
+        },
+        manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def get(self, request, kind, *args, **kwargs):
-        """
-        Handles the GET HTTP request for the 'manifest' command.
-
-        Parameters:
-        request (Request): The request object.
-        *args: Variable length argument list.
-        **kwargs: the kind of resource to get an example manifest for
-
-        Returns:
-        Response: a JSON object containing an example manifest of the resource.
-        """
         response = self.broker.example_manifest(request=request, kwargs=kwargs)
         return response

@@ -1,0 +1,37 @@
+{
+  "data": {
+    "apiVersion": "smarter.sh/v1",
+    "kind": "User",
+    "metadata": {
+      "name": "admin",
+      "description": "admin",
+      "version": "1.0.0",
+      "username": "admin"
+    },
+    "spec": {
+      "config": {
+        "password": "pbkdf2_sha256$1000000$OU6cQ1fjmYwL5KV79zG3CJ$rjCX1Sw523xeZIwpmst0SM3hkm+iN8YSotrrkuowu6Y=",
+        "lastLogin": "2025-10-14T03:43:54.573Z",
+        "isSuperuser": true,
+        "username": "admin",
+        "firstName": "",
+        "lastName": "",
+        "email": "admin@smarter.sh",
+        "isStaff": true,
+        "isActive": true,
+        "dateJoined": "2025-09-19T19:00:47.516Z",
+        "groups": [],
+        "userPermissions": []
+      }
+    },
+    "status": {
+      "dateJoined": "2025-09-19T19:00:47.516730+00:00"
+    }
+  },
+  "message": "User None described successfully",
+  "api": "smarter.sh/v1",
+  "thing": "User",
+  "metadata": {
+    "command": "describe"
+  }
+}

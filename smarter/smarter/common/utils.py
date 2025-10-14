@@ -25,7 +25,7 @@ RequestType = Union[HttpRequest, Request, WSGIRequest]
 logger = logging.getLogger(__name__)
 
 
-def is_authenticated_request(request: RequestType) -> bool:
+def is_authenticated_request(request: Optional[RequestType]) -> bool:
     """
     Check if the request is authenticated.
     Args:
@@ -33,11 +33,9 @@ def is_authenticated_request(request: RequestType) -> bool:
     Returns:
         bool: True if the request is authenticated, False otherwise.
     """
-    if not isinstance(request, (HttpRequest, Request, WSGIRequest)):
-        return False
     try:
         return (
-            request
+            isinstance(request, (HttpRequest, Request, WSGIRequest))
             and hasattr(request, "user")
             and hasattr(request.user, "is_authenticated")
             and request.user.is_authenticated
