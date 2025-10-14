@@ -1,3 +1,20 @@
+## [0.13.19](https://github.com/smarter-sh/smarter/compare/v0.13.18...v0.13.19) (2025-10-14)
+
+
+### Bug Fixes
+
+* base requirements version bumps ([700501f](https://github.com/smarter-sh/smarter/commit/700501f1f7de1bf9259b5e910d8717d65b9250e1))
+* broken site logo link ([edf4d6a](https://github.com/smarter-sh/smarter/commit/edf4d6a4c4f12f5549b6564406bbb737f8007660))
+* disallow SSO creating new accounts ([4a469b1](https://github.com/smarter-sh/smarter/commit/4a469b1fce9d78d67e1d9edcdcf11d47789a4795))
+* refactor for multiple user_profile records per user ([a79c245](https://github.com/smarter-sh/smarter/commit/a79c2454f74ccfc049f962dc20f64ae06e061f7a))
+* setup api domain and api receivers ([c4bb723](https://github.com/smarter-sh/smarter/commit/c4bb7232ef653d541509ee749d50fc78cd6aca2e))
+* setup api domain and api receivers ([93b5b70](https://github.com/smarter-sh/smarter/commit/93b5b7093d89a27ddcd512d194b78f900f65e357))
+* setup api domain and api receivers ([d49fcc3](https://github.com/smarter-sh/smarter/commit/d49fcc3531245d5b1073f41f78df11f5c94e995f))
+* setup api domain and api receivers ([38e8a20](https://github.com/smarter-sh/smarter/commit/38e8a202c5a4a3311119fa29e4006c742098baff))
+* setup api domain and api receivers ([66d6e4d](https://github.com/smarter-sh/smarter/commit/66d6e4d58bc83f9ef7e8b6e26e7b6ca25b6c2b81))
+* we now have to consider superuser accounts that are assocated with multiple accounts ([380b958](https://github.com/smarter-sh/smarter/commit/380b958ca4e6276b698ab0c7880d3691cf853c31))
+* work on CORS headers ([5bdb18f](https://github.com/smarter-sh/smarter/commit/5bdb18f3f60d99c3fdfd44b08b522b994149cfee))
+
 ## [0.13.18](https://github.com/smarter-sh/smarter/compare/v0.13.17...v0.13.18) (2025-10-08)
 
 
