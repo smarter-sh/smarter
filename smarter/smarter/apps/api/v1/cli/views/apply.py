@@ -15,7 +15,11 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base import APIV1CLIViewError, CliBaseApiView
-from .const import COMMON_SWAGGER_RESPONSES, ManifestSerializer
+from .swagger import (
+    COMMON_SWAGGER_RESPONSES,
+    ManifestSerializer,
+    openai_success_response,
+)
 
 
 def should_log(level):
@@ -72,7 +76,7 @@ The response from this endpoint is a JSON object.
 
 This is a brokered operation, so the actual work is delegated to the appropriate broker based on the resource kind specified in the manifest. See smarter.apps.api.v1.cli.brokers.Brokers
 """,
-        responses={**COMMON_SWAGGER_RESPONSES, 200: "Applied successfully"},
+        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Manifest applied successfully")},
         request_body=ManifestSerializer,
     )
     def post(self, request: WSGIRequest, *args, **kwargs):

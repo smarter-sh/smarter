@@ -1,1 +1,5 @@
+"""
+CLI constants.
+"""
+
 namespace = "cli"

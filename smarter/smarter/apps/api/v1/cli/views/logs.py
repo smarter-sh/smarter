@@ -1,10 +1,16 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'logs' view"""
 
+from http import HTTPStatus
+
 from drf_yasg.utils import swagger_auto_schema
 
 from .base import CliBaseApiView
-from .const import COMMON_SWAGGER_PARAMETERS, COMMON_SWAGGER_RESPONSES
+from .swagger import (
+    COMMON_SWAGGER_PARAMETERS,
+    COMMON_SWAGGER_RESPONSES,
+    openai_success_response,
+)
 
 
 class ApiV1CliLogsApiView(CliBaseApiView):
@@ -39,7 +45,7 @@ The client making the HTTP request to this endpoint is expected to be the Smarte
 
 The response from this endpoint is a JSON object.
 """,
-        responses={**COMMON_SWAGGER_RESPONSES, 200: "Logs retrieved successfully"},
+        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Logs retrieved successfully")},
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def post(self, request, kind, *args, **kwargs):

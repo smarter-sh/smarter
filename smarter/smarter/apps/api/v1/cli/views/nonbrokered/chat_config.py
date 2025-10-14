@@ -2,6 +2,7 @@
 """Smarter API command-line interface 'chat' config view"""
 
 import logging
+from http import HTTPStatus
 from typing import Optional
 
 from django.core.cache import cache
@@ -19,7 +20,11 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from ..base import APIV1CLIViewError
-from ..const import COMMON_SWAGGER_RESPONSES, ChatConfigSerializer
+from ..swagger import (
+    COMMON_SWAGGER_RESPONSES,
+    ChatConfigSerializer,
+    openai_success_response,
+)
 from .chat import CACHE_EXPIRATION, ApiV1CliChatBaseApiView
 
 
@@ -76,7 +81,7 @@ The response from this endpoint is a JSON object.
 
 This is a Non-brokered operation.
 """,
-        responses={**COMMON_SWAGGER_RESPONSES, 200: "Config generated successfully"},
+        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Config generated successfully")},
         request_body=ChatConfigSerializer,
     )
     @csrf_exempt
