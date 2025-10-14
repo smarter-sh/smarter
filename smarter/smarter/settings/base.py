@@ -267,7 +267,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_HOSTCONF = "smarter.hosts"
-ROOT_URLCONF = "smarter.urls"
+ROOT_URLCONF = "smarter.urls.console"
 DEFAULT_HOST = SMARTER_PLATFORM_SUBDOMAIN
 
 TEMPLATES = [

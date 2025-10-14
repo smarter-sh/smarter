@@ -18,7 +18,7 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.smarter_celery import app
+from smarter.workers.celery import app
 
 from .models import PluginSelectorHistory
 
