@@ -1,67 +1,60 @@
-## [0.13.21](https://github.com/smarter-sh/smarter/compare/v0.13.20...v0.13.21) (2025-10-14)
-
-
-### Bug Fixes
-
-* request.user Nonetype ([797fa27](https://github.com/smarter-sh/smarter/commit/797fa27b72793cecf366fb2e7a22f996e1d3514f))
-
-## [0.13.20](https://github.com/smarter-sh/smarter/compare/v0.13.19...v0.13.20) (2025-10-14)
-
-
-### Bug Fixes
-
-* refactor project root modules - celery, urls, hosts ([600e6ab](https://github.com/smarter-sh/smarter/commit/600e6ab99b3efdf5281b7556c52c14bd544fc536))
-
-## [0.13.19](https://github.com/smarter-sh/smarter/compare/v0.13.18...v0.13.19) (2025-10-14)
-
-
-### Bug Fixes
-
-* base requirements version bumps ([700501f](https://github.com/smarter-sh/smarter/commit/700501f1f7de1bf9259b5e910d8717d65b9250e1))
-* broken site logo link ([edf4d6a](https://github.com/smarter-sh/smarter/commit/edf4d6a4c4f12f5549b6564406bbb737f8007660))
-* disallow SSO creating new accounts ([4a469b1](https://github.com/smarter-sh/smarter/commit/4a469b1fce9d78d67e1d9edcdcf11d47789a4795))
-* refactor for multiple user_profile records per user ([a79c245](https://github.com/smarter-sh/smarter/commit/a79c2454f74ccfc049f962dc20f64ae06e061f7a))
-* setup api domain and api receivers ([c4bb723](https://github.com/smarter-sh/smarter/commit/c4bb7232ef653d541509ee749d50fc78cd6aca2e))
-* setup api domain and api receivers ([93b5b70](https://github.com/smarter-sh/smarter/commit/93b5b7093d89a27ddcd512d194b78f900f65e357))
-* setup api domain and api receivers ([d49fcc3](https://github.com/smarter-sh/smarter/commit/d49fcc3531245d5b1073f41f78df11f5c94e995f))
-* setup api domain and api receivers ([38e8a20](https://github.com/smarter-sh/smarter/commit/38e8a202c5a4a3311119fa29e4006c742098baff))
-* setup api domain and api receivers ([66d6e4d](https://github.com/smarter-sh/smarter/commit/66d6e4d58bc83f9ef7e8b6e26e7b6ca25b6c2b81))
-* we now have to consider superuser accounts that are assocated with multiple accounts ([380b958](https://github.com/smarter-sh/smarter/commit/380b958ca4e6276b698ab0c7880d3691cf853c31))
-* work on CORS headers ([5bdb18f](https://github.com/smarter-sh/smarter/commit/5bdb18f3f60d99c3fdfd44b08b522b994149cfee))
-
-## [0.13.18](https://github.com/smarter-sh/smarter/compare/v0.13.17...v0.13.18) (2025-10-08)
-
-
-### Bug Fixes
-
-* add ingressClassName ([c9e6daa](https://github.com/smarter-sh/smarter/commit/c9e6daaebea8cd80bf3a10d1bfaabdc5d0802ee8))
-
-## [0.13.17](https://github.com/smarter-sh/smarter/compare/v0.13.16...v0.13.17) (2025-10-08)
-
-
-### Bug Fixes
-
-* ensure that plugin and chatbot urls are always rfc1034 compliant ([71eb6a1](https://github.com/smarter-sh/smarter/commit/71eb6a1352d2c0ffe570f0ce8a3d189ff55144fb))
-
-## [0.13.16](https://github.com/smarter-sh/smarter/compare/v0.13.15...v0.13.16) (2025-10-08)
-
-
-### Bug Fixes
-
-* evaluate the http request IP address rather than the internal ip of the pod ([8a68e05](https://github.com/smarter-sh/smarter/commit/8a68e05ffb147d6a15f264402181403199857799))
-
-## [0.13.15](https://github.com/smarter-sh/smarter/compare/v0.13.14...v0.13.15) (2025-10-08)
-
-
-### Bug Fixes
-
-* ignore http protocol when determining mode() ([28b2b50](https://github.com/smarter-sh/smarter/commit/28b2b5073247075d569d34912f01e8e1d57d7ba5))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.13.21](https://github.com/smarter-sh/smarter/compare/v0.13.20...v0.13.21) (2025-10-14)
+
+### Bug Fixes
+
+- request.user Nonetype ([797fa27](https://github.com/smarter-sh/smarter/commit/797fa27b72793cecf366fb2e7a22f996e1d3514f))
+
+## [0.13.20](https://github.com/smarter-sh/smarter/compare/v0.13.19...v0.13.20) (2025-10-14)
+
+### Bug Fixes
+
+- refactor project root modules - celery, urls, hosts ([600e6ab](https://github.com/smarter-sh/smarter/commit/600e6ab99b3efdf5281b7556c52c14bd544fc536))
+
+## [0.13.19](https://github.com/smarter-sh/smarter/compare/v0.13.18...v0.13.19) (2025-10-14)
+
+### Bug Fixes
+
+- base requirements version bumps ([700501f](https://github.com/smarter-sh/smarter/commit/700501f1f7de1bf9259b5e910d8717d65b9250e1))
+- broken site logo link ([edf4d6a](https://github.com/smarter-sh/smarter/commit/edf4d6a4c4f12f5549b6564406bbb737f8007660))
+- disallow SSO creating new accounts ([4a469b1](https://github.com/smarter-sh/smarter/commit/4a469b1fce9d78d67e1d9edcdcf11d47789a4795))
+- refactor for multiple user_profile records per user ([a79c245](https://github.com/smarter-sh/smarter/commit/a79c2454f74ccfc049f962dc20f64ae06e061f7a))
+- setup api domain and api receivers ([c4bb723](https://github.com/smarter-sh/smarter/commit/c4bb7232ef653d541509ee749d50fc78cd6aca2e))
+- setup api domain and api receivers ([93b5b70](https://github.com/smarter-sh/smarter/commit/93b5b7093d89a27ddcd512d194b78f900f65e357))
+- setup api domain and api receivers ([d49fcc3](https://github.com/smarter-sh/smarter/commit/d49fcc3531245d5b1073f41f78df11f5c94e995f))
+- setup api domain and api receivers ([38e8a20](https://github.com/smarter-sh/smarter/commit/38e8a202c5a4a3311119fa29e4006c742098baff))
+- setup api domain and api receivers ([66d6e4d](https://github.com/smarter-sh/smarter/commit/66d6e4d58bc83f9ef7e8b6e26e7b6ca25b6c2b81))
+- we now have to consider superuser accounts that are associated with multiple accounts ([380b958](https://github.com/smarter-sh/smarter/commit/380b958ca4e6276b698ab0c7880d3691cf853c31))
+- work on CORS headers ([5bdb18f](https://github.com/smarter-sh/smarter/commit/5bdb18f3f60d99c3fdfd44b08b522b994149cfee))
+
+## [0.13.18](https://github.com/smarter-sh/smarter/compare/v0.13.17...v0.13.18) (2025-10-08)
+
+### Bug Fixes
+
+- add ingressClassName ([c9e6daa](https://github.com/smarter-sh/smarter/commit/c9e6daaebea8cd80bf3a10d1bfaabdc5d0802ee8))
+
+## [0.13.17](https://github.com/smarter-sh/smarter/compare/v0.13.16...v0.13.17) (2025-10-08)
+
+### Bug Fixes
+
+- ensure that plugin and chatbot urls are always rfc1034 compliant ([71eb6a1](https://github.com/smarter-sh/smarter/commit/71eb6a1352d2c0ffe570f0ce8a3d189ff55144fb))
+
+## [0.13.16](https://github.com/smarter-sh/smarter/compare/v0.13.15...v0.13.16) (2025-10-08)
+
+### Bug Fixes
+
+- evaluate the http request IP address rather than the internal ip of the pod ([8a68e05](https://github.com/smarter-sh/smarter/commit/8a68e05ffb147d6a15f264402181403199857799))
+
+## [0.13.15](https://github.com/smarter-sh/smarter/compare/v0.13.14...v0.13.15) (2025-10-08)
+
+### Bug Fixes
+
+- ignore http protocol when determining mode() ([28b2b50](https://github.com/smarter-sh/smarter/commit/28b2b5073247075d569d34912f01e8e1d57d7ba5))
 
 ## [0.13.14](https://github.com/smarter-sh/smarter/compare/v0.13.13...v0.13.14) (2025-10-07)
 
