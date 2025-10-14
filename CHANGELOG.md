@@ -1,3 +1,10 @@
+## [0.13.24](https://github.com/smarter-sh/smarter/compare/v0.13.23...v0.13.24) (2025-10-14)
+
+
+### Bug Fixes
+
+* 500 error on incorrect api key ([ff6e135](https://github.com/smarter-sh/smarter/commit/ff6e13580997ed010e9f8e3110becac11757bd2c))
+
 ## [0.13.23](https://github.com/smarter-sh/smarter/compare/v0.13.22...v0.13.23) (2025-10-14)
 
 
