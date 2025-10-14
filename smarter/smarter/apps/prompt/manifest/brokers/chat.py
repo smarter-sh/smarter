@@ -11,6 +11,7 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.prompt.manifest.models.chat.const import MANIFEST_KIND
 from smarter.apps.prompt.manifest.models.chat.model import SAMChat
 from smarter.apps.prompt.models import Chat
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -37,7 +38,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= logging.INFO
+    ) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

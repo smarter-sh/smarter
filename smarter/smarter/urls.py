@@ -63,6 +63,7 @@ EXCLUDED_MODELS = [
 
 models = apps.get_models()
 for model in models:
+    # pylint: disable=protected-access
     model_label = f"{model._meta.app_label}.{model._meta.object_name}"
     if model_label in EXCLUDED_MODELS:
         continue

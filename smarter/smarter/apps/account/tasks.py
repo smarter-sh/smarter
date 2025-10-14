@@ -15,6 +15,7 @@ from django.conf import settings
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Sum
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
@@ -38,7 +39,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-        and level >= logging.INFO
+        and level >= smarter_settings.log_level
     )
 
 

@@ -18,6 +18,7 @@ from smarter.apps.plugin.manifest.enum import (
 )
 from smarter.apps.plugin.models import ApiConnection
 from smarter.common.api import SmarterApiVersions
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
@@ -35,7 +36,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
+        and level >= smarter_settings.log_level
     )
 
 

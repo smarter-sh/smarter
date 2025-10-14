@@ -21,6 +21,7 @@ from smarter.apps.provider.utils import (
     set_provider_verification,
     test_web_page,
 )
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
@@ -33,7 +34,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
+        and level >= smarter_settings.log_level
     )
 
 

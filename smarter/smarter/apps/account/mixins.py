@@ -13,6 +13,7 @@ from smarter.apps.account.models import User
 from smarter.apps.account.serializers import UserMiniSerializer
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.utils import mask_string
 from smarter.lib.django import waffle
@@ -41,7 +42,7 @@ RequestType = Union[WSGIRequest, HttpRequest, Request]
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

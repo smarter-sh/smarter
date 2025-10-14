@@ -14,6 +14,7 @@ from smarter.apps.account.models import (
     UserProfile,
 )
 from smarter.apps.account.utils import get_cached_user_profile
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -23,7 +24,7 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

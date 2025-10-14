@@ -8,6 +8,7 @@ import yaml
 from django.http import HttpRequest
 from django.utils.deprecation import MiddlewareMixin
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import (
@@ -22,7 +23,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return (
-        waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= logging.INFO
+        waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= smarter_settings.log_level
     ) or level >= logging.WARNING
 
 
@@ -128,12 +129,24 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
     """A mixin for middleware classes with helper functions."""
 
     def get_client_ip(self, request) -> Optional[str]:
-        """Get client IP address from request."""
+        """
+        Get client IP address from request.
 
-        # In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
-        # Client -> CLB -> Nginx Ingress -> Django
-        # CLB adds X-Forwarded-For with original client IP
-        # Nginx may add X-Real-IP or modify X-Forwarded-For
+        This is harder than it seems due to proxies, load balancers,
+        and CDNs. This implementation checks common headers set by
+        proxies and falls back to REMOTE_ADDR.
+
+        Note the following:
+        - In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
+        - Client -> CLB -> Nginx Ingress -> Django
+        - CLB adds X-Forwarded-For with original client IP
+        - Nginx may add X-Real-IP or modify X-Forwarded-For
+        - Django sees REMOTE_ADDR as the Nginx IP (not useful for client IP)
+
+        - If using Cloudflare, it adds CF-Connecting-IP header with original client IP
+        - Always validate IPs to avoid trusting spoofed headers
+
+        """
 
         # First check X-Forwarded-For (most reliable for CLB)
         forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
@@ -186,7 +199,7 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             )
             return remote_addr
 
-        if request.path.replace("/", "") not in self.amnesty_urls:
+        if request.path.replace("/", "") not in self.amnesty_urls and not smarter_settings.environment_is_local:
             logger.warning(
                 "%s __call()__ - Could not determine client IP: %s",
                 self.formatted_class_name,

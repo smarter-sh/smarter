@@ -11,17 +11,7 @@ metadata:
   version: 0.1.0
 spec:
   selector:
-    directive: search_terms
-    # Complete search terms that will trigger the chatbot to use your customized system prompt.
-    searchTerms:
-      - stackademy
-      - course
-      - courses
-      - classes
-      - class
-      - online
-      - teach
-      - teaching
+    directive: always
   prompt:
     provider: openai
     systemRole: >
@@ -29,15 +19,21 @@ spec:
       degrees programs. Whenever possible you should defer to the tool calls provided for additional information
       about the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University
       should be answered with "I am sorry, but I can only provide information about the courses offered by Stackademy University."
-    model: gpt-4-turbo
+    model: gpt-40-mini
     temperature: 0.5
-    maxTokens: 4096
+    maxTokens: 2048
   connection: smarter_test_db
   sqlData:
     description: >
       returns up to 10 rows of course detail data, filtered by the maximum cost a student is willing
       to pay for a course and the area of specialization.
     limit: 10
+    sqlQuery: SELECT c.course_code, c.course_name, c.description, c.cost, prerequisite.course_code AS prerequisite_course_code, prerequisite.course_name AS prerequisite_course_name
+      FROM courses c
+      LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id
+      WHERE ((c.description LIKE CONCAT('%', {description}, '%')) OR ({description} IS NULL))
+        AND (c.cost <= {max_cost} OR {max_cost} IS NULL)
+      ORDER BY c.prerequisite_id;
     parameters:
     - description: the maximum cost that a student is willing to pay for a course.
       enum: null
@@ -55,12 +51,6 @@ spec:
       name: description
       required: false
       type: string
-    sqlQuery: SELECT c.course_code, c.course_name, c.description, c.cost, prerequisite.course_code AS prerequisite_course_code, prerequisite.course_name AS prerequisite_course_name
-      FROM courses c
-      LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id
-      WHERE ((c.description LIKE CONCAT('%', {description}, '%')) OR ({description} IS NULL))
-        AND (c.cost <= {max_cost} OR {max_cost} IS NULL)
-      ORDER BY c.prerequisite_id;
     testValues:
     - name: description
       value: AI

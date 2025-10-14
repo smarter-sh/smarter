@@ -13,6 +13,7 @@ from django.db import models
 
 from smarter.apps.account.models import Account, Secret
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
@@ -44,7 +45,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
+        and level >= smarter_settings.log_level
     )
 
 

@@ -25,6 +25,7 @@ from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -43,7 +44,7 @@ from ..tests.test_setup import get_test_file, get_test_file_path
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

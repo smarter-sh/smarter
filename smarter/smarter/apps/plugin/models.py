@@ -36,6 +36,7 @@ from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake, rfc1034_compliant_str
 from smarter.lib import json
@@ -73,7 +74,7 @@ from .signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

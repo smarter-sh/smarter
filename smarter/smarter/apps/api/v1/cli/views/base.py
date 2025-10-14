@@ -18,6 +18,7 @@ from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.docs.views.base import DocsError
 from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.apps.prompt.views import SmarterChatappViewError
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import (
     SMARTER_BUG_REPORT_URL,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
@@ -61,7 +62,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -129,8 +130,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         underlying object that provides the object-specific service (create, update, get, delete, etc).
     """
 
-    authentication_classes = (SmarterTokenAuthentication,)
     permission_classes = (SmarterAuthenticatedPermissionClass,)
+    authentication_classes = (SmarterTokenAuthentication,)
 
     _BrokerClass: Optional[Type[AbstractBroker]] = None
     _broker: Optional[AbstractBroker] = None
@@ -144,7 +145,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
     def __init__(self, *args, **kwargs):
         request = None
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
         super().__init__(*args, **kwargs)
 
     @property
@@ -299,26 +299,14 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         Setup the view. This is called by Django before dispatch() and is used to
         set up the view for the request.
         """
-        logger.info(
-            "%s.setup() - called for request: %s", self.formatted_class_name, smarter_build_absolute_uri(request)
-        )
         super().setup(request, *args, **kwargs)
-        logger.info(
-            "%s.setup() - view for request: %s, user: %s is_authenticated: %s",
-            self.formatted_class_name,
-            smarter_build_absolute_uri(request),
-            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
-            request.user.is_authenticated,
-        )
-        # experiment: we want to ensure that the request object is
-        # initialized before we call the SmarterRequestMixin.
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
         logger.info(
-            "CliBaseApiView().setup() - finished view for request: %s, user: %s, self.user: %s is_authenticated: %s",
+            "CliBaseApiView().setup() - finished for request: %s, user: %s, self.user: %s is_authenticated: %s",
             smarter_build_absolute_uri(request),
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,

@@ -3,6 +3,8 @@
 
 import os
 
+from smarter.common.conf import settings as smarter_settings
+
 from .base import *
 
 

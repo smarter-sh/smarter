@@ -24,6 +24,7 @@ from smarter.apps.account.manifest.models.secret.model import (
 )
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.models import Secret
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -52,7 +53,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= logging.INFO
+    ) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
