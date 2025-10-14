@@ -20,6 +20,7 @@ from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import ChatHelper
 from smarter.apps.prompt.providers.providers import chat_providers
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
@@ -255,7 +256,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
             }
             self.chatbot_helper.log_dump()
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST.value)
-        if self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
+        if self.chatbot_helper.is_authentication_required and not is_authenticated_request(request):
             data = {"message": "Forbidden. Please provide a valid API key."}
             return JsonResponse(data=data, status=HTTPStatus.FORBIDDEN.value)
 

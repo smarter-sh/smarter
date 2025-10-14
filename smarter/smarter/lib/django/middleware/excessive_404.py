@@ -10,6 +10,7 @@ from django.http import HttpResponseForbidden
 
 from smarter.common.classes import SmarterMiddlewareMixin
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -35,7 +36,7 @@ class BlockExcessive404Middleware(SmarterMiddlewareMixin):
     def process_response(self, request: WSGIRequest, response):
         if response.status_code == 404:
             # skip this for authenticated users
-            if hasattr(request, "user") and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
+            if is_authenticated_request(request):
                 return response
 
             client_ip = self.get_client_ip(request)

@@ -8,6 +8,7 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.views import APIView
 
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
+from smarter.common.utils import is_authenticated_request
 
 
 logger = logging.getLogger(__name__)
@@ -37,12 +38,7 @@ class SmarterAuthenticatedPermissionClass(IsAuthenticated):
         Allows internal view access to authenticated users and
         internal API requests.
         """
-        if (
-            request
-            and hasattr(request, "user")
-            and request.user.is_authenticated
-            and getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False)
-        ):
+        if is_authenticated_request(request) and getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False):
             logger.info(
                 "SmarterAuthenticatedPermissionClass().has_permission() - internal api request. Overriding permission: %s",
                 request.build_absolute_uri(),

@@ -5,7 +5,7 @@ import logging
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.serializers import AccountSerializer
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.utils import smarter_build_absolute_uri
+from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
@@ -65,7 +65,7 @@ class AccountListViewBase(SmarterAdminListAPIView):
                 self.request.user,
             )
         else:
-            if not self.request.user.is_authenticated:
+            if not is_authenticated_request(self.request):
                 logger.warning(
                     "%s.setup() - request user is not authenticated: %s",
                     self.formatted_class_name,
@@ -77,5 +77,5 @@ class AccountListViewBase(SmarterAdminListAPIView):
             smarter_build_absolute_uri(self.request),
             self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
-            self.request.user.is_authenticated,
+            is_authenticated_request(self.request),
         )

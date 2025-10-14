@@ -12,6 +12,9 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import (
+    is_authenticated_request,
+)
+from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
 from smarter.lib import json
@@ -236,7 +239,7 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             return True
 
         # Check if user is authenticated (Django built-in)
-        if hasattr(request, "user") and request.user.is_authenticated:
+        if is_authenticated_request(request):
             return True
 
         return False

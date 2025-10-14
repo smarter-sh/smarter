@@ -17,6 +17,7 @@ from django.utils.functional import cached_property
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.request import SmarterRequestMixin
@@ -113,7 +114,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         if self.smarter_request and hasattr(self.smarter_request, "user") and self.smarter_request.user is not None:
             request.user = self.smarter_request.user
 
-        if not hasattr(request, "user") or (request.user and not request.user.is_authenticated):
+        if not is_authenticated_request(request):
             # this would only happen if the url routes to DRF but no
             # Authentication token was passed in the header. In this
             # case we'll add our own smarter admin user just for initializing
