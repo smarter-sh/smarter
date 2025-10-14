@@ -19,11 +19,7 @@ from smarter.apps.docs.views.base import DocsError
 from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.apps.prompt.views import SmarterChatappViewError
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import (
-    SMARTER_BUG_REPORT_URL,
-    SMARTER_CUSTOMER_SUPPORT_EMAIL,
-    SMARTER_IS_INTERNAL_API_REQUEST,
-)
+from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
@@ -63,6 +59,8 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
 
+from .const import BUG_REPORT
+
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
@@ -71,12 +69,6 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
-BUG_REPORT = (
-    "Encountered an unexpected error. "
-    f"This is a bug. Please contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} "
-    f"and/or report to {SMARTER_BUG_REPORT_URL}."
-)
 
 
 class APIV1CLIViewError(SmarterException):

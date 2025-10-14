@@ -7,6 +7,7 @@ from typing import Optional
 from django.core.cache import cache
 from django.http import HttpRequest
 from django.views.decorators.csrf import csrf_exempt
+from drf_yasg.utils import swagger_auto_schema
 
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.common.conf import settings as smarter_settings
@@ -18,6 +19,7 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from ..base import APIV1CLIViewError
+from ..const import COMMON_SWAGGER_RESPONSES, ChatConfigSerializer
 from .chat import CACHE_EXPIRATION, ApiV1CliChatBaseApiView
 
 
@@ -61,16 +63,24 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         inherited_class = super().formatted_class_name
         return f"{inherited_class}.ApiV1CliChatConfigApiView()"
 
+    @swagger_auto_schema(
+        operation_description="""
+Api v1 post method for chat config view. Returns the configuration
+dict used to configure the React chat component.
+
+The client must send `uid` and optionally `session_key` as form data (`application/x-www-form-urlencoded`).
+
+The client making the HTTP request to this endpoint is expected to be the Smarter CLI, emulating the Smarter Chat React component, which is written in Golang and available on Windows, macOS, and Linux.
+
+The response from this endpoint is a JSON object.
+
+This is a Non-brokered operation.
+""",
+        responses={**COMMON_SWAGGER_RESPONSES, 200: "Config generated successfully"},
+        request_body=ChatConfigSerializer,
+    )
     @csrf_exempt
     def post(self, request: HttpRequest, name: str, *args, **kwargs):
-        """
-        Api v1 post method for chat config view. Returns the configuration
-        dict used to configure the React chat component.
-
-        :param request: Request object
-        :param name: Name of the chat
-        :param uid: UID of the client, created from the machine mac address and the hostname
-        """
         uid: Optional[str] = request.POST.get("uid")
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
         logger.info(
