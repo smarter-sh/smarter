@@ -1,5 +1,5 @@
 """
-Common constants for Brokered CLI API views.
+Common Swagger definitions for CLI API views.
 """
 
 import json
@@ -56,9 +56,19 @@ class ManifestSerializer(serializers.Serializer):
 class ChatConfigSerializer(serializers.Serializer):
     """Serializer for the chat configuration in smarter.sh/v1 format."""
 
-    uid = serializers.CharField(help_text="Client UID")
-    session_key = serializers.CharField(
-        help_text="Optional session key. If not provided, a new session key will be generated."
+    uid = serializers.RegexField(
+        help_text="Client UID",
+        max_length=64,
+        min_length=64,
+        regex=r"^[0-9a-f]{64}$",
+        required=True,
+    )
+    session_key = serializers.RegexField(
+        help_text="Optional session key. If not provided, a new session key will be generated.",
+        max_length=64,
+        min_length=64,
+        regex=r"^[0-9a-f]{64}$",
+        required=False,
     )
 
 
@@ -100,44 +110,113 @@ COMMON_SWAGGER_PARAMETERS = {
 }
 
 
+class ErrorResponseSerializer(serializers.Serializer):
+    """Serializer for a JSON error response."""
+
+    status = serializers.CharField(default="error")
+    message = serializers.CharField()
+
+
+class ResponseMetadataSerializer(serializers.Serializer):
+    """Serializer for the metadata in the response."""
+
+    count = serializers.IntegerField(required=False)
+    command = serializers.CharField(required=False)
+
+
+class ResponseKwargsSerializer(serializers.Serializer):
+    """Serializer for the kwargs in the response."""
+
+    asc = serializers.CharField()
+    desc = serializers.CharField()
+    i = serializers.CharField()
+    username = serializers.CharField()
+
+
+class ResponseDataSerializer(serializers.Serializer):
+    """Serializer for the data in the response."""
+
+    apiVersion = serializers.CharField()
+    kind = serializers.CharField()
+    metadata = ResponseMetadataSerializer(required=False)
+    kwargs = ResponseKwargsSerializer(required=False)
+    data = serializers.DictField(required=False)
+
+
+class SuccessResponseSerializer(serializers.Serializer):
+    """Serializer for a JSON success response."""
+
+    data = ResponseDataSerializer()
+    message = serializers.CharField()
+    api = serializers.CharField()
+    thing = serializers.CharField()
+    metadata = ResponseMetadataSerializer(required=False)
+
+
 def json_error_response(message: str) -> dict:
     """Helper function to generate a JSON error response."""
     return {"status": "error", "message": message}
 
 
+def json_success_response(message: str) -> dict:
+    """Helper function to generate a JSON success response."""
+    return {
+        "application/json": {
+            "data": {},
+            "message": message,
+            "api": "smarter.sh/v1",
+            "thing": "User",
+            "metadata": {"command": "get"},
+        }
+    }
+
+
+def openai_success_response(message: str) -> openapi.Response:
+    """Helper function to generate a JSON success response."""
+    return openapi.Response(
+        description=message,
+        examples=json_success_response(message),
+        schema=SuccessResponseSerializer(),
+    )
+
+
 # @swagger_auto_schema responses
 COMMON_SWAGGER_RESPONSES = {
-    HTTPStatus.OK: openapi.Response(
-        description="Manifest applied successfully",
-        examples={"application/json": json_error_response("Manifest applied successfully")},
-    ),
+    HTTPStatus.OK: openai_success_response("Manifest applied successfully"),
     HTTPStatus.BAD_REQUEST: openapi.Response(
         description="Malformed manifest or missing data",
         examples={"application/json": json_error_response("No YAML manifest provided.")},
+        schema=ErrorResponseSerializer(),
     ),
     HTTPStatus.FORBIDDEN: openapi.Response(
         description="Forbidden",
         examples={"application/json": json_error_response("You do not have permission to perform this action.")},
+        schema=ErrorResponseSerializer(),
     ),
     HTTPStatus.NOT_FOUND: openapi.Response(
         description="Resource not found",
         examples={"application/json": json_error_response("Requested resource not found.")},
+        schema=ErrorResponseSerializer(),
     ),
     HTTPStatus.METHOD_NOT_ALLOWED: openapi.Response(
         description="Method not allowed",
         examples={"application/json": json_error_response("HTTP method not allowed on this endpoint.")},
+        schema=ErrorResponseSerializer(),
     ),
     HTTPStatus.INTERNAL_SERVER_ERROR: openapi.Response(
         description="Internal server error",
         examples={"application/json": json_error_response("An unexpected error occurred.")},
+        schema=ErrorResponseSerializer(),
     ),
     HTTPStatus.NOT_IMPLEMENTED: openapi.Response(
         description="Not implemented",
         examples={"application/json": json_error_response("This feature is not implemented.")},
+        schema=ErrorResponseSerializer(),
     ),
     HTTPStatus.SERVICE_UNAVAILABLE: openapi.Response(
         description="Service unavailable",
         examples={"application/json": json_error_response("Service is temporarily unavailable.")},
+        schema=ErrorResponseSerializer(),
     ),
 }
 
@@ -148,4 +227,6 @@ __all__ = [
     "ManifestSerializer",
     "ChatConfigSerializer",
     "CliChatSerializer",
+    "SuccessResponseSerializer",
+    "json_success_response",
 ]

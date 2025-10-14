@@ -1,10 +1,16 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'schema' view"""
 
+from http import HTTPStatus
+
 from drf_yasg.utils import swagger_auto_schema
 
 from .base import CliBaseApiView
-from .const import COMMON_SWAGGER_PARAMETERS, COMMON_SWAGGER_RESPONSES
+from .swagger import (
+    COMMON_SWAGGER_PARAMETERS,
+    COMMON_SWAGGER_RESPONSES,
+    openai_success_response,
+)
 
 
 class ApiV1CliSchemaApiView(CliBaseApiView):
@@ -46,7 +52,7 @@ Golang and available on Windows, macOS, and Linux, or the Smarter web console /d
 
 The response from this endpoint is a JSON object containing the published JSON schema.
 """,
-        responses={**COMMON_SWAGGER_RESPONSES, 200: "Schema generated successfully"},
+        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Schema generated successfully")},
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def post(self, request, kind: str, *args, **kwargs):
@@ -66,7 +72,7 @@ The response from this endpoint is a JSON object containing the published JSON s
 
 This is a brokered operation, so the actual work is delegated to the appropriate broker based on the resource kind specified in the manifest. See smarter.apps.api.v1.cli.brokers.Brokers
 """,
-        responses={**COMMON_SWAGGER_RESPONSES, 200: "Schema retrieved successfully"},
+        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Schema retrieved successfully")},
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"], COMMON_SWAGGER_PARAMETERS["name_query_param"]],
     )
     def get(self, request, kind: str, *args, **kwargs):

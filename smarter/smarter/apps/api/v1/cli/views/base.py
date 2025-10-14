@@ -59,7 +59,7 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
 
-from .const import BUG_REPORT
+from .swagger import BUG_REPORT
 
 
 def should_log(level):

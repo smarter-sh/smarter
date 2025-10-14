@@ -39,10 +39,11 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMMetadataKeys, SCLIResponseGet
 
 from ..base import APIV1CLIViewError, CliBaseApiView
-from ..const import (
+from ..swagger import (
     COMMON_SWAGGER_PARAMETERS,
     COMMON_SWAGGER_RESPONSES,
     CliChatSerializer,
+    openai_success_response,
 )
 
 
@@ -558,7 +559,7 @@ The response from this endpoint is a JSON object.
 
 This is a Non-brokered operation.
 """,
-        responses={**COMMON_SWAGGER_RESPONSES, 200: "Chat generated successfully"},
+        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Chat generated successfully")},
         request_body=CliChatSerializer,
         manual_parameters=[
             COMMON_SWAGGER_PARAMETERS["name"],

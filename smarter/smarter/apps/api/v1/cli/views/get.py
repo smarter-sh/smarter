@@ -12,7 +12,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base import CliBaseApiView
-from .const import (
+from .swagger import (
     COMMON_SWAGGER_PARAMETERS,
     COMMON_SWAGGER_RESPONSES,
     EXAMPLE_GET_RESPONSE,

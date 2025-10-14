@@ -5,7 +5,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from .base import CliBaseApiView
-from .const import (
+from .swagger import (
     COMMON_SWAGGER_PARAMETERS,
     COMMON_SWAGGER_RESPONSES,
     EXAMPLE_DESCRIBE_USER,
