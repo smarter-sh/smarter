@@ -15,6 +15,11 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base import APIV1CLIViewError, CliBaseApiView
+from .swagger import (
+    COMMON_SWAGGER_RESPONSES,
+    ManifestSerializer,
+    openai_success_response,
+)
 
 
 def should_log(level):
@@ -68,20 +73,13 @@ This is the API endpoint for the 'apply' command in the Smarter command-line int
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
 
 The response from this endpoint is a JSON object.
-"""
+
+This is a brokered operation, so the actual work is delegated to the appropriate broker based on the resource kind specified in the manifest. See smarter.apps.api.v1.cli.brokers.Brokers
+""",
+        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Manifest applied successfully")},
+        request_body=ManifestSerializer,
     )
     def post(self, request: WSGIRequest, *args, **kwargs):
-        """
-        Handles the POST HTTP request for the 'apply' command.
-
-        Parameters:
-        request (Request): The request object containing a YAML manifest in the smarter.sh/v1 format.
-        *args: Variable length argument list.
-        **kwargs: expected to be an empty dictionary
-
-        Returns:
-        Response: A JSON object representing the result of the 'apply' operation.
-        """
 
         if not self.manifest_data:
             raise APIV1CLIViewManifestNotFoundError("No YAML manifest provided.")

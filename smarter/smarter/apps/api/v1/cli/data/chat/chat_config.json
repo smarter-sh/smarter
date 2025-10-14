@@ -1,0 +1,307 @@
+{
+    "data": {
+        "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc",
+        "sandbox_mode": false,
+        "debug_mode": true,
+        "chatbot": {
+            "id": 1,
+            "url_chatbot": "http://localhost:8000/api/v1/chatbots/1/chat/",
+            "account": {
+                "accountNumber": "3141-5926-5359"
+            },
+            "default_system_role": "The current date/time is Tuesday, 2025-10-14T12:48:51+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+            "created_at": "2025-09-19T19:01:34.105463Z",
+            "updated_at": "2025-09-28T15:47:09.836020Z",
+            "name": "example",
+            "description": "An example chatbot with tool calling and Smarter Plugins.",
+            "version": "0.1.0",
+            "deployed": true,
+            "provider": "openai",
+            "default_model": "gpt-4-turbo",
+            "default_temperature": 0.5,
+            "default_max_tokens": 2048,
+            "app_name": "Smarter Demo",
+            "app_assistant": "Kent",
+            "app_welcome_message": "Welcome to the Smarter demo!",
+            "app_example_prompts": [
+                "What is the weather in San Francisco?",
+                "What is an Everlasting Gobstopper?",
+                "example function calling configuration"
+            ],
+            "app_placeholder": "Ask me anything...",
+            "app_info_url": "https://smarter.sh",
+            "app_background_image_url": null,
+            "app_logo_url": "https://platform.smarter.sh/static/images/logo/smarter-crop.png",
+            "app_file_attachment": false,
+            "dns_verification_status": "Verified",
+            "tls_certificate_issuance_status": "No Certificate",
+            "subdomain": null,
+            "custom_domain": null
+        },
+        "history": {
+            "chat": {
+                "id": 274,
+                "created_at": "2025-10-14T03:59:13.695303Z",
+                "updated_at": "2025-10-14T03:59:13.695331Z",
+                "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc",
+                "ip_address": "192.168.65.1",
+                "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+                "url": "http://example.3141-5926-5359.api.localhost:8000/config/",
+                "account": 1,
+                "chatbot": 1
+            },
+            "chat_history": [
+                {
+                    "role": "system",
+                    "content": "The current date/time is Tuesday, 2025-10-14T12:48:44+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                    "smarter_is_new": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Welcome to the Smarter demo!",
+                    "smarter_is_new": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n",
+                    "smarter_is_new": false
+                },
+                {
+                    "role": "user",
+                    "content": "hello world",
+                    "smarter_is_new": false
+                },
+                {
+                    "role": "smarter",
+                    "content": "Prompt configuration: llm=openai, model=gpt-4-turbo, temperature=0.5, max_completion_tokens=2048, tool_choice=auto.",
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "smarter",
+                    "content": "Tool presented: get_current_weather(location: The city and state, e.g. San Francisco, CA, unit: METRIC, USCS) - Get the current weather in a given location ",
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "smarter",
+                    "content": "openai prompt charges: 226 prompt tokens, 24 completion tokens = 250 total tokens charged.",
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "assistant",
+                    "audio": null,
+                    "content": "Hello! How can I assist you today? If you have any questions or need information, feel free to ask.",
+                    "refusal": null,
+                    "tool_calls": null,
+                    "annotations": [],
+                    "function_call": null,
+                    "smarter_is_new": true
+                }
+            ],
+            "chat_tool_call_history": [],
+            "chat_plugin_usage_history": [],
+            "chatbot_request_history": [
+                {
+                    "id": 59,
+                    "created_at": "2025-10-14T12:48:49.679727Z",
+                    "updated_at": "2025-10-14T12:48:49.679847Z",
+                    "request": {
+                        "messages": [
+                            {
+                                "role": "system",
+                                "content": "The current date/time is Tuesday, 2025-10-14T12:48:44+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time."
+                            },
+                            {
+                                "role": "assistant",
+                                "content": "Welcome to the Smarter demo!"
+                            },
+                            {
+                                "role": "assistant",
+                                "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
+                            },
+                            {
+                                "role": "user",
+                                "content": "hello world"
+                            }
+                        ],
+                        "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc"
+                    },
+                    "is_aggregation": false
+                }
+            ],
+            "plugin_selector_history": []
+        },
+        "meta_data": {
+            "ready": true,
+            "name": "example",
+            "api_host": "api.localhost:8000",
+            "chatbot_id": null,
+            "chatbot_name": null,
+            "chatbot_custom_domain": null,
+            "environment_api_domain": "api.localhost:8000",
+            "err": "ChatBotHelper.__init__() not a chatbot. Quitting. http://localhost:8000/api/v1/chatbots/1/chat/config/",
+            "is_custom_domain": false,
+            "is_deployed": true,
+            "is_valid": true,
+            "is_authentication_required": false,
+            "chatbot": {
+                "id": 1,
+                "created_at": "2025-09-19T19:01:34.105463Z",
+                "updated_at": "2025-09-28T15:47:09.836020Z",
+                "account": {
+                    "accountNumber": "3141-5926-5359"
+                },
+                "name": "example",
+                "description": "An example chatbot with tool calling and Smarter Plugins.",
+                "version": "0.1.0",
+                "subdomain": null,
+                "custom_domain": null,
+                "deployed": true,
+                "provider": "openai",
+                "default_model": "gpt-4-turbo",
+                "default_system_role": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                "default_temperature": 0.5,
+                "default_max_tokens": 2048,
+                "app_name": "Smarter Demo",
+                "app_assistant": "Kent",
+                "app_welcome_message": "Welcome to the Smarter demo!",
+                "app_example_prompts": [
+                    "What is the weather in San Francisco?",
+                    "What is an Everlasting Gobstopper?",
+                    "example function calling configuration"
+                ],
+                "app_placeholder": "Ask me anything...",
+                "app_info_url": "https://smarter.sh",
+                "app_background_image_url": null,
+                "app_logo_url": "https://platform.smarter.sh/static/images/logo/smarter-crop.png",
+                "app_file_attachment": false,
+                "dns_verification_status": "Verified",
+                "tls_certificate_issuance_status": "No Certificate",
+                "url_chatbot": "http://localhost:8000/api/v1/chatbots/1/chat/"
+            },
+            "url": "http://localhost:8000/api/v1/chatbots/1/chat/config/",
+            "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc",
+            "auth_header": "Bearer****",
+            "api_token": null,
+            "data": {
+                "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc"
+            },
+            "is_smarter_api": true,
+            "is_chatbot": false,
+            "is_chatbot_smarter_api_url": false,
+            "is_chatbot_named_url": false,
+            "is_chatbot_sandbox_url": false,
+            "is_chatbot_cli_api_url": false,
+            "is_default_domain": false,
+            "path": "/api/v1/chatbots/1/chat/config/",
+            "root_domain": "localhost",
+            "subdomain": "",
+            "api_subdomain": null,
+            "domain": "localhost:8000",
+            "timestamp": "2025-10-14T12:48:51.879796",
+            "unique_client_string": "3141-5926-5359.http://localhost:8000/api/v1/chatbots/1/chat/config/.Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36.162.159.140.245.2025-10-14T12:48:51.879796",
+            "client_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc",
+            "ip_address": "162.159.140.245",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+            "parsed_url": "ParseResult(scheme='http', netloc='localhost:8000', path='/api/v1/chatbots/1/chat/config/', params='', query='session_key=3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc', fragment='')",
+            "request": true,
+            "qualified_request": true,
+            "url_path_parts": [
+                "api",
+                "v1",
+                "chatbots",
+                "1",
+                "chat",
+                "config"
+            ],
+            "params": {
+                "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc"
+            },
+            "uid": null,
+            "cache_key": "40e705662233925beb48ccbd130cc417c0ed361cad0b9c40e0dffb1aa5d0e791",
+            "is_config": true,
+            "is_dashboard": false,
+            "is_workbench": false,
+            "is_environment_root_domain": false,
+            "account": {
+                "accountNumber": "3141-5926-5359"
+            },
+            "user": {
+                "username": "lpm0073",
+                "email": "lpm0073@gmail.com"
+            },
+            "user_profile": {
+                "user": {
+                    "username": "lpm0073",
+                    "email": "lpm0073@gmail.com"
+                },
+                "account": {
+                    "accountNumber": "3141-5926-5359"
+                }
+            },
+            "class_name": "ChatBotHelper"
+        },
+        "plugins": {
+            "meta_data": {
+                "total_plugins": 2,
+                "plugins_returned": 2
+            },
+            "plugins": [
+                {
+                    "id": 11,
+                    "pluginMeta": {
+                        "name": "example_configuration",
+                        "account": {
+                            "accountNumber": "3141-5926-5359"
+                        },
+                        "description": "The example plugin. This is a 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
+                        "pluginClass": "static",
+                        "version": "0.2.0",
+                        "author": {
+                            "user": {
+                                "username": "admin",
+                                "email": "admin@smarter.sh"
+                            },
+                            "account": {
+                                "accountNumber": "3141-5926-5359"
+                            }
+                        },
+                        "tags": []
+                    },
+                    "createdAt": "2025-09-19T19:02:46.656422Z",
+                    "updatedAt": "2025-09-19T19:02:46.656434Z",
+                    "chatbot": 1
+                },
+                {
+                    "id": 10,
+                    "pluginMeta": {
+                        "name": "everlasting_gobstopper",
+                        "account": {
+                            "accountNumber": "3141-5926-5359"
+                        },
+                        "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+                        "pluginClass": "static",
+                        "version": "0.2.0",
+                        "author": {
+                            "user": {
+                                "username": "admin",
+                                "email": "admin@smarter.sh"
+                            },
+                            "account": {
+                                "accountNumber": "3141-5926-5359"
+                            }
+                        },
+                        "tags": []
+                    },
+                    "createdAt": "2025-09-19T19:02:46.654492Z",
+                    "updatedAt": "2025-09-19T19:02:46.654520Z",
+                    "chatbot": 1
+                }
+            ]
+        }
+    },
+    "api": "smarter.sh/v1",
+    "thing": "ChatConfig",
+    "metadata": {
+        "command": "chat_config"
+    }
+}
