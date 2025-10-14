@@ -1,6 +1,6 @@
-"""URL configuration for Smarter Api and web console."""
-
-from logging import getLogger
+"""
+URLs for Smarter web console.
+"""
 
 from django.apps import apps
 from django.conf import settings
@@ -43,8 +43,6 @@ from smarter.apps.provider.const import namespace as provider_namespace
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 
 
-logger = getLogger(__name__)
-
 # -----------------------------------------------------------------------------
 # Initialize custom admin site for Smarter
 # -----------------------------------------------------------------------------
@@ -80,15 +78,16 @@ name_prefix = "root"
 urlpatterns = [
     path("", RedirectView.as_view(pattern_name="dashboard:dashboard"), name=f"{name_prefix}_home"),
     # -----------------------------------
+    # Api
+    # -----------------------------------
+    path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
+    # -----------------------------------
     # root paths
     # -----------------------------------
     path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
     path("admin/", admin.site.urls, name="django_admin"),
     path("admin/docs/", include("django.contrib.admindocs.urls")),
-    path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
-    path("chat/", DefaultChatbotApiView.as_view(), name=f"{name_prefix}_chat"),
     path("cms/", include("smarter.apps.cms.urls", namespace=None)),
-    path("config/", ChatConfigView.as_view(), name=f"{name_prefix}_config"),
     path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
     path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
     path("docs/", include("smarter.apps.docs.urls", namespace=docs_namespace)),
@@ -97,6 +96,11 @@ urlpatterns = [
     path("plugin/", include("smarter.apps.plugin.urls", namespace=plugin_namespace)),
     path("provider/", include("smarter.apps.provider.urls", namespace=provider_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
+    # -----------------------------------
+    # Chatbots
+    # -----------------------------------
+    path("chat/", DefaultChatbotApiView.as_view(), name=f"{name_prefix}_chat"),
+    path("config/", ChatConfigView.as_view(), name=f"{name_prefix}_config"),
     # -----------------------------------
     # static routes
     # -----------------------------------
@@ -132,3 +136,5 @@ if not settings.DEBUG:
 # urlpatterns += [
 #     path("__debug__/", include(debug_toolbar.urls)),
 # ]
+
+__all__ = ["urlpatterns"]

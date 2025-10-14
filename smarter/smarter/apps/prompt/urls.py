@@ -5,8 +5,6 @@ endpoints for for the Workbench React app and chat configuration.
 how we got here:
  - /
  - /workbench/<str:name>/config/
- - also via smarter.urls.py config_redirector() ???
-
 """
 
 from django.urls import include, path

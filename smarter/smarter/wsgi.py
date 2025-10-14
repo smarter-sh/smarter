@@ -22,3 +22,5 @@ logger.debug("WSGI config for smarter.")
 logger.debug("WSGI application: %s", application)
 logger.debug("DJANGO_SETTINGS_MODULE: %s", os.getenv("DJANGO_SETTINGS_MODULE"))
 logger.debug("static_root: %s", settings.STATIC_ROOT)
+
+__all__ = ["application"]

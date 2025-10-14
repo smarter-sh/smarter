@@ -23,7 +23,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # Smarter stuff
-from smarter.smarter_celery import app
+from smarter.workers.celery import app
 
 # Account stuff
 from .models import Account, Charge, DailyBillingRecord
