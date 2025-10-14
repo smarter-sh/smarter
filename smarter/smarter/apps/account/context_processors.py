@@ -27,7 +27,12 @@ def base(request):
             "forgot_password_url": "/dashboard/account/password-reset-request/",
         }
     }
-    if request.user.is_authenticated:
+    if (
+        request
+        and hasattr(request, "user")
+        and hasattr(request.user, "is_authenticated")
+        and request.user.is_authenticated
+    ):
         try:
             user_profile = get_cached_user_profile(user=request.user)
         except UserProfile.DoesNotExist:
