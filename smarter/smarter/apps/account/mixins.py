@@ -7,6 +7,7 @@ from typing import Optional, Union
 from django.contrib.auth.models import AnonymousUser
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
 from smarter.apps.account.models import User
@@ -185,8 +186,11 @@ class AccountMixin(SmarterHelperMixin):
                 self.formatted_class_name,
                 mask_string(api_token.decode()),
             )
-            user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
-            self.user = user
+            try:
+                user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
+                self.user = user
+            except AuthenticationFailed:
+                logger.warning("%s.__init__(): failed to authenticate user from API token", self.formatted_class_name)
 
         if self.is_accountmixin_ready:
             logger.info(
