@@ -1,3 +1,10 @@
+## [0.13.22](https://github.com/smarter-sh/smarter/compare/v0.13.21...v0.13.22) (2025-10-14)
+
+
+### Bug Fixes
+
+* weak logic in request.user.is_authenticated evaluation ([9b7b9c8](https://github.com/smarter-sh/smarter/commit/9b7b9c84234d68274ef227a1745571b8e6ecc0ff))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
