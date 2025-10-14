@@ -17,6 +17,7 @@ from smarter.apps.account.models import User
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import Chat
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
@@ -34,7 +35,7 @@ from .openai.classes import OpenAIChatProvider
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= smarter_settings.log_level
 
 
 def should_log_caching(level):
@@ -42,7 +43,7 @@ def should_log_caching(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
-    ) and level >= logging.INFO
+    ) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

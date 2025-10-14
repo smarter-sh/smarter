@@ -16,6 +16,7 @@ from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.common.api import SmarterApiVersions
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake as util_camel_to_snake
 from smarter.common.utils import snake_to_camel as util_snake_to_camel
@@ -52,7 +53,7 @@ SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

@@ -34,6 +34,7 @@ from smarter.apps.prompt.manifest.brokers.chat_plugin_usage import (
     SAMChatPluginUsageBroker,
 )
 from smarter.apps.prompt.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -44,7 +45,7 @@ from smarter.lib.manifest.broker import AbstractBroker  # BrokerNotImplemented
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

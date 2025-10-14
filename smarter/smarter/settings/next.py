@@ -2,6 +2,8 @@
 """Django settings for next.platform.smarter.sh"""
 import os
 
+from smarter.common.conf import settings as smarter_settings
+
 from .base_aws import *
 
 

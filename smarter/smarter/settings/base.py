@@ -30,6 +30,8 @@ from django import get_version
 from social_core.backends.linkedin import LinkedinOAuth2
 
 from smarter.__version__ import __version__ as smarter_version
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
 
 # Add proprietary settings for the project
 from .smarter import *  # noqa: E402, F401, W0401
@@ -51,6 +53,9 @@ if "collectstatic" in sys.argv:
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-api-key",
+    "accept-encoding",
+    "dnt",
+    "origin",
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGIN_REGEXES = [
@@ -169,6 +174,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_hosts",
     "storages",
     # smarter apps
     # -------------------------------
@@ -215,6 +221,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django_hosts.middleware.HostsRequestMiddleware",
     # this replaces corsheaders.middleware.CorsMiddleware"
     "smarter.lib.django.middleware.cors.CorsMiddleware",
     # this replaces django.middleware.security.SecurityMiddleware
@@ -255,10 +262,13 @@ MIDDLEWARE = [
     # -------------------------------
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     "smarter.apps.cms.middleware.HTMLMinifyMiddleware",
+    "django_hosts.middleware.HostsResponseMiddleware",
     #
 ]
 
+ROOT_HOSTCONF = "smarter.hosts"
 ROOT_URLCONF = "smarter.urls"
+DEFAULT_HOST = SMARTER_PLATFORM_SUBDOMAIN
 
 TEMPLATES = [
     {
@@ -332,6 +342,7 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
 )
 
+SOCIAL_AUTH_CREATE_USERS = False
 SOCIAL_AUTH_PIPELINE = (
     # Get the information we can about the user and return it in a simple
     # format to create the user instance later. On some cases the details are

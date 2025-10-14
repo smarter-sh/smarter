@@ -44,7 +44,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -106,6 +106,7 @@ def get_resolved_user(
     Maps the various kinds of Django user subclasses and mutations to the User.
     Used for resolving type annotations and ensuring type safety.
     """
+    logger.info("get_resolved_user() called for user type: %s", type(user))
     if user is None:
         return None
 

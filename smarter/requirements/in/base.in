@@ -31,23 +31,24 @@ mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to th
 
 # Django
 # ------------
-Django==5.2.6
+Django==5.2.7
 django-redis==6.0.0                     # object caching
 django-celery-beat==2.8.1               # scheduled asynchronous tasks
 djangorestframework==3.16.1             # for creating REST APIs on top of Django
 django-filter==25.1                     # REST API filtering
+django-hosts==7.0.0                     # Dynamic and static host resolving for Django. Maps hostnames to URLconfs.
 django-taggit==6.1.0                    # Smarter Plugin tagging
 django-rest-knox==5.0.2                 # Token authentication for REST APIs
 django-cors-headers==4.7.0              # Cross-origin resource sharing
 django-storages==1.14.6                 # Django storage subsystem
 django-waffle==5.0.0                    # Feature flagging
-social-auth-app-django==5.4.2           # Social authentication for Django
+social-auth-app-django==5.6.0           # Social authentication for Django
 
 # Manifest support, and for working with data
 # ------------
 pandas==2.3.2                           # Data manipulation for data science stuff
-pydantic==2.11.7                        # best data validation library ever!
-pydantic-settings==2.10.1               # settings management
+pydantic==2.12.0                        # best data validation library ever!
+pydantic-settings==2.11.0               # settings management
 
 # LLM support
 # ------------

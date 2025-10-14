@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import glob
 import os
 
+from smarter.common.conf import settings as smarter_settings
+
 from .base import *
 
 

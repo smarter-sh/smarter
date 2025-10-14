@@ -25,7 +25,6 @@ from urllib.parse import ParseResult, urlparse, urlunsplit
 import tldextract
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, QueryDict
 from rest_framework.request import Request as RestFrameworkRequest
 
@@ -60,11 +59,13 @@ netloc_pattern_named_url = re.compile(
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock]]
 
 
 class SmarterRequestMixin(AccountMixin):
@@ -158,13 +159,15 @@ class SmarterRequestMixin(AccountMixin):
         self._cache_key: Optional[str] = None
 
         if request:
-            self.init(request, *args, **kwargs)
+            self.smarter_request = request
         else:
             logger.debug(
                 "%s.__init__() - request is None. SmarterRequestMixin will be partially initialized. This might affect request processing.",
                 self.formatted_class_name,
             )
             super().__init__(request, *args, api_token=self.api_token, **kwargs)
+        if self.smarter_request:
+            self.smarter_request.user = self.user
 
     def init(self, request: HttpRequest, *args, **kwargs):
         """
@@ -255,12 +258,12 @@ class SmarterRequestMixin(AccountMixin):
                     self.__dict__.pop(name, None)
 
     @property
-    def smarter_request(self) -> Optional[HttpRequest]:
+    def smarter_request(self) -> SmarterRequestType:
         """renaming this to avoid potential name collisions in child classes"""
         return self._smarter_request
 
     @smarter_request.setter
-    def smarter_request(self, request: HttpRequest):
+    def smarter_request(self, request: SmarterRequestType):
         self._smarter_request = request
         if request is not None:
             logger.info(

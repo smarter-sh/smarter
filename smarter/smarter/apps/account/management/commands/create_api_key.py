@@ -23,6 +23,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
+        account: Account | None = None
+        user: User | None = None
+        user_profile: UserProfile | None = None
         account_number = options["account_number"]
         username = options["username"]
         description = options["description"]
@@ -36,10 +39,26 @@ class Command(BaseCommand):
             user = get_cached_admin_user_for_account(account)
         if username:
             user = User.objects.get(username=username)
-            account = UserProfile.objects.get(user=user).account
+            user_profile = (
+                UserProfile.objects.get(user=user, account=account)
+                if account
+                else UserProfile.objects.filter(user=user).first()
+            )
+            if not user_profile:
+                self.stdout.write(self.style.ERROR(f"User {username} does not have a user profile"))
+                return
+            account = user_profile.account
         if not user:
-            user = User.objects.get(username=username) if username else get_cached_admin_user_for_account(account)
-        UserProfile.objects.get(user=user, account=account)
+            user = (
+                User.objects.get(username=username)
+                if username
+                else get_cached_admin_user_for_account(account) if account else None
+            )
+        user_profile = UserProfile.objects.get(user=user, account=account)
+
+        if not user or not account or not user_profile:
+            self.stdout.write(self.style.ERROR("Could not find user or account"))
+            return
 
         auth_token, token_key = SmarterAuthToken.objects.create(
             name=f"{account.account_number}.{user.username}", user=user, description=description
