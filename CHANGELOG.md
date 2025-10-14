@@ -1,3 +1,10 @@
+## [0.13.23](https://github.com/smarter-sh/smarter/compare/v0.13.22...v0.13.23) (2025-10-14)
+
+
+### Bug Fixes
+
+* incorrect http error response on incorrect or malformed api key ([83e61a5](https://github.com/smarter-sh/smarter/commit/83e61a57e60dc9f2dc6b6101e779869d3223ccf7))
+
 ## [0.13.22](https://github.com/smarter-sh/smarter/compare/v0.13.21...v0.13.22) (2025-10-14)
 
 
