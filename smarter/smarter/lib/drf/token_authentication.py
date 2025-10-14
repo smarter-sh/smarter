@@ -74,7 +74,21 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
             token=masked_token,
         )
         logger.info("%s.authenticate_credentials() - %s", self.formatted_class_name, masked_token)
-        user, auth_token = super().authenticate_credentials(token)
+        try:
+            user, auth_token = super().authenticate_credentials(token)
+        except AuthenticationFailed as e:
+            smarter_token_authentication_failure.send(
+                sender=self.__class__,
+                user=None,
+                token=masked_token,
+            )
+            logger.warning(
+                "%s.authenticate_credentials() - failed to authenticate token: %s, error: %s",
+                self.formatted_class_name,
+                masked_token,
+                str(e),
+            )
+            raise
         if not isinstance(user, User):
             logger.warning(
                 "%s.authenticate_credentials() - failed to retrieve user for token: %s",
