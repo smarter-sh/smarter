@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: 0.13.19
+appVersion: 0.13.20
 name: smarter
 description: A Helm chart for deploying Smarter API and web console
 type: application

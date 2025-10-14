@@ -1,3 +1,10 @@
+## [0.13.20](https://github.com/smarter-sh/smarter/compare/v0.13.19...v0.13.20) (2025-10-14)
+
+
+### Bug Fixes
+
+* refactor project root modules - celery, urls, hosts ([600e6ab](https://github.com/smarter-sh/smarter/commit/600e6ab99b3efdf5281b7556c52c14bd544fc536))
+
 ## [0.13.19](https://github.com/smarter-sh/smarter/compare/v0.13.18...v0.13.19) (2025-10-14)
 
 
