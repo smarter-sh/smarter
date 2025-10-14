@@ -1,3 +1,10 @@
+## [0.13.21](https://github.com/smarter-sh/smarter/compare/v0.13.20...v0.13.21) (2025-10-14)
+
+
+### Bug Fixes
+
+* request.user Nonetype ([797fa27](https://github.com/smarter-sh/smarter/commit/797fa27b72793cecf366fb2e7a22f996e1d3514f))
+
 ## [0.13.20](https://github.com/smarter-sh/smarter/compare/v0.13.19...v0.13.20) (2025-10-14)
 
 
