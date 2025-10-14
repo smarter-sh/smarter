@@ -2,6 +2,8 @@
 """Account views for smarter api."""
 import logging
 
+from django.http.response import HttpResponseForbidden
+
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.serializers import AccountSerializer
 from smarter.common.conf import settings as smarter_settings
@@ -43,7 +45,14 @@ class AccountListViewBase(SmarterAdminListAPIView):
     serializer_class = AccountSerializer
 
     def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
+        try:
+            response = super().dispatch(request, *args, **kwargs)
+        except AttributeError:
+            # catches an error raised by a decorator elsewhere in the stack that
+            # barfs when the user object is None
+            # File "/home/smarter_user/venv/lib/python3.12/site-packages/django/contrib/admin/views/decorators.py", line 13, in <lambda>
+            return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
+
         logger.info(
             "%s.dispatch() - request: %s, user: %s",
             self.formatted_class_name,

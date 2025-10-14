@@ -5,9 +5,10 @@ from http import HTTPStatus
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse
 from django.utils.decorators import method_decorator
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -164,7 +165,22 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
         super().setup(self.request, *args, **kwargs)
 
     def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
+        if not is_authenticated_request(request):
+            logger.warning(
+                "%s.dispatch() - request user is not authenticated: %s",
+                self.formatted_class_name,
+                request.user,
+            )
+            return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
+
+        try:
+            response = super().dispatch(request, *args, **kwargs)
+        # pylint: disable=broad-except
+        except AttributeError:
+            # catches an error raised by a decorator elsewhere in the stack that
+            # barfs when the user object is None
+            # File "/home/smarter_user/venv/lib/python3.12/site-packages/django/contrib/admin/views/decorators.py", line 13, in <lambda>
+            return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
         logger.info(
             "%s.dispatch() - request: %s, user: %s",
             self.formatted_class_name,
@@ -225,7 +241,22 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
         )
 
     def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
+        if not is_authenticated_request(request):
+            logger.warning(
+                "%s.dispatch() - request user is not authenticated: %s",
+                self.formatted_class_name,
+                request.user,
+            )
+            return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
+
+        try:
+            response = super().dispatch(request, *args, **kwargs)
+        except AttributeError:
+            # catches an error raised by a decorator elsewhere in the stack that
+            # barfs when the user object is None
+            # File "/home/smarter_user/venv/lib/python3.12/site-packages/django/contrib/admin/views/decorators.py", line 13, in <lambda>
+            return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
+
         logger.info(
             "%s.dispatch() - request: %s, user: %s",
             self.formatted_class_name,
