@@ -3,6 +3,7 @@
 
 import logging
 
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from smarter.common.conf import settings as smarter_settings
@@ -11,6 +12,11 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .base import CliBaseApiView
+from .swagger import (
+    COMMON_SWAGGER_PARAMETERS,
+    COMMON_SWAGGER_RESPONSES,
+    EXAMPLE_GET_RESPONSE,
+)
 
 
 def should_log(level):
@@ -53,20 +59,19 @@ This is the API endpoint for the 'get' command in the Smarter command-line inter
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
 
 The response from this endpoint is a JSON object.
-"""
+
+This is a brokered operation, so the actual work is delegated to the appropriate broker based on the resource kind specified in the manifest. See smarter.apps.api.v1.cli.brokers.Brokers
+""",
+        responses={
+            **COMMON_SWAGGER_RESPONSES,
+            200: openapi.Response(
+                description="Got resources successfully",
+                examples=EXAMPLE_GET_RESPONSE,
+            ),
+        },
+        manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def post(self, request, kind: str, *args, **kwargs):
-        """
-        Handles the POST HTTP request for the 'get' command.
-
-        Parameters:
-        request (Request): The request object containing a YAML manifest in the smarter.sh/v1 format. Get criteria is passed as url query parameters.
-        *args: Variable length argument list.
-        **kwargs: the kind of resource to get
-
-        Returns:
-        Response: A JSON object representing the result of the 'get' operation.
-        """
         logger.info("%s.post() %s", self.formatted_class_name, kwargs)
         response = self.broker.get(request=request, kwargs=kwargs)
         return response

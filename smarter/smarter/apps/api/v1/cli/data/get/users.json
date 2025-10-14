@@ -1,0 +1,91 @@
+{
+  "data": {
+    "apiVersion": "smarter.sh/v1",
+    "kind": "User",
+    "metadata": {
+      "count": 4
+    },
+    "kwargs": {
+      "asc": "false",
+      "desc": "false",
+      "i": "10",
+      "username": ""
+    },
+    "data": {
+      "titles": [
+        {
+          "name": "id",
+          "type": "IntegerField"
+        },
+        {
+          "name": "username",
+          "type": "CharField"
+        },
+        {
+          "name": "firstName",
+          "type": "CharField"
+        },
+        {
+          "name": "lastName",
+          "type": "CharField"
+        },
+        {
+          "name": "email",
+          "type": "EmailField"
+        },
+        {
+          "name": "isStaff",
+          "type": "BooleanField"
+        },
+        {
+          "name": "isSuperuser",
+          "type": "BooleanField"
+        }
+      ],
+      "items": [
+        {
+          "id": 1,
+          "username": "admin",
+          "firstName": "",
+          "lastName": "",
+          "email": "admin@smarter.sh",
+          "isStaff": true,
+          "isSuperuser": true
+        },
+        {
+          "id": 2,
+          "username": "staff_user",
+          "firstName": "Smarter",
+          "lastName": "User",
+          "email": "staff@smarter.sh",
+          "isStaff": true,
+          "isSuperuser": false
+        },
+        {
+          "id": 3,
+          "username": "customer_user",
+          "firstName": "Customer",
+          "lastName": "User",
+          "email": "customer@smarter.sh",
+          "isStaff": false,
+          "isSuperuser": false
+        },
+        {
+          "id": 4,
+          "username": "lpm0073",
+          "firstName": "Lawrence",
+          "lastName": "McDaniel",
+          "email": "lpm0073@gmail.com",
+          "isStaff": false,
+          "isSuperuser": false
+        }
+      ]
+    }
+  },
+  "message": "Users got successfully",
+  "api": "smarter.sh/v1",
+  "thing": "User",
+  "metadata": {
+    "command": "get"
+  }
+}

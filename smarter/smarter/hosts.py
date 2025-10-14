@@ -20,6 +20,8 @@ host_patterns = patterns(
     # -------------------------------------------------------------------------
     # web console
     # -------------------------------------------------------------------------
+    host(r"localhost:8000", smarter_console_urls, name="localhost"),  # for http://localhost:8000/
+    host(r"127.0.0.1:8000", smarter_console_urls, name="127001"),  # for http://127.0.0.1:8000/
     host(
         rf"{SMARTER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
         smarter_console_urls,
@@ -43,6 +45,8 @@ host_patterns = patterns(
     # -------------------------------------------------------------------------
     # API subdomains
     # -------------------------------------------------------------------------
+    host(r"api.localhost:8000", smarter_api_urls, name="api_localhost"),  # for http://api.localhost:8000/
+    host(r"api.127.0.0.1:8000", smarter_api_urls, name="api_127001"),  # for http://api.127.0.0.1:8000/
     host(
         rf"{SMARTER_API_SUBDOMAIN}.{smarter_settings.root_domain}", smarter_api_urls, name=SMARTER_API_SUBDOMAIN
     ),  # for https://api.platform.smarter.sh/
