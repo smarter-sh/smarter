@@ -31,3 +31,5 @@ app.conf.beat_schedule = {
     },
 }
 app.conf.beat_schedule_filename = "/home/smarter_user/data/celery/celerybeat-schedule"
+
+__all__ = ["app"]
