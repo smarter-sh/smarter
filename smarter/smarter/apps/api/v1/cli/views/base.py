@@ -6,11 +6,15 @@ import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
-from rest_framework.exceptions import NotAuthenticated
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-from smarter.apps.api.signals import api_request_completed, api_request_initiated
+from smarter.apps.api.signals import (
+    api_request_completed,
+    api_request_failed,
+    api_request_initiated,
+)
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
@@ -452,6 +456,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         we're just trying to catch any unhandled exceptions and
         return a generic error message with a bug report URL.
         """
+        response = None
         try:
             url = smarter_build_absolute_uri(request)
             logger.info("%s.dispatch() - called for request: %s", self.formatted_class_name, url)
@@ -467,6 +472,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return response
         # pylint: disable=broad-except
         except Exception as e:
+            api_request_failed.send(sender=self.__class__, instance=self, request=request, response=response)
             status: int = HTTPStatus.INTERNAL_SERVER_ERROR.value
             description_override: Optional[str] = None
 
@@ -482,6 +488,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 SmarterAPIV1CLIViewErrorNotAuthenticated,
                 SmarterInvalidApiKeyError,
                 SmarterTokenError,
+                NotAuthenticated,
+                AuthenticationFailed,
                 AttributeError,  # can be raised by a django admin decorator if request or request.user is None
             ):
                 status = HTTPStatus.FORBIDDEN.value
