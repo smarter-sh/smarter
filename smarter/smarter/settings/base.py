@@ -30,6 +30,7 @@ from django import get_version
 from social_core.backends.linkedin import LinkedinOAuth2
 
 from smarter.__version__ import __version__ as smarter_version
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
 
 # Add proprietary settings for the project
@@ -52,6 +53,9 @@ if "collectstatic" in sys.argv:
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-api-key",
+    "accept-encoding",
+    "dnt",
+    "origin",
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGIN_REGEXES = [
