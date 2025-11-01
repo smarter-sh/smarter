@@ -1,3 +1,11 @@
+## [0.13.25](https://github.com/smarter-sh/smarter/compare/v0.13.24...v0.13.25) (2025-11-01)
+
+
+### Bug Fixes
+
+* remove platform argument bc specifying amd64 precludes use of aws graviton instance types ([84b2ff5](https://github.com/smarter-sh/smarter/commit/84b2ff5da7e54a6e4ea2d76bbf0d5f6ce28ad9d6))
+* setup multi-architecture builds for both AMD64 and ARM64 ([8142653](https://github.com/smarter-sh/smarter/commit/8142653c480a610befa1e997b469d9d94771dd38))
+
 ## [0.13.24](https://github.com/smarter-sh/smarter/compare/v0.13.23...v0.13.24) (2025-10-14)
 
 
