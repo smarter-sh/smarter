@@ -31,6 +31,8 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
 
 
 # Environment: local, alpha, beta, next, or production
+ARG TARGETPLATFORM
+ARG TARGETARCH
 ARG ENVIRONMENT=local
 ENV ENVIRONMENT=$ENVIRONMENT
 RUN echo "ENVIRONMENT: $ENVIRONMENT"
@@ -70,15 +72,24 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   rm -rf /var/lib/apt/lists/*
 
 # Install kubectl, required for smarter/common/helpers/k8s_helpers.py
-RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
-  chmod +x ./kubectl && \
-  mv ./kubectl /usr/local/bin/kubectl
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
+      KUBECTL_ARCH="arm64"; \
+    else \
+      KUBECTL_ARCH="amd64"; \
+    fi && \
+    curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/${KUBECTL_ARCH}/kubectl" && \
+    chmod +x ./kubectl && \
+    mv ./kubectl /usr/local/bin/kubectl
 
 # install aws cli, required for smarter/common/helpers/aws/
-RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-  unzip awscliv2.zip && \
-  ./aws/install && \
-  rm -rf awscliv2.zip aws
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
+      curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"; \
+    else \
+      curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"; \
+    fi && \
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    rm -rf awscliv2.zip aws
 
 ############################## create app user #################################
 FROM system_packages AS user_setup
