@@ -12,7 +12,8 @@ spec:
     defaultSystemRole: >
       You are a helpful assistant. When given the opportunity to utilize
       function calling, you should always do so. This will allow you to
-      provide the best possible responses to the user.
+      provide the best possible responses to the user. DO NOT GUESS. IF
+        YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.
     defaultTemperature: 0.5
     defaultMaxTokens: 1024
     appName: Stackademy SQL Chatbot
