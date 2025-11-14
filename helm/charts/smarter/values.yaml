@@ -19,9 +19,8 @@ redis:
     pullSecrets:
       - dockerhub-secret
   master:
-    image:
-      pullSecrets:
-        - dockerhub-secret
+    imagePullSecrets:
+      - dockerhub-secret
     containerSecurityContext:
       enabled: true
     persistence:
