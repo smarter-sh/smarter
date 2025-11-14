@@ -13,6 +13,8 @@ redis:
   global:
     redis:
       password: "smarter"
+    imagePullSecrets:
+      - dockerhub-secret
   architecture: standalone
   master:
     persistence:
