@@ -15,9 +15,6 @@ redis:
     password: "smarter"
   architecture: standalone
   image:
-    registry: docker.io
-    repository: bitnami/redis
-    tag: sha256-a9454f19ce78f03ef0401823b910fa327b2e25bb6b158341d9ee5391fa4e8d89
     pullPolicy: IfNotPresent
     pullSecrets:
       - dockerhub-secret
