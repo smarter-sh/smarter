@@ -46,7 +46,7 @@ spec:
         - name: {{ .Values.appName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           command: ["gunicorn", "smarter.wsgi:application", "--bind", "0.0.0.0:{{ .Values.deployment.containerPort }}", "--workers=2", "--timeout=60", "--worker-class=sync"]
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: "1Gi"

@@ -151,7 +151,7 @@ spec:
               value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}"
 
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: "{{ .Values.appJobName }}"
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
