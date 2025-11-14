@@ -18,13 +18,6 @@ spec:
     spec:
       affinity:
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: node-group
-                    operator: In
-                    values:
-                      - smarter
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
               preference:
