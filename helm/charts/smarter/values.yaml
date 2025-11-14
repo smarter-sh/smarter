@@ -10,18 +10,18 @@ service:
   targetPort: 8000
 redis:
   fullnameOverride: "smarter-redis"
-  global:
-    redis:
-      password: "smarter"
-    imagePullSecrets:
-      - dockerhub-secret
+  auth:
+    enabled: true
+    password: "smarter"
   architecture: standalone
   image:
+    pullPolicy: IfNotPresent
     pullSecrets:
       - dockerhub-secret
   master:
-    imagePullSecrets:
-      - name: dockerhub-secret
+    image:
+      pullSecrets:
+        - dockerhub-secret
     containerSecurityContext:
       enabled: true
     persistence:
