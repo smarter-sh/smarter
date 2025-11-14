@@ -16,7 +16,12 @@ redis:
     imagePullSecrets:
       - dockerhub-secret
   architecture: standalone
+  image:
+    pullSecrets:
+      - dockerhub-secret
   master:
+    pullSecrets:
+      - dockerhub-secret
     persistence:
       enabled: true
       size: 1Gi
