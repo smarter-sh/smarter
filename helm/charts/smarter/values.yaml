@@ -20,11 +20,15 @@ redis:
     pullSecrets:
       - dockerhub-secret
   master:
-    pullSecrets:
-      - dockerhub-secret
+    imagePullSecrets:
+      - name: dockerhub-secret
+    containerSecurityContext:
+      enabled: true
     persistence:
       enabled: true
       size: 1Gi
+    podSecurityContext:
+      enabled: true
     resources:
       requests:
         memory: "512Mi"
