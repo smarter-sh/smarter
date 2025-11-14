@@ -15,6 +15,12 @@ inputs:
   aws-region:
     description: "The AWS region to deploy to"
     required: true
+  dockerhub-username:
+    description: "The DockerHub username"
+    required: true
+  dockerhub-pat:
+    description: "The DockerHub personal access token"
+    required: false
   fernet-encryption-key:
     description: "The Fernet encryption key"
     required: true
@@ -279,6 +285,8 @@ runs:
         --set env.AWS_REGION=${{ inputs.aws-region }} \
         --set env.AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }} \
         --set env.AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }} \
+        --set env.DOCKERHUB_USERNAME=${{ inputs.dockerhub-username }} \
+        --set env.DOCKERHUB_PAT=${{ inputs.dockerhub-pat }} \
         --set env.FERNET_ENCRYPTION_KEY=${{inputs.fernet-encryption-key}} \
         --set env.NAMESPACE=${{ env.NAMESPACE }} \
         --set env.SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }} \
