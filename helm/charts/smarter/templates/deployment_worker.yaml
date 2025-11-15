@@ -2,12 +2,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    meta.helm.sh/release-name: {{ .Values.workerName }}
+    meta.helm.sh/release-name: {{ .Values.names.workerName }}
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Values.version }}
   labels:
-    App: {{ .Values.workerName }}
-  name: {{ .Values.workerName }}
+    App: {{ .Values.names.workerName }}
+  name: {{ .Values.names.workerName }}
   namespace: {{ .Values.namespace }}
 spec:
   progressDeadlineSeconds: 600
@@ -15,7 +15,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.workerName }}
+      app.kubernetes.io/name: {{ .Values.names.workerName }}
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -24,10 +24,11 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ .Values.workerName }}
+        app.kubernetes.io/name: {{ .Values.names.workerName }}
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
       affinity:
+        nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
               preference:
@@ -42,7 +43,7 @@ spec:
           value: "smarter"
           effect: "NoSchedule"
       containers:
-        - name: {{ .Values.workerName }}
+        - name: {{ .Values.names.workerName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency=2", "--loglevel=info", "-Q", "default_celery_task_queue", "-E"]
           imagePullPolicy: IfNotPresent

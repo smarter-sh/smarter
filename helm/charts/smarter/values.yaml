@@ -1,7 +1,8 @@
-appName: smarter
-workerName: smarter-worker
-beatName: smarter-beat
-appJobName: smarter-job-db-init
+names:
+  appName: smarter
+  workerName: smarter-worker
+  beatName: smarter-beat
+  appJobName: smarter-job-db-init
 version: 0.8.0
 deployment:
   containerPort: 8000
