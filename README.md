@@ -1,8 +1,8 @@
 # Smarter
 
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
 [![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)<br>
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)
 [![Pydantic](https://img.shields.io/badge/Pydantic-2.11-blue?logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
 [![Django REST framework](https://img.shields.io/badge/Django%20REST%20framework-3.16-red?logo=django&logoColor=white)](https://www.django-rest-framework.org/)<br>
 ![Build Status](https://github.com/smarter-sh/smarter/actions/workflows/build.yml/badge.svg?branch=main)
