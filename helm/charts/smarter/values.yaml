@@ -1,3 +1,28 @@
+# ==============================================================================
+# Smarter Platform - Helm Chart Values
+# ==============================================================================
+#
+# Default configuration values for the Smarter Platform Helm chart.
+#
+# This file contains all configurable parameters for deploying the Smarter
+# application stack including:
+#   - Django application server
+#   - Celery workers and beat scheduler
+#   - Redis cache
+#   - Database connections
+#   - Third-party API integrations
+#   - OAuth providers
+#
+# IMPORTANT: Replace all "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML" values
+# with actual credentials before deployment.
+#
+# Usage:
+#   helm install smarter . -f values.yaml
+#   helm upgrade smarter . -f values.yaml
+#
+# Documentation: https://github.com/smarter-sh/smarter
+# ==============================================================================
+
 ## @param deployTimestamp Deployment timestamp for forcing pod restarts
 deployTimestamp: ""
 
