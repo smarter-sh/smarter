@@ -3,7 +3,7 @@ appVersion: 0.13.25
 name: smarter
 description: A Helm chart for deploying Smarter API and web console
 type: application
-version: 0.7.7
+version: 0.7.8
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -31,7 +31,7 @@ keywords:
   - redis
   - scalable
 annotations:
-  helm.sh/chart: smarter-0.7.7
+  helm.sh/chart: smarter-0.7.8
   artifacthub.io/changes: |
     - kind: added
       description: Support for Kubernetes 1.28+
