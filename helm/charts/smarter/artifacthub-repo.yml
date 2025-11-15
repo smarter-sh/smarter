@@ -14,7 +14,7 @@
 # The ID of the Artifact Hub repository where the packages will be published to (optional, but it enables verified publisher)
 repositoryID: 3a242504-4225-4f54-af67-05c27a6768c7
 owners:
-  - name: Lawrence master
+  - name: Lawrence McDaniel
     email: lpm0073@gmail.com
 
 displayName: Smarter Helm Charts
