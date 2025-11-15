@@ -35,6 +35,9 @@ redis:
       limits:
         memory: "1Gi"
         cpu: "512m"
+    service:
+      headless:
+        sessionAffinity: None
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
