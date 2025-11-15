@@ -10,6 +10,7 @@ Updates:
 - smarter/smarter/__version__.py
 - pyproject.toml
 - Dockerfile
+- helm/charts/smarter/Chart.yaml
 """
 
 import re
@@ -21,6 +22,35 @@ def update_version_in_file(filepath, pattern, replacement):
     path = Path(filepath)
     text = path.read_text(encoding="utf-8")
     new_text = re.sub(pattern, replacement, text)
+    path.write_text(new_text, encoding="utf-8")
+
+
+def bump_helm_chart_patch_version():
+    """
+    Update the version and annotations.helm.sh/chart in Helm helm/Chart.yaml
+
+    Note that the Helm version is logically "detached" from the application version,
+    so for simplicity, we always only tick the patch version here. Anything more
+    complex should be handled manually.
+
+    example values:
+        version: 0.7.5
+        annotations:
+          "helm.sh/chart": "smarter-0.7.5"
+    """
+    path = Path("helm/charts/smarter/Chart.yaml")
+    text = path.read_text(encoding="utf-8")
+    version_match = re.search(r"version:\s*(\d+)\.(\d+)\.(\d+)", text)
+    if not version_match:
+        print("Error: Could not find version in helm/charts/smarter/Chart.yaml")
+        sys.exit(1)
+    major, minor, patch = map(int, version_match.groups())
+    patch += 1  # Bump patch version
+    new_version = f"{major}.{minor}.{patch}"
+    new_text = re.sub(r"version:\s*\d+\.\d+\.\d+", f"version: {new_version}", text)
+    new_text = re.sub(
+        r'helm\.sh/chart":\s*"smarter-\d+\.\d+\.\d+"', f'helm.sh/chart": "smarter-{new_version}"', new_text
+    )
     path.write_text(new_text, encoding="utf-8")
 
 
@@ -60,6 +90,8 @@ def main():
         r'appVersion:\s*["\']?[\w\.\-]+["\']?',
         f"appVersion: {new_version}",
     )
+
+    bump_helm_chart_patch_version()
 
 
 if __name__ == "__main__":

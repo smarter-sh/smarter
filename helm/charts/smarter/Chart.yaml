@@ -11,6 +11,7 @@ sources:
 maintainers:
   - name: Lawrence McDaniel
     email: lpm0073@gmail.com
+    website: https://lawrencemcdaniel.com
 dependencies:
   - name: redis
     version: 23.1.1
@@ -30,8 +31,8 @@ keywords:
   - redis
   - scalable
 annotations:
-  "helm.sh/chart": "smarter-0.7.6"
-  "artifacthub.io/changes": |
+  helm.sh/chart: smarter-0.7.6
+  artifacthub.io/changes: |
     - kind: added
       description: Support for Kubernetes 1.28+
     - kind: changed
@@ -40,4 +41,17 @@ annotations:
       description: Multi-architecture builds for AMD64 and ARM64
     - kind: security
       description: Remove platform argument to support AWS Graviton instances
-  "artifacthub.io/license": "AGPL-3.0"
+  artifacthub.io/license: AGPL-3.0
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: smarter
+      image: queensu-mcdaniel/smarter:0.13.25
+  artifacthub.io/links: |
+    - name: Website
+      url: https://smarter.sh
+    - name: Source
+      url: https://github.com/smarter-sh/smarter
+    - name: Documentation
+      url: https://platform.smarter.sh/docs/
+    - name: Support
+      url: https://github.com/smarter-sh/smarter/issues
