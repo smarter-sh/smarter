@@ -49,9 +49,17 @@ annotations:
   artifacthub.io/links: |
     - name: Website
       url: https://smarter.sh
-    - name: Source
+    - name: GitHub
       url: https://github.com/smarter-sh/smarter
+    - name: Chart Source
+      url: https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter
     - name: Documentation
       url: https://platform.smarter.sh/docs/
     - name: Support
       url: https://github.com/smarter-sh/smarter/issues
+  artifacthub.io/maintainers: |
+      - name: Lawrence McDaniel
+        email: lpm0073@gmail.com
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/recommendations: |
+    - url: https://artifacthub.io/packages/helm/bitnami/redis

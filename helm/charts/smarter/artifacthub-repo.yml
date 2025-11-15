@@ -18,7 +18,7 @@ owners:
     email: lpm0073@gmail.com
 
 displayName: Smarter Helm Charts
-url: https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter/
+url: https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter
 
 description: |
   Helm charts for deploying the Smarter Api and web console
