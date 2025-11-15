@@ -239,4 +239,3 @@ redis:
 service:
   port: 8000
   targetPort: 8000
-version: 0.8.0
