@@ -1,37 +1,33 @@
-## [0.13.25](https://github.com/smarter-sh/smarter/compare/v0.13.24...v0.13.25) (2025-11-01)
-
-
-### Bug Fixes
-
-* remove platform argument bc specifying amd64 precludes use of aws graviton instance types ([84b2ff5](https://github.com/smarter-sh/smarter/commit/84b2ff5da7e54a6e4ea2d76bbf0d5f6ce28ad9d6))
-* setup multi-architecture builds for both AMD64 and ARM64 ([8142653](https://github.com/smarter-sh/smarter/commit/8142653c480a610befa1e997b469d9d94771dd38))
-
-## [0.13.24](https://github.com/smarter-sh/smarter/compare/v0.13.23...v0.13.24) (2025-10-14)
-
-
-### Bug Fixes
-
-* 500 error on incorrect api key ([ff6e135](https://github.com/smarter-sh/smarter/commit/ff6e13580997ed010e9f8e3110becac11757bd2c))
-
-## [0.13.23](https://github.com/smarter-sh/smarter/compare/v0.13.22...v0.13.23) (2025-10-14)
-
-
-### Bug Fixes
-
-* incorrect http error response on incorrect or malformed api key ([83e61a5](https://github.com/smarter-sh/smarter/commit/83e61a57e60dc9f2dc6b6101e779869d3223ccf7))
-
-## [0.13.22](https://github.com/smarter-sh/smarter/compare/v0.13.21...v0.13.22) (2025-10-14)
-
-
-### Bug Fixes
-
-* weak logic in request.user.is_authenticated evaluation ([9b7b9c8](https://github.com/smarter-sh/smarter/commit/9b7b9c84234d68274ef227a1745571b8e6ecc0ff))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.13.25](https://github.com/smarter-sh/smarter/compare/v0.13.24...v0.13.25) (2025-11-01)
+
+### Bug Fixes
+
+- remove platform argument bc specifying amd64 precludes use of aws graviton instance types ([84b2ff5](https://github.com/smarter-sh/smarter/commit/84b2ff5da7e54a6e4ea2d76bbf0d5f6ce28ad9d6))
+- setup multi-architecture builds for both AMD64 and ARM64 ([8142653](https://github.com/smarter-sh/smarter/commit/8142653c480a610befa1e997b469d9d94771dd38))
+
+## [0.13.24](https://github.com/smarter-sh/smarter/compare/v0.13.23...v0.13.24) (2025-10-14)
+
+### Bug Fixes
+
+- 500 error on incorrect api key ([ff6e135](https://github.com/smarter-sh/smarter/commit/ff6e13580997ed010e9f8e3110becac11757bd2c))
+
+## [0.13.23](https://github.com/smarter-sh/smarter/compare/v0.13.22...v0.13.23) (2025-10-14)
+
+### Bug Fixes
+
+- incorrect http error response on incorrect or malformed api key ([83e61a5](https://github.com/smarter-sh/smarter/commit/83e61a57e60dc9f2dc6b6101e779869d3223ccf7))
+
+## [0.13.22](https://github.com/smarter-sh/smarter/compare/v0.13.21...v0.13.22) (2025-10-14)
+
+### Bug Fixes
+
+- weak logic in request.user.is_authenticated evaluation ([9b7b9c8](https://github.com/smarter-sh/smarter/commit/9b7b9c84234d68274ef227a1745571b8e6ecc0ff))
 
 ## [0.13.21](https://github.com/smarter-sh/smarter/compare/v0.13.20...v0.13.21) (2025-10-14)
 
