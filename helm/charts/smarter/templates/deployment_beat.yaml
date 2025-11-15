@@ -2,12 +2,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    meta.helm.sh/release-name: {{ .Values.beatName }}
+    meta.helm.sh/release-name: {{ .Values.names.beatName }}
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Values.version }}
   labels:
-    App: {{ .Values.beatName }}
-  name: {{ .Values.beatName }}
+    App: {{ .Values.names.beatName }}
+  name: {{ .Values.names.beatName }}
   namespace: {{ .Values.namespace }}
 spec:
   progressDeadlineSeconds: 600
@@ -15,7 +15,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.beatName }}
+      app.kubernetes.io/name: {{ .Values.names.beatName }}
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ .Values.beatName }}
+        app.kubernetes.io/name: {{ .Values.names.beatName }}
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
       affinity:
@@ -43,7 +43,7 @@ spec:
           value: "smarter"
           effect: "NoSchedule"
       containers:
-        - name: {{ .Values.workerName }}
+        - name: {{ .Values.names.workerName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           command: ["celery", "-A", "smarter.workers.celery.app", "beat", "--loglevel=info"]
           imagePullPolicy: IfNotPresent

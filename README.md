@@ -1,12 +1,12 @@
 # Smarter
 
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
 [![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)<br>
 [![Pydantic](https://img.shields.io/badge/Pydantic-2.11-blue?logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
 [![Django REST framework](https://img.shields.io/badge/Django%20REST%20framework-3.16-red?logo=django&logoColor=white)](https://www.django-rest-framework.org/)<br>
 ![Build Status](https://github.com/smarter-sh/smarter/actions/workflows/build.yml/badge.svg?branch=main)
 ![Release Status](https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main)
-![Auto Assign](https://github.com/smarter-sh/smarter/actions/workflows/auto-assign.yml/badge.svg)
 [![License: GNU AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
@@ -69,6 +69,89 @@ See these onboarding videos:
 
 - [Smarter Developer Onboarding #1](https://youtu.be/-hZEO9sMm1s)
 - [Smarter Developer Workflow Tutorial](https://youtu.be/XolFLX1u9Kg)
+
+## Smarter Helm Chart
+
+Deploy Smarter API and web console to Kubernetes using the public Helm chart, available at [ghcr.io/smarter-sh/charts/smarter](https://ghcr.io/smarter-sh/charts/smarter) or [Artifact Hub](https://artifacthub.io/packages/helm/project-smarter/smarter).
+
+### Quick Install
+
+Pull the chart:
+
+```console
+helm pull oci://ghcr.io/smarter-sh/charts/smarter --version 0.7.6
+```
+
+Install to Kubernetes:
+
+```console
+helm upgrade --install smarter oci://ghcr.io/smarter-sh/charts/smarter \
+  --namespace smarter \
+  --create-namespace \
+  --timeout 900s \
+  --values values.yaml
+```
+
+### Configuration
+
+See the [chart values.yaml](./helm/charts/smarter/values.yaml) for all available parameters, or view the [chart README](./helm/charts/smarter/README.md) for detailed configuration examples.
+
+Minimum required configuration in your `values.yaml`:
+
+```yaml
+env:
+  MYSQL_HOST: "your-mysql-host"
+  MYSQL_DATABASE: "smarter"
+  MYSQL_USER: "smarter_user"
+  MYSQL_PASSWORD: "your-secure-password"
+  OPENAI_API_KEY: "sk-..."
+  SECRET_KEY: "your-django-secret-key"
+
+  # Deployment
+  DJANGO_SETTINGS_MODULE: "${{ env.DJANGO_SETTINGS_MODULE }}"
+  ENVIRONMENT: "${{ inputs.environment }}"
+  NAMESPACE: "${{ env.NAMESPACE }}"
+  SMARTER_DOCKER_IMAGE: "${{ env.SMARTER_DOCKER_IMAGE }}"
+
+  # AWS
+  AWS_REGION: "${{ inputs.aws-region }}"
+  AWS_ACCESS_KEY_ID: "${{ inputs.aws-access-key-id }}"
+  AWS_SECRET_ACCESS_KEY: "${{ inputs.aws-secret-access-key }}"
+
+  # Security
+  FERNET_ENCRYPTION_KEY: "${{ inputs.fernet-encryption-key }}"
+  SECRET_KEY: "${{ env.SECRET_KEY }}"
+
+  # AI APIs
+  OPENAI_API_KEY: "${{ inputs.openai-api-key }}"
+  GOOGLE_MAPS_API_KEY: "${{ inputs.google-maps-api-key }}"
+  GEMINI_API_KEY: "${{ inputs.gemini-api-key }}"
+  LLAMA_API_KEY: "${{ inputs.llama-api-key }}"
+
+  # Database
+  MYSQL_HOST: "${{ env.MYSQL_HOST }}"
+  MYSQL_PORT: "${{ env.MYSQL_PORT }}"
+  MYSQL_DATABASE: "${{ env.SMARTER_MYSQL_DATABASE }}"
+  MYSQL_USER: "${{ env.SMARTER_MYSQL_USERNAME }}"
+  MYSQL_PASSWORD: "${{ env.SMARTER_MYSQL_PASSWORD }}"
+  MYSQL_ROOT_USERNAME: "${{ env.MYSQL_ROOT_USERNAME }}"
+  MYSQL_ROOT_PASSWORD: "${{ env.MYSQL_ROOT_PASSWORD }}"
+  SMARTER_MYSQL_TEST_DATABASE_PASSWORD: "${{ inputs.smarter-mysql-test_database_password }}"
+
+  # Admin
+  SMARTER_LOGIN_URL: "${{ env.SMARTER_LOGIN_URL }}"
+  SMARTER_ADMIN_PASSWORD: "${{ env.SMARTER_ADMIN_PASSWORD }}"
+  SMARTER_ADMIN_USERNAME: "${{ env.SMARTER_ADMIN_USERNAME }}"
+  SMARTER_ADMIN_EMAIL: "${{ env.SMARTER_ADMIN_EMAIL }}"
+
+  # SMTP
+  SMTP_HOST: "${{ env.SMTP_HOST }}"
+  SMTP_PORT: "${{ env.SMTP_PORT }}"
+  SMTP_USE_SSL: "${{ env.SMTP_USE_SSL }}"
+  SMTP_USE_TLS: "${{ env.SMTP_USE_TLS }}"
+  SMTP_USERNAME: "${{ env.SMTP_USERNAME }}"
+  SMTP_PASSWORD: "${{ env.SMTP_PASSWORD }}"
+```
 
 ## Documentation
 
