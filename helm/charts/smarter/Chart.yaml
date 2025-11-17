@@ -1,6 +1,6 @@
 apiVersion: v2
 appVersion: 0.13.25
-name: smarter-api-and-web-console
+name: smarter
 description: Smarter API and web console
 type: application
 version: 0.7.10
