@@ -1,9 +1,9 @@
 apiVersion: v2
 appVersion: 0.13.25
 name: smarter
-description: A Helm chart for deploying Smarter API and web console
+description: Smarter API and web console
 type: application
-version: 0.7.6
+version: 0.7.10
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -31,16 +31,8 @@ keywords:
   - redis
   - scalable
 annotations:
-  helm.sh/chart: smarter-0.7.6
+  helm.sh/chart: smarter-0.7.10
   artifacthub.io/changes: |
-    - kind: added
-      description: Support for Kubernetes 1.28+
-    - kind: changed
-      description: Updated Redis dependency to 23.1.1
-    - kind: fixed
-      description: Multi-architecture builds for AMD64 and ARM64
-    - kind: security
-      description: Remove platform argument to support AWS Graviton instances
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
@@ -49,9 +41,26 @@ annotations:
   artifacthub.io/links: |
     - name: Website
       url: https://smarter.sh
-    - name: Source
+    - name: GitHub
       url: https://github.com/smarter-sh/smarter
+    - name: Chart Source
+      url: https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter
     - name: Documentation
       url: https://platform.smarter.sh/docs/
     - name: Support
       url: https://github.com/smarter-sh/smarter/issues
+  artifacthub.io/maintainers: |
+      - name: Lawrence McDaniel
+        email: lpm0073@gmail.com
+  artifacthub.io/operator: "true"
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/recommendations: |
+    - url: https://artifacthub.io/packages/helm/bitnami/redis
+  artifacthub.io/signKey: |
+      fingerprint: FC3130197AED484D9B5FA847440711F032A1DCBB1B813D458CF71FB90CC2345D
+      url: https://github.com/smarter-sh/smarter/raw/main/sigstore/artifacthub-cosign.pub
+      key: |
+        -----BEGIN PUBLIC KEY-----
+        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEd36XqSY/+wHzvq5sPFCNQk08oMxD
+        3uAi/F4SjX9fbu2zjBuBTwSqd64D8Oi3LrHqNsO0J0RHiWI/qvZoU8poaA==
+        -----END PUBLIC KEY-----
