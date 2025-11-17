@@ -47,12 +47,19 @@ jobs:
           VERSION=$(yq '.version' helm/charts/smarter/Chart.yaml)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Get Chart Digest
+        id: chart_digest
+        run: |
+          CHART_REF="ghcr.io/${{ github.repository_owner }}/charts/smarter:${{ steps.chart_version.outputs.version }}"
+          DIGEST=$(oras manifest fetch --descriptor $CHART_REF | jq -r .digest)
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+
       - name: Sign OCI Helm Chart with Cosign
         env:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           echo "${{ secrets.COSIGN_KEY }}" > cosign.key
-          CHART_REF="ghcr.io/${{ github.repository_owner }}/charts/smarter:${{ steps.chart_version.outputs.version }}"
+          CHART_REF="ghcr.io/${{ github.repository_owner }}/charts/smarter@${{ steps.chart_digest.outputs.digest }}"
           cosign sign --key cosign.key $CHART_REF
 
       - name: Verify OCI Helm Chart Signature
