@@ -11,7 +11,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   progressDeadlineSeconds: 600
-  replicas: 1
+  replicas: {{ .Values.beat.replicaCount }}
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -27,33 +27,13 @@ spec:
         app.kubernetes.io/name: {{ .Values.names.beatName }}
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              preference:
-                matchExpressions:
-                  - key: node-group
-                    operator: In
-                    values:
-                      - smarter
-      tolerations:
-        - key: "node-group"
-          operator: "Equal"
-          value: "smarter"
-          effect: "NoSchedule"
       containers:
         - name: {{ .Values.names.workerName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           command: ["celery", "-A", "smarter.workers.celery.app", "beat", "--loglevel=info"]
           imagePullPolicy: IfNotPresent
           resources:
-            requests:
-              memory: "500Mi"
-              cpu: "100m"
-            limits:
-              memory: "2Gi"
-              cpu: "1"
+            {{- toYaml .Values.beat.resources | nindent 12 }}
           livenessProbe:
             exec:
               command:
@@ -77,84 +57,20 @@ spec:
             failureThreshold: 30
             successThreshold: 1
           env:
-            - name: ROOT_DOMAIN
-              value: "{{ .Values.env.ROOT_DOMAIN }}"
-            - name: AWS_REGION
-              value: "{{ .Values.env.AWS_REGION }}"
-            - name: AWS_ACCESS_KEY_ID
-              value: "{{ .Values.env.AWS_ACCESS_KEY_ID }}"
-            - name: AWS_SECRET_ACCESS_KEY
-              value: "{{ .Values.env.AWS_SECRET_ACCESS_KEY}}"
-            - name: ENVIRONMENT
-              value: "{{ .Values.env.ENVIRONMENT }}"
-            - name: DEBUG_MODE
-              value: "{{ .Values.env.DEBUG_MODE }}"
-            - name: DJANGO_SETTINGS_MODULE
-              value: "{{ .Values.env.DJANGO_SETTINGS_MODULE }}"
-            - name: DUMP_DEFAULTS
-              value: "{{ .Values.env.DUMP_DEFAULTS }}"
-            - name: FERNET_ENCRYPTION_KEY
-              value: "{{ .Values.env.FERNET_ENCRYPTION_KEY }}"
-            - name: MYSQL_HOST
-              value: "{{ .Values.env.MYSQL_HOST }}"
-            - name: MYSQL_PORT
-              value: "{{ .Values.env.MYSQL_PORT }}"
-            - name: MYSQL_DATABASE
-              value: "{{ .Values.env.MYSQL_DATABASE }}"
-            - name: MYSQL_USER
-              value: "{{ .Values.env.MYSQL_USER }}"
-            - name: MYSQL_PASSWORD
-              value: "{{ .Values.env.MYSQL_PASSWORD }}"
-            - name: OPENAI_API_KEY
-              value: "{{ .Values.env.OPENAI_API_KEY }}"
-            - name: PINECONE_API_KEY
-              value: "{{ .Values.env.PINECONE_API_KEY }}"
-            - name: PINECONE_ENVIRONMENT
-              value: "{{ .Values.env.PINECONE_ENVIRONMENT }}"
-            - name: GOOGLE_MAPS_API_KEY
-              value: "{{ .Values.env.GOOGLE_MAPS_API_KEY }}"
-            - name: GEMINI_API_KEY
-              value: "{{ .Values.env.GEMINI_API_KEY }}"
-            - name: LLAMA_API_KEY
-              value: "{{ .Values.env.LLAMA_API_KEY }}"
-            - name: MAILCHIMP_API_KEY
-              value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
-            - name: SECRET_KEY
-              value: "{{ .Values.env.SECRET_KEY }}"
-            - name: SMARTER_MYSQL_TEST_DATABASE_PASSWORD
-              value: "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
-            - name: SMTP_HOST
-              value: "{{ .Values.env.SMTP_HOST }}"
-            - name: SMTP_PORT
-              value: "{{ .Values.env.SMTP_PORT }}"
-            - name: SMTP_USE_SSL
-              value: "{{ .Values.env.SMTP_USE_SSL }}"
-            - name: SMTP_USE_TLS
-              value: "{{ .Values.env.SMTP_USE_TLS }}"
-            - name: SMTP_USERNAME
-              value: "{{ .Values.env.SMTP_USERNAME }}"
-            - name: SMTP_PASSWORD
-              value: "{{ .Values.env.SMTP_PASSWORD }}"
-            - name: CACHES_LOCATION
-              value: "{{ .Values.env.CACHES_LOCATION }}"
-            - name: CELERY_BROKER_URL
-              value: "{{ .Values.env.CELERY_BROKER_URL }}"
-            - name: CELERY_RESULT_BACKEND
-              value: "{{ .Values.env.CELERY_RESULT_BACKEND }}"
-            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}"
-            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}"
-            - name: SOCIAL_AUTH_GITHUB_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_KEY }}"
-            - name: SOCIAL_AUTH_GITHUB_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_SECRET }}"
-            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}"
-            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}"
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $env := .Values.beat.env }}
+            - name: {{ $env.name }}
+              value: {{ $env.value | quote }}
+            {{- end }}
+          volumeMounts:
+            {{- toYaml .Values.beat.extraVolumeMounts | nindent 12 }}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
+      volumes:
+        {{- toYaml .Values.beat.extraVolumes | nindent 8 }}
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Always

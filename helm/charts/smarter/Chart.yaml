@@ -3,7 +3,7 @@ appVersion: 0.13.25
 name: smarter
 description: Smarter API and web console
 type: application
-version: 0.7.10
+version: 0.8.0
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -13,9 +13,18 @@ maintainers:
     email: lpm0073@gmail.com
     website: https://lawrencemcdaniel.com
 dependencies:
-  - name: redis
-    version: 23.1.1
+  - name: mysql
+    version: 14.0.3
     repository: https://charts.bitnami.com/bitnami
+    condition: mysql.enabled
+  - name: mariadb
+    version: 23.2.4
+    repository: https://charts.bitnami.com/bitnami
+    condition: mariadb.enabled
+  - name: redis
+    version: 23.2.12
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
 icon: https://platform.smarter.sh/static/images/logo/smarter-crop.png
 keywords:
   - smarter
@@ -31,8 +40,8 @@ keywords:
   - redis
   - scalable
 annotations:
-  helm.sh/chart: smarter-0.7.10
-  artifacthub.io/changes: |
+  helm.sh/chart: smarter-0.8.0
+  artifacthub.io/changes: "See CHANGELOG.md"
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
