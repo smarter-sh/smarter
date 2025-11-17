@@ -56,3 +56,11 @@ annotations:
   artifacthub.io/prerelease: "false"
   artifacthub.io/recommendations: |
     - url: https://artifacthub.io/packages/helm/bitnami/redis
+  artifacthub.io/signKey: |
+      fingerprint: FC3130197AED484D9B5FA847440711F032A1DCBB1B813D458CF71FB90CC2345D
+      url: https://github.com/smarter-sh/smarter/raw/main/sigstore/artifacthub-cosign.pub
+      key: |
+        -----BEGIN PUBLIC KEY-----
+        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEd36XqSY/+wHzvq5sPFCNQk08oMxD
+        3uAi/F4SjX9fbu2zjBuBTwSqd64D8Oi3LrHqNsO0J0RHiWI/qvZoU8poaA==
+        -----END PUBLIC KEY-----
