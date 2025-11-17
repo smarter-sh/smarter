@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    meta.helm.sh/release-name: {{ .Values.names.appName | default "smarter" }}-mysql
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+    meta.helm.sh/application-version: {{ .Values.version }}
+  labels:
+    App: {{ .Values.names.appName | default "smarter" }}-mysql
+  name: {{ .Values.names.appName | default "smarter" }}-mysql
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.names.appName | default "smarter" }}-mysql
+      app.kubernetes.io/component: mysql
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.names.appName | default "smarter" }}-mysql
+        app.kubernetes.io/component: mysql
+    spec:
+      securityContext:
+        fsGroup: {{ .Values.mysql.podSecurityContext.fsGroup | default 1001 }}
+      containers:
+        - name: mysql
+          image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
+          imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.names.appName | default "smarter" }}-root-mysql
+                  key: mysql-root-password
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mysql.auth.database }}
+            - name: MYSQL_USER
+              value: {{ .Values.mysql.auth.username }}
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.names.appName | default "smarter" }}-user-mysql
+                  key: mysql-password
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+          resources:
+            {{- toYaml .Values.mysql.resources | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.mysql.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.mysql.readinessProbe | nindent 12 }}
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.names.appName | default "smarter" }}-mysql

@@ -1,6 +1,12 @@
 dependencies:
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 14.0.3
+- name: mariadb
+  repository: https://charts.bitnami.com/bitnami
+  version: 23.2.4
 - name: redis
   repository: https://charts.bitnami.com/bitnami
-  version: 23.1.1
-digest: sha256:18f6f9535e8412cc2683e6076ad99dd8119a28bcf031f6b7b1efa3367698c9f1
-generated: "2025-10-07T14:44:25.708464-06:00"
+  version: 23.2.12
+digest: sha256:ecd5a37210abd403d48692d4752ae61aedc51ac14ddbca60fae1680be76f43e9
+generated: "2025-11-17T17:32:11.861753-06:00"
