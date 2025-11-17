@@ -68,7 +68,7 @@ jobs:
         run: |
           echo "${{ secrets.COSIGN_KEY }}" > cosign.key
           CHART_REF="ghcr.io/${{ github.repository_owner }}/charts/smarter@${{ steps.chart_digest.outputs.digest }}"
-          cosign sign --key cosign.key $CHART_REF
+          cosign sign --yes --key cosign.key $CHART_REF
 
       - name: Verify OCI Helm Chart Signature
         run: |
