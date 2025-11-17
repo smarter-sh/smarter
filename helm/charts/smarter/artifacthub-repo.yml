@@ -17,7 +17,7 @@ owners:
   - name: Lawrence McDaniel
     email: lpm0073@gmail.com
 
-displayName: Smarter Helm Charts
+displayName: Smarter Api and web console Helm Charts
 url: https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter
 
 description: |
