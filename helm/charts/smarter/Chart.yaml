@@ -1,9 +1,9 @@
 apiVersion: v2
 appVersion: 0.13.25
-name: smarter
-description: A Helm chart for deploying Smarter API and web console
+name: smarter-api-and-web-console
+description: Smarter API and web console
 type: application
-version: 0.7.9
+version: 0.7.10
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -31,16 +31,8 @@ keywords:
   - redis
   - scalable
 annotations:
-  helm.sh/chart: smarter-0.7.9
+  helm.sh/chart: smarter-0.7.10
   artifacthub.io/changes: |
-    - kind: added
-      description: Support for Kubernetes 1.28+
-    - kind: changed
-      description: Updated Redis dependency to 23.1.1
-    - kind: fixed
-      description: Multi-architecture builds for AMD64 and ARM64
-    - kind: security
-      description: Remove platform argument to support AWS Graviton instances
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
