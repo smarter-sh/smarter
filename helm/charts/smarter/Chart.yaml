@@ -14,7 +14,7 @@ maintainers:
     website: https://lawrencemcdaniel.com
 dependencies:
   - name: grafana
-    version: 10.1.4
+    version: 12.1.8
     repository: https://charts.bitnami.com/bitnami
     condition: grafana.enabled
   - name: loki
@@ -30,7 +30,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
   - name: prometheus
-    version: 25.45.0
+    version: 2.1.23
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
