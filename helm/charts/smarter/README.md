@@ -88,12 +88,3 @@ env:
   SECRET_KEY: "your-django-secret"
   FERNET_ENCRYPTION_KEY: "your-fernet-key"
 ```
-
-## Support
-
-- [GitHub Issues](https://github.com/smarter-sh/smarter/issues)
-- [Documentation](https://platform.smarter.sh/docs/)
-
-## License
-
-[AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)

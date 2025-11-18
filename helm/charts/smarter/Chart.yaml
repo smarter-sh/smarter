@@ -10,7 +10,7 @@ description: >
   Includes enterprise features like credentials management, team workgroups, RBAC, cost codes, and audit logging.
   Open source with public documentation and rapid self-onboarding.
 type: application
-version: 0.8.9
+version: 0.8.10
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -66,10 +66,10 @@ keywords:
   - remote-data
   - smarter
 annotations:
-  helm.sh/chart: smarter-0.8.9
+  helm.sh/chart: smarter-0.8.10
   artifacthub.io/changes: |
     - kind: changed
-      description: updated README with a more accuraate Quickstart section.
+      description: updated values.schema.json to add new fields and descriptions
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
