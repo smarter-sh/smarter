@@ -29,6 +29,8 @@
 global:
   image:
     pullPolicy: IfNotPresent
+    repository: lpm0073/smarter
+    tag: latest
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -194,7 +196,7 @@ env:
   SECRET_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
 
   ## @param env.SMARTER_DOCKER_IMAGE Docker image for Smarter
-  SMARTER_DOCKER_IMAGE: "090511222473.dkr.ecr.us-east-2.amazonaws.com/smarter-platform-prod"
+  SMARTER_DOCKER_IMAGE: "mcdaniel/smarter:latest"
 
   ## OAuth Configuration
   ## @param env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY Google OAuth2 client ID

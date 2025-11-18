@@ -3,7 +3,7 @@ appVersion: 0.13.25
 name: smarter
 description: Smarter API and web console
 type: application
-version: 0.8.5
+version: 0.8.6
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -59,13 +59,12 @@ keywords:
   - education
   - smarter
 annotations:
-  helm.sh/chart: smarter-0.8.5
-  artifacthub.io/screenshots: |
-    - url: https://raw.githubusercontent.com/smarter-sh/smarter-chat/main/doc/img/readme-usage4.png
-      caption: Smarter Prompt Engineering Workbench
+  helm.sh/chart: smarter-0.8.6
   artifacthub.io/changes: |
     - kind: added
-      description: artifacthub.io/images annotation, which points to the new public Smarter Docker image.
+      description: artifacthub.io/screenshots annotations using screenshots from main landing page.
+    - kind: added
+      description: default image to app, worker, beat, job
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
@@ -94,7 +93,16 @@ annotations:
     - url: https://artifacthub.io/packages/helm/bitnami/mysql
     - url: https://artifacthub.io/packages/helm/bitnami/mariadb
     - url: https://artifacthub.io/packages/helm/bitnami/prometheus
-  artifacthub.io/signKey: |
+  artifacthub.io/screenshots: |
+    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-1.png
+      caption: Smarter's YAML-first configuration simplifies AI Workflow orchestration
+    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-2.png
+      caption: Smarter’s Prompt Engineer Workbench gives you a live, transparent view into every part of a conversation
+    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-3.png
+      caption: Smarter is LLM Provider agnostic
+    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-4.png
+      caption: Smarter Plugins let any model call SQL, APIs, static data, or secure Python
+  artifacthub.io.signKey: |
       fingerprint: FC3130197AED484D9B5FA847440711F032A1DCBB1B813D458CF71FB90CC2345D
       url: https://github.com/smarter-sh/smarter/raw/main/sigstore/artifacthub-cosign.pub
       key: |
