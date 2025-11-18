@@ -1,36 +1,67 @@
 # Smarter Helm Chart
 
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)
+A Helm chart for deploying Smarter, a no-code, cloud-native AI orchestration platform, to Kubernetes.
 
-A Helm chart for deploying Smarter API and web console to Kubernetes.
+- **Website:** [https://smarter.sh](https://smarter.sh)
+- **Docs:** [https://platform.smarter.sh/docs/](https://platform.smarter.sh/docs/)
+- **Chart:** [https://artifacthub.io/packages/helm/project-smarter/smarter](https://artifacthub.io/packages/helm/project-smarter/smarter)
+- **Dockerhub** [https://hub.docker.com/r/mcdaniel0073/smarter](https://hub.docker.com/r/mcdaniel0073/smarter)
 
-## Description
+## Quickstart
 
-**Smarter** is a platform for managing and orchestrating AI resources. This Helm chart deploys the REST API and web console components.
+```bash
+helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
+  --version 0.8.8 \
+  --timeout 900s \
+  --namespace smarter-prod \
+  --create-namespace \
+  --set env.MYSQL_HOST=your-mysql-host \
+  --set env.MYSQL_PASSWORD=your-password \
+  --set env.OPENAI_API_KEY=your-key \
+  --set env.SECRET_KEY=your-django-secret \
+  --set env.FERNET_ENCRYPTION_KEY=your-fernet-key \
+  --values values.yaml
+```
+
+See [values.yaml](https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml) for all available configuration options.
+
+**Note:** For production, use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) to manage sensitive values like passwords and API keys.
+
 
 ## Prerequisites
 
 - Kubernetes >=1.28.0
-- Helm 3.x
-- MySQL database
-- Redis cache
+- Helm 3.8+
 
 ## Installation
 
-### Install from OCI registry
+First, ensure you are using Helm 3.8.0 or later, as OCI support is required.
+
+Then install the chart directly from the OCI registry:
 
 ```bash
-helm upgrade --install smarter oci://ghcr.io/smarter-sh/charts/smarter \
+helm install smarter oci://ghcr.io/smarter-sh/charts/smarter \
+  --version <chart-version> \
   --namespace your-namespace \
   --create-namespace \
-  --timeout 900s \
   --values values.yaml
 ```
 
-### Install from GitHub Container Registry
+Replace `<chart-version>` with the desired chart version (see [Artifact Hub: project-smarter/smarter](https://artifacthub.io/packages/helm/project-smarter/smarter) for available versions).
+
+## Upgrading
 
 ```bash
-docker pull ghcr.io/smarter-sh/charts/smarter:0.7.6
+helm upgrade smarter oci://ghcr.io/smarter-sh/charts/smarter \
+  --version <new-chart-version> \
+  --namespace your-namespace \
+  --values values.yaml
+```
+
+## Uninstalling
+
+```bash
+helm uninstall smarter --namespace your-namespace
 ```
 
 ## Configuration
@@ -39,13 +70,11 @@ See [values.yaml](./values.yaml) for all available configuration options.
 
 ### Required Configuration
 
-Create a `values.yaml` file with your configuration:
-
 ```yaml
 env:
   # Django settings
   DJANGO_SETTINGS_MODULE: "smarter.settings.prod"
-  ENVIRONMENT: "production"
+  ENVIRONMENT: "prod"
 
   # Database (required)
   MYSQL_HOST: "your-mysql-host"
@@ -62,41 +91,3 @@ env:
   SECRET_KEY: "your-django-secret"
   FERNET_ENCRYPTION_KEY: "your-fernet-key"
 ```
-
-## Parameters
-
-### Common Parameters
-
-| Name | Description | Default |
-|------|-------------|---------|
-| `env.DJANGO_SETTINGS_MODULE` | Django settings module | `smarter.settings.prod` |
-| `env.ENVIRONMENT` | Deployment environment | `prod` |
-| `env.DEBUG_MODE` | Enable debug mode | `false` |
-| `env.ROOT_DOMAIN` | Root domain | `example.com` |
-
-### Database Configuration
-
-| Name | Description | Default |
-|------|-------------|---------|
-| `env.MYSQL_HOST` | MySQL hostname | Required |
-| `env.MYSQL_PORT` | MySQL port | `3306` |
-| `env.MYSQL_DATABASE` | Database name | Required |
-| `env.MYSQL_USER` | Database user | Required |
-| `env.MYSQL_PASSWORD` | Database password | Required |
-
-### AI Service API Keys
-
-| Name | Description | Default |
-|------|-------------|---------|
-| `env.OPENAI_API_KEY` | OpenAI API key | Required |
-| `env.GEMINI_API_KEY` | Google Gemini API key | Optional |
-| `env.LLAMA_API_KEY` | Meta Llama API key | Optional |
-
-## Support
-
-- [GitHub Issues](https://github.com/smarter-sh/smarter/issues)
-- [Documentation](https://platform.smarter.sh/docs/)
-
-## License
-
-AGPL-3.0
