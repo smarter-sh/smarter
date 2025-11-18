@@ -4,7 +4,7 @@ metadata:
   name: "{{ .Release.Name }}-smarter-job-db-init-{{ now | unixEpoch }}"
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.names.appJobName }}"
+    app.kubernetes.io/name: "{{ .Values.names.appName }}-job-init"
   annotations:
     "helm.sh/hook": post-upgrade,post-install
     "helm.sh/hook-delete-policy": hook-succeeded
@@ -13,24 +13,13 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: "{{ .Values.names.appJobName }}"
+        app.kubernetes.io/name: "{{ .Values.names.appName }}-job-init"
         jobTimestamp: "{{ now | unixEpoch }}"
     spec:
       affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              preference:
-                matchExpressions:
-                  - key: node-group
-                    operator: In
-                    values:
-                      - smarter
+        {{- toYaml .Values.global.affinity | nindent 8 }}
       tolerations:
-        - key: "node-group"
-          operator: "Equal"
-          value: "smarter"
-          effect: "NoSchedule"
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
       automountServiceAccountToken: true
       containers:
         - resources:
@@ -151,8 +140,8 @@ spec:
               value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}"
 
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
-          imagePullPolicy: IfNotPresent
-          name: "{{ .Values.names.appJobName }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
+          name: "{{ .Values.names.appName }}-job-init"
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Never

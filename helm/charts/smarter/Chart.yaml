@@ -13,6 +13,14 @@ maintainers:
     email: lpm0073@gmail.com
     website: https://lawrencemcdaniel.com
 dependencies:
+  - name: grafana
+    version: 10.1.4
+    repository: https://charts.bitnami.com/bitnami
+    condition: grafana.enabled
+  - name: loki
+    version: 6.46.0
+    repository: https://grafana.github.io/helm-charts
+    condition: loki.enabled
   - name: mysql
     version: 14.0.3
     repository: https://charts.bitnami.com/bitnami
@@ -21,27 +29,40 @@ dependencies:
     version: 23.2.4
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
+  - name: prometheus
+    version: 25.45.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: prometheus.enabled
   - name: redis
     version: 23.2.12
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
 icon: https://platform.smarter.sh/static/images/logo/smarter-crop.png
 keywords:
-  - smarter
-  - plugins
+  - ai
+  - artificial-intelligence
+  - resource-management
+  - platform
+  - kubernetes
+  - llm
+  - rag
+  - mlops
+  - orchestration
+  - workflow
+  - automation
+  - monitoring
+  - logging
   - api
   - web
   - console
+  - plugins
   - education
-  - cloud
-  - deployment
-  - k8s
-  - kubernetes
-  - redis
-  - scalable
+  - smarter
 annotations:
   helm.sh/chart: smarter-0.8.0
-  artifacthub.io/changes: "See CHANGELOG.md"
+  artifacthub.io/changes: |
+    - kind: changed
+      description: "See CHANGELOG.md"
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |

@@ -22,6 +22,35 @@
 #
 # Documentation: https://github.com/smarter-sh/smarter
 # ==============================================================================
+
+
+# Global Configuration
+# ----------------------------------------------------------------------------
+global:
+  image:
+    pullPolicy: IfNotPresent
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node-group
+                operator: In
+                values:
+                  - smarter
+  imagePullSecrets:
+    - name: dockerhub-secret
+
+  tolerations:
+    - key: "node-group"
+      operator: "Equal"
+      value: "smarter"
+      effect: "NoSchedule"
+
+
+# Application Configuration
+# ----------------------------------------------------------------------------
 app:
   replicaCount: 2
   resources:
@@ -221,6 +250,9 @@ env:
   ## @param env.SMTP_PASSWORD SMTP password
   SMTP_PASSWORD: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
 
+# Backing Services Configuration
+# ----------------------------------------------------------------------------
+
 externalDatabase:
   host: ""        # Will use .Values.env.MYSQL_HOST if empty
   port: 3306      # Will use .Values.env.MYSQL_PORT if empty
@@ -228,33 +260,13 @@ externalDatabase:
   username: ""    # Will use .Values.env.MYSQL_USER if empty
   password: ""    # Will use .Values.env.MYSQL_PASSWORD if empty
 
-global:
-  affinity:
-    nodeAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          preference:
-            matchExpressions:
-              - key: node-group
-                operator: In
-                values:
-                  - smarter
-  imagePullSecrets:
-    - name: dockerhub-secret
-
-  tolerations:
-    - key: "node-group"
-      operator: "Equal"
-      value: "smarter"
-      effect: "NoSchedule"
-
 mysql:
   enabled: true
   auth:
-    rootPassword: "SET-ME"
-    password: "SET-ME"
-    database: "smarter"
-    username: "smarter"
+    rootPassword: ""
+    password: ""
+    database: ""
+    username: ""
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
@@ -308,10 +320,10 @@ mysql:
 mariadb:
   enabled: false
   auth:
-    rootPassword: "SET-ME"
-    password: "SET-ME"
-    database: "smarter"
-    username: "smarter"
+    rootPassword: ""
+    password: ""
+    database: ""
+    username: ""
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
@@ -364,11 +376,8 @@ mariadb:
 
 names:
   appName: smarter
-  workerName: smarter-worker
-  beatName: smarter-beat
-  appJobName: smarter-job-db-init
-  mysqlName: smarter-mysql
-  mariadbName: smarter-mariadb
+  mysqlName: mysql
+  mariadbName: mariadb
 
 redis:
   enabled: true
@@ -381,8 +390,6 @@ redis:
     enabled: true
     password: "smarter"
   architecture: standalone
-  image:
-    pullPolicy: IfNotPresent
   master:
     containerSecurityContext:
       enabled: true
@@ -404,3 +411,35 @@ redis:
 service:
   port: 8000
   targetPort: 8000
+
+# Monitoring Components
+# Enable/disable and configure Prometheus, Grafana, and Loki
+# ----------------------------------------------------------------------------
+prometheus:
+  enabled: false
+  server:
+    persistentVolume:
+      enabled: false  # For demo/dev. Set to true and configure storage for production.
+
+grafana:
+  enabled: false
+  adminPassword: "admin"  # Change for production!
+  persistence:
+    enabled: false  # For demo/dev. Set to true and configure storage for production.
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://prometheus-server
+        - name: Loki
+          type: loki
+          access: proxy
+          url: http://loki:3100
+
+loki:
+  enabled: false
+  persistence:
+    enabled: false  # For demo/dev. Set to true and configure storage for production.

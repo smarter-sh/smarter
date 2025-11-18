@@ -27,11 +27,15 @@ spec:
         app.kubernetes.io/name: {{ .Values.names.appName }}
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
       containers:
         - name: {{ .Values.names.appName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           command: ["gunicorn", "smarter.wsgi:application", "--bind", "0.0.0.0:{{ .Values.deployment.containerPort }}", "--workers=2", "--timeout=60", "--worker-class=sync"]
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
           resources:
             {{- toYaml .Values.app.resources | nindent 12 }}
           env:

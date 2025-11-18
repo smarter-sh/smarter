@@ -2,12 +2,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    meta.helm.sh/release-name: {{ .Values.names.appName | default "smarter" }}-mariadb
+    meta.helm.sh/release-name: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Values.version }}
   labels:
-    App: {{ .Values.names.appName | default "smarter" }}-mariadb
-  name: {{ .Values.names.appName | default "smarter" }}-mariadb
+    App: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
+  name: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
   namespace: {{ .Values.namespace }}
 
 spec:
@@ -22,6 +22,10 @@ spec:
         app.kubernetes.io/name: {{ .Values.names.mariadbName | default "smarter-mariadb" }}
         app.kubernetes.io/component: mariadb
     spec:
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
       securityContext:
         fsGroup: {{ .Values.mariadb.podSecurityContext.fsGroup | default 1001 }}
       containers:
@@ -32,7 +36,7 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.names.appName | default "smarter" }}-root-mariadb
+                  name: {{ .Values.names.appName | default "smarter" }}-root-{{ .Values.names.mariadbName | default "mariadb" }}
                   key: mariadb-root-password
             - name: MYSQL_DATABASE
               value: {{ .Values.mariadb.auth.database }}
@@ -41,7 +45,7 @@ spec:
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.names.appName | default "smarter" }}-user-mariadb
+                  name: {{ .Values.names.appName | default "smarter" }}-user-{{ .Values.names.mariadbName | default "mariadb" }}
                   key: mariadb-password
           ports:
             - containerPort: 3306
@@ -58,4 +62,4 @@ spec:
       volumes:
         - name: mariadb-data
           persistentVolumeClaim:
-            claimName: {{ .Values.names.appName | default "smarter" }}-mariadb
+            claimName: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}-pvc
