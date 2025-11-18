@@ -60,7 +60,7 @@ keywords:
   - smarter
 annotations:
   helm.sh/chart: smarter-0.8.3
-  artifacthub.io/category: AI/Machine Learning
+  artifacthub.io/category: ai-machine-learning
   artifacthub.io/screenshots: |
     - url: https://raw.githubusercontent.com/smarter-sh/smarter-chat/main/doc/img/readme-usage4.png
       caption: Smarter Prompt Engineering Workbench
