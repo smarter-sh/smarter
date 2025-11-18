@@ -74,7 +74,7 @@ annotations:
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
     - name: smarter
-      image: queensu-mcdaniel/smarter:0.13.25
+      image: mcdaniel0073/smarter:0.13.25
   artifacthub.io/links: |
     - name: Website
       url: https://smarter.sh

@@ -62,6 +62,13 @@ runs:
         ENVIRONMENT: ${{ inputs.environment }}
         NAMESPACE_BASE: smarter-platform
 
+    - name: Get latest release version
+      id: get-latest-release
+      shell: bash
+      run: |
+        LATEST_TAG=$(git describe --tags --abbrev=0)
+        echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
@@ -182,6 +189,7 @@ runs:
           ${{ github.ref_name == 'main' && format('{0}/{1}:latest', inputs.dockerhub-account, inputs.dockerhub-repo) || format('{0}/{1}:{2}', inputs.dockerhub-account, inputs.dockerhub-repo, github.ref_name) }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ github.run_id }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.DATESTAMP }}
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.LATEST_TAG }}
         build-args: ENVIRONMENT=${{ inputs.environment }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
