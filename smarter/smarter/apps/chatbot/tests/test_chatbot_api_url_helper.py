@@ -19,7 +19,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
             deployed=True,
         )
 
-        self.custom_domain_name = "smarter.querium.com"
+        self.custom_domain_name = "smarter.sh"
         self.custom_domain = ChatBotCustomDomain.objects.create(
             account=self.account,
             domain_name=self.custom_domain_name,
@@ -141,7 +141,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         """Test a custom domain."""
         self.assertIsNotNone(self.custom_chatbot.id)
         url = self.custom_chatbot.url
-        request: WSGIRequest = self.wsgi_request_factory.get(url, SERVER_NAME="smarter.querium.com")
+        request: WSGIRequest = self.wsgi_request_factory.get(url, SERVER_NAME="smarter.sh")
         helper = ChatBotHelper(
             request=request,
             chatbot_id=self.custom_chatbot.id,

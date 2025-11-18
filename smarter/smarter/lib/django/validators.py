@@ -7,7 +7,6 @@ TODO: add `import validators` and study this library to see what can be removed 
       see https://python-validators.github.io/validators/
 """
 
-import json
 import logging
 import re
 import warnings
@@ -20,6 +19,7 @@ from django.core.validators import URLValidator, validate_email, validate_ipv4_a
 
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import json
 
 
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class SmarterValidator:
             return False
 
     @staticmethod
-    def validate_snake_case(value: str) -> str:
+    def validate_snake_case(value: str) -> None:
         """Validate snake case format"""
         if not re.match(SmarterValidator.VALID_SNAKE_CASE, value):
             raise SmarterValueError(f"Invalid snake case {value}")
@@ -93,7 +93,7 @@ class SmarterValidator:
             raise SmarterValueError(f"Value must start with a lowercase letter: {value}")
         if not value[0].isalpha():
             raise SmarterValueError(f"Value must start with a letter: {value}")
-        return value
+        return
 
     @staticmethod
     def is_valid_snake_case(value: str) -> bool:

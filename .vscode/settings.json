@@ -1,7 +1,10 @@
 {
-  "cornflakes.linter.executablePath": "/Users/mcdaniel/desktop/gh/smarter-sh/smarter/venv/bin/flake8",
+  "cornflakes.linter.executablePath": "../venv/bin/flake8",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-containers"
   },
   "search.exclude": {
     "**/.git": true,

@@ -1,8 +1,7 @@
 """OpenAI API request validators"""
 
-import json
-
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import json
 
 from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 
@@ -22,13 +21,13 @@ def validate_temperature(temperature: any) -> None:
         raise SmarterValueError("Temperature must be a float") from exc
 
 
-def validate_max_tokens(max_tokens: any) -> None:
-    """Ensure that max_tokens is an int between 1 and 2048"""
-    if not isinstance(max_tokens, int):
-        raise TypeError("max_tokens should be an int")
+def validate_max_completion_tokens(max_completion_tokens: any) -> None:
+    """Ensure that max_completion_tokens is an int between 1 and 2048"""
+    if not isinstance(max_completion_tokens, int):
+        raise TypeError("max_completion_tokens should be an int")
 
-    if max_tokens < 1 or max_tokens > 2048:
-        raise SmarterValueError("max_tokens should be between 1 and 2048")
+    if max_completion_tokens < 1 or max_completion_tokens > 2048:
+        raise SmarterValueError("max_completion_tokens should be between 1 and 2048")
 
 
 def validate_endpoint(end_point: any) -> None:
@@ -68,14 +67,14 @@ def validate_messages(request_body):
         if not isinstance(message, dict):
             raise SmarterValueError(f"invalid object type {type(message)} {message} found in messages list {messages}")
         if "role" not in message:
-            raise SmarterValueError(f"dict key 'role' not found in message {json.dumps(message, indent=4)}")
+            raise SmarterValueError(f"dict key 'role' not found in message {json.dumps(message)}")
         if message["role"] not in OpenAIMessageKeys.all_roles:
             raise SmarterValueError(
-                f"invalid role {message['role']} found in message {json.dumps(message, indent=4)}. "
+                f"invalid role {message['role']} found in message {json.dumps(message)}. "
                 f"Should be one of {OpenAIMessageKeys.all_roles}"
             )
         if "content" not in message:
-            raise SmarterValueError(f"dict key 'content' not found in message {json.dumps(message, indent=4)}")
+            raise SmarterValueError(f"dict key 'content' not found in message {json.dumps(message)}")
 
 
 def validate_completion_request(request_body, version: str = "v1") -> None:
@@ -89,8 +88,8 @@ def validate_completion_request(request_body, version: str = "v1") -> None:
             raise SmarterValueError("dict key 'model' not found in request body object")
         if "temperature" not in request_body:
             raise SmarterValueError("dict key 'temperature' not found in request body object")
-        if "max_tokens" not in request_body:
-            raise SmarterValueError("dict key 'max_tokens' not found in request body object")
+        if "max_completion_tokens" not in request_body:
+            raise SmarterValueError("dict key 'max_completion_tokens' not found in request body object")
 
 
 def validate_embedding_request(request_body) -> None:

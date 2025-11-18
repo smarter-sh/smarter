@@ -2,33 +2,41 @@
 
 import fnmatch
 import logging
-import re
 
+from django.conf import settings
+from django.core.cache import cache
 from django.http import HttpResponseForbidden
-from django.utils.deprecation import MiddlewareMixin
 
-from smarter.common.classes import SmarterHelperMixin
+from smarter.common.classes import SmarterMiddlewareMixin
+from smarter.common.conf import settings as smarter_settings
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = logging.getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= smarter_settings.log_level
 
 
-class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+
+class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     """Block requests for common sensitive files."""
+
+    THROTTLE_LIMIT = 5
+    THROTTLE_TIMEOUT = 600  # seconds (10 minutes)
 
     def __init__(self, get_response):
         super().__init__(get_response)
         self.get_response = get_response
 
         # grant amnesty for specific patterns
-        self.allowed_patterns = [
-            re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
-            re.compile(r"^/api(/.*)?$"),
-            re.compile(r"^/admin(/.*)?$"),
-            re.compile(r"^/plugin(/.*)?$"),
-            re.compile(r"^/docs/manifest(/.*)?$"),
-            re.compile(r"^/docs/json-schema(/.*)?$"),
-        ]
+        self.allowed_patterns = (
+            settings.SENSITIVE_FILES_AMNESTY_PATTERNS if hasattr(settings, "SENSITIVE_FILES_AMNESTY_PATTERNS") else []
+        )
         self.sensitive_files = {
             ".env",
             "config.php",
@@ -108,23 +116,47 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
 
     def __call__(self, request):
         request_path = request.path.lower()
+        if request_path.replace("/", "") in self.amnesty_urls:
+            logger.debug("%s amnesty granted to: %s", self.formatted_class_name, request.path)
+            return self.get_response(request)
 
-        # Check for sensitive files using glob patterns
+        client_ip = self.get_client_ip(request)
+        if not client_ip:
+            return self.get_response(request)
+
+        # Throttle check
+        throttle_key = f"sensitive_files_throttle:{client_ip}"
+        blocked_count = cache.get(throttle_key, 0)
+        if blocked_count >= self.THROTTLE_LIMIT:
+            logger.warning(
+                "%s Throttled client %s after %d blocked requests", self.formatted_class_name, client_ip, blocked_count
+            )
+            return HttpResponseForbidden(
+                "You have been blocked due to too many suspicious requests from your IP. Try again later or contact support@smarter.sh."
+            )
+
         path_basename = request_path.rsplit("/", 1)[-1]
         for sensitive_file in self.sensitive_files:
             sensitive_file = sensitive_file.lower()
             if (
                 fnmatch.fnmatch(path_basename, sensitive_file)
                 or fnmatch.fnmatch(request_path, sensitive_file)
-                or sensitive_file in request_path  # fallback for legacy entries
+                or sensitive_file in request_path
             ):
-                # Allow specific patterns to pass through
                 for pattern in self.allowed_patterns:
                     if pattern.match(request_path):
-                        logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
+                        logger.debug("%s amnesty granted to: %s", self.formatted_class_name, request.path)
                         return self.get_response(request)
 
                 logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
+
+                try:
+                    blocked_count = cache.incr(throttle_key)
+                except ValueError:
+                    cache.set(throttle_key, 1, timeout=self.THROTTLE_TIMEOUT)
+                    blocked_count = 1
+                else:
+                    cache.set(throttle_key, blocked_count, timeout=self.THROTTLE_TIMEOUT)
                 return HttpResponseForbidden(
                     "Your request has been blocked by Smarter. Contact support@smarter.sh for assistance."
                 )

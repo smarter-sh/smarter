@@ -10,6 +10,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
@@ -27,7 +28,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
-    ) and level >= logging.INFO
+    ) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -54,11 +55,17 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     def process_request(self, request: WSGIRequest):
 
+        logger.info(
+            "%s.process_request() called for %s",
+            self.formatted_class_name,
+            self.smarter_build_absolute_uri(request),
+        )
+
         # 1.) If the request is from an internal ip address, allow it to pass through
         # these typically originate from health checks from load balancers.
         # ---------------------------------------------------------------------
         # Short-circuit for health checks
-        if request.path.replace("/", "") in ["healthz", "readiness", "liveness"]:
+        if request.path.replace("/", "") in self.amnesty_urls:
             return None
 
         host = request.get_host()

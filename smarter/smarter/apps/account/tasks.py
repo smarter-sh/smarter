@@ -8,12 +8,14 @@ future high-traffic scenarios.
 """
 # python stuff
 import logging
+from typing import Optional
 
 # django stuff
 from django.conf import settings
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Sum
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
@@ -21,7 +23,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # Smarter stuff
-from smarter.smarter_celery import app
+from smarter.workers.celery import app
 
 # Account stuff
 from .models import Account, Charge, DailyBillingRecord
@@ -37,7 +39,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-        and level >= logging.INFO
+        and level >= smarter_settings.log_level
     )
 
 
@@ -55,7 +57,7 @@ module_prefix = "smarter.apps.account.tasks."
 def create_charge(*args, **kwargs):
     """Create a charge record."""
 
-    account: Account = None
+    account: Optional[Account] = None
     user = None
     user_profile = None
 

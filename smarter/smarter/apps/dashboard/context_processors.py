@@ -94,7 +94,7 @@ def base(request: HttpRequest) -> dict:
                 "is_superuser": is_superuser,
                 "is_staff": is_staff,
                 "product_name": "Smarter",
-                "company_name": "Querium, Corp",
+                "company_name": "smarter.sh",
                 "smarter_version": "v" + __version__,
                 "current_year": current_year,
                 "product_description": "Smarter is an enterprise class plugin-based chat solution.",

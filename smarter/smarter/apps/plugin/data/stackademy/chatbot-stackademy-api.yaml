@@ -1,0 +1,35 @@
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  name: stackademy_api
+  description: Stackademy University course catalogue inquiries using the Stackademy API plugin.
+  version: 1.0.0
+spec:
+  config:
+    deployed: true
+    provider: openai
+    defaultModel: gpt-4-turbo
+    defaultSystemRole: >
+      You are a helpful assistant. When given the opportunity to utilize
+      function calling, you should always do so. This will allow you to
+      provide the best possible responses to the user.
+    defaultTemperature: 0.5
+    defaultMaxTokens: 512
+    appName: Stackademy API Chatbot
+    appAssistant: Stanley
+    appWelcomeMessage: Welcome to Stackademy API Chatbot! How can I help you today?
+    appExamplePrompts:
+      - "Do you offer any courses on AI?"
+      - "My budget is $1,000. What courses can I take?"
+      - "What is the capital of France?"
+    appPlaceholder: "Ask me anything about Stackademy courses..."
+    appInfoUrl: https://smarter.sh
+    appBackgroundImageUrl: https://smarter.sh/assets/img/bg.jpg
+    appLogoUrl: https://smarter.sh/assets/img/logo.png
+    appFileAttachment: false
+    subdomain: null
+    customDomain: null
+  plugins:
+    - stackademy_api
+  functions:
+    - weather

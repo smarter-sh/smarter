@@ -79,6 +79,7 @@ class Command(BaseCommand):
 
         # 1.) handle the Secret
         try:
+            self.stdout.write(self.style.NOTICE(f"creating Secret '{secret_name}'."))
             secret = Secret.objects.get(
                 user_profile=admin_user_profile,
                 name=secret_name,
@@ -104,6 +105,7 @@ class Command(BaseCommand):
 
         # 2.) handle the SqlConnection
         try:
+            self.stdout.write(self.style.NOTICE(f"creating SQL database connection '{db_name}'."))
             sql_connection, created = SqlConnection.objects.get_or_create(
                 account=admin_user_profile.account,
                 name=db_name,
@@ -133,7 +135,7 @@ class Command(BaseCommand):
             "apps",
             "plugin",
             "data",
-            "sample-plugins",
+            "stackademy",
             "stackademy-sql.yaml",
         )
         call_command(

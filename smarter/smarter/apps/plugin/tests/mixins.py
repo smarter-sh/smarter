@@ -2,7 +2,6 @@
 Test mixins for the plugin module.
 """
 
-import json
 import logging
 import os
 from typing import Optional
@@ -14,7 +13,9 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import ApiConnection, SqlConnection
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import camel_to_snake_dict, get_readonly_yaml_file
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -28,7 +29,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -242,3 +243,10 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
             pass
         cls.connection_django_model = None
         super().tearDownClass()
+
+    def test_00_sql_connection_mixin(self):
+        """Test the SqlConnection itself, lest we get ahead of ourselves"""
+        self.assertIsInstance(self.connection_django_model, SqlConnection)
+        self.assertIsInstance(self.connection_loader, SAMLoader)
+        self.assertIsInstance(self.connection_manifest, dict)
+        self.assertIsInstance(self.connection_manifest_path, str)

@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup, Comment
 from django.http import FileResponse
 from django.utils.deprecation import MiddlewareMixin
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -17,7 +18,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
-        and level >= logging.INFO
+        and level >= smarter_settings.log_level
     )
 
 

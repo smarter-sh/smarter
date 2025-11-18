@@ -1,7 +1,6 @@
 """A Plugin that uses a REST API to retrieve its return data"""
 
 # python stuff
-import json
 import logging
 from typing import Any, Optional, Type
 
@@ -9,8 +8,10 @@ from typing import Any, Optional, Type
 from smarter.apps.plugin.manifest.models.common import Parameter
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -38,7 +39,7 @@ from .base import PluginBase, SmarterPluginError
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

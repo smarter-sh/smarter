@@ -3,7 +3,6 @@ Project level base classes for unit tests.
 """
 
 import csv
-import json
 import logging
 import unittest
 from typing import Union
@@ -13,6 +12,7 @@ from django.http import HttpRequest
 from django.test import RequestFactory
 
 from smarter.common.utils import camel_to_snake, hash_factory
+from smarter.lib import json
 
 
 logger = logging.getLogger(__name__)

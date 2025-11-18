@@ -47,7 +47,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.helpers.url_helpers import clean_url
-from smarter.lib.cache import cache_results
+from smarter.common.utils import is_authenticated_request, rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
@@ -74,7 +74,7 @@ MAX_RETURNED_PLUGINS = 10
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -302,7 +302,11 @@ class ChatConfigView(SmarterNeverCachedWebView):
 
         logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
 
-        if self.chatbot_helper and self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
+        if (
+            self.chatbot_helper
+            and self.chatbot_helper.is_authentication_required
+            and not is_authenticated_request(request)
+        ):
             try:
                 raise SmarterChatappViewError(
                     "Authentication failed. Are you logged in? Smarter sessions automatically expire after 24 hours."
@@ -426,7 +430,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     The url is expected to be in one of three formats.
 
     Sandbox mode:
-    - http://smarter.querium.com/workbench/hr/
+    - http://smarter.sh/workbench/hr/
     - http://127.0.0.1:8000/workbench/<str:name>/
 
     Production mode:
@@ -476,7 +480,9 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         retval = super().dispatch(request, *args, **kwargs)
         if retval.status_code >= 400:
             return retval
+
         name = kwargs.pop("name", None)
+        name = rfc1034_compliant_to_snake(name) if name else None
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
         if self.user_profile is None:
             raise SmarterValueError("User profile is not set. Cannot proceed with ChatAppWorkbenchView dispatch.")

@@ -17,6 +17,7 @@ from django.http.response import HttpResponseBase
 
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -25,7 +26,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
             )
 
         # Short-circuit for health checks
-        if request.path.replace("/", "") in ["healthz", "readiness", "liveness"]:
+        if request.path.replace("/", "") in self.amnesty_urls:
             return super().__call__(request)
 
         # Short-circuit for any requests born from internal IP address hosts

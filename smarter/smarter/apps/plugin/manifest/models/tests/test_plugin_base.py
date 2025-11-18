@@ -1,8 +1,6 @@
 # pylint: disable=R0801,W0613
 """Test plugin base class."""
 
-# python stuff
-import json
 import logging
 from time import sleep
 
@@ -48,17 +46,22 @@ from smarter.apps.plugin.signals import (
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import camel_to_snake, get_readonly_yaml_file
+
+# python stuff
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoaderError
 
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -187,7 +190,7 @@ class TestPluginBase(TestAccountMixin):
             ],
         )
         self.assertEqual(
-            plugin.plugin_prompt.max_tokens,
+            plugin.plugin_prompt.max_completion_tokens,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
             ],
@@ -205,8 +208,10 @@ class TestPluginBase(TestAccountMixin):
 
         plugin = self.plugin_class(user_profile=self.user_profile, data=self.data)
         to_json = plugin.to_json()
+
         if not isinstance(to_json, dict):
             self.fail("Expected JSON output to be a dict.")
+
         logger.info("TestPluginBase().test_to_json() data: %s", self.data)
         logger.info("TestPluginBase().test_to_json() to_json: %s", to_json)
 
@@ -215,56 +220,76 @@ class TestPluginBase(TestAccountMixin):
 
         self.assertIsInstance(to_json, dict)
 
+        # Helper function to create assertion error messages with JSON dump
+        def assert_equal_with_dump(actual, expected, field_description):
+            try:
+                self.assertEqual(actual, expected)
+            except AssertionError as e:
+                logger.error("Assertion failed for %s", field_description)
+                logger.error("to_json dump: %s", json.dumps(to_json))
+                raise AssertionError(f"{field_description} assertion failed. to_json: {json.dumps(to_json)}") from e
+
         # ensure that we can go from json output to a string and back to json without error
         # taking into account that the PluginMeta name will always save in snake_case format.
         snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
-        self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], snake_case_name)
+        assert_equal_with_dump(to_json[SAMKeys.METADATA.value]["name"], snake_case_name, "Plugin name (snake_case)")
 
-        self.assertEqual(
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ].strip(),
+            "Selector directive",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.PROVIDER.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.PROVIDER.value
             ].strip(),
+            "Prompt provider",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
             ].strip(),
+            "Prompt system role",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MODEL.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MODEL.value
             ].strip(),
+            "Prompt model",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
             ],
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
             ],
+            "Prompt temperature",
         )
-        self.assertEqual(
+
+        assert_equal_with_dump(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.MAXTOKENS.value],
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
             ],
+            "Prompt max tokens",
         )
 
     def test_delete(self):
@@ -321,7 +346,7 @@ class TestPluginBase(TestAccountMixin):
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):
         """Test that the StaticPlugin raises an error when given bad data."""
-        with self.assertRaises(SmarterPluginError):
+        with self.assertRaises((SmarterPluginError, SAMValidationError)):
             self.plugin_class(data={})
 
         bad_data = self.data.copy()
@@ -460,7 +485,7 @@ class TestPluginBase(TestAccountMixin):
         self.assertEqual(plugin.plugin_prompt.system_role, plugin_clone.plugin_prompt.system_role)  # type: ignore
         self.assertEqual(plugin.plugin_prompt.model, plugin_clone.plugin_prompt.model)  # type: ignore
         self.assertEqual(plugin.plugin_prompt.temperature, plugin_clone.plugin_prompt.temperature)  # type: ignore
-        self.assertEqual(plugin.plugin_prompt.max_tokens, plugin_clone.plugin_prompt.max_tokens)  # type: ignore
+        self.assertEqual(plugin.plugin_prompt.max_completion_tokens, plugin_clone.plugin_prompt.max_completion_tokens)  # type: ignore
 
         self.assertEqual(plugin.plugin_data.description, plugin_clone.plugin_data.description)  # type: ignore
         self.assertEqual(plugin.plugin_data.static_data, plugin_clone.plugin_data.static_data)  # type: ignore

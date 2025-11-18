@@ -1,6 +1,5 @@
 """Test ChatBotApiBaseViewSet"""
 
-import json
 import logging
 import os
 
@@ -11,7 +10,9 @@ from rest_framework.test import APIClient
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import get_readonly_yaml_file
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -24,7 +25,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -62,7 +63,9 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
         cls.broker = SAMChatbotBroker(
-            request=cls.create_generic_request("/anywhere/"), account=cls.account, manifest=json.dumps(cls.manifest)
+            request=cls.create_generic_request("/anywhere/"),
+            account=cls.account,
+            manifest=json.dumps(cls.manifest),
         )
         cls.request = cls.create_generic_request(url=cls.broker.chatbot.url_chatbot)
 

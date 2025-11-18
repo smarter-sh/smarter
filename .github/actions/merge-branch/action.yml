@@ -26,14 +26,14 @@ inputs:
     required: true
     type: string
 env:
-  GITHUB_ORGANIZATION: "QueriumCorp"
+  GITHUB_ORGANIZATION: "smarter-sh"
 
 runs:
   using: "composite"
   steps:
     - name: Checkout code
       id: checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
         persist-credentials: false

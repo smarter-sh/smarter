@@ -4,7 +4,6 @@ import hashlib
 import logging
 import pickle
 from functools import wraps
-from typing import Optional
 
 from django.core.cache import cache
 from django.http import HttpRequest
@@ -15,7 +14,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_green,
     formatted_text_red,
 )
-from smarter.common.utils import smarter_build_absolute_uri
+from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -166,7 +165,7 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 return func(request, *args, **kwargs)
             url = smarter_build_absolute_uri(request)
             user_identifier = (
-                request.user.username if hasattr(request, "user") and request.user.is_authenticated else "anonymous"  # type: ignore[union-attr,attr-defined]
+                request.user.username if is_authenticated_request(request) else "anonymous"  # type: ignore[union-attr,attr-defined]
             )
             cache_key = f"{func.__name__}_{url}_{user_identifier}"
             result = cache.get(cache_key)

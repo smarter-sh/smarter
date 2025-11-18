@@ -1,20 +1,37 @@
 """Common classes"""
 
-import json
-from logging import getLogger
+import ipaddress
+import logging
 from typing import Any, Optional, Union
 
 import yaml
 from django.http import HttpRequest
+from django.utils.deprecation import MiddlewareMixin
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import (
+    is_authenticated_request,
+)
+from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
+from smarter.lib import json
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = getLogger(__name__)
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= smarter_settings.log_level
+    ) or level >= logging.WARNING
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class Singleton(type):
@@ -109,3 +126,120 @@ class SmarterHelperMixin:
                     raise SmarterValueError("String data is neither valid JSON nor YAML.") from yaml_error
         else:
             raise SmarterValueError("Unsupported data type for conversion to dict.")
+
+
+class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
+    """A mixin for middleware classes with helper functions."""
+
+    def get_client_ip(self, request) -> Optional[str]:
+        """
+        Get client IP address from request.
+
+        This is harder than it seems due to proxies, load balancers,
+        and CDNs. This implementation checks common headers set by
+        proxies and falls back to REMOTE_ADDR.
+
+        Note the following:
+        - In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
+        - Client -> CLB -> Nginx Ingress -> Django
+        - CLB adds X-Forwarded-For with original client IP
+        - Nginx may add X-Real-IP or modify X-Forwarded-For
+        - Django sees REMOTE_ADDR as the Nginx IP (not useful for client IP)
+
+        - If using Cloudflare, it adds CF-Connecting-IP header with original client IP
+        - Always validate IPs to avoid trusting spoofed headers
+
+        """
+
+        # First check X-Forwarded-For (most reliable for CLB)
+        forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if forwarded_for:
+            # X-Forwarded-For format: "client_ip, proxy1_ip, proxy2_ip"
+            # The leftmost IP is the original client IP
+            client_ip = forwarded_for.split(",")[0].strip()
+            # Validate it's not a private IP (load balancer/proxy IP)
+            if not self._is_private_ip(client_ip):
+                logger.info(
+                    "%s.get_client_ip() - Using X-Forwarded-For: %s",
+                    self.formatted_class_name,
+                    client_ip,
+                )
+                return client_ip
+
+        # Check X-Real-IP (set by Nginx ingress controller)
+        real_ip = request.META.get("HTTP_X_REAL_IP")
+        if real_ip and not self._is_private_ip(real_ip.strip()):
+            logger.info(
+                "%s.get_client_ip() - Using X-Real-IP: %s",
+                self.formatted_class_name,
+                real_ip.strip(),
+            )
+            return real_ip.strip()
+
+        # Check Cloudflare connecting IP if using Cloudflare
+        cf_ip = request.META.get("HTTP_CF_CONNECTING_IP")
+        if cf_ip and not self._is_private_ip(cf_ip.strip()):
+            logger.info(
+                "%s.get_client_ip() - Using CF-Connecting-IP: %s",
+                self.formatted_class_name,
+                cf_ip.strip(),
+            )
+            return cf_ip.strip()
+
+        # Fallback to REMOTE_ADDR (will be load balancer IP in AWS)
+        remote_addr = request.META.get("REMOTE_ADDR", "127.0.0.1")
+        logger.info(
+            "%s.get_client_ip() - Falling back to REMOTE_ADDR: %s",
+            self.formatted_class_name,
+            remote_addr,
+        )
+
+        if not self._is_private_ip(remote_addr):
+            logger.info(
+                "%s.get_client_ip() - Using REMOTE_ADDR: %s",
+                self.formatted_class_name,
+                remote_addr,
+            )
+            return remote_addr
+
+        if request.path.replace("/", "") not in self.amnesty_urls and not smarter_settings.environment_is_local:
+            logger.warning(
+                "%s __call()__ - Could not determine client IP: %s",
+                self.formatted_class_name,
+                self.smarter_build_absolute_uri(request=request),
+            )
+        return None
+
+    def _is_private_ip(self, ip):
+        """Check if IP is in private/internal ranges."""
+        try:
+            ip_obj = ipaddress.ip_address(ip)
+            return ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local
+        except ValueError as e:
+            logger.warning("%s._is_private_ip() - Invalid IP address: %s, error: %s", self.formatted_class_name, ip, e)
+            return True
+
+    def has_auth_indicators(self, request):
+        """Check if request has authentication indicators (cookies, headers, etc.)."""
+
+        # Check for Django session cookie
+        if request.COOKIES.get("sessionid"):
+            return True
+
+        # Check for CSRF token (indicates active session)
+        if request.COOKIES.get("csrftoken"):
+            return True
+
+        # Check for Authorization header
+        if request.META.get("HTTP_AUTHORIZATION"):
+            return True
+
+        # Check for API key header
+        if request.META.get("HTTP_X_API_KEY"):
+            return True
+
+        # Check if user is authenticated (Django built-in)
+        if is_authenticated_request(request):
+            return True
+
+        return False

@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "pip"
-    directory: "/smarter/requirements"
+    directory: "/smarter/requirements/in"
     schedule:
       interval: "monthly"
     target-branch: "alpha"
@@ -38,3 +38,7 @@ updates:
       - "lpm0073"
     reviewers:
       - "lpm0073"
+  - package-ecosystem: "helm"
+    directory: "/helm/charts/smarter"
+    schedule:
+      interval: "quarterly"

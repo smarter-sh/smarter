@@ -1,0 +1,127 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      referenced by base.in and local.in to constrain versions
+# -----------------------------------------------------------------------------
+
+cachetools<6.0
+
+# Indirect dependency, constrained for compatibility. Update as needed.
+certifi>=2025.8.0,<2026.0.0
+
+# Indirect dependency, constrained for compatibility. Update as needed.
+chardet>=5.2.0,<6.0.0
+
+# Indirect dependency, constrained for compatibility. Update as needed.
+charset-normalizer>=3.4.0,<4.0.0
+
+# Provides cross-platform colored terminal output; often required by CLI tools (e.g., pytest, click) for Windows compatibility.
+colorama>=0.4.6,<1.0.0
+
+# Used for platform-independent file locking; required by joblib, pytest, and other tools needing concurrency-safe file access.
+filelock>=3.19.0,<4.0.0
+
+# Handles Internationalized Domain Names; indirect dependency of requests, urllib3, and other networking libraries.
+idna>=3.10,<4.0.0
+
+# Used for parsing INI files; required by pytest for configuration file support.
+iniconfig>=2.1.0,<3.0.0
+
+# JSON query language; required by boto3 and other AWS SDKs for querying JSON responses.
+jmespath>=1.0.1,<2.0.0
+
+# Lightweight pipelining and parallelization; used by scikit-learn and other scientific packages.
+joblib>=1.5.2,<2.0.0
+
+# URL parsing for Markdown; indirect dependency of markdown-it-py, used by rich and other Markdown rendering tools.
+mdurl>=0.1.2,<1.1.0
+
+# Complexity checker for Python code; required by flake8 for code quality checks.
+mccabe>=0.7.0,<1.0.0
+
+# Additional itertools for Python; used by pytest and other testing frameworks for advanced iteration utilities.
+more-itertools>=10.8.0,<11.0.0
+
+# Multi-value dictionary implementation; required by aiohttp and yarl for async web frameworks.
+multidict>=6.6.4,<7.0.0
+
+# Pattern matching for file paths; used by black, pre-commit, and other tools for file selection.
+pathspec>=0.12.1,<1.0.0
+
+# Determines platform-specific directories; used by black, jupyter, and other tools for config/cache locations.
+platformdirs>=4.4.0,<5.0.0
+
+# Plugin management framework; required by pytest and tox for plugin support.
+pluggy>=1.6.0,<2.0.0
+
+# ASN.1 types and codecs; required by cryptography, pyasn1-modules, and some authentication libraries.
+pyasn1>=0.6.1,<1.0.0
+
+# Additional ASN.1 modules; used with pyasn1 for cryptography and network protocols.
+pyasn1-modules>=0.4.2,<1.0.0
+
+# Python style guide checker; required by flake8 for PEP8 compliance checks.
+pycodestyle>=2.14.0,<3.0.0
+
+# C parser in Python; required by cffi, which is used by cryptography and other C-extension libraries.
+pycparser>=2.23,<3.0.0
+
+# Static code analysis for Python; used by flake8 for linting.
+pyflakes>=3.4.0,<4.0.0
+
+# Parsing library for grammars; required by packaging, matplotlib, and other libraries for parsing expressions.
+pyparsing>=3.2.3,<4.0.0
+
+# Fast fuzzy string matching; used by rich and other libraries for text processing.
+rapidfuzz>=3.14.1,<4.0.0
+
+# Enhanced regular expressions; used by black, dateparser, and other tools needing advanced regex features.
+regex>=2025.9.1,<2026.0.0
+
+# Pure Python RSA implementation; required by google-auth and other authentication libraries.
+rsa>=4.9.1,<5.0.0
+
+# Python 2 and 3 compatibility utilities; still required by many libraries for legacy support.
+six>=1.17.0,<2.0.0
+
+# Detects async library context; required by httpx, trio, and other async frameworks.
+sniffio>=1.3.1,<2.0.0
+
+# CSS selector library for BeautifulSoup; required by beautifulsoup4 for HTML/XML parsing.
+soupsieve>=2.8,<3.0.0
+
+# SQL parsing library; used by Django and other ORMs for SQL formatting and analysis.
+sqlparse>=0.5.3,<1.0.0
+
+# Plugin management for Python; used by OpenStack and other extensible frameworks.
+stevedore>=5.5.0,<6.0.0
+
+# Retry utility for Python; used by celery, requests, and other libraries needing robust retry logic.
+tenacity>=9.1.2,<10.0.0
+
+# TOML file parser and writer; used by poetry, black, and other tools for pyproject.toml support.
+tomlkit>=0.13.3,<1.0.0
+
+# Backports of typing features; required by libraries supporting older Python versions.
+typing-extensions>=4.15.0,<5.0.0
+
+# Time zone database; used by dateutil, pandas, and other libraries for timezone support.
+tzdata>=2025.2,<2026.0
+
+# HTTP client library; indirect dependency of requests and other networking libraries.
+urllib3>=2.5.0,<3.0.0
+
+# Data validation for strings, URLs, etc.; used by various web and data libraries.
+validators>=0.35.0,<1.0.0
+
+# Promises/A+ implementation; required by celery for async task management.
+vine>=5.1.0,<6.0.0
+
+# Measures printable width of unicode strings; used by rich, prompt-toolkit, and other CLI tools.
+wcwidth>=0.2.13,<1.0.0
+
+# Built-package format for Python; required for building and distributing Python packages.
+wheel>=0.45.1,<1.0.0
+
+# URL parsing for async frameworks; required by aiohttp for URL handling.

@@ -12,12 +12,13 @@ from smarter.apps.account.utils import (
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import SmarterPluginError
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.smarter_celery import app
+from smarter.workers.celery import app
 
 from .models import PluginSelectorHistory
 
@@ -27,7 +28,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= logging.INFO
+        and level >= smarter_settings.log_level
     )
 
 
@@ -50,7 +51,7 @@ def create_plugin_selector_history(*args, **kwargs):
     user_id = kwargs.get("user_id")
     if user_id:
         user = get_cached_user_for_user_id(user_id)
-        user_profile = get_cached_user_profile(user)
+        user_profile = get_cached_user_profile(user) if user else None
 
     plugin_id = kwargs.get("plugin_id")
     plugin_meta = PluginMeta.objects.get(id=plugin_id) if plugin_id else None

@@ -1,25 +1,112 @@
 apiVersion: v2
-appVersion: 0.10.20
+appVersion: 0.13.25
 name: smarter
-description: A Helm chart for deploying Querium Smarter API and web console
+description: Smarter API and web console
 type: application
-version: 0.7.3
+version: 0.8.6
+kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
-  - https://github.com/QueriumCorp/smarter
+  - https://github.com/smarter-sh/smarter
 maintainers:
   - name: Lawrence McDaniel
-    email: lawrence@querium.com
-  - name: Kent Fuka
-    email: kent@querium.com
+    email: lpm0073@gmail.com
+    website: https://lawrencemcdaniel.com
 dependencies:
-  - name: redis
-    version: 20.6.1
+  - name: grafana
+    version: 12.1.8
     repository: https://charts.bitnami.com/bitnami
-icon: https://www.querium.com/wp-content/uploads/2022/04/Querium-logo_white_transparency.png
+    condition: grafana.enabled
+  - name: loki
+    version: 6.46.0
+    repository: https://grafana.github.io/helm-charts
+    condition: loki.enabled
+  - name: mysql
+    version: 14.0.3
+    repository: https://charts.bitnami.com/bitnami
+    condition: mysql.enabled
+  - name: mariadb
+    version: 23.2.4
+    repository: https://charts.bitnami.com/bitnami
+    condition: mariadb.enabled
+  - name: prometheus
+    version: 2.1.23
+    repository: https://charts.bitnami.com/bitnami
+    condition: prometheus.enabled
+  - name: redis
+    version: 23.2.12
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+icon: https://platform.smarter.sh/static/images/logo/smarter-crop.png
 keywords:
-  - Querium
-  - smarter
+  - ai
+  - artificial-intelligence
+  - resource-management
+  - platform
+  - kubernetes
+  - llm
+  - rag
+  - mlops
+  - orchestration
+  - workflow
+  - automation
+  - monitoring
+  - logging
+  - api
+  - web
+  - console
   - plugins
+  - education
+  - smarter
 annotations:
-  "helm.sh/chart": "smarter-0.7.3"
+  helm.sh/chart: smarter-0.8.6
+  artifacthub.io/changes: |
+    - kind: added
+      description: artifacthub.io/screenshots annotations using screenshots from main landing page.
+    - kind: added
+      description: default image to app, worker, beat, job
+  artifacthub.io/license: AGPL-3.0
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: smarter
+      image: mcdaniel0073/smarter:v0.13.25
+  artifacthub.io/links: |
+    - name: Website
+      url: https://smarter.sh
+    - name: GitHub
+      url: https://github.com/smarter-sh/smarter
+    - name: Chart Source
+      url: https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter
+    - name: Documentation
+      url: https://platform.smarter.sh/docs/
+    - name: Support
+      url: https://github.com/smarter-sh/smarter/issues
+  artifacthub.io/maintainers: |
+      - name: Lawrence McDaniel
+        email: lpm0073@gmail.com
+  artifacthub.io/operator: "true"
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/recommendations: |
+    - url: https://artifacthub.io/packages/helm/bitnami/redis
+    - url: https://artifacthub.io/packages/helm/bitnami/grafana
+    - url: https://artifacthub.io/packages/helm/grafana/loki
+    - url: https://artifacthub.io/packages/helm/bitnami/mysql
+    - url: https://artifacthub.io/packages/helm/bitnami/mariadb
+    - url: https://artifacthub.io/packages/helm/bitnami/prometheus
+  artifacthub.io/screenshots: |
+    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-1.png
+      caption: Smarter's YAML-first configuration simplifies AI Workflow orchestration
+    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-2.png
+      caption: Smarter’s Prompt Engineer Workbench gives you a live, transparent view into every part of a conversation
+    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-3.png
+      caption: Smarter is LLM Provider agnostic
+    - url: https://cdn.platform.smarter.sh/artifacthub.io/screenshots/smarter-screenshot-4.png
+      caption: Smarter Plugins let any model call SQL, APIs, static data, or secure Python
+  artifacthub.io.signKey: |
+      fingerprint: FC3130197AED484D9B5FA847440711F032A1DCBB1B813D458CF71FB90CC2345D
+      url: https://github.com/smarter-sh/smarter/raw/main/sigstore/artifacthub-cosign.pub
+      key: |
+        -----BEGIN PUBLIC KEY-----
+        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEd36XqSY/+wHzvq5sPFCNQk08oMxD
+        3uAi/F4SjX9fbu2zjBuBTwSqd64D8Oi3LrHqNsO0J0RHiWI/qvZoU8poaA==
+        -----END PUBLIC KEY-----

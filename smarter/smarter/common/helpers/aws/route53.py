@@ -10,6 +10,7 @@ import botocore.exceptions
 import dns.resolver
 from django.conf import settings
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -21,7 +22,7 @@ from .exceptions import AWSRoute53RecordVerificationTimeout
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

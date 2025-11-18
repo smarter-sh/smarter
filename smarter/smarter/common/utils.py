@@ -8,9 +8,10 @@ import logging
 import random
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 import yaml
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 from pydantic import SecretStr
 from rest_framework.request import Request
@@ -20,7 +21,29 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.validators import SmarterValidator
 
 
+RequestType = Union[HttpRequest, Request, WSGIRequest]
 logger = logging.getLogger(__name__)
+
+
+def is_authenticated_request(request: Optional[RequestType]) -> bool:
+    """
+    Check if the request is authenticated.
+    Args:
+        request (RequestType): The request object.
+    Returns:
+        bool: True if the request is authenticated, False otherwise.
+    """
+    try:
+        return (
+            isinstance(request, (HttpRequest, Request, WSGIRequest))
+            and hasattr(request, "user")
+            and hasattr(request.user, "is_authenticated")
+            and request.user.is_authenticated
+        )
+    # pylint: disable=W0718
+    except Exception as e:
+        logger.warning("is_authenticated_request() failed: %s", formatted_text(str(e)))
+        return False
 
 
 def hash_factory(length: int = 16) -> str:
@@ -55,41 +78,6 @@ class DateTimeEncoder(json.JSONEncoder):
             return "*** REDACTED ***"
 
         return super().default(o)
-
-
-def camel_to_snake(name):
-    """
-    Converts camelCase or incorrectly formatted names to snake_case.
-    examples:
-        camel_to_snake("camelCase") -> "camel_case"
-        camel_to_snake("CamelCase") -> "camel_case"
-        camel_to_snake("Camel Case") -> "camel_case"
-        camel_to_snake("camel case") -> "camel_case"
-        camel_to_snake("camelCaseWithSpaces") -> "camel_case_with_spaces"
-        camel_to_snake("CamelCaseWithSpaces") -> "camel_case_with_spaces"
-        camel_to_snake("Camel Case With Spaces") -> "camel_case_with_spaces"
-        camel_to_snake("MYEverlastingSUPERDUPERGobstopper") -> "my_everlasting_superduper_gobstopper"
-    Args:
-        name (str): The name to convert.
-    Returns:
-        str: The converted name in snake_case.
-    """
-    name = str(name or "")
-    name = name.replace(" ", "_").replace("-", "_")
-
-    # Split lowercase-uppercase boundary
-    name = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
-
-    # Handle consecutive uppercase letters followed by lowercase letters
-    name = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
-
-    # Reduce multiple underscores to a single underscore
-    name = re.sub(r"_+", "_", name)
-
-    # Remove non-alphanumeric characters except underscores
-    name = re.sub(r"[^\w]", "", name)
-
-    return name.lower()
 
 
 def camel_to_snake_dict(dictionary: dict) -> dict:
@@ -247,3 +235,98 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
     # Fallback: synthesize a generic test URL
     logger.warning("smarter_build_absolute_uri() could not determine URL, returning fallback test URL")
     return "http://testserver/unknown/"
+
+
+def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -> Optional[Union[str, dict, list]]:
+    """Converts snake_case dict keys to camelCase."""
+
+    def convert(name: str) -> str:
+        components = name.split("_")
+        return components[0] + "".join(x.title() for x in components[1:])
+
+    if isinstance(data, str):
+        return convert(data)
+
+    if isinstance(data, list):
+        return [snake_to_camel(item, convert_values=convert_values) for item in data]
+
+    if not isinstance(data, dict):
+        raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
+
+    dictionary: dict = data if isinstance(data, dict) else {}
+    retval = {}
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            value = snake_to_camel(data=value, convert_values=convert_values)
+        new_key = convert(key)
+        if convert_values:
+            new_value = convert(value) if isinstance(value, str) else value
+        else:
+            new_value = value
+        retval[new_key] = new_value
+    return retval
+
+
+def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
+    """Converts camelCase dict keys to snake_case."""
+
+    def convert(name: str):
+        name = name.replace(" ", "_")
+        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+        result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+        result = re.sub("_+", "_", result)
+        return result
+
+    if isinstance(data, str):
+        return convert(data)
+    if isinstance(data, list):
+        return [camel_to_snake(item) for item in data]
+    if not isinstance(data, dict):
+        raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
+    dictionary: dict = data if isinstance(data, dict) else {}
+    retval = {}
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            value = camel_to_snake(value)
+        new_key = convert(key)
+        retval[new_key] = value
+    return retval
+
+
+def rfc1034_compliant_str(val) -> str:
+    """
+    Returns a RFC 1034 compliant name for the ChatBot.
+    - lower case
+    - alphanumeric characters and hyphens only
+    - starts and ends with an alphanumeric character
+    - max length of 63 characters
+    """
+    if not isinstance(val, str):
+        raise SmarterValueError(f"Could not generate RFC 1034 compliant name from {type(val)}")
+    # Replace underscores with hyphens
+    label = val.lower().replace("_", "-")
+    # Remove invalid characters
+    label = re.sub(r"[^a-z0-9-]", "", label)
+    # Remove leading/trailing hyphens
+    label = label.strip("-")
+    # Truncate to 63 characters
+    if label:
+        return label[:63]
+    else:
+        raise SmarterValueError("Could not generate RFC 1034 compliant name from empty string")
+
+
+def rfc1034_compliant_to_snake(val) -> str:
+    """
+    Converts a RFC 1034 compliant name to a more human-readable snake_case name.
+    - replaces hyphens with underscores
+    Args:
+        val (str): The RFC 1034 compliant name to convert.
+    Returns:
+        str: The converted name in snake_case.
+    """
+    if not isinstance(val, str):
+        raise SmarterValueError(f"Could not convert RFC 1034 compliant name from {type(val)}")
+    # Replace hyphens with underscores
+    name = val.replace("-", "_")
+    return name

@@ -1,9 +1,16 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'delete' view"""
 
+from http import HTTPStatus
+
 from drf_yasg.utils import swagger_auto_schema
 
 from .base import CliBaseApiView
+from .swagger import (
+    COMMON_SWAGGER_PARAMETERS,
+    COMMON_SWAGGER_RESPONSES,
+    openai_success_response,
+)
 
 
 class ApiV1CliDeleteApiView(CliBaseApiView):
@@ -37,19 +44,12 @@ This is the API endpoint for the 'delete' command in the Smarter command-line in
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
 
 The response from this endpoint is a JSON object.
-"""
+
+This is a brokered operation, so the actual work is delegated to the appropriate broker based on the resource kind specified in the manifest. See smarter.apps.api.v1.cli.brokers.Brokers
+""",
+        responses={**COMMON_SWAGGER_RESPONSES, HTTPStatus.OK: openai_success_response("Deleted successfully")},
+        manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"], COMMON_SWAGGER_PARAMETERS["name_query_param"]],
     )
     def post(self, request, kind: str, *args, **kwargs):
-        """
-        Handles the POST HTTP request for the 'delete' command.
-
-        Parameters:
-        request (Request): The request object. The resource name is passed in the url query parameters.
-        *args: Variable length argument list.
-        **kwargs: the kind of resource to delete
-
-        Returns:
-        Response: A JSON object representing the result of the 'delete' operation.
-        """
         response = self.broker.delete(request=request, kwargs=kwargs)
         return response

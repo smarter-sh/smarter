@@ -1,0 +1,16 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      for all cloud-based non-development environments. Adds
+#             a WSGI HTTP server for running web applications. This
+#             handshakes with the cloud proxy server Nginx to manage
+#             http requests and responses.
+#
+# pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
+# -----------------------------------------------------------------------------
+
+-r constraints.in
+-r base.in
+
+gunicorn==23.0.0

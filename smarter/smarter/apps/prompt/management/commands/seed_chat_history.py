@@ -1,7 +1,6 @@
 """This module is used to generate seed records for the chat history models."""
 
 import glob
-import json
 import os
 import secrets
 from pathlib import Path
@@ -17,6 +16,7 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.prompt.models import Chat
 from smarter.apps.prompt.providers.providers import chat_providers
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
+from smarter.lib import json
 
 
 HERE = Path(__file__).resolve().parent

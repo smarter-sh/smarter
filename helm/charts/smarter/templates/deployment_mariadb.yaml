@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    meta.helm.sh/release-name: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+    meta.helm.sh/application-version: {{ .Values.version }}
+  labels:
+    App: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
+  name: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}
+  namespace: {{ .Values.namespace }}
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.names.mariadbName | default "smarter-mariadb" }}
+      app.kubernetes.io/component: mariadb
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.names.mariadbName | default "smarter-mariadb" }}
+        app.kubernetes.io/component: mariadb
+    spec:
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
+      securityContext:
+        fsGroup: {{ .Values.mariadb.podSecurityContext.fsGroup | default 1001 }}
+      containers:
+        - name: mariadb
+          image: "{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}"
+          imagePullPolicy: {{ .Values.mariadb.image.pullPolicy }}
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.names.appName | default "smarter" }}-root-{{ .Values.names.mariadbName | default "mariadb" }}
+                  key: mariadb-root-password
+            - name: MYSQL_DATABASE
+              value: {{ .Values.env.MYSQL_DATABASE | default .Values.mariadb.auth.database | quote }}
+            - name: MYSQL_USER
+              value: {{ .Values.env.MYSQL_USER | default .Values.mariadb.auth.username | quote }}
+{{- if .Values.env.MYSQL_PASSWORD }}
+            - name: MYSQL_PASSWORD
+              value: {{ .Values.env.MYSQL_PASSWORD | quote }}
+{{- else }}
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.names.appName | default "smarter" }}-user-{{ .Values.names.mariadbName | default "mariadb" }}
+                  key: mariadb-password
+{{- end }}
+          ports:
+            - containerPort: 3306
+              name: mariadb
+          volumeMounts:
+            - name: mariadb-data
+              mountPath: /var/lib/mysql
+          resources:
+            {{- toYaml .Values.mariadb.resources | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.mariadb.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.mariadb.readinessProbe | nindent 12 }}
+      volumes:
+        - name: mariadb-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mariadbName | default "mariadb" }}-pvc

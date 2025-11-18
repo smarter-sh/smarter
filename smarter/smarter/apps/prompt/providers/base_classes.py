@@ -2,14 +2,14 @@
 Base class for chat providers.
 """
 
-import json
 import logging
 import traceback
 from http import HTTPStatus
 from typing import Any, Dict, List, Optional, Union
 
-# 3rd party stuff
 import openai
+
+# 3rd party stuff
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.chat.chat_completion_message_tool_call import (
@@ -40,6 +40,11 @@ from smarter.apps.prompt.providers.utils import (
     http_response_factory,
     parse_request,
 )
+from smarter.apps.prompt.receivers import (
+    llm_tool_presented,
+    llm_tool_requested,
+    llm_tool_responded,
+)
 from smarter.apps.prompt.signals import (
     chat_completion_plugin_called,
     chat_completion_request,
@@ -58,6 +63,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -68,7 +74,7 @@ from .mixins import ProviderDbMixin
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -120,7 +126,7 @@ class InternalKeys:
     PLUGINS_KEY = "plugins"
     MODEL_KEY = "model"
     TEMPERATURE_KEY = "temperature"
-    MAX_TOKENS_KEY = "max_tokens"
+    MAX_COMPLETION_TOKENS_KEY = "max_completion_tokens"
     TOOL_CHOICE = "tool_choice"
 
     SMARTER_PLUGIN_KEY = SMARTER_SYSTEM_KEY_PREFIX + "plugin"
@@ -137,7 +143,7 @@ class ChatProviderBase(ProviderDbMixin):
         plugins: A list of plugins.
         model: The model to use for chat completions.
         temperature: The temperature to use for chat completions.
-        max_tokens: The maximum tokens to use for chat completions.
+        max_completion_tokens: The maximum tokens to use for chat completions.
         input_text: The input text for the chat completion.
         completion_tokens: The number of completion tokens used.
         prompt_tokens: The number of prompt tokens used.
@@ -159,7 +165,7 @@ class ChatProviderBase(ProviderDbMixin):
         "_default_model",
         "_default_system_role",
         "_default_temperature",
-        "_default_max_tokens",
+        "_default_max_completion_tokens",
         "_valid_chat_completion_models",
         "_messages",
         "_base_url",
@@ -169,7 +175,7 @@ class ChatProviderBase(ProviderDbMixin):
         "plugins",
         "model",
         "temperature",
-        "max_tokens",
+        "max_completion_tokens",
         "input_text",
         "completion_tokens",
         "prompt_tokens",
@@ -190,7 +196,7 @@ class ChatProviderBase(ProviderDbMixin):
     _default_model: Optional[str]
     _default_system_role: Optional[str]
     _default_temperature: Optional[float]
-    _default_max_tokens: Optional[int]
+    _default_max_completion_tokens: Optional[int]
 
     _valid_chat_completion_models: Optional[list[str]]
     _messages: Optional[List[Dict[str, str]]]
@@ -204,7 +210,7 @@ class ChatProviderBase(ProviderDbMixin):
 
     model: Optional[str]
     temperature: Optional[float]
-    max_tokens: Optional[int]
+    max_completion_tokens: Optional[int]
     input_text: Optional[str]
 
     completion_tokens: Optional[int]
@@ -244,7 +250,7 @@ class ChatProviderBase(ProviderDbMixin):
         self._default_model = None
         self._default_system_role = None
         self._default_temperature = None
-        self._default_max_tokens = None
+        self._default_max_completion_tokens = None
 
         self._valid_chat_completion_models = None
         self._messages = []
@@ -258,7 +264,7 @@ class ChatProviderBase(ProviderDbMixin):
 
         self.model = None
         self.temperature = None
-        self.max_tokens = None
+        self.max_completion_tokens = None
         self.input_text = None
 
         self.completion_tokens = None
@@ -290,7 +296,7 @@ class ChatProviderBase(ProviderDbMixin):
         self._default_model = default_model
         self._default_system_role = default_system_role
         self._default_temperature = default_temperature
-        self._default_max_tokens = default_max_tokens
+        self._default_max_completion_tokens = default_max_tokens
         self._valid_chat_completion_models = valid_chat_completion_models
 
         weather_tool = weather_tool_factory()
@@ -397,7 +403,7 @@ class ChatProviderBase(ProviderDbMixin):
 
     @property
     def default_max_tokens(self) -> Optional[int]:
-        return self._default_max_tokens
+        return self._default_max_completion_tokens
 
     @property
     def valid_chat_completion_models(self) -> Optional[list[str]]:
@@ -492,18 +498,61 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     def openai_messages(self) -> list[dict[str, Any]]:
         """
         Sanitize the message list to ensure compatibility with OpenAI's chat completion API.
-        Principally, this removes Smarter annotations to the messages list, such
+        Principally, this removes Smarter annotations from the messages list, such
         as meta data about tool calls and interim completion token charges.
+
+        mcdaniel 2025-09-26:
+            {
+                'message': \"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_TRlKNPrjLZJnaZoggJiJnmYe\",
+                'type': 'invalid_request_error',
+                'param': 'messages.[5].role',
+                'code': None
+            }
+
+            Example input messages:
+            {
+                    "role": "assistant",
+                    "audio": null,
+                    "content": null,
+                    "refusal": null,
+                    "tool_calls": [                     <- IF THIS IS PRESENT
+                        {
+                            "id": "call_TRlKNPrjLZJnaZoggJiJnmYe",
+                            "type": "function",
+                            "function": {
+                                "name": "smarter_plugin_0000000045",
+                                "arguments": "{\"description\":\"AI\"}"
+                            }
+                        }
+                    ],
+                    "annotations": [],
+                    "function_call": null,
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "smarter",
+                    "content": "openai called this tool: smarter_plugin_0000000045({'description': 'AI'})",
+                    "smarter_is_new": true
+                },
+                {                                       <- THEN OPENAI EXPECTS TO SEE THIS IMMEDIATELY AFTER
+                    "name": "smarter_plugin_0000000045",
+                    "role": "tool",
+                    "content": "SqlPlugin stackademy_sql response: [{\"course_code\": \"CS210\", \"course_name\": \"Artificial Intelligence\", \"description\": \"Introduction to AI concepts and techniques.\", \"prerequisite_course_code\": \"CS107\"}, {\"course_code\": \"CS316\", \"course_name\": \"AI for Robotics\", \"description\": \"Applying AI techniques to robotics.\", \"prerequisite_course_code\": \"CS301\"}, {\"course_code\": \"CS319\", \"course_name\": \"AI in Healthcare\", \"description\": \"Applications of AI in healthcare.\", \"prerequisite_course_code\": \"CS301\"}, {\"course_code\": \"CS405\", \"course_name\": \"AI Capstone Project\", \"description\": \"Team-based AI project.\", \"prerequisite_course_code\": \"CS301\"}]",
+                    "tool_call_id": "call_TRlKNPrjLZJnaZoggJiJnmYe",
+                    "smarter_is_new": true
+                },
+            }
         """
         if not isinstance(self.messages, list):
             raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
 
         if self.iteration == 1:
             # ensure that we're not passing any tool call responses to the first request.
+            # mcdaniel 2025-09-26: this was causing issues with OpenAI's API.
             filtered_messages = [
                 message
                 for message in self.messages
-                if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.no_tools
+                if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all
             ]
         else:
             filtered_messages = [
@@ -544,13 +593,13 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             InternalKeys.MODEL_KEY: self.model,
             InternalKeys.MESSAGES_KEY: self.openai_messages,
             InternalKeys.TEMPERATURE_KEY: self.temperature,
-            InternalKeys.MAX_TOKENS_KEY: self.max_tokens,
+            InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
             InternalKeys.TOOLS_KEY: self.tools,
             InternalKeys.TOOL_CHOICE: tool_choice,
         }
 
         # create a Smarter UI message with the established configuration
-        content = f"Prompt configuration: llm={self.provider}, model={self.model}, temperature={self.temperature}, max_tokens={self.max_tokens}, tool_choice={tool_choice}."
+        content = f"Prompt configuration: llm={self.provider}, model={self.model}, temperature={self.temperature}, max_completion_tokens={self.max_completion_tokens}, tool_choice={tool_choice}."
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
         # for any tools that are included in the request, add Smarter UI messages for each tool
@@ -713,7 +762,12 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         """
         tool_call: List[ChatCompletionMessageToolCall]
         """
+        if not isinstance(tool_call, ChatCompletionMessageToolCall):
+            raise SmarterValueError(
+                f"{self.formatted_class_name}: tool_call must be a ChatCompletionMessageToolCall, got {type(tool_call)}. This is a bug."
+            )
         logger.info("%s %s", self.formatted_class_name, formatted_text("process_tool_call()"))
+        llm_tool_requested.send(sender=self.process_tool_call, tool_call=tool_call.model_dump())
         if not tool_call:
             raise SmarterValueError(f"{self.formatted_class_name}: tool_call is required")
         serialized_tool_call = {}
@@ -732,10 +786,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self.append_message_tool_called(function_name=function_name, function_args=function_args)
 
         function_response = None
-        # FIX NOTE: instead of a big switch, we should be attempting to call the
-        #
         if function_name == "get_current_weather":
             function_response = function_to_call(
+                tool_call=tool_call,
                 location=function_args.get("location"),
                 unit=function_args.get("unit"),
             )
@@ -762,6 +815,10 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 raise SmarterConfigurationError(
                     f"{self.formatted_class_name}: user_profile is required to handle plugin calls."
                 )
+            if not isinstance(self.user, User):
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}: user must be an instance of User, got {type(self.user)}. This is a bug."
+                )
             plugin_controller = PluginController(
                 account=self.account,
                 user=self.user,
@@ -782,7 +839,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 f"{self.formatted_class_name}: function '{function_name}' not recognized. Available functions: {self.available_functions}"
             )
         tool_call_message = {
-            "tool_call_id": tool_call.id,
+            OpenAIMessageKeys.TOOL_CALL_ID: tool_call.id,
             OpenAIMessageKeys.MESSAGE_NAME_KEY: function_name,
         }
         if not isinstance(function_response, str):
@@ -799,17 +856,20 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 f"{self.formatted_class_name}: serialized_tool_calls must be a list, got {type(self.serialized_tool_calls)}"
             )
         self.serialized_tool_calls.append(serialized_tool_call)
+        llm_tool_responded.send(
+            sender=self.process_tool_call, tool_call=tool_call.model_dump(), tool_response=function_response
+        )
 
     def handle_plugin_selected(self, plugin: PluginBase) -> None:
         # does the prompt have anything to do with any of the search terms defined in a plugin?
-        # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
+        # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_completion_tokens
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_plugin_selected()"))
         logger.warning(
             "smarter.apps.prompt.providers.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
         )
         self.model = plugin.plugin_prompt.model
         self.temperature = plugin.plugin_prompt.temperature
-        self.max_tokens = plugin.plugin_prompt.max_tokens
+        self.max_completion_tokens = plugin.plugin_prompt.max_completion_tokens
         if isinstance(self.messages, list):
             self.messages = plugin.customize_prompt(self.messages)
         else:
@@ -820,6 +880,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             raise SmarterValueError(f"{self.formatted_class_name}: tools must be a list, got {type(self.tools)}")
         self.available_functions[plugin.function_calling_identifier] = plugin.tool_call_fetch_plugin_response
         self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)  # type: ignore[call-arg]
+        llm_tool_presented.send(sender=self.handle_plugin_selected, tool=plugin.custom_tool, plugin=plugin)
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
 
     def handle_success(self) -> dict:
@@ -855,7 +916,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         return {
             InternalKeys.MODEL_KEY: self.model,
             InternalKeys.TEMPERATURE_KEY: self.temperature,
-            InternalKeys.MAX_TOKENS_KEY: self.max_tokens,
+            InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
             "input_text": self.input_text,
         }
 
@@ -909,7 +970,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.validate()
             self.model = self.chat.chatbot.default_model or self.default_model
             self.temperature = self.chat.chatbot.default_temperature or self.default_temperature
-            self.max_tokens = self.chat.chatbot.default_max_tokens or self.default_max_tokens
+            self.max_completion_tokens = self.chat.chatbot.default_max_tokens or self.default_max_tokens
             self.input_text = self.get_input_text_prompt(data=self.data)
             self.request_meta_data = self.request_meta_data_factory()
 
@@ -947,7 +1008,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 InternalKeys.MODEL_KEY: self.model,
                 InternalKeys.MESSAGES_KEY: self.openai_messages,
                 InternalKeys.TEMPERATURE_KEY: self.temperature,
-                InternalKeys.MAX_TOKENS_KEY: self.max_tokens,
+                InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
                 InternalKeys.TOOLS_KEY: self.tools,
                 InternalKeys.TOOL_CHOICE: OPENAI_TOOL_CHOICE,
             }
@@ -994,15 +1055,15 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                     raise SmarterConfigurationError(
                         f"{self.formatted_class_name}: temperature must be a float or int, got {type(self.temperature)}"
                     )
-                if not isinstance(self.max_tokens, int):
+                if not isinstance(self.max_completion_tokens, int):
                     raise SmarterConfigurationError(
-                        f"{self.formatted_class_name}: max_tokens must be an int, got {type(self.max_tokens)}"
+                        f"{self.formatted_class_name}: max_completion_tokens must be an int, got {type(self.max_completion_tokens)}"
                     )
                 self.second_response = openai.chat.completions.create(
                     model=self.model,
                     messages=self.openai_messages,  # type: ignore[call-arg]
                     temperature=self.temperature,
-                    max_tokens=self.max_tokens,
+                    max_completion_tokens=self.max_completion_tokens,
                 )
                 self.append_openai_response(self.second_response)
                 self.handle_response()

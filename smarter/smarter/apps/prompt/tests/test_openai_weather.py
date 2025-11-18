@@ -2,12 +2,12 @@
 # pylint: disable=R0801
 """Test lambda_openai_v2 function."""
 
-# python stuff
-import json
 import os
 import sys
 from pathlib import Path
 
+# python stuff
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 

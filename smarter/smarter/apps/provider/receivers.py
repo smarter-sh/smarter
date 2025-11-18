@@ -3,10 +3,12 @@
 # pylint: disable=W0613
 
 import logging
+from typing import Union
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -38,11 +40,7 @@ from .signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
-        and level >= logging.INFO
-    )
+    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -96,8 +94,8 @@ def handle_model_verification_success(
 @receiver(model_verification_failure, dispatch_uid="model_verification_failure_receiver")
 def handle_model_verification_failure(
     sender,
-    provider_model: ProviderModel = None,
-    provider_model_verification: ProviderModelVerification = None,
+    provider_model: Union[ProviderModel, None] = None,
+    provider_model_verification: Union[ProviderModelVerification, None] = None,
     **kwargs,
 ):
     """Handle model verification failure signal."""
@@ -106,11 +104,13 @@ def handle_model_verification_failure(
         logger.error(
             "%s Model verification failed for model: %s with verification: %s",
             prefix,
-            provider_model.name,
-            provider_model_verification.verification_type,
+            provider_model.name if provider_model else "Unknown",
+            provider_model_verification.verification_type if provider_model_verification else "Unknown",
         )
     elif provider_model:
-        logger.error("%s Model verification failed for model: %s", prefix, provider_model.name)
+        logger.error(
+            "%s Model verification failed for model: %s", prefix, provider_model.name if provider_model else "Unknown"
+        )
     else:
         logger.error("%s Model verification failed for an unknown model for an unknown reason", prefix)
 

@@ -1,9 +1,15 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'describe' view"""
 
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from .base import CliBaseApiView
+from .swagger import (
+    COMMON_SWAGGER_PARAMETERS,
+    COMMON_SWAGGER_RESPONSES,
+    EXAMPLE_DESCRIBE_USER,
+)
 
 
 class ApiV1CliDescribeApiView(CliBaseApiView):
@@ -40,18 +46,6 @@ The response from this endpoint is a JSON object containing a representation of 
 """
     )
     def post(self, request, kind: str, *args, **kwargs):
-        """
-        Handles the POST HTTP request for the 'describe' command.
-
-        Parameters:
-        request (Request): The request object. The resource name is passed in the url query parameters.
-        kind (str): The kind of resource to describe.
-        *args: Variable length argument list.
-        **kwargs: Variable length keyword arguments.
-
-        Returns:
-        Response: A JSON object containing the resource manifest.
-        """
         response = self.broker.describe(request, *args, **kwargs)
         return response
 
@@ -64,20 +58,19 @@ This is the API endpoint for the 'describe' command in the Smarter command-line 
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
 
 The response from this endpoint is a JSON object containing a representation of the resource manifest.
-"""
+
+This is a brokered operation, so the actual work is delegated to the appropriate broker based on the resource kind specified in the manifest. See smarter.apps.api.v1.cli.brokers.Brokers
+""",
+        responses={
+            **COMMON_SWAGGER_RESPONSES,
+            200: openapi.Response(
+                description="User admin described successfully",
+                examples=EXAMPLE_DESCRIBE_USER,
+            ),
+        },
+        manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"], COMMON_SWAGGER_PARAMETERS["name_query_param"]],
     )
     def get(self, request, kind, *args, **kwargs):
-        """
-        Handles the GET HTTP request for the 'describe' command.
-
-        Parameters:
-        request (Request): The request object.
-        *args: Variable length argument list.
-        **kwargs: the kind of resource to describe
-
-        Returns:
-        Response: a JSON object containing the resource manifest.
-        """
 
         response = self.broker.describe(request, *args, **kwargs)
         return response

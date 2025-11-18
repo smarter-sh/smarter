@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
-import json
 import logging
 from http import HTTPStatus
 from typing import Optional, Union
@@ -11,6 +10,8 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.utils import is_authenticated_request
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.serializers import (
     HttpAnonymousRequestSerializer,
@@ -120,7 +121,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
             # 'WSGIRequest' object has no attribute 'user'.
             # AttributeError: 'PreparedRequest' object has no attribute 'user'
             try:
-                if hasattr(request, "user") and request.user.is_authenticated:
+                if is_authenticated_request(request):
                     user = request.user
                     request_data = authenticated_serialized_request(request)
                 else:
