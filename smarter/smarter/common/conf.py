@@ -187,6 +187,7 @@ class SettingsDefaults:
     )
     AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
     DEBUG_MODE: bool = bool(os.environ.get("DEBUG_MODE", TFVARS.get("debug_mode", False)))
+    DEVELOPER_MODE: bool = bool(os.environ.get("DEVELOPER_MODE", TFVARS.get("developer_mode", False)))
     DUMP_DEFAULTS: bool = bool(os.environ.get("DUMP_DEFAULTS", TFVARS.get("dump_defaults", False)))
     ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
 
@@ -358,6 +359,12 @@ class Settings(BaseSettings):
 
     shared_resource_identifier: str = Field(SettingsDefaults.SHARED_RESOURCE_IDENTIFIER)
     debug_mode: bool = Field(SettingsDefaults.DEBUG_MODE)
+
+    # new in 0.13.26
+    # True if developer mode is enabled. Used as a means to configure a production
+    # Docker container to run locally for student use.
+    developer_mode: bool = Field(SettingsDefaults.DEVELOPER_MODE)
+
     log_level: int = Field(
         SettingsDefaults.LOG_LEVEL
     )  # e.g., logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL

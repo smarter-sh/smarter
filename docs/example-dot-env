@@ -16,6 +16,7 @@
 # configured in your DNS provider to point to your
 # AWS resources via Route 53 using https://github.com/smarter-sh/smarter-infrastructure
 ROOT_DOMAIN=SET-ME-PLEASE
+DEVELOPER_MODE=true
 
 # AWS settings. The key-pair need sufficient permissions to manage
 # all resources created by https://github.com/smarter-sh/smarter-infrastructure
