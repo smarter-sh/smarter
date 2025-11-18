@@ -61,8 +61,8 @@ keywords:
 annotations:
   helm.sh/chart: smarter-0.8.1
   artifacthub.io/changes: |
-    - kind: changed
-      description: "See CHANGELOG.md"
+    - kind: "changed"
+      description: "See CHANGELOG"
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
