@@ -24,8 +24,6 @@ helm install smarter oci://ghcr.io/smarter-sh/charts/smarter \
 
 - Kubernetes >=1.28.0
 - Helm 3.8+
-- MySQL database
-- Redis cache
 
 ## Installation
 
