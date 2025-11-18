@@ -27,6 +27,24 @@ inputs:
     description: "The AWS region to deploy to"
     required: true
     type: string
+  dockerhub-username:
+    description: "Docker Hub username"
+    required: true
+    type: string
+  dockerhub-password:
+    description: "Docker Hub Personal Access Token"
+    required: true
+    type: string
+  dockerhub-account:
+    description: "Docker Hub account name"
+    required: false
+    type: string
+    default: "mcdaniel0073"
+  dockerhub-repo:
+    description: "Docker Hub repository name"
+    required: false
+    type: string
+    default: "smarter"
 
 runs:
   using: "composite"
@@ -113,6 +131,12 @@ runs:
       run: |-
         echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
 
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.dockerhub-username }}
+        password: ${{ inputs.dockerhub-password }}
+
     - name: Create the repository
       id: create-repo
       shell: bash
@@ -123,7 +147,7 @@ runs:
       shell: bash
       run: echo "DATESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
 
-    - name: Build and push
+    - name: Build and push to AWS ECR
       id: docker-build
       uses: docker/build-push-action@v5
       with:
@@ -146,3 +170,23 @@ runs:
         echo "Triggering new image scan for latest tag..."
         aws ecr start-image-scan --repository-name ${{ env.AWS_ECR_REPO }} --image-id imageTag=latest || echo "Scan already in progress or failed"
         echo "ECR image scan triggered"
+
+    - name: Build and push to Docker Hub
+      id: docker-build
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: true
+        platforms: linux/amd64,linux/arm64
+        tags: |
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:latest
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ github.run_id }}
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.DATESTAMP }}
+        build-args: ENVIRONMENT=${{ inputs.environment }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
