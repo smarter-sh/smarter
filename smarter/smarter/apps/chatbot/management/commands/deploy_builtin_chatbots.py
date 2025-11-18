@@ -2,7 +2,6 @@
 
 import glob
 import io
-import json
 import os
 from typing import Optional
 
@@ -19,6 +18,7 @@ from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import json
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.loader import SAMLoader
 

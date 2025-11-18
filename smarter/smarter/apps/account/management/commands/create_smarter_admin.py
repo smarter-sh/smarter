@@ -36,14 +36,14 @@ class Command(BaseCommand):
             company_name=SMARTER_COMPANY_NAME,
         )
         account.is_default_account = True
-        account.phone_number = "+1 (512) 833-6955"
-        account.address1 = "1700 South Lamar Blvd"
-        account.address2 = "Suite 338"
-        account.city = "Austin"
-        account.state = "TX"
-        account.postal_code = "78704"
+        account.phone_number = "+1 (617) 834-6172"
+        account.address1 = "851 Burlway Road"
+        account.address2 = "Suite 101"
+        account.city = "Burlingame"
+        account.state = "CA"
+        account.postal_code = "94010"
         account.country = "USA"
-        account.timezone = "America/Chicago"
+        account.timezone = "America/Los_Angeles"
         account.currency = "USD"
         account.save()
 

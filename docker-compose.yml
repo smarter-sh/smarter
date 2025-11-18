@@ -8,6 +8,8 @@
 services:
   smarter-mysql:
     container_name: smarter-mysql
+    mem_limit: 2g
+    cpus: 0.5
     image: mysql:8
     command: ["mysqld", "--mysql-native-password=ON"]
     restart: always
@@ -23,11 +25,15 @@ services:
 
   smarter-redis:
     container_name: smarter-redis
+    mem_limit: 1g
+    cpus: 0.25
     image: redis:latest
     command: redis-server --requirepass smarter
 
   smarter-app:
     container_name: smarter-app
+    mem_limit: 4g
+    cpus: 1
     user: smarter_user
     x-build:
       type: docker
@@ -53,6 +59,8 @@ services:
 
   smarter-worker:
     container_name: smarter-worker
+    mem_limit: 2g
+    cpus: 0.5
     user: smarter_user
     x-build:
       type: docker
@@ -62,7 +70,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
-    command: celery -A smarter.smarter_celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
+    command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
     depends_on:
       - smarter-mysql
       - smarter-redis
@@ -76,13 +84,15 @@ services:
         consistency: cached
     healthcheck:
       test:
-        ["CMD", "celery", "-A", "smarter.smarter_celery.app", "inspect", "ping"]
+        ["CMD", "celery", "-A", "smarter.workers.celery.app", "inspect", "ping"]
       interval: 30s
       timeout: 30s
       retries: 3
 
   smarter-beat:
     container_name: smarter-beat
+    mem_limit: 1g
+    cpus: 0.5
     user: smarter_user
     x-build:
       type: docker
@@ -92,7 +102,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
-    command: celery -A smarter.smarter_celerybeat.app beat --loglevel=info
+    command: celery -A smarter.workers.celerybeat.app beat --loglevel=info
     depends_on:
       - smarter-mysql
       - smarter-redis
@@ -110,7 +120,7 @@ services:
           "CMD",
           "celery",
           "-A",
-          "smarter.smarter_celerybeat.app",
+          "smarter.workers.celerybeat.app",
           "inspect",
           "ping",
         ]

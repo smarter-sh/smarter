@@ -9,6 +9,7 @@ from django.urls import reverse
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
@@ -23,7 +24,7 @@ KIND = SAMKinds.ACCOUNT.value
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)

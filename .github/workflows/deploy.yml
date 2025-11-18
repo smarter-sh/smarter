@@ -1,7 +1,36 @@
 ---
 #------------------------------------------------------------------------------
-# - Build from Dockerfile
-# - Run manage.py unit tests
+# - Deploy to AWS Elastic Kubernetes Service (EKS)
+#
+# IMPORTANT: Before running this workflow, ensure that you have first built your
+# AWS infrastructure using the [Smarter Infrastructure repository](https://github.com/smarter-sh/smarter-infrastructure).
+# Additionally, make sure the following secrets are configured in your
+# [GitHub repository settings](https://github.com/smarter-sh/smarter/settings/secrets/actions):
+#
+# AWS_ACCESS_KEY_ID
+# AWS_REGION
+# AWS_SECRET_ACCESS_KEY
+# FERNET_ENCRYPTION_KEY
+# GEMINI_API_KEY
+# GOOGLE_AI_STUDIO_KEY
+# GOOGLE_MAPS_API_KEY
+# GOOGLE_SERVICE_ACCOUNT_B64
+# LLAMA_API_KEY
+# MAILCHIMP_API_KEY
+# MAILCHIMP_LIST_ID
+# OPENAI_API_KEY
+# PAT
+# PINECONE_API_KEY
+# PINECONE_ENVIRONMENT
+# SMARTER_MYSQL_TEST_DATABASE_PASSWORD
+# SMTP_PASSWORD
+# SMTP_USERNAME
+# SOCIAL_AUTH_GITHUB_KEY
+# SOCIAL_AUTH_GITHUB_SECRET
+# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+# SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
+# SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
 #------------------------------------------------------------------------------
 name: Deploy
 
@@ -18,7 +47,7 @@ jobs:
     steps:
       - name: Checkout code
         id: checkout_code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set environment variable
         id: setenv
@@ -43,6 +72,8 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-pat: ${{ secrets.DOCKERHUB_PAT }}
           fernet-encryption-key: ${{ secrets.FERNET_ENCRYPTION_KEY }}
           google-maps-api-key: ${{ secrets.GOOGLE_MAPS_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}

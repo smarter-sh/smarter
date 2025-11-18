@@ -100,5 +100,5 @@ class Command(BaseCommand):
             "create_plugin",
             account_number=admin_user_profile.account.account_number,
             username=admin_user_profile.user.username,
-            path="./smarter/smarter/apps/plugin/data/sample-plugins/stackademy-api.yaml",
+            path="./smarter/smarter/apps/plugin/data/stackademy/stackademy-api.yaml",
         )

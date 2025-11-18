@@ -11,7 +11,6 @@ from typing import Any, Optional, Union
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.utils import DateTimeEncoder
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -19,7 +18,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from .const import OpenAIMessageKeys
 from .validators import (
     validate_endpoint,
-    validate_max_tokens,
+    validate_max_completion_tokens,
     validate_messages,
     validate_object_types,
     validate_request_body,
@@ -29,7 +28,7 @@ from .validators import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -61,10 +60,10 @@ def http_response_factory(status_code: int, body, debug_mode: bool = False) -> U
     if debug_mode:
         retval["body"] = body
         # log our output to the CloudWatch log for this Lambda
-        logger.info(json.dumps({"retval": retval}, cls=DateTimeEncoder))
+        logger.info(json.dumps({"retval": retval}))
 
     # see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
-    retval["body"] = json.dumps(body, cls=DateTimeEncoder)
+    retval["body"] = json.dumps(body)
 
     return retval
 
@@ -120,9 +119,9 @@ def get_request_body(data) -> dict:
         temperature = request_body["temperature"]
         validate_temperature(temperature=temperature)
 
-    if hasattr(request_body, "max_tokens"):
-        max_tokens = request_body["max_tokens"]
-        validate_max_tokens(max_tokens=max_tokens)
+    if hasattr(request_body, "max_completion_tokens"):
+        max_completion_tokens = request_body["max_completion_tokens"]
+        validate_max_completion_tokens(max_completion_tokens=max_completion_tokens)
 
     if hasattr(request_body, "end_point"):
         end_point = request_body["end_point"]

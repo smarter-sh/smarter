@@ -17,7 +17,7 @@ class DeveloperDocsRequirementsView(TxtBaseView):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.text_file = "/home/smarter_user/smarter/requirements/base.txt"
+        self.text_file = "/home/smarter_user/smarter/requirements/docker.txt"
         self.title = "Python Package Dependencies"
         self.leader = """
         Smarter Platform is a Python-Django micro-service application. Below is a list of the requirements and version

@@ -31,7 +31,7 @@ from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.smarter_celery import app
+from smarter.workers.celery import app
 
 from .exceptions import SmarterChatBotException
 from .models import (
@@ -71,7 +71,7 @@ def should_log(level):
     return (
         waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING)
         and waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
-        and level >= logging.INFO
+        and level >= smarter_settings.log_level
     )
 
 

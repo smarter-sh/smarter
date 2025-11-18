@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    meta.helm.sh/release-name: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+    meta.helm.sh/application-version: {{ .Values.version }}
+  labels:
+    App: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}
+  name: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}
+      app.kubernetes.io/component: mysql
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}
+        app.kubernetes.io/component: mysql
+    spec:
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
+      securityContext:
+        fsGroup: {{ .Values.mysql.podSecurityContext.fsGroup | default 1001 }}
+      containers:
+        - name: mysql
+          image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
+          imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              {{- if .Values.env.MYSQL_ROOT_PASSWORD }}
+              value: {{ .Values.env.MYSQL_ROOT_PASSWORD | quote }}
+              {{- else }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.names.appName | default "smarter" }}-root-{{ .Values.names.mysqlName | default "mysql" }}
+                  key: mysql-root-password
+              {{- end }}
+            - name: MYSQL_DATABASE
+              value: {{ .Values.env.MYSQL_DATABASE | default .Values.mysql.auth.database | quote }}
+            - name: MYSQL_USER
+              value: {{ .Values.env.MYSQL_USER | default .Values.mysql.auth.username | quote }}
+            {{- if .Values.env.MYSQL_PASSWORD }}
+            - name: MYSQL_PASSWORD
+              value: {{ .Values.env.MYSQL_PASSWORD | quote }}
+            {{- else }}
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.names.appName | default "smarter" }}-user-{{ .Values.names.mysqlName | default "mysql" }}
+                  key: mysql-password
+            {{- end }}
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+          resources:
+            {{- toYaml .Values.mysql.resources | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.mysql.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.mysql.readinessProbe | nindent 12 }}
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}

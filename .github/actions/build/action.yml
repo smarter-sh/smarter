@@ -1,7 +1,11 @@
 ---
 #------------------------------------------------------------------------------
-# - build the Docker image
+# - build and push the Docker image to AWS ECR
 # - run all unit tests
+#
+# Updates:
+# - Nov-2025: added step to upgrade ECR Basic Scanning to new version
+#   [Action Required] Upgrade to new version of ECR Basic Scanning before February 2, 2026 [AWS Account: 090511222473]
 #------------------------------------------------------------------------------
 name: Build
 branding:
@@ -23,13 +27,33 @@ inputs:
     description: "The AWS region to deploy to"
     required: true
     type: string
+  dockerhub-username:
+    description: "Docker Hub username"
+    required: true
+    type: string
+  dockerhub-password:
+    description: "Docker Hub Personal Access Token"
+    required: true
+    type: string
+  dockerhub-account:
+    description: "Docker Hub account name"
+    required: false
+    type: string
+    default: "mcdaniel0073"
+  dockerhub-repo:
+    description: "Docker Hub repository name"
+    required: false
+    type: string
+    default: "smarter"
 
 runs:
   using: "composite"
   steps:
     - name: Checkout code
       id: checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
 
     - name: Initialize environment variables
       shell: bash
@@ -39,6 +63,18 @@ runs:
       env:
         ENVIRONMENT: ${{ inputs.environment }}
         NAMESPACE_BASE: smarter-platform
+
+    - name: Get latest release version
+      id: get-latest-release
+      shell: bash
+      run: |
+        LATEST_TAG=$(git describe --tags --abbrev=0)
+        if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          FINAL_TAG="$LATEST_TAG"
+        else
+          FINAL_TAG="${LATEST_TAG}.${GITHUB_REF_NAME}"
+        fi
+        echo "LATEST_TAG=$FINAL_TAG" >> $GITHUB_ENV
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -64,6 +100,24 @@ runs:
         echo "aws IAM user:"
         echo "-------------"
         aws sts get-caller-identity
+
+    # Upgrade ECR Basic Scanning to new version (required before Feb 2, 2026)
+    - name: Upgrade ECR Basic Scanning
+      id: upgrade-ecr-scanning
+      shell: bash
+      run: |-
+        echo "Checking current ECR scanning version:"
+        echo "-------------------------------------"
+        current_setting=$(aws ecr get-account-setting --name BASIC_SCAN_TYPE_VERSION --query 'value' --output text 2>/dev/null || echo "CLAIR")
+        echo "Current setting: $current_setting"
+
+        if [ "$current_setting" != "AWS_NATIVE" ]; then
+          echo "Upgrading to AWS_NATIVE scanning..."
+          aws ecr put-account-setting --name BASIC_SCAN_TYPE_VERSION --value AWS_NATIVE
+          echo "ECR scanning upgraded to AWS_NATIVE"
+        else
+          echo "ECR scanning already using AWS_NATIVE version"
+        fi
 
     # NOTE: we're going to borrow the SMTP credentials from the Kubernetes secret
     # for this environment, since unit tests will send a test email and we don't
@@ -99,15 +153,64 @@ runs:
 
     - name: Get the date
       shell: bash
-      run: echo "DATESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+      run: |
+        DATESTAMP=$(date +'%Y-%m-%dT%H-%M-%S')
+        if [ "${GITHUB_REF_NAME}" != "main" ]; then
+          DATESTAMP="${DATESTAMP}.${GITHUB_REF_NAME}"
+        fi
+        echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
 
-    - name: Build and push
-      id: docker-build
-      uses: docker/build-push-action@v5
+    - name: Build and push to AWS ECR
+      id: docker-build-ecr
+      uses: docker/build-push-action@v6
       with:
         context: .
         push: true
-        tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest, ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}, ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
+        platforms: linux/amd64,linux/arm64
+        tags: |
+          ${{ github.ref_name == 'main' && format('{0}/{1}:latest', steps.login-ecr.outputs.registry, env.AWS_ECR_REPO) || '' }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.LATEST_TAG }}
         build-args: ENVIRONMENT=${{ inputs.environment }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+
+    # Nov-2025: ECR image scanning upgrade
+    # Trigger new image scan after upgrading ECR scanning version
+    - name: Trigger ECR image scan
+      id: trigger-scan
+      shell: bash
+      run: |-
+        echo "Triggering new image scan for latest tag..."
+        aws ecr start-image-scan --repository-name ${{ env.AWS_ECR_REPO }} --image-id imageTag=latest || echo "Scan already in progress or failed"
+        echo "ECR image scan triggered"
+
+    # -------------------------------------------------------------------------
+    # Build and Push the Docker image to Docker Hub
+    # -------------------------------------------------------------------------
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.dockerhub-username }}
+        password: ${{ inputs.dockerhub-password }}
+
+    - name: Build and push to Docker Hub
+      id: docker-build-docker
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: true
+        platforms: linux/amd64,linux/arm64
+        tags: |
+          ${{ github.ref_name == 'main' && format('{0}/{1}:latest', inputs.dockerhub-account, inputs.dockerhub-repo) || '' }}
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ github.run_id }}
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.DATESTAMP }}
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.LATEST_TAG }}
+        build-args: ENVIRONMENT=${{ inputs.environment }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
       env:
         ENVIRONMENT: ${{ inputs.environment }}

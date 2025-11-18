@@ -33,7 +33,7 @@ from .exceptions import AWSNotReadyError
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -98,8 +98,6 @@ class AWSBase(SmarterHelperMixin):
         self._environment_domain = environment_domain or smarter_settings.environment_platform_domain
         self._debug_mode = debug_mode or smarter_settings.debug_mode
 
-        if self.debug_mode:
-            logger.setLevel(logging.DEBUG)
         if init_info:
             logger.debug(init_info)
 

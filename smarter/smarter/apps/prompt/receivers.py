@@ -10,6 +10,7 @@ from django.dispatch import receiver
 
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import plugin_deleting
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -38,11 +39,7 @@ from .views import ChatConfigView, SmarterChatSession
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
-        and level >= logging.INFO
-    )
+    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -312,28 +309,31 @@ def handle_llm_tool_presented(sender, tool: dict, **kwargs):
 
 # llm_tool_requested.send(sender=get_current_weather, location=location, unit=unit)
 @receiver(llm_tool_requested, dispatch_uid="llm_tool_requested")
-def handle_get_current_weather_request(sender, **kwargs):
+def handle_tool_requested(sender, tool_call: dict, **kwargs):
     """Handle get_current_weather() request signal."""
 
-    location = kwargs.get("location")
-    unit = kwargs.get("unit")
     sender_name = sender.__name__
 
     logger.info(
-        "%s from %s for location: %s, unit: %s",
+        "%s from %s: %s",
         formatted_text(f"{prefix}.llm_tool_requested"),
         sender_name,
-        location,
-        unit,
+        formatted_json(tool_call),
     )
 
 
 @receiver(llm_tool_responded, dispatch_uid="llm_tool_responded")
-def handle_llm_tool_responded(sender, **kwargs):
+def handle_llm_tool_responded(sender, tool_call: dict, tool_response: dict, **kwargs):
     """Handle get_current_weather() response signal."""
     sender_name = sender.__name__
 
-    logger.info("%s from %s", formatted_text(f"{prefix}.llm_tool_responded"), sender_name)
+    logger.info(
+        "%s from %s, tool_call: %s, tool_response: %s",
+        formatted_text(f"{prefix}.llm_tool_responded"),
+        sender_name,
+        formatted_json(tool_call),
+        formatted_json(tool_response),
+    )
 
 
 # ------------------------------------------------------------------------------

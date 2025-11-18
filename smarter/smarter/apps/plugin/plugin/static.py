@@ -1,6 +1,5 @@
 """A PLugin that returns a static json object stored in the Plugin itself."""
 
-import json
 import logging
 from typing import Any, Optional, Type
 
@@ -17,6 +16,8 @@ from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginStaticSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings as smarter_settings
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -31,7 +32,7 @@ from .base import PluginBase, SmarterPluginError
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -253,8 +254,26 @@ class StaticPlugin(PluginBase):
                 raise SmarterPluginError(
                     f"Plugin {self.name} return data is not a dictionary.",
                 )
-            retval = return_data[inquiry_type]
-            retval = json.dumps(retval)
+
+            try:
+                retval = return_data[inquiry_type]
+            except KeyError as e:
+                raise SmarterPluginError(
+                    f"Plugin {self.name} does not have a return value for inquiry_type: {inquiry_type}. Available keys are: {list(return_data.keys())} from return_data {json.dumps(return_data)}.",
+                ) from e
+
+            if retval is None:
+                raise SmarterPluginError(
+                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is None.",
+                )
+
+            try:
+                retval = json.dumps(retval)
+            except (TypeError, ValueError) as e:
+                raise SmarterPluginError(
+                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} could not be serialized to JSON: {e}.",
+                ) from e
+
             if not isinstance(retval, str):
                 raise SmarterPluginError(
                     f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is not a string. Expected a string, got {type(retval)}.",

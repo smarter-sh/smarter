@@ -9,7 +9,7 @@
   }
   .smarter-title-bar {
   }
-  .smarter-by-querium {
+  .product-name {
     font-size: small;
     color: gray;
   }
@@ -34,9 +34,9 @@
 			<!--begin::Mobile logo-->
 			<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
 				<a href={% url 'root_home' %} class="d-lg-none">
-					<img alt="Logo" src="{% static 'querium/querium-logo-orange-transparent.png' %}"
+					<img alt="Logo" src="{% static 'images/logo/smarter-crop.png' %}"
 						class="theme-light-show h-60px" />
-					<img alt="Logo" src="{% static 'querium/querium-logo-white-transparent.png' %}"
+					<img alt="Logo" src="{% static 'images/logo/smarter-crop.png' %}"
 						class="theme-dark-show h-60px" />
                 </a>
 			</div>
@@ -52,7 +52,7 @@
 					data-kt-swapper-parent="{default: '#kt_app_body', lg: '#kt_app_header_wrapper'}">
 				</div>
         <div class="smarter-title-bar not-selectable pt-6 d-flex align-items-stretch justify-content-between flex-lg-grow-1">
-          <h1>{{ dashboard.product_name }}<span class="smarter-by-querium"> by Querium</span></h1>
+          <h1>{{ dashboard.product_name }}<span class="product-name"></span></h1>
         </div>
       <!--end::Menu wrapper-->
 				<!--begin::Navbar-->
@@ -264,7 +264,7 @@
 			<div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
 				<!--begin::Logo image-->
 				<a href={% url 'root_home' %}>
-					<img alt="Logo" src="{% static 'querium/querium-logo-white-transparent.png' %}"
+					<img alt="Logo" src="{% static 'images/logo/smarter-crop.png' %}"
 						class="h-75px app-sidebar-logo-default" />
 				</a>
 				<!--end::Logo image-->
@@ -675,13 +675,13 @@
 				<!--begin::Menu-->
 				<ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
 					<li class="menu-item">
-						<a href="https://www.querium.com/about/" target="_blank" class="menu-link px-2">About</a>
+						<a href="https://smarter.sh/about/" target="_blank" class="menu-link px-2">About</a>
 					</li>
 					<li class="menu-item">
-						<a href="https://www.querium.com/contact/" target="_blank" class="menu-link px-2">Support</a>
+						<a href="https://smarter.sh/contact/" target="_blank" class="menu-link px-2">Support</a>
 					</li>
 					<li class="menu-item">
-						<a href="https://www.querium.com/privacy-policy/" target="_blank"
+						<a href="https://smarter.sh/privacy-policy/" target="_blank"
 							class="menu-link px-2">Legal</a>
 					</li>
 				</ul>

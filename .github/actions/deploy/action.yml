@@ -15,6 +15,12 @@ inputs:
   aws-region:
     description: "The AWS region to deploy to"
     required: true
+  dockerhub-username:
+    description: "The DockerHub username"
+    required: true
+  dockerhub-pat:
+    description: "The DockerHub personal access token"
+    required: false
   fernet-encryption-key:
     description: "The Fernet encryption key"
     required: true
@@ -93,7 +99,7 @@ runs:
     # Checkout all code referenced by this action
     - name: Checkout code
       id: checkout_code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     # authenticate AWS CLI
     - name: Configure AWS credentials
@@ -266,58 +272,96 @@ runs:
         helm repo add bitnami https://charts.bitnami.com/bitnami
         helm dependency build
 
+    # Create a temporary values file with secrets
+    - name: Create secrets values file
+      id: create-secrets-values
+      shell: bash
+      run: |-
+        cat > /tmp/values.yaml <<EOF
+        deployTimestamp: "$(date +%s)"
+
+        env:
+          # Deployment
+          DJANGO_SETTINGS_MODULE: "${{ env.DJANGO_SETTINGS_MODULE }}"
+          ENVIRONMENT: "${{ inputs.environment }}"
+          NAMESPACE: "${{ env.NAMESPACE }}"
+          SMARTER_DOCKER_IMAGE: "${{ env.SMARTER_DOCKER_IMAGE }}"
+
+          # AWS
+          AWS_REGION: "${{ inputs.aws-region }}"
+          AWS_ACCESS_KEY_ID: "${{ inputs.aws-access-key-id }}"
+          AWS_SECRET_ACCESS_KEY: "${{ inputs.aws-secret-access-key }}"
+
+          # Docker Hub
+          DOCKERHUB_USERNAME: "${{ inputs.dockerhub-username }}"
+          DOCKERHUB_PAT: "${{ inputs.dockerhub-pat }}"
+
+          # Security
+          FERNET_ENCRYPTION_KEY: "${{ inputs.fernet-encryption-key }}"
+          SECRET_KEY: "${{ env.SECRET_KEY }}"
+
+          # Email
+          MAILCHIMP_API_KEY: "${{ inputs.mailchimp-api-key }}"
+          MAILCHIMP_LIST_ID: "${{ inputs.mailchimp-list-id }}"
+
+          # AI APIs
+          OPENAI_API_KEY: "${{ inputs.openai-api-key }}"
+          PINECONE_API_KEY: "${{ inputs.pinecone-api-key }}"
+          PINECONE_ENVIRONMENT: "${{ inputs.pinecone-environment }}"
+          GOOGLE_MAPS_API_KEY: "${{ inputs.google-maps-api-key }}"
+          GEMINI_API_KEY: "${{ inputs.gemini-api-key }}"
+          LLAMA_API_KEY: "${{ inputs.llama-api-key }}"
+
+          # OAuth
+          SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "${{ inputs.social-auth-google-oauth2-key }}"
+          SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "${{ inputs.social-auth-google-oauth2-secret }}"
+          SOCIAL_AUTH_GITHUB_KEY: "${{ inputs.social-auth-github-key }}"
+          SOCIAL_AUTH_GITHUB_SECRET: "${{ inputs.social-auth-github-secret }}"
+          SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "${{ inputs.social-auth-linkedin-oauth2-key }}"
+          SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "${{ inputs.social-auth-linkedin-oauth2-secret }}"
+
+          # Database
+          MYSQL_HOST: "${{ env.MYSQL_HOST }}"
+          MYSQL_PORT: "${{ env.MYSQL_PORT }}"
+          MYSQL_DATABASE: "${{ env.SMARTER_MYSQL_DATABASE }}"
+          MYSQL_USER: "${{ env.SMARTER_MYSQL_USERNAME }}"
+          MYSQL_PASSWORD: "${{ env.SMARTER_MYSQL_PASSWORD }}"
+          MYSQL_ROOT_USERNAME: "${{ env.MYSQL_ROOT_USERNAME }}"
+          MYSQL_ROOT_PASSWORD: "${{ env.MYSQL_ROOT_PASSWORD }}"
+          SMARTER_MYSQL_TEST_DATABASE_PASSWORD: "${{ inputs.smarter-mysql-test_database_password }}"
+
+          # Admin
+          SMARTER_LOGIN_URL: "${{ env.SMARTER_LOGIN_URL }}"
+          SMARTER_ADMIN_PASSWORD: "${{ env.SMARTER_ADMIN_PASSWORD }}"
+          SMARTER_ADMIN_USERNAME: "${{ env.SMARTER_ADMIN_USERNAME }}"
+          SMARTER_ADMIN_EMAIL: "${{ env.SMARTER_ADMIN_EMAIL }}"
+
+          # SMTP
+          SMTP_HOST: "${{ env.SMTP_HOST }}"
+          SMTP_PORT: "${{ env.SMTP_PORT }}"
+          SMTP_USE_SSL: "${{ env.SMTP_USE_SSL }}"
+          SMTP_USE_TLS: "${{ env.SMTP_USE_TLS }}"
+          SMTP_USERNAME: "${{ env.SMTP_USERNAME }}"
+          SMTP_PASSWORD: "${{ env.SMTP_PASSWORD }}"
+
+          # Cache/Celery
+          CACHES_LOCATION: "${{ env.CACHES_LOCATION }}"
+          CELERY_BROKER_URL: "${{ env.CELERY_BROKER_URL }}"
+          CELERY_RESULT_BACKEND: "${{ env.CELERY_RESULT_BACKEND }}"
+        EOF
+
     # Deploy the application to Kubernetes using Helm
     - name: Deploy
       id: deploy
       shell: bash
       run: |-
-        helm upgrade --install --force smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
-        --timeout 900s \
-        --set deployTimestamp="$(date +%s)" \
-        --set env.DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_MODULE }} \
-        --set env.ENVIRONMENT=${{ inputs.environment }} \
-        --set env.AWS_REGION=${{ inputs.aws-region }} \
-        --set env.AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }} \
-        --set env.AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }} \
-        --set env.FERNET_ENCRYPTION_KEY=${{inputs.fernet-encryption-key}} \
-        --set env.NAMESPACE=${{ env.NAMESPACE }} \
-        --set env.SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }} \
-        --set env.ROOT_DOMAIN=smarter.sh \
-        --set env.DEBUG_MODE="false" \
-        --set env.DUMP_DEFAULTS="True" \
-        --set env.MAILCHIMP_API_KEY=${{ inputs.mailchimp-api-key }} \
-        --set env.MAILCHIMP_LIST_ID=${{ inputs.mailchimp-list-id }} \
-        --set env.OPENAI_API_KEY=${{ inputs.openai-api-key }} \
-        --set env.PINECONE_API_KEY=${{ inputs.pinecone-api-key }} \
-        --set env.PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }} \
-        --set env.GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }} \
-        --set env.GEMINI_API_KEY=${{ inputs.gemini-api-key }} \
-        --set env.LLAMA_API_KEY=${{ inputs.llama-api-key }} \
-        --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=${{ inputs.social-auth-google-oauth2-key }} \
-        --set env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD=${{ inputs.smarter-mysql-test_database_password }} \
-        --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=${{ inputs.social-auth-google-oauth2-secret }} \
-        --set env.SOCIAL_AUTH_GITHUB_KEY=${{ inputs.social-auth-github-key }} \
-        --set env.SOCIAL_AUTH_GITHUB_SECRET=${{ inputs.social-auth-github-secret }} \
-        --set env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY=${{ inputs.social-auth-linkedin-oauth2-key }} \
-        --set env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET=${{ inputs.social-auth-linkedin-oauth2-secret }} \
-        --set env.MYSQL_HOST=${{ env.MYSQL_HOST }} \
-        --set env.MYSQL_PORT=${{ env.MYSQL_PORT }} \
-        --set env.MYSQL_DATABASE=${{ env.SMARTER_MYSQL_DATABASE }} \
-        --set env.MYSQL_USER=${{ env.SMARTER_MYSQL_USERNAME }} \
-        --set env.MYSQL_PASSWORD=${{ env.SMARTER_MYSQL_PASSWORD }} \
-        --set env.MYSQL_ROOT_USERNAME=${{ env.MYSQL_ROOT_USERNAME }} \
-        --set env.MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }} \
-        --set env.SECRET_KEY=${{ env.SECRET_KEY }} \
-        --set env.SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }} \
-        --set env.SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }} \
-        --set env.SMARTER_ADMIN_USERNAME=${{ env.SMARTER_ADMIN_USERNAME }} \
-        --set env.SMARTER_ADMIN_EMAIL=${{ env.SMARTER_ADMIN_EMAIL }} \
-        --set env.SMTP_HOST=${{ env.SMTP_HOST }} \
-        --set env.SMTP_PORT=${{ env.SMTP_PORT }} \
-        --set env.SMTP_USE_SSL=${{ env.SMTP_USE_SSL }} \
-        --set env.SMTP_USE_TLS=${{ env.SMTP_USE_TLS }} \
-        --set env.SMTP_USERNAME=${{ env.SMTP_USERNAME }} \
-        --set env.SMTP_PASSWORD=${{ env.SMTP_PASSWORD }} \
-        --set env.CACHES_LOCATION=${{ env.CACHES_LOCATION }} \
-        --set env.CELERY_BROKER_URL=${{ env.CELERY_BROKER_URL }} \
-        --set env.CELERY_RESULT_BACKEND=${{ env.CELERY_RESULT_BACKEND }} \
+        helm upgrade --install --force smarter ./helm/charts/smarter/ \
+          --namespace ${{ env.NAMESPACE }} \
+          --timeout 900s \
+          --values /tmp/values.yaml
+
+    # Clean up secrets file
+    - name: Clean up secrets
+      if: always()
+      shell: bash
+      run: rm -f /tmp/values.yaml

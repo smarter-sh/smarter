@@ -18,7 +18,9 @@ application = WhiteNoise(application, root=settings.STATIC_ROOT)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.info("WSGI config for smarter.")
-logger.info("WSGI application: %s", application)
-logger.info("DJANGO_SETTINGS_MODULE: %s", os.getenv("DJANGO_SETTINGS_MODULE"))
-logger.info("static_root: %s", settings.STATIC_ROOT)
+logger.debug("WSGI config for smarter.")
+logger.debug("WSGI application: %s", application)
+logger.debug("DJANGO_SETTINGS_MODULE: %s", os.getenv("DJANGO_SETTINGS_MODULE"))
+logger.debug("static_root: %s", settings.STATIC_ROOT)
+
+__all__ = ["application"]

@@ -1,6 +1,21 @@
 dependencies:
+- name: grafana
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.1.8
+- name: loki
+  repository: https://grafana.github.io/helm-charts
+  version: 6.46.0
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 14.0.3
+- name: mariadb
+  repository: https://charts.bitnami.com/bitnami
+  version: 23.2.4
+- name: prometheus
+  repository: https://charts.bitnami.com/bitnami
+  version: 2.1.23
 - name: redis
   repository: https://charts.bitnami.com/bitnami
-  version: 20.6.1
-digest: sha256:6712b234d5ab3921597de97981196c7217655b47a5fde7054add4cd1e5278ba1
-generated: "2025-01-02T16:24:04.106506-06:00"
+  version: 23.2.12
+digest: sha256:77f808b15980692fa450afd0fc4184fd8c7c4438c815c40d0f62f26fa249ed00
+generated: "2025-11-17T18:34:08.675182-06:00"

@@ -4,7 +4,6 @@
 # python stuff
 import ast
 import io
-import json
 import logging
 import re
 import tempfile
@@ -17,9 +16,9 @@ from urllib.parse import urljoin
 
 import paramiko
 import requests
-from django.core.exceptions import ImproperlyConfigured
 
 # django stuff
+from django.core.exceptions import ImproperlyConfigured
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
@@ -35,9 +34,12 @@ from smarter.apps.account.utils import get_cached_account_for_user
 
 # smarter stuff
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import camel_to_snake, rfc1034_compliant_str
+from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -72,7 +74,7 @@ from .signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -212,7 +214,7 @@ def list_of_dicts_to_list(data: list[dict]) -> Optional[list[str]]:
     from the first key in the first dict."""
     if not data or not isinstance(data[0], dict):
         return None
-    logger.warning("converting list of dicts to a single dict")
+    logger.warning("list_of_dicts_to_list() converting list of dicts to a single dict")
     retval = []
     key = next(iter(data[0]))
     for d in data:
@@ -236,7 +238,7 @@ def list_of_dicts_to_dict(data: list[dict]) -> Optional[dict]:
     return retval
 
 
-class PluginMeta(TimestampedModel):
+class PluginMeta(TimestampedModel, SmarterHelperMixin):
     """
     Stores metadata for a Smarter plugin.
 
@@ -267,6 +269,22 @@ class PluginMeta(TimestampedModel):
         max_length=255,
         validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
     )
+
+    @property
+    def rfc1034_compliant_name(self) -> Optional[str]:
+        """
+        Returns a url friendly name for the chatbot.
+        This is a convenience property that returns
+        a RFC 1034 compliant name for the chatbot.
+
+        example:
+        - self.name: 'Example ChatBot 1'
+        - self.rfc1034_compliant_name: 'example-chatbot-1'
+        """
+        if self.name:
+            return rfc1034_compliant_str(self.name)
+        return None
+
     description = models.TextField(
         help_text="A brief description of the plugin. Be verbose, but not too verbose.",
     )
@@ -282,10 +300,11 @@ class PluginMeta(TimestampedModel):
 
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
-        if not SmarterValidator.is_valid_snake_case(self.name):
+        if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
             snake_case_name = camel_to_snake(self.name)
             logger.warning(
-                "PluginMeta.save(): name %s was not in snake_case. Converted to snake_case: %s",
+                "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
+                self.formatted_class_name,
                 self.name,
                 snake_case_name,
             )
@@ -307,6 +326,21 @@ class PluginMeta(TimestampedModel):
             return SAMKinds.API_PLUGIN
         else:
             raise SmarterValueError(f"Unsupported plugin class: {self.plugin_class}")
+
+    @property
+    def rfc1034_compliant_kind(self) -> Optional[str]:
+        """
+        Returns a url friendly kind for the chatbot.
+        This is a convenience property that returns
+        a RFC 1034 compliant kind for the chatbot.
+
+        example:
+        - self.kind: 'Static'
+        - self.rfc1034_compliant_kind: 'static'
+        """
+        if self.kind:
+            return rfc1034_compliant_str(self.kind.value)
+        return None
 
     @classmethod
     @cache_results()
@@ -333,11 +367,13 @@ class PluginMeta(TimestampedModel):
         try:
             return cls.objects.get(account=account, name=name)
         except cls.DoesNotExist:
-            logger.warning("PluginMeta.get_cached_plugin_by_name: Plugin not found for name: %s", name)
+            logger.warning(
+                "%s.get_cached_plugin_by_name: Plugin not found for name: %s", cls.formatted_class_name, name
+            )
             return None
 
 
-class PluginSelector(TimestampedModel):
+class PluginSelector(TimestampedModel, SmarterHelperMixin):
     """
     Stores plugin selection strategies for a Smarter plugin.
 
@@ -390,7 +426,7 @@ class PluginSelectorSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PluginSelectorHistory(TimestampedModel):
+class PluginSelectorHistory(TimestampedModel, SmarterHelperMixin):
     """
     Stores the history of plugin selector activations.
 
@@ -428,7 +464,7 @@ class PluginSelectorHistorySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PluginPrompt(TimestampedModel):
+class PluginPrompt(TimestampedModel, SmarterHelperMixin):
     """
     Stores LLM prompt model configuration for a Smarter plugin.
 
@@ -458,7 +494,7 @@ class PluginPrompt(TimestampedModel):
         default=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
         validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],
     )
-    max_tokens = models.IntegerField(
+    max_completion_tokens = models.IntegerField(
         help_text="The maximum number of tokens for both input and output.",
         default=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
         validators=[MinValueValidator(0), MaxValueValidator(8192)],
@@ -468,7 +504,7 @@ class PluginPrompt(TimestampedModel):
         return str(self.plugin.name)
 
 
-class PluginDataBase(TimestampedModel):
+class PluginDataBase(TimestampedModel, SmarterHelperMixin):
     """PluginData base model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data_base_plugin")
@@ -571,7 +607,8 @@ class PluginDataStatic(PluginDataBase):
             if isinstance(retval, list) and len(retval) > 0:
                 if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
                     logger.warning(
-                        "PluginDataStatic.sanitized_return_data: Truncating static_data to %s items.",
+                        "%s.sanitized_return_data: Truncating static_data to %s items.",
+                        self.formatted_class_name,
                         {SMARTER_PLUGIN_MAX_DATA_RESULTS},
                     )
                 retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
@@ -589,13 +626,14 @@ class PluginDataStatic(PluginDataBase):
         retval: Optional[list[Any]] = []
         if isinstance(self.static_data, dict):
             retval = dict_keys_to_list(data=self.static_data)
-            retval = list(retval)
+            retval = list(retval) if retval else None
         elif isinstance(self.static_data, list):
             retval = self.static_data
             if isinstance(retval, list) and len(retval) > 0:
                 if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
                     logger.warning(
-                        "PluginDataStatic.return_data_keys: Truncating static_data to %s items.",
+                        "%s.return_data_keys: Truncating static_data to %s items.",
+                        self.formatted_class_name,
                         {SMARTER_PLUGIN_MAX_DATA_RESULTS},
                     )
                 retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
@@ -609,11 +647,11 @@ class PluginDataStatic(PluginDataBase):
         try:
             data = json.loads(self.static_data)
             if not isinstance(data, dict):
-                logger.warning("PluginDataStatic.data: static_data is not a dict, returning None.")
+                logger.warning("%s.data: static_data is not a dict, returning None.", self.formatted_class_name)
                 return None
             return data
         except (json.JSONDecodeError, TypeError) as e:
-            logger.error("PluginDataStatic.data: Failed to decode static_data JSON: %s", e)
+            logger.error("%s.data: Failed to decode static_data JSON: %s", self.formatted_class_name, e)
             return None
 
     def __str__(self) -> str:
@@ -624,7 +662,7 @@ class PluginDataStatic(PluginDataBase):
         verbose_name_plural = "Plugin Static Data"
 
 
-class ConnectionBase(TimestampedModel):
+class ConnectionBase(TimestampedModel, SmarterHelperMixin):
     """
     Base class for connection models.
     """
@@ -671,7 +709,7 @@ class ConnectionBase(TimestampedModel):
         Return a list of all instances of all concrete subclasses of ConnectionBase.
         """
         if user is None:
-            logger.warning("get_cached_connections_for_user: user is None")
+            logger.warning("%s.get_cached_connections_for_user: user is None", cls.formatted_class_name)
             return []
         account = get_cached_account_for_user(user)
         instances = []
@@ -732,7 +770,11 @@ class SqlConnection(ConnectionBase):
             else:
                 self.sql_connection.ssh_known_hosts = new_entry
             self.sql_connection.save()
-            logger.warning("Unknown host key for %s. Key added to known_hosts.", hostname)
+            logger.warning(
+                "%s. Unknown host key for %s. Key added to known_hosts.",
+                self.sql_connection.formatted_class_name,
+                hostname,
+            )
 
     DBMS_DEFAULT_TIMEOUT = 30
     DBMS_CHOICES = [
@@ -904,7 +946,11 @@ class SqlConnection(ConnectionBase):
 
     def transport_handler(self, channel, src_addr, dest_addr):
         logger.info(
-            "Transport handler called with channel: %s, src_addr: %s, dest_addr: %s", channel, src_addr, dest_addr
+            "%s.transport_handler() Transport handler called with channel: %s, src_addr: %s, dest_addr: %s",
+            self.formatted_class_name,
+            channel,
+            src_addr,
+            dest_addr,
         )
 
     def connect_tcpip_ssh(self) -> Optional[BaseDatabaseWrapper]:
@@ -955,13 +1001,13 @@ class SqlConnection(ConnectionBase):
             return connection_handler
 
         except (paramiko.SSHException, DatabaseError, ImproperlyConfigured) as e:
-            logger.error("SSH connection failed: %s", e)
+            logger.error("%s.connect_tcpip_ssh() SSH connection failed: %s", self.formatted_class_name, e)
             plugin_sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
             return None
         # pylint: disable=W0718
         except Exception as e:
             plugin_sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
-            logger.error("An unexpected error occurred: %s", e)
+            logger.error("%s.connect_tcpip_ssh() An unexpected error occurred: %s", self.formatted_class_name, e)
             return None
 
     def connect_ldap_user_pwd(self) -> Optional[BaseDatabaseWrapper]:
@@ -980,7 +1026,9 @@ class SqlConnection(ConnectionBase):
         # pylint: disable=W0718
         except Exception as e:
             plugin_sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
-            logger.error("LDAP User/Password connection failed: %s", e)
+            logger.error(
+                "%s.connect_ldap_user_pwd() LDAP User/Password connection failed: %s", self.formatted_class_name, e
+            )
             return None
 
     def test_connection(self) -> bool:
@@ -1009,7 +1057,8 @@ class SqlConnection(ConnectionBase):
             return retval
         else:
             logger.error(
-                "Failed to establish a database connection using method: %s. Got return type of %s",
+                "%s.get_connection() Failed to establish a database connection using method: %s. Got return type of %s",
+                self.formatted_class_name,
                 self.authentication_method,
                 type(retval),
             )
@@ -1022,7 +1071,7 @@ class SqlConnection(ConnectionBase):
                 self._connection.close()
             # pylint: disable=W0718
             except Exception as e:
-                logger.error("Failed to close the database connection: %s", e)
+                logger.error("%s.close() Failed to close the database connection: %s", self.formatted_class_name, e)
             self._connection = None
 
     def execute_query(self, sql: str, limit: Optional[int] = None) -> Union[str, bool]:
@@ -1053,7 +1102,7 @@ class SqlConnection(ConnectionBase):
             plugin_sql_connection_query_failed.send(
                 sender=self.__class__, connection=self, sql=sql, limit=limit, error=str(e)
             )
-            logger.error("SQL query execution failed: %s", e)
+            logger.error("%s.execute_query() SQL query execution failed: %s", self.formatted_class_name, e)
             return False
         finally:
             self.close()
@@ -1070,7 +1119,7 @@ class SqlConnection(ConnectionBase):
             response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
         except requests.exceptions.RequestException as e:
-            logger.error("proxy test connection failed: %s", e)
+            logger.error("%s.test_proxy() proxy test connection failed: %s", self.formatted_class_name, e)
             return False
 
     def get_connection_string(self, masked: bool = True) -> str:
@@ -1093,7 +1142,8 @@ class SqlConnection(ConnectionBase):
         if not SmarterValidator.is_valid_snake_case(self.name):
             snake_case_name = camel_to_snake(self.name)
             logger.warning(
-                "SqlConnection.save(): name %s was not in snake_case. Converted to snake_case: %s",
+                "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
+                self.formatted_class_name,
                 self.name,
                 snake_case_name,
             )
@@ -1101,7 +1151,7 @@ class SqlConnection(ConnectionBase):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return self.name + " - " + self.get_connection_string()
+        return self.name + " - " + self.get_connection_string() if isinstance(self.name, str) else "unassigned"
 
 
 class PluginDataSql(PluginDataBase):
@@ -1177,7 +1227,7 @@ class PluginDataSql(PluginDataBase):
             except (ValidationError, SmarterValueError) as e:
                 raise SmarterValueError(f"Invalid test value structure: {e}") from e
 
-    def valdate_all_placeholders_in_parameters(self) -> None:
+    def validate_all_placeholders_in_parameters(self) -> None:
         """
         Validate that all placeholders in the SQL query string are present in the parameters.
 
@@ -1208,8 +1258,8 @@ class PluginDataSql(PluginDataBase):
         parameters = self.parameters or {}
         properties = parameters.get("properties", {})
         logger.info(
-            "%s.valdate_all_placeholders_in_parameters() Validating all placeholders in SQL query parameters: %s\n properties: %s, placeholders: %s",
-            self.__class__.__name__,
+            "%s.validate_all_placeholders_in_parameters() Validating all placeholders in SQL query parameters: %s\n properties: %s, placeholders: %s",
+            self.formatted_class_name,
             self.sql_query,
             properties,
             placeholders,
@@ -1222,7 +1272,7 @@ class PluginDataSql(PluginDataBase):
         super().validate()
         self.validate_test_values()
         self.validate_all_parameters_in_test_values()
-        self.valdate_all_placeholders_in_parameters()
+        self.validate_all_placeholders_in_parameters()
 
         return True
 
@@ -1258,7 +1308,7 @@ class PluginDataSql(PluginDataBase):
 
     def sanitized_return_data(self, params: Optional[dict] = None) -> Union[str, bool]:
         """Return a dict by executing the query with the provided params."""
-        logger.info("{self.__class__.__name__}.sanitized_return_data called. - %s", params)
+        logger.info("%s.sanitized_return_data called. - %s", self.formatted_class_name, params)
         return self.execute_query(params)
 
     def save(self, *args, **kwargs):
@@ -1352,14 +1402,15 @@ class ApiConnection(ConnectionBase):
             response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
         except requests.exceptions.RequestException as e:
-            logger.error("proxy test connection failed: %s", e)
+            logger.error("%s.test_proxy() proxy test connection failed: %s", self.formatted_class_name, e)
             return False
 
     def test_connection(self) -> bool:
         """Test the API connection by making a simple GET request to the root domain."""
         try:
             logger.warning(
-                "ApiConnection.test_connection() called for %s with auth method %s but we didn't actually test it.",
+                "%s.test_connection() called for %s with auth method %s but we didn't actually test it.",
+                self.formatted_class_name,
                 self.name,
                 self.auth_method,
             )
@@ -1378,10 +1429,11 @@ class ApiConnection(ConnectionBase):
 
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
-        if not SmarterValidator.is_valid_snake_case(self.name):
+        if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
             snake_case_name = camel_to_snake(self.name)
             logger.warning(
-                "ApiConnection.save(): name %s was not in snake_case. Converted to snake_case: %s",
+                "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
+                self.formatted_class_name,
                 self.name,
                 snake_case_name,
             )
@@ -1448,7 +1500,7 @@ class ApiConnection(ConnectionBase):
             return False
 
     def __str__(self) -> str:
-        return self.name + " - " + self.get_connection_string()
+        return self.name + " - " + self.get_connection_string() if isinstance(self.name, str) else "unassigned"
 
 
 class PluginDataApi(PluginDataBase):
@@ -1548,7 +1600,7 @@ class PluginDataApi(PluginDataBase):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            logger.error("API request failed: %s", e)
+            logger.error("%s.execute_request() API request failed: %s", self.formatted_class_name, e)
             return False
 
     def test(self) -> Union[dict, bool]:
@@ -1557,7 +1609,7 @@ class PluginDataApi(PluginDataBase):
 
     def sanitized_return_data(self, params: Optional[dict] = None) -> Union[dict, bool]:
         """Return a dict by executing the API request with the provided params."""
-        logger.info("{self.__class__.__name__}.sanitized_return_data called. - %s", params)
+        logger.info("%s.sanitized_return_data called. - %s", self.formatted_class_name, params)
         return self.execute_request(params)
 
     def validate_endpoint(self) -> None:
@@ -1632,8 +1684,8 @@ class PluginDataApi(PluginDataBase):
         parameters = self.parameters or {}
         properties = parameters.get("properties", {})
         logger.info(
-            "%s.valdate_all_placeholders_in_parameters() Validating all placeholders in SQL query parameters: %s\n properties: %s, placeholders: %s",
-            self.__class__.__name__,
+            "%s.validate_all_placeholders_in_parameters() Validating all placeholders in SQL query parameters: %s\n properties: %s, placeholders: %s",
+            self.formatted_class_name,
             self.endpoint,
             properties,
             placeholders,

@@ -11,10 +11,6 @@ spec:
   data:
     description: This tool provides detailed information about the Smarter platform. Use this for all inquiries about Smarter.
     staticData:
-      serviceLevalAgreement: |
-        Querium Corp. is willing to enter into service-level agreements covering uptime, security and data privacy.
-        Contact Kent Fuka at +1 (512) 833-6955 or email [kent@querium.com](mailto:kent@querium.com).
-
       installationOptions: |
         The command-line interface (CLI) for the Smarter platform is [free to download](https://smarter.sh/cli/)
         and runs on Windows, macOS, Linux, and Docker. The CLI provides a powerful set of tools for managing AI resources,
@@ -30,35 +26,17 @@ spec:
             Invoiced monthly based on net usage.
         - name: Cloud
           description: |
-            Smarter can be installed on your cloud infrastructure and maintained by the Querium team.
+            Smarter can be installed on your cloud infrastructure and maintained by a certified partner.
         - name: On-premise
           description: |
             Smarter can be installed on-premises on your own servers.
 
-      salesContact:
-      - name: Kent Fuka
-      - title: Co-founder and CEO
-      - location: 1700 South Lamar Blvd, Suite 338, Austin, TX 78704
-      - phone: +1 (512) 833-6955
-      - website: https://www.querium.com/
-      - whatsapp: 16178346172
-      - email: kent@querium.com
-
-      legalContact:
-      - name: Kent Fuka
-      - title: Co-founder and CEO
-      - location: 1700 South Lamar Blvd, Suite 338, Austin, TX 78704
-      - phone: +1 (512) 833-6955
-      - website: https://www.querium.com/
-      - whatsapp: 16178346172
-      - email: kent@querium.com
-
       technicalSupport:
       - name: Lawrence McDaniel
-      - title: Chief Technology Officer
+      - title: Data Scientist
       - location: CDMX, Mexico
       - phone: +1 (617) 834-6172
-      - email: lawrence@querium.com
+      - email: lpm0073@gmail.com
       - web: https://lawrencemcdaniel.com/
 
       pricingInformation: |
@@ -66,8 +44,8 @@ spec:
         student per course. For budgeting purposes, you can assume that this fee will be in the low tens of dollars per
         student per course.
 
-        Further inquiries should be directed to Kent at +1 (512) 833-6955 or
-        email [kent@querium.com](mailto:kent@querium.com).
+        Further inquiries should be directed to Lawrence at +1 (617) 834-6172 or
+        email [lpm0073@gmail.com](mailto:lpm0073@gmail.com).
 
       trainingAndOnboarding: |
         Smarter provides a comprehensive set of training and onboarding resources for developers, system administrators,
@@ -77,7 +55,7 @@ spec:
         We offer on-site training and onboarding for enterprise customers and large educational institutions.
 
         For more information, visit the [Smarter Training](https://smarter.sh/certification-program/) or contact
-        Lawrence McDaniel at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
+        Lawrence McDaniel at +1 (617) 834-6172 or email [lpm0073@gmail.com](mailto:lpm0073@gmail.com).
 
       aboutPlugins: |
         Smarter plugins are built on a Large Language Model (LLM) API edge feature generally referred to as, "Function Calling", that a growing population of LLM's include in their APIs. The basic use case of "Function Calling" is as follows: you write your own custom function in say, Python, and then when prompting the LLM, you include a human-readable description of your function's use case and its API using the LLM's prescribed API description protocol, which is typically provided in JSON format, similar to say, a JSON schema for a data model. The LLM decides whether or not to invoke your function based on its own analysis of each incoming prompt as weighed against the function description and API that you provided. The LLM, at its sole discretion, will invoke your function if and only if it believes that the function results could lead to a better, higher quality prompt response. Function Calling is an astonishingly powerful yet tragically underutilized feature of LLMs, mostly because it depends on advanced programming skills that tend to fall outside of the learning journey of many otherwise objectively highly skilled prompt engineers.
@@ -94,7 +72,7 @@ spec:
         api documentation, developer resources, and the Smarter developer team.
 
         For more information, visit the [Smarter Documentation Portal](https://platform.smarter.sh/docs/) or contact
-        Lawrence McDaniel at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
+        Lawrence McDaniel at +1 (617) 834-6172 or email [lpm0073@gmail.com](mailto:lpm0073@gmail.com).
 
         Check out Smarter on GitHub for code samples, at [https://github.com/smarter-sh/](https://github.com/smarter-sh/).
         You should also take a look at these sample manifests for deploying AI resources on the Smarter platform,
@@ -165,7 +143,7 @@ spec:
         and we use security groups and network ACLs to control traffic between different parts of the platform. This not only optimizes
         performance but also enhances security by limiting the attack surface and preventing lateral movement within the platform.
 
-        For more information, contact Lawrence McDaniel, CTO, at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
+        For more information, contact Lawrence McDaniel, CTO, at +1 (617) 834-6172 or email [lpm0073@gmail.com](mailto:lpm0073@gmail.com).
 
       technologyStack:
       - name: Ubuntu Linux
@@ -284,8 +262,7 @@ spec:
 
       additionalInformation: |
         For more information about the Smarter platform, visit the [Smarter website](https://smarter.sh/), or contact
-        Kent Fuka, Founder and CEO, at +1 (512) 833-6955 or email email [kent@querium.com](mailto:kent@querium.com)
-        or contact Lawrence McDaniel, CTO, at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
+        Lawrence McDaniel, Data Scientist, at +1 (617) 834-6172 or email [lpm0073@gmail.com](mailto:lpm0073@gmail.com).
 
         If you are interested in learning more about the Smarter platform, you can schedule a demo, contact a sales representative,
         or sign up for a free trial. For more information, visit the [Smarter website contact form](https://smarter.sh/contact/),
@@ -303,7 +280,6 @@ spec:
         - [Smarter Certification Program](https://smarter.sh/certification-program/). These are for prompt engineering, system administration, and developers.
         - [Smarter Solutions](https://smarter.sh/solutions/)
         - [Smarter on Github](https://github.com/smarter-sh/)
-        - [Querium Corp. web site](https://www.querium.com/)
 
       keyFeatures:
       - feature: a declarative, manifest-based approach to managing AI resources
@@ -320,9 +296,9 @@ spec:
 
       interestingFacts:
       - fact: Smarter was presented to a VIP group of 100 business executives in Mexico City in early 2025, most of whom work in the financial services industry.
-      - fact: Smarter has a beta program. Contact Lawrence McDaniel at +1 (617) 834-6172 or [lawrence@querium.com](mailto:lawrence@querium.com) for information.
-      - fact: The Smarter project began in early 2024 and is ongoing. It is lead by [Lawrence McDaniel](https://lawrencemcdaniel.com/), the CTO of Querium Corp.
-      - fact: Smarter was created by [Querium Corp.](https://www.querium.com/), an Austin based company founded in 2012 that specializes in Artificial Intelligence.
+      - fact: Smarter has a beta program. Contact Lawrence McDaniel at +1 (617) 834-6172 or [lpm0073@gmail.com](mailto:lpm0073@gmail.com) for information.
+      - fact: The Smarter project began in early 2024 and is ongoing. It is lead by [Lawrence McDaniel](https://lawrencemcdaniel.com/), Data Scientist.
+      - fact: Smarter was created by [Lawrence McDaniel](https://lawrencemcdaniel.com/).
       - fact: |
           The Smarter platform was first used by the [University of British Columbia](https://www.ubc.ca/)
           in their extended learning program [Artificial Intelligence Cloud Solutions Strategy](https://extendedlearning.ubc.ca/programs-credentials/artificial-intelligence-cloud-solutions-strategy-microcertificate)
@@ -338,7 +314,7 @@ spec:
 
   prompt:
     maxTokens: 4096
-    model: gpt-4o-mini
+    model: gpt-4-turbo
     provider: openai
     systemRole: |
       Refer to the tools provided in this prompt for detailed, factual information about the Smarter platform,

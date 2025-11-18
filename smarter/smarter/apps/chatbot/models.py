@@ -1,10 +1,9 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
-import json
 import logging
 from functools import cached_property
 from typing import Any, List, Optional, Type
-from urllib.parse import ParseResult, urljoin
+from urllib.parse import ParseResult, urljoin, urlparse
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -30,7 +29,8 @@ from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.common.helpers.url_helpers import clean_url
-from smarter.common.utils import smarter_build_absolute_uri
+from smarter.common.utils import rfc1034_compliant_str, smarter_build_absolute_uri
+from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -59,12 +59,12 @@ API_VI_CHATBOT_NAMESPACE = "api:v1:chatbot"
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= smarter_settings.log_level
 
 
 def should_log_chatbot_helper(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -214,6 +214,17 @@ class ChatBot(TimestampedModel):
         return self.url if self.url else "undefined"
 
     @property
+    def rfc1034_compliant_name(self) -> str:
+        """
+        Returns a RFC 1034 compliant name for the ChatBot.
+        - lower case
+        - alphanumeric characters and hyphens only
+        - starts and ends with an alphanumeric character
+        - max length of 63 characters
+        """
+        return rfc1034_compliant_str(self.name)
+
+    @property
     def default_system_role_enhanced(self):
         """
         prepends a date/time string to the default_system_role
@@ -227,7 +238,9 @@ class ChatBot(TimestampedModel):
         self.account.account_number: '1234-5678-9012'
         smarter_settings.environment_api_domain: 'alpha.api.smarter.sh'
         """
-        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.environment_api_domain}"
+        domain = (
+            f"{self.rfc1034_compliant_name}.{self.account.account_number}.{smarter_settings.environment_api_domain}"
+        )
         SmarterValidator.validate_domain(domain)
         return domain
 
@@ -242,7 +255,7 @@ class ChatBot(TimestampedModel):
         self.custom_domain.domain_name: 'example.com'
         """
         if self.custom_domain and self.custom_domain.is_verified:
-            domain = f"{self.name}.{self.custom_domain.domain_name}"
+            domain = f"{self.rfc1034_compliant_name}.{self.custom_domain.domain_name}"
             SmarterValidator.validate_domain(domain)
             return domain
         return None
@@ -339,7 +352,7 @@ class ChatBot(TimestampedModel):
         if self.dns_verification_status != self.DnsVerificationStatusChoices.VERIFIED:
             logger.warning(
                 "ChatBot %s is not ready. DNS verification status is %s",
-                self.name,
+                self.rfc1034_compliant_name,
                 self.dns_verification_status,
             )
             return False
@@ -347,13 +360,13 @@ class ChatBot(TimestampedModel):
         if self.tls_certificate_issuance_status != self.TlsCertificateIssuanceStatusChoices.ISSUED:
             logger.warning(
                 "ChatBot %s is not ready. TLS certificate issuance status is %s",
-                self.name,
+                self.rfc1034_compliant_name,
                 self.tls_certificate_issuance_status,
             )
             return False
 
         if not self.deployed:
-            logger.warning("ChatBot %s is not ready. It is not deployed.", self.name)
+            logger.warning("ChatBot %s is not ready. It is not deployed.", self.rfc1034_compliant_name)
             return False
 
         return True
@@ -364,25 +377,36 @@ class ChatBot(TimestampedModel):
             return self.Modes.UNKNOWN
         SmarterValidator.validate_url(url)
         url = SmarterValidator.urlify(url, environment=smarter_settings.environment)  # type: ignore[return-value]
+        parsed_url = urlparse(url)
+        input_hostname = parsed_url.netloc
 
-        try:
-            custom_url = SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-            if custom_url and custom_url in url:
-                return self.Modes.CUSTOM
-        except SmarterValueError:
-            pass
-
+        # most likely case first when running in production, at scale.
         try:
             default_url = SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-            if default_url and default_url in url:
-                return self.Modes.DEFAULT
+            if default_url:
+                default_hostname = urlparse(default_url).netloc
+                if default_hostname and input_hostname == default_hostname:
+                    return self.Modes.DEFAULT
         except SmarterValueError:
             pass
 
+        # workbench sandbox mode
         try:
             sandbox_url = SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-            if sandbox_url and sandbox_url in url:
-                return self.Modes.SANDBOX
+            if sandbox_url:
+                sandbox_hostname = urlparse(sandbox_url).netloc
+                if sandbox_hostname and input_hostname == sandbox_hostname:
+                    return self.Modes.SANDBOX
+        except SmarterValueError:
+            pass
+
+        # custom domain mode. Least likely case.
+        try:
+            custom_url = SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)  # type: ignore[return-value]
+            if custom_url:
+                custom_hostname = urlparse(custom_url).netloc
+                if custom_hostname and input_hostname == custom_hostname:
+                    return self.Modes.CUSTOM
         except SmarterValueError:
             pass
 
@@ -614,7 +638,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
     # authenticated urls
     - https://alpha.api.smarter.sh/smarter/example/
-    - https://example.smarter.querium.com/chatbot/
+    - https://example.smarter.sh/chatbot/
     - https://alpha.api.smarter.sh/workbench/1/
     - https://alpha.api.smarter.sh/workbench/example/
 
@@ -657,7 +681,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         if not self.is_chatbot:
             self._err = f"ChatBotHelper.__init__() not a chatbot. Quitting. {self.url}"
-            logger.warning(self._err)
+            logger.debug(self._err)
             return None
 
         chatbot_helper_logger.info(
@@ -779,7 +803,7 @@ class ChatBotHelper(SmarterRequestMixin):
         return self.name
 
     @property
-    def name(self):
+    def name(self) -> Optional[str]:
         """
         Returns the name of the chatbot.
         valid possibilities:
@@ -795,6 +819,21 @@ class ChatBotHelper(SmarterRequestMixin):
             return self._name
 
     @property
+    def rfc1034_compliant_name(self) -> Optional[str]:
+        """
+        Returns a url friendly name for the chatbot.
+        This is a convenience property that returns
+        a RFC 1034 compliant name for the chatbot.
+
+        example:
+        - self.name: 'Example ChatBot 1'
+        - self.rfc1034_compliant_name: 'example-chatbot-1'
+        """
+        if self._chatbot:
+            return self._chatbot.rfc1034_compliant_name
+        return None
+
+    @property
     def is_chatbothelper_ready(self) -> bool:
         """
         Returns True if the ChatBotHelper is ready to be used.
@@ -803,7 +842,7 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         if not isinstance(self._chatbot, ChatBot):
             self._err = f"{self.formatted_class_name}.is_chatbothelper_ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
-            logger.warning(self._err)
+            logger.debug(self._err)
             return False
         return True
 
@@ -812,7 +851,7 @@ class ChatBotHelper(SmarterRequestMixin):
         retval = bool(super().ready)
         if not retval:
             self._err = f"{self.formatted_class_name}.ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
-            logger.warning(self._err)
+            logger.debug(self._err)
         return retval and self.is_chatbothelper_ready
 
     def to_json(self) -> dict[str, Any]:
@@ -853,8 +892,8 @@ class ChatBotHelper(SmarterRequestMixin):
           return 'api.localhost:8000'
 
         custom domain url:
-        - https://hr.smarter.querium.com/chatbot/
-          return 'hr.smarter.querium.com'
+        - https://hr.smarter.sh/chatbot/
+          return 'hr.smarter.sh'
 
         """
         if not self.smarter_request:
@@ -938,8 +977,8 @@ class ChatBotHelper(SmarterRequestMixin):
         Returns a lazy instance of the ChatBotCustomDomain
 
         examples:
-        - https://hr.smarter.querium.com/chatbot/
-          returns ChatBotCustomDomain(domain_name='smarter.querium.com')
+        - https://hr.smarter.sh/chatbot/
+          returns ChatBotCustomDomain(domain_name='smarter.sh')
         """
         if self._chatbot_custom_domain:
             return self._chatbot_custom_domain
@@ -984,7 +1023,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         horizontal_line = "-" * (80 - 15)
         self.helper_logger(horizontal_line)
-        self.helper_logger(json.dumps(self.to_json(), indent=4))
+        self.helper_logger(json.dumps(self.to_json()))
         self.helper_logger(horizontal_line)
 
 

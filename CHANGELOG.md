@@ -1,46 +1,233 @@
-# [0.13.0](https://github.com/smarter-sh/smarter/compare/v0.12.0...v0.13.0) (2025-08-25)
-
-
-### Bug Fixes
-
-* authenticate if not already done, and we find an Authentication token in the header ([a84f0f5](https://github.com/smarter-sh/smarter/commit/a84f0f50e20ce1a885b35b74a77725473ce517b8))
-* cache authenticate_credentials() ([f1a2eb4](https://github.com/smarter-sh/smarter/commit/f1a2eb4c4df06ef5fc61e2bb2d78058c6dbccb93))
-* cannot assume that request objects always have a META attribute ([452ebab](https://github.com/smarter-sh/smarter/commit/452ebaba2f5fad9f4545a21b2b6f66bcb027c6ae))
-* cannot include tool responses in 1st iteration ([9c5b828](https://github.com/smarter-sh/smarter/commit/9c5b828e662ec1345deb914a84e8b0d1e1e1c603))
-* container resource memory settings ([f7d300a](https://github.com/smarter-sh/smarter/commit/f7d300a35932c586b55c0b583c9534ff77cc7531))
-* dns verification should be based on cascading hosted zones ([0de5ddf](https://github.com/smarter-sh/smarter/commit/0de5ddfad7d4a7bd326f85b3e65d00fb6444542b))
-* environment NS records belong in platform.domain.com and api.domain.com ([f26977c](https://github.com/smarter-sh/smarter/commit/f26977c0c3da881e8f2cdedb32b05b0064be2e7f))
-* is Kind is missing then say so ([8d38a78](https://github.com/smarter-sh/smarter/commit/8d38a78ad710af1a33e9327856617f133695db61))
-* recast DRF Request as HttpRequest ([a3f39ac](https://github.com/smarter-sh/smarter/commit/a3f39ac5f922d97129f073b9d29f11cc0f111b0e))
-* setup cache invalidations and implement for Account, User, UserProfile and related SAM objects ([3fb8de7](https://github.com/smarter-sh/smarter/commit/3fb8de7f2a19a275e8b615e861b1463a33d62fb7))
-* should_log() should ensure that log level is >= logging.INFO ([fdda0fc](https://github.com/smarter-sh/smarter/commit/fdda0fc334cfcaa28981aed4f261a69dc7c574ec))
-* trouble shoot ChatConfigView initialization ([71c2b37](https://github.com/smarter-sh/smarter/commit/71c2b37af7fadda8a32835ecfce56cfefda25697))
-* trouble shoot ChatConfigView initialization ([46104b8](https://github.com/smarter-sh/smarter/commit/46104b8ed3faefc47d990be088a8e666c25f4aff))
-
-
-### Features
-
-* add /api/v1/providers/ end points ([dba2ad9](https://github.com/smarter-sh/smarter/commit/dba2ad9692eab4c50f09a738389a68ac37261cef))
-* add serializers ([60201f7](https://github.com/smarter-sh/smarter/commit/60201f70488827864f0a80afbeb92062617770c1))
-* code get_model_for_provider() ([15df290](https://github.com/smarter-sh/smarter/commit/15df2907e5d21ca28125bdf396dd30abf03665db))
-* code provider verification ([e2cdb18](https://github.com/smarter-sh/smarter/commit/e2cdb18c7468f90c5ebd2b697ee2b672b0268492))
-* code provider verification ([0c3161b](https://github.com/smarter-sh/smarter/commit/0c3161ba1ed82a37d039f82b853c9bc97c345d08))
-* create manage.py create_sqldb_connection ([0369ebd](https://github.com/smarter-sh/smarter/commit/0369ebd96f0d7e0acec77e267e849d7c578ff249))
-* create manage.py initialize_providers ([110edf3](https://github.com/smarter-sh/smarter/commit/110edf31c8518df2a008d95358d450a5b0b843cc))
-* create ProviderModelTypedDict ([1ff8992](https://github.com/smarter-sh/smarter/commit/1ff8992656e0272f1009afb03a0fb90bf04f1ba7))
-* create ProviderVerification model and ProviderVerificationTypes ([b52fa08](https://github.com/smarter-sh/smarter/commit/b52fa08fe54015a8e80fc5404b6e2209f0cef9f3))
-* create Pydantic model ([308560a](https://github.com/smarter-sh/smarter/commit/308560a53f8b5ac342968e86a8f2fef4eb73520d))
-* generalize instantiation of Plugin classes based on manifest type ([3a77e2b](https://github.com/smarter-sh/smarter/commit/3a77e2bd25e24010e70d67706ac61970ba82e155))
-* register admin models ([77ef5d3](https://github.com/smarter-sh/smarter/commit/77ef5d3504be2bb582b8605417f3d56824c0c3c9))
-* scaffold provider app ([cb8975b](https://github.com/smarter-sh/smarter/commit/cb8975b53f7e1008cc516467d4f40d4d8929de15))
-* scaffold provider verifications ([036da3d](https://github.com/smarter-sh/smarter/commit/036da3dd56e57aada21972920804153f78e835ff))
-* setup Broker base classes for Connection and Plugin ([601bc99](https://github.com/smarter-sh/smarter/commit/601bc99b046072d4e3b4616c8c9e29032c28b5b9))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.13.25](https://github.com/smarter-sh/smarter/compare/v0.13.24...v0.13.25) (2025-11-01)
+
+### Bug Fixes
+
+- remove platform argument bc specifying amd64 precludes use of aws graviton instance types ([84b2ff5](https://github.com/smarter-sh/smarter/commit/84b2ff5da7e54a6e4ea2d76bbf0d5f6ce28ad9d6))
+- setup multi-architecture builds for both AMD64 and ARM64 ([8142653](https://github.com/smarter-sh/smarter/commit/8142653c480a610befa1e997b469d9d94771dd38))
+
+## [0.13.24](https://github.com/smarter-sh/smarter/compare/v0.13.23...v0.13.24) (2025-10-14)
+
+### Bug Fixes
+
+- 500 error on incorrect api key ([ff6e135](https://github.com/smarter-sh/smarter/commit/ff6e13580997ed010e9f8e3110becac11757bd2c))
+
+## [0.13.23](https://github.com/smarter-sh/smarter/compare/v0.13.22...v0.13.23) (2025-10-14)
+
+### Bug Fixes
+
+- incorrect http error response on incorrect or malformed api key ([83e61a5](https://github.com/smarter-sh/smarter/commit/83e61a57e60dc9f2dc6b6101e779869d3223ccf7))
+
+## [0.13.22](https://github.com/smarter-sh/smarter/compare/v0.13.21...v0.13.22) (2025-10-14)
+
+### Bug Fixes
+
+- weak logic in request.user.is_authenticated evaluation ([9b7b9c8](https://github.com/smarter-sh/smarter/commit/9b7b9c84234d68274ef227a1745571b8e6ecc0ff))
+
+## [0.13.21](https://github.com/smarter-sh/smarter/compare/v0.13.20...v0.13.21) (2025-10-14)
+
+### Bug Fixes
+
+- request.user Nonetype ([797fa27](https://github.com/smarter-sh/smarter/commit/797fa27b72793cecf366fb2e7a22f996e1d3514f))
+
+## [0.13.20](https://github.com/smarter-sh/smarter/compare/v0.13.19...v0.13.20) (2025-10-14)
+
+### Bug Fixes
+
+- refactor project root modules - celery, urls, hosts ([600e6ab](https://github.com/smarter-sh/smarter/commit/600e6ab99b3efdf5281b7556c52c14bd544fc536))
+
+## [0.13.19](https://github.com/smarter-sh/smarter/compare/v0.13.18...v0.13.19) (2025-10-14)
+
+### Bug Fixes
+
+- base requirements version bumps ([700501f](https://github.com/smarter-sh/smarter/commit/700501f1f7de1bf9259b5e910d8717d65b9250e1))
+- broken site logo link ([edf4d6a](https://github.com/smarter-sh/smarter/commit/edf4d6a4c4f12f5549b6564406bbb737f8007660))
+- disallow SSO creating new accounts ([4a469b1](https://github.com/smarter-sh/smarter/commit/4a469b1fce9d78d67e1d9edcdcf11d47789a4795))
+- refactor for multiple user_profile records per user ([a79c245](https://github.com/smarter-sh/smarter/commit/a79c2454f74ccfc049f962dc20f64ae06e061f7a))
+- setup api domain and api receivers ([c4bb723](https://github.com/smarter-sh/smarter/commit/c4bb7232ef653d541509ee749d50fc78cd6aca2e))
+- setup api domain and api receivers ([93b5b70](https://github.com/smarter-sh/smarter/commit/93b5b7093d89a27ddcd512d194b78f900f65e357))
+- setup api domain and api receivers ([d49fcc3](https://github.com/smarter-sh/smarter/commit/d49fcc3531245d5b1073f41f78df11f5c94e995f))
+- setup api domain and api receivers ([38e8a20](https://github.com/smarter-sh/smarter/commit/38e8a202c5a4a3311119fa29e4006c742098baff))
+- setup api domain and api receivers ([66d6e4d](https://github.com/smarter-sh/smarter/commit/66d6e4d58bc83f9ef7e8b6e26e7b6ca25b6c2b81))
+- we now have to consider superuser accounts that are associated with multiple accounts ([380b958](https://github.com/smarter-sh/smarter/commit/380b958ca4e6276b698ab0c7880d3691cf853c31))
+- work on CORS headers ([5bdb18f](https://github.com/smarter-sh/smarter/commit/5bdb18f3f60d99c3fdfd44b08b522b994149cfee))
+
+## [0.13.18](https://github.com/smarter-sh/smarter/compare/v0.13.17...v0.13.18) (2025-10-08)
+
+### Bug Fixes
+
+- add ingressClassName ([c9e6daa](https://github.com/smarter-sh/smarter/commit/c9e6daaebea8cd80bf3a10d1bfaabdc5d0802ee8))
+
+## [0.13.17](https://github.com/smarter-sh/smarter/compare/v0.13.16...v0.13.17) (2025-10-08)
+
+### Bug Fixes
+
+- ensure that plugin and chatbot urls are always rfc1034 compliant ([71eb6a1](https://github.com/smarter-sh/smarter/commit/71eb6a1352d2c0ffe570f0ce8a3d189ff55144fb))
+
+## [0.13.16](https://github.com/smarter-sh/smarter/compare/v0.13.15...v0.13.16) (2025-10-08)
+
+### Bug Fixes
+
+- evaluate the http request IP address rather than the internal ip of the pod ([8a68e05](https://github.com/smarter-sh/smarter/commit/8a68e05ffb147d6a15f264402181403199857799))
+
+## [0.13.15](https://github.com/smarter-sh/smarter/compare/v0.13.14...v0.13.15) (2025-10-08)
+
+### Bug Fixes
+
+- ignore http protocol when determining mode() ([28b2b50](https://github.com/smarter-sh/smarter/commit/28b2b5073247075d569d34912f01e8e1d57d7ba5))
+
+## [0.13.14](https://github.com/smarter-sh/smarter/compare/v0.13.13...v0.13.14) (2025-10-07)
+
+### Bug Fixes
+
+- favicon url ([6947591](https://github.com/smarter-sh/smarter/commit/6947591fa0414e147d76067ba1e6298269bc8ff0))
+
+## [0.13.13](https://github.com/smarter-sh/smarter/compare/v0.13.12...v0.13.13) (2025-09-28)
+
+### Bug Fixes
+
+- wrap google authentication in try block ([6c07f63](https://github.com/smarter-sh/smarter/commit/6c07f6350e28be3d06c450d713a35cc2c650c60d))
+
+## [0.13.12](https://github.com/smarter-sh/smarter/compare/v0.13.11...v0.13.12) (2025-09-28)
+
+### Bug Fixes
+
+- collect assets after permissions to improve caching ([ce932c8](https://github.com/smarter-sh/smarter/commit/ce932c87f7be9a71b156397db9cf961f8532c5f6))
+
+## [0.13.11](https://github.com/smarter-sh/smarter/compare/v0.13.10...v0.13.11) (2025-09-28)
+
+### Bug Fixes
+
+- AbstractBroker must be able to initialize from a manifest passed as a dict ([b3532a6](https://github.com/smarter-sh/smarter/commit/b3532a6adde3c0743dfba8f32f9ab1481f9210a2))
+- add DjangoJSONEncoder to every json.dumps() ([9306237](https://github.com/smarter-sh/smarter/commit/9306237cdcc0445afc77ea8b17a7df85eb97767f))
+- get_cached_user_for_user_id() needs to consider that User might not exist ([3152910](https://github.com/smarter-sh/smarter/commit/3152910c8e3e8849d252a226e2b53ff5c1955bad))
+- initialization error in TestSqlPlugin.sql_plugin_model() ([1ad9cbf](https://github.com/smarter-sh/smarter/commit/1ad9cbf8687d6fdd6e66ba4949c5563c5f6a7850))
+- key error in StaticPlugin.tool_call_fetch_plugin_response() ([681f8f8](https://github.com/smarter-sh/smarter/commit/681f8f8a0eed43f3d6050779026dfe0b61caa0e0))
+- leave the logger level bc WaffleSwitchedLoggerWrapper() manages this now ([66b6d57](https://github.com/smarter-sh/smarter/commit/66b6d57622e8720b688dd35e580a919b2b4123af))
+- new docs path inside Docker file system ([cb0bac9](https://github.com/smarter-sh/smarter/commit/cb0bac9a0dc0c39634fd9cc211190717c8242847))
+- reverts to using a data/docs/ folder ([770fb61](https://github.com/smarter-sh/smarter/commit/770fb6176cafccaf2d890249fa2e9f945cbeaca5))
+- temp patch of PluginPrompt.max_completion_tokens until gpt 4 models are deprecated ([51a5e14](https://github.com/smarter-sh/smarter/commit/51a5e14f46edae83a5a0403e55fe2a779269636f))
+- test_camel_to_snake() ([f5d9101](https://github.com/smarter-sh/smarter/commit/f5d9101befbe14379911ba9b44b43e4e4144d3c0))
+- tool_call is required ([b4b1fd4](https://github.com/smarter-sh/smarter/commit/b4b1fd495f8aabcb336f5a1403fe3d468bd086a4))
+
+## [0.13.10](https://github.com/smarter-sh/smarter/compare/v0.13.9...v0.13.10) (2025-09-27)
+
+### Bug Fixes
+
+- realign receiver params ([f4e0331](https://github.com/smarter-sh/smarter/commit/f4e03312a367894a1ebb44c34732cb85cab27a50))
+
+## [0.13.9](https://github.com/smarter-sh/smarter/compare/v0.13.8...v0.13.9) (2025-09-27)
+
+### Bug Fixes
+
+- we have to allow 'tool' role messages to pass to openai on thread history. otherwise we get a 400 response ([2ee2444](https://github.com/smarter-sh/smarter/commit/2ee24448aea1727ece585fadb57b40e5e1baff72))
+
+## [0.13.8](https://github.com/smarter-sh/smarter/compare/v0.13.7...v0.13.8) (2025-09-26)
+
+### Bug Fixes
+
+- should be cloning https://github.com/QueriumCorp/smarter-demo ([d9bd0a9](https://github.com/smarter-sh/smarter/commit/d9bd0a9805f1f7700b87a10cf6e73de9b19f6f74))
+- should be cloning https://github.com/QueriumCorp/smarter-demo ([2944098](https://github.com/smarter-sh/smarter/commit/29440980ed7e21d0b991cedbbdae1caef4b0f8e1))
+- sql syntax error ([c4b6dfe](https://github.com/smarter-sh/smarter/commit/c4b6dfe0e72fe224b897224b756f8a289cce761d))
+
+## [0.13.7](https://github.com/smarter-sh/smarter/compare/v0.13.6...v0.13.7) (2025-09-26)
+
+### Bug Fixes
+
+- ensure that chatbot name is rfc1034_compliant_str ([a1f486a](https://github.com/smarter-sh/smarter/commit/a1f486a84f2ebd27109ab1c63ccdc295475ba923))
+
+## [0.13.6](https://github.com/smarter-sh/smarter/compare/v0.13.5...v0.13.6) (2025-09-26)
+
+### Bug Fixes
+
+- logo and favicon ([8a5194b](https://github.com/smarter-sh/smarter/commit/8a5194b5f335f106bd37bc119c9943e67544aa93))
+
+## [0.13.5](https://github.com/smarter-sh/smarter/compare/v0.13.4...v0.13.5) (2025-09-26)
+
+### Bug Fixes
+
+- release.config.js @semantic-release/git assets list needs **version**.py and helm/charts/smarter/Chart.yaml ([cee493a](https://github.com/smarter-sh/smarter/commit/cee493ae6f408ed510cbec94663846226c847de0))
+
+## [0.13.4](https://github.com/smarter-sh/smarter/compare/v0.13.3...v0.13.4) (2025-09-26)
+
+### Bug Fixes
+
+- return_data_keys() should only return staticData key value. Providers should send signals for the complete tool_call lifecycle ([7611f35](https://github.com/smarter-sh/smarter/commit/7611f356edd362d9614ae270527a4e9b84d5c738))
+
+## [0.13.3](https://github.com/smarter-sh/smarter/compare/v0.13.2...v0.13.3) (2025-09-20)
+
+### Bug Fixes
+
+- prepare to open source ([2f814f6](https://github.com/smarter-sh/smarter/commit/2f814f626974723fde916792a9ce778bbefcbc16))
+
+## [0.13.2](https://github.com/smarter-sh/smarter/compare/v0.13.1...v0.13.2) (2025-09-19)
+
+### Bug Fixes
+
+- do not raise exception on missing UserProfile since this happens during bootstrap on fresh installs ([d5946ee](https://github.com/smarter-sh/smarter/commit/d5946eed7b3a484a51820b29d3d28525fff67bc3))
+- downgrade default model to gpt-4-turbo ([e7c0a0c](https://github.com/smarter-sh/smarter/commit/e7c0a0c7d462f7990ddfa745e539c56cb49cb568))
+- downgrade to gpt-4-turbo ([29f5483](https://github.com/smarter-sh/smarter/commit/29f5483d746cc22cb3f3f86009270038d7fe20fe))
+- ensure that db is initialized and that waffle table exists ([c71dddc](https://github.com/smarter-sh/smarter/commit/c71dddccfeefce2fa5d4e1cbd275746af5b1cd5c))
+- ensure that name is snake_case ([8a43478](https://github.com/smarter-sh/smarter/commit/8a4347842f2fb900cf197925597495df5b09dd63))
+- ensure that only smarter_user has permissions ([b2c612d](https://github.com/smarter-sh/smarter/commit/b2c612d0b2fcbfc073fb326d1f5d6d6825cdf0bf))
+- further restrict permissions, and ignore any non-build files ([c0356cc](https://github.com/smarter-sh/smarter/commit/c0356ccadbe1eca7e56dcd96e47849104544a7a7))
+- ignore anything that is not explicitly needed inside the container. ([38c5818](https://github.com/smarter-sh/smarter/commit/38c5818fda7872dde91d33929a189ff71b3868db))
+- IndexError: list index out of range error ([f309963](https://github.com/smarter-sh/smarter/commit/f309963cc1a7c1e2bc32ac551b11615e8a3e2cbb))
+- setup GOOGLE_SERVICE_ACCOUNT_B64 in .env ([d43f149](https://github.com/smarter-sh/smarter/commit/d43f149270d793de73bee6f050950672334d8578))
+- switch to importlib.metadata import distributions() ([4c68753](https://github.com/smarter-sh/smarter/commit/4c68753d306c3adac5ef77f9baa75153c8cc9c29))
+- syntax error in docker-init ([ca7060d](https://github.com/smarter-sh/smarter/commit/ca7060d6b68f69fb331f7a96a0c4cbd3c8bdab5f))
+- tool_call_fetch_plugin_response() needs to fetch from staticData key ([0b8f90e](https://github.com/smarter-sh/smarter/commit/0b8f90e2a9d9351427157d6c07055b8955db3aea))
+- uniformly update all occurrences of version ([a60fa43](https://github.com/smarter-sh/smarter/commit/a60fa431108984d705d8c19d957c2747904453d2))
+
+## [0.13.1](https://github.com/smarter-sh/smarter/compare/v0.13.0...v0.13.1) (2025-08-26)
+
+### Bug Fixes
+
+- broken yaml manifest style on drill-down pages ([364238e](https://github.com/smarter-sh/smarter/commit/364238e08be7beba010a7208828ae890b2900d87))
+- log apply ([f7c8355](https://github.com/smarter-sh/smarter/commit/f7c8355496ff4be2f0641681320d42c18910b550))
+- logging switch logic ([6fd93ab](https://github.com/smarter-sh/smarter/commit/6fd93abb1e5963ebb0eb24369008b83f5733c5c7))
+- plugin apply update manifest initialization bug ([86c5061](https://github.com/smarter-sh/smarter/commit/86c5061c08306212108dc533e39e4d430cf234b0))
+
+## [0.13.0](https://github.com/smarter-sh/smarter/compare/v0.12.0...v0.13.0) (2025-08-25)
+
+### Bug Fixes
+
+- authenticate if not already done, and we find an Authentication token in the header ([a84f0f5](https://github.com/smarter-sh/smarter/commit/a84f0f50e20ce1a885b35b74a77725473ce517b8))
+- cache authenticate_credentials() ([f1a2eb4](https://github.com/smarter-sh/smarter/commit/f1a2eb4c4df06ef5fc61e2bb2d78058c6dbccb93))
+- cannot assume that request objects always have a META attribute ([452ebab](https://github.com/smarter-sh/smarter/commit/452ebaba2f5fad9f4545a21b2b6f66bcb027c6ae))
+- cannot include tool responses in 1st iteration ([9c5b828](https://github.com/smarter-sh/smarter/commit/9c5b828e662ec1345deb914a84e8b0d1e1e1c603))
+- container resource memory settings ([f7d300a](https://github.com/smarter-sh/smarter/commit/f7d300a35932c586b55c0b583c9534ff77cc7531))
+- dns verification should be based on cascading hosted zones ([0de5ddf](https://github.com/smarter-sh/smarter/commit/0de5ddfad7d4a7bd326f85b3e65d00fb6444542b))
+- environment NS records belong in platform.domain.com and api.domain.com ([f26977c](https://github.com/smarter-sh/smarter/commit/f26977c0c3da881e8f2cdedb32b05b0064be2e7f))
+- is Kind is missing then say so ([8d38a78](https://github.com/smarter-sh/smarter/commit/8d38a78ad710af1a33e9327856617f133695db61))
+- recast DRF Request as HttpRequest ([a3f39ac](https://github.com/smarter-sh/smarter/commit/a3f39ac5f922d97129f073b9d29f11cc0f111b0e))
+- setup cache invalidations and implement for Account, User, UserProfile and related SAM objects ([3fb8de7](https://github.com/smarter-sh/smarter/commit/3fb8de7f2a19a275e8b615e861b1463a33d62fb7))
+- should_log() should ensure that log level is >= logging.INFO ([fdda0fc](https://github.com/smarter-sh/smarter/commit/fdda0fc334cfcaa28981aed4f261a69dc7c574ec))
+- trouble shoot ChatConfigView initialization ([71c2b37](https://github.com/smarter-sh/smarter/commit/71c2b37af7fadda8a32835ecfce56cfefda25697))
+- trouble shoot ChatConfigView initialization ([46104b8](https://github.com/smarter-sh/smarter/commit/46104b8ed3faefc47d990be088a8e666c25f4aff))
+
+### Features
+
+- add /api/v1/providers/ end points ([dba2ad9](https://github.com/smarter-sh/smarter/commit/dba2ad9692eab4c50f09a738389a68ac37261cef))
+- add serializers ([60201f7](https://github.com/smarter-sh/smarter/commit/60201f70488827864f0a80afbeb92062617770c1))
+- code get_model_for_provider() ([15df290](https://github.com/smarter-sh/smarter/commit/15df2907e5d21ca28125bdf396dd30abf03665db))
+- code provider verification ([e2cdb18](https://github.com/smarter-sh/smarter/commit/e2cdb18c7468f90c5ebd2b697ee2b672b0268492))
+- code provider verification ([0c3161b](https://github.com/smarter-sh/smarter/commit/0c3161ba1ed82a37d039f82b853c9bc97c345d08))
+- create manage.py create_sqldb_connection ([0369ebd](https://github.com/smarter-sh/smarter/commit/0369ebd96f0d7e0acec77e267e849d7c578ff249))
+- create manage.py initialize_providers ([110edf3](https://github.com/smarter-sh/smarter/commit/110edf31c8518df2a008d95358d450a5b0b843cc))
+- create ProviderModelTypedDict ([1ff8992](https://github.com/smarter-sh/smarter/commit/1ff8992656e0272f1009afb03a0fb90bf04f1ba7))
+- create ProviderVerification model and ProviderVerificationTypes ([b52fa08](https://github.com/smarter-sh/smarter/commit/b52fa08fe54015a8e80fc5404b6e2209f0cef9f3))
+- create Pydantic model ([308560a](https://github.com/smarter-sh/smarter/commit/308560a53f8b5ac342968e86a8f2fef4eb73520d))
+- generalize instantiation of Plugin classes based on manifest type ([3a77e2b](https://github.com/smarter-sh/smarter/commit/3a77e2bd25e24010e70d67706ac61970ba82e155))
+- register admin models ([77ef5d3](https://github.com/smarter-sh/smarter/commit/77ef5d3504be2bb582b8605417f3d56824c0c3c9))
+- scaffold provider app ([cb8975b](https://github.com/smarter-sh/smarter/commit/cb8975b53f7e1008cc516467d4f40d4d8929de15))
+- scaffold provider verifications ([036da3d](https://github.com/smarter-sh/smarter/commit/036da3dd56e57aada21972920804153f78e835ff))
+- setup Broker base classes for Connection and Plugin ([601bc99](https://github.com/smarter-sh/smarter/commit/601bc99b046072d4e3b4616c8c9e29032c28b5b9))
 
 ## [0.12.0](https://github.com/smarter-sh/smarter/compare/v0.11.0...v0.12.0) (2025-06-02)
 
@@ -758,7 +945,7 @@ This is a major low-level refactoring of business logic for Account and WSGI req
 - scaffold ApiV1CliChatApiView() ([6f127bb](https://github.com/smarter-sh/smarter/commit/6f127bbc53ae1ad2164ad89cba3852a442011ac8))
 - create SmarterTokenAuthenticationMiddleware to automate api key authentication
 
-## [0.2.1](https://github.com/QueriumCorp/smarter/compare/v0.2.0...v0.2.1) (2024-05-19)
+## [0.2.1](https://github.com/smarter-sh/smarter/compare/v0.2.0...v0.2.1) (2024-05-19)
 
 A refactor of the Django chatbot app.
 
@@ -776,19 +963,19 @@ A refactor of the Django chatbot app.
 - refactor Dockerfile to improve layer caching
 - refactor docker-compose.yaml and Helm chart to enable multiple worker threads
 
-## [0.2.0](https://github.com/QueriumCorp/smarter/compare/v0.1.2...v0.2.0) (2024-05-16)
+## [0.2.0](https://github.com/smarter-sh/smarter/compare/v0.1.2...v0.2.0) (2024-05-16)
 
 Introduces remote Sql server integration to the Plugin class. New Django ORMs PluginSql and SqlConnection have been added for persinsting remote sql server connections, and parameterized sql queries. SAMPluginDataSqlConnectionBroker is added to fully integrate these models to /api/v1/cli.
 
 ### Features
 
-- add SAMPluginDataSqlConnectionBroker to api/v1/cli ([f120cfd](https://github.com/QueriumCorp/smarter/commit/f120cfd3600a8e865e9dd43f9cde41a0312591df))
-- add SAMPluginDataSqlConnectionBroker to api/v1/cli ([54fa4da](https://github.com/QueriumCorp/smarter/commit/54fa4da9f91d010adef4b737d0f7887e154767ac))
-- add unit tests ([2c9e355](https://github.com/QueriumCorp/smarter/commit/2c9e35501d1824da521eb51cb937567627ab0dcb))
-- scaffold PluginSql and Pydantic model ([e1bb076](https://github.com/QueriumCorp/smarter/commit/e1bb076ad428853c97505203cf35b476fc6dd30d))
-- scaffold PluginSql models ([17daf61](https://github.com/QueriumCorp/smarter/commit/17daf615e74ed3f826fbf21db97d10d5174879bd))
+- add SAMPluginDataSqlConnectionBroker to api/v1/cli ([f120cfd](https://github.com/smarter-sh/smarter/commit/f120cfd3600a8e865e9dd43f9cde41a0312591df))
+- add SAMPluginDataSqlConnectionBroker to api/v1/cli ([54fa4da](https://github.com/smarter-sh/smarter/commit/54fa4da9f91d010adef4b737d0f7887e154767ac))
+- add unit tests ([2c9e355](https://github.com/smarter-sh/smarter/commit/2c9e35501d1824da521eb51cb937567627ab0dcb))
+- scaffold PluginSql and Pydantic model ([e1bb076](https://github.com/smarter-sh/smarter/commit/e1bb076ad428853c97505203cf35b476fc6dd30d))
+- scaffold PluginSql models ([17daf61](https://github.com/smarter-sh/smarter/commit/17daf615e74ed3f826fbf21db97d10d5174879bd))
 
-## [0.1.2](https://github.com/QueriumCorp/smarter/compare/v0.1.1...v0.1.2) (2024-05-14)
+## [0.1.2](https://github.com/smarter-sh/smarter/compare/v0.1.1...v0.1.2) (2024-05-14)
 
 Introduces a powerful new architecture for processing Kubernetes-style manifests for managing Smarter resources. The new Broker class architecture facilitates lightweight implementations of the smarter command-line implementation and the REST API that backs it.
 
@@ -801,7 +988,7 @@ Introduces a powerful new architecture for processing Kubernetes-style manifests
 - implement all Plugin cli services
 - add a Controller class to Plugin, facilitating the future introduction of new data classes to support remote SQl databases and REST API data sources.
 
-## [0.1.1](https://github.com/QueriumCorp/smarter/compare/v0.1.0...v0.1.1) (2024-04-02)
+## [0.1.1](https://github.com/smarter-sh/smarter/compare/v0.1.0...v0.1.1) (2024-04-02)
 
 ### New features
 
@@ -810,23 +997,23 @@ Introduces a powerful new architecture for processing Kubernetes-style manifests
 - add Makefile commands to automate local developer setup
 - implement final chat REST API, referenced as http://{host}/admin/chat/chathistory/config/ which returns a context dict for a chat session. Enables a single authenticated Smarter user to manage multiple chat sessions in the sandbox.
 
-## [0.1.0](https://github.com/QueriumCorp/smarter/compare/v0.0.1...v0.1.0) (2024-04-01)
+## [0.1.0](https://github.com/smarter-sh/smarter/compare/v0.0.1...v0.1.0) (2024-04-01)
 
 ### New features
 
-- add FQDM's to CSRF_TRUSTED_ORIGINS ([6d6bd92](https://github.com/QueriumCorp/smarter/commit/6d6bd92dc8e9c5d162d3bd4359afbd58ef1a72ee))
-- pass user to function_calling_plugin() ([0e6b1fa](https://github.com/QueriumCorp/smarter/commit/0e6b1fa94d853f1d4295ede704a3204adb53d24a))
-- remove custom login.html ([b4f091f](https://github.com/QueriumCorp/smarter/commit/b4f091fd0a271cb1e12950e6ca4e5a1cdb8c038e))
-- set CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS ([62a8ca3](https://github.com/QueriumCorp/smarter/commit/62a8ca38cd4d46207392c5839718abb981808da2))
-- STATIC_URL = '/static/' ([277fff3](https://github.com/QueriumCorp/smarter/commit/277fff3aa2fe2aa32faf8699d3128398c36024a4))
-- STATIC_URL = '/static/' ([89a2e0c](https://github.com/QueriumCorp/smarter/commit/89a2e0c5705064b878b254e83ac874d5c7fd6699))
-- values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme ([dc9ca5e](https://github.com/QueriumCorp/smarter/commit/dc9ca5e09d289bd33d15723a0b4352bbc08478b2))
-- add api-key authentication ([491927f](https://github.com/QueriumCorp/smarter/commit/491927fe9d51594905ad1a1542e8e9b00de22871))
-- add chat history models and signals ([07e5f82](https://github.com/QueriumCorp/smarter/commit/07e5f8223f96c886a35f1344a52d3ca748231310))
-- automate build/deploy by environment ([f808ed5](https://github.com/QueriumCorp/smarter/commit/f808ed50d6148d193c73088696407db219cff008))
-- restore most recent chat history when app starts up ([118d884](https://github.com/QueriumCorp/smarter/commit/118d88450a63bcf0ee1649fece7db0fbbac1c50d))
+- add FQDM's to CSRF_TRUSTED_ORIGINS ([6d6bd92](https://github.com/smarter-sh/smarter/commit/6d6bd92dc8e9c5d162d3bd4359afbd58ef1a72ee))
+- pass user to function_calling_plugin() ([0e6b1fa](https://github.com/smarter-sh/smarter/commit/0e6b1fa94d853f1d4295ede704a3204adb53d24a))
+- remove custom login.html ([b4f091f](https://github.com/smarter-sh/smarter/commit/b4f091fd0a271cb1e12950e6ca4e5a1cdb8c038e))
+- set CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS ([62a8ca3](https://github.com/smarter-sh/smarter/commit/62a8ca38cd4d46207392c5839718abb981808da2))
+- STATIC_URL = '/static/' ([277fff3](https://github.com/smarter-sh/smarter/commit/277fff3aa2fe2aa32faf8699d3128398c36024a4))
+- STATIC_URL = '/static/' ([89a2e0c](https://github.com/smarter-sh/smarter/commit/89a2e0c5705064b878b254e83ac874d5c7fd6699))
+- values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme ([dc9ca5e](https://github.com/smarter-sh/smarter/commit/dc9ca5e09d289bd33d15723a0b4352bbc08478b2))
+- add api-key authentication ([491927f](https://github.com/smarter-sh/smarter/commit/491927fe9d51594905ad1a1542e8e9b00de22871))
+- add chat history models and signals ([07e5f82](https://github.com/smarter-sh/smarter/commit/07e5f8223f96c886a35f1344a52d3ca748231310))
+- automate build/deploy by environment ([f808ed5](https://github.com/smarter-sh/smarter/commit/f808ed50d6148d193c73088696407db219cff008))
+- restore most recent chat history when app starts up ([118d884](https://github.com/smarter-sh/smarter/commit/118d88450a63bcf0ee1649fece7db0fbbac1c50d))
 
-## [0.0.1](https://github.com/QueriumCorp/smarter/releases/tag/v0.0.1) (2024-02-21)
+## [0.0.1](https://github.com/smarter-sh/smarter/releases/tag/v0.0.1) (2024-02-21)
 
 Django based REST API and ReactJS web app hosting an MVP plugin platform for OpenAI API Function Calling. This release implements the following features:
 

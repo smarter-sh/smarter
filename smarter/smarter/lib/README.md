@@ -1,3 +1,3 @@
 # Smarter lib
 
-Contains Django-specific (ie not Python-specific) common code such as base classes, custom Django User class, etc.
+Contains wrappers for modifications to low-level library code such as Python logging, manifest base classes, django rest framework, custom Django User class, etc.

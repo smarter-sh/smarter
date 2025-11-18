@@ -3,7 +3,6 @@
 # python stuff
 import copy
 import datetime
-import json
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -27,6 +26,9 @@ from smarter.common.exceptions import (
     SmarterException,
     SmarterValueError,
 )
+from smarter.common.utils import camel_to_snake as util_camel_to_snake
+from smarter.common.utils import snake_to_camel as util_snake_to_camel
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -67,7 +69,7 @@ from ..signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -159,8 +161,13 @@ class PluginBase(ABC, SmarterHelperMixin):
             try:
                 self._plugin_meta = PluginMeta.objects.get(account=self.user_profile.account, name=name)
                 self.id = self._plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
-            except PluginMeta.DoesNotExist as e:
-                raise SmarterPluginError(f"PluginMeta with name {name} does not exist for this account.") from e
+            except PluginMeta.DoesNotExist:
+                logger.warning(
+                    "%s.__init__() PluginMeta with name %s does not exist for account %s.",
+                    self.formatted_class_name,
+                    name,
+                    self.user_profile.account if self.user_profile else "unknown",
+                )
 
         #######################################################################
         # Smarter API Manifest based initialization
@@ -482,7 +489,9 @@ class PluginBase(ABC, SmarterHelperMixin):
                 "system_role": self.manifest.spec.prompt.systemRole if self.manifest and self.manifest.spec else None,
                 "model": self.manifest.spec.prompt.model if self.manifest and self.manifest.spec else None,
                 "temperature": self.manifest.spec.prompt.temperature if self.manifest and self.manifest.spec else None,
-                "max_tokens": self.manifest.spec.prompt.maxTokens if self.manifest and self.manifest.spec else None,
+                "max_completion_tokens": (
+                    self.manifest.spec.prompt.maxTokens if self.manifest and self.manifest.spec else None
+                ),
             }
 
     @property
@@ -992,6 +1001,16 @@ class PluginBase(ABC, SmarterHelperMixin):
                 )
             retval["enum"] = enum
         return retval
+
+    def snake_to_camel(
+        self, data: Union[str, dict, list], convert_values: bool = False
+    ) -> Optional[Union[str, dict, list]]:
+        """Convert snake_case to camelCase."""
+        return util_snake_to_camel(data, convert_values)
+
+    def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
+        """Convert camelCase to snake_case."""
+        return util_camel_to_snake(data)
 
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
         """

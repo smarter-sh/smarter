@@ -34,7 +34,7 @@ class FaviconView(View):
     """View to serve the favicon.ico file"""
 
     def get(self, request, *args, **kwargs):
-        file_path = os.path.join("smarter", "static", "images", "favicon.ico")
+        file_path = os.path.join("smarter", "static", "images", "logo", "favicon.ico")
         return FileResponse(open(file_path, "rb"), content_type="image/x-icon")
 
 

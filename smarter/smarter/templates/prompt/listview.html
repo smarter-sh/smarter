@@ -36,7 +36,7 @@
           <!--begin::Col Smarter Chatbot Card-->
           <article class="col-lg-6 mb-4 p-5">
             <!--begin::Chatbot card-->
-            <a href="{% url 'prompt_workbench:by_name' chatbot_helper.name %}">
+            <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
               <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card {% if chatbot_helper.user_profile == smarter_admin %}smarter-chatbot-card{% else %}user-chatbot-card{% endif %}">
                 <!--begin::Header-->
                 <div class="p-5">

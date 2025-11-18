@@ -1,6 +1,5 @@
 """A PLugin that uses a remote SQL database server to retrieve its return data"""
 
-import json
 import logging
 import re
 from typing import Any, Optional, Type, Union
@@ -19,8 +18,10 @@ from smarter.apps.plugin.models import PluginDataSql, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -35,7 +36,7 @@ from .base import PluginBase, SmarterPluginError
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -410,6 +411,10 @@ class SqlPlugin(PluginBase):
         if not sql.endswith(";"):
             sql += ";"
 
+        logger.info(
+            "%s.tool_call_fetch_plugin_response() executing remote SQL query: %s", self.formatted_class_name, sql
+        )
+
         retval = sql_connection.execute_query(
             sql=sql,
             limit=(
@@ -427,7 +432,7 @@ class SqlPlugin(PluginBase):
             return ""
         if isinstance(retval, list) or isinstance(retval, dict):
             # convert the result to a JSON string
-            retval = json.dumps(retval, indent=2)
+            retval = json.dumps(retval)
         elif not isinstance(retval, str):
             raise SmarterSqlPluginError(
                 f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query returned an unexpected type: {type(retval)}. Expected str, list, or dict."

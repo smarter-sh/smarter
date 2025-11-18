@@ -67,6 +67,9 @@ class PluginSelectorSerializer(SmarterCamelCaseSerializer):
 class PluginPromptSerializer(SmarterCamelCaseSerializer):
     """PluginPrompt model serializer."""
 
+    # FIX NOTE: this temporarily deals with a breaking change in gpt 5
+    max_tokens = serializers.IntegerField(source="max_completion_tokens")
+
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginPrompt

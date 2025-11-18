@@ -2,7 +2,6 @@
 """Django views"""
 
 import html
-import json
 
 from django import forms
 from django.core.handlers.wsgi import WSGIRequest
@@ -11,6 +10,8 @@ from django.shortcuts import redirect
 from django.urls import reverse
 
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
+from smarter.common.utils import is_authenticated_request
+from smarter.lib import json
 from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedWebView,
     SmarterWebHtmlView,
@@ -59,7 +60,7 @@ class ComingSoon(SmarterWebHtmlView):
                     },
                 }
             )
-        html_error = html.escape(form.errors)
+        html_error = html.escape(form.errors.as_text())
         return JsonResponse({"error": json.dumps(html_error)})
 
 
@@ -94,6 +95,6 @@ class DashboardView(SmarterWebHtmlView):
     template_path = "dashboard/authenticated.html"
 
     def get(self, request: WSGIRequest, *args, **kwargs):
-        if request.user.is_authenticated:
+        if is_authenticated_request(request):
             return super().get(request, *args, **kwargs)
         return redirect(reverse("login_view"))

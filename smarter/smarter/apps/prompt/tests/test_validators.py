@@ -14,7 +14,7 @@ sys.path.append(PYTHON_ROOT)  # noqa: E402
 from smarter.apps.prompt.providers.validators import (
     validate_completion_request,
     validate_endpoint,
-    validate_max_tokens,
+    validate_max_completion_tokens,
     validate_messages,
     validate_object_types,
     validate_request_body,
@@ -71,23 +71,23 @@ class TestValidators(SmarterTestBase):
         else:
             self.fail("ValueError not raised")
 
-    def test_validate_max_tokens(self):
-        """Test validate_max_tokens."""
-        max_tokens = 100
+    def test_validate_max_completion_tokens(self):
+        """Test validate_max_completion_tokens."""
+        max_completion_tokens = 100
         # verify that no exception is raised
-        validate_max_tokens(max_tokens)
+        validate_max_completion_tokens(max_completion_tokens)
 
-        max_tokens = 0
+        max_completion_tokens = 0
         with self.assertRaises(SmarterValueError):
-            validate_max_tokens(max_tokens)
+            validate_max_completion_tokens(max_completion_tokens)
 
-        max_tokens = 2049
+        max_completion_tokens = 2049
         with self.assertRaises(SmarterValueError):
-            validate_max_tokens(max_tokens)
+            validate_max_completion_tokens(max_completion_tokens)
 
-        max_tokens = "not_an_int"
+        max_completion_tokens = "not_an_int"
         with self.assertRaises(TypeError):
-            validate_max_tokens(max_tokens)
+            validate_max_completion_tokens(max_completion_tokens)
 
     def test_validate_endpoint(self):
         """Test validate_endpoint."""
@@ -138,6 +138,11 @@ class TestValidators(SmarterTestBase):
         # verify that no exception is raised
         validate_completion_request(request_body)
 
-        request_body = {"prompt": "This is a test", "max_tokens": 100, "temperature": 0.5, "stop": "not_a_list"}
+        request_body = {
+            "prompt": "This is a test",
+            "max_completion_tokens": 100,
+            "temperature": 0.5,
+            "stop": "not_a_list",
+        }
         with self.assertRaises(SmarterValueError):
             validate_completion_request(request_body)

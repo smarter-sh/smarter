@@ -3,7 +3,6 @@
 Django REST framework base views for /docs/ brokered viewsets,
 manifest and schema.
 """
-import json
 import os
 from logging import getLogger
 from typing import Optional
@@ -20,6 +19,8 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST, SmarterEnvironments
 from smarter.common.exceptions import SmarterException
+from smarter.common.utils import is_authenticated_request
+from smarter.lib import json
 from smarter.lib.django.view_helpers import SmarterWebHtmlView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
@@ -27,7 +28,7 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 logger = getLogger(__name__)
 
 # note: this is the path from the Docker container, not the GitHub repo.
-DOCS_PATH = "/home/smarter_user/data/doc/"
+DOCS_PATH = "/home/smarter_user/data/docs/"
 
 
 class DocsError(SmarterException):
@@ -57,7 +58,7 @@ class DocsBaseView(SmarterWebHtmlView):
             "Getting brokered JSON response for reverse_name=%s, kind=%s, request.user=%s",
             reverse_name,
             self.kind,
-            request.user.username if request.user.is_authenticated else "Anonymous",  # type: ignore[union-attr]
+            request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr]
         )
         if not self.template_path:
             raise DocsError("self.template_path not set.")
@@ -96,7 +97,7 @@ class DocsBaseView(SmarterWebHtmlView):
             "Brokered JSON response for reverse_name=%s, kind=%s, request.user=%s: %s",
             reverse_name,
             self.kind,
-            request.user.username if request.user.is_authenticated else "Anonymous",  # type: ignore[union-attr]
+            request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr]
             json_response,
         )
         return json_response

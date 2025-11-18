@@ -1,23 +1,405 @@
-appName: smarter
-workerName: smarter-worker
-beatName: smarter-beat
-appJobName: smarter-job-db-init
-version: 0.8.0
+# ==============================================================================
+# Smarter Platform - Helm Chart Values
+# ==============================================================================
+#
+# Default configuration values for the Smarter Platform Helm chart.
+#
+# This file contains all configurable parameters for deploying the Smarter
+# application stack including:
+#   - Django application server
+#   - Celery workers and beat scheduler
+#   - Redis cache
+#   - Database connections
+#   - Third-party API integrations
+#   - OAuth providers
+#
+# IMPORTANT: Replace all "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML" values
+# with actual credentials before deployment.
+#
+# Usage:
+#   helm install smarter . -f values.yaml
+#   helm upgrade smarter . -f values.yaml
+#
+# Documentation: https://github.com/smarter-sh/smarter
+# ==============================================================================
+
+
+# Global Configuration
+# ----------------------------------------------------------------------------
+global:
+  image:
+    pullPolicy: IfNotPresent
+    repository: lpm0073/smarter
+    tag: latest
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node-group
+                operator: In
+                values:
+                  - smarter
+  imagePullSecrets:
+    - name: dockerhub-secret
+
+  tolerations:
+    - key: "node-group"
+      operator: "Equal"
+      value: "smarter"
+      effect: "NoSchedule"
+
+
+# Application Configuration
+# ----------------------------------------------------------------------------
+app:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+  extraVolumeMounts: []
+
+worker:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+beat:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+
+database:
+  type: mysql   # Options: mysql, mariadb, external
+
+## @param deployTimestamp Deployment timestamp for forcing pod restarts
+deployTimestamp: ""
+
 deployment:
   containerPort: 8000
-service:
-  port: 8000
-  targetPort: 8000
+## @param env Environment variables for the Smarter application
+env:
+  ## @param env.AWS_ACCESS_KEY_ID AWS access key ID
+  AWS_ACCESS_KEY_ID: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## AWS Configuration
+  ## @param env.AWS_REGION AWS region
+  AWS_REGION: "us-east-2"
+
+  ## @param env.AWS_SECRET_ACCESS_KEY AWS secret access key
+  AWS_SECRET_ACCESS_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## Cache and Celery Configuration
+  ## @param env.CACHES_LOCATION Redis cache location
+  CACHES_LOCATION: "redis://:smarter@smarter-redis-master.smarter-platform-prod.svc.cluster.local:6379/1"
+
+  ## @param env.CELERY_BROKER_URL Celery broker URL
+  CELERY_BROKER_URL: "redis://:smarter@smarter-redis-master.smarter-platform-prod.svc.cluster.local:6379/1"
+
+  ## @param env.CELERY_RESULT_BACKEND Celery result backend
+  CELERY_RESULT_BACKEND: "redis://:smarter@smarter-redis-master.smarter-platform-prod.svc.cluster.local:6379/1"
+
+  ## @param env.DEBUG_MODE Enable Django debug mode
+  DEBUG_MODE: "false"
+
+  ## Docker Hub Configuration
+  ## @param env.DOCKERHUB_USERNAME Docker Hub username
+  DOCKERHUB_USERNAME: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.DOCKERHUB_PAT Docker Hub personal access token
+  DOCKERHUB_PAT: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.DUMP_DEFAULTS Dump default configuration
+  DUMP_DEFAULTS: "False"
+
+  ## Django Configuration
+  ## @param env.DJANGO_SETTINGS_MODULE Django settings module
+  DJANGO_SETTINGS_MODULE: "smarter.settings.prod"
+
+  ## @param env.ENVIRONMENT Deployment environment (development, staging, production)
+  ENVIRONMENT: "prod"
+
+  ## Encryption
+  ## @param env.FERNET_ENCRYPTION_KEY Fernet encryption key
+  FERNET_ENCRYPTION_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.GEMINI_API_KEY Google Gemini API key
+  GEMINI_API_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.GOOGLE_MAPS_API_KEY Google Maps API key
+  GOOGLE_MAPS_API_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.LLAMA_API_KEY Meta Llama API key
+  LLAMA_API_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## Email Configuration
+  ## @param env.MAILCHIMP_API_KEY Mailchimp API key
+  MAILCHIMP_API_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.MAILCHIMP_LIST_ID Mailchimp list ID
+  MAILCHIMP_LIST_ID: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## Database Configuration
+  ## @param env.MYSQL_HOST MySQL host
+  MYSQL_HOST: "mysql"
+
+  ## @param env.MYSQL_PORT MySQL port
+  MYSQL_PORT: "3306"
+
+  ## @param env.MYSQL_DATABASE MySQL database name
+  MYSQL_DATABASE: "smarter_platform_prod"
+
+  ## @param env.MYSQL_USER MySQL user
+  MYSQL_USER: "smarter_platform_prod"
+
+  ## @param env.MYSQL_PASSWORD MySQL password
+  MYSQL_PASSWORD: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.MYSQL_ROOT_USERNAME MySQL root username
+  MYSQL_ROOT_USERNAME: "root"
+
+  ## @param env.MYSQL_ROOT_PASSWORD MySQL root password
+  MYSQL_ROOT_PASSWORD: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.NAMESPACE Kubernetes namespace
+  NAMESPACE: "smarter-platform-prod"
+
+  ## AI Service API Keys
+  ## @param env.OPENAI_API_KEY OpenAI API key
+  OPENAI_API_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.PINECONE_API_KEY Pinecone API key
+  PINECONE_API_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.PINECONE_ENVIRONMENT Pinecone environment
+  PINECONE_ENVIRONMENT: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.ROOT_DOMAIN Root domain for the application
+  ROOT_DOMAIN: "example.com"
+
+  ## @param env.SECRET_KEY Django secret key
+  SECRET_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SMARTER_DOCKER_IMAGE Docker image for Smarter
+  SMARTER_DOCKER_IMAGE: "mcdaniel/smarter:latest"
+
+  ## OAuth Configuration
+  ## @param env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY Google OAuth2 client ID
+  SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET Google OAuth2 client secret
+  SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SOCIAL_AUTH_GITHUB_KEY GitHub OAuth2 client ID
+  SOCIAL_AUTH_GITHUB_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SOCIAL_AUTH_GITHUB_SECRET GitHub OAuth2 client secret
+  SOCIAL_AUTH_GITHUB_SECRET: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY LinkedIn OAuth2 client ID
+  SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET LinkedIn OAuth2 client secret
+  SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD MySQL test database password
+  SMARTER_MYSQL_TEST_DATABASE_PASSWORD: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## Admin Configuration
+  ## @param env.SMARTER_LOGIN_URL Smarter login URL
+  SMARTER_LOGIN_URL: "https://platform.example.com/login/"
+
+  ## @param env.SMARTER_ADMIN_USERNAME Smarter admin username
+  SMARTER_ADMIN_USERNAME: "admin"
+
+  ## @param env.SMARTER_ADMIN_PASSWORD Smarter admin password
+  SMARTER_ADMIN_PASSWORD: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SMARTER_ADMIN_EMAIL Smarter admin email
+  SMARTER_ADMIN_EMAIL: "admin@example.com"
+
+  ## SMTP Configuration
+  ## @param env.SMTP_HOST SMTP host
+  SMTP_HOST: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SMTP_PORT SMTP port
+  SMTP_PORT: "587"
+
+  ## @param env.SMTP_USE_SSL Use SSL for SMTP
+  SMTP_USE_SSL: "false"
+
+  ## @param env.SMTP_USE_TLS Use TLS for SMTP
+  SMTP_USE_TLS: "true"
+
+  ## @param env.SMTP_USERNAME SMTP username
+  SMTP_USERNAME: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SMTP_PASSWORD SMTP password
+  SMTP_PASSWORD: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+# Backing Services Configuration
+# ----------------------------------------------------------------------------
+
+externalDatabase:
+  host: ""        # Will use .Values.env.MYSQL_HOST if empty
+  port: 3306      # Will use .Values.env.MYSQL_PORT if empty
+  database: ""    # Will use .Values.env.MYSQL_DATABASE if empty
+  username: ""    # Will use .Values.env.MYSQL_USER if empty
+  password: ""    # Will use .Values.env.MYSQL_PASSWORD if empty
+
+mysql:
+  enabled: true
+  auth:
+    rootPassword: ""
+    password: ""
+    database: ""
+    username: ""
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+  extraEnv: []
+  extraVolumeMounts: []
+  extraVolumes: []
+  image:
+    repository: mysql
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+  initdbScripts: {}
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  nodeSelector: {}
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: "gp3"
+    accessModes:
+      - ReadWriteOnce
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1"
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  service:
+    type: ClusterIP
+    port: 3306
+    headless:
+      sessionAffinity: None
+
+mariadb:
+  enabled: false
+  auth:
+    rootPassword: ""
+    password: ""
+    database: ""
+    username: ""
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+  extraEnv: []
+  extraVolumeMounts: []
+  extraVolumes: []
+  image:
+    repository: mariadb
+    tag: "11.3"
+    pullPolicy: IfNotPresent
+  initdbScripts: {}
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  nodeSelector: {}
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: "gp3"
+    accessModes:
+      - ReadWriteOnce
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1"
+  service:
+    type: ClusterIP
+    port: 3306
+    headless:
+      sessionAffinity: None
+
+names:
+  appName: smarter
+  mysqlName: mysql
+  mariadbName: mariadb
+
 redis:
+  enabled: true
+  external:
+    host: ""
+    port: 6379
+    password: ""
   fullnameOverride: "smarter-redis"
-  global:
-    redis:
-      password: "smarter"
+  auth:
+    enabled: true
+    password: "smarter"
   architecture: standalone
   master:
+    containerSecurityContext:
+      enabled: true
     persistence:
       enabled: true
       size: 1Gi
+    podSecurityContext:
+      enabled: true
     resources:
       requests:
         memory: "512Mi"
@@ -25,25 +407,41 @@ redis:
       limits:
         memory: "1Gi"
         cpu: "512m"
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: node-group
-                  operator: In
-                  values:
-                    - smarter
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            preference:
-              matchExpressions:
-                - key: node-group
-                  operator: In
-                  values:
-                    - smarter
-    tolerations:
-      - key: "node-group"
-        operator: "Equal"
-        value: "smarter"
-        effect: "NoSchedule"
+    service:
+      headless:
+        sessionAffinity: None
+service:
+  port: 8000
+  targetPort: 8000
+
+# Monitoring Components
+# Enable/disable and configure Prometheus, Grafana, and Loki
+# ----------------------------------------------------------------------------
+prometheus:
+  enabled: false
+  server:
+    persistentVolume:
+      enabled: false  # For demo/dev. Set to true and configure storage for production.
+
+grafana:
+  enabled: false
+  adminPassword: "admin"  # Change for production!
+  persistence:
+    enabled: false  # For demo/dev. Set to true and configure storage for production.
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://prometheus-server
+        - name: Loki
+          type: loki
+          access: proxy
+          url: http://loki:3100
+
+loki:
+  enabled: false
+  persistence:
+    enabled: false  # For demo/dev. Set to true and configure storage for production.

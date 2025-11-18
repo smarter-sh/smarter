@@ -1,0 +1,79 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      The common platform requirements.
+#
+# pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
+# -----------------------------------------------------------------------------
+
+-r constraints.in
+
+# General back end
+# ------------
+boto3~=1.40                             # AWS CLI SDK
+botocore~=1.40                          # AWS CLI SDK core
+cachetools                              # Python object caching library
+celery==5.5.3                           # asynchronous task queue. works with redis.
+celery-redbeat==2.3.3                   # scheduled asynchronous tasks
+dnspython==2.7.0                        # DNS toolkit for Python
+mysqlclient==2.2.7                      # MySQL client
+paramiko==4.0.0                         # SSH2 protocol library
+python-hcl2==7.3.1                      # Terraform hcl parser for reading Terraform tfvars files
+python-dotenv==1.1.1                    # for reading environment variables from .env files
+requests==2.32.5                        # HTTP requests library
+requests-cache==1.2.1                   # HTTP requests caching
+retry-requests==2.0.0                   # HTTP requests retry
+tldextract==5.3.0                       # Extracts the top-level domain from a URL
+validators==0.35.0                      # Data validation library
+mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to the mailing list
+
+
+# Django
+# ------------
+Django==5.2.7
+django-redis==6.0.0                     # object caching
+django-celery-beat==2.8.1               # scheduled asynchronous tasks
+djangorestframework==3.16.1             # for creating REST APIs on top of Django
+django-filter==25.1                     # REST API filtering
+django-hosts==7.0.0                     # Dynamic and static host resolving for Django. Maps hostnames to URLconfs.
+django-taggit==6.1.0                    # Smarter Plugin tagging
+django-rest-knox==5.0.2                 # Token authentication for REST APIs
+django-cors-headers==4.7.0              # Cross-origin resource sharing
+django-storages==1.14.6                 # Django storage subsystem
+django-waffle==5.0.0                    # Feature flagging
+social-auth-app-django==5.6.0           # Social authentication for Django
+
+# Manifest support, and for working with data
+# ------------
+pandas==2.3.2                           # Data manipulation for data science stuff
+pydantic==2.12.0                        # best data validation library ever!
+pydantic-settings==2.11.0               # settings management
+
+# LLM support
+# ------------
+openai==1.101.0                         # OpenAI API
+google-generativeai==0.8.5              # Google Generative AI API
+llamaai==0.1.27                         # Llama AI API
+googlemaps==4.10.0                      # Google Maps API for weather function calling feature
+openmeteo-requests==1.3.0               # OpenMeteo API for weather data for weather function calling feature
+
+# Natural language processing
+# ------------
+pyyaml==6.0.2                           # YAML parser
+python-Levenshtein==0.27.1              # Levenshtein distance calculation for LLMs
+nltk==3.9.1                             # Natural Language Toolkit
+textblob==0.19.0                        # Text processing library
+inflect==7.4.0                          # Pluralization and singularization
+
+# CMS and web publishing tools
+# ------------
+beautifulsoup4==4.13.3                  # HTML parser for Wagtail page compression
+docutils==0.22                          # required by Django for django.contrib.admindocs
+drf-yasg==1.21.10                       # Swagger API documentation
+htmlmin==0.1.12                         # HTML minification, for browser performance optimization and sanitization
+lxml==6.0.0                             # parser for Wagtail page compression
+markdown==3.8                           # Markdown reader/parser
+wagtail==7.1.1                          # Wagail CMS, for building static pages
+wagtail-transfer==0.9.4                 # https://github.com/wagtail/wagtail-transfer
+whitenoise==6.9.0                       # static file serving

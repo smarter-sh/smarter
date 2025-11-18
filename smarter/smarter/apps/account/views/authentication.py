@@ -1,13 +1,17 @@
 # pylint: disable=W0613
 """Django Authentication views."""
+import logging
 from typing import Optional
 
 from django import forms
 from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 
 from smarter.apps.account.models import User, get_resolved_user
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
@@ -26,6 +30,21 @@ from smarter.lib.django.view_helpers import (
     SmarterNeverCachedWebView,
     redirect_and_expire_cache,
 )
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (
+        waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
+        and waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
+        and level >= smarter_settings.log_level
+    )
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # ------------------------------------------------------------------------------
@@ -42,15 +61,29 @@ class LoginView(SmarterNeverCachedWebView):
 
     template_path = "account/authentication/sign-in.html"
 
-    def get(self, request):
-        user = get_resolved_user(request.user)
+    def get(self, request, *args, **kwargs) -> HttpResponseRedirect | HttpResponse:
+        logger.info(
+            "%s.LoginView.get() called with request type: %s %s", self.formatted_class_name, type(request), request
+        )
+        user = (
+            get_resolved_user(request.user)
+            if request and hasattr(request, "user") and request.user is not None
+            else None
+        )
         if user and hasattr(user, "is_authenticated") and user.is_authenticated:
             return redirect_and_expire_cache(path="/")
         form = LoginView.LoginForm()
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request):
+    def post(
+        self, request, *args, **kwargs
+    ) -> (
+        HttpResponseRedirect
+        | SmarterHttpResponseBadRequest
+        | SmarterHttpResponseForbidden
+        | SmarterHttpResponseServerError
+    ):
         form = LoginView.LoginForm(request.POST)
         authenticated_user: Optional[User] = None
         if form.is_valid():
@@ -78,11 +111,11 @@ class LoginView(SmarterNeverCachedWebView):
 class LogoutView(SmarterNeverCachedWebView):
     """View for logging out browser session."""
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs) -> HttpResponseRedirect:
         logout(request)
         return redirect_and_expire_cache(path="/")
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs) -> HttpResponseRedirect:
         logout(request)
         return redirect_and_expire_cache(path="/")
 
@@ -98,7 +131,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
 
     template_path = "account/authentication/sign-up.html"
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs) -> HttpResponseRedirect | HttpResponse:
         user = get_resolved_user(request.user)
         if user and hasattr(user, "is_authenticated") and user.is_authenticated:
             return redirect_and_expire_cache(path="/")
@@ -107,7 +140,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs) -> HttpResponseRedirect | HttpResponse:
         form = AccountRegisterView.SignUpForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data["email"]
@@ -131,7 +164,7 @@ class AccountActivationEmailView(SmarterNeverCachedWebView):
     email_template_path = "account/authentication/email/account-activation.html"
     expiring_token = ExpiringTokenGenerator()
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs) -> HttpResponse:
 
         # generate and send the activation email
         user = get_resolved_user(request.user)

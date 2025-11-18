@@ -2,12 +2,13 @@
 
 import logging
 
-from django.core.handlers.wsgi import WSGIRequest
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
+from smarter.common.utils import is_authenticated_request
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ class UnauthenticatedPermissionClass(BasePermission):
     Allows public access to APIS.
     """
 
-    def has_permission(self, request: WSGIRequest, view) -> bool:
+    def has_permission(self, request: Request, view) -> bool:
         return True
 
 
@@ -32,17 +33,12 @@ class SmarterAuthenticatedPermissionClass(IsAuthenticated):
     requiring bearer tokens or other authentication methods.
     """
 
-    def has_permission(self, request: WSGIRequest, view) -> bool:
+    def has_permission(self, request: Request, view) -> bool:
         """
         Allows internal view access to authenticated users and
         internal API requests.
         """
-        if (
-            request
-            and hasattr(request, "user")
-            and request.user.is_authenticated
-            and getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False)
-        ):
+        if is_authenticated_request(request) and getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False):
             logger.info(
                 "SmarterAuthenticatedPermissionClass().has_permission() - internal api request. Overriding permission: %s",
                 request.build_absolute_uri(),

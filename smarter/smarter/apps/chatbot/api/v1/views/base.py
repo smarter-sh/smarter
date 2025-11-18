@@ -20,6 +20,7 @@ from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import ChatHelper
 from smarter.apps.prompt.providers.providers import chat_providers
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
@@ -38,7 +39,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -255,7 +256,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
             }
             self.chatbot_helper.log_dump()
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST.value)
-        if self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
+        if self.chatbot_helper.is_authentication_required and not is_authenticated_request(request):
             data = {"message": "Forbidden. Please provide a valid API key."}
             return JsonResponse(data=data, status=HTTPStatus.FORBIDDEN.value)
 
@@ -323,9 +324,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
         URL with custom domain
         -------------------
-        example: https://api.smarter.querium.com/chatbot/
+        example: https://api.smarter.sh/chatbot/
         where
-         - `api.smarter.querium.com == chatbot.custom_domain`
+         - `api.smarter.sh == chatbot.custom_domain`
          - `ChatBotCustomDomain.is_verified == True` noting that
            an asynchronous task has verified the domain NS records.
 

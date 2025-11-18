@@ -4,6 +4,7 @@
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.utils import get_readonly_yaml_file
 
 from .test_setup import get_test_file_path
@@ -27,7 +28,10 @@ class TestStaticPlugin(TestAccountMixin):
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise ValueError("PluginController could not be created or plugin is None")
-        self.plugin = plugin_controller.plugin
+
+        if not isinstance(plugin_controller.plugin, StaticPlugin):
+            raise ValueError("Expected StaticPlugin but got different plugin type")
+        self.plugin: StaticPlugin = plugin_controller.plugin
 
     def tearDown(self):
         """Tear down test fixtures."""
@@ -37,8 +41,14 @@ class TestStaticPlugin(TestAccountMixin):
     # pylint: disable=broad-exception-caught
     def test_get_additional_info(self):
         """Test default return value of tool_call_fetch_plugin_response()"""
+        if not self.plugin:
+            self.fail("self.plugin is None")
+        if not self.plugin.plugin_data:
+            self.fail("self.plugin.plugin_data is None")
+        if not self.plugin.plugin_data.return_data_keys:
+            self.fail("self.plugin.plugin_data.return_data_keys is None")
         try:
-            inquiry_type = inquiry_type = self.plugin.plugin_data.return_data_keys[0]
+            inquiry_type = self.plugin.plugin_data.return_data_keys[0]
             function_args = {
                 "inquiry_type": inquiry_type,
             }

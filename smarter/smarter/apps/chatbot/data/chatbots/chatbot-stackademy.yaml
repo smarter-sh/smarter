@@ -15,13 +15,13 @@ spec:
     - Do you have any AI courses?
     appFileAttachment: false
     appInfoUrl: https://smarter.sh
-    appLogoUrl: https://platform.smarter.sh/static/querium/querium-logo-white-transparent.png
+    appLogoUrl: https://platform.smarter.sh/static/images/logo/smarter-crop.png
     appName: Sta
     appPlaceholder: Ask me anything about Smarter...
     appWelcomeMessage: Welcome Stackademy University!
     customDomain: null
     defaultMaxTokens: 4096
-    defaultModel: gpt-4o-mini
+    defaultModel: gpt-4-turbo
     defaultSystemRole:
       You are a helpful course counselor for Stackademy University, a fictional online learning platform.
       Your role is to assist students with inquiries about courses, pricing, and available resources.

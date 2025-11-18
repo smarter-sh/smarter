@@ -7,12 +7,14 @@ from typing import Optional, Union
 from django.contrib.auth.models import AnonymousUser
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
 from smarter.apps.account.models import User
 from smarter.apps.account.serializers import UserMiniSerializer
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.utils import mask_string
 from smarter.lib.django import waffle
@@ -41,7 +43,7 @@ RequestType = Union[WSGIRequest, HttpRequest, Request]
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
@@ -93,7 +95,7 @@ class AccountMixin(SmarterHelperMixin):
         if not request and args:
             for arg in args:
                 if isinstance(arg, RequestType):
-                    logger.info(
+                    logger.debug(
                         "%s.__init__(): received a request object: %s",
                         self.formatted_class_name,
                         self.smarter_build_absolute_uri(arg),
@@ -112,7 +114,7 @@ class AccountMixin(SmarterHelperMixin):
             logger.info("%s.__init__(): received user %s", self.formatted_class_name, user)
             self._account = get_cached_account_for_user(user)
             if not self._account:
-                logger.warning(
+                logger.debug(
                     "%s.__init__(): did not find an account for user %s",
                     self.formatted_class_name,
                     user,
@@ -127,11 +129,11 @@ class AccountMixin(SmarterHelperMixin):
         # evaluate these in reverse order, so that the first one wins.
         if request is not None:
             url: str = self.smarter_build_absolute_uri(request)
-            logger.info("%s.__init__(): received a request object: %s", self.formatted_class_name, url)
+            logger.debug("%s.__init__(): received a request object: %s", self.formatted_class_name, url)
             if hasattr(request, "user") and not isinstance(request.user, AnonymousUser):
                 self._user = request.user  # type: ignore[union-attr]
                 if not isinstance(self._user, User):
-                    logger.warning(
+                    logger.debug(
                         "%s.__init__(): could not resolve user from the request object %s",
                         self.formatted_class_name,
                         request.build_absolute_uri(),
@@ -143,7 +145,7 @@ class AccountMixin(SmarterHelperMixin):
                 )
                 self._account = get_cached_account_for_user(self._user)
                 if not isinstance(self._account, Account):
-                    logger.warning(
+                    logger.debug(
                         "%s.__init__(): could not resolve account from the user %s",
                         self.formatted_class_name,
                         self._user,
@@ -155,7 +157,7 @@ class AccountMixin(SmarterHelperMixin):
                     self.user_profile,
                 )
             elif not api_token:
-                logger.warning(
+                logger.debug(
                     "%s.__init__(): did not find a user in the request object nor an Api token in the request header",
                     self.formatted_class_name,
                 )
@@ -173,7 +175,7 @@ class AccountMixin(SmarterHelperMixin):
                     self._account = get_cached_account(account_number=account_number)
                     logger.info("%s.__init__(): set account to %s", self.formatted_class_name, self._account)
                 elif not api_token:
-                    logger.warning(
+                    logger.debug(
                         "%s.__init__(): did not find an account number in the request url nor an API token in the request header: %s",
                         self.formatted_class_name,
                         url,
@@ -184,8 +186,11 @@ class AccountMixin(SmarterHelperMixin):
                 self.formatted_class_name,
                 mask_string(api_token.decode()),
             )
-            user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
-            self.user = user
+            try:
+                user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
+                self.user = user
+            except AuthenticationFailed:
+                logger.warning("%s.__init__(): failed to authenticate user from API token", self.formatted_class_name)
 
         if self.is_accountmixin_ready:
             logger.info(
@@ -348,7 +353,7 @@ class AccountMixin(SmarterHelperMixin):
         if isinstance(self._user, User):
             self._user_profile = get_cached_user_profile(user=self._user)
         if not self._user_profile:
-            logger.warning(
+            logger.debug(
                 "%s: user_profile() could not initialize _user_profile for user: %s, account: %s",
                 self.formatted_class_name,
                 self._user,
@@ -377,13 +382,13 @@ class AccountMixin(SmarterHelperMixin):
         are initialized.
         """
         if not isinstance(self.account, Account):
-            logger.warning(
+            logger.debug(
                 "%s.is_accountmixin_ready() returning false because account is not initialized.",
                 self.formatted_class_name,
             )
             return False
         if not isinstance(self.user, User):
-            logger.warning(
+            logger.debug(
                 "%s.is_accountmixin_ready() returning false because user is not initialized.",
                 self.formatted_class_name,
             )
@@ -397,7 +402,7 @@ class AccountMixin(SmarterHelperMixin):
         """
         retval = super().ready
         if not retval:
-            logger.warning(
+            logger.debug(
                 "%s: ready() returning false because super().ready returned false. This might cause problems with other initializations.",
                 self.formatted_class_name,
             )

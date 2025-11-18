@@ -1,6 +1,5 @@
 """Smarter API Manifest Loader base class."""
 
-import json
 import logging
 from enum import Enum
 from typing import Any, Optional, Union
@@ -10,6 +9,7 @@ import yaml
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
+from smarter.lib import json
 
 from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
 from .exceptions import SAMExceptionBase
@@ -206,7 +206,7 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def formatted_data(self) -> str:
-        return json.dumps(self.json_data, indent=4)
+        return json.dumps(self.json_data)
 
     def pydantic_model_dump(self) -> dict:
         """

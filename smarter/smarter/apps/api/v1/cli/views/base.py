@@ -1,17 +1,20 @@
 """Smarter API command-line interface Base class API view"""
 
-import json
 import logging
 import re
 import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
-from rest_framework.exceptions import NotAuthenticated
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-from smarter.apps.api.signals import api_request_completed, api_request_initiated
+from smarter.apps.api.signals import (
+    api_request_completed,
+    api_request_failed,
+    api_request_initiated,
+)
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
@@ -19,11 +22,8 @@ from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.docs.views.base import DocsError
 from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.apps.prompt.views import SmarterChatappViewError
-from smarter.common.const import (
-    SMARTER_BUG_REPORT_URL,
-    SMARTER_CUSTOMER_SUPPORT_EMAIL,
-    SMARTER_IS_INTERNAL_API_REQUEST,
-)
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
@@ -34,7 +34,12 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.aws.exceptions import SmarterAWSError
 from smarter.common.helpers.k8s_helpers import KubernetesHelperException
-from smarter.common.utils import mask_string, smarter_build_absolute_uri
+from smarter.common.utils import (
+    is_authenticated_request,
+    mask_string,
+    smarter_build_absolute_uri,
+)
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.token_generators import SmarterTokenError
@@ -58,20 +63,16 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
 
+from .swagger import BUG_REPORT
+
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= logging.INFO
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= smarter_settings.log_level
 
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
-BUG_REPORT = (
-    "Encountered an unexpected error. "
-    f"This is a bug. Please contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} "
-    f"and/or report to {SMARTER_BUG_REPORT_URL}."
-)
 
 
 class APIV1CLIViewError(SmarterException):
@@ -129,8 +130,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         underlying object that provides the object-specific service (create, update, get, delete, etc).
     """
 
-    authentication_classes = (SmarterTokenAuthentication,)
     permission_classes = (SmarterAuthenticatedPermissionClass,)
+    authentication_classes = (SmarterTokenAuthentication,)
 
     _BrokerClass: Optional[Type[AbstractBroker]] = None
     _broker: Optional[AbstractBroker] = None
@@ -144,7 +145,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
     def __init__(self, *args, **kwargs):
         request = None
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
         super().__init__(*args, **kwargs)
 
     @property
@@ -299,30 +299,18 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         Setup the view. This is called by Django before dispatch() and is used to
         set up the view for the request.
         """
-        logger.info(
-            "%s.setup() - called for request: %s", self.formatted_class_name, smarter_build_absolute_uri(request)
-        )
         super().setup(request, *args, **kwargs)
-        logger.info(
-            "%s.setup() - view for request: %s, user: %s is_authenticated: %s",
-            self.formatted_class_name,
-            smarter_build_absolute_uri(request),
-            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
-            request.user.is_authenticated,
-        )
-        # experiment: we want to ensure that the request object is
-        # initialized before we call the SmarterRequestMixin.
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
         logger.info(
-            "CliBaseApiView().setup() - finished view for request: %s, user: %s, self.user: %s is_authenticated: %s",
+            "CliBaseApiView().setup() - finished for request: %s, user: %s, self.user: %s is_authenticated: %s",
             smarter_build_absolute_uri(request),
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
-            request.user.is_authenticated,
+            is_authenticated_request(request),
         )
 
     def initial(self, request: Request, *args, **kwargs):
@@ -358,7 +346,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 url,
                 request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
                 self.user_profile,
-                request.user.is_authenticated,
+                is_authenticated_request(request),
                 mask_string(str(request.META.get("HTTP_AUTHORIZATION"))),
             )
         except NotAuthenticated as e:
@@ -468,6 +456,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         we're just trying to catch any unhandled exceptions and
         return a generic error message with a bug report URL.
         """
+        response = None
         try:
             url = smarter_build_absolute_uri(request)
             logger.info("%s.dispatch() - called for request: %s", self.formatted_class_name, url)
@@ -483,6 +472,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return response
         # pylint: disable=broad-except
         except Exception as e:
+            api_request_failed.send(sender=self.__class__, instance=self, request=request, response=response)
             status: int = HTTPStatus.INTERNAL_SERVER_ERROR.value
             description_override: Optional[str] = None
 
@@ -498,6 +488,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 SmarterAPIV1CLIViewErrorNotAuthenticated,
                 SmarterInvalidApiKeyError,
                 SmarterTokenError,
+                NotAuthenticated,
+                AuthenticationFailed,
+                AttributeError,  # can be raised by a django admin decorator if request or request.user is None
             ):
                 status = HTTPStatus.FORBIDDEN.value
             elif type(e) in (

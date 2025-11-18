@@ -25,7 +25,8 @@ class EmailHelperException(SmarterException):
 class EmailHelper(metaclass=Singleton):
     """Helper class for sending emails."""
 
-    def validate_mail_list(emails: Union[str, List[str]], quiet: bool = False) -> List[str]:
+    @staticmethod
+    def validate_mail_list(emails: Union[str, List[str]], quiet: bool = False) -> Union[List[str], None]:
         """Convert to a list and filter out any invalid email addresses."""
         if isinstance(emails, str):
             mailto_list = [emails]
@@ -65,6 +66,13 @@ class EmailHelper(metaclass=Singleton):
         if not mail_to:
             return
 
+        if not smarter_settings.smtp_from_email:
+            raise EmailHelperException("smtp_from_email not configured")
+        if smarter_settings.smtp_host is None or smarter_settings.smtp_port is None:
+            raise EmailHelperException("SMTP host or port not configured")
+        if smarter_settings.smtp_username is None or smarter_settings.smtp_password is None:
+            raise EmailHelperException("SMTP username or password not configured")
+
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = from_email or smarter_settings.smtp_from_email
@@ -94,12 +102,12 @@ class EmailHelper(metaclass=Singleton):
             logger.error(
                 "smtp error while attempting to send email. error: %s from: %s to. %s", e, msg["From"], msg["To"]
             )
-            raise EmailHelperException("Error sending email") from e
+            raise EmailHelperException(f"Error sending email: {e}") from e
         except Exception as e:
             logger.error(
                 "unexpected error while attempting to send email. error: %s from: %s to. %s", e, msg["From"], msg["To"]
             )
-            raise EmailHelperException("Error sending email") from e
+            raise EmailHelperException(f"Error sending email: {e}") from e
 
 
 email_helper = EmailHelper()

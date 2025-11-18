@@ -18,9 +18,14 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
     nginx.ingress.kubernetes.io/session-cookie-name: ${environment_namespace}_sticky_session
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+    nginx.ingress.kubernetes.io/compute-full-forwarded-for: "true"
+    nginx.ingress.kubernetes.io/use-proxy-protocol: "true"
+    nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
   name: ${domain}
   namespace: ${environment_namespace}
 spec:
+  ingressClassName: "default"
   rules:
     - host: ${domain}
       http:
