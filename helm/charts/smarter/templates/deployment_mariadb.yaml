@@ -39,14 +39,19 @@ spec:
                   name: {{ .Values.names.appName | default "smarter" }}-root-{{ .Values.names.mariadbName | default "mariadb" }}
                   key: mariadb-root-password
             - name: MYSQL_DATABASE
-              value: {{ .Values.mariadb.auth.database }}
+              value: {{ .Values.env.MYSQL_DATABASE | default .Values.mariadb.auth.database | quote }}
             - name: MYSQL_USER
-              value: {{ .Values.mariadb.auth.username }}
+              value: {{ .Values.env.MYSQL_USER | default .Values.mariadb.auth.username | quote }}
+{{- if .Values.env.MYSQL_PASSWORD }}
+            - name: MYSQL_PASSWORD
+              value: {{ .Values.env.MYSQL_PASSWORD | quote }}
+{{- else }}
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.names.appName | default "smarter" }}-user-{{ .Values.names.mariadbName | default "mariadb" }}
                   key: mariadb-password
+{{- end }}
           ports:
             - containerPort: 3306
               name: mariadb
