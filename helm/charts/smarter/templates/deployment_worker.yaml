@@ -33,7 +33,7 @@ spec:
         {{- toYaml .Values.global.tolerations | nindent 8 }}
       containers:
         - name: "{{ .Values.names.appName }}-worker"
-          image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
+          image: "{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf \"%s:%s\" .Values.global.image.repository .Values.global.image.tag) }}"
           command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency=2", "--loglevel=info", "-Q", "default_celery_task_queue", "-E"]
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
           resources:
