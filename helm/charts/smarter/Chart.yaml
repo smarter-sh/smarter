@@ -3,7 +3,7 @@ appVersion: 0.13.25
 name: smarter
 description: Smarter API and web console
 type: application
-version: 0.8.0
+version: 0.8.1
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -59,7 +59,7 @@ keywords:
   - education
   - smarter
 annotations:
-  helm.sh/chart: smarter-0.8.0
+  helm.sh/chart: smarter-0.8.1
   artifacthub.io/changes: |
     - kind: changed
       description: "See CHANGELOG.md"
