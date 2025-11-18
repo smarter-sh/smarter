@@ -9,8 +9,9 @@ A Helm chart for deploying Smarter, a no-code, cloud-native AI orchestration pla
 ## Quickstart
 
 ```bash
-helm install smarter oci://ghcr.io/smarter-sh/charts/smarter \
-  --version 0.8.7 \
+helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
+  --version 0.8.8 \
+  --timeout 900s \
   --namespace smarter-prod \
   --create-namespace \
   --set env.MYSQL_HOST=your-mysql-host \
