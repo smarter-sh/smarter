@@ -188,7 +188,8 @@ runs:
         push: true
         platforms: linux/amd64,linux/arm64
         tags: |
-          ${{ github.ref_name == 'main' && format('{0}/{1}:latest', inputs.dockerhub-account, inputs.dockerhub-repo) || format('{0}/{1}:{2}', inputs.dockerhub-account, inputs.dockerhub-repo, github.ref_name) }}
+          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ github.ref_name }}
+          ${{ github.ref_name == 'main' && format('{0}/{1}:latest', inputs.dockerhub-account, inputs.dockerhub-repo) || '' }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ github.run_id }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.DATESTAMP }}
           ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.LATEST_TAG }}
