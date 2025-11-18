@@ -5,6 +5,7 @@ A Helm chart for deploying Smarter, a no-code, cloud-native AI orchestration pla
 - **Website:** [https://smarter.sh](https://smarter.sh)
 - **Docs:** [https://platform.smarter.sh/docs/](https://platform.smarter.sh/docs/)
 - **Chart:** [https://artifacthub.io/packages/helm/project-smarter/smarter](https://artifacthub.io/packages/helm/project-smarter/smarter)
+- **Dockerhub** [https://hub.docker.com/r/mcdaniel0073/smarter](https://hub.docker.com/r/mcdaniel0073/smarter)
 
 ## Quickstart
 

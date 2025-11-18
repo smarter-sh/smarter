@@ -70,6 +70,12 @@ annotations:
   artifacthub.io/changes: |
     - kind: changed
       description: updated values.schema.json to add new fields and descriptions
+    - kind: changed
+      description: updated smarter image to v0.13.25
+    - kind: changed
+      description: added values.yaml to Quickstart Guide in README.md
+    - kind: changed
+      description: added Dockerhub url to README.md
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
