@@ -69,7 +69,12 @@ runs:
       shell: bash
       run: |
         LATEST_TAG=$(git describe --tags --abbrev=0)
-        echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+        if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          FINAL_TAG="$LATEST_TAG"
+        else
+          FINAL_TAG="${LATEST_TAG}.${GITHUB_REF_NAME}"
+        fi
+        echo "LATEST_TAG=$FINAL_TAG" >> $GITHUB_ENV
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
