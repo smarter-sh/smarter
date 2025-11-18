@@ -168,10 +168,10 @@ runs:
         push: true
         platforms: linux/amd64,linux/arm64
         tags: |
-          ${{ github.ref_name == 'main' && format('{0}/{1}:latest', inputs.dockerhub-account, inputs.dockerhub-repo) || '' }}
-          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ github.run_id }}
-          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.DATESTAMP }}
-          ${{ inputs.dockerhub-account }}/${{ inputs.dockerhub-repo }}:${{ env.LATEST_TAG }}
+          ${{ github.ref_name == 'main' && format('{0}/{1}:latest', steps.login-ecr.outputs.registry, env.AWS_ECR_REPO) || '' }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.LATEST_TAG }}
         build-args: ENVIRONMENT=${{ inputs.environment }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
