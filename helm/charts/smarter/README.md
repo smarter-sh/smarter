@@ -18,8 +18,14 @@ helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
   --set env.MYSQL_PASSWORD=your-password \
   --set env.OPENAI_API_KEY=your-key \
   --set env.SECRET_KEY=your-django-secret \
-  --set env.FERNET_ENCRYPTION_KEY=your-fernet-key
+  --set env.FERNET_ENCRYPTION_KEY=your-fernet-key \
+  --values values.yaml
 ```
+
+See [values.yaml](https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml) for all available configuration options.
+
+**Note:** For production, use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) to manage sensitive values like passwords and API keys.
+
 
 ## Prerequisites
 
@@ -50,10 +56,6 @@ helm upgrade smarter oci://ghcr.io/smarter-sh/charts/smarter \
   --namespace your-namespace \
   --values values.yaml
 ```
-
-See [values.yaml](https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml) for all available configuration options.
-
-**Note:** For production, use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) to manage sensitive values like passwords and API keys.
 
 ## Uninstalling
 
