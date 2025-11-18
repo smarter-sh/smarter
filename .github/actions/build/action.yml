@@ -149,7 +149,7 @@ runs:
 
     - name: Build and push to AWS ECR
       id: docker-build-ecr
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: .
         push: true
