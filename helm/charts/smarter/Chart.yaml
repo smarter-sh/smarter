@@ -3,7 +3,7 @@ appVersion: 0.13.25
 name: smarter
 description: Smarter API and web console
 type: application
-version: 0.8.2
+version: 0.8.3
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -59,10 +59,16 @@ keywords:
   - education
   - smarter
 annotations:
-  helm.sh/chart: smarter-0.8.2
+  helm.sh/chart: smarter-0.8.3
+  artifacthub.io/category: AI/Machine Learning
+  artifacthub.io/screenshots: |
+    - url: https://raw.githubusercontent.com/smarter-sh/smarter-chat/main/doc/img/readme-usage4.png
+      caption: Smarter Prompt Engineering Workbench
   artifacthub.io/changes: |
-    - kind: fixed
-      description: pass common env sql secrets to mysql and mariadb subcharts
+    - kind: added
+      description: support for built-in Mysql and Mariadb database services
+    - kind: added
+      description: support for built-in Prometheus, Grafana, and Loki monitoring services
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
@@ -86,6 +92,11 @@ annotations:
   artifacthub.io/prerelease: "false"
   artifacthub.io/recommendations: |
     - url: https://artifacthub.io/packages/helm/bitnami/redis
+    - url: https://artifacthub.io/packages/helm/bitnami/grafana
+    - url: https://artifacthub.io/packages/helm/grafana/loki
+    - url: https://artifacthub.io/packages/helm/bitnami/mysql
+    - url: https://artifacthub.io/packages/helm/bitnami/mariadb
+    - url: https://artifacthub.io/packages/helm/bitnami/prometheus
   artifacthub.io/signKey: |
       fingerprint: FC3130197AED484D9B5FA847440711F032A1DCBB1B813D458CF71FB90CC2345D
       url: https://github.com/smarter-sh/smarter/raw/main/sigstore/artifacthub-cosign.pub
