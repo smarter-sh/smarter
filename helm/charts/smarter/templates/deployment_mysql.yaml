@@ -33,19 +33,28 @@ spec:
           imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
           env:
             - name: MYSQL_ROOT_PASSWORD
+              {{- if .Values.env.MYSQL_ROOT_PASSWORD }}
+              value: {{ .Values.env.MYSQL_ROOT_PASSWORD | quote }}
+              {{- else }}
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.names.appName | default "smarter" }}-root-{{ .Values.names.mysqlName | default "mysql" }}
                   key: mysql-root-password
+              {{- end }}
             - name: MYSQL_DATABASE
-              value: {{ .Values.mysql.auth.database }}
+              value: {{ .Values.env.MYSQL_DATABASE | default .Values.mysql.auth.database | quote }}
             - name: MYSQL_USER
-              value: {{ .Values.mysql.auth.username }}
+              value: {{ .Values.env.MYSQL_USER | default .Values.mysql.auth.username | quote }}
+            {{- if .Values.env.MYSQL_PASSWORD }}
+            - name: MYSQL_PASSWORD
+              value: {{ .Values.env.MYSQL_PASSWORD | quote }}
+            {{- else }}
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.names.appName | default "smarter" }}-user-{{ .Values.names.mysqlName | default "mysql" }}
                   key: mysql-password
+            {{- end }}
           ports:
             - containerPort: 3306
               name: mysql
