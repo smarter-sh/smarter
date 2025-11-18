@@ -2,12 +2,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    meta.helm.sh/release-name: {{ .Values.names.workerName }}
+    meta.helm.sh/release-name: "{{ .Values.names.appName }}-worker"
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
     meta.helm.sh/application-version: {{ .Values.version }}
   labels:
-    App: {{ .Values.names.workerName }}
-  name: {{ .Values.names.workerName }}
+    App: "{{ .Values.names.appName }}-worker"
+  name: "{{ .Values.names.appName }}-worker"
   namespace: {{ .Values.namespace }}
 spec:
   progressDeadlineSeconds: 600
@@ -15,7 +15,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.names.workerName }}
+      app.kubernetes.io/name: "{{ .Values.names.appName }}-worker"
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -24,14 +24,18 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ .Values.names.workerName }}
+        app.kubernetes.io/name: "{{ .Values.names.appName }}-worker"
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
       containers:
-        - name: {{ .Values.names.workerName }}
+        - name: "{{ .Values.names.appName }}-worker"
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency=2", "--loglevel=info", "-Q", "default_celery_task_queue", "-E"]
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
           livenessProbe:
