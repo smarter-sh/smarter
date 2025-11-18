@@ -153,7 +153,12 @@ runs:
 
     - name: Get the date
       shell: bash
-      run: echo "DATESTAMP=$(date +'%Y-%m-%dT%H-%M-%S')" >> $GITHUB_ENV
+      run: |
+        DATESTAMP=$(date +'%Y-%m-%dT%H-%M-%S')
+        if [ "${GITHUB_REF_NAME}" != "main" ]; then
+          DATESTAMP="${DATESTAMP}.${GITHUB_REF_NAME}"
+        fi
+        echo "DATESTAMP=$DATESTAMP" >> $GITHUB_ENV
 
     - name: Build and push to AWS ECR
       id: docker-build-ecr
