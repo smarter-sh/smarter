@@ -17,7 +17,9 @@ from smarter.common.conf import settings as smarter_settings
 from .base import *
 
 
-logger.info("Loading smarter.settings.local")
+environment_name = os.path.basename(__file__).replace(".py", "")
+print(f"Loading smarter.settings.{environment_name}")
+logger.info("Loading smarter.settings.%s", environment_name)
 
 if smarter_settings.developer_mode:
     # dev only:
