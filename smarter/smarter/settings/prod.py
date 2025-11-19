@@ -2,13 +2,12 @@
 """Django settings for platform.smarter.sh"""
 import os
 
-from smarter.common.conf import settings as smarter_settings
-
 from .base_aws import *
 
 
 environment_name = os.path.basename(__file__).replace(".py", "")
 print(f"Loading smarter.settings.{environment_name}")
+logger.info("Loading smarter.settings.%s", environment_name)
 
 if environment_name != SmarterEnvironments.PROD:
     raise SmarterConfigurationError(

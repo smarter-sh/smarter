@@ -17,29 +17,32 @@ from smarter.common.conf import settings as smarter_settings
 from .base import *
 
 
-logger.info("Loading smarter.settings.local")
+environment_name = os.path.basename(__file__).replace(".py", "")
+print(f"Loading smarter.settings.{environment_name}")
+logger.info("Loading smarter.settings.%s", environment_name)
+
+if smarter_settings.developer_mode:
+    # dev only:
+    # Bootstrap theme source files and static assets.
+    keen_source = [Path(p) for p in glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))]
+    STATICFILES_DIRS.extend(keen_source)
+    STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
+
+    INSTALLED_APPS += ["django_extensions"]
+
+    # if DEBUG and not "test" in sys.argv:
+    #     INSTALLED_APPS += [
+    #         "debug_toolbar",
+    #     ]
+
+    #     MIDDLEWARE += [
+    #         "debug_toolbar.middleware.DebugToolbarMiddleware",
+    #     ]
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
 
 SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS
-
-# dev only:
-# Bootstrap theme source files and static assets.
-keen_source = [Path(p) for p in glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))]
-STATICFILES_DIRS.extend(keen_source)
-STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
-
-INSTALLED_APPS += ["django_extensions"]
-
-# if DEBUG and not "test" in sys.argv:
-#     INSTALLED_APPS += [
-#         "debug_toolbar",
-#     ]
-
-#     MIDDLEWARE += [
-#         "debug_toolbar.middleware.DebugToolbarMiddleware",
-#     ]
 
 MIDDLEWARE += [
     "corsheaders.middleware.CorsMiddleware",

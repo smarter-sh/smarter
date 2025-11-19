@@ -14,6 +14,9 @@ class is created.
 Individual services are accessed lazily via properties on the AWSInfrastructureConfig class.
 """
 
+import logging
+from typing import Optional
+
 from ..classes import Singleton
 from .aws.acm import AWSCertificateManager
 from .aws.api_gateway import AWSAPIGateway
@@ -28,26 +31,37 @@ from .aws.route53 import AWSRoute53
 from .aws.s3 import AWSSimpleStorageSystem
 
 
+logger = logging.getLogger(__name__)
+
+
 # pylint: disable=too-many-instance-attributes
 class AWSInfrastructureConfig(metaclass=Singleton):
     """AWS Infrastructure Configuration class with lazy loading of services."""
 
-    _aws: AWSBase = None
-    _acm: AWSCertificateManager = None
-    _api_gateway: AWSAPIGateway = None
-    _dynamodb: AWSDynamoDB = None
-    _eks: AWSEks = None
-    _iam: AWSIdentifyAccessManagement = None
-    _lambda_function: AWSLambdaFunction = None
-    _rekognition: AWSRekognition = None
-    _route53: AWSRoute53 = None
-    _s3: AWSSimpleStorageSystem = None
-    _rds: AWSRds = None
+    _aws: Optional[AWSBase] = None
+    _acm: Optional[AWSCertificateManager] = None
+    _api_gateway: Optional[AWSAPIGateway] = None
+    _dynamodb: Optional[AWSDynamoDB] = None
+    _eks: Optional[AWSEks] = None
+    _iam: Optional[AWSIdentifyAccessManagement] = None
+    _lambda_function: Optional[AWSLambdaFunction] = None
+    _rekognition: Optional[AWSRekognition] = None
+    _route53: Optional[AWSRoute53] = None
+    _s3: Optional[AWSSimpleStorageSystem] = None
+    _rds: Optional[AWSRds] = None
+
+    def check_aws_configuration(self) -> bool:
+        """Check if AWS is configured"""
+        if not self.aws.aws_is_configured:
+            logger.warning(
+                "AWS is not configured. Please set AWS credentials in environment variables or configuration file."
+            )
+        return self.aws.aws_is_configured
 
     @property
-    def get_botocore_version(self):
+    def get_botocore_version(self) -> str:
         """Return the botocore version"""
-        return self.aws.get_botocore_version()
+        return self.aws.version
 
     @property
     def aws(self) -> AWSBase:
@@ -57,73 +71,83 @@ class AWSInfrastructureConfig(metaclass=Singleton):
         return self._aws
 
     @property
-    def acm(self) -> AWSCertificateManager:
+    def acm(self) -> Optional[AWSCertificateManager]:
         """Return the AWS Certificate Manager"""
         if not self._acm:
-            self._acm = AWSCertificateManager()
+            if self.check_aws_configuration():
+                self._acm = AWSCertificateManager()
         return self._acm
 
     @property
-    def api_gateway(self) -> AWSAPIGateway:
+    def api_gateway(self) -> Optional[AWSAPIGateway]:
         """Return the AWS API Gateway"""
         if not self._api_gateway:
-            self._api_gateway = AWSAPIGateway()
+            if self.check_aws_configuration():
+                self._api_gateway = AWSAPIGateway()
         return self._api_gateway
 
     @property
-    def dynamodb(self) -> AWSDynamoDB:
+    def dynamodb(self) -> Optional[AWSDynamoDB]:
         """Return the AWS DynamoDB"""
         if not self._dynamodb:
-            self._dynamodb = AWSDynamoDB()
+            if self.check_aws_configuration():
+                self._dynamodb = AWSDynamoDB()
         return self._dynamodb
 
     @property
-    def eks(self) -> AWSEks:
+    def eks(self) -> Optional[AWSEks]:
         """Return the AWS EKS"""
         if not self._eks:
-            self._eks = AWSEks()
+            if self.check_aws_configuration():
+                self._eks = AWSEks()
         return self._eks
 
     @property
-    def lambda_function(self) -> AWSLambdaFunction:
+    def lambda_function(self) -> Optional[AWSLambdaFunction]:
         """Return the AWS Lambda Function"""
         if not self._lambda_function:
-            self._lambda_function = AWSLambdaFunction()
+            if self.check_aws_configuration():
+                self._lambda_function = AWSLambdaFunction()
         return self._lambda_function
 
     @property
-    def iam(self) -> AWSIdentifyAccessManagement:
+    def iam(self) -> Optional[AWSIdentifyAccessManagement]:
         """Return the AWS IAM"""
         if not self._iam:
-            self._iam = AWSIdentifyAccessManagement()
+            if self.check_aws_configuration():
+                self._iam = AWSIdentifyAccessManagement()
         return self._iam
 
     @property
-    def rds(self) -> AWSRds:
+    def rds(self) -> Optional[AWSRds]:
         """Return the AWS RDS"""
         if not self._rds:
-            self._rds = AWSRds()
+            if self.check_aws_configuration():
+                self._rds = AWSRds()
         return self._rds
 
     @property
-    def rekognition(self) -> AWSRekognition:
+    def rekognition(self) -> Optional[AWSRekognition]:
         """Return the AWS Rekognition"""
         if not self._rekognition:
-            self._rekognition = AWSRekognition()
+            if self.check_aws_configuration():
+                self._rekognition = AWSRekognition()
         return self._rekognition
 
     @property
-    def route53(self) -> AWSRoute53:
+    def route53(self) -> Optional[AWSRoute53]:
         """Return the AWS Route53"""
         if not self._route53:
-            self._route53 = AWSRoute53()
+            if self.check_aws_configuration():
+                self._route53 = AWSRoute53()
         return self._route53
 
     @property
-    def s3(self) -> AWSSimpleStorageSystem:
+    def s3(self) -> Optional[AWSSimpleStorageSystem]:
         """Return the AWS S3"""
         if not self._s3:
-            self._s3 = AWSSimpleStorageSystem()
+            if self.check_aws_configuration():
+                self._s3 = AWSSimpleStorageSystem()
         return self._s3
 
 

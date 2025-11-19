@@ -390,12 +390,12 @@ def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, error
     logger.error(
         "%s - %s - error: %s",
         formatted_text(prefix + "plugin_sql_connection_failed"),
-        connection.get_connection_string(),
+        connection.get_connection_string(masked=not smarter_settings.debug_mode),
         error,
     )
 
     raise SmarterConfigurationError(
-        f"Remote SQL Connection {connection.get_connection_string()} failed: {error}"
+        f"Remote SQL Connection {connection.get_connection_string(masked=not smarter_settings.debug_mode)} failed: {error}"
     ) from None
 
 

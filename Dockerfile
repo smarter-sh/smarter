@@ -102,7 +102,8 @@ RUN adduser --disabled-password --gecos '' smarter_user
 # - add a .kube directory and an empty config file
 # - add a celery directory for celerybeat to use to store its schedule.
 RUN mkdir -p /home/smarter_user/data/.kube && touch /home/smarter_user/data/.kube/config && \
-  mkdir -p /home/smarter_user/data/celery
+  mkdir -p /home/smarter_user/data/celery && \
+  mkdir -p /home/smarter_user/data/media        # fallback Django storage when not using S3 or other external storage.
 
 # Set the KUBECONFIG environment variable
 ENV KUBECONFIG=/home/smarter_user/data/.kube/config
