@@ -5,12 +5,12 @@ description: >
   Smarter is a no-code, cloud-native platform for securely managing and orchestrating AI resources at scale.
   Empower domain experts to build AI workflows using intuitive YAML manifests—no coding required.
   Smarter standardizes database and API integrations for RAG and advanced function calling, with built-in resource limits, logging, and moderation controls.
-  Deploy on Kubernetes, on-premises, or in the cloud. Extensible via REST API, web console, CLI, and SDKs for Python, NPM, and more.
+  Deploy to the cloud, on premise or to Docker Desktop. Extensible via REST API, web console, CLI, and SDKs for Python, NPM, and more.
   Provider-agnostic, supporting LLMs from DeepSeek, Google AI, Meta AI, OpenAI, and others.
   Includes enterprise features like credentials management, team workgroups, RBAC, cost codes, and audit logging.
   Open source with public documentation and rapid self-onboarding.
 type: application
-version: 0.9.2
+version: 0.9.3
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -66,10 +66,10 @@ keywords:
   - remote-data
   - smarter
 annotations:
-  helm.sh/chart: smarter-0.9.2
+  helm.sh/chart: smarter-0.9.3
   artifacthub.io/changes: |
     - kind: changed
-      description: add platforms to artifacthub.io/images
+      description: Chart description updated to better reflect Smarter's installation options.
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
