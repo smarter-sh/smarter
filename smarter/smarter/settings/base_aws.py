@@ -8,6 +8,8 @@ from smarter.common.conf import settings as smarter_settings
 from .base import *
 
 
+logger.info("Loading smarter.settings.base_aws")
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
