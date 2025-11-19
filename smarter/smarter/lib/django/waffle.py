@@ -2,6 +2,9 @@
 This module provides a wrapper around the django-waffle library to
 add caching and to handle an init scendario where the database is not ready.
 It is used to check if a feature flag (switch) is active.
+
+Warning and Fix Note: waffle is a Django app that relies on database tables. If the database is not ready (e.g., during initial migrations),
+attempting to access waffle switches can lead to errors. This module includes checks to ensure the database is ready before accessing waffle switches.
 """
 
 import logging
