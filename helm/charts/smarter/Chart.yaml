@@ -66,16 +66,10 @@ keywords:
   - remote-data
   - smarter
 annotations:
-  helm.sh/chart: smarter-0.8.10
+  helm.sh/chart: smarter-0.9.0
   artifacthub.io/changes: |
     - kind: changed
-      description: updated values.schema.json to add new fields and descriptions
-    - kind: changed
-      description: updated smarter image to v0.13.25
-    - kind: changed
-      description: added values.yaml to Quickstart Guide in README.md
-    - kind: changed
-      description: added Dockerhub url to README.md
+      description: bump to appVersion v0.13.26
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
