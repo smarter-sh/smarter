@@ -108,6 +108,10 @@ class AWSRoute53(AWSBase):
         else:
             raise AWSHostedZoneNotFound(f"Hosted zone not found for {hosted_zone}. Expected a dict with 'Id' key.")
 
+    def get_hosted_zone_by_id(self, hosted_zone_id) -> Optional[dict]:
+        """Return the AWS Route53 Hosted zone for the zone id"""
+        pass
+
     def get_hosted_zone_id_for_domain(self, domain_name) -> str:
         """Return the hosted zone id for the domain."""
         logger.info("%s.get_hosted_zone_id_for_domain() domain_name: %s", self.formatted_class_name, domain_name)

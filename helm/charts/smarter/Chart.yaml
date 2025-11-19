@@ -1,16 +1,16 @@
 apiVersion: v2
-appVersion: 0.13.26
+appVersion: 0.13.28
 name: smarter
 description: >
   Smarter is a no-code, cloud-native platform for securely managing and orchestrating AI resources at scale.
   Empower domain experts to build AI workflows using intuitive YAML manifests—no coding required.
   Smarter standardizes database and API integrations for RAG and advanced function calling, with built-in resource limits, logging, and moderation controls.
-  Deploy on Kubernetes, on-premises, or in the cloud. Extensible via REST API, web console, CLI, and SDKs for Python, NPM, and more.
+  Deploy to the cloud, on premise or to Docker Desktop. Extensible via REST API, web console, CLI, and SDKs for Python, NPM, and more.
   Provider-agnostic, supporting LLMs from DeepSeek, Google AI, Meta AI, OpenAI, and others.
   Includes enterprise features like credentials management, team workgroups, RBAC, cost codes, and audit logging.
   Open source with public documentation and rapid self-onboarding.
 type: application
-version: 0.9.0
+version: 0.9.5
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -21,27 +21,27 @@ maintainers:
     website: https://lawrencemcdaniel.com
 dependencies:
   - name: grafana
-    version: 12.1.8
+    version: 0.9.5
     repository: https://charts.bitnami.com/bitnami
     condition: grafana.enabled
   - name: loki
-    version: 6.46.0
+    version: 0.9.5
     repository: https://grafana.github.io/helm-charts
     condition: loki.enabled
   - name: mysql
-    version: 14.0.3
+    version: 0.9.5
     repository: https://charts.bitnami.com/bitnami
     condition: mysql.enabled
   - name: mariadb
-    version: 23.2.4
+    version: 0.9.5
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
   - name: prometheus
-    version: 2.1.23
+    version: 0.9.5
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
-    version: 23.2.12
+    version: 0.9.5
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
 icon: https://platform.smarter.sh/static/images/logo/smarter-crop.png
@@ -66,15 +66,18 @@ keywords:
   - remote-data
   - smarter
 annotations:
-  helm.sh/chart: smarter-0.9.0
+  helm.sh/chart: smarter-0.9.3
   artifacthub.io/changes: |
     - kind: changed
-      description: bump to appVersion v0.13.26
+      description: Chart description updated to better reflect Smarter's installation options.
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
     - name: smarter
-      image: mcdaniel0073/smarter:v0.13.25
+      image: mcdaniel0073/smarter:v0.13.26
+      platforms:
+        - linux/amd64
+        - linux/arm64
   artifacthub.io/links: |
     - name: Website
       url: https://smarter.sh

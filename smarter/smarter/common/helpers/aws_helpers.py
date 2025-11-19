@@ -17,6 +17,10 @@ Individual services are accessed lazily via properties on the AWSInfrastructureC
 import logging
 from typing import Optional
 
+from tenacity import sleep
+
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
+
 from ..classes import Singleton
 from .aws.acm import AWSCertificateManager
 from .aws.api_gateway import AWSAPIGateway
@@ -50,13 +54,24 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     _s3: Optional[AWSSimpleStorageSystem] = None
     _rds: Optional[AWSRds] = None
 
-    def check_aws_configuration(self) -> bool:
-        """Check if AWS is configured"""
-        if not self.aws.aws_is_configured:
-            logger.warning(
-                "AWS is not configured. Please set AWS credentials in environment variables or configuration file."
-            )
-        return self.aws.aws_is_configured
+    def ready(self) -> bool:
+        """Check if AWS is ready"""
+        return self.aws.ready
+
+    @property
+    def identity(self) -> Optional[dict]:
+        """Return the AWS identity."""
+        return self.aws.identity
+
+    @property
+    def aws_iam_arn(self) -> Optional[str]:
+        """Return the AWS IAM ARN."""
+        return self.aws.aws_iam_arn
+
+    @property
+    def aws_account_id(self) -> Optional[str]:
+        """Return the AWS Account ID."""
+        return self.aws.aws_account_id
 
     @property
     def get_botocore_version(self) -> str:
@@ -74,7 +89,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def acm(self) -> Optional[AWSCertificateManager]:
         """Return the AWS Certificate Manager"""
         if not self._acm:
-            if self.check_aws_configuration():
+            if self.ready():
                 self._acm = AWSCertificateManager()
         return self._acm
 
@@ -82,7 +97,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def api_gateway(self) -> Optional[AWSAPIGateway]:
         """Return the AWS API Gateway"""
         if not self._api_gateway:
-            if self.check_aws_configuration():
+            if self.ready():
                 self._api_gateway = AWSAPIGateway()
         return self._api_gateway
 
@@ -90,7 +105,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def dynamodb(self) -> Optional[AWSDynamoDB]:
         """Return the AWS DynamoDB"""
         if not self._dynamodb:
-            if self.check_aws_configuration():
+            if self.ready():
                 self._dynamodb = AWSDynamoDB()
         return self._dynamodb
 
@@ -98,7 +113,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def eks(self) -> Optional[AWSEks]:
         """Return the AWS EKS"""
         if not self._eks:
-            if self.check_aws_configuration():
+            if self.ready():
                 self._eks = AWSEks()
         return self._eks
 
@@ -106,7 +121,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def lambda_function(self) -> Optional[AWSLambdaFunction]:
         """Return the AWS Lambda Function"""
         if not self._lambda_function:
-            if self.check_aws_configuration():
+            if self.ready():
                 self._lambda_function = AWSLambdaFunction()
         return self._lambda_function
 
@@ -114,7 +129,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def iam(self) -> Optional[AWSIdentifyAccessManagement]:
         """Return the AWS IAM"""
         if not self._iam:
-            if self.check_aws_configuration():
+            if self.ready():
                 self._iam = AWSIdentifyAccessManagement()
         return self._iam
 
@@ -122,7 +137,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def rds(self) -> Optional[AWSRds]:
         """Return the AWS RDS"""
         if not self._rds:
-            if self.check_aws_configuration():
+            if self.ready():
                 self._rds = AWSRds()
         return self._rds
 
@@ -130,7 +145,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def rekognition(self) -> Optional[AWSRekognition]:
         """Return the AWS Rekognition"""
         if not self._rekognition:
-            if self.check_aws_configuration():
+            if self.ready():
                 self._rekognition = AWSRekognition()
         return self._rekognition
 
@@ -138,7 +153,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def route53(self) -> Optional[AWSRoute53]:
         """Return the AWS Route53"""
         if not self._route53:
-            if self.check_aws_configuration():
+            if self.ready():
                 self._route53 = AWSRoute53()
         return self._route53
 
@@ -146,7 +161,7 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def s3(self) -> Optional[AWSSimpleStorageSystem]:
         """Return the AWS S3"""
         if not self._s3:
-            if self.check_aws_configuration():
+            if self.ready():
                 self._s3 = AWSSimpleStorageSystem()
         return self._s3
 
