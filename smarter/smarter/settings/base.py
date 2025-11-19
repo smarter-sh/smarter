@@ -98,26 +98,40 @@ SESSION_COOKIE_HTTPONLY = True
 
 SECURE_PROXY_SSL_HEADER = None
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(os.path.join(PROJECT_ROOT, "smarter")).resolve()
+
 # -------------------------------
 # Django storages settings for AWS S3
 # -------------------------------
 # See https://django-storages.readthedocs.io/en/latest/backends/amazon
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-            "access_key": smarter_settings.aws_access_key_id.get_secret_value(),
-            "secret_key": smarter_settings.aws_secret_access_key.get_secret_value(),
-            "bucket_name": smarter_settings.aws_s3_bucket_name,
-            "region_name": smarter_settings.aws_region,
-            "default_acl": "public-read",
-            "querystring_auth": False,
-        },
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-        "OPTIONS": {},
-    },
+if smarter_settings.aws_is_configured:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "access_key": smarter_settings.aws_access_key_id.get_secret_value(),
+                "secret_key": smarter_settings.aws_secret_access_key.get_secret_value(),
+                "bucket_name": smarter_settings.aws_s3_bucket_name,
+                "region_name": smarter_settings.aws_region,
+                "default_acl": "public-read",
+                "querystring_auth": False,
+            },
+        }
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": BASE_DIR / "media",
+            },
+        }
+    }
+STORAGES["staticfiles"] = {
+    "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    "OPTIONS": {},
 }
 DEFAULT_FILE_STORAGE = smarter_settings.django_default_file_storage
 
@@ -126,10 +140,6 @@ AWS_SECRET_ACCESS_KEY = smarter_settings.aws_secret_access_key.get_secret_value(
 AWS_STORAGE_BUCKET_NAME = smarter_settings.aws_s3_bucket_name
 AWS_S3_REGION_NAME = smarter_settings.aws_region
 AWS_QUERYSTRING_AUTH = False  # disable querystring auth for public files
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-BASE_DIR = Path(os.path.join(PROJECT_ROOT, "smarter")).resolve()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
