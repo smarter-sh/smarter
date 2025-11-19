@@ -167,6 +167,11 @@ class AWSBase(SmarterHelperMixin):
         return bool(os.environ.get("AWS_DEPLOYED", False))
 
     @property
+    def aws_is_configured(self) -> bool:
+        """Return True if AWS is configured."""
+        return smarter_settings.aws_is_configured
+
+    @property
     def aws_profile(self):
         """AWS profile"""
         return self._aws_profile

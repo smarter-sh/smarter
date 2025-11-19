@@ -102,12 +102,15 @@ class EmailHelper(metaclass=Singleton):
             logger.error(
                 "smtp error while attempting to send email. error: %s from: %s to. %s", e, msg["From"], msg["To"]
             )
-            raise EmailHelperException(f"Error sending email: {e}") from e
+            if smarter_settings.developer_mode:
+                raise EmailHelperException(f"Error sending email: {e}") from e
+        # pylint: disable=broad-except
         except Exception as e:
             logger.error(
                 "unexpected error while attempting to send email. error: %s from: %s to. %s", e, msg["From"], msg["To"]
             )
-            raise EmailHelperException(f"Error sending email: {e}") from e
+            if smarter_settings.developer_mode:
+                raise EmailHelperException(f"Error sending email: {e}") from e
 
 
 email_helper = EmailHelper()
