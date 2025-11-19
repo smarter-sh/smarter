@@ -17,6 +17,8 @@ Individual services are accessed lazily via properties on the AWSInfrastructureC
 import logging
 from typing import Optional
 
+from tenacity import sleep
+
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
 
 from ..classes import Singleton
@@ -165,15 +167,3 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
 
 aws_helper = AWSInfrastructureConfig()
-if aws_helper.ready():
-    logger.info(
-        "%s is initialized and ready using botocore version %s, aws account %s and IAM ARN %s",
-        formatted_text("smarter.common.helpers.aws_helpers"),
-        aws_helper.get_botocore_version,
-        aws_helper.aws_account_id,
-        aws_helper.aws_iam_arn,
-    )
-else:
-    logger.warning(
-        "%s is not initialized properly and not ready.", formatted_text_red("smarter.common.helpers.aws_helpers")
-    )

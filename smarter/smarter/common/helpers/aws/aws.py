@@ -364,7 +364,12 @@ class AWSBase(SmarterHelperMixin):
             return False
         try:
             self._identity = self.aws_session.client("sts").get_caller_identity()
-            logger.info("connected to AWS with IAM identity: %s", self._identity)
+            logger.info(
+                "%s connected to AWS with account %s and IAM ARN: %s",
+                self.formatted_class_name,
+                self.aws_account_id,
+                self.aws_iam_arn,
+            )
             self._connected = isinstance(self._identity, dict)
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error("connected() Failure - %s", e)
