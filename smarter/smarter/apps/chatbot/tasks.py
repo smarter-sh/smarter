@@ -9,6 +9,7 @@ import logging
 import os
 import time
 from string import Template
+from typing import Optional
 from urllib.parse import urlparse
 
 import dns.resolver
@@ -21,10 +22,12 @@ from smarter.common.const import (
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
     SmarterEnvironments,
 )
+from smarter.common.helpers.aws.acm import AWSCertificateManager
 from smarter.common.helpers.aws.exceptions import (
     AWSACMCertificateNotFound,
     AWSACMVerificationNotFound,
 )
+from smarter.common.helpers.aws.route53 import AWSRoute53
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
@@ -82,6 +85,21 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 module_prefix = "smarter.apps.chatbot.tasks."
 
 
+def is_taskable() -> bool:
+    """
+    Module helper function to check if aws resources are accessible
+    for task processing.
+    """
+    if not aws_helper.ready():
+        return False
+
+    # belt and suspenders check to quiet linting errors
+    if not isinstance(aws_helper.route53, AWSRoute53):
+        return False
+
+    return True
+
+
 class ChatBotCustomDomainNotFound(SmarterChatBotException):
     """Raised when the custom domain for the chatbot is not found."""
 
@@ -109,6 +127,11 @@ def aggregate_chatbot_history():
 )
 def verify_certificate(certificate_arn: str):
     """Verify an AWS ACM certificate."""
+    if not is_taskable():
+        return
+    if not isinstance(aws_helper.acm, AWSCertificateManager):
+        return False
+
     pre_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn)
     prefix = formatted_text(module_prefix + "verify_certificate()")
     logger.info("%s - %s", prefix, certificate_arn)
@@ -148,6 +171,13 @@ def register_custom_domain(account_id: int, domain_name: str):
     Register a customer's custom domain name in AWS Route53
     and associated the Hosted Zone with the account.
     """
+    if not is_taskable():
+        return
+    if not isinstance(aws_helper.acm, AWSCertificateManager):
+        return False
+    if not isinstance(aws_helper.route53, AWSRoute53):
+        return False
+
     pre_register_custom_domain.send(sender=register_custom_domain, account_id=account_id, domain_name=domain_name)
     account = Account.objects.get(id=account_id)
     domain_name = aws_helper.aws.domain_resolver(domain_name)
@@ -175,12 +205,7 @@ def register_custom_domain(account_id: int, domain_name: str):
     try:
         # verify that the domain is available to register.
         domain_record = ChatBotCustomDomain.objects.get(domain_name=domain_name)
-        err = (
-            "Account %s attempted to register %s but it is already registered to %s.",
-            account.company_name,
-            domain_name,
-            domain_record.account.company_name,
-        )
+        err = f"Account {account.company_name} attempted to register {domain_name} but it is already registered to {domain_record.account.company_name}."
         logger.error(err)
         raise ChatBotCustomDomainExists(err)
     except ChatBotCustomDomain.DoesNotExist:
@@ -193,7 +218,7 @@ def register_custom_domain(account_id: int, domain_name: str):
         account=account,
         domain_name=domain_name,
     )
-    host.hosted_zone_id = aws_hosted_zone["Id"]
+    host.aws_hosted_zone_id = aws_hosted_zone["Id"]
     host.save()
 
     # create a certificate for the custom domain
@@ -228,6 +253,11 @@ def create_custom_domain_dns_record(
             ],
         }
     """
+    if not is_taskable():
+        return
+    if not isinstance(aws_helper.route53, AWSRoute53):
+        return
+
     pre_create_custom_domain_dns_record.send(
         sender=create_custom_domain_dns_record,
         chatbot_custom_domain_id=chatbot_custom_domain_id,
@@ -294,23 +324,30 @@ def create_custom_domain_dns_record(
     queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def verify_custom_domain(
-    hosted_zone_id: int,
-    sleep_interval: int = None,
-    max_attempts: int = None,
+    hosted_zone_id: str,
+    sleep_interval: Optional[int] = None,
+    max_attempts: Optional[int] = None,
 ) -> bool:
     """
     Verify the NS records of an AWS Route53 hosted zone. Custom domains
     are periodically reverified to ensure that the NS records are still valid.
     """
+    if not is_taskable():
+        return False
+    if not aws_helper.route53:
+        return False
+
     pre_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id)
 
     fn_name = "verify_custom_domain()"
     HOURS = 24
-    hosted_zone = smarter_settings.aws_route53_client.get_hosted_zone(Id=hosted_zone_id)
+    hosted_zone = aws_helper.route53.get_hosted_zone_by_id(hosted_zone_id=hosted_zone_id)
+    if not isinstance(hosted_zone, dict):
+        raise TypeError(f"expected a dict but received {type(hosted_zone)}")
     domain_name = hosted_zone["HostedZone"]["Name"]
     aws_ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=hosted_zone_id)
     sleep_interval = sleep_interval or 1800
-    max_attempts = max_attempts or HOURS * (3600 / sleep_interval)
+    max_attempts = max_attempts or int(HOURS * (3600 / sleep_interval))
 
     logger.info("%s - %s %s", fn_name, hosted_zone_id, domain_name)
     for i in range(max_attempts):  # 24 hours * attempts per hour * 2 days
@@ -405,11 +442,16 @@ def verify_custom_domain(
 def verify_domain(
     domain_name: str,
     record_type="A",
-    chatbot: ChatBot = None,
+    chatbot: Optional[ChatBot] = None,
     activate_chatbot: bool = False,
-    hosted_zone_id: str = None,
+    hosted_zone_id: Optional[str] = None,
 ) -> bool:
     """Verify that an Internet domain name resolves to NS records."""
+    if not is_taskable():
+        return False
+    if not aws_helper.route53:
+        return False
+
     pre_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
 
     fn_name = "verify_domain()"
@@ -477,6 +519,11 @@ def verify_domain(
 
 def destroy_domain_A_record(hostname: str, api_host_domain: str):
     """Destroy the A record for a domain name."""
+    if not is_taskable():
+        return
+    if not aws_helper.route53:
+        return
+
     pre_destroy_domain_A_record.send(sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain)
 
     fn_name = "destroy_domain_A_record()"
@@ -535,6 +582,8 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
 )
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     """Create a customer API default domain A record for a chatbot."""
+    if not is_taskable():
+        return
 
     pre_deploy_default_api.send(
         sender=deploy_default_api, chatbot_id=chatbot_id, with_domain_verification=with_domain_verification
@@ -542,7 +591,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 
     fn_name = formatted_text(module_prefix + "deploy_default_api()")
     logger.info("%s - chatbot %s", fn_name, chatbot_id)
-    chatbot: ChatBot = None
+    chatbot: ChatBot
     activate = False
 
     try:
@@ -552,6 +601,10 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         post_deploy_default_api.send(
             sender=deploy_default_api, chatbot_id=chatbot_id, with_domain_verification=with_domain_verification
         )
+        return None
+
+    # to quiet linting errors
+    if not aws_helper.route53:
         return None
 
     # Prerequisites.
@@ -663,10 +716,13 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 )
 def undeploy_default_api(chatbot_id: int):
     """Reverse a Chatbot deployment by destroying the customer API default domain A record for a chatbot."""
+    if not is_taskable():
+        return
+
     pre_undeploy_default_api.send(sender=undeploy_default_api, chatbot_id=chatbot_id)
     prefix = formatted_text(module_prefix + "undeploy_default_api()")
 
-    chatbot: ChatBot = None
+    chatbot: ChatBot
     try:
         chatbot = ChatBot.objects.get(id=chatbot_id)
     except ChatBot.DoesNotExist:
@@ -692,6 +748,9 @@ def delete_default_api(url: str, account_number: str, name: str):
     - delete default domain Route53 A record for a chatbot.
     - delete ingress resources: ingress, certificate, secret.
     """
+    if not is_taskable():
+        return
+
     pre_delete_default_api.send(sender=delete_default_api, url=url, account_number=account_number, name=name)
 
     prefix = formatted_text(module_prefix + "delete_default_api()")
@@ -736,9 +795,12 @@ def deploy_custom_api(chatbot_id: int):
         post_deploy_custom_api.send(sender=deploy_custom_api, chatbot_id=chatbot_id)
         return
 
-    aws_helper.route53.create_domain_a_record(hostname=domain_name, api_host_domain=domain_name)
+    if not is_taskable():
+        return
+
+    aws_helper.route53.create_domain_a_record(hostname=domain_name, api_host_domain=domain_name)  # type: ignore[union-attr]
 
     # verify the hosted zone of the custom domain
-    hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name)
+    hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name)  # type: ignore[union-attr]
     verify_custom_domain(hosted_zone_id)
     post_deploy_custom_api.send(sender=deploy_custom_api, chatbot_id=chatbot_id)
