@@ -74,6 +74,7 @@ class AWSBase(SmarterHelperMixin):
     _debug_mode: bool = False
 
     _connected: bool = False
+    _identity: Optional[dict] = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -322,6 +323,11 @@ class AWSBase(SmarterHelperMixin):
         """
         return bool(self.connected()) and bool(smarter_settings.environment in SmarterEnvironments.all)
 
+    @property
+    def identity(self) -> Optional[dict]:
+        """Return the AWS identity."""
+        return self._identity
+
     def connected(self) -> bool:
         """Test that the AWS connection works."""
         if self._connected:
@@ -330,8 +336,10 @@ class AWSBase(SmarterHelperMixin):
             logger.error("connected() Failure - aws_session is not initialized")
             return False
         try:
-            # pylint: disable=pointless-statement
-            self._connected = self.aws_session.client("sts").get_caller_identity()
+            self._identity = self.aws_session.client("sts").get_caller_identity()
+            logger.info("connected to AWS with IAM identity: %s", self._identity)
+            self._connected = isinstance(self._identity, dict)
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error("connected() Failure - %s", e)
+            self._connected = False
         return self._connected
