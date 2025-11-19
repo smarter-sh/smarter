@@ -10,7 +10,7 @@ description: >
   Includes enterprise features like credentials management, team workgroups, RBAC, cost codes, and audit logging.
   Open source with public documentation and rapid self-onboarding.
 type: application
-version: 0.8.11
+version: 0.9.0
 kubeVersion: ">=1.28.0-0"
 home: https://smarter.sh
 sources:
@@ -21,27 +21,27 @@ maintainers:
     website: https://lawrencemcdaniel.com
 dependencies:
   - name: grafana
-    version: 0.8.11
+    version: 12.1.8
     repository: https://charts.bitnami.com/bitnami
     condition: grafana.enabled
   - name: loki
-    version: 0.8.11
+    version: 6.46.0
     repository: https://grafana.github.io/helm-charts
     condition: loki.enabled
   - name: mysql
-    version: 0.8.11
+    version: 14.0.3
     repository: https://charts.bitnami.com/bitnami
     condition: mysql.enabled
   - name: mariadb
-    version: 0.8.11
+    version: 23.2.4
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
   - name: prometheus
-    version: 0.8.11
+    version: 2.1.23
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
-    version: 0.8.11
+    version: 23.2.12
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
 icon: https://platform.smarter.sh/static/images/logo/smarter-crop.png
