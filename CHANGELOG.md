@@ -1,3 +1,11 @@
+## [0.13.27](https://github.com/smarter-sh/smarter/compare/v0.13.26...v0.13.27) (2025-11-19)
+
+
+### Bug Fixes
+
+* cleanup data type linter errors ([50283b4](https://github.com/smarter-sh/smarter/commit/50283b452411cda3b6beaec58bd17847aec71ed1))
+* fail gracefully if aws cli could not authenticate ([96a1f71](https://github.com/smarter-sh/smarter/commit/96a1f717c5e510491ba6d7d6075866272149344f))
+
 ## [0.13.26](https://github.com/smarter-sh/smarter/compare/v0.13.25...v0.13.26) (2025-11-19)
 
 
