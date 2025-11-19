@@ -125,7 +125,7 @@ else:
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
             "OPTIONS": {
-                "location": "/home/smarter_user/media",
+                "location": "/home/smarter_user/data/media",
             },
         }
     }
