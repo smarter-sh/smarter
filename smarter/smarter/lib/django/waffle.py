@@ -11,6 +11,8 @@ import waffle as waffle_orig
 from django.core.cache import cache
 from django.db import connections
 from django.db.utils import OperationalError, ProgrammingError
+from django_redis.exceptions import ConnectionInterrupted
+from redis.exceptions import ConnectionError as RedisConnectionError
 from waffle.admin import SwitchAdmin
 
 
@@ -98,14 +100,29 @@ class SmarterWaffleSwitches:
 
 
 def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             cache_key = f"{func.__name__}_{args}_{kwargs}"
-            result = cache.get(cache_key)
+            result = None
+            try:
+                result = cache.get(cache_key)
+            except (RedisConnectionError, ConnectionInterrupted) as e:
+                logger.error("Redis connection error while accessing cache: %s", e, exc_info=True)
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Unexpected error while attempting to access cache: %s", e, exc_info=True)
+
             if not result:
                 result = func(*args, **kwargs)
-                cache.set(cache_key, result, timeout)
+                try:
+                    cache.set(cache_key, result, timeout)
+                except (RedisConnectionError, ConnectionInterrupted) as e:
+                    logger.error("Redis connection error while setting cache: %s", e, exc_info=True)
+                # pylint: disable=broad-except
+                except Exception as e:
+                    logger.error("Unexpected error while attempting to access cache: %s", e, exc_info=True)
             return result
 
         def invalidate(*args, **kwargs):

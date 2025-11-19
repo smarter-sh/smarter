@@ -145,7 +145,34 @@ class AWSBase(SmarterHelperMixin):
             msg = f"Unable to initialize AWSBase for environment {self.environment}."
             if self.environment not in SmarterEnvironments.aws_environments:
                 msg += f" Please note AWS classes only work with the following environments: {SmarterEnvironments.aws_environments}"
-            raise AWSNotReadyError(msg)
+            # raise AWSNotReadyError(msg)
+            logger.error(msg)
+
+    @property
+    def identity(self) -> Optional[dict]:
+        """
+        Return the AWS identity.
+
+        example = {
+            "UserId": "AIDARKEXDU3E7KD3L3CRF",
+            "Account": "090511222473",
+            "Arn": "arn:aws:iam::090511222473:user/mcdaniel",
+            "ResponseMetadata": {
+                "RequestId": "4d20b844-7e75-4980-9e92-ca0867b24387",
+                "HTTPStatusCode": 200,
+                "HTTPHeaders": {
+                    "x-amzn-requestid": "4d20b844-7e75-4980-9e92-ca0867b24387",
+                    "x-amz-sts-extended-request-id": "MTp1cy1lYXN0LTI6UzoxNzYzNTc5NjUyMzA0OlI6MVFkeG8yZ1Q=",
+                    "content-type": "text/xml",
+                    "content-length": "405",
+                    "date": "Wed, 19 Nov 2025 19:14:12 GMT",
+                },
+                "RetryAttempts": 0,
+            }
+        }
+
+        """
+        return self._identity
 
     @property
     def version(self):
@@ -180,19 +207,24 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_account_id(self):
         """AWS account id"""
-        Services.raise_error_on_disabled(Services.AWS_CLI)
-        if not self.aws_session:
-            logger.warning("aws_session is not initialized")
+        if not self.ready:
             return None
-        sts_client = self.aws_session.client("sts")
-        if not sts_client:
-            logger.warning("could not initialize sts_client")
+
+        if not isinstance(self.identity, dict):
             return None
-        retval = sts_client.get_caller_identity()
-        if not isinstance(retval, dict):
-            logger.warning("sts_client.get_caller_identity() did not return a dict")
+
+        return self.identity.get("Account", None)
+
+    @property
+    def aws_iam_arn(self):
+        """AWS IAM ARN"""
+        if not self.ready:
             return None
-        return retval.get("Account", None)
+
+        if not isinstance(self.identity, dict):
+            return None
+
+        return self.identity.get("Arn", None)
 
     @property
     def aws_region(self):
@@ -322,11 +354,6 @@ class AWSBase(SmarterHelperMixin):
         we consider it safe to create billable resources in AWS.
         """
         return bool(self.connected()) and bool(smarter_settings.environment in SmarterEnvironments.all)
-
-    @property
-    def identity(self) -> Optional[dict]:
-        """Return the AWS identity."""
-        return self._identity
 
     def connected(self) -> bool:
         """Test that the AWS connection works."""

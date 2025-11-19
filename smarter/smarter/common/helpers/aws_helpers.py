@@ -17,6 +17,8 @@ Individual services are accessed lazily via properties on the AWSInfrastructureC
 import logging
 from typing import Optional
 
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
+
 from ..classes import Singleton
 from .aws.acm import AWSCertificateManager
 from .aws.api_gateway import AWSAPIGateway
@@ -58,6 +60,16 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     def identity(self) -> Optional[dict]:
         """Return the AWS identity."""
         return self.aws.identity
+
+    @property
+    def aws_iam_arn(self) -> Optional[str]:
+        """Return the AWS IAM ARN."""
+        return self.aws.aws_iam_arn
+
+    @property
+    def aws_account_id(self) -> Optional[str]:
+        """Return the AWS Account ID."""
+        return self.aws.aws_account_id
 
     @property
     def get_botocore_version(self) -> str:
@@ -153,3 +165,15 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
 
 aws_helper = AWSInfrastructureConfig()
+if aws_helper.ready():
+    logger.info(
+        "%s is initialized and ready using botocore version %s, aws account %s and IAM ARN %s",
+        formatted_text("smarter.common.helpers.aws_helpers"),
+        aws_helper.get_botocore_version,
+        aws_helper.aws_account_id,
+        aws_helper.aws_iam_arn,
+    )
+else:
+    logger.warning(
+        "%s is not initialized properly and not ready.", formatted_text_red("smarter.common.helpers.aws_helpers")
+    )

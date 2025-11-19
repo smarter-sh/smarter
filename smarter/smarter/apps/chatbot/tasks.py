@@ -90,11 +90,16 @@ def is_taskable() -> bool:
     Module helper function to check if aws resources are accessible
     for task processing.
     """
+
+    # verifies that the aws credentials are available and valid.
     if not aws_helper.ready():
         return False
 
-    # belt and suspenders check to quiet linting errors
+    # verify that route53 and acm helpers are available.
     if not isinstance(aws_helper.route53, AWSRoute53):
+        return False
+
+    if not isinstance(aws_helper.acm, AWSCertificateManager):
         return False
 
     return True
@@ -343,7 +348,7 @@ def verify_custom_domain(
     HOURS = 24
     hosted_zone = aws_helper.route53.get_hosted_zone_by_id(hosted_zone_id=hosted_zone_id)
     if not isinstance(hosted_zone, dict):
-        raise TypeError(f"expected a dict but received {type(hosted_zone)}")
+        raise ChatBotTaskError(f"expected a dict but received {type(hosted_zone)}")
     domain_name = hosted_zone["HostedZone"]["Name"]
     aws_ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=hosted_zone_id)
     sleep_interval = sleep_interval or 1800
@@ -370,6 +375,10 @@ def verify_custom_domain(
         except dns.resolver.Timeout:
             logger.warning("%s timeout exceeded while querying the domain %s.", fn_name, domain_name)
             continue
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("%s unexpected error while querying domain %s: %s", fn_name, domain_name, str(e))
+            continue
 
         for record in aws_ns_records:
             aws_ns_value = record["Value"]
@@ -392,12 +401,7 @@ def verify_custom_domain(
                 try:
                     account = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id).account
                     AccountContact.send_email_to_account(account=account, subject=subject, body=body)
-                    msg = (
-                        "Domain %s has been verified for account %s %s",
-                        domain_name,
-                        account.company_name,
-                        account.account_number,
-                    )
+                    msg = f"Domain {domain_name} has been verified for account {account.company_name} {account.account_number}"
                     logger.info(msg)
                 except ChatBotCustomDomain.DoesNotExist:
                     pass
@@ -421,13 +425,7 @@ def verify_custom_domain(
     If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."""
     account = ChatBotCustomDomain.objects.get(hosted_zone_id=hosted_zone_id).account
     AccountContact.send_email_to_account(account=account, subject=subject, body=body)
-
-    msg = (
-        "Domain verification failed for domain %s for account %s %s",
-        domain_name,
-        account.company_name,
-        account.account_number,
-    )
+    msg = f"Domain verification failed for domain {domain_name} for account {account.company_name} {account.account_number}"
     logger.error(msg)
     post_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id)
     return False
