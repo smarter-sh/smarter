@@ -1,3 +1,10 @@
+## [0.13.28](https://github.com/smarter-sh/smarter/compare/v0.13.27...v0.13.28) (2025-11-19)
+
+
+### Bug Fixes
+
+* cache decorator should fail gracefully if its cache is unavailable ([7438487](https://github.com/smarter-sh/smarter/commit/7438487749fcdf8dfe00eca16fe3ec6505bbcb97))
+
 ## [0.13.27](https://github.com/smarter-sh/smarter/compare/v0.13.26...v0.13.27) (2025-11-19)
 
 
