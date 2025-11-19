@@ -21,27 +21,27 @@ maintainers:
     website: https://lawrencemcdaniel.com
 dependencies:
   - name: grafana
-    version: 0.9.5
+    version: 12.1.8
     repository: https://charts.bitnami.com/bitnami
     condition: grafana.enabled
   - name: loki
-    version: 0.9.5
+    version: 6.46.0
     repository: https://grafana.github.io/helm-charts
     condition: loki.enabled
   - name: mysql
-    version: 0.9.5
+    version: 14.0.3
     repository: https://charts.bitnami.com/bitnami
     condition: mysql.enabled
   - name: mariadb
-    version: 0.9.5
+    version: 23.2.4
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
   - name: prometheus
-    version: 0.9.5
+    version: 2.1.23
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
-    version: 0.9.5
+    version: 23.2.12
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
 icon: https://platform.smarter.sh/static/images/logo/smarter-crop.png
@@ -69,12 +69,12 @@ annotations:
   helm.sh/chart: smarter-0.9.3
   artifacthub.io/changes: |
     - kind: changed
-      description: Chart description updated to better reflect Smarter's installation options.
+      description: bump to app version 0.13.28
   artifacthub.io/license: AGPL-3.0
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
     - name: smarter
-      image: mcdaniel0073/smarter:v0.13.26
+      image: mcdaniel0073/smarter:v0.13.28
       platforms:
         - linux/amd64
         - linux/arm64
