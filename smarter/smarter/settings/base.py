@@ -678,4 +678,6 @@ except OSError as e:
 logger.info("Python v%s", sys.version)
 logger.info("Django v%s", get_version())
 logger.info("Smarter v%s", smarter_version)
+logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)
+logger.info("Storages backend: %s", STORAGES["default"]["BACKEND"])
 logger.info("=" * 80)
