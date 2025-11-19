@@ -119,7 +119,8 @@ STORAGES = {
         "OPTIONS": {},
     },
 }
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+DEFAULT_FILE_STORAGE = smarter_settings.django_default_file_storage
+
 AWS_ACCESS_KEY_ID = smarter_settings.aws_access_key_id.get_secret_value()
 AWS_SECRET_ACCESS_KEY = smarter_settings.aws_secret_access_key.get_secret_value()
 AWS_STORAGE_BUCKET_NAME = smarter_settings.aws_s3_bucket_name

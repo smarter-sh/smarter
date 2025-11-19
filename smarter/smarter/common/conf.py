@@ -91,6 +91,13 @@ def get_semantic_version() -> str:
     return re.sub(r"-next-major\.\d+", "", version)
 
 
+class DjangoPermittedStorages:
+    """Django permitted storage backends"""
+
+    AWS_S3 = "storages.backends.s3boto3.S3Boto3Storage"
+    FILE_SYSTEM = "django.core.files.storage.FileSystemStorage"
+
+
 # pylint: disable=too-few-public-methods
 class SettingsDefaults:
     """
@@ -130,6 +137,14 @@ class SettingsDefaults:
     AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
     DEBUG_MODE: bool = bool(os.environ.get("DEBUG_MODE", TFVARS.get("debug_mode", False)))
     DEVELOPER_MODE: bool = bool(os.environ.get("DEVELOPER_MODE", TFVARS.get("developer_mode", False)))
+
+    DJANGO_DEFAULT_FILE_STORAGE = os.environ.get("DJANGO_DEFAULT_FILE_STORAGE", DjangoPermittedStorages.AWS_S3)
+    if DJANGO_DEFAULT_FILE_STORAGE == DjangoPermittedStorages.AWS_S3 and not AWS_IS_CONFIGURED:
+        DJANGO_DEFAULT_FILE_STORAGE = DjangoPermittedStorages.FILE_SYSTEM
+        logger.warning(
+            "AWS is not configured properly. Falling back to FileSystemStorage for Django default file storage."
+        )
+
     DUMP_DEFAULTS: bool = bool(os.environ.get("DUMP_DEFAULTS", TFVARS.get("dump_defaults", False)))
     ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
 
@@ -374,6 +389,7 @@ class Settings(BaseSettings):
     # True if developer mode is enabled. Used as a means to configure a production
     # Docker container to run locally for student use.
     developer_mode: bool = Field(SettingsDefaults.DEVELOPER_MODE)
+    django_default_file_storage: str = Field(SettingsDefaults.DJANGO_DEFAULT_FILE_STORAGE)
 
     log_level: int = Field(
         SettingsDefaults.LOG_LEVEL
