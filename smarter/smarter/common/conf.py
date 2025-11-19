@@ -91,71 +91,6 @@ def get_semantic_version() -> str:
     return re.sub(r"-next-major\.\d+", "", version)
 
 
-class Services:
-    """Services enabled for this solution. This is intended to be permanently read-only"""
-
-    # enabled
-    AWS_CLI = ("aws-cli", True)
-    AWS_ROUTE53 = ("route53", True)
-    AWS_S3 = ("s3", True)
-    AWS_EC2 = ("ec2", True)
-    AWS_IAM = ("iam", True)
-    AWS_CLOUDWATCH = ("cloudwatch", True)
-    AWS_SES = ("ses", True)
-    AWS_RDS = ("rds", True)
-    AWS_EKS = ("eks", True)
-
-    # disabled
-    AWS_LAMBDA = ("lambda", False)
-    AWS_APIGATEWAY = ("apigateway", False)
-    AWS_SNS = ("sns", False)
-    AWS_SQS = ("sqs", False)
-    AWS_REKOGNITION = ("rekognition", False)
-    AWS_DYNAMODB = ("dynamodb", False)
-
-    @classmethod
-    def is_connected_to_aws(cls):
-        return bool(boto3.Session().get_credentials())
-
-    @classmethod
-    def enabled(cls, service: Union[str, Tuple[str, bool]]) -> bool:
-        """Is the service enabled?"""
-        if not cls.is_connected_to_aws():
-            return False
-        if isinstance(service, tuple):
-            service = service[0]
-        return service in cls.enabled_services()
-
-    @classmethod
-    def raise_error_on_disabled(cls, service: Union[str, Tuple[str, bool]]) -> None:
-        """Raise an error if the service is disabled"""
-        if not cls.enabled(service):
-            raise SmarterConfigurationError(f"{service} is not enabled. See conf.Services")
-
-    @classmethod
-    def to_dict(cls):
-        """Convert Services to dict"""
-        return {
-            key: value
-            for key, value in Services.__dict__.items()
-            if not key.startswith("__")
-            and not callable(key)
-            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
-        }
-
-    @classmethod
-    def enabled_services(cls) -> List[str]:
-        """Return a list of enabled services"""
-        return [
-            getattr(cls, key)[0]
-            for key in dir(cls)
-            if not key.startswith("__")
-            and not callable(getattr(cls, key))
-            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
-            and getattr(cls, key)[1] is True
-        ]
-
-
 # pylint: disable=too-few-public-methods
 class SettingsDefaults:
     """
@@ -175,6 +110,13 @@ class SettingsDefaults:
     AWS_ACCESS_KEY_ID: SecretStr = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", "SET-ME-PLEASE"))
     AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(os.environ.get("AWS_SECRET_ACCESS_KEY", "SET-ME-PLEASE"))
     AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+    AWS_IS_CONFIGURED = bool(
+        AWS_PROFILE
+        or (
+            AWS_ACCESS_KEY_ID.get_secret_value() != "SET-ME-PLEASE"
+            and AWS_SECRET_ACCESS_KEY.get_secret_value() != "SET-ME-PLEASE"
+        )
+    )
 
     # aws api gateway defaults
     AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = bool(os.environ.get("create_custom_domain", False))
@@ -308,6 +250,74 @@ class SettingsDefaults:
         }
 
 
+class Services:
+    """Services enabled for this solution. This is intended to be permanently read-only"""
+
+    # enabled
+    AWS_CLI = ("aws-cli", True)
+    AWS_ROUTE53 = ("route53", True)
+    AWS_S3 = ("s3", True)
+    AWS_EC2 = ("ec2", True)
+    AWS_IAM = ("iam", True)
+    AWS_CLOUDWATCH = ("cloudwatch", True)
+    AWS_SES = ("ses", True)
+    AWS_RDS = ("rds", True)
+    AWS_EKS = ("eks", True)
+
+    # disabled
+    AWS_LAMBDA = ("lambda", False)
+    AWS_APIGATEWAY = ("apigateway", False)
+    AWS_SNS = ("sns", False)
+    AWS_SQS = ("sqs", False)
+    AWS_REKOGNITION = ("rekognition", False)
+    AWS_DYNAMODB = ("dynamodb", False)
+
+    @classmethod
+    def is_connected_to_aws(cls):
+        return bool(boto3.Session().get_credentials())
+
+    @classmethod
+    def enabled(cls, service: Union[str, Tuple[str, bool]]) -> bool:
+        """Is the service enabled?"""
+        if not cls.is_connected_to_aws():
+            return False
+        if isinstance(service, tuple):
+            service = service[0]
+        return service in cls.enabled_services()
+
+    @classmethod
+    def raise_error_on_disabled(cls, service: Union[str, Tuple[str, bool]]) -> None:
+        """Raise an error if the service is disabled"""
+        if not cls.enabled(service):
+            if SettingsDefaults.AWS_IS_CONFIGURED:
+                raise SmarterConfigurationError(f"{service} is not enabled. See conf.Services")
+            else:
+                logger.warning("AWS is not configured. %s is not enabled.", service)
+
+    @classmethod
+    def to_dict(cls):
+        """Convert Services to dict"""
+        return {
+            key: value
+            for key, value in Services.__dict__.items()
+            if not key.startswith("__")
+            and not callable(key)
+            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
+        }
+
+    @classmethod
+    def enabled_services(cls) -> List[str]:
+        """Return a list of enabled services"""
+        return [
+            getattr(cls, key)[0]
+            for key in dir(cls)
+            if not key.startswith("__")
+            and not callable(getattr(cls, key))
+            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
+            and getattr(cls, key)[1] is True
+        ]
+
+
 AWS_REGIONS = ["us-east-1"]
 if Services.enabled(Services.AWS_EC2):
     try:
@@ -381,6 +391,10 @@ class Settings(BaseSettings):
     aws_regions: List[str] = Field(AWS_REGIONS, description="The list of AWS regions")
     aws_region: str = Field(
         SettingsDefaults.AWS_REGION,
+    )
+    aws_is_configured: bool = Field(
+        SettingsDefaults.AWS_IS_CONFIGURED,
+        description="True if AWS is configured",
     )
     aws_apigateway_create_custom_domaim: bool = Field(
         SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN,
