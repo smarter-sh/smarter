@@ -1,3 +1,19 @@
+## [0.13.26](https://github.com/smarter-sh/smarter/compare/v0.13.25...v0.13.26) (2025-11-19)
+
+
+### Bug Fixes
+
+* add developer_mode to fine tune behavior of local.py settings ([f925702](https://github.com/smarter-sh/smarter/commit/f925702401ad863a0e86bf2642b5885e6dc12d62))
+* add the actual password to the test db ([3ebbdc8](https://github.com/smarter-sh/smarter/commit/3ebbdc88a1ecb3c304497d272fcd37e3ec507d99))
+* allow overrides to DEFAULT_FILE_STORAGE in order to avoid using AWS S3 when aws is not configured ([7b3704b](https://github.com/smarter-sh/smarter/commit/7b3704b2af5e603e1b875666c2f7dc72a0eb7b13))
+* ensure that we always know which settings module is being loaded ([a81ca2e](https://github.com/smarter-sh/smarter/commit/a81ca2e306c67c5356a67c3b76ed6662a62ba546))
+* expose unencrypted sql connection password when in debug mode ([e873c62](https://github.com/smarter-sh/smarter/commit/e873c623261af9b2a317cb0cba145b733f38aa5e))
+* setup a fixed media folder /home/smarter_user/data/media ([428402c](https://github.com/smarter-sh/smarter/commit/428402c3dcf41a7e78b2dc59cf6d08c5b2db9659))
+* setup a fixed media folder /home/smarter_user/data/media ([b0463e0](https://github.com/smarter-sh/smarter/commit/b0463e05a45452938840b4a6366ef4c3beb93cd0))
+* STORAGES should only use S3 if aws is configured ([031ca77](https://github.com/smarter-sh/smarter/commit/031ca77c18feacdb6df8558d7b4be318e4843406))
+* STORAGES should only use S3 if aws is configured ([1ff8b8e](https://github.com/smarter-sh/smarter/commit/1ff8b8e31252ec7a8b7149dc7f27e38eca3ba5e5))
+* we should only raise_error_on_disabled() if we've actually configure aws ([78b2eb5](https://github.com/smarter-sh/smarter/commit/78b2eb5b26df5decc2b0fcf2e88a1069bfe2fa41))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.

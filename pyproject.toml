@@ -1,6 +1,6 @@
 [project]
 name = "Smarter"
-version = "0.13.25"
+version = "0.13.26"
 requires-python = ">=3.10"
 description = "Smarter: a declarative AI resource management platform"
 authors = [{ name = "Lawrence McDaniel", email = "lpm0073@gmail.com" }]
