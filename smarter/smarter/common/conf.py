@@ -91,69 +91,11 @@ def get_semantic_version() -> str:
     return re.sub(r"-next-major\.\d+", "", version)
 
 
-class Services:
-    """Services enabled for this solution. This is intended to be permanently read-only"""
+class DjangoPermittedStorages:
+    """Django permitted storage backends"""
 
-    # enabled
-    AWS_CLI = ("aws-cli", True)
-    AWS_ROUTE53 = ("route53", True)
-    AWS_S3 = ("s3", True)
-    AWS_EC2 = ("ec2", True)
-    AWS_IAM = ("iam", True)
-    AWS_CLOUDWATCH = ("cloudwatch", True)
-    AWS_SES = ("ses", True)
-    AWS_RDS = ("rds", True)
-    AWS_EKS = ("eks", True)
-
-    # disabled
-    AWS_LAMBDA = ("lambda", False)
-    AWS_APIGATEWAY = ("apigateway", False)
-    AWS_SNS = ("sns", False)
-    AWS_SQS = ("sqs", False)
-    AWS_REKOGNITION = ("rekognition", False)
-    AWS_DYNAMODB = ("dynamodb", False)
-
-    @classmethod
-    def is_connected_to_aws(cls):
-        return bool(boto3.Session().get_credentials())
-
-    @classmethod
-    def enabled(cls, service: Union[str, Tuple[str, bool]]) -> bool:
-        """Is the service enabled?"""
-        if not cls.is_connected_to_aws():
-            return False
-        if isinstance(service, tuple):
-            service = service[0]
-        return service in cls.enabled_services()
-
-    @classmethod
-    def raise_error_on_disabled(cls, service: Union[str, Tuple[str, bool]]) -> None:
-        """Raise an error if the service is disabled"""
-        if not cls.enabled(service):
-            raise SmarterConfigurationError(f"{service} is not enabled. See conf.Services")
-
-    @classmethod
-    def to_dict(cls):
-        """Convert Services to dict"""
-        return {
-            key: value
-            for key, value in Services.__dict__.items()
-            if not key.startswith("__")
-            and not callable(key)
-            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
-        }
-
-    @classmethod
-    def enabled_services(cls) -> List[str]:
-        """Return a list of enabled services"""
-        return [
-            getattr(cls, key)[0]
-            for key in dir(cls)
-            if not key.startswith("__")
-            and not callable(getattr(cls, key))
-            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
-            and getattr(cls, key)[1] is True
-        ]
+    AWS_S3 = "storages.backends.s3boto3.S3Boto3Storage"
+    FILE_SYSTEM = "django.core.files.storage.FileSystemStorage"
 
 
 # pylint: disable=too-few-public-methods
@@ -175,6 +117,13 @@ class SettingsDefaults:
     AWS_ACCESS_KEY_ID: SecretStr = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", "SET-ME-PLEASE"))
     AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(os.environ.get("AWS_SECRET_ACCESS_KEY", "SET-ME-PLEASE"))
     AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+    AWS_IS_CONFIGURED = bool(
+        AWS_PROFILE
+        or (
+            AWS_ACCESS_KEY_ID.get_secret_value() != "SET-ME-PLEASE"
+            and AWS_SECRET_ACCESS_KEY.get_secret_value() != "SET-ME-PLEASE"
+        )
+    )
 
     # aws api gateway defaults
     AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = bool(os.environ.get("create_custom_domain", False))
@@ -187,6 +136,15 @@ class SettingsDefaults:
     )
     AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
     DEBUG_MODE: bool = bool(os.environ.get("DEBUG_MODE", TFVARS.get("debug_mode", False)))
+    DEVELOPER_MODE: bool = bool(os.environ.get("DEVELOPER_MODE", TFVARS.get("developer_mode", False)))
+
+    DJANGO_DEFAULT_FILE_STORAGE = os.environ.get("DJANGO_DEFAULT_FILE_STORAGE", DjangoPermittedStorages.AWS_S3)
+    if DJANGO_DEFAULT_FILE_STORAGE == DjangoPermittedStorages.AWS_S3 and not AWS_IS_CONFIGURED:
+        DJANGO_DEFAULT_FILE_STORAGE = DjangoPermittedStorages.FILE_SYSTEM
+        logger.warning(
+            "AWS is not configured properly. Falling back to FileSystemStorage for Django default file storage."
+        )
+
     DUMP_DEFAULTS: bool = bool(os.environ.get("DUMP_DEFAULTS", TFVARS.get("dump_defaults", False)))
     ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
 
@@ -307,6 +265,74 @@ class SettingsDefaults:
         }
 
 
+class Services:
+    """Services enabled for this solution. This is intended to be permanently read-only"""
+
+    # enabled
+    AWS_CLI = ("aws-cli", True)
+    AWS_ROUTE53 = ("route53", True)
+    AWS_S3 = ("s3", True)
+    AWS_EC2 = ("ec2", True)
+    AWS_IAM = ("iam", True)
+    AWS_CLOUDWATCH = ("cloudwatch", True)
+    AWS_SES = ("ses", True)
+    AWS_RDS = ("rds", True)
+    AWS_EKS = ("eks", True)
+
+    # disabled
+    AWS_LAMBDA = ("lambda", False)
+    AWS_APIGATEWAY = ("apigateway", False)
+    AWS_SNS = ("sns", False)
+    AWS_SQS = ("sqs", False)
+    AWS_REKOGNITION = ("rekognition", False)
+    AWS_DYNAMODB = ("dynamodb", False)
+
+    @classmethod
+    def is_connected_to_aws(cls):
+        return bool(boto3.Session().get_credentials())
+
+    @classmethod
+    def enabled(cls, service: Union[str, Tuple[str, bool]]) -> bool:
+        """Is the service enabled?"""
+        if not cls.is_connected_to_aws():
+            return False
+        if isinstance(service, tuple):
+            service = service[0]
+        return service in cls.enabled_services()
+
+    @classmethod
+    def raise_error_on_disabled(cls, service: Union[str, Tuple[str, bool]]) -> None:
+        """Raise an error if the service is disabled"""
+        if not cls.enabled(service):
+            if SettingsDefaults.AWS_IS_CONFIGURED:
+                raise SmarterConfigurationError(f"{service} is not enabled. See conf.Services")
+            else:
+                logger.warning("AWS is not configured. %s is not enabled.", service)
+
+    @classmethod
+    def to_dict(cls):
+        """Convert Services to dict"""
+        return {
+            key: value
+            for key, value in Services.__dict__.items()
+            if not key.startswith("__")
+            and not callable(key)
+            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
+        }
+
+    @classmethod
+    def enabled_services(cls) -> List[str]:
+        """Return a list of enabled services"""
+        return [
+            getattr(cls, key)[0]
+            for key in dir(cls)
+            if not key.startswith("__")
+            and not callable(getattr(cls, key))
+            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
+            and getattr(cls, key)[1] is True
+        ]
+
+
 AWS_REGIONS = ["us-east-1"]
 if Services.enabled(Services.AWS_EC2):
     try:
@@ -358,6 +384,13 @@ class Settings(BaseSettings):
 
     shared_resource_identifier: str = Field(SettingsDefaults.SHARED_RESOURCE_IDENTIFIER)
     debug_mode: bool = Field(SettingsDefaults.DEBUG_MODE)
+
+    # new in 0.13.26
+    # True if developer mode is enabled. Used as a means to configure a production
+    # Docker container to run locally for student use.
+    developer_mode: bool = Field(SettingsDefaults.DEVELOPER_MODE)
+    django_default_file_storage: str = Field(SettingsDefaults.DJANGO_DEFAULT_FILE_STORAGE)
+
     log_level: int = Field(
         SettingsDefaults.LOG_LEVEL
     )  # e.g., logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
@@ -374,6 +407,10 @@ class Settings(BaseSettings):
     aws_regions: List[str] = Field(AWS_REGIONS, description="The list of AWS regions")
     aws_region: str = Field(
         SettingsDefaults.AWS_REGION,
+    )
+    aws_is_configured: bool = Field(
+        SettingsDefaults.AWS_IS_CONFIGURED,
+        description="True if AWS is configured",
     )
     aws_apigateway_create_custom_domaim: bool = Field(
         SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN,

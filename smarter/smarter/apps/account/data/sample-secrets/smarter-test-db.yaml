@@ -2,7 +2,7 @@ apiVersion: smarter.sh/v1
 kind: Secret
 metadata:
   accountNumber: 3141-5926-5359
-  description: an example secret manifest for the Smarter API Secret
+  description: an example secret manifest for the Smarter Remote SQL Secret
   name: smarter_test_db
   tags:
   - example
@@ -12,5 +12,5 @@ metadata:
   version: 1.0.0
 spec:
   config:
-    description: Smarter test user for  remote test database connections
-    value: <** your unencrypted credential value **>
+    description: smarter_test_user password. Password value is the same as the user.
+    value: smarter_test_user
