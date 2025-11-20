@@ -20,24 +20,16 @@ from smarter.common.const import (
     SmarterEnvironments,
 )
 from smarter.common.exceptions import SmarterException
-from smarter.lib.django import waffle
 
 # mcdaniel apr-2024: technically we shouldn't import smarter.libe.django into the aws helpers
 # but the validators don't depend on django initialization, so we're okay here.
 from smarter.lib.django.validators import SmarterValidator, SmarterValueError
-from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-
-from .exceptions import AWSNotReadyError
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.TASK_LOGGING) and level >= smarter_settings.log_level
+# from .exceptions import AWSNotReadyError
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getLogger(__name__)
 
 
 class SmarterAWSException(SmarterException):
@@ -172,7 +164,16 @@ class AWSBase(SmarterHelperMixin):
         }
 
         """
-        return self._identity
+        if self._identity:
+            return self._identity
+        if self.initialized:
+            self._identity = self.aws_session.client("sts").get_caller_identity() if self.aws_session else None
+            logger.info(
+                "%s connected to AWS with account %s and IAM ARN: %s",
+                self.formatted_class_name,
+                self.aws_account_id,
+                self.aws_iam_arn,
+            )
 
     @property
     def version(self):
@@ -265,25 +266,30 @@ class AWSBase(SmarterHelperMixin):
     @property
     def aws_session(self):
         """AWS session"""
-        if not self._aws_session:
-            if self.aws_profile:
-                logger.debug("creating new aws_session with aws_profile: %s", self.aws_profile)
-                try:
-                    self._aws_session = boto3.Session(profile_name=self.aws_profile, region_name=self.aws_region)
-                except ProfileNotFound:
-                    logger.warning("aws_profile %s not found", self.aws_profile)
+        if self._aws_session:
+            return self._aws_session
+        if not self.initialized:
+            logger.warning("aws_session requested but AWSBase is not initialized")
+            return None
 
-                return self._aws_session
-            if self.aws_access_key_id is not None and self.aws_secret_access_key is not None:
-                logger.debug("creating new aws_session with aws keypair: %s", self.aws_access_key_id_source)
-                self._aws_session = boto3.Session(
-                    region_name=self.aws_region,
-                    aws_access_key_id=self.aws_access_key_id,
-                    aws_secret_access_key=self.aws_secret_access_key,
-                )
-                return self._aws_session
-            logger.debug("creating new aws_session without aws credentials")
-            self._aws_session = boto3.Session(region_name=self.aws_region)
+        if self.aws_profile:
+            logger.info("creating new aws_session with aws_profile: %s", self.aws_profile)
+            try:
+                self._aws_session = boto3.Session(profile_name=self.aws_profile, region_name=self.aws_region)
+            except ProfileNotFound:
+                logger.warning("aws_profile %s not found", self.aws_profile)
+
+            return self._aws_session
+        if self.aws_access_key_id is not None and self.aws_secret_access_key is not None:
+            logger.info("creating new aws_session with aws keypair: %s", self.aws_access_key_id_source)
+            self._aws_session = boto3.Session(
+                region_name=self.aws_region,
+                aws_access_key_id=self.aws_access_key_id,
+                aws_secret_access_key=self.aws_secret_access_key,
+            )
+            return self._aws_session
+        logger.warning("creating new aws_session without aws credentials")
+        self._aws_session = boto3.Session(region_name=self.aws_region)
         return self._aws_session
 
     @property
@@ -359,18 +365,15 @@ class AWSBase(SmarterHelperMixin):
         """Test that the AWS connection works."""
         if self._connected:
             return True
+        if not self.initialized:
+            logger.warning("connected() Failure - AWSBase is not initialized")
+            return False
+
         if not self.aws_session:
-            logger.error("connected() Failure - aws_session is not initialized")
+            logger.warning("connected() Failure - aws_session is not initialized")
             return False
         try:
-            self._identity = self.aws_session.client("sts").get_caller_identity()
-            logger.info(
-                "%s connected to AWS with account %s and IAM ARN: %s",
-                self.formatted_class_name,
-                self.aws_account_id,
-                self.aws_iam_arn,
-            )
-            self._connected = isinstance(self._identity, dict)
+            self._connected = isinstance(self.identity, dict)
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error("connected() Failure - %s", e)
             self._connected = False

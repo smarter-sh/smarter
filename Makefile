@@ -103,17 +103,10 @@ docker-init:
 			echo "Aborted."; exit 1; \
 		fi && \
 	make docker-check && \
-	make docker-prune && \
-	rm -rf ./mysql-data && \
-	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
-	docker system prune -a --volumes && \
-	docker volume prune -f && \
-	docker network prune -f && \
-	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove" && \
 	echo "Building Docker images..." && \
 	docker-compose up -d && \
 	echo "Initializing Docker..." && \
-	docker exec smarter-mysql bash -c "sleep 20; until echo '\q' | mysql -u smarter -psmarter; do sleep 10; done" && \
+	docker exec smarter-mysql bash -c "sleep 20; until echo '\q' | mysql -u smarter -psmarter; do echo 'Waiting for MySQL to be ready...'; sleep 10; done" && \
 	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
 	docker exec smarter-app bash -c "\
 		python manage.py makemigrations && python manage.py migrate && \
@@ -129,13 +122,11 @@ docker-init:
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2 && \
 		python manage.py initialize_wagtail && \
 		python manage.py initialize_providers && \
-		python manage.py create_stackacademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user && \
 		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
-		python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin && \
-		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin" && \
-		python manage.py create_stackademy_sql_chatbot && \
-		python manage.py create_stackademy_api_chatbot && \
 		python manage.py update_secret --name smarter_test_db --username admin --value smarter_test_user && \
+		python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin && \
+		python manage.py create_stackademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user && \
+		python manage.py create_stackademy_sql_chatbot" && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
@@ -158,6 +149,12 @@ docker-prune:
 	docker-compose down && \
 	docker builder prune -a -f && \
 	docker image prune -a -f
+	rm -rf ./mysql-data && \
+	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
+	docker system prune -a --volumes && \
+	docker volume prune -f && \
+	docker network prune -f && \
+	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove" && \
 
 # ---------------------------------------------------------
 # Python

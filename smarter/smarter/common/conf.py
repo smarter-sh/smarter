@@ -57,6 +57,7 @@ from .utils import recursive_sort_dict
 
 
 logger = logging.getLogger(__name__)
+DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
 TFVARS = TFVARS or {}
 DOT_ENV_LOADED = load_dotenv()
 
@@ -110,18 +111,18 @@ class SettingsDefaults:
 
     ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
 
-    ANTHROPIC_API_KEY: SecretStr = SecretStr(os.environ.get("ANTHROPIC_API_KEY", "SET-ME-PLEASE"))
+    ANTHROPIC_API_KEY: SecretStr = SecretStr(os.environ.get("ANTHROPIC_API_KEY", DEFAULT_MISSING_VALUE))
 
     # aws auth
     AWS_PROFILE = os.environ.get("AWS_PROFILE", TFVARS.get("aws_profile", None))
-    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", "SET-ME-PLEASE"))
-    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(os.environ.get("AWS_SECRET_ACCESS_KEY", "SET-ME-PLEASE"))
+    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", DEFAULT_MISSING_VALUE))
+    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(os.environ.get("AWS_SECRET_ACCESS_KEY", DEFAULT_MISSING_VALUE))
     AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
     AWS_IS_CONFIGURED = bool(
         AWS_PROFILE
         or (
-            AWS_ACCESS_KEY_ID.get_secret_value() != "SET-ME-PLEASE"
-            and AWS_SECRET_ACCESS_KEY.get_secret_value() != "SET-ME-PLEASE"
+            AWS_ACCESS_KEY_ID.get_secret_value() != DEFAULT_MISSING_VALUE
+            and AWS_SECRET_ACCESS_KEY.get_secret_value() != DEFAULT_MISSING_VALUE
         )
     )
 
@@ -148,10 +149,10 @@ class SettingsDefaults:
     DUMP_DEFAULTS: bool = bool(os.environ.get("DUMP_DEFAULTS", TFVARS.get("dump_defaults", False)))
     ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
 
-    FERNET_ENCRYPTION_KEY: str = os.environ.get("FERNET_ENCRYPTION_KEY", "SET-ME-PLEASE")
+    FERNET_ENCRYPTION_KEY: str = os.environ.get("FERNET_ENCRYPTION_KEY", DEFAULT_MISSING_VALUE)
 
     GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(
-        os.environ.get("GOOGLE_MAPS_API_KEY", os.environ.get("google_maps_api_key", "SET-ME-PLEASE"))
+        os.environ.get("GOOGLE_MAPS_API_KEY", os.environ.get("google_maps_api_key", DEFAULT_MISSING_VALUE))
     )
 
     try:
@@ -164,10 +165,10 @@ class SettingsDefaults:
         )
         GOOGLE_SERVICE_ACCOUNT = {}
 
-    GEMINI_API_KEY: SecretStr = SecretStr(os.environ.get("GEMINI_API_KEY", "SET-ME-PLEASE"))
+    GEMINI_API_KEY: SecretStr = SecretStr(os.environ.get("GEMINI_API_KEY", DEFAULT_MISSING_VALUE))
     LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
 
-    LLAMA_API_KEY: SecretStr = SecretStr(os.environ.get("LLAMA_API_KEY", "SET-ME-PLEASE"))
+    LLAMA_API_KEY: SecretStr = SecretStr(os.environ.get("LLAMA_API_KEY", DEFAULT_MISSING_VALUE))
 
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4-turbo"
@@ -191,16 +192,16 @@ class SettingsDefaults:
     LOGO: str = os.environ.get(
         "OPENAI_API_ORGANIZATION", "https://platform.smarter.sh/static/images/logo/smarter-crop.png"
     )
-    MAILCHIMP_API_KEY: SecretStr = SecretStr(os.environ.get("MAILCHIMP_API_KEY", "SET-ME-PLEASE"))
-    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", "SET-ME-PLEASE")
+    MAILCHIMP_API_KEY: SecretStr = SecretStr(os.environ.get("MAILCHIMP_API_KEY", DEFAULT_MISSING_VALUE))
+    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", DEFAULT_MISSING_VALUE)
 
     MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", f"https://{ROOT_DOMAIN}")
 
-    OPENAI_API_ORGANIZATION = os.environ.get("OPENAI_API_ORGANIZATION", "SET-ME-PLEASE")
-    OPENAI_API_KEY: SecretStr = SecretStr(os.environ.get("OPENAI_API_KEY", "SET-ME-PLEASE"))
+    OPENAI_API_ORGANIZATION = os.environ.get("OPENAI_API_ORGANIZATION", DEFAULT_MISSING_VALUE)
+    OPENAI_API_KEY: SecretStr = SecretStr(os.environ.get("OPENAI_API_KEY", DEFAULT_MISSING_VALUE))
     OPENAI_ENDPOINT_IMAGE_N = 4
     OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
-    PINECONE_API_KEY: SecretStr = SecretStr(os.environ.get("PINECONE_API_KEY", "SET-ME-PLEASE"))
+    PINECONE_API_KEY: SecretStr = SecretStr(os.environ.get("PINECONE_API_KEY", DEFAULT_MISSING_VALUE))
 
     SHARED_RESOURCE_IDENTIFIER = os.environ.get(
         "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
@@ -212,48 +213,48 @@ class SettingsDefaults:
     )
     SMARTER_MYSQL_TEST_DATABASE_PASSWORD = os.environ.get(
         "SMARTER_MYSQL_TEST_DATABASE_PASSWORD",
-        "SET-ME-PLEASE",
+        DEFAULT_MISSING_VALUE,
     )
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
     # -------------------------------------------------------------------------
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: SecretStr = SecretStr(
-        os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "SET-ME-PLEASE")
+        os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", DEFAULT_MISSING_VALUE)
     )
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: SecretStr = SecretStr(
-        os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "SET-ME-PLEASE")
+        os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", DEFAULT_MISSING_VALUE)
     )
     # -------------------------------------------------------------------------
     # see: https://github.com/settings/applications/2620957
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GITHUB_KEY: SecretStr = SecretStr(os.environ.get("SOCIAL_AUTH_GITHUB_KEY", "SET-ME-PLEASE"))
-    SOCIAL_AUTH_GITHUB_SECRET: SecretStr = SecretStr(os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", "SET-ME-PLEASE"))
+    SOCIAL_AUTH_GITHUB_KEY: SecretStr = SecretStr(os.environ.get("SOCIAL_AUTH_GITHUB_KEY", DEFAULT_MISSING_VALUE))
+    SOCIAL_AUTH_GITHUB_SECRET: SecretStr = SecretStr(os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", DEFAULT_MISSING_VALUE))
     # -------------------------------------------------------------------------
     # see:  https://www.linkedin.com/developers/apps/221422881/settings
     #       https://www.linkedin.com/developers/apps/221422881/products?refreshKey=1734980684455
     # verification url: https://www.linkedin.com/developers/apps/verification/3ac34414-09a4-433b-983a-0d529fa486f1
     # -------------------------------------------------------------------------
     SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(
-        os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", "SET-ME-PLEASE")
+        os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", DEFAULT_MISSING_VALUE)
     )
     SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(
-        os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", "SET-ME-PLEASE")
+        os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", DEFAULT_MISSING_VALUE)
     )
 
     SECRET_KEY = os.getenv("SECRET_KEY")
 
-    SMTP_SENDER = os.environ.get("SMTP_SENDER", "SET-ME-PLEASE")
+    SMTP_SENDER = os.environ.get("SMTP_SENDER", DEFAULT_MISSING_VALUE)
     SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
     SMTP_HOST = os.environ.get("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(os.environ.get("SMTP_USE_SSL", False))
     SMTP_USE_TLS = bool(os.environ.get("SMTP_USE_TLS", True))
-    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "SET-ME-PLEASE")
-    SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "SET-ME-PLEASE")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", DEFAULT_MISSING_VALUE)
+    SMTP_USERNAME = os.environ.get("SMTP_USERNAME", DEFAULT_MISSING_VALUE)
 
-    STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "SET-ME-PLEASE")
-    STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "SET-ME-PLEASE")
+    STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", DEFAULT_MISSING_VALUE)
+    STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", DEFAULT_MISSING_VALUE)
 
     @classmethod
     def to_dict(cls):
@@ -384,6 +385,7 @@ class Settings(BaseSettings):
 
     shared_resource_identifier: str = Field(SettingsDefaults.SHARED_RESOURCE_IDENTIFIER)
     debug_mode: bool = Field(SettingsDefaults.DEBUG_MODE)
+    default_missing_value: str = Field(DEFAULT_MISSING_VALUE)
 
     # new in 0.13.26
     # True if developer mode is enabled. Used as a means to configure a production
@@ -506,6 +508,18 @@ class Settings(BaseSettings):
 
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY)
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY)
+
+    @property
+    def smtp_is_configured(self) -> bool:
+        """Return True if SMTP is configured"""
+        required_fields = [
+            self.smtp_host,
+            self.smtp_port,
+            self.smtp_username,
+            self.smtp_password,
+            self.smtp_from_email,
+        ]
+        return all(field not in [None, "", DEFAULT_MISSING_VALUE] for field in required_fields)
 
     @property
     def protocol(self) -> str:
@@ -901,7 +915,7 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             return SettingsDefaults.FERNET_ENCRYPTION_KEY
 
-        if v == "SET-ME-PLEASE":
+        if v == DEFAULT_MISSING_VALUE:
             return v
 
         try:
