@@ -51,6 +51,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Create a test SQL database connection."""
+        self.stdout.write(
+            self.style.NOTICE("smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin started.")
+        )
 
         host = options["db_host"]
         if host is None:
@@ -95,13 +98,23 @@ class Command(BaseCommand):
                     f"Secret '{secret_name}' for account '{admin_user_profile}' does not exist. Creating a new one."
                 )
             )
-            secret = Secret.objects.create(
-                user_profile=admin_user_profile,
-                name=secret_name,
-                description=f"Sql database connection pwd for {db_name} at {host}:{port}",
-                encrypted_value=password,
-            )
-            self.stdout.write(self.style.SUCCESS(f"Secret '{secret_name}' created successfully."))
+            try:
+                secret = Secret.objects.create(
+                    user_profile=admin_user_profile,
+                    name=secret_name,
+                    description=f"Sql database connection pwd for {db_name} at {host}:{port}",
+                    encrypted_value=password,
+                )
+                self.stdout.write(self.style.SUCCESS(f"Secret '{secret_name}' created successfully."))
+            # pylint: disable=broad-except
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Failed to create Secret '{secret_name}': {e}"))
+                self.stdout.write(
+                    self.style.ERROR(
+                        "smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin completed with errors."
+                    )
+                )
+                return
 
         # 2.) handle the SqlConnection
         try:
@@ -127,6 +140,11 @@ class Command(BaseCommand):
         # pylint: disable=W0718
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Unexpected error: {e}"))
+            self.stdout.write(
+                self.style.ERROR(
+                    "smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin completed with errors."
+                )
+            )
             return
 
         # 3.) handle the Plugin
@@ -138,9 +156,23 @@ class Command(BaseCommand):
             "stackademy",
             "stackademy-sql.yaml",
         )
-        call_command(
-            "create_plugin",
-            account_number=admin_user_profile.account.account_number,
-            username=admin_user_profile.user.username,
-            file_path=file_path,
+        try:
+            call_command(
+                "create_plugin",
+                account_number=admin_user_profile.account.account_number,
+                username=admin_user_profile.user.username,
+                file_path=file_path,
+            )
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"Failed to create plugin from manifest: {e}"))
+            self.stdout.write(
+                self.style.ERROR(
+                    "smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin completed with errors."
+                )
+            )
+            return
+
+        self.stdout.write(
+            self.style.SUCCESS("smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin completed.")
         )

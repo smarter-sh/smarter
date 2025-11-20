@@ -38,6 +38,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Create a test Api connection."""
+        self.stdout.write(
+            self.style.NOTICE("smarter.apps.plugin.management.commands.create_stackademy_api_plugin started.")
+        )
 
         api_name = options["api_name"]
         host = options["api_host"]
@@ -93,12 +96,30 @@ class Command(BaseCommand):
         # pylint: disable=W0718
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Unexpected error: {e}"))
+            self.stdout.write(
+                self.style.ERROR(
+                    "smarter.apps.plugin.management.commands.create_stackademy_api_plugin completed with errors."
+                )
+            )
             return
 
         # 3.) handle the Plugin
-        call_command(
-            "create_plugin",
-            account_number=admin_user_profile.account.account_number,
-            username=admin_user_profile.user.username,
-            path="./smarter/smarter/apps/plugin/data/stackademy/stackademy-api.yaml",
+        try:
+            call_command(
+                "create_plugin",
+                account_number=admin_user_profile.account.account_number,
+                username=admin_user_profile.user.username,
+                path="./smarter/smarter/apps/plugin/data/stackademy/stackademy-api.yaml",
+            )
+        # pylint: disable=W0718
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(
+                    f"smarter.apps.plugin.management.commands.create_stackademy_api_plugin completed with errors: {e}"
+                )
+            )
+            return
+
+        self.stdout.write(
+            self.style.SUCCESS("smarter.apps.plugin.management.commands.create_stackademy_api_plugin completed.")
         )

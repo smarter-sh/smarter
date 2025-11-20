@@ -312,11 +312,23 @@ class Command(BaseCommand):
         """
         Initialize all built-in providers.
         """
-        self.stdout.write("initialize_providers: Initializing providers...")
+        self.stdout.write(self.style.NOTICE("smarter.apps.provider.management.commands.initialize_providers started."))
 
-        self.user_profile = get_cached_smarter_admin_user_profile()
-        self.initialize_openai()
-        self.initialize_googleai()
-        self.initialize_metaai()
+        try:
+            self.user_profile = get_cached_smarter_admin_user_profile()
+            self.initialize_openai()
+            self.initialize_googleai()
+            self.initialize_metaai()
+        # pylint: disable=broad-except
+        except Exception as exc:
+            self.stdout.write(self.style.ERROR(f"initialize_providers: Error initializing providers: {exc}"))
+            self.stdout.write(
+                self.style.ERROR(
+                    "smarter.apps.provider.management.commands.initialize_providers completed with errors."
+                )
+            )
+            return
 
-        self.stdout.write(self.style.SUCCESS("initialize_providers: Providers initialized successfully."))
+        self.stdout.write(
+            self.style.SUCCESS("smarter.apps.provider.management.commands.initialize_providers completed successfully.")
+        )

@@ -26,6 +26,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Create a chatbot from a manifest file."""
+        self.stdout.write(
+            self.style.NOTICE("smarter.apps.plugin.management.commands.create_stackademy_sql_chatbot started.")
+        )
+
         admin_user_profile: UserProfile = get_cached_smarter_admin_user_profile()
         output = io.StringIO()
         error_output = io.StringIO()
@@ -55,4 +59,11 @@ class Command(BaseCommand):
                 print(f"Applied manifest {file_path}. output: {output.getvalue()}")
         except Exception as exc:
             print(f"Failed to apply manifest {file_path}: {exc}")
+            self.stdout.write(
+                self.style.ERROR("smarter.apps.plugin.management.commands.create_stackademy_sql_chatbot failed.")
+            )
             raise SmarterValueError(f"Failed to apply manifest: {exc}") from exc
+
+        self.stdout.write(
+            self.style.SUCCESS("smarter.apps.plugin.management.commands.create_stackademy_sql_chatbot completed.")
+        )

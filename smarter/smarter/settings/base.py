@@ -32,6 +32,7 @@ from social_core.backends.linkedin import LinkedinOAuth2
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
+from smarter.common.helpers.aws_helpers import aws_helper
 
 # Add proprietary settings for the project
 from .smarter import *  # noqa: E402, F401, W0401
@@ -680,4 +681,12 @@ logger.info("Django v%s", get_version())
 logger.info("Smarter v%s", smarter_version)
 logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)
 logger.info("Storages backend: %s", STORAGES["default"]["BACKEND"])
+if smarter_settings.smtp_is_configured:
+    logger.info("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)
+else:
+    logger.warning("SMTP server not configured")
+if smarter_settings.aws_is_configured:
+    logger.info("AWS credentials detected")
+else:
+    logger.warning("AWS credentials not found.")
 logger.info("=" * 80)

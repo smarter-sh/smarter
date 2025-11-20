@@ -23,6 +23,8 @@ class Command(BaseCommand):
             else:
                 print(f"Verified switch {switch_name}")
 
+        self.stdout.write(self.style.NOTICE("smarter.apps.api.management.commands.initialize_waffle started."))
+
         smarter_switches = SmarterWaffleSwitches().all.copy()
 
         for switch in smarter_switches:
@@ -36,3 +38,5 @@ class Command(BaseCommand):
 
         if smarter_settings.environment == SmarterEnvironments.LOCAL:
             call_command("waffle_switch", SmarterWaffleSwitches.REACTAPP_DEBUG_MODE, "on")
+
+        self.stdout.write(self.style.SUCCESS("smarter.apps.api.management.commands.initialize_waffle completed."))
