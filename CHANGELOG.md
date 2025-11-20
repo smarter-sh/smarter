@@ -1,3 +1,10 @@
+## [0.13.30](https://github.com/smarter-sh/smarter/compare/v0.13.29...v0.13.30) (2025-11-20)
+
+
+### Bug Fixes
+
+* cleanup docker-init commands ([efca1d4](https://github.com/smarter-sh/smarter/commit/efca1d4f72c434a00eb9b6b4859964bade6635bd))
+
 ## [0.13.29](https://github.com/smarter-sh/smarter/compare/v0.13.28...v0.13.29) (2025-11-20)
 
 

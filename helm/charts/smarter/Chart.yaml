@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: 0.13.29
+appVersion: 0.13.30
 name: smarter
 description: >
   Smarter is a no-code, cloud-native platform for securely managing and orchestrating AI resources at scale.
