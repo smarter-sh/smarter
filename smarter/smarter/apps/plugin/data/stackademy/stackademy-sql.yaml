@@ -19,7 +19,7 @@ spec:
       degrees programs. Whenever possible you should defer to the tool calls provided for additional information
       about the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University
       should be answered with "I am sorry, but I can only provide information about the courses offered by Stackademy University."
-    model: gpt-40-mini
+    model: gpt-4o-mini
     temperature: 0.5
     maxTokens: 2048
   connection: smarter_test_db

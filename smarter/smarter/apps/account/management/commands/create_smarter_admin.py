@@ -27,6 +27,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
+        self.stdout.write(self.style.NOTICE("smarter.apps.account.management.commands.create_smarter_admin started."))
+
         username = options["username"]
         email = options["email"]
         password = options["password"]
@@ -101,3 +103,7 @@ class Command(BaseCommand):
                 name="smarter-admin-key", user=user, description="created by manage.py"
             )  # type: ignore[assignment]
             self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))
+
+        self.stdout.write(
+            self.style.SUCCESS("smarter.apps.account.management.commands.create_smarter_admin completed.")
+        )

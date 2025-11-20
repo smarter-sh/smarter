@@ -94,6 +94,7 @@ class Command(BaseCommand):
         We need to be mindful of the environment we are in, as the
         endpoint may be hosted over https or http.
         """
+        self.stdout.write(self.style.NOTICE("smarter.apps.api.management.commands.apply_manifest started."))
 
         self.filespec = options.get("filespec")
         self.manifest = options.get("manifest")
@@ -161,5 +162,12 @@ class Command(BaseCommand):
             if verbose:
                 self.stdout.write(self.style.SUCCESS(response))
         else:
+            self.stderr.write(
+                self.style.ERROR(f"Manifest apply to {url} failed with status code: {httpx_response.status_code}")
+            )
+            self.stderr.write(self.style.ERROR(f"manifest: {self.data}"))
+            self.stderr.write(self.style.ERROR(f"response: {response}"))
             msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {self.data}\nresponse: {response}"
             raise CommandError(msg)
+
+        self.stdout.write(self.style.SUCCESS("smarter.apps.api.management.commands.apply_manifest completed."))

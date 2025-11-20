@@ -148,6 +148,7 @@ class Command(BaseCommand):
                                 self.stderr.write(
                                     f"Error applying manifest: {filename} for account {self.account.account_number}: {e}"
                                 )
+                                raise e
 
         if not self.user_profile:
             raise SmarterValueError("User profile is required.")
@@ -207,14 +208,20 @@ class Command(BaseCommand):
                     for _, _, files in os.walk(directory_path):
                         for file in files:
                             if file.endswith(".yaml") or file.endswith(".yml"):
-                                filespec = os.path.join(directory_path, file)
-                                filename = os.path.basename(filespec)
-                                print(f"Loading plugin: {filespec}")
-                                plugin = self.load_plugin(filespec=filespec)
-                                if not plugin:
-                                    self.stderr.write(f"Error loading plugin: {filename}")
-                                    continue
-                                ChatBotPlugin.objects.get_or_create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
+                                try:
+                                    filespec = os.path.join(directory_path, file)
+                                    filename = os.path.basename(filespec)
+                                    print(f"Loading plugin: {filespec}")
+                                    plugin = self.load_plugin(filespec=filespec)
+                                    if not plugin:
+                                        self.stderr.write(f"Error loading plugin: {filename}")
+                                        continue
+                                    ChatBotPlugin.objects.get_or_create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
+                                except Exception as e:
+                                    self.stderr.write(
+                                        f"Error loading plugin: {filename} for account {self.account.account_number}: {e}"
+                                    )
+                                    raise e
 
                     deploy_default_api.delay(chatbot_id=chatbot.id, with_domain_verification=False)  # type: ignore
 
@@ -236,6 +243,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Process the GitHub repository"""
+        self.stdout.write(self.style.NOTICE("smarter.apps.chatbot.management.commands.load_from_github started."))
+
         self.url = options["url"]
         account_number = options["account_number"]
         username = options["username"]
@@ -260,9 +269,19 @@ class Command(BaseCommand):
         if self.user is not None:
             self.user_profile = UserProfile.objects.get(user=self.user, account=self.account)
 
-        if repo_version == 2:
-            # iterate repo and apply manifests
-            self.process_repo_v2()
-        else:
-            # iterate repo, assume that folders refer to chatbots, and load plugins
-            self.process_repo_v1()
+        try:
+            if repo_version == 2:
+                # iterate repo and apply manifests
+                self.process_repo_v2()
+            else:
+                # iterate repo, assume that folders refer to chatbots, and load plugins
+                self.process_repo_v1()
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.stderr.write(f"Error processing repository: {e}")
+            self.stdout.write(
+                self.style.ERROR("smarter.apps.chatbot.management.commands.load_from_github completed with errors.")
+            )
+            return
+
+        self.stdout.write(self.style.SUCCESS("smarter.apps.chatbot.management.commands.load_from_github completed."))
