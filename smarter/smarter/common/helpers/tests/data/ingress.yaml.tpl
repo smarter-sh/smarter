@@ -7,19 +7,9 @@ metadata:
   name: ${domain}
   namespace: ${environment_namespace}
 spec:
-  ingressClassName: "default"
+  ingressClassName: nginx
   rules:
     - host: ${domain}
-      http:
-        paths:
-          - backend:
-              service:
-                name: ${service_name}
-                port:
-                  number: 8000
-            path: /
-            pathType: Prefix
-    - host: "*.${domain}"
       http:
         paths:
           - backend:
