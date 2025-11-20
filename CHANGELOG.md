@@ -1,3 +1,10 @@
+## [0.13.29](https://github.com/smarter-sh/smarter/compare/v0.13.28...v0.13.29) (2025-11-20)
+
+
+### Bug Fixes
+
+* set spec.ingressClassName: default ([19c745a](https://github.com/smarter-sh/smarter/commit/19c745ab59309d4563ad508f2d98a27436d0e2ec))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
