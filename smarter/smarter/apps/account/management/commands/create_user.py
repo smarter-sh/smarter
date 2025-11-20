@@ -43,6 +43,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
+        self.stdout.write(self.style.NOTICE("smarter.apps.account.management.commands.create_user started."))
+
         account_number = options["account_number"]
         username = options["username"]
         email = options["email"]
@@ -97,5 +99,9 @@ class Command(BaseCommand):
             account_contact.first_name = first_name
             account_contact.last_name = last_name
             account_contact.save()
+            self.stdout.write(self.style.SUCCESS("smarter.apps.account.management.commands.create_user completed."))
         except AccountContact.DoesNotExist:
             AccountContact.objects.create(account=account, first_name=first_name, last_name=last_name, email=email)
+            self.stdout.write(
+                self.style.ERROR("smarter.apps.account.management.commands.create_user completed with errors")
+            )

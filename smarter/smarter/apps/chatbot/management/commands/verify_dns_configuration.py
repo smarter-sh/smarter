@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.helpers.aws.route53 import AWSRoute53
 from smarter.common.helpers.aws_helpers import aws_helper
 
 
@@ -16,7 +17,7 @@ class Command(BaseCommand):
     - platform: platform.example.com, alpha.platform.example.com, beta.platform.example.com, etc.
     """
 
-    log_prefix = "manage.py verify_dns_configuration()"
+    log_prefix = "smarter.apps.chatbot.management.commands.verify_dns_configuration"
 
     def get_any_A_record(self) -> dict:
         """
@@ -24,8 +25,11 @@ class Command(BaseCommand):
         This is a simple traversal method to look for and retrieve an A record
         from the AWS Route53 hosted zone for any of the existing domains.
         """
+        if not isinstance(aws_helper.route53, AWSRoute53):
+            raise SmarterConfigurationError(f"{self.log_prefix} AWS Route53 helper is not initialized. Cannot proceed.")
+
         for some_domain in smarter_settings.all_domains:
-            print(f"looking for an A record in {some_domain}...")
+            self.stdout.write(self.style.NOTICE(f"looking for an A record in {some_domain}..."))
             a_record = aws_helper.route53.get_environment_A_record(domain=some_domain)
             if a_record:
                 self.stdout.write(
@@ -44,15 +48,17 @@ class Command(BaseCommand):
         """
         Verify the AWS Route53 hosted zones for the root domain, api domain and platform domain.
         """
+        if not isinstance(aws_helper.route53, AWSRoute53):
+            raise SmarterConfigurationError(f"{self.log_prefix} AWS Route53 helper is not initialized. Cannot proceed.")
 
         log_prefix = self.log_prefix + " - " + "verify_base_dns_config()"
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
         self.stdout.write(
             self.style.NOTICE(
                 f"{log_prefix} verifying DNS configuration for {smarter_settings.root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
             )
         )
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
         # 1. Root domain hosted zone verification, ie example.com. This needs to exist in AWS Route53
         #    independent of this code base.
@@ -132,7 +138,7 @@ class Command(BaseCommand):
         #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
         #     - NS records for this hosted zone should exist in the root domain hosted zone.
         # ---------------------------------------------------------------------
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
         self.stdout.write(
             self.style.NOTICE(f"{log_prefix} (2) api domain DNS verification: {smarter_settings.root_api_domain}")
         )
@@ -152,7 +158,7 @@ class Command(BaseCommand):
                     f"{log_prefix} verified AWS Route53 hosted zone for root api domain: {smarter_settings.root_api_domain}"
                 )
             )
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
         self.stdout.write(
             self.style.NOTICE(
@@ -180,7 +186,7 @@ class Command(BaseCommand):
                     f"{log_prefix} verified A record for api base domain {smarter_settings.root_api_domain}."
                 )
             )
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
         # verify that the NS records for the root api domain are in the root domain hosted zone
         self.stdout.write(
@@ -223,7 +229,7 @@ class Command(BaseCommand):
         #     - hosted zone should contain A record alias to the AWS Classic Load Balancer.
         #     - NS records for this hosted zone should exist in the root domain hosted zone.
         # ---------------------------------------------------------------------
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
         self.stdout.write(
             self.style.NOTICE(
                 f"{log_prefix} (3) root platform domain DNS verification: {smarter_settings.root_platform_domain}"
@@ -247,7 +253,7 @@ class Command(BaseCommand):
                     f"{log_prefix} verified AWS Route53 hosted zone for root platform domain: {smarter_settings.root_platform_domain}"
                 )
             )
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
         self.stdout.write(
             self.style.NOTICE(
@@ -277,7 +283,7 @@ class Command(BaseCommand):
                     f"{log_prefix} verified A record for root platform domain {smarter_settings.root_platform_domain}."
                 )
             )
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
         # verify that the NS records for the platform domain are in the root domain hosted zone
         self.stdout.write(
@@ -314,13 +320,13 @@ class Command(BaseCommand):
                 )
             )
 
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
         self.stdout.write(
             self.style.SUCCESS(
                 f"{log_prefix} verified platform level DNS infrastructure for {smarter_settings.root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
             )
         )
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
     def verify(self, domain: str):
         """
@@ -343,6 +349,9 @@ class Command(BaseCommand):
             parent_domain = ".".join(parts[1:])
             return aws_helper.aws.domain_resolver(parent_domain)
 
+        if not isinstance(aws_helper.route53, AWSRoute53):
+            raise SmarterConfigurationError(f"{self.log_prefix} AWS Route53 helper is not initialized. Cannot proceed.")
+
         resolved_domain = aws_helper.aws.domain_resolver(domain)
         parent_domain = get_parent_domain(resolved_domain)
 
@@ -351,11 +360,11 @@ class Command(BaseCommand):
             + " - "
             + f"verify() - domain: {domain}, resolved domain: {resolved_domain}, parent_domain: {parent_domain}"
         )
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
         self.stdout.write(
             self.style.NOTICE(f"{log_prefix} verifying AWS Route53 DNS infrastructure for domain: {resolved_domain}")
         )
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
         # 1. Verify that the AWS Route53 hosted zone exists for the environment platform
         #    example: alpha.platform.example.com, beta.platform.example.com, etc.
@@ -374,7 +383,7 @@ class Command(BaseCommand):
 
         domain_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=resolved_domain)
 
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
         # 2. Verify that the NS records for the resolved_domain exist in the parent resolved_domain's hosted zone
         # ---------------------------------------------------------------------
@@ -429,16 +438,18 @@ class Command(BaseCommand):
                 self.style.SUCCESS(f"{log_prefix} verified A record for domain {resolved_domain} in hosted zone.")
             )
 
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
         self.stdout.write(
             self.style.SUCCESS(f"{log_prefix} verified AWS Route53 DNS infrastructure for domain: {resolved_domain}")
         )
-        print("-" * 80)
+        self.stdout.write(self.style.NOTICE("-" * 80))
 
     def handle(self, *args, **options):
-        print("*" * 80)
-        print(f"{self.log_prefix}")
-        print("*" * 80)
+        self.stdout.write(self.style.NOTICE("*" * 80))
+        self.stdout.write(
+            self.style.NOTICE("smarter.apps.chatbot.management.commands.verify_dns_configuration started.")
+        )
+        self.stdout.write(self.style.NOTICE("*" * 80))
 
         self.verify_base_dns_config()
 
@@ -450,6 +461,6 @@ class Command(BaseCommand):
             # example: domain=alpha.platform.example.com
             self.verify(domain=smarter_settings.environment_platform_domain)
 
-        print("*" * 80)
+        self.stdout.write(self.style.NOTICE("*" * 80))
         self.stdout.write(self.style.SUCCESS(f"{self.log_prefix} completed successfully."))
-        print("*" * 80)
+        self.stdout.write(self.style.NOTICE("*" * 80))

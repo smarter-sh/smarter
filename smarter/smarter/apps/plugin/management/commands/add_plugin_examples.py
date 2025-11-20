@@ -22,6 +22,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the plugin."""
+        self.stdout.write(self.style.NOTICE("smarter.apps.plugin.management.commands.add_plugin_examples started."))
+
         user_profile: Optional[UserProfile] = None
         username = options["username"]
 
@@ -37,4 +39,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"User profile for {user.username} {user.email} does not exist."))  # type: ignore
             return
 
-        add_example_plugins(user_profile=user_profile)
+        try:
+            add_example_plugins(user_profile=user_profile)
+        # pylint: disable=broad-except
+        except Exception as exc:
+            self.stdout.write(self.style.ERROR(f"Failed to add example plugins for user {username}: {exc}"))
+            return
+
+        self.stdout.write(self.style.SUCCESS("smarter.apps.plugin.management.commands.add_plugin_examples completed."))
