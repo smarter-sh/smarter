@@ -97,14 +97,6 @@ docker-shell:
 	docker exec -it smarter-app /bin/bash
 
 
-# 	make docker-prune && \
-# 	rm -rf ./mysql-data && \
-# 	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
-# 	docker system prune -a --volumes && \
-# 	docker volume prune -f && \
-# 	docker network prune -f && \
-# 	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove" && \
-
 docker-init:
 	@read -p "AWS keypair and OpenAI Api key must be present in your .env file. Continue? [y/N]: " ans; \
 		if [ "$$ans" != "y" ] && [ "$$ans" != "Y" ]; then \
@@ -157,6 +149,12 @@ docker-prune:
 	docker-compose down && \
 	docker builder prune -a -f && \
 	docker image prune -a -f
+	rm -rf ./mysql-data && \
+	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
+	docker system prune -a --volumes && \
+	docker volume prune -f && \
+	docker network prune -f && \
+	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove" && \
 
 # ---------------------------------------------------------
 # Python
