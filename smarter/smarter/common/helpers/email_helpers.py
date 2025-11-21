@@ -56,14 +56,13 @@ class EmailHelper(metaclass=Singleton):
     def send_email(subject, body, to: Union[str, List[str]], html=False, from_email=None, quiet: bool = False):
         """Send an email."""
         if not smarter_settings.smtp_is_configured:
-            if quiet:
-                logger.info(
+            if not quiet:
+                logger.warning(
                     "EmailHelper.send_email() quiet mode. SMTP not configured, would have sent subject '%s' to: %s",
                     subject,
                     to,
                 )
-                return
-            raise EmailHelperException("SMTP settings are not properly configured")
+            return
 
         mail_to = EmailHelper.validate_mail_list(emails=to, quiet=quiet)
         if mail_to in (None, []):
