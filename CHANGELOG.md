@@ -1,3 +1,10 @@
+## [0.13.31](https://github.com/smarter-sh/smarter/compare/v0.13.30...v0.13.31) (2025-11-21)
+
+
+### Bug Fixes
+
+* only raise EmailHelperException if smarter_settings.smtp_is_configured ([9eca70c](https://github.com/smarter-sh/smarter/commit/9eca70c6ef76b06be3670824b3cadb7bf141fb1e))
+
 ## [0.13.30](https://github.com/smarter-sh/smarter/compare/v0.13.29...v0.13.30) (2025-11-20)
 
 
