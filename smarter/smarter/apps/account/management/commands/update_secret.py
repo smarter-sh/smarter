@@ -2,14 +2,13 @@
 
 import getpass
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import Secret, User
 from smarter.apps.account.utils import get_cached_user_profile
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Django manage.py create_user command. This command is used to update the encrypted value of a Secret."""
 
     def add_arguments(self, parser):
@@ -30,6 +29,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
+        self.handle_begin()
+
         name = options.get("name")
         if not name:
             self.stdout.write(self.style.ERROR("You must provide a name for the Secret"))
@@ -45,27 +46,25 @@ class Command(BaseCommand):
 
         try:
             user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"User '{username}' does not exist."))
+        except User.DoesNotExist as e:
+            self.handle_completed_failure(e, msg=f"User '{username}' does not exist.")
             return
 
         user_profile = get_cached_user_profile(user=user)
         if not user_profile:
-            self.stdout.write(self.style.ERROR(f"User profile for '{username}' does not exist."))
+            self.handle_completed_failure(msg=f"User profile for '{username}' does not exist.")
             return
 
         try:
             secret = Secret.objects.get(name=name, user_profile=user_profile)
             secret.encrypted_value = value
             secret.save()
-        except Secret.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"Secret '{name}' does not exist for user '{username}'."))
+        except Secret.DoesNotExist as e:
+            self.handle_completed_failure(e, msg=f"Secret '{name}' does not exist for user '{username}'.")
             return
         # pylint: disable=W0718
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Error updating Secret '{name}': {e}"))
+            self.handle_completed_failure(e)
             return
 
-        self.stdout.write(
-            self.style.SUCCESS(f"Successfully updated Secret '{name}' for user '{username}' with the provided value.")
-        )
+        self.handle_completed_success()

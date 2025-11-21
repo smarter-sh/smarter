@@ -6,7 +6,6 @@ import getpass
 import os
 
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
@@ -18,13 +17,14 @@ from smarter.apps.plugin.manifest.models.sql_connection.enum import (
 from smarter.apps.plugin.models import SqlConnection
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import PROJECT_ROOT
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 
 
 KIND = SAMKinds.SQL_CONNECTION.value
 
 
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Django manage.py create_stackacademy_sql_plugin command.
     This command is used to create a SQL database connection.
@@ -51,9 +51,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Create a test SQL database connection."""
-        self.stdout.write(
-            self.style.NOTICE("smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin started.")
-        )
+        self.handle_begin()
 
         host = options["db_host"]
         if host is None:
@@ -93,10 +91,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Secret '{secret_name}' updated."))
 
         except Secret.DoesNotExist:
-            self.stdout.write(
-                self.style.WARNING(
-                    f"Secret '{secret_name}' for account '{admin_user_profile}' does not exist. Creating a new one."
-                )
+            self.handle_completed_failure(
+                None,
+                f"Secret '{secret_name}' for account '{admin_user_profile}' does not exist. Creating a new one.",
             )
             try:
                 secret = Secret.objects.create(
@@ -108,11 +105,9 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"Secret '{secret_name}' created successfully."))
             # pylint: disable=broad-except
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"Failed to create Secret '{secret_name}': {e}"))
-                self.stdout.write(
-                    self.style.ERROR(
-                        "smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin completed with errors."
-                    )
+                self.handle_completed_failure(
+                    e,
+                    "smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin completed with errors.",
                 )
                 return
 
@@ -134,16 +129,14 @@ class Command(BaseCommand):
             sql_connection.password = secret
             sql_connection.save()
             if created:
-                self.stdout.write(self.style.SUCCESS(f"SQL database connection '{db_name}' created successfully."))
+                self.handle_completed_success(msg=f"SQL database connection '{db_name}' created successfully.")
             else:
-                self.stdout.write(self.style.SUCCESS(f"SQL database connection '{db_name}' updated."))
+                self.handle_completed_success(msg=f"SQL database connection '{db_name}' updated successfully.")
         # pylint: disable=W0718
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Unexpected error: {e}"))
-            self.stdout.write(
-                self.style.ERROR(
-                    "smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin completed with errors."
-                )
+            self.handle_completed_failure(
+                e,
+                "smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin completed with errors.",
             )
             return
 
@@ -165,14 +158,7 @@ class Command(BaseCommand):
             )
         # pylint: disable=broad-except
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Failed to create plugin from manifest: {e}"))
-            self.stdout.write(
-                self.style.ERROR(
-                    "smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin completed with errors."
-                )
-            )
+            self.handle_completed_failure(e)
             return
 
-        self.stdout.write(
-            self.style.SUCCESS("smarter.apps.plugin.management.commands.create_stackacademy_sql_plugin completed.")
-        )
+        self.handle_completed_success()

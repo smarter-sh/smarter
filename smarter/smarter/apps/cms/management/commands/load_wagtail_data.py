@@ -9,7 +9,6 @@ Wagtail content between environments.
 """
 
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
 from wagtail.documents.models import Document
 from wagtail.images.models import Image
 from wagtail.models import Page, Revision
@@ -18,10 +17,11 @@ from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.cms.const import WAGTAIL_DUMP
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib import json
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Django manage.py load_wagtail_data command. This module is used to load
     Wagtail CMS page and snippet content.
@@ -70,6 +70,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Load Wagtail CMS page and snippet content from a JSON file."""
+        self.handle_begin()
 
         # Delete existing revisions and pages except for the root page
         Revision.objects.all().delete()
@@ -89,4 +90,4 @@ class Command(BaseCommand):
         self.add_missing_users(WAGTAIL_DUMP)
 
         call_command("loaddata", WAGTAIL_DUMP)
-        self.stdout.write(self.style.SUCCESS(f"Loaded wagtail data from {WAGTAIL_DUMP}"))
+        self.handle_completed_success(msg=f"Loaded wagtail data from {WAGTAIL_DUMP}")

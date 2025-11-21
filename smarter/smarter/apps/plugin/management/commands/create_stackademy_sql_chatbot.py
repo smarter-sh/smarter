@@ -6,19 +6,19 @@ import io
 import os
 
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.const import PROJECT_ROOT
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.management.base import SmarterCommand
 
 
 KIND = SAMKinds.SQL_CONNECTION.value
 
 
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Django manage.py create_stackademy_sql_chatbot command.
     This command is used to create a Chatbot to demo the Stackademy SQL database plugin.
@@ -26,9 +26,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Create a chatbot from a manifest file."""
-        self.stdout.write(
-            self.style.NOTICE("smarter.apps.plugin.management.commands.create_stackademy_sql_chatbot started.")
-        )
+        self.handle_begin()
 
         admin_user_profile: UserProfile = get_cached_smarter_admin_user_profile()
         output = io.StringIO()
@@ -58,12 +56,7 @@ class Command(BaseCommand):
             else:
                 print(f"Applied manifest {file_path}. output: {output.getvalue()}")
         except Exception as exc:
-            print(f"Failed to apply manifest {file_path}: {exc}")
-            self.stdout.write(
-                self.style.ERROR("smarter.apps.plugin.management.commands.create_stackademy_sql_chatbot failed.")
-            )
+            self.handle_completed_failure(exc)
             raise SmarterValueError(f"Failed to apply manifest: {exc}") from exc
 
-        self.stdout.write(
-            self.style.SUCCESS("smarter.apps.plugin.management.commands.create_stackademy_sql_chatbot completed.")
-        )
+        self.handle_completed_success()

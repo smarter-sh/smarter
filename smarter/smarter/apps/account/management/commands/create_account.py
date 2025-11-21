@@ -1,12 +1,11 @@
 """This module is used to create a new account."""
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import Account
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Create a new account."""
 
     def add_arguments(self, parser):
@@ -16,6 +15,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
+        self.handle_begin()
+
         account_number = options["account_number"]
         company_name = options["company_name"]
 
@@ -24,8 +25,8 @@ class Command(BaseCommand):
         else:
             account, created = Account.objects.get_or_create(company_name=company_name)
         if created:
-            self.stdout.write(self.style.SUCCESS(f"Created account: {account.account_number} {account.company_name}"))
+            self.handle_completed_success(msg=f"Created account: {account.account_number} {account.company_name}")
         else:
-            self.stdout.write(
-                self.style.NOTICE(f"Account already exists: {account.account_number} {account.company_name}")
+            self.handle_completed_success(
+                msg=f"Account already exists: {account.account_number} {account.company_name}"
             )

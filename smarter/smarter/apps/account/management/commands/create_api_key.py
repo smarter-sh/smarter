@@ -1,14 +1,13 @@
 """This module is used to create a new api key."""
 
-from django.core.management.base import BaseCommand
-
-from smarter.apps.account.models import Account, User, UserProfile, get_resolved_user
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Django manage.py create_user command. This command is used to create a new user for an account."""
 
     def add_arguments(self, parser):
@@ -23,6 +22,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
+        self.handle_begin()
+
         account: Account | None = None
         user: User | None = None
         user_profile: UserProfile | None = None
@@ -31,7 +32,7 @@ class Command(BaseCommand):
         description = options["description"]
 
         if not account_number and not username:
-            self.stdout.write(self.style.ERROR("You must provide an account number or a username"))
+            self.handle_completed_failure(msg="You must provide an account number or a username")
             return
 
         if account_number:
@@ -45,7 +46,7 @@ class Command(BaseCommand):
                 else UserProfile.objects.filter(user=user).first()
             )
             if not user_profile:
-                self.stdout.write(self.style.ERROR(f"User {username} does not have a user profile"))
+                self.handle_completed_failure(msg=f"User {username} does not have a user profile")
                 return
             account = user_profile.account
         if not user:
@@ -63,10 +64,8 @@ class Command(BaseCommand):
         auth_token, token_key = SmarterAuthToken.objects.create(
             name=f"{account.account_number}.{user.username}", user=user, description=description
         )  # type: ignore[assignment]
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"API key created successfully for account {account.account_number} and user {user.username}"
-            )
+        self.handle_completed_success(
+            msg=f"Created API key {auth_token.name} for account {account.account_number} and user {user.username}"
         )
         self.stdout.write(self.style.SUCCESS("*" * 80))
         self.stdout.write(self.style.SUCCESS(f"API key: {token_key}"))

@@ -17,10 +17,6 @@ from smarter.common.conf import settings as smarter_settings
 from .base import *
 
 
-environment_name = os.path.basename(__file__).replace(".py", "")
-print(f"Loading smarter.settings.{environment_name}")
-logger.info("Loading smarter.settings.%s", environment_name)
-
 if smarter_settings.developer_mode:
     # dev only:
     # Bootstrap theme source files and static assets.
@@ -86,26 +82,30 @@ SESSION_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "lax"
 
-logger.debug("*" * 80)
-logger.debug("CORS_ALLOW_HEADERS: %s", CORS_ALLOW_HEADERS)
-logger.debug("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
-logger.debug("CORS_ALLOWED_ORIGIN_REGEXES: %s", CORS_ALLOWED_ORIGIN_REGEXES)
-logger.debug("ENVIRONMENT_API_DOMAIN: %s", ENVIRONMENT_API_DOMAIN)
-logger.debug("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
-logger.debug("SECURE_PROXY_SSL_HEADER: %s", SECURE_PROXY_SSL_HEADER)
-logger.debug("SMARTER_API_SCHEMA: %s", SMARTER_API_SCHEMA)
-logger.debug("SMARTER_ALLOWED_HOSTS: %s", SMARTER_ALLOWED_HOSTS)
-logger.debug("SMTP_SENDER: %s", SMTP_SENDER)
-logger.debug("SMTP_FROM_EMAIL: %s", SMTP_FROM_EMAIL)
-logger.debug("-" * 80)
-logger.debug("CSRF_COOKIE_DOMAIN: %s", CSRF_COOKIE_DOMAIN)
-logger.debug("CSRF_COOKIE_SAMESITE: %s", CSRF_COOKIE_SAMESITE)
-logger.debug("CSRF_COOKIE_SECURE: %s", CSRF_COOKIE_SECURE)
-logger.debug("CSRF_TRUSTED_ORIGINS: %s", CSRF_TRUSTED_ORIGINS)
-logger.debug("-" * 80)
-logger.debug("SESSION_COOKIE_DOMAIN: %s", SESSION_COOKIE_DOMAIN)
-logger.debug("SESSION_COOKIE_SAMESITE: %s", SESSION_COOKIE_SAMESITE)
-logger.debug("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)
-logger.debug("SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI)
-logger.debug("SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI)
-logger.debug("*" * 80)
+if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
+    environment_name = os.path.basename(__file__).replace(".py", "")
+    logger.info("Loading smarter.settings.%s", environment_name)
+
+    logger.debug("*" * 80)
+    logger.debug("CORS_ALLOW_HEADERS: %s", CORS_ALLOW_HEADERS)
+    logger.debug("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
+    logger.debug("CORS_ALLOWED_ORIGIN_REGEXES: %s", CORS_ALLOWED_ORIGIN_REGEXES)
+    logger.debug("ENVIRONMENT_API_DOMAIN: %s", ENVIRONMENT_API_DOMAIN)
+    logger.debug("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
+    logger.debug("SECURE_PROXY_SSL_HEADER: %s", SECURE_PROXY_SSL_HEADER)
+    logger.debug("SMARTER_API_SCHEMA: %s", SMARTER_API_SCHEMA)
+    logger.debug("SMARTER_ALLOWED_HOSTS: %s", SMARTER_ALLOWED_HOSTS)
+    logger.debug("SMTP_SENDER: %s", SMTP_SENDER)
+    logger.debug("SMTP_FROM_EMAIL: %s", SMTP_FROM_EMAIL)
+    logger.debug("-" * 80)
+    logger.debug("CSRF_COOKIE_DOMAIN: %s", CSRF_COOKIE_DOMAIN)
+    logger.debug("CSRF_COOKIE_SAMESITE: %s", CSRF_COOKIE_SAMESITE)
+    logger.debug("CSRF_COOKIE_SECURE: %s", CSRF_COOKIE_SECURE)
+    logger.debug("CSRF_TRUSTED_ORIGINS: %s", CSRF_TRUSTED_ORIGINS)
+    logger.debug("-" * 80)
+    logger.debug("SESSION_COOKIE_DOMAIN: %s", SESSION_COOKIE_DOMAIN)
+    logger.debug("SESSION_COOKIE_SAMESITE: %s", SESSION_COOKIE_SAMESITE)
+    logger.debug("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)
+    logger.debug("SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI)
+    logger.debug("SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI)
+    logger.debug("*" * 80)
