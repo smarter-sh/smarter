@@ -1,3 +1,10 @@
+## [0.13.32](https://github.com/smarter-sh/smarter/compare/v0.13.31...v0.13.32) (2025-11-21)
+
+
+### Bug Fixes
+
+* fail gracefully if aws is not configured ([7f63c65](https://github.com/smarter-sh/smarter/commit/7f63c6549d65e22cfd4a1ffb41a33e478f4a7211))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
