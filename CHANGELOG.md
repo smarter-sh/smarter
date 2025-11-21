@@ -1,3 +1,10 @@
+## [0.13.33](https://github.com/smarter-sh/smarter/compare/v0.13.32...v0.13.33) (2025-11-21)
+
+
+### Bug Fixes
+
+* ensure that aws deployments fail gracefully if aws is not configured ([227ef6b](https://github.com/smarter-sh/smarter/commit/227ef6ba905390e3bfba6b154f6c42a3ecd930ac))
+
 ## [0.13.32](https://github.com/smarter-sh/smarter/compare/v0.13.31...v0.13.32) (2025-11-21)
 
 
