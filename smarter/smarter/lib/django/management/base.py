@@ -13,29 +13,29 @@ class SmarterCommand(BaseCommand):
         super().__init__(*args, **kwargs)
 
     def handle_begin(self):
-        self.stdout.write(self.style.NOTICE("-" * 35 + " manage.py " + "-" * 35))
-        self.stdout.write(self.style.NOTICE(f"{self.__module__} started."))
-        self.stdout.write(self.style.NOTICE("-" * 80))
+        self.stdout.write("-" * 35 + " manage.py " + "-" * 34)
+        self.stdout.write(f"{self.__module__} started.")
+        self.stdout.write("-" * 80)
 
     def handle_completed_success(self, msg: Optional[str] = None):
-        self.stdout.write(self.style.NOTICE("-" * 80))
+        self.stdout.write(self.style.SUCCESS("-" * 80))
         if msg:
             self.stdout.write(self.style.SUCCESS(msg))
         else:
             self.stdout.write(self.style.SUCCESS(f"{self.__module__} completed successfully."))
-        self.stdout.write(self.style.NOTICE("-" * 80))
+        self.stdout.write(self.style.SUCCESS("-" * 80))
 
     def handle_completed_failure(
         self,
         err: Optional[Exception] = None,
         msg: Optional[str] = None,
     ):
-        self.stdout.write(self.style.NOTICE("-" * 80))
+        self.stdout.write(self.style.ERROR("-" * 80))
         if msg:
             self.stdout.write(self.style.ERROR(msg))
         msg = f"{self.__module__} failed" + f" with error: {err}" if err else "."
         self.stdout.write(self.style.ERROR(msg))
-        self.stdout.write(self.style.NOTICE("-" * 80))
+        self.stdout.write(self.style.ERROR("-" * 80))
         sys.exit(1)
 
     def create_parser(self, prog_name, subcommand, **kwargs):
