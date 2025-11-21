@@ -447,14 +447,32 @@ class Command(SmarterCommand):
         """Verify DNS configuration."""
         self.handle_begin()
 
-        self.verify_base_dns_config()
+        if not smarter_settings.aws_is_configured:
+            self.handle_completed_failure(
+                SmarterConfigurationError(f"{self.log_prefix} AWS is not configured. Cannot proceed.")
+            )
+            return
+
+        try:
+            self.verify_base_dns_config()
+        except SmarterConfigurationError as exc:
+            self.handle_completed_failure(exc)
+            return
 
         # for non-production environments, we need to verify the environment specific domains
         if smarter_settings.environment_api_domain != smarter_settings.root_api_domain:
             # example: domain=alpha.api.example.com
-            self.verify(domain=smarter_settings.environment_api_domain)
+            try:
+                self.verify(domain=smarter_settings.environment_api_domain)
+            except SmarterConfigurationError as exc:
+                self.handle_completed_failure(exc)
+                return
         if smarter_settings.environment_platform_domain != smarter_settings.root_platform_domain:
             # example: domain=alpha.platform.example.com
-            self.verify(domain=smarter_settings.environment_platform_domain)
+            try:
+                self.verify(domain=smarter_settings.environment_platform_domain)
+            except SmarterConfigurationError as exc:
+                self.handle_completed_failure(exc)
+                return
 
         self.handle_completed_success()
