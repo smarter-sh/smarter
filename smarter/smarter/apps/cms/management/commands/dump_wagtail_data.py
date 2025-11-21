@@ -9,9 +9,9 @@ Wagtail content between environments.
 """
 
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
 
 from smarter.apps.cms.const import WAGTAIL_DUMP
+from smarter.lib.django.management.base import SmarterCommand
 
 
 WAGTAIL_APPS = [
@@ -31,12 +31,15 @@ WAGTAIL_APPS = [
 ]
 
 
-# pylint: disable=E1101
-class Command(BaseCommand):
+# pylint: disable=E1101SmarterCommand
+class Command(SmarterCommand):
     """Dumps Wagtail CMS page and snippet content to separate JSON files."""
 
     help = "Dump Wagtail CMS page and snippet content to separate JSON files."
 
     def handle(self, *args, **options):
+        """Dump Wagtail CMS page and snippet content to separate JSON files."""
+        self.handle_begin()
+
         call_command("dumpdata", *WAGTAIL_APPS, indent=2, output=WAGTAIL_DUMP)
-        self.stdout.write(self.style.SUCCESS(f"Dumped wagtail data to {WAGTAIL_DUMP}"))
+        self.handle_completed_success(msg=f"Wagtail data dumped to {WAGTAIL_DUMP}")

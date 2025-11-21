@@ -1,7 +1,5 @@
 """This module is used to initialize the environment."""
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
@@ -9,10 +7,11 @@ from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import SettingsDefaults
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Deploy the Smarter demo ChatBot."""
 
     def add_arguments(self, parser):
@@ -20,10 +19,14 @@ class Command(BaseCommand):
         parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
 
     def handle(self, *args, **options):
+        """Deploy the Smarter demo ChatBot."""
+
+        self.handle_begin()
+
         foreground = options["foreground"] if "foreground" in options else False
 
         log_prefix = "manage.py deploy_example_chatbot:"
-        print(log_prefix, "Deploying the Smarter demo API...")
+        self.stdout.write(self.style.NOTICE(log_prefix + "Deploying the Smarter demo API..."))
 
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
         user = get_cached_admin_user_for_account(account)
@@ -50,7 +53,7 @@ class Command(BaseCommand):
         chatbot.save()
 
         if chatbot.deployed and chatbot.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
-            self.stdout.write(self.style.SUCCESS(log_prefix + "The Smarter demo API is already deployed."))
+            self.handle_completed_success(msg=f"The Smarter demo API is already deployed.")
             return
 
         for plugin_meta in PluginMeta.objects.filter(account=user_profile.account):
@@ -63,3 +66,7 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.NOTICE(log_prefix + "Deploying example api as a Celery task."))
             deploy_default_api.delay(chatbot_id=chatbot.id)
+            self.handle_completed_success(msg=f"Deployment of the Smarter demo API has been initiated.")
+            return
+
+        self.handle_completed_success()

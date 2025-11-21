@@ -2,9 +2,9 @@
 """utility for running api/v1 cli endpoints to verify that they work."""
 
 import os
+from typing import Optional
 
 import yaml
-from django.core.management.base import BaseCommand
 from django.test import Client
 from django.urls import reverse
 
@@ -17,13 +17,14 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.lib import json
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Utility for running api/v1/cli/ endpoints to verify that they work.
     This largely recreates the unit tests for the endpoints, albeit with
@@ -38,10 +39,10 @@ class Command(BaseCommand):
     """
 
     help = "Run API CLI endpoint verifications."
-    _data: str = None
+    _data: Optional[dict] = None
 
     @property
-    def data(self) -> json:
+    def data(self) -> Optional[dict]:
         """Return the plugin.yaml data."""
         if self._data is None:
             file_path = os.path.join(HERE, "data", "plugin.yaml")
@@ -60,18 +61,29 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """Run API v1 CLI endpoint verifications."""
+        self.handle_begin()
+
         username = options["username"]
         account_number = options["account_number"]
 
         account = Account.get_by_account_number(account_number)
+        if not account:
+            self.handle_completed_failure(msg=f"Account with account number '{account_number}' does not exist.")
+            return
         user = get_cached_admin_user_for_account(account=account)
         if username != user.get_username():
             try:
                 user_profile = get_cached_user_profile(account=account, user=user)
+                if not user_profile:
+                    self.handle_completed_failure(
+                        msg=f"No user profile for user '{username}' associated with account {account.account_number}."
+                    )
+                    return
                 user = user_profile.user
             except UserProfile.DoesNotExist:
-                self.stdout.write(
-                    self.style.ERROR(f"No user '{username}' associated with account {account.account_number}.")
+                self.handle_completed_failure(
+                    msg=f"No user profile for user '{username}' associated with account {account.account_number}."
                 )
                 return
 
@@ -90,7 +102,7 @@ class Command(BaseCommand):
         self.stdout.write("single-use API key: " + self.style.SUCCESS(f"{token_key}"))
         self.stdout.write("*" * 80)
 
-        def get_response(path, manifest: str = None):
+        def get_response(path, manifest: Optional[str] = None):
             """
             Prepare and get a response from an api/v1/cli endpoint.
             We need to be mindful of the environment we are in, as the
@@ -146,4 +158,4 @@ class Command(BaseCommand):
         # get_response(path)
 
         token_record.delete()
-        self.stdout.write(self.style.SUCCESS("API CLI endpoint verifications complete."))
+        self.handle_completed_success()

@@ -1,14 +1,13 @@
 """This module is used to add an api key to a chatbot."""
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Add an api key to a chatbot."""
 
     def add_arguments(self, parser):
@@ -23,6 +22,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
+        self.handle_begin()
+
         account_number = options["account_number"]
         key_id = options["key_id"]
         name = options["name"]
@@ -33,6 +34,6 @@ class Command(BaseCommand):
         chatbot_api_key, created = ChatBotAPIKey.objects.get_or_create(chatbot=chatbot, api_key=api_key)
         msg = f"API key {key_id} '{chatbot_api_key.api_key.description}'"
         if created:
-            self.stdout.write(self.style.SUCCESS(msg + f" has been added to chatbot {name}"))
+            self.handle_completed_success(msg + f" has been added to chatbot {name}")
         else:
-            self.stdout.write(self.style.NOTICE(msg + f" is already associated with chatbot {name}"))
+            self.handle_completed_success(msg + f" is already associated with chatbot {name}")

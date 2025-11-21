@@ -1,15 +1,15 @@
 """This module is used to deploy a customer API."""
 
-from django.core.management.base import BaseCommand
+from typing import Optional
 
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.tasks import undeploy_default_api
-from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Undeploy a customer API. Provide either an account number or a company name.
     Undeploys by deleting the DNS A record of the form [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/
@@ -23,14 +23,17 @@ class Command(BaseCommand):
         parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
 
     def handle(self, *args, **options):
+        """Undeploy a customer API."""
+
+        self.handle_begin()
 
         account_number = options["account_number"]
         company_name = options["company_name"]
         name = options["name"]
         foreground = options["foreground"] if "foreground" in options else False
 
-        account: Account = None
-        chatbot: ChatBot = None
+        account: Optional[Account] = None
+        chatbot: Optional[ChatBot] = None
 
         if options["account_number"]:
             try:
@@ -41,19 +44,18 @@ class Command(BaseCommand):
         elif options["company_name"]:
             try:
                 account = Account.objects.get(company_name=company_name)
-            except Account.DoesNotExist:
-                print(f"Account {company_name} not found.")
+            except Account.DoesNotExist as e:
+                self.handle_completed_failure(e, msg=f"Account {company_name} not found.")
                 return
         else:
-            raise SmarterValueError("You must provide either an account number or a company name.")
+            self.handle_completed_failure(msg="You must provide either an account number or a company name.")
+            return
 
         try:
             chatbot = ChatBot.objects.get(account=account, name=name)
-        except ChatBot.DoesNotExist:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Chatbot {name} not found for account {account.account_number} {account.company_name}."
-                )
+        except ChatBot.DoesNotExist as e:
+            self.handle_completed_failure(
+                e, msg=f"Chatbot {name} not found for account {account.account_number} {account.company_name}."
             )
             return
 
@@ -61,7 +63,7 @@ class Command(BaseCommand):
             not chatbot.deployed
             and chatbot.dns_verification_status == chatbot.DnsVerificationStatusChoices.NOT_VERIFIED
         ):
-            print(f"{chatbot.hostname} is not currently deployed.")
+            self.handle_completed_failure(msg=f"{chatbot.hostname} is not currently deployed.")
             return
 
         if foreground:
@@ -70,3 +72,5 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname} as a Celery task."))
             undeploy_default_api.delay(chatbot_id=chatbot.id)
+
+        self.handle_completed_success()

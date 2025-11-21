@@ -5,20 +5,20 @@ Command to create a test Api connection.
 import getpass
 
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.plugin.manifest.models.api_connection.enum import AuthMethods
 from smarter.apps.plugin.models import ApiConnection
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 
 
 KIND = SAMKinds.API_CONNECTION.value
 
 
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Django manage.py create_stackacademy_api_plugin command.
     This command is used to create a Api connection.
@@ -38,9 +38,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Create a test Api connection."""
-        self.stdout.write(
-            self.style.NOTICE("smarter.apps.plugin.management.commands.create_stackademy_api_plugin started.")
-        )
+        self.handle_begin()
 
         api_name = options["api_name"]
         host = options["api_host"]
@@ -72,7 +70,7 @@ class Command(BaseCommand):
                 description=f"Api authentication key for {api_name} at {host}:{port}",
                 encrypted_value=api_key,
             )
-            self.stdout.write(self.style.SUCCESS(f"Secret '{secret_name}' created successfully."))
+            self.handle_completed_success(msg=f"Secret '{secret_name}' created successfully.")
 
         # 2.) handle the ApiConnection
         try:
@@ -90,17 +88,12 @@ class Command(BaseCommand):
             api_connection.proxy_password = secret
             api_connection.save()
             if created:
-                self.stdout.write(self.style.SUCCESS(f"API connection '{api_name}' created successfully."))
+                self.handle_completed_success(msg=f"API connection '{api_name}' created successfully.")
             else:
-                self.stdout.write(self.style.SUCCESS(f"Api connection '{api_name}' updated."))
+                self.handle_completed_success(msg=f"Api connection '{api_name}' updated successfully.")
         # pylint: disable=W0718
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Unexpected error: {e}"))
-            self.stdout.write(
-                self.style.ERROR(
-                    "smarter.apps.plugin.management.commands.create_stackademy_api_plugin completed with errors."
-                )
-            )
+            self.handle_completed_failure(e)
             return
 
         # 3.) handle the Plugin
@@ -113,13 +106,7 @@ class Command(BaseCommand):
             )
         # pylint: disable=W0718
         except Exception as e:
-            self.stdout.write(
-                self.style.ERROR(
-                    f"smarter.apps.plugin.management.commands.create_stackademy_api_plugin completed with errors: {e}"
-                )
-            )
+            self.handle_completed_failure(e)
             return
 
-        self.stdout.write(
-            self.style.SUCCESS("smarter.apps.plugin.management.commands.create_stackademy_api_plugin completed.")
-        )
+        self.handle_completed_success()

@@ -6,7 +6,6 @@ import os
 from typing import Optional
 
 from django.core.management import CommandError, call_command
-from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
@@ -18,13 +17,13 @@ from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib import json
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.loader import SAMLoader
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Deploy a customer API. Provide either an account number or a company name.
     Deploys to a URL of the form [chatbot-name].####-####-####.api.smarter.sh/chatbot/
@@ -132,8 +131,11 @@ class Command(BaseCommand):
             return False
 
     def handle(self, *args, **options):
+        """Deploy built-in chatbots for an account."""
+        self.handle_begin()
 
         if not options["account_number"]:
+            self.handle_completed_failure(msg="You must provide an account number.")
             raise SmarterValueError("You must provide an account number.")
 
         account_number = options["account_number"]
@@ -163,3 +165,5 @@ class Command(BaseCommand):
             self.stdout.write(self.style.NOTICE("-" * 80))
             self.create_and_deploy_chatbot(filespec=filespec)
             self.stdout.write(self.style.NOTICE("\n"))
+
+        self.handle_completed_success()

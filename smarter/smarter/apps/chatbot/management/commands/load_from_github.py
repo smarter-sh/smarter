@@ -9,8 +9,6 @@ import subprocess
 import sys
 from typing import Optional
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_account,
@@ -22,12 +20,13 @@ from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.loader import SAMLoader
 
 
 # pylint: disable=E1101,too-many-instance-attributes
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Deploy customer APIs from a GitHub repository of plugin YAML files organized by customer API name."""
 
     _url: Optional[str] = None
@@ -243,7 +242,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Process the GitHub repository"""
-        self.stdout.write(self.style.NOTICE("smarter.apps.chatbot.management.commands.load_from_github started."))
+        self.handle_begin()
 
         self.url = options["url"]
         account_number = options["account_number"]
@@ -256,6 +255,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE("=" * 80))
 
         if not account_number and not username:
+            self.handle_completed_failure(msg="username and/or account_number is required.")
             raise SmarterValueError("username and/or account_number is required.")
 
         if account_number:
@@ -278,10 +278,7 @@ class Command(BaseCommand):
                 self.process_repo_v1()
         # pylint: disable=broad-except
         except Exception as e:
-            self.stderr.write(f"Error processing repository: {e}")
-            self.stdout.write(
-                self.style.ERROR("smarter.apps.chatbot.management.commands.load_from_github completed with errors.")
-            )
+            self.handle_completed_failure(e)
             return
 
-        self.stdout.write(self.style.SUCCESS("smarter.apps.chatbot.management.commands.load_from_github completed."))
+        self.handle_completed_success()

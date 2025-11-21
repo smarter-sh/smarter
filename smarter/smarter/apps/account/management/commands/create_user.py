@@ -4,15 +4,14 @@ import secrets
 import string
 from urllib.parse import urljoin
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Django manage.py create_user command. This command is used to create a new user for an account."""
 
     def add_arguments(self, parser):
@@ -43,7 +42,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
-        self.stdout.write(self.style.NOTICE("smarter.apps.account.management.commands.create_user started."))
+        self.handle_begin()
 
         account_number = options["account_number"]
         username = options["username"]
@@ -67,7 +66,7 @@ class Command(BaseCommand):
             user.is_active = True
             user.set_password(password)
             user.save()
-            self.stdout.write(self.style.SUCCESS("User" + f" {username} {email} has been created."))
+            self.handle_completed_success(msg=f"User {username} {email} has been created.")
 
             # Send email to user
             login_url = urljoin(smarter_settings.environment_url, "login")
@@ -85,13 +84,13 @@ class Command(BaseCommand):
         else:
             if password:
                 self.change_password(username, password)
-                self.stdout.write(self.style.SUCCESS(f"Updated password for {username}."))
+                self.handle_completed_success(msg=f"Updated password for {username}.")
 
         user = User.objects.get(username=username)
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:
-            self.stdout.write(
-                self.style.SUCCESS(f"User profile created for {user_profile.user} {user_profile.account.company_name}.")
+            self.handle_completed_success(
+                msg=f"User profile created for {user_profile.user} {user_profile.account.company_name}."
             )
 
         try:
@@ -99,9 +98,9 @@ class Command(BaseCommand):
             account_contact.first_name = first_name
             account_contact.last_name = last_name
             account_contact.save()
-            self.stdout.write(self.style.SUCCESS("smarter.apps.account.management.commands.create_user completed."))
+            self.handle_completed_success(msg="smarter.apps.account.management.commands.create_user completed.")
         except AccountContact.DoesNotExist:
             AccountContact.objects.create(account=account, first_name=first_name, last_name=last_name, email=email)
-            self.stdout.write(
-                self.style.ERROR("smarter.apps.account.management.commands.create_user completed with errors")
+            self.handle_completed_success(
+                msg=f"Account contact created for {first_name} {last_name}, account {account.account_number} {account.company_name}."
             )
