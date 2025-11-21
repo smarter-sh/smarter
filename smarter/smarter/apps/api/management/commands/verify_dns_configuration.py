@@ -448,9 +448,8 @@ class Command(SmarterCommand):
         self.handle_begin()
 
         if not smarter_settings.aws_is_configured:
-            self.handle_completed_failure(
-                SmarterConfigurationError(f"{self.log_prefix} AWS is not configured. Cannot proceed.")
-            )
+            # fail gracefully if AWS is not configured
+            self.handle_completed_failure(msg=f"{self.log_prefix} AWS is not configured. Cannot proceed.")
             return
 
         try:

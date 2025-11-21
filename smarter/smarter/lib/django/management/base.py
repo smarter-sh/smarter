@@ -36,7 +36,8 @@ class SmarterCommand(BaseCommand):
         msg = f"{self.__module__} failed" + f" with error: {err}" if err else "."
         self.stdout.write(self.style.ERROR(msg))
         self.stdout.write(self.style.ERROR("-" * 80))
-        sys.exit(1)
+        if err:
+            sys.exit(1)
 
     def create_parser(self, prog_name, subcommand, **kwargs):
         """

@@ -98,10 +98,6 @@ docker-shell:
 
 
 docker-init:
-	@read -p "AWS keypair and OpenAI Api key must be present in your .env file. Continue? [y/N]: " ans; \
-		if [ "$$ans" != "y" ] && [ "$$ans" != "Y" ]; then \
-			echo "Aborted."; exit 1; \
-		fi && \
 	make docker-check && \
 	echo "Building Docker images..." && \
 	docker-compose up -d && \
