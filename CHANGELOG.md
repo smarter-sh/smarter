@@ -1,22 +1,26 @@
-## [0.13.30](https://github.com/smarter-sh/smarter/compare/v0.13.29...v0.13.30) (2025-11-20)
-
-
-### Bug Fixes
-
-* cleanup docker-init commands ([efca1d4](https://github.com/smarter-sh/smarter/commit/efca1d4f72c434a00eb9b6b4859964bade6635bd))
-
-## [0.13.29](https://github.com/smarter-sh/smarter/compare/v0.13.28...v0.13.29) (2025-11-20)
-
-
-### Bug Fixes
-
-* set spec.ingressClassName: default ([19c745a](https://github.com/smarter-sh/smarter/commit/19c745ab59309d4563ad508f2d98a27436d0e2ec))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.13.31](https://github.com/smarter-sh/smarter/compare/v0.13.30...v0.13.31) (2025-11-21)
+
+### Bug Fixes
+
+- only raise EmailHelperException if smarter_settings.smtp_is_configured ([9eca70c](https://github.com/smarter-sh/smarter/commit/9eca70c6ef76b06be3670824b3cadb7bf141fb1e))
+
+## [0.13.30](https://github.com/smarter-sh/smarter/compare/v0.13.29...v0.13.30) (2025-11-20)
+
+### Bug Fixes
+
+- cleanup docker-init commands ([efca1d4](https://github.com/smarter-sh/smarter/commit/efca1d4f72c434a00eb9b6b4859964bade6635bd))
+
+## [0.13.29](https://github.com/smarter-sh/smarter/compare/v0.13.28...v0.13.29) (2025-11-20)
+
+### Bug Fixes
+
+- set spec.ingressClassName: default ([19c745a](https://github.com/smarter-sh/smarter/commit/19c745ab59309d4563ad508f2d98a27436d0e2ec))
 
 ## [0.13.28](https://github.com/smarter-sh/smarter/compare/v0.13.27...v0.13.28) (2025-11-19)
 
