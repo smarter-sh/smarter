@@ -3,8 +3,6 @@
 import secrets
 import string
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
 from smarter.common.const import (
     SMARTER_ACCOUNT_NUMBER,
@@ -12,11 +10,12 @@ from smarter.common.const import (
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
     SMARTER_CUSTOMER_SUPPORT_PHONE,
 )
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Create a new Smarter superuser."""
 
     def add_arguments(self, parser):
@@ -27,7 +26,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
-        self.stdout.write(self.style.NOTICE("smarter.apps.account.management.commands.create_smarter_admin started."))
+        self.handle_begin()
 
         username = options["username"]
         email = options["email"]
@@ -50,7 +49,7 @@ class Command(BaseCommand):
         account.save()
 
         if created:
-            self.stdout.write(self.style.SUCCESS(f"Created account: {account.account_number} {account.company_name}"))
+            self.handle_completed_success(msg=f"Created account: {account.account_number} {account.company_name}")
 
         user, created = User.objects.get_or_create(
             username=username, email=email, is_superuser=True, is_staff=True, is_active=True
@@ -64,17 +63,13 @@ class Command(BaseCommand):
             user.set_password(password)
             user.save()
 
-            self.stdout.write(self.style.SUCCESS(f"Created superuser {username} {email} has been created."))
-            self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
+            self.handle_completed_success(msg=f"Created superuser {username} {email} has been created.")
         else:
-            self.stdout.write(self.style.SUCCESS(f"User {username} updated."))
-
+            self.handle_completed_success(msg=f"User {username} updated.")
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}"
-                )
+            self.handle_completed_success(
+                msg=f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}"
             )
 
         try:
@@ -91,10 +86,8 @@ class Command(BaseCommand):
                 phone=SMARTER_CUSTOMER_SUPPORT_PHONE,
                 is_primary=True,
             )
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
-                )
+            self.handle_completed_success(
+                msg=f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
             )
 
         # ensure that the Smarter admin user has at least one auth token (api key)
@@ -102,8 +95,6 @@ class Command(BaseCommand):
             _, token_key = SmarterAuthToken.objects.create(
                 name="smarter-admin-key", user=user, description="created by manage.py"
             )  # type: ignore[assignment]
-            self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))
-
-        self.stdout.write(
-            self.style.SUCCESS("smarter.apps.account.management.commands.create_smarter_admin completed.")
-        )
+            self.handle_completed_success(msg=f"created API key: {token_key}")
+            return
+        self.handle_completed_success()

@@ -18,6 +18,9 @@
 ROOT_DOMAIN=SET-ME-PLEASE
 DEVELOPER_MODE=true
 
+# Enable detailed settings output to the console during startup and management commands.
+# SMARTER_SETTINGS_OUTPUT=true
+
 # AWS settings. The key-pair need sufficient permissions to manage
 # all resources created by https://github.com/smarter-sh/smarter-infrastructure
 AWS_REGION=us-east-2

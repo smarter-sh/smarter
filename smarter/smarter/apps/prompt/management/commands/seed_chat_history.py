@@ -5,8 +5,6 @@ import os
 import secrets
 from pathlib import Path
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import Account
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
@@ -17,6 +15,7 @@ from smarter.apps.prompt.models import Chat
 from smarter.apps.prompt.providers.providers import chat_providers
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 from smarter.lib import json
+from smarter.lib.django.management.base import SmarterCommand
 
 
 HERE = Path(__file__).resolve().parent
@@ -24,7 +23,7 @@ default_handler = chat_providers.default_handler
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Django manage.py seed_chat_history.py command.
     This command is used to seed the chat history and audit tables.
@@ -42,22 +41,28 @@ class Command(BaseCommand):
         to exist at this point, as well as the built-in example
         chatbot and plugins.
         """
+        self.handle_begin()
+
         data_folder_path = os.path.join(HERE, "data", "*.json")
 
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
         if not account:
+            self.handle_completed_failure(msg=f"Account not found: {SMARTER_ACCOUNT_NUMBER}")
             raise ValueError(f"Account not found: {SMARTER_ACCOUNT_NUMBER}")
 
         user = get_cached_admin_user_for_account(account)
         if not user:
+            self.handle_completed_failure(msg=f"User not found for account: {account}")
             raise ValueError(f"User not found for account: {account}")
 
         user_profile = get_cached_user_profile(account=account, user=user)
         if not user_profile:
+            self.handle_completed_failure(msg=f"User profile not found for account: {account} user: {user}")
             raise ValueError(f"User profile not found for account: {account} user: {user}")
 
         chatbot = ChatBot.objects.get(account=user_profile.account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
         if not chatbot:
+            self.handle_completed_failure(msg=f"Chatbot not found {SMARTER_EXAMPLE_CHATBOT_NAME}")
             raise ValueError(f"Chatbot not found {SMARTER_EXAMPLE_CHATBOT_NAME}")
 
         session_key = "seed_chat_history.py_" + secrets.token_urlsafe(16)
@@ -71,7 +76,7 @@ class Command(BaseCommand):
         )
 
         for file_path in glob.glob(data_folder_path):
-            print("Processing file: ", file_path)
+            self.stdout.write(self.style.NOTICE(f"Processing file: {file_path}"))
             with open(file_path, encoding="utf-8") as file:
                 data = json.loads(file.read())
                 plugins = ChatBotPlugin().plugins(chatbot=chatbot)
@@ -83,5 +88,5 @@ class Command(BaseCommand):
                     )
 
                 default_handler(chat=chat, plugins=plugins, user=user_profile.user, data=data)
-                print("Chat history seeded.")
-        print("Chat history seeding complete.")
+                self.stdout.write(self.style.SUCCESS("Chat history seeded."))
+        self.handle_completed_success()

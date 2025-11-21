@@ -62,6 +62,14 @@ TFVARS = TFVARS or {}
 DOT_ENV_LOADED = load_dotenv()
 
 
+def bool_environment_variable(var_name: str, default: bool) -> bool:
+    """Get a boolean environment variable"""
+    value = os.environ.get(var_name)
+    if value is None:
+        return default
+    return value.lower() in ["true", "1", "t", "y", "yes"]
+
+
 def get_semantic_version() -> str:
     """
     Return the semantic version number.

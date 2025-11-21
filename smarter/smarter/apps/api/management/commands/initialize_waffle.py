@@ -1,16 +1,16 @@
 """Initialize Waffle flags and switches."""
 
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
 from waffle.models import Switch
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterEnvironments
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Initialize Waffle flags and switches."""
 
     def handle(self, *args, **options):
@@ -23,7 +23,7 @@ class Command(BaseCommand):
             else:
                 print(f"Verified switch {switch_name}")
 
-        self.stdout.write(self.style.NOTICE("smarter.apps.api.management.commands.initialize_waffle started."))
+        self.handle_begin()
 
         smarter_switches = SmarterWaffleSwitches().all.copy()
 
@@ -39,4 +39,4 @@ class Command(BaseCommand):
         if smarter_settings.environment == SmarterEnvironments.LOCAL:
             call_command("waffle_switch", SmarterWaffleSwitches.REACTAPP_DEBUG_MODE, "on")
 
-        self.stdout.write(self.style.SUCCESS("smarter.apps.api.management.commands.initialize_waffle completed."))
+        self.handle_completed_success()

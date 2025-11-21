@@ -594,99 +594,84 @@ WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = 30
 ###############################################################################
 # System information logging for all environments
 ###############################################################################
-logger.info("=" * 80)
+if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
+    logger.info("=" * 80)
 
-try:
-    with open("/proc/uptime", encoding="utf-8") as f:
-        uptime_seconds = float(f.readline().split()[0])
-        uptime_str = time.strftime("%H:%M:%S", time.gmtime(uptime_seconds))
-        logger.info("Container uptime: %s", uptime_str)
-except FileNotFoundError:
-    logger.warning("Container uptime not available")
-except OSError as e:
-    logger.error("Error reading container uptime: %s", e)
+    try:
+        with open("/proc/uptime", encoding="utf-8") as f:
+            uptime_seconds = float(f.readline().split()[0])
+            uptime_str = time.strftime("%H:%M:%S", time.gmtime(uptime_seconds))
+            logger.info("Container uptime: %s", uptime_str)
+    except FileNotFoundError:
+        logger.warning("Container uptime not available")
+    except OSError as e:
+        logger.error("Error reading container uptime: %s", e)
 
-# try:
-#     cpu_limit = int(subprocess.check_output("nproc", shell=True).decode().strip())
-#     mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
-#     mem_kib = int(mem_total_line.split()[1])  # MemTotal value in kB
-#     mem_gib = mem_kib / 1024 / 1024
-#     logger.info("CPU limit: %s cores", cpu_limit)
-#     if cpu_limit < 2:
-#         logger.warning("Recommended minimum CPU limit is 2. Detected: %s cores", cpu_limit)
-#     logger.info("Memory limit: %.2f GiB", mem_gib)
-#     if mem_gib < 4.0:
-#         logger.warning("Recommended minimum memory limit is 4 GiB. Detected: %.2f GiB", mem_gib)
-# except (subprocess.CalledProcessError, OSError) as e:
-#     logger.warning("Resource limits not available: %s", e)
-# except (ValueError, IndexError) as e:
-#     logger.error("Error parsing resource limits: %s", e)
+    try:
+        # CPU limit (cgroup v2)
+        cpu_limit = None
+        cpu_max_path = "/sys/fs/cgroup/cpu.max"
+        if os.path.exists(cpu_max_path):
+            with open(cpu_max_path, encoding="utf-8") as f:
+                quota, period = f.read().strip().split()
+                if quota != "max":
+                    cpu_limit = math.ceil(int(quota) / int(period))
+                else:
+                    cpu_limit = int(subprocess.check_output("nproc", shell=True).decode().strip())
+        else:
+            cpu_limit = int(subprocess.check_output("nproc", shell=True).decode().strip())
 
-try:
-    # CPU limit (cgroup v2)
-    cpu_limit = None
-    cpu_max_path = "/sys/fs/cgroup/cpu.max"
-    if os.path.exists(cpu_max_path):
-        with open(cpu_max_path, encoding="utf-8") as f:
-            quota, period = f.read().strip().split()
-            if quota != "max":
-                cpu_limit = math.ceil(int(quota) / int(period))
-            else:
-                cpu_limit = int(subprocess.check_output("nproc", shell=True).decode().strip())
+        # Memory limit (cgroup v2)
+        mem_limit = None
+        mem_max_path = "/sys/fs/cgroup/memory.max"
+        if os.path.exists(mem_max_path):
+            with open(mem_max_path, encoding="utf-8") as f:
+                mem_bytes = int(f.read().strip())
+                if mem_bytes < 1 << 60:  # If not unlimited
+                    mem_gib = mem_bytes / 1024 / 1024 / 1024
+                    mem_limit = mem_gib
+                else:
+                    # Fallback to /proc/meminfo
+                    mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
+                    mem_kib = int(mem_total_line.split()[1])
+                    mem_limit = mem_kib / 1024 / 1024
+        else:
+            mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
+            mem_kib = int(mem_total_line.split()[1])
+            mem_limit = mem_kib / 1024 / 1024
+
+        logger.info("CPU limit: %s cores", cpu_limit)
+        if cpu_limit < 2:
+            logger.warning("Recommended minimum CPU limit is 2. Detected: %s cores", cpu_limit)
+        logger.info("Memory limit: %.2f GiB", mem_limit)
+        if mem_limit < 4.0:
+            logger.warning("Recommended minimum memory limit is 4 GiB. Detected: %.2f GiB", mem_limit)
+    except (OSError, subprocess.CalledProcessError) as e:
+        logger.warning("Resource limits not available: %s", e)
+    except (ValueError, IndexError) as e:
+        logger.error("Error parsing resource limits: %s", e)
+
+    try:
+        debian_version = "not found"
+        with open("/etc/debian_version", encoding="utf-8") as f:
+            debian_version = f.read().strip()
+        logger.info("Debian v%s %s", debian_version, os.uname().version)
+    except FileNotFoundError:
+        logger.error("Debian version file not found")
+    except OSError as e:
+        logger.error("Error reading Debian version: %s", e)
+
+    logger.info("Python v%s", sys.version)
+    logger.info("Django v%s", get_version())
+    logger.info("Smarter v%s", smarter_version)
+    logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)
+    logger.info("Storages backend: %s", STORAGES["default"]["BACKEND"])
+    if smarter_settings.smtp_is_configured:
+        logger.info("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)
     else:
-        cpu_limit = int(subprocess.check_output("nproc", shell=True).decode().strip())
-
-    # Memory limit (cgroup v2)
-    mem_limit = None
-    mem_max_path = "/sys/fs/cgroup/memory.max"
-    if os.path.exists(mem_max_path):
-        with open(mem_max_path, encoding="utf-8") as f:
-            mem_bytes = int(f.read().strip())
-            if mem_bytes < 1 << 60:  # If not unlimited
-                mem_gib = mem_bytes / 1024 / 1024 / 1024
-                mem_limit = mem_gib
-            else:
-                # Fallback to /proc/meminfo
-                mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
-                mem_kib = int(mem_total_line.split()[1])
-                mem_limit = mem_kib / 1024 / 1024
+        logger.warning("SMTP server not configured")
+    if smarter_settings.aws_is_configured:
+        logger.info("AWS credentials detected")
     else:
-        mem_total_line = subprocess.check_output("grep MemTotal /proc/meminfo", shell=True).decode().strip()
-        mem_kib = int(mem_total_line.split()[1])
-        mem_limit = mem_kib / 1024 / 1024
-
-    logger.info("CPU limit: %s cores", cpu_limit)
-    if cpu_limit < 2:
-        logger.warning("Recommended minimum CPU limit is 2. Detected: %s cores", cpu_limit)
-    logger.info("Memory limit: %.2f GiB", mem_limit)
-    if mem_limit < 4.0:
-        logger.warning("Recommended minimum memory limit is 4 GiB. Detected: %.2f GiB", mem_limit)
-except (OSError, subprocess.CalledProcessError) as e:
-    logger.warning("Resource limits not available: %s", e)
-except (ValueError, IndexError) as e:
-    logger.error("Error parsing resource limits: %s", e)
-
-try:
-    debian_version = "not found"
-    with open("/etc/debian_version", encoding="utf-8") as f:
-        debian_version = f.read().strip()
-    logger.info("Debian v%s %s", debian_version, os.uname().version)
-except FileNotFoundError:
-    logger.error("Debian version file not found")
-except OSError as e:
-    logger.error("Error reading Debian version: %s", e)
-
-logger.info("Python v%s", sys.version)
-logger.info("Django v%s", get_version())
-logger.info("Smarter v%s", smarter_version)
-logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)
-logger.info("Storages backend: %s", STORAGES["default"]["BACKEND"])
-if smarter_settings.smtp_is_configured:
-    logger.info("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)
-else:
-    logger.warning("SMTP server not configured")
-if smarter_settings.aws_is_configured:
-    logger.info("AWS credentials detected")
-else:
-    logger.warning("AWS credentials not found.")
-logger.info("=" * 80)
+        logger.warning("AWS credentials not found.")
+    logger.info("=" * 80)

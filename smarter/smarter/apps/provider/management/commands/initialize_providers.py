@@ -8,7 +8,6 @@ from urllib.parse import urljoin
 import google.auth.transport.requests
 import requests
 from django.core.files.base import ContentFile
-from django.core.management.base import BaseCommand
 from django.utils import timezone
 from google.auth.exceptions import GoogleAuthError
 from google.oauth2 import service_account
@@ -18,6 +17,7 @@ from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
+from smarter.lib.django.management.base import SmarterCommand
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ META_DEFAULT_MODEL = "llama3.1-70b"
 META_API_KEY_NAME = "meta_ai_api_key"
 
 
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Django manage.py initialize_providers.py command.
     This command is used to create/update the principal
@@ -312,7 +312,7 @@ class Command(BaseCommand):
         """
         Initialize all built-in providers.
         """
-        self.stdout.write(self.style.NOTICE("smarter.apps.provider.management.commands.initialize_providers started."))
+        self.handle_begin()
 
         try:
             self.user_profile = get_cached_smarter_admin_user_profile()
@@ -321,14 +321,7 @@ class Command(BaseCommand):
             self.initialize_metaai()
         # pylint: disable=broad-except
         except Exception as exc:
-            self.stdout.write(self.style.ERROR(f"initialize_providers: Error initializing providers: {exc}"))
-            self.stdout.write(
-                self.style.ERROR(
-                    "smarter.apps.provider.management.commands.initialize_providers completed with errors."
-                )
-            )
+            self.handle_completed_failure(msg=f"initialize_providers: Error initializing providers: {exc}")
             return
 
-        self.stdout.write(
-            self.style.SUCCESS("smarter.apps.provider.management.commands.initialize_providers completed successfully.")
-        )
+        self.handle_completed_success()

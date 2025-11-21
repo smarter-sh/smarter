@@ -1,8 +1,12 @@
 """Django custom project settings"""
 
+from smarter.common.conf import bool_environment_variable
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterEnvironments  # pylint: disable=W0611
 from smarter.common.exceptions import SmarterConfigurationError  # pylint: disable=W0611
+
+
+SMARTER_SETTINGS_OUTPUT = bool_environment_variable("SMARTER_SETTINGS_OUTPUT", False)
 
 
 # SMARTER platform settings

@@ -7,7 +7,6 @@ from urllib.parse import urljoin
 
 import httpx
 from django.core.management import CommandError
-from django.core.management.base import BaseCommand
 from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
@@ -16,13 +15,14 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Utility for running api/v1/cli/ endpoints to verify that they work.
     This largely recreates the unit tests for the endpoints, albeit with
@@ -94,7 +94,7 @@ class Command(BaseCommand):
         We need to be mindful of the environment we are in, as the
         endpoint may be hosted over https or http.
         """
-        self.stdout.write(self.style.NOTICE("smarter.apps.api.management.commands.apply_manifest started."))
+        self.handle_begin()
 
         self.filespec = options.get("filespec")
         self.manifest = options.get("manifest")
@@ -102,18 +102,18 @@ class Command(BaseCommand):
         verbose = options.get("verbose", False)
 
         if not isinstance(username, str) or not username.strip():
-            self.stderr.write(self.style.ERROR("No username provided."))
+            self.handle_completed_failure(msg="No username provided.")
             return
 
         try:
             self.user = User.objects.get(username=username.strip())
-        except User.DoesNotExist:
-            self.stderr.write(self.style.ERROR(f"User '{username}' does not exist."))
+        except User.DoesNotExist as e:
+            self.handle_completed_failure(e, msg=f"User '{username}' does not exist.")
             return
 
         user_profile = get_cached_user_profile(user=self.user)
         if not isinstance(user_profile, UserProfile):
-            self.stderr.write(self.style.ERROR("No admin user profile found."))
+            self.handle_completed_failure(msg="No admin user profile found.")
             return
 
         user = user_profile.user
@@ -126,7 +126,7 @@ class Command(BaseCommand):
             )
         # pylint: disable=W0718
         except Exception as e:
-            self.stderr.write(self.style.ERROR(f"Error creating API token: {e}"))
+            self.handle_completed_failure(e, msg=f"Error creating API token: {e}")
             return
 
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply, kwargs={})
@@ -162,12 +162,12 @@ class Command(BaseCommand):
             if verbose:
                 self.stdout.write(self.style.SUCCESS(response))
         else:
-            self.stderr.write(
-                self.style.ERROR(f"Manifest apply to {url} failed with status code: {httpx_response.status_code}")
+            self.handle_completed_failure(
+                msg=f"Manifest apply to {url} failed with status code: {httpx_response.status_code}"
             )
             self.stderr.write(self.style.ERROR(f"manifest: {self.data}"))
             self.stderr.write(self.style.ERROR(f"response: {response}"))
             msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {self.data}\nresponse: {response}"
             raise CommandError(msg)
 
-        self.stdout.write(self.style.SUCCESS("smarter.apps.api.management.commands.apply_manifest completed."))
+        self.handle_completed_success()
