@@ -163,7 +163,8 @@ RUN chown -R smarter_user:smarter_user /home/smarter_user/ && \
   find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
   find /home/smarter_user/smarter/smarter/ -type d -name migrations -exec chmod 700 {} + && \
   chmod -R 700 /home/smarter_user/data && \
-  chmod -R 700 /home/smarter_user/.cache
+  chmod -R 700 /home/smarter_user/.cache && \
+  chmod 755 /home/smarter_user/smarter/manage.py
 
 ################################# data #################################
 FROM permissions AS data
