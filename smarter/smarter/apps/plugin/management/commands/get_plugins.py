@@ -1,19 +1,17 @@
 # pylint: disable=W0613
 """This module retrieves a list of plugins for an account using manage.py on the command line."""
 
-import sys
 from typing import Optional
-
-from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.plugin.utils import Plugins
+from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.manifest.enum import SAMKeys
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """Django manage.py get_plugins command. This command is used to retrieve a list of plugins for an account."""
 
     def add_arguments(self, parser):
@@ -25,6 +23,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """delete the plugin."""
+        self.handle_begin()
+
         account_number = options["account_number"]
         username = options["username"]
 
@@ -33,23 +33,30 @@ class Command(BaseCommand):
 
         try:
             user = User.objects.get(username=username)  # type: ignore
-        except User.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"manage.py retrieve_plugin: User {username} does not exist."))
-            sys.exit(1)
+        except User.DoesNotExist as e:
+            self.handle_completed_failure(
+                e,
+                f"manage.py retrieve_plugin: User {username} does not exist.",
+            )
+            raise
 
         try:
             account = Account.objects.get(account_number=account_number)
-        except Account.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"manage.py retrieve_plugin: Account {account_number} does not exist."))
-            sys.exit(1)
+        except Account.DoesNotExist as e:
+            self.handle_completed_failure(
+                e,
+                f"manage.py retrieve_plugin: Account {account_number} does not exist.",
+            )
+            raise
 
         try:
             get_cached_user_profile(user=user, account=account)  # type: ignore
-        except UserProfile.DoesNotExist:
-            self.stdout.write(
-                self.style.ERROR(f"manage.py retrieve_plugin: UserProfile for {user} and {account} does not exist.")
+        except UserProfile.DoesNotExist as e:
+            self.handle_completed_failure(
+                e,
+                f"manage.py retrieve_plugin: UserProfile for {user} and {account} does not exist.",
             )
-            sys.exit(1)
+            raise
 
         plugins = Plugins(user=user, account=account)  # type: ignore
         retval = [
@@ -57,3 +64,4 @@ class Command(BaseCommand):
             for plugin in plugins.data
         ]
         print(retval)
+        self.handle_completed_success()

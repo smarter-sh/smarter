@@ -3,15 +3,14 @@
 
 from typing import Optional
 
-from django.core.management.base import BaseCommand
-
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Django manage.py create_plugin command. This command is used to add plugin examples to a user account.
     """
@@ -22,28 +21,28 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the plugin."""
-        self.stdout.write(self.style.NOTICE("smarter.apps.plugin.management.commands.add_plugin_examples started."))
+        self.handle_begin()
 
         user_profile: Optional[UserProfile] = None
         username = options["username"]
 
         try:
             user: User = User.objects.get(username=username)
-        except User.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"User {username} does not exist."))
-            return
+        except User.DoesNotExist as e:
+            self.handle_completed_failure(e, f"User {username} does not exist.")
+            raise ValueError(f"User {username} does not exist.") from e
 
         try:
             user_profile = get_cached_user_profile(user=user)  # type: ignore
-        except UserProfile.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"User profile for {user.username} {user.email} does not exist."))  # type: ignore
-            return
+        except UserProfile.DoesNotExist as e:
+            self.handle_completed_failure(e, f"UserProfile for {user} does not exist.")
+            raise ValueError(f"UserProfile for {user} does not exist.") from e
 
         try:
             add_example_plugins(user_profile=user_profile)
         # pylint: disable=broad-except
         except Exception as exc:
-            self.stdout.write(self.style.ERROR(f"Failed to add example plugins for user {username}: {exc}"))
-            return
+            self.handle_completed_failure(exc)
+            raise
 
-        self.stdout.write(self.style.SUCCESS("smarter.apps.plugin.management.commands.add_plugin_examples completed."))
+        self.handle_completed_success()

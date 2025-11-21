@@ -1,15 +1,14 @@
 """This module is used to initialize the environment."""
 
-from django.core.management.base import BaseCommand
-
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.aws.route53 import AWSRoute53
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.lib.django.management.base import SmarterCommand
 
 
 # pylint: disable=E1101
-class Command(BaseCommand):
+class Command(SmarterCommand):
     """
     Verify AWS Route53 resources.
     - root:     example.com
@@ -445,11 +444,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE("-" * 80))
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.NOTICE("*" * 80))
-        self.stdout.write(
-            self.style.NOTICE("smarter.apps.chatbot.management.commands.verify_dns_configuration started.")
-        )
-        self.stdout.write(self.style.NOTICE("*" * 80))
+        """Verify DNS configuration."""
+        self.handle_begin()
 
         self.verify_base_dns_config()
 
@@ -461,6 +457,4 @@ class Command(BaseCommand):
             # example: domain=alpha.platform.example.com
             self.verify(domain=smarter_settings.environment_platform_domain)
 
-        self.stdout.write(self.style.NOTICE("*" * 80))
-        self.stdout.write(self.style.SUCCESS(f"{self.log_prefix} completed successfully."))
-        self.stdout.write(self.style.NOTICE("*" * 80))
+        self.handle_completed_success()
