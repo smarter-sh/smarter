@@ -10,11 +10,13 @@
 ![Release Status](https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-Smarter is a no-code platform for managing and orchestrating AI resources. This repo contains source code for the REST Api and the web based Prompt Engineer Workbench. Smarter is used as an instructional tool at University of British Columbia for teaching cloud computing and prompt engineering techniques including advanced use of tool calling involving secure integrations to remote data sources like Sql databases and remote Apis.
+This repo contains source code for the Smarter REST Api and the web based Prompt Engineer Workbench. Smarter is a no-code platform for managing and orchestrating AI resources.
+
+Smarter is used as an instructional tool at [University of British Columbia](https://www.ubc.ca/) for teaching cloud computing at scale, and generative AI prompt engineering techniques including advanced use of LLM tool calling involving secure integrations to remote data sources like Sql databases and remote Apis.
 
 ## At a Glance
 
-- [1-click deployment](https://github.com/smarter-sh/smarter-deploy)
+- [1-click Quickstart](https://github.com/smarter-sh/smarter-deploy) deployment with Docker
 - declarative manifest based resource management
 - no-code LLM tool call extensibility that facilitates integrations to remote data sources like Sql databases and remote Apis
 - [command-line interface](https://smarter.sh/cli) for Windows, macOS, Linux and Docker
