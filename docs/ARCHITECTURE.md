@@ -1,12 +1,31 @@
 # Smarter Architecture at a glance
 
-- Compute infrastructure that runs both locally via Docker as well as natively on Kubernetes.
-- Countermeasures for common Internet and web intrusion strategies including SQL injection, cross-site request forgeries, brute force password attacks, distributed denial of service, cross-site scripting, clickjacking, host header corruptions. Additionally, Smarter goes to great pains to minimize its attack surface, primarily by only opening ports 80 and 443 to the public.
+- Docker-based Api and web console application that is designed to run both locally as well as natively on Kubernetes.
+- YAML-first interface for managing AI resources that leverages a separately managed command-line interface that is similar in design to Kubernetes' kubectl.
+- Robust LLM tool call / function call extensibility mobile that facilitates no-code integrations to remote data sources like Sql databases and remote Api's.
+- Independent drop-in Chat UI written in React that works on any html web page via a simple 2-step DOM manipulation.
+- Proprietary chat/agent REST Api to manage sessions between the Smarter Api backend and the Smarter Chat UI.
+- A robust "batteries included" backend, with industrial strength security countermeasures for common Internet and web intrusion strategies including SQL injection, LLM prompt injection, cross-site request forgeries, brute force password attacks, distributed denial of service, cross-site scripting, clickjacking, host header corruptions.
 - [Python-Django](https://www.djangoproject.com/) web console **Prompt Engineer's Workbench** for developing advanced LLM tool call-based extensions that leverage remote data sources and can be deployed to independent, custom domains.
-- React component chat UI that can also be integrated into any html web page via a simple 2-step DOM manipulation.
-- customer api logging architecture implemented with Django models, signals and Celery tasks
-- Team management features
-- Configurable use-based billing features based on api calls as well as plugin usage.
+- Sophsticated logging, content moderation.
+- Team management features for granular control of AI resource ownership, api key access, and internal budgeting
+- Configurable use-based internal billing features based on api calls as well as plugin usage.
+
+The principal technologies in the **Smarter** platform stack include:
+
+- Amazon Web Services
+- Debian, Ubuntu or Amazon Linux
+- Docker/Kubernetes/Helm
+- MySQL
+- Redis
+- Terraform/awscli/Boto3
+- Python/Django
+- Pytest/Pluggy
+- Pydantic/Pandas/NumPy
+- react.js
+- Bootstrap
+- Go lang
+- GitHub Actions
 
 ## Running Locally
 
