@@ -5,7 +5,7 @@ Django Settings
 ---------------
 
 Asynchronous Task Queue Configuration
-------------------------------------
+-------------------------------------
 
 Beat Scheduler Configuration
 ----------------------------
