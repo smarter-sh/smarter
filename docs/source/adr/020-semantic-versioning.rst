@@ -7,7 +7,8 @@ Accepted
 
 Context
 -------
-Consistent versioning is important for release management, automation, and communication with users. Semantic versioning provides a standardized approach to versioning software releases.
+Consistent versioning is important for release management, automation, and communication with users. Semantic versioning provides a standardized approach to versioning software releases
+including across disparate platforms and package managers like GitHub, PyPi, DockerHub and ArtifactHUB.
 
 Decision
 --------
