@@ -14,3 +14,4 @@ Developers
    developers/architecture
    developers/docker
    developers/developer-guidelines
+   developers/code-of-conduct
