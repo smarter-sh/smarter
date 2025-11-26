@@ -1,2 +1,2 @@
-Knox
-====
+Django Knox
+===========
