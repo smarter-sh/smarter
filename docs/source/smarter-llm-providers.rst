@@ -1,5 +1,5 @@
-LLM Providers
-=============
+Smarter LLM Providers
+=====================
 
 OpenAI Compatible Providers
 ---------------------------

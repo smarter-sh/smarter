@@ -1,5 +1,5 @@
-Django Overrides
-================
+Developer Reference
+===================
 
 
 Django Rest Framework Serializers
