@@ -6,8 +6,11 @@ Architecture
    :caption: Architecture
 
    architecture/summary
+   architecture/aws
    architecture/broker-model
    architecture/drf
+   architecture/templates
+   architecture/knox
    architecture/object-caching
    architecture/pydantic
    architecture/react
@@ -17,3 +20,6 @@ Architecture
    architecture/settings
    architecture/logging
    architecture/security
+   architecture/waffle
+   architecture/wagtail
+   architecture/unit-tests
