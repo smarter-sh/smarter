@@ -13,4 +13,3 @@ Architecture
    architecture/react
    architecture/logging
    architecture/wagtail
-   architecture/unit-tests

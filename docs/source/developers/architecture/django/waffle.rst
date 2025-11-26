@@ -1,2 +1,2 @@
-Waffle
-======
+Django Waffle
+=============

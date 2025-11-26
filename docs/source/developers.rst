@@ -8,6 +8,7 @@ Developers
 
    developers/contributing
    developers/build
+   developers/test
    developers/deployment
    developers/ci-cd
    developers/architecture
