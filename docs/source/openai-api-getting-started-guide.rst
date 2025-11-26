@@ -1,5 +1,5 @@
-How to Get an OpenAI API Key
-============================
+OpenAI
+======
 
 Navigate to `OpenAI’s official platform
 website <https://platform.openai.com/>`__. If you haven’t already,

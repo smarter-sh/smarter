@@ -1,5 +1,5 @@
-Smarter Architecture at a glance
-================================
+Architecture at a Glance
+========================
 
 - Docker-based Api and web console application that is designed to run
   both locally as well as natively on Kubernetes.

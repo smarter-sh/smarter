@@ -1,2 +1,12 @@
 Plugins
 =======
+
+
+Static
+------
+
+SqlPlugin
+---------
+
+ApiPlugin
+---------

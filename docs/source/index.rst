@@ -29,3 +29,4 @@ documentation for details.
    django-react-integration
    openai-api-getting-started-guide
    openai-json-examples
+   providers
