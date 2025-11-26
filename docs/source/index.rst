@@ -19,9 +19,9 @@ documentation for details.
    introduction
    installation
    administration
-   cli
-   api
-   chatbot-api
+   smarter-cli
+   smarter-api
+   smarter-chatbot-api
    contributing
    plugins
    connections
