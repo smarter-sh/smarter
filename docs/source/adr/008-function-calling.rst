@@ -1,2 +1,2 @@
-ADR-001: Smarter Settings
+ADR-008: Function Calling
 =========================
