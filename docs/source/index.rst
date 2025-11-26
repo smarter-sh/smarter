@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Smarter documentation
+Smarter Documentation
 =====================
 
 Add your content using ``reStructuredText`` syntax. See the
@@ -36,5 +36,7 @@ documentation for details.
    openai-api-getting-started-guide
    openai-json-examples
    developer-reference
+   developer-docker-reference
+   developer-guidelines
    architecture
    contributing
