@@ -1,5 +1,5 @@
-Integrations & External Services
-================================
+Integrations
+============
 
 .. toctree::
    :maxdepth: 2
