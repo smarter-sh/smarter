@@ -8,18 +8,9 @@ Architecture
    architecture/summary
    architecture/aws
    architecture/broker-model
-   architecture/drf
-   architecture/templates
-   architecture/knox
-   architecture/object-caching
+   architecture/django
    architecture/pydantic
    architecture/react
-   architecture/tasks
-   architecture/signals
-   architecture/middleware
-   architecture/settings
    architecture/logging
-   architecture/security
-   architecture/waffle
    architecture/wagtail
    architecture/unit-tests
