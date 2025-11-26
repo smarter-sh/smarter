@@ -14,3 +14,18 @@ documentation for details.
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+   architecture
+   introduction
+   installation
+   administration
+   cli
+   api
+   chatbot-api
+   contributing
+   plugins
+   connections
+   secrets
+   django-react-integration
+   openai-api-getting-started-guide
+   openai-json-examples
