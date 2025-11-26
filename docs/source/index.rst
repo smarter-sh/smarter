@@ -16,27 +16,7 @@ documentation for details.
    :caption: Contents:
 
    introduction
-   installation
-   configuration
-   build
-   deployment
-   ci-cd
-   administration
-   smarter-manifests
-   smarter-chatbots
-   smarter-chatbot-api
-   smarter-chat-ui
-   smarter-cli
-   smarter-api
-   smarter-llm-providers
-   smarter-plugins
-   smarter-connections
-   smarter-secrets
-   django-react-integration
-   openai-api-getting-started-guide
-   openai-json-examples
-   developer-reference
-   developer-docker-reference
-   developer-guidelines
-   architecture
-   contributing
+   system-management
+   smarter-resources
+   developers
+   integrations
