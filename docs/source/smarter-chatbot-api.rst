@@ -1,5 +1,5 @@
-ChatBot API’s
-=============
+Smarter ChatBot API
+===================
 
 ChatBot’s are accessible via REST API. End points to deployed ChatBots
 are publicly accessible unless the customer has chosen to attach a
