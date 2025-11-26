@@ -15,18 +15,22 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
-   architecture
    introduction
    installation
+   configuration
+   architecture
    administration
+   smarter-manifests
+   smarter-chatbots
+   smarter-chatbot-api
+   smarter-chat-ui
    smarter-cli
    smarter-api
-   smarter-chatbot-api
-   contributing
+   llm-providers
    plugins
    connections
    secrets
    django-react-integration
    openai-api-getting-started-guide
    openai-json-examples
-   providers
+   contributing
