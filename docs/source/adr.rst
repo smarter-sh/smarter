@@ -34,3 +34,8 @@ See: `Michael Nygard’s ADRs <https://cognitect.com/blog/2011/11/15/documenting
    adr/021-internationalization
    adr/022-feature-flags
    adr/023-api-versioning
+   adr/024-broker-model
+   adr/025-templates
+   adr/026-keen
+   adr/027-annotations
+   adr/028-code-quality
