@@ -1,2 +1,2 @@
-ADR: Smarter Settings
-=====================
+ADR-001: Smarter Settings
+=========================
