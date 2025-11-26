@@ -39,3 +39,4 @@ See: `Michael Nygard’s ADRs <https://cognitect.com/blog/2011/11/15/documenting
    adr/026-keen
    adr/027-annotations
    adr/028-code-quality
+   adr/029-docstrings

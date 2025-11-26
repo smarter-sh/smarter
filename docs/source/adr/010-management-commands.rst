@@ -1,9 +1,6 @@
 ADR-010: Management Commands
 ============================
 
-ADR-010: Management Commands
-============================
-
 Status
 ------
 Accepted
