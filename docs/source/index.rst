@@ -18,6 +18,7 @@ documentation for details.
    introduction
    installation
    configuration
+   django-overrides
    architecture
    administration
    smarter-manifests
