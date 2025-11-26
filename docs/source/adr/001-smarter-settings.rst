@@ -1,0 +1,2 @@
+ADR: Smarter Settings
+=====================

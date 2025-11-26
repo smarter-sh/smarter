@@ -20,3 +20,4 @@ documentation for details.
    smarter-resources
    developers
    integrations
+   adr
