@@ -18,8 +18,9 @@ documentation for details.
    introduction
    installation
    configuration
-   django-overrides
-   architecture
+   build
+   deployment
+   ci-cd
    administration
    smarter-manifests
    smarter-chatbots
@@ -27,11 +28,13 @@ documentation for details.
    smarter-chat-ui
    smarter-cli
    smarter-api
-   llm-providers
-   plugins
-   connections
-   secrets
+   smarter-llm-providers
+   smarter-plugins
+   smarter-connections
+   smarter-secrets
    django-react-integration
    openai-api-getting-started-guide
    openai-json-examples
+   developer-reference
+   architecture
    contributing
