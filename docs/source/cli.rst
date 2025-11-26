@@ -1,5 +1,5 @@
-Smarter API Command-line Interface
-==================================
+Command-line Interface
+======================
 
 The Smarter cli is a standalone application written in Go lang that runs
 on Windows, macOS and Linux. It is separately managed in
