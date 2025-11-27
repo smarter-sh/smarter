@@ -52,17 +52,17 @@ If you are new to Docker, we recommend the following trusted resources:
 
 **Official Docker Documentation**
 
-- [Get Started with Docker](https://docs.docker.com/get-started/) – The official step-by-step guide for beginners.
-- [Docker Overview](https://docs.docker.com/engine/docker-overview/) – High-level introduction to Docker concepts.
+- `Get Started with Docker <https://docs.docker.com/get-started/>`__ – The official step-by-step guide for beginners.
+- `Docker Overview <https://docs.docker.com/engine/docker-overview/>`__ – High-level introduction to Docker concepts.
 
 **Video Tutorials**
 
-- [Docker for Beginners – Full Course (YouTube, freeCodeCamp)](https://www.youtube.com/watch?v=fqMOX6JJhGo) – A comprehensive, beginner-friendly video tutorial.
-- [Docker in 100 Seconds (YouTube, Fireship)](https://www.youtube.com/watch?v=Gjnup-PuquQ) – A fast-paced, visual introduction to Docker basics.
+- `Docker for Beginners – Full Course (YouTube, freeCodeCamp) <https://www.youtube.com/watch?v=fqMOX6JJhGo>`__ – A comprehensive, beginner-friendly video tutorial.
+- `Docker in 100 Seconds (YouTube, Fireship) <https://www.youtube.com/watch?v=Gjnup-PuquQ>`__ – A fast-paced, visual introduction to Docker basics.
 
 **Interactive Learning**
 
-- [Play with Docker](https://labs.play-with-docker.com/) – Try Docker in your browser, no installation required.
+- `Play with Docker <https://labs.play-with-docker.com/>`__ – Try Docker in your browser, no installation required.
 
 Key Docker Concepts
 -------------------
