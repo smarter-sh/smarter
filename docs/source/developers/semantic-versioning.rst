@@ -3,11 +3,10 @@ Semantic Versioning Guide
 
 See `Conventional Commits <https://www.conventionalcommits.org/>`__
 
-The `release.yml <.github/workflows/release.yml>`__,
-`checkPullRequest.yml <.github/workflows/checkPullRequest.yml>`__ and
-`testRelease.yml <.github/workflows/testRelease.yml>`__ Github Action
-Workflows in this repo are designed to act on the commit comment rules
-that follow.
+The `pushMain <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/pushMain.yml>`__,
+`build <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/build.yml>`__, and
+`deploy <https://github.com/smarter-sh/smarter/tree/main/.github/workflows/deploy.yml>`__ Github Action Workflows
+found in most Smarter repos are designed to act on the commit comment rules that follow.
 
 As an open-source maintainer, squash feature branches onto master and
 write a standardized commit message while doing so. The commit message
