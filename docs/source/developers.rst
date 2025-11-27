@@ -7,6 +7,7 @@ Developers
    :caption: Developers:
 
    developers/contributing
+   developers/12-factor-app
    developers/build
    developers/test
    developers/deployment
