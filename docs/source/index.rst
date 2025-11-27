@@ -88,6 +88,13 @@ Smarter requires a .env file with your credentials and configuration. You can sc
    Open the newly created .env file and add your credentials (API keys, passwords, etc.) as needed. The application will not run without this step.
    Note that `.env` contains copious inline documentation that you can refer to for specific configuration and technical guidance.
 
+.. raw:: html
+
+   <img src="https://cdn.smarter.sh/images/dot-env.png"
+        style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
+        alt="Smarter Login Screen"/>
+
+
 **4. Initialize the Application.**
 This step pulls the Docker containers, and seeds the platform with test data:
 
