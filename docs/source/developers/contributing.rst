@@ -38,7 +38,7 @@ Pull Requests
 Code of Conduct
 ~~~~~~~~~~~~~~~
 
-Please see our `CODE_OF_CONDUCT <./code-of-conduct.rst>`__
+Please see our `CODE_OF_CONDUCT <./code-of-conduct.html>`__
 
 Developer Getting Started
 -------------------------
@@ -100,7 +100,7 @@ Good Coding Best Practices
 This project demonstrates a wide variety of good coding best practices
 for managing mission-critical cloud-based micro services in a team
 environment, namely its adherence to `12-Factor
-Methodology <./12-factor-app.rst>`__. Please see this `Developer Guide <./developer-guidelines.rst>`__
+Methodology <./12-factor-app.html>`__. Please see this `Developer Guide <./developer-guidelines.html>`__
 for additional details.
 
 We want to make this project more accessible to students and learners as
@@ -117,7 +117,7 @@ Repository Setup
 ~~~~~~~~~~
 
 Smarter uses a **LOT** of configuration data. You’ll find a
-pre-formatted quick-start sample .env `here <https://github.com/smarter-sh/smarter/blob/main/docs/example-dot-env>`__ to
+pre-formatted `example .env file <https://github.com/smarter-sh/smarter/blob/main/docs/example-dot-env>`__ to
 help you get started, noting however that simply running ``make`` from
 the root of this repo will scaffold this exact file for you.
 
@@ -147,7 +147,7 @@ environment is correctly setup:
 Output should look similar to the following:
 
 .. figure::
-   https://github.com/smarter-sh/smarter/blob/main/docs/img/pre-commit.png
+   https://raw.githubusercontent.com/smarter-sh/smarter/main/docs/img/pre-commit.png
    :alt: pre-commit output
 
    pre-commit output
@@ -167,7 +167,7 @@ own independent project, then you’ll need to initialize each of these
 yourself.
 
 .. figure::
-   https://github.com/smarter-sh/smarter/blob/main/docs/img/github-secrets.png
+   https://raw.githubusercontent.com/smarter-sh/smarter/blob/main/docs/img/github-secrets.png
    :alt: Github Secrets
 
    Github Secrets
@@ -183,7 +183,7 @@ services on which Smarter relies including for example, MySQL, SMTP
 Email, AWS S3, AWS Elastic Container Registry, and Kubernetes itself.
 
 .. figure::
-   https://github.com/smarter-sh/smarter/blob/main/docs/img/kubernetes-secrets.png
+   https://raw.githubusercontent.com/smarter-sh/smarter/main/docs/img/kubernetes-secrets.png
    :alt: Kubernetes Secrets
 
    Kubernetes Secrets
@@ -207,7 +207,7 @@ following in this project:
 A typical pull request will look like the following:
 
 .. figure::
-   https://github.com/smarter-sh/smarter/blob/main/docs/img/automated-pr.png
+   https://raw.githubusercontent.com/smarter-sh/smarter/blob/main/docs/img/automated-pr.png
    :alt: Automated pull request
 
    Automated pull request
@@ -240,12 +240,13 @@ files located in the root of this repo:
 Python Setup
 ------------
 
-Smarter is built on the `Django <https://www.djangoproject.com/>`__ web
-development framework for Python. Moreover, the API is implemented with
-`Django REST Framework <https://www.django-rest-framework.org/>`__.
+Smarter is built substantially on the `Django <https://www.djangoproject.com/>`__ web
+development framework for Python,
+`Django REST Framework <https://www.django-rest-framework.org/>`__ and
+`Pydantic <https://docs.pydantic.dev/>`__ data validation library.
 Smarter strictly follows generally accepted best practices and coding
-conventions for both of these. Thus, to work effectively on this project
-you’ll need familiarity with both of these third party code libraries.
+conventions for all of these. Thus, to work effectively on this project
+you’ll need familiarity with all of these third party code libraries.
 Also note that this project leverages
 `Dependabot <https://github.com/dependabot>`__ and
 `Mergify <https://mergify.com/>`__ for managing version numbers of all
