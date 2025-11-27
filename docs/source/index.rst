@@ -27,20 +27,16 @@ Project: smarter
    :alt: AGPL-3 License
 
 
-**Smarter** is an AI resource management system designed for enterprises running at scale.
-It is a yaml manifest-based approach to managing the disparate resources that are required for creating and managing AI resources
-that integrate to other enterprise resources like REST Api's and Sql databases. And it gives prompt engineering teams
-an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful AI resources for common
-corporate use cases including agentic workflows, customer facing chat solutions, and more.
+**Smarter** is an extensible AI resource management system.
 
 Features
 --------
 
 - Declarative YAML manifest-based resource management that works like Kubernetes' kubectl.
-- Easy Docker-based installation for Windows, macOS, and Linux. Native Kubernetes support.
+- Easy Docker-based installation for Windows, macOS and Linux, and it natively supports Kubernetes.
 - Multi-LLM provider support: DeepSeek, OpenAI, Google AI, Meta AI, and more.
 - Web console, REST API, and CLI for managing AI resources.
-- LLM tool call extensibility for integrating remote data sources like SQL databases and remote APIs.
+- Extensibility model for LLM tool calls for integrating remote data sources like SQL databases and remote APIs.
 - Agentic workflow support for building multi-step AI processes.
 - Robust prompt management with versioning, testing, and deployment tracking.
 - Built-in prompt content moderation, detailed logging, security, cost accounting, and audit features.
