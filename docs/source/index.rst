@@ -52,6 +52,7 @@ You'll be up and running on your desktop in about 10 minutes!
 1. Install Docker Desktop. If you haven't already, download and install `Docker Desktop <https://docs.docker.com/desktop/>`__. This will also install Docker Compose.
 
 2. Clone the Repository. Open your terminal (command prompt) and run the following commands:
+
 .. code-block:: console
 
    git clone https://github.com/smarter-sh/smarter-deploy.git
@@ -127,12 +128,12 @@ A:
 - Check the Docker Desktop dashboard for error logs.
 - Ask for help: `Lawrence McDaniel <https://lawrencemcdaniel.com>`__
 
-Documentation Contents
-----------------------
+User Guide
+----------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User Guide
 
    system-management
    smarter-resources
