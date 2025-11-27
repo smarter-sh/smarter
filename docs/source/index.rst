@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Project: smarter
+project: smarter
 =================================================
 
 .. image:: https://img.shields.io/badge/Website-smarter.sh-brightgreen
@@ -32,16 +32,16 @@ Project: smarter
 Features
 --------
 
-- Declarative YAML manifest-based resource management that works like Kubernetes' kubectl.
+- Declarative `YAML manifest-based <https://platform.smarter.sh/docs/manifests/>`__ resource management that works like Kubernetes' kubectl.
 - Easy Docker-based installation for Windows, macOS and Linux, and it natively supports Kubernetes.
-- Multi-LLM provider support: DeepSeek, OpenAI, Google AI, Meta AI, and more.
-- Web console, REST API, and CLI available via Homebrew and Chocolatey (`smarter.sh/cli <https://smarter.sh/cli>`__).
+- Supports a growing list of LLM providers: DeepSeek, OpenAI, Google AI, Meta AI, and more.
+- Web console, REST API, and CLI (downloadable at `smarter.sh/cli <https://smarter.sh/cli>`__).
 - Extensibility model for LLM tool calls for integrating remote data sources like SQL databases and remote APIs. See :doc:`developers/architecture/plugin`.
 - Agentic workflow support for building multi-step AI processes.
 - Robust prompt management with versioning, testing, and deployment tracking.
 - Built-in prompt content moderation, detailed logging, security, cost accounting, and audit features.
 - Prompt engineering workbench for designing, testing, deploying, and managing AI resources.
-- Thriving developer ecosystem: Homebrew, Chocolatey, PyPI, NPM, VS Code Extension, and more. Self-onboarding resources included.
+- Thriving developer ecosystem: Homebrew, Chocolatey, PyPI, NPM, VS Code Extension, and more.
 
 .. raw:: html
 
@@ -179,3 +179,4 @@ A:
    external-links/manifest-reference
    external-links/json-schemas
    external-links/smarter-tutorial
+   external-links/youtube
