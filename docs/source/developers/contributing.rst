@@ -167,7 +167,7 @@ own independent project, then you’ll need to initialize each of these
 yourself.
 
 .. figure::
-   https://raw.githubusercontent.com/smarter-sh/smarter/blob/main/docs/img/github-secrets.png
+   https://raw.githubusercontent.com/smarter-sh/smarter/main/docs/img/github-secrets.png
    :alt: Github Secrets
 
    Github Secrets
@@ -207,7 +207,7 @@ following in this project:
 A typical pull request will look like the following:
 
 .. figure::
-   https://raw.githubusercontent.com/smarter-sh/smarter/blob/main/docs/img/automated-pr.png
+   https://raw.githubusercontent.com/smarter-sh/smarter/main/docs/img/automated-pr.png
    :alt: Automated pull request
 
    Automated pull request
