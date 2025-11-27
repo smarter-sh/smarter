@@ -16,7 +16,7 @@ Smarter is used as an instructional tool at [University of British Columbia](htt
 
 ## At a Glance
 
-- [1-click Quickstart](https://github.com/smarter-sh/smarter-deploy) deployment with Docker
+- [1-click Quickstart](https://github.com/smarter-sh/smarter-deploy) deployment with Docker.
 - declarative manifest based resource management
 - no-code LLM tool call extensibility that facilitates integrations to remote data sources like Sql databases and remote Apis
 - [command-line interface](https://smarter.sh/cli) for Windows, macOS, Linux and Docker
