@@ -63,12 +63,14 @@ practices.
 
   9. **Disposability**: [✅] Maximize robustness with fast startup and
      graceful shutdown. Terraform takes care of this for us. Running
-     ``terraform destroy`` will completely remove this project and any
-     residual data from your AWS account.
+     ``terraform destroy`` in `github.com/smarter-sh/smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__
+     will remove this project's aws resources and any residual data from your AWS account.
+     If you are running locally then simply deleting all
+     Smarter Docker containers and images will achieve the same effect.
 
 -
 
-  10. **Dev/prod parity**: [✅] Keep development, staging, and
+  1.  **Dev/prod parity**: [✅] Keep development, staging, and
       production as similar as possible. The GitHub Action
       `pushMain.yml <.github/workflows/pushMain.yml>`__ executes a
       forced merge from main to dev branches. This ensure that all dev
