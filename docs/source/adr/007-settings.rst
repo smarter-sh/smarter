@@ -1,9 +1,6 @@
 ADR-007: Settings
 =================
 
-ADR-007: Settings
-=================
-
 Status
 ------
 Accepted
