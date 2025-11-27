@@ -152,7 +152,7 @@ env:
 
 ## Documentation
 
-Detailed documentation for this repo is available here: [Documentation](./docs/) and for the [overall platform here](https://platform.smarter.sh/docs/)
+Detailed documentation for this repo is available here: [docs.smarter.sh](https://docs.smarter.sh/)
 
 ## Support
 
@@ -160,14 +160,4 @@ Please report bugs to the [GitHub Issues Page](https://github.com/smarter-sh/sma
 
 ## Contributing
 
-Please see the [CONTRIBUTING](./.github/CONTRIBUTING.md) page, the [project documentation](./docs/) and these tutorials:
-
-- the [Developer Setup Guide](./CONTRIBUTING.md)
-- this [Platform Architecture Summary](./docs/ARCHITECTURE.md)
-- these [Good Coding Practices](./docs/GOOD_CODING_PRACTICE.md)
-- this getting started guide for [12-factor Development Principals](./docs/12-FACTOR.md)
-- these [git Commit Comment Guidelines](./docs/SEMANTIC_VERSIONING.md) 😬😬😬 for managing CI rules for automated semantic releases.
-
-Contact: [Lawrence McDaniel](https://lawrencemcdaniel.com/contact)
-
-![Lines of Code](https://cdn.platform.smarter.sh/github.com/smarter-sh/lines-of-code.png)
+Please see the [CONTRIBUTING](https://docs.smarter.sh/en/latest/developers/contributing.html).
