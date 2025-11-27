@@ -107,6 +107,17 @@ Run the following command to start all Docker containers and launch the web serv
 The web console will be available at: http://127.0.0.1:8000/ or http://localhost:8000
 If you see a login screen, your deployment is working!
 
+.. raw:: html
+
+   <img src="https://cdn.smarter.sh/images/smarter-login-screen.png"
+        style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
+        alt="Smarter Login Screen"/>
+
+.. image:: https://img.shields.io/badge/Website-smarter.sh-brightgreen
+   :target: https://smarter.sh
+   :alt: Project Website
+
+
 **6. Log In.**
 Go to http://localhost:8000/login/ and log in with:
 
