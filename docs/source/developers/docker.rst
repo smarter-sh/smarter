@@ -4,7 +4,9 @@ Docker Reference
 What is Docker?
 ---------------
 
-Docker is an open-source platform that enables you to automate the deployment, scaling, and management of applications using lightweight, portable containers. Containers package your application code together with all dependencies, ensuring consistency across development, testing, and production environments.
+Docker is an open-source platform that enables you to automate the deployment, scaling, and management of applications using lightweight, portable containers.
+Containers package your application code together with all dependencies, including for example the runtime operating system, libraries, and system tools,
+ensuring consistency across development, testing, and production environments.
 
 Why Use Docker?
 ---------------
@@ -13,6 +15,35 @@ Why Use Docker?
 - **Isolation:** Each container runs independently, reducing conflicts between applications.
 - **Portability:** Containers can run anywhere Docker is supported (Windows, macOS, Linux, cloud).
 - **Efficiency:** Containers are lightweight and start quickly.
+
+Smarter and Docker
+-------------------
+
+Optimized Builds
+~~~~~~~~~~~~~~~~~~
+
+The Smarter Dockerfile begins with a novel base image declaration that helps to minimize image size while ensuring compatibility and performance.
+
+.. code-block:: docker
+
+   FROM python:3.12-slim-trixie AS linux_base
+
+python:3.12-slim-trixie includes the latest Python 3.12, installed on a minimal Debian 13 ("Trixie") operating system base
+which is optimized for size and performance. The Dockerfile is laid out in stages (eg, layers),
+ordered to optimize build caching and minimize final image size.
+
+Other Key Elements
+~~~~~~~~~~~~~~~~~~
+While the full Dockerfile may include additional instructions, typical elements are:
+
+- **Dependency Installation**: Installs system and Python dependencies required for the application.
+- **Copying Source Code**: Copies project files into the image.
+- **Setting Work Directory**: Uses ``WORKDIR`` to define the working directory for subsequent commands.
+- **Environment Variables**: Sets environment variables for configuration.
+- **Entrypoint or CMD**: Specifies how the container should start the application.
+- **Multi-Stage Build**: Uses the named stage (``linux_base``) to optimize the final image by copying only necessary files and dependencies.
+
+
 
 Getting Started with Docker
 ---------------------------
