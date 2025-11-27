@@ -113,9 +113,6 @@ If you see a login screen, your deployment is working!
         style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
         alt="Smarter Login Screen"/>
 
-.. image:: https://img.shields.io/badge/Website-smarter.sh-brightgreen
-   :target: https://smarter.sh
-   :alt: Project Website
 
 
 **6. Log In.**
