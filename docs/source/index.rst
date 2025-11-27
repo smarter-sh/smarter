@@ -44,6 +44,13 @@ Features
 - publicly accessible online documentation and self onboarding resources
 - open source UI components for jump starting projects
 
+.. raw:: html
+
+   <video src="https://cdn.smarter.sh/videos/read-the-docs.mp4" autoplay loop muted playsinline style="max-width: 100%; height: auto; border-radius: 8px;">
+     Sorry, your browser doesn't support embedded videos.
+   </video>
+
+
 Quickstart (1-click install)
 ----------------------------
 
