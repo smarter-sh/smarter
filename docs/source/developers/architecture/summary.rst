@@ -192,7 +192,7 @@ Optional requirements:
 
 - `OpenAI platform API key <https://platform.openai.com/>`__. *If you’re
   new to OpenAI API then see* `How to Get an OpenAI API
-  Key <./docs/OPENAI_API_GETTING_STARTED_GUIDE.md>`__
+  Key <https://docs.smarter.sh/en/latest/integrations/openai-api-getting-started-guide.html>`__
 - `Google Maps API
   key <https://developers.google.com/maps/documentation/geocoding/overview>`__.
   This is used the OpenAI API Function Calling coding example,

@@ -14,4 +14,5 @@ Developers
    developers/architecture
    developers/docker
    developers/developer-guidelines
+   developers/semantic-versioning
    developers/code-of-conduct

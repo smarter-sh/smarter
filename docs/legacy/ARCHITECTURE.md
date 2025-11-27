@@ -104,6 +104,6 @@ Cloud engineers:
 Optional requirements:
 
 - [OpenAI platform API key](https://platform.openai.com/).
-  _If you're new to OpenAI API then see [How to Get an OpenAI API Key](./docs/OPENAI_API_GETTING_STARTED_GUIDE.md)_
+  _If you're new to OpenAI API then see [How to Get an OpenAI API Key](https://docs.smarter.sh/en/latest/integrations/openai-api-getting-started-guide.html)_
 - [Google Maps API key](https://developers.google.com/maps/documentation/geocoding/overview). This is used the OpenAI API Function Calling coding example, "[get_current_weather()](https://platform.openai.com/docs/guides/function-calling)".
 - [Pinecone API key](https://docs.pinecone.io/docs/quickstart). This is used for OpenAI API Embedding examples.

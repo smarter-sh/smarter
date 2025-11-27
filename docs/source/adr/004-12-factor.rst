@@ -11,7 +11,7 @@ The project aims to follow modern best practices for building scalable, maintain
 
 Decision
 --------
-All pull requests and feature requests must respect and adhere to all 12 principles of the 12-Factor App methodology.
+All pull requests and feature requests must respect and adhere to all of the `12-Factor App methodology <https://github.com/smarter-sh/smarter/blob/main/docs/12-FACTOR.md>`__.
 
 Alternatives Considered
 -----------------------
