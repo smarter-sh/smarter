@@ -33,7 +33,7 @@ Features
 --------
 
 - Declarative `YAML manifest-based <https://platform.smarter.sh/docs/manifests/>`__ resource management that works like Kubernetes' kubectl.
-- Easy Docker-based installation for Windows, macOS and Linux, and it natively supports Kubernetes.
+- Easy `Docker-based <https://hub.docker.com/r/mcdaniel0073/smarter>`__ installation for Windows, macOS and Linux. See the `Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__ for native Kubernetes support.
 - Supports a growing list of LLM providers: DeepSeek, OpenAI, Google AI, Meta AI, and more.
 - Web console, REST API, and CLI (downloadable at `smarter.sh/cli <https://smarter.sh/cli>`__).
 - Extensibility model for LLM tool calls for integrating remote data sources like SQL databases and remote APIs. See :doc:`developers/architecture/plugin`.
