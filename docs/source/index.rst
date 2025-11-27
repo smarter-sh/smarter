@@ -111,6 +111,7 @@ Password: smarter
 
 **7. Download the Smarter Command-Line Interface.**
 You'll need to download, install and configure the cli in order to manage AI resources. Get the cli here: `smarter.sh/cli <https://smarter.sh/cli>`__.
+
 Prerequisites
 -------------
 
