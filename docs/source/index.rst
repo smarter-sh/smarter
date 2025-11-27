@@ -27,22 +27,25 @@ Project: smarter
    :alt: AGPL-3 License
 
 
-**Smarter** is an AI resource management system designed for enterprises running at scale. It is a yaml manifest-based approach to managing the disparate resources that are required for creating and managing AI resources that integrate to other enterprise resources like REST Api's and Sql databases. And it gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful AI resources for common corporate use cases including agentic workflows, customer facing chat solutions, and more.
-
-**Smarter** provides seamless integration and interoperation between LLMs from DeepSeek, Google AI, Meta AI and OpenAI. It is LLM provider-agnostic, and provides seamless integrations to a continuously evolving list of value added services for security management, prompt content moderation, audit, cost accounting, and workflow management. Smarter is cloud native and runs locally, on Kubernetes, on-site in your data center or in the cloud.
+**Smarter** is an AI resource management system designed for enterprises running at scale.
+It is a yaml manifest-based approach to managing the disparate resources that are required for creating and managing AI resources
+that integrate to other enterprise resources like REST Api's and Sql databases. And it gives prompt engineering teams
+an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful AI resources for common
+corporate use cases including agentic workflows, customer facing chat solutions, and more.
 
 Features
 --------
 
-- 1-click Quickstart deployment with Docker
-- declarative manifest based resource management
-- no-code LLM tool call extensibility that facilitates integrations to remote data sources like Sql databases and remote Apis
-- command-line interface for Windows, macOS, Linux and Docker
-- rest api
-- web console / prompt engineer workbench
-- robust developer ecosystem: PyPi, NPM, VS Code Extension and more
-- publicly accessible online documentation and self onboarding resources
-- open source UI components for jump starting projects
+- Easy installation and deployment with Docker for Windows, macOS, and Linux. Native Kubernetes support.
+- Multi-LLM provider support: DeepSeek, OpenAI, Google AI, Meta AI, and more.
+- Web console, REST API, and CLI for managing AI resources.
+- No-code LLM tool call extensibility for integrating with remote data sources (e.g., SQL databases, remote APIs).
+- Agentic workflow support for building multi-step AI processes.
+- Robust prompt management with versioning, testing, and deployment tracking.
+- Built-in prompt content moderation, detailed logging, security, cost accounting, and audit features.
+- Prompt engineering workbench for designing, testing, deploying, and managing AI resources.
+- Declarative YAML manifest-based resource management.
+- Thriving developer ecosystem: Homebrew, Chocolatey, PyPI, NPM, VS Code Extension, and more. Self-onboarding resources included.
 
 .. raw:: html
 
@@ -60,8 +63,8 @@ Features
 
 
 
-Quickstart (1-click install)
-----------------------------
+Quickstart
+----------
 
 You'll be up and running on your desktop in about 10 minutes!
 
@@ -169,3 +172,12 @@ A:
    developers
    integrations
    adr
+
+.. rubric:: External Resources
+
+- `Smarter docs <https://platform.smarter.sh/docs/>`__
+- `Swagger Api Docs <https://platform.smarter.sh/docs/swagger/>`__
+- `Redoc <https://platform.smarter.sh/docs/redoc/>`__
+- `Manifest Reference <https://platform.smarter.sh/docs/manifests/>`__
+- `Json Schemas <https://platform.smarter.sh/docs/json-schemas/>`__
+- `Smarter Tutorial <https://platform.smarter.sh/docs/learn/>`__

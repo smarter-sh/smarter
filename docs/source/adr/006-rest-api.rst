@@ -1,9 +1,6 @@
 ADR-006: Rest API
 =================
 
-ADR-006: Rest API
-=================
-
 Status
 ------
 Accepted
