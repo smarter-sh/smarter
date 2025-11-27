@@ -46,7 +46,7 @@ Features
 
 .. raw:: html
 
-   <video src="https://cdn.smarter.sh/videos/read-the-docs.mp4"
+   <video src="https://cdn.smarter.sh/videos/read-the-docs2.mp4"
           autoplay loop muted playsinline
           style="width: 100%; height: auto; display: block; margin: 0; border-radius: 0;">
      Sorry, your browser doesn't support embedded videos.
