@@ -11,7 +11,18 @@ Efficient caching is important for performance and scalability. Smarter currentl
 
 Decision
 --------
-The preferred methodology for caching in this project is to use `cache_results` for function result caching. Contributors should always attempt to use this approach for caching function outputs.
+The preferred methodology for caching in this project is to use `cache_results` for function result caching.
+Contributors should always attempt to use this approach for caching function outputs.
+Example:
+
+.. code-block:: python
+
+  from smarter.lib.cache import cache_results
+
+  @cache_results(timeout=3600, logging_enabled=True)
+  def expensive_function(args):
+      # hard-to-do computation
+      return result
 
 PENDING:
 - `cache_results` should be moved into its own independently managed PyPi package.

@@ -1,5 +1,7 @@
 # Smarter Docs
 
+[![Read the Docs](https://readthedocs.org/projects/smarter/badge/?version=latest)](https://docs.smarter.sh/)
+
 Table of contents:
 
 - [Django-React Integration](./DJANGO-REACT-INTEGRATION.md)
