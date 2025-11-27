@@ -48,7 +48,7 @@ Features
 
    <video src="https://cdn.smarter.sh/videos/read-the-docs.mp4"
           autoplay loop muted playsinline
-          style="width: 1200px; max-width: 100vw; height: auto; display: block; margin: 2em auto; border-radius: 8px;">
+          style="width: 100%; height: auto; display: block; margin: 0; border-radius: 0;">
      Sorry, your browser doesn't support embedded videos.
    </video>
 
