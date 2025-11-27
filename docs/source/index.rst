@@ -177,9 +177,9 @@ A:
    :maxdepth: 2
    :caption: External Resources
 
-   https://platform.smarter.sh/docs/
-   https://platform.smarter.sh/docs/swagger/
-   https://platform.smarter.sh/docs/redoc/
-   https://platform.smarter.sh/docs/manifests/
-   https://platform.smarter.sh/docs/json-schemas/
-   https://platform.smarter.sh/docs/learn/
+   external-links/smarter-docs
+   external-links/swagger
+   external-links/redoc
+   external-links/manifest-reference
+   external-links/json-schemas
+   external-links/smarter-tutorial
