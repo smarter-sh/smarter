@@ -41,7 +41,7 @@ Features
 - Robust prompt management with versioning, testing, and deployment tracking.
 - Built-in prompt content moderation, detailed logging, security, cost accounting, and audit features.
 - Prompt engineering workbench for designing, testing, deploying, and managing AI resources.
-- Thriving developer ecosystem: Homebrew, Chocolatey, PyPI, NPM, VS Code Extension, and more.
+- Thriving developer ecosystem: `PyPi <https://pypi.org/project/smarter-api/>`__, `NPM <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__, `VS Code Extension <https://marketplace.visualstudio.com/items/?itemName=Querium.smarter-manifest>`__, `Homebrew <https://smarter.sh/cli>`__, `Chocolately <https://smarter.sh/cli>`__ and more.
 
 .. raw:: html
 
