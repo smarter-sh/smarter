@@ -36,15 +36,15 @@ corporate use cases including agentic workflows, customer facing chat solutions,
 Features
 --------
 
-- Easy installation and deployment with Docker for Windows, macOS, and Linux. Native Kubernetes support.
+- Declarative YAML manifest-based resource management that works like Kubernetes' kubectl.
+- Easy Docker-based installation for Windows, macOS, and Linux. Native Kubernetes support.
 - Multi-LLM provider support: DeepSeek, OpenAI, Google AI, Meta AI, and more.
 - Web console, REST API, and CLI for managing AI resources.
-- No-code LLM tool call extensibility for integrating with remote data sources (e.g., SQL databases, remote APIs).
+- LLM tool call extensibility for integrating remote data sources like SQL databases and remote APIs.
 - Agentic workflow support for building multi-step AI processes.
 - Robust prompt management with versioning, testing, and deployment tracking.
 - Built-in prompt content moderation, detailed logging, security, cost accounting, and audit features.
 - Prompt engineering workbench for designing, testing, deploying, and managing AI resources.
-- Declarative YAML manifest-based resource management.
 - Thriving developer ecosystem: Homebrew, Chocolatey, PyPI, NPM, VS Code Extension, and more. Self-onboarding resources included.
 
 .. raw:: html
@@ -173,11 +173,13 @@ A:
    integrations
    adr
 
-.. rubric:: External Resources
+.. toctree::
+   :maxdepth: 2
+   :caption: External Resources
 
-- `Smarter docs <https://platform.smarter.sh/docs/>`__
-- `Swagger Api Docs <https://platform.smarter.sh/docs/swagger/>`__
-- `Redoc <https://platform.smarter.sh/docs/redoc/>`__
-- `Manifest Reference <https://platform.smarter.sh/docs/manifests/>`__
-- `Json Schemas <https://platform.smarter.sh/docs/json-schemas/>`__
-- `Smarter Tutorial <https://platform.smarter.sh/docs/learn/>`__
+   https://platform.smarter.sh/docs/
+   https://platform.smarter.sh/docs/swagger/
+   https://platform.smarter.sh/docs/redoc/
+   https://platform.smarter.sh/docs/manifests/
+   https://platform.smarter.sh/docs/json-schemas/
+   https://platform.smarter.sh/docs/learn/
