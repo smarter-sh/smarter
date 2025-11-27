@@ -74,8 +74,7 @@ Of note:
 - `Dependabot <https://github.com/dependabot>`__ automatically updates
   the version pins of code library dependencies for Python, ReactJS and
   Terraform.
-- `Unit Tests <https://docs.pytest.org/>`__ are automated and can be
-  invoked
+- `Unit Tests <https://docs.pytest.org/>`__ are automated and can be invoked
 
   - manually from the command line
   - manually from GitHub Actions
