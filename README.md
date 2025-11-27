@@ -10,7 +10,7 @@
 ![Release Status](https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main)
 [![Documentation Status](https://readthedocs.org/projects/smarter/badge/?version=latest)](https://docs.smarter.sh/)[![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-This repo contains source code for the Smarter REST Api and the web based Prompt Engineer Workbench. Smarter is a no-code platform for managing and orchestrating AI resources.
+This repo contains source code for the Smarter REST Api and the web based Prompt Engineer Workbench.
 
 Smarter is an extensible AI resource management system. It is used as an instructional tool at [University of British Columbia](https://www.ubc.ca/) for teaching cloud computing at scale, and generative AI prompt engineering techniques including advanced use of LLM tool calling involving secure integrations to remote data sources like Sql databases and remote Apis.
 

@@ -35,8 +35,8 @@ Features
 - Declarative YAML manifest-based resource management that works like Kubernetes' kubectl.
 - Easy Docker-based installation for Windows, macOS and Linux, and it natively supports Kubernetes.
 - Multi-LLM provider support: DeepSeek, OpenAI, Google AI, Meta AI, and more.
-- Web console, REST API, and CLI for managing AI resources.
-- Extensibility model for LLM tool calls for integrating remote data sources like SQL databases and remote APIs.
+- Web console, REST API, and CLI available via Homebrew and Chocolatey (`smarter.sh/cli <https://smarter.sh/cli>`__).
+- Extensibility model for LLM tool calls for integrating remote data sources like SQL databases and remote APIs. See :doc:`developers/architecture/plugin`.
 - Agentic workflow support for building multi-step AI processes.
 - Robust prompt management with versioning, testing, and deployment tracking.
 - Built-in prompt content moderation, detailed logging, security, cost accounting, and audit features.

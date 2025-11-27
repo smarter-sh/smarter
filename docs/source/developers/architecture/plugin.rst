@@ -1,0 +1,2 @@
+Smarter Plugin Architecture
+===========================

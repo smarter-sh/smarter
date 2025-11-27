@@ -6,6 +6,12 @@ Architecture
    :caption: Architecture
 
    architecture/summary
+   architecture/chatbot
+   architecture/chat
+   architecture/plugin
+   architecture/prompt
+   architecture/provider
+   architecture/api
    architecture/aws
    architecture/broker-model
    architecture/django
