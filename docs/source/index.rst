@@ -90,19 +90,19 @@ Password: smarter
 .. note::
    For security reasons, be sure to change the default password after your first login.
 
-6. Download the Smarter Command-Line Interface. You'll need to download, install and configure the cli in order to manage AI resources. Get the cli here, at smarter.sh/cli.
+6. Download the Smarter Command-Line Interface. You'll need to download, install and configure the cli in order to manage AI resources. Get the cli here: `smarter.sh/cli <https://smarter.sh/cli>`__.
 
-Prerequisites and Minimum System Requirements
----------------------------------------------
+Prerequisites
+-------------
 
 Before you begin, make sure you have:
 
-20Gib of available drive space
-for Mac: Version 12 (Monterey), Apple Silicon (M1 or newer) or Intel CPU with support for virtualization
-for Windows: Windows 10 64-bit, 64-bit processor with Second Level Address Translation (SLAT), 8Gib of RAM, Windows Subsystem for Linux 2 if running Windows Home Editions.
-`Docker Desktop <https://www.docker.com/products/docker-desktop/>`__ installed and running (includes Docker Compose)
-Basic familiarity with using the terminal/command prompt
-(Optional) A Git client if you want to clone this repository
+- 20Gib of available drive space
+- for Mac: Version 12 (Monterey), Apple Silicon (M1 or newer) or Intel CPU with support for virtualization
+- for Windows: Windows 10 64-bit, 64-bit processor with Second Level Address Translation (SLAT), 8Gib of RAM, Windows Subsystem for Linux 2 if running Windows Home Editions.
+- `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__ installed and running (includes Docker Compose)
+- Basic familiarity with using the terminal/command prompt
+- (Optional) A Git client if you want to clone this repository
 
 Troubleshooting & FAQ
 ---------------------
