@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-project: smarter
-=================================================
+Smarter
+=======
 
 .. image:: https://img.shields.io/badge/Website-smarter.sh-brightgreen
    :target: https://smarter.sh
@@ -27,7 +27,7 @@ project: smarter
    :alt: AGPL-3 License
 
 
-**Smarter** is an extensible AI resource management system.
+An extensible AI resource management system.
 
 Features
 --------
