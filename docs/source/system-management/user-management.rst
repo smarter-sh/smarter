@@ -1,7 +1,7 @@
 User Management
 ===================
 
-**Please review `Account Management <account-management.html>`_ before adding users.**
+**Please review** `Account Management <account-management.html>`_ **before adding users.**
 
 Use the manage.py command to create new Accounts:
 

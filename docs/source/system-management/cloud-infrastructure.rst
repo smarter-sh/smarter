@@ -81,6 +81,7 @@ The Terraform scripts will create the following AWS resources:
 - `AWS Elastic Container Registry <https://aws.amazon.com/ecr/>`_ (ECR) for storing Docker images.
 - `AWS Identity and Access Management <https://aws.amazon.com/iam/>`_  (IAM) roles and policies for secure access control.
 - `AWS Route53 <https://aws.amazon.com/route53/>`_ hosted zone(s) and DNS records for domain name resolution.
+- `AWS Simple Email Service <https://aws.amazon.com/ses/>`_ (SES) for sending transactional emails.
 - `AWS Simple Storage Service <https://aws.amazon.com/s3/>`_ (S3) buckets for storing static and media files.
 - Kubernetes `cert-manager <https://cert-manager.io/docs/>`_ for managing SSL/TLS certificates within the Kubernetes cluster.
 - Kubernetes `ingress resources <https://kubernetes.io/docs/concepts/services-networking/ingress/>`_ for routing traffic to the Smarter application.

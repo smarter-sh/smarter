@@ -2,14 +2,19 @@ SMTP Email Services
 ====================
 
 SMTP Email Services allow your system to send emails using an external SMTP server.
-Smarter uses AWS Simple Email Service (SES) by default, but you can configure it to use any SMTP server of your choice.
+Smarter uses `AWS Simple Email Service <https://aws.amazon.com/ses/>`_ (SES) by default, but you can configure it to use any SMTP server of your choice.
+
+.. warning::
+
+   It is highly recommended to use AWS Simple Email Service (SES) for sending emails as this is known to be both cost effective and reliable.
+   It is also recommended to use Smarter's provided Terraform scripts to set up the necessary SES resources as this is a more complex operation than might be expected, and the Terraform scripts will automate all of this for you. See `Cloud Infrastructure <cloud-infrastructure.html>`_ for more information.
 
 Configuration
 -------------
 
 To configure SMTP Email Services, follow these steps:
 
-1. Prepare your AWS SES account. This is taken care automatically if you use the Smarter `Terraform scripts <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terraform/ses.tf>`_.
+1. Prepare your AWS SES account. This is taken care automatically if you use the Smarter `Terraform scripts <cloud-infrastructure.html>`_.
    This will create the necessary SES resources including verified domains and SMTP credentials, and it will also generate
    a Kubernetes Secret containing the SMTP credentials to be used by Smarter's default GitHub Actions deployment workflow.
 
