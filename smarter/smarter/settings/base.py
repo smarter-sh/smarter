@@ -42,23 +42,25 @@ logger = logging.getLogger(__name__)
 
 
 # We implemented our own middleware to validate host names
-ALLOWED_HOSTS = ["*"]
-SMARTER_ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",") if host.strip()]
+SMARTER_ALLOWED_HOSTS = [host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if host.strip()]
 LOCAL_HOSTS = smarter_settings.local_hosts
-INTERNAL_IP_PREFIXES = ["192.168."]
+INTERNAL_IP_PREFIXES = [
+    host.strip() for host in os.environ.get("DJANGO_INTERNAL_IP_PREFIXES", "192.168.").split(",") if host.strip()
+]
 
 # to disable redis/celery in collectstatic
 if "collectstatic" in sys.argv:
     CELERY_TASK_ALWAYS_EAGER = True
 
-CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = os.environ.get("CORS_ORIGIN_ALLOW_ALL", "False").lower() in ("true", "1", "t")
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-api-key",
     "accept-encoding",
     "dnt",
     "origin",
 ]
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = os.environ.get("CORS_ALLOW_CREDENTIALS", "True").lower() in ("true", "1", "t")
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://[\w-]+\.(\d+-\d+-\d+)\.api\.localhost:\d+$",
     r"^https?://[\w-]+\.localhost:\d+$",
@@ -69,19 +71,19 @@ CORS_ALLOWED_ORIGINS = []
 # -------------------------------
 # Cross Site Request Forgery (CSRF) settings
 # -------------------------------
-CSRF_COOKIE_SECURE = False
-CSRF_COOKIE_NAME = "csrftoken"
-CSRF_COOKIE_SAMESITE = "lax"
-CSRF_COOKIE_AGE = 60 * 60 * 24
+CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "False").lower() in ("true", "1", "t")
+CSRF_COOKIE_NAME = os.environ.get("CSRF_COOKIE_NAME", "csrftoken")
+CSRF_COOKIE_SAMESITE = os.environ.get("CSRF_COOKIE_SAMESITE", "lax")
+CSRF_COOKIE_AGE = os.environ.get("CSRF_COOKIE_AGE", 60 * 60 * 24)
 CSRF_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
-CSRF_COOKIE_PATH = "/"
-CSRF_COOKIE_HTTPONLY = False
-CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
+CSRF_COOKIE_PATH = os.environ.get("CSRF_COOKIE_PATH", "/")
+CSRF_COOKIE_HTTPONLY = os.environ.get("CSRF_COOKIE_HTTPONLY", "False").lower() in ("true", "1", "t")
+CSRF_HEADER_NAME = os.environ.get("CSRF_HEADER_NAME", "HTTP_X_CSRFTOKEN")
 CSRF_TRUSTED_ORIGINS = [
     smarter_settings.environment_platform_domain,
     smarter_settings.environment_api_domain,
 ]
-CSRF_USE_SESSIONS = False
+CSRF_USE_SESSIONS = os.environ.get("CSRF_USE_SESSIONS", "False").lower() in ("true", "1", "t")
 
 
 # -------------------------------
@@ -89,15 +91,15 @@ CSRF_USE_SESSIONS = False
 # -------------------------------
 # Whether to set the flag restricting cookie leaks on cross-site requests.
 # This can be 'Lax', 'Strict', 'None', or False to disable the flag.
-SESSION_COOKIE_SAMESITE = "lax"
-SESSION_COOKIE_SECURE = False
-SESSION_COOKIE_NAME = "sessionid"
+SESSION_COOKIE_SAMESITE = os.environ.get("SESSION_COOKIE_SAMESITE", "lax")
+SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "False").lower() in ("true", "1", "t")
+SESSION_COOKIE_NAME = os.environ.get("SESSION_COOKIE_NAME", "sessionid")
 SESSION_COOKIE_AGE = CSRF_COOKIE_AGE
 SESSION_COOKIE_DOMAIN = smarter_settings.environment_platform_domain
-SESSION_COOKIE_PATH = "/"
-SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_PATH = os.environ.get("SESSION_COOKIE_PATH", "/")
+SESSION_COOKIE_HTTPONLY = os.environ.get("SESSION_COOKIE_HTTPONLY", "True").lower() in ("true", "1", "t")
 
-SECURE_PROXY_SSL_HEADER = None
+SECURE_PROXY_SSL_HEADER = os.environ.get("SECURE_PROXY_SSL_HEADER", None)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -174,8 +176,8 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # Default Celery Configuration
-CELERY_BROKER_URL = "redis://:smarter@smarter-redis:6379/1"
-CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://:smarter@smarter-redis:6379/1")
+CELERY_TASK_TIME_LIMIT = int(os.environ.get("CELERY_TASK_TIME_LIMIT", 30 * 60))
 
 # Application definition
 
@@ -278,9 +280,9 @@ MIDDLEWARE = [
     #
 ]
 
-ROOT_HOSTCONF = "smarter.hosts"
-ROOT_URLCONF = "smarter.urls.console"
-DEFAULT_HOST = SMARTER_PLATFORM_SUBDOMAIN
+ROOT_HOSTCONF = os.environ.get("ROOT_HOSTCONF", "smarter.hosts")
+ROOT_URLCONF = os.environ.get("ROOT_URLCONF", "smarter.urls.console")
+DEFAULT_HOST = os.environ.get("DEFAULT_HOST", SMARTER_PLATFORM_SUBDOMAIN)
 
 TEMPLATES = [
     {
@@ -346,15 +348,21 @@ DATABASES = {
 
 # https://python-social-auth.readthedocs.io/en/latest/configuration/django.html
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
-
-AUTHENTICATION_BACKENDS = (
+default_auth_backends = [
     "social_core.backends.google.GoogleOAuth2",
     "social_core.backends.github.GithubOAuth2",
     "smarter.lib.social_core.backends.linkedin.LinkedinOAuth2",
     "django.contrib.auth.backends.ModelBackend",
-)
+]
 
-SOCIAL_AUTH_CREATE_USERS = False
+env_auth_backends = os.environ.get("AUTHENTICATION_BACKENDS")
+if env_auth_backends:
+    AUTHENTICATION_BACKENDS = tuple(backend.strip() for backend in env_auth_backends.split(",") if backend.strip())
+else:
+    AUTHENTICATION_BACKENDS = tuple(default_auth_backends)
+
+
+SOCIAL_AUTH_CREATE_USERS = os.environ.get("SOCIAL_AUTH_CREATE_USERS", False)
 SOCIAL_AUTH_PIPELINE = (
     # Get the information we can about the user and return it in a simple
     # format to create the user instance later. On some cases the details are
@@ -437,19 +445,19 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
-LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
-USE_I18N = True
-USE_TZ = True
+LANGUAGE_CODE = os.environ.get("LANGUAGE_CODE", "en-us")
+TIME_ZONE = os.environ.get("TIME_ZONE", "UTC")
+USE_I18N = os.environ.get("USE_I18N", "True").lower() in ("true", "1", "t", "yes")
+USE_TZ = os.environ.get("USE_TZ", "True").lower() in ("true", "1", "t", "yes")
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
-STATIC_URL = "/static/"
+STATIC_URL = os.environ.get("STATIC_URL", "/static/")
 STATIC_ROOT = PROJECT_ROOT / "staticfiles"
 
 STATICFILES_DIRS = [BASE_DIR / "static"]
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+STATICFILES_STORAGE = os.environ.get("STATICFILES_STORAGE", "whitenoise.storage.CompressedStaticFilesStorage")
 
 # ReactJS integration with Django. Add all reactapp/dist directories in Django apps
 django_apps_dir = BASE_DIR / "apps"
@@ -459,7 +467,7 @@ STATICFILES_DIRS.extend(reactapp_dirs)
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = os.environ.get("DEFAULT_AUTO_FIELD", "django.db.models.BigAutoField")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -514,15 +522,21 @@ DJSTRIPE_WEBHOOK_SECRET = (
 DJSTRIPE_USE_NATIVE_JSONFIELD = True  # We recommend setting to True for new installations
 DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
-SENSITIVE_FILES_AMNESTY_PATTERNS = [
-    re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
-    re.compile(r"^/api(/.*)?$"),
-    re.compile(r"^/admin(/.*)?$"),
-    re.compile(r"^/plugin(/.*)?$"),
-    re.compile(r"^/docs/manifest(/.*)?$"),
-    re.compile(r"^/docs/json-schema(/.*)?$"),
-    re.compile(r".*stackademy.*"),
-]
+env_amnesty_patterns = os.environ.get("SENSITIVE_FILES_AMNESTY_PATTERNS")
+if env_amnesty_patterns:
+    SENSITIVE_FILES_AMNESTY_PATTERNS = [
+        re.compile(pattern.strip()) for pattern in env_amnesty_patterns.split(",") if pattern.strip()
+    ]
+else:
+    SENSITIVE_FILES_AMNESTY_PATTERNS = [
+        re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
+        re.compile(r"^/api(/.*)?$"),
+        re.compile(r"^/admin(/.*)?$"),
+        re.compile(r"^/plugin(/.*)?$"),
+        re.compile(r"^/docs/manifest(/.*)?$"),
+        re.compile(r"^/docs/json-schema(/.*)?$"),
+        re.compile(r".*stackademy.*"),
+    ]
 
 SMTP_SENDER = smarter_settings.smtp_sender
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email
@@ -533,12 +547,17 @@ SMTP_USE_SSL = smarter_settings.smtp_use_ssl
 SMTP_USE_TLS = smarter_settings.smtp_use_tls
 SMTP_USERNAME = smarter_settings.smtp_username
 
-WAFFLE_CREATE_MISSING_SWITCHES = True
+WAFFLE_CREATE_MISSING_SWITCHES = os.environ.get("WAFFLE_CREATE_MISSING_SWITCHES", "True").lower() in (
+    "true",
+    "1",
+    "t",
+    "yes",
+)
 
 # Wagtail settings
 # This is the human-readable name of your Wagtail install
 # which welcomes users upon login to the Wagtail admin.
-WAGTAIL_SITE_NAME = "Smarter"
+WAGTAIL_SITE_NAME = os.environ.get("WAGTAIL_SITE_NAME", "Smarter")
 
 # Replace the search backend
 # WAGTAILSEARCH_BACKENDS = {
@@ -552,7 +571,12 @@ WAGTAIL_SITE_NAME = "Smarter"
 WAGTAILADMIN_NOTIFICATION_FROM_EMAIL = SMTP_FROM_EMAIL
 
 # Wagtail email notification format
-WAGTAILADMIN_NOTIFICATION_USE_HTML = True
+WAGTAILADMIN_NOTIFICATION_USE_HTML = os.environ.get("WAGTAILADMIN_NOTIFICATION_USE_HTML", "True").lower() in (
+    "true",
+    "1",
+    "t",
+    "yes",
+)
 
 # Allowed file extensions for documents in the document library.
 # This can be omitted to allow all files, but note that this may present a security risk
@@ -561,9 +585,9 @@ WAGTAILADMIN_NOTIFICATION_USE_HTML = True
 WAGTAILDOCS_EXTENSIONS = ["csv", "docx", "key", "odt", "pdf", "pptx", "rtf", "txt", "xlsx", "zip"]
 
 # Reverse the default case-sensitive handling of tags
-TAGGIT_CASE_INSENSITIVE = True
+TAGGIT_CASE_INSENSITIVE = os.environ.get("TAGGIT_CASE_INSENSITIVE", "True").lower() in ("true", "1", "t", "yes")
 
-WAGTAILADMIN_BASE_URL = "/cms/admin/"
+WAGTAILADMIN_BASE_URL = os.environ.get("WAGTAILADMIN_BASE_URL", "/cms/admin/")
 
 WAGTAILTRANSFER_SOURCES = {
     "localhost": {
@@ -588,8 +612,8 @@ WAGTAILTRANSFER_SOURCES = {
     },
 }
 
-WAGTAILTRANSFER_SECRET_KEY = "8egf3jj8ib64j00gomz270wgzqwrfyed"
-WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = 30
+WAGTAILTRANSFER_SECRET_KEY = os.environ.get("WAGTAILTRANSFER_SECRET_KEY", "8egf3jj8ib64j00gomz270wgzqwrfyed")
+WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = int(os.environ.get("WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT", "30"))
 
 ###############################################################################
 # System information logging for all environments
