@@ -10,7 +10,6 @@ for managing a Smarter installation.
    :maxdepth: 2
 
    system-management/cloud-infrastructure
-   system-management/smtp-email
    system-management/installation
    system-management/django-admin
    system-management/url-patterns
