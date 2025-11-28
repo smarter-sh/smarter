@@ -29,14 +29,13 @@ Here are some example URL patterns for a Smarter installation hosted at `platfor
 | URL Pattern                                              | Description                                      |
 +==========================================================+==================================================+
 | `https://platform.example.com/`                          | Web application                                  |
-+----------------------------------------------------------+--------------------------------------------------+
 | `https://alpha.platform.example.com/`                    | Web application (cloud development)              |
-+----------------------------------------------------------+--------------------------------------------------+
 | `https://beta.platform.example.com/`                     | Web application (cloud test)                     |
-+----------------------------------------------------------+--------------------------------------------------+
 | `https://next.platform.example.com/`                     | Web application (cloud pre-production)           |
 +----------------------------------------------------------+--------------------------------------------------+
 | `https://platform.example.com/api/v1/`                   | The REST API for client software.                |
+| `https://api.platform.example.com/`                      | The REST API (recommended prod domain scheme)    |
+| `https://alpha.api.platform.example.com/`                | The REST API (cloud development)                 |
 +----------------------------------------------------------+--------------------------------------------------+
 | `https://platform.example.com/api/v1/chatbots/1/chat/`   | REST API endpoints for sandbox ChatBots/Agents.  |
 +----------------------------------------------------------+--------------------------------------------------+
