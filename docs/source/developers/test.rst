@@ -10,8 +10,10 @@ Try to the guidelines below to help ensure that your tests provide maximum value
 We've invested heavily in unit test infrastructure by way of bases classes, mixins, and fixtures to make writing tests as easy
 as possible.
 
-*Also, please be aware that the principal authors generously awards himself a self-assessment of "C-" for test writing skills.
-So, please be kind when reviewing the legacy testing infrastructure.*
+.. note::
+
+  *Please be aware that the principal author generously awards himself a self-assessment of "C-" for test writing skills.
+  So, please be kind when reviewing the legacy testing infrastructure.*
 
 Local Testing
 -----------------
