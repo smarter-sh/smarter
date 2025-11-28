@@ -32,6 +32,7 @@ Usage:
    from smarter.apps.common.conf import settings as smarter_settings
 
    print(smarter_settings.environment_cdn_domain)
+   smarter_settings.openai_api_key.get_secret_value()
    smarter_settings.dump()
 
 In all other cases, Smarter uses standard Django settings located in `smarter/settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`_.
@@ -75,7 +76,14 @@ The Smarter cloud platform is deployed using the official Helm chart. Configurat
 in the `values.yaml <https://github.com/smarter-sh/smarter/blob/alpha/helm/charts/smarter/values.yaml>`_ file. Additional
 documentation on this Helm chart can be found in the `Helm Chart Documentation <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
 
-6. Dockerfile Configuration
+.. warning::
+
+  Kubernetes is a complex topic with a substantial learning curve. The Helm chart, as published is known to work well for most use cases.
+  That is, installations that are running in production, at scale, or otherwise mission critical. It is **EXCEEDINGLY UNLIKELY** that you will need to modify the Helm chart configuration to suit your needs.
+  Therefore, you are **STRONGLY** recommended to avoid modifying the Helm chart itself, beyond providing the pre-programmed values.yml data,
+  unless you know what you are doing, and you are fully aware of the implications.
+
+1. Dockerfile Configuration
 ---------------------------
 
 The official Docker container image for Smarter (`hub.docker.com/r/mcdaniel0073/smarter <https://hub.docker.com/r/mcdaniel0073/smarter>`_) is
