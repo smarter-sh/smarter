@@ -284,12 +284,12 @@ To configure SMTP Email Services, follow these steps:
 
    .. code-block:: ini
 
-    SMTP_HOST: email-smtp.us-east-2.amazonaws.com                                                                                                                                │
-    SMTP_PASSWORD: <A CREDENTIAL GENERATED IN AWS SES>                                                                                                                             │
-    SMTP_PORT: "587"                                                                                                                                                             │
-    SMTP_USE_SSL: "false"                                                                                                                                                        │
-    SMTP_USE_TLS: "true"                                                                                                                                                         │
-    SMTP_USERNAME: <A USERNAME GENERATED IN AWS SES>                                                                                                                                          │
+    SMTP_HOST: email-smtp.us-east-2.amazonaws.com
+    SMTP_PASSWORD: <A CREDENTIAL GENERATED IN AWS SES>
+    SMTP_PORT: "587"
+    SMTP_USE_SSL: "false"
+    SMTP_USE_TLS: "true"
+    SMTP_USERNAME: <A USERNAME GENERATED IN AWS SES>
 
 You can test your SMTP configuration by sending a test email from the Django console:
 
@@ -297,7 +297,7 @@ You can test your SMTP configuration by sending a test email from the Django con
 
    python manage.py send_welcome_email --email user@example.com
 
-12. Static & Media Files Configuration
+1.  Static & Media Files Configuration
 ---------------------------------------------
 
 Smarter serves static and media files using Amazon S3 and CloudFront in AWS cloud deployments, and 'whitenoise.storage.CompressedStaticFilesStorage'
