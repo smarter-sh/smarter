@@ -24,7 +24,7 @@ Production
 
 For production deployments, you can utilize cloud platforms such as AWS, Google Cloud Platform, or Microsoft Azure.
 You can use this `reference GitHub Actions workflow <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/deploy.yml>`__
-as a starting point for your own CI/CD pipeline. This workflow deploys the Smarter cloud platform to an AWS Elastic Kubernetes Service (EKS) cluster.
+as a starting point for your own CI/CD pipeline. This workflow deploys the Smarter cloud platform to an `AWS Elastic Kubernetes Service <https://aws.amazon.com/eks/>`_ (EKS) cluster.
 
 .. raw:: html
 
