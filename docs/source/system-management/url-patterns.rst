@@ -25,22 +25,33 @@ Example URL Patterns
 
 Here are some example URL patterns for a Smarter installation hosted at `platform.example.com`:
 
-+----------------------------------------------------------+--------------------------------------------------+
-| URL Pattern                                              | Description                                      |
-+==========================================================+==================================================+
-| `https://platform.example.com/`                          | Web application                                  |
-| `https://alpha.platform.example.com/`                    | Web application (cloud development)              |
-| `https://beta.platform.example.com/`                     | Web application (cloud test)                     |
-| `https://next.platform.example.com/`                     | Web application (cloud pre-production)           |
-+----------------------------------------------------------+--------------------------------------------------+
-| `https://platform.example.com/api/v1/`                   | The REST API for client software.                |
-| `https://api.platform.example.com/`                      | The REST API (recommended prod domain scheme)    |
-| `https://alpha.api.platform.example.com/`                | The REST API (cloud development)                 |
-+----------------------------------------------------------+--------------------------------------------------+
-| `https://platform.example.com/api/v1/chatbots/1/chat/`   | REST API endpoints for sandbox ChatBots/Agents.  |
-+----------------------------------------------------------+--------------------------------------------------+
-| `https://stackademy-api.3141-5926-5359.api.example.com/` | REST API endpoints for deployed ChatBots/Agents. |
-+----------------------------------------------------------+--------------------------------------------------+
+.. list-table:: Example URL Patterns
+   :header-rows: 1
+
+   * - URL Pattern
+     - Description
+   * -
+       - `https://platform.example.com/`
+       - `https://alpha.platform.example.com/`
+       - `https://beta.platform.example.com/`
+       - `https://next.platform.example.com/`
+     -
+       - Web application
+       - Web application (cloud development)
+       - Web application (cloud test)
+       - Web application (cloud pre-production)
+   * -
+       - `https://platform.example.com/api/v1/`
+       - `https://api.platform.example.com/`
+       - `https://alpha.api.platform.example.com/`
+     -
+       - The REST API for client software.
+       - The REST API (recommended prod domain scheme)
+       - The REST API (cloud development)
+   * - `https://platform.example.com/api/v1/chatbots/1/chat/`
+     - REST API endpoints for sandbox ChatBots/Agents.
+   * - `https://stackademy-api.3141-5926-5359.api.example.com/`
+     - REST API endpoints for deployed ChatBots/Agents.
 
 ChatBot/Agents are served by the same Django view logic, regardless of whether they are sandbox or deployed. The difference
 between the two is as follows:
