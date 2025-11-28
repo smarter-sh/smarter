@@ -70,6 +70,15 @@ check out the repository code using the `actions/checkout` action, as shown in t
   GitHub provides caching mechanisms that you can optionally use
   to speed up dependency installation between workflow runs.
 
+**GitHub Actions Secrets**
+
+Some workflows may require sensitive information (like API keys, tokens, or passwords) to function correctly.
+GitHub Actions provides a secure way to store and access these secrets using *GitHub Secrets*.
+Secrets are encrypted environment variables that can be used in your workflows without exposing their values in the code
+
+See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/settings/secrets/actions>`_ for the list of currently configured GitHub Secrets in the main Smarter repository.
+of the workflows.
+
 **Further Reading and References**
 
 - `GitHub Actions Documentation <https://docs.github.com/en/actions>`_

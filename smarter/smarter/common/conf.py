@@ -789,7 +789,6 @@ class Settings(BaseSettings):
         """
         return get_semantic_version()
 
-    @property
     def dump(self) -> dict:
         """
         Dump all settings.
