@@ -2,8 +2,8 @@ Installation
 ============
 
 Smarter is a Docker-based application that is designed to be deployed in various environments. The path of least
-resistance is to deploy Smarter to AWS Elastic Kubernetes Service (EKS) using the provided Helm chart and Smarter-supported
-Terraform modules and GitHub Actions workflows.
+resistance is to deploy Smarter to `AWS Elastic Kubernetes Service <https://aws.amazon.com/eks/>`_ (EKS) using the provided Helm chart and Smarter-supported
+Terraform modules and GitHub Actions workflows as further described below.
 
 While any of these methods and technologies can be replaced with alternatives, the approach outlined here is
 known to work, and is the recommended path; initially at least.
@@ -12,7 +12,7 @@ known to work, and is the recommended path; initially at least.
    with the necessary networking, IAM roles, and compute resources using Smarter-supported Terraform modules.
 
 2. **Application software**. Smarter maintains a Docker image in DockerHub at `https://hub.docker.com/r/mcdaniel0073/smarter <https://hub.docker.com/r/mcdaniel0073/smarter>`_.
-   Alternatively, see `Build <../developers/build.html>`_ in the Developer Guide for instructions on building your own Docker image and pushing to a private AWS Elastic Container Registry (ECR) repository.
+   Alternatively, see `Build <../developers/build.html>`_ in the Developer Guide for instructions on building your own Docker image and pushing to a private `AWS Elastic Container Registry <https://aws.amazon.com/ecr/>`_ (ECR) repository.
 
 3. **Helm chart**. Helm is overwhelmingly the most popular package manager for Kubernetes applications.
    See `Helm Chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`_ for details on deploying Smarter to your Kubernetes cluster using the official Smarter Helm chart.
@@ -36,4 +36,5 @@ known to work, and is the recommended path; initially at least.
    This is a powerful feature, but it requires additional AWS infrastructure to be created and configured properly. **THIS IS NOT TRIVIAL TO GET RIGHT.**
 
    The authors have invested upwards of three years fine tuning the provided Terraform modules, the Helm chart, and the GitHub Actions workflows
-   to ensure a smooth deployment experience.
+   to ensure a smooth deployment experience. If you choose to reinvent the wheel, then at least do this knowingly, and be prepared to invest
+   significant time and effort into getting everything working correctly.
