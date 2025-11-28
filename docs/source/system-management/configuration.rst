@@ -270,7 +270,7 @@ Regardless of how the configuration values were ingested, the final database con
   However, they operate at different layers of the application stack. Kubernetes Secrets are used for securely storing and managing secrets at the infrastructure level,
   while Pydantic SecretStr is used within the application code itself to ensure that sensitive information is not inadvertently exposed in logs or error messages.
 
-1.   Email/Notification Configuration
+11.   Email/Notification Configuration
 ---------------------------------------
 
 SMTP Email Services allow your system to send emails using an external SMTP server.
@@ -299,7 +299,7 @@ for local development and testing environments, and by Kubernetes Secrets for AW
 3. Default values hardcoded in `smarter/settings/base.py (local database config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L336>`_ for local development and testing environments,
    and `settings/base_aws.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base_aws.py#L37>`_ for AWS cloud based deployments regardless of environment.
 
-Regardless of how the configuration values were ingested, the final database configuration values are accessible via both Django settings and smarter_settings.
+Regardless of how the configuration values were ingested, the final smtp configuration values are accessible via both Django settings and smarter_settings.
 
    .. code-block:: ini
 
@@ -314,7 +314,7 @@ You can test your SMTP configuration by sending a test email from the Django con
 
 .. code-block:: bash
 
-   python manage.py send_welcome_email --email user@example.com
+   python manage.py send_welcome_email --email john.doe@example.com
 
 12.  Static & Media Files Configuration
 ---------------------------------------------
