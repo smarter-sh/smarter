@@ -76,14 +76,13 @@ Resources Created
 
 The Terraform scripts will create the following AWS resources:
 
-- AWS Certificate Manager (ACM) certificates for SSL/TLS encryption. See `https://aws.amazon.com/certificate-manager/ <https://aws.amazon.com/certificate-manager/>`_
-- AWS Cloudfront distribution for content delivery. See `https://aws.amazon.com/cloudfront/ <https://aws.amazon.com/cloudfront/>`_
-- AWS Elastic Container Registry (ECR) for storing Docker images. See `https://aws.amazon.com/ecr/ <https://aws.amazon.com/ecr/>`_
-- AWS Identity and Access Management (IAM) roles and policies for secure access control. See `https://aws.amazon.com/iam/ <https://aws.amazon.com/iam/>`_
-- AWS Route53 hosted zone(s) and DNS records for domain name resolution. See `https://aws.amazon.com/route53/ <https://aws.amazon.com/route53/>`_
-- AWS S3 buckets for storing static and media files. See `https://aws.amazon.com/s3/ <https://aws.amazon.com/s3/>`_
-- Kubernetes cert-manager for managing SSL/TLS certificates within the Kubernetes cluster. See <https://cert-manager.io/docs/>
-- Kubernetes ingress resources for routing traffic to the Smarter application. See <https://kubernetes.io/docs/concepts/services-networking/ingress/>
-- Kubernetes secrets for storing environment-specific sensitive information used for deployments such as database credentials and admin login credentials. See <https://kubernetes.io/docs/concepts/configuration/secret/>
-- Kubernetes ses for creating a Secret to store AWS SES SMTP credentials.
-- Kubernetes namespace for isolating Smarter resources within the Kubernetes cluster. See <https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/>
+- `AWS Certificate Manager <https://aws.amazon.com/certificate-manager/>`_ (ACM) certificates for SSL/TLS encryption.
+- `AWS Cloudfront <https://aws.amazon.com/cloudfront/>`_ distribution for content delivery.
+- `AWS Elastic Container Registry <https://aws.amazon.com/ecr/>`_ (ECR) for storing Docker images.
+- `AWS Identity and Access Management <https://aws.amazon.com/iam/>`_  (IAM) roles and policies for secure access control.
+- `AWS Route53 <https://aws.amazon.com/route53/>`_ hosted zone(s) and DNS records for domain name resolution.
+- `AWS Simple Storage Service <https://aws.amazon.com/s3/>`_ (S3) buckets for storing static and media files.
+- Kubernetes `cert-manager <https://cert-manager.io/docs/>`_ for managing SSL/TLS certificates within the Kubernetes cluster.
+- Kubernetes `ingress resources <https://kubernetes.io/docs/concepts/services-networking/ingress/>`_ for routing traffic to the Smarter application.
+- Kubernetes `secrets <https://kubernetes.io/docs/concepts/configuration/secret/>`_ for storing environment-specific sensitive information used for deployments such as database credentials, smtp credentials, and admin login credentials.
+- Kubernetes `namespace <https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/>`_ for isolating Smarter resources within the Kubernetes cluster.
