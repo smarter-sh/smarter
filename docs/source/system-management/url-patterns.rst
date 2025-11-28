@@ -18,7 +18,7 @@ platform consists of:
 +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 
 the URL patterns are implements using Django's URL routing system. For more information on the URL configuration, see
-`smarter/hosts.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/hosts.py>`.
+`smarter/hosts.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/hosts.py>`_.
 
 Example URL Patterns
 --------------------
@@ -46,6 +46,6 @@ Here are some example URL patterns for a Smarter installation hosted at `platfor
 ChatBot/Agents are served by the same Django view logic, regardless of whether they are sandbox or deployed. The difference
 between the two is as follows:
 
-- **SSL/TLS certificates management**. certificates are independently managed for deployed resources whereas sandbox resources are part of the web platform. Part of the deployment process involves creating a Kubernetes Ingress resource that provisions a TLS certificate for the deployed endpoint. See `smarter/apps/chatbot/k8s/ingress.yaml.tpl <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/chatbot/k8s/ingress.yaml.tpl>` for implementation details.
+- **SSL/TLS certificates management**. certificates are independently managed for deployed resources whereas sandbox resources are part of the web platform. Part of the deployment process involves creating a Kubernetes Ingress resource that provisions a TLS certificate for the deployed endpoint. See `smarter/apps/chatbot/k8s/ingress.yaml.tpl <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/chatbot/k8s/ingress.yaml.tpl>`_ for implementation details.
 
 - **Authentication**. Deployed resources authenticate via API keys, whereas sandbox resources authenticate via the Django session cookie.
