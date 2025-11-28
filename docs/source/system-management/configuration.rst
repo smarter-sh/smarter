@@ -294,8 +294,6 @@ for local development and testing environments, and by Kubernetes Secrets for AW
    These are consumed and validated by the smarter_settings module, internally encrypted by Pydantic SecretStr where applicable, and passed down to Django settings.
 2. Kubernetes Secrets (for AWS cloud deployments) or .env files (for local development and testing). These in point of fact, are environment variables subject to the same treatment
    as #1 above, albeit these take a more colorful route to get there.
-3. Default values hardcoded in `smarter/settings/base.py (local database config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L336>`_ for local development and testing environments,
-   and `settings/base_aws.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base_aws.py#L37>`_ for AWS cloud based deployments regardless of environment.
 
 Regardless of how the configuration values were ingested, the final smtp configuration values are accessible via both Django settings and smarter_settings.
 
@@ -314,7 +312,7 @@ You can test your SMTP configuration by sending a test email from the Django con
 
    python manage.py send_welcome_email --email john.doe@example.com
 
-12.  Static & Media Files Configuration
+1.   Static & Media Files Configuration
 ---------------------------------------------
 
 Smarter serves static and media files using Amazon S3 and CloudFront in AWS cloud deployments, and 'whitenoise.storage.CompressedStaticFilesStorage'
