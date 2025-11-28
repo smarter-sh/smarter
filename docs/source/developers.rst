@@ -7,10 +7,6 @@ This section provides guidelines and resources to help you get started with cont
 Alternatively, if you've forked the repository and want to understand how to build and test your changes locally,
 you'll find detailed instructions here as well.
 
-
-Developer Onboarding Videos
----------------------------
-
 .. raw:: html
 
    <iframe width="560" height="315" src="https://www.youtube.com/embed/YtVxkjHzZrE" title="Smarter Developer Onboarding #1" frameborder="0" allowfullscreen></iframe>
@@ -25,11 +21,9 @@ A high-level introduction to the Smarter project, its goals, and how to get star
 **Smarter Developer Onboarding #2**
 A walkthrough of setting up your development environment and running Smarter locally.
 
-Table of Contents
------------------
-
 .. toctree::
    :maxdepth: 2
+   :caption: Developer Resources
 
    developers/contributing
    developers/12-factor-app
