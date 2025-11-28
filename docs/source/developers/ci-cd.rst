@@ -56,6 +56,17 @@ Each file specifies the jobs and steps required for that part of the CI/CD proce
          - name: Run tests
            run: pytest
 
+Note that GitHub Actions workflows run on GitHub's servers (eg, inside Azure). These in point of fact are
+Kubernetes pods running ephemeral containers spun up on demand to execute the jobs defined in the workflows.
+At the point of instantiation of the pod the container image contains only the base OS (eg, the latest Linux Ubuntu in the case of the example above)
+and afterwards, any software explicitly declared by the workflow itself. Also note that it is necessary to explicitly
+check out the repository code using the `actions/checkout` action, as shown in the example above.
+
+Summarizing, you must explicitly declare everything you need in the workflow, as the environment starts out completely blank.
+Once the workflow completes, the pod and container are destroyed, so no state is preserved between runs. However,
+artifacts can be uploaded and downloaded between jobs within a workflow if needed, and, GitHub provides caching mechanisms
+to speed up dependency installation between workflow runs.
+
 **Further Reading and References**
 
 - `GitHub Actions Documentation <https://docs.github.com/en/actions>`_
