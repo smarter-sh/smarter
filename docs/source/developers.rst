@@ -25,6 +25,8 @@ A high-level introduction to the Smarter project, its goals, and how to get star
 **Smarter Developer Onboarding #2**
 A walkthrough of setting up your development environment and running Smarter locally.
 
+..
+
 .. toctree::
    :maxdepth: 2
    :caption: Table of Contents
