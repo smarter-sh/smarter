@@ -23,8 +23,7 @@ Terraform scripts as this facilitates reuse of the Terraform modules across diff
   **THERE ARE COSTS ASSOCIATED WITH RUNNING CLOUD INFRASTRUCTURE.**  Be sure to review the AWS pricing documentation
   for each of the services that will be created by the Terraform scripts to understand the potential costs involved.
 
-  Creating and managing cloud infrastructure is MUCH MORE COMPLEX than simply deploying
-  the Smarter application itself. It is assumed that the person using these Terraform scripts
+  **CREATING AND MANAGING CLOUD INFRASTRUCTURE IS MUCH MORE COMPLEX THAN SIMPLY DEPLOYING THE SMARTER APPLICATION ITSELF**. It is assumed that the person using these Terraform scripts
   has a good understanding of AWS services, Terraform, and Terragrunt. If you are not familiar
   with these technologies, it is highly recommended to seek assistance from someone who is
   experienced in cloud infrastructure management before attempting to use these scripts.
@@ -58,27 +57,33 @@ To use the Terraform scripts, follow these steps:
         terragrunt init
 
 7. Review and customize the `terragrunt.hcl <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/prod/terragrunt.hcl>`_ configuration file to match your specific requirements.
-8. Apply the Terraform configuration to create the necessary AWS resources by running:
+8. Review the Terraform plan by running:
+
+    .. code-block:: bash
+
+        terragrunt plan
+
+9. Apply the Terraform configuration to create the necessary AWS resources by running:
 
     .. code-block:: bash
 
         terragrunt apply
-9. Follow the prompts to confirm the creation of resources.
-10. Once the process is complete, Terraform will have created all the necessary AWS resources for running Smarter in production.
+10. Follow the prompts to confirm the creation of resources.
+11. Once the process is complete, Terraform will have created all the necessary AWS resources for running Smarter in production.
 
 Resources Created
 -----------------
 
 The Terraform scripts will create the following AWS resources:
 
-- AWS Certificate Manager (ACM) certificates for SSL/TLS encryption.
-- AWS Cloudfront distribution for content delivery.
-- AWS Elastic Container Registry (ECR) for storing Docker images.
-- AWS Identity and Access Management (IAM) roles and policies for secure access control.
-- AWS Route53 hosted zone(s) and DNS records for domain name resolution.
-- AWS S3 buckets for storing static and media files.
-- Kubernetes cert-manager for managing SSL/TLS certificates within the Kubernetes cluster.
-- Kubernetes ingress resources for routing traffic to the Smarter application.
-- Kubernetes secrets for storing environment-specific sensitive information used for deployments such as database credentials and admin login credentials.
+- AWS Certificate Manager (ACM) certificates for SSL/TLS encryption. See `https://aws.amazon.com/certificate-manager/ <https://aws.amazon.com/certificate-manager/>`_
+- AWS Cloudfront distribution for content delivery. See `https://aws.amazon.com/cloudfront/ <https://aws.amazon.com/cloudfront/>`_
+- AWS Elastic Container Registry (ECR) for storing Docker images. See `https://aws.amazon.com/ecr/ <https://aws.amazon.com/ecr/>`_
+- AWS Identity and Access Management (IAM) roles and policies for secure access control. See `https://aws.amazon.com/iam/ <https://aws.amazon.com/iam/>`_
+- AWS Route53 hosted zone(s) and DNS records for domain name resolution. See `https://aws.amazon.com/route53/ <https://aws.amazon.com/route53/>`_
+- AWS S3 buckets for storing static and media files. See `https://aws.amazon.com/s3/ <https://aws.amazon.com/s3/>`_
+- Kubernetes cert-manager for managing SSL/TLS certificates within the Kubernetes cluster. See <https://cert-manager.io/docs/>
+- Kubernetes ingress resources for routing traffic to the Smarter application. See <https://kubernetes.io/docs/concepts/services-networking/ingress/>
+- Kubernetes secrets for storing environment-specific sensitive information used for deployments such as database credentials and admin login credentials. See <https://kubernetes.io/docs/concepts/configuration/secret/>
 - Kubernetes ses for creating a Secret to store AWS SES SMTP credentials.
-- Kubernetes namespace for isolating Smarter resources within the Kubernetes cluster.
+- Kubernetes namespace for isolating Smarter resources within the Kubernetes cluster. See <https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/>
