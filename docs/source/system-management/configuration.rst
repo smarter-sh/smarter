@@ -261,12 +261,12 @@ for local development and testing environments, and by Kubernetes Secrets for AW
   while Pydantic SecretStr is used within the application code itself to ensure that sensitive information is not inadvertently exposed in logs or error messages.
 
 11.  Email/Notification Configuration
--------------------------------
+---------------------------------------
 
 Smarter's SMTP email and notification settings follow the same configuration precedence rules as database configuration described above.
 
 12. Static & Media Files Configuration
-------------------------
+---------------------------------------------
 
 Smarter serves static and media files using Amazon S3 and CloudFront in AWS cloud deployments, and 'whitenoise.storage.CompressedStaticFilesStorage'
 for local development and testing environments. Static and media file settings can be found in `smarter/settings/base.py (static files config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L446>`_.
@@ -280,3 +280,28 @@ these settings if at all possible, unless you have a specific need to do so.
   Failure to do so can lead to security vulnerabilities and data breaches. Always use Amazon CloudFront with SSL/TLS certificates for secure delivery of static and media files.
 
 See `Django Static Files Documentation <https://docs.djangoproject.com/en/5.2/howto/static-files/>`_ for more details on how static and media files are configured in Smarter.
+
+13. Smarter Settings Class Reference
+------------------------------------
+
+The Smarter settings system is implemented as an immutable singleton object called `smarter_settings <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf.py>`_. This object contains all validated, derived, and superseding configuration values for the platform.
+
+The ``smarter_settings`` class enforces a consistent set of rules for initializing configuration values from multiple sources, including environment variables, ``.env`` files, TFVARS, and class-defined defaults. All configuration values are strongly typed and validated.
+
+Where applicable, ``smarter_settings`` values take precedence over Django settings. You should use ``smarter_settings`` in preference to Django settings wherever possible, as Django settings are often initialized from values in ``smarter_settings``.
+
+**Notes:**
+
+- ``smarter_settings`` values are immutable after instantiation.
+- Every property or attribute in ``smarter_settings`` is guaranteed to have a value.
+- Sensitive values are stored as Pydantic ``SecretStr`` types to prevent accidental exposure.
+- Configuration values are initialized in the following order of precedence:
+
+  1. Constructor (not recommended; prefer ``.env`` or environment variables)
+  2. ``SettingsDefaults``
+  3. ``.env`` file
+  4. Environment variables (if present and not already consumed by ``SettingsDefaults``, these are overridden by ``.env`` file values)
+  5. Default values defined in the class
+
+- The ``dump`` property returns a dictionary of all configuration values, which is useful for debugging and logging.
+- Always access configuration values via the ``smarter_settings`` singleton instance when possible.

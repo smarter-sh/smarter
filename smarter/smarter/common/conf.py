@@ -377,6 +377,11 @@ class Settings(BaseSettings):
     an immutable singleton object called `smarter_settings`. smarter_settings
     contains superseding, validated, and derived settings values for the platform.
 
+    This class implements a consistent set of rules for initializing configuration
+    values from multiple sources, including environment variables, `.env` file, TFVARS,
+    and default values defined in this class. It additionally ensures that all
+    configuration values are strongly typed and validated.
+
     Where applicable, smarter_settings supersede Django settings values. That is,
     smarter_settings should be used in preference to Django settings wherever
     possible. Django settings are initialized from smarter_settings values where
@@ -384,16 +389,17 @@ class Settings(BaseSettings):
 
     Notes:
     -----------------
-    - Settings values are immutable after instantiation.
-    - Every property/attribute in this smarter_settings has a value.
+    - smarter_settings values are immutable after instantiation.
+    - Every property/attribute in smarter_settings has a value.
     - Sensitive values are stored as pydantic SecretStr types.
-    - Settings values are initialized according to the following prioritization sequence:
-        1. constructor
-        2. `.env` file
-        3. environment variables (if present, these are overridden by .env file values)
-        4. defaults
+    - smarter_settings values are initialized according to the following prioritization sequence:
+        1. constructor. This is discouraged. prefer to use .env file or environment variables.
+        2. SettingsDefaults
+        3. `.env` file
+        4. environment variables. If present and not already consumed by SettingsDefaults, these are overridden by .env file values.
+        5. default values defined in this class.
     - The dump property returns a dictionary of all configuration values.
-    - Settings values should be accessed via the smarter_settings singleton instance when possible.
+    - smarter_settings values should be accessed via the smarter_settings singleton instance when possible.
     """
 
     # pylint: disable=too-few-public-methods
@@ -643,7 +649,9 @@ class Settings(BaseSettings):
     def all_domains(self) -> List[str]:
         """
         Return all domains for the environment.
-        example:
+
+        Example::
+
         [
             'api.example.com',
             'api.alpha.platform.example.com',
@@ -657,6 +665,7 @@ class Settings(BaseSettings):
             'localhost:8000',
             'next.platform.example.com'
         ]
+
         """
         environments = [
             None,  # for root domains (no environment prefix)
