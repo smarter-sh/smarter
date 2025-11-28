@@ -5,6 +5,11 @@ System Management
    :maxdepth: 2
 
    system-management/installation
+   system-management/content-moderation
+   system-management/user-management
+   system-management/api-keys
+   system-management/cost-accounting
+   system-management/smarter-journal
    system-management/configuration
    system-management/administration
    system-management/security
