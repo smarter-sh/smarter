@@ -9,6 +9,8 @@ AWS Infrastructure Configuration
 --------------------------------
 
 See `Cloud Infrastructure <../system-management/cloud-infrastructure.html>`_ for details on configuring the necessary AWS resources using Smarter-supported Terraform modules.
+The official Smarter Terraform modules favor simplicity, paradoxically making them conducive to customization.
+You should be able to fork and modify these modules to suit your specific infrastructure requirements.
 
 Django Settings
 ---------------
@@ -18,9 +20,14 @@ This module leverages Pydantic to implement enhanced validation and type checkin
 modifying this module directly unless you are fully aware of the implications. Many of Smarter's configuration settings are programmatically derived from environment variables
 set in the Docker container or Kubernetes pod. Modifying this logic can lead to unexpected behavior.
 
+.. note::
+
+  The superseding singleton settings module also leverages Pydantics' `SecretStr <https://docs.pydantic.dev/latest/api/types/#pydantic.types.SecretStr>`_ type
+  to securely handle sensitive configuration values such as API keys, tokens, and passwords. This ensures that sensitive information is not inadvertently exposed in logs or error messages.
+
 Usage:
 
-... code-block:: python
+.. code-block:: python
 
    from smarter.apps.common.conf import settings as smarter_settings
 
@@ -68,8 +75,8 @@ The Smarter cloud platform is deployed using the official Helm chart. Configurat
 in the `values.yaml <https://github.com/smarter-sh/smarter/blob/alpha/helm/charts/smarter/values.yaml>`_ file. Additional
 documentation on this Helm chart can be found in the `Helm Chart Documentation <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
 
-Docker Compose Configuration
-----------------------------
+Dockerfile Configuration
+------------------------
 
 The official Docker container image for Smarter (`hub.docker.com/r/mcdaniel0073/smarter <https://hub.docker.com/r/mcdaniel0073/smarter>`_) is
 built using the `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`_ from the main branch of Smarter's main code
