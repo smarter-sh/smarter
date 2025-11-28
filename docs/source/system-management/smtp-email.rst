@@ -15,7 +15,7 @@ To configure SMTP Email Services, follow these steps:
 
 2. Otherwise, in your Smarter settings for deployment ensure that you have included the following in your .env file:
 
-   .. code-block:: dotenv
+   .. code-block:: ini
 
     SMTP_HOST: email-smtp.us-east-2.amazonaws.com                                                                                                                                │
     SMTP_PASSWORD: <A CREDENTIAL GENERATED IN AWS SES>                                                                                                                             │
