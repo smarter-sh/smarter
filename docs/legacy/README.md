@@ -1,10 +1,11 @@
 # Smarter Docs
 
+This documentation has moved to [Read the Docs](https://docs.smarter.sh/).
+
 Table of contents:
 
 - [Django-React Integration](./DJANGO-REACT-INTEGRATION.md)
 - [Example .env](./example-dot-env)
-- [Code Management Best Practices](./GOOD_CODING_PRACTICE.md)
 - [OpenAI JSON Examples](./OPENAI_JSON_EXAMPLES.md)
 - [How to Get an OpenAI API Key](./OPENAI_API_GETTING_STARTED_GUIDE.md)
 - [Semantic Versioning Guide](./SEMANTIC_VERSIONING.md)

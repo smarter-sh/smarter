@@ -1,0 +1,7 @@
+div[class^="literal-block-wrapper"],
+.rst-content .literal-block-wrapper {
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
