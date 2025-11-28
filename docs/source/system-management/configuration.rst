@@ -206,9 +206,17 @@ Smarter currently relies on four primary mechanisms for secrets management:
   See `actions/k8s-get-secret <https://github.com/smarter-sh/smarter/blob/main/.github/actions/k8s-get-secret/action.yml>`_ for more details on this custom GitHub Action.
 
 - **.env Files:** For local development and testing environments. These are used for local Docker Compose deployments
-  and local Kubernetes deployments using tools like Minikube or Kind. These files should never be committed to source control.
+  and local Kubernetes deployments using tools like Minikube or Kind.
   See `example-dot-env <https://github.com/smarter-sh/smarter/blob/main/docs/example-dot-env>`_ file is provided in the repository for reference
   and can be automatically initialized for you by running `make` on the command line from the root of the repository.
+
+  .. warning::
+
+    .env files are intended for local development and testing purposes only. They should **NEVER** be used in production environments.
+    Storing sensitive information in plain text files poses significant security risks. Always use secure secrets management mechanisms,
+    such as Kubernetes Secrets, in production deployments.
+
+    **These files should never be committed to source control!!!**
 
 - **Pydantic SecretStr:** For securely handling sensitive configuration values within the application code. These
   are used within the Python source code, inside Smarter's smarter_settings module described above
@@ -220,7 +228,7 @@ Smarter currently relies on four primary mechanisms for secrets management:
 ------------------------
 
 Smarter application logs are highly configurable. By default, Smarter uses Python's built-in logging module to log messages to an application log file that
-resides inside the Docker container at `/var/log/???????????`. This can be changed by modifying the logging configuration in `smarter/settings/base.py (logging config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L477>`_.
+resides inside the running Kubernetes pod at `/var/log/???????????` (FIX NOTE: where in the heck are these???). This can be changed by modifying the logging configuration in `smarter/settings/base.py (logging config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L477>`_.
 See `Django Logging Documentation <https://docs.djangoproject.com/en/5.2/topics/logging/>`_ for more details on how logging is configured in Smarter.
 
 Smarter additionally provides more granular control over logging levels for specific application components via waffle switches. These are useful for real-time, in-flight
@@ -237,16 +245,22 @@ debugging and troubleshooting without requiring application restarts or code cha
 -----------------------------
 
 Database configuration settings are ultimately controlled by `smarter/settings/base.py (database config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L336>`_
-for local development and testing environments, and by Kubernetes Secrets for AWS cloud based deployments, as described above. In both cases, following orders of precedence are observed:
+for local development and testing environments, and by Kubernetes Secrets for AWS cloud based deployments, as described above. In both cases, the following orders of precedence are observed:
 
-1. Environment variables set in the Docker container or Kubernetes pod. These are consumed and validated by the smarter_settings module and passed down to Django settings.
+1. Environment variables set in the Docker container or Kubernetes pod.
+   These are consumed and validated by the smarter_settings module, internally encrypted by Pydantic SecretStr where applicable, and passed down to Django settings.
 2. Kubernetes Secrets (for AWS cloud deployments) or .env files (for local development and testing). These in point of fact, are environment variables subject to the same treatment
    as #1 above, albeit these take a more colorful route to get there.
 3. Default values hardcoded in `smarter/settings/base.py (local database config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L336>`_ for local development and testing environments,
    and `settings/base_aws.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base_aws.py#L37>`_ for AWS cloud based deployments regardless of environment.
 
+.. note::
 
-11. Email/Notification Settings
+  Pydantic SecretStr and Kubernetes Secrets serve similar purposes in securely handling sensitive configuration values such as database and vendor api credentials.
+  However, they operate at different layers of the application stack. Kubernetes Secrets are used for securely storing and managing secrets at the infrastructure level,
+  while Pydantic SecretStr is used within the application code itself to ensure that sensitive information is not inadvertently exposed in logs or error messages.
+
+1.  Email/Notification Settings
 -------------------------------
 
 Smarter's SMTP email and notification settings follow the same configuration precedence rules as database configuration described above.
