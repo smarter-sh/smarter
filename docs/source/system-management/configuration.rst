@@ -281,13 +281,11 @@ Smarter uses `AWS Simple Email Service <https://aws.amazon.com/ses/>`_ (SES) by 
    It is highly recommended to use AWS Simple Email Service (SES) for sending emails as this is known to be both cost effective and reliable.
    It is also recommended to use Smarter's provided Terraform scripts to set up the necessary SES resources as this is a more complex operation than might be expected, and the Terraform scripts will automate all of this for you. See `Cloud Infrastructure <cloud-infrastructure.html>`__ for more information.
 
-To configure SMTP Email Services, follow these steps:
+To configure SMTP Email Services, follow one of these two steps:
 
-- Prepare your AWS SES account. This is taken care automatically if you use the Smarter `Terraform scripts <cloud-infrastructure.html>`_.
-   This will create the necessary SES resources including verified domains and SMTP credentials, and it will also generate
-   a Kubernetes Secret containing the SMTP credentials to be used by Smarter's default GitHub Actions deployment workflow.
+- (Recommended) Use the Smarter `Terraform scripts <cloud-infrastructure.html>`_ to automatically create the necessary SES resources, including verified domains and SMTP credentials. This will also generate a Kubernetes Secret containing the SMTP credentials to be used by Smarter's default GitHub Actions deployment workflow.
 
-- Otherwise, in your Smarter settings for deployment ensure that you have included the following in your .env file:
+- In your Smarter settings for deployment ensure that your .env files includes all six SMTP variables (see below) for your SMTP service of choice.
 
 SMTP settings are ultimately controlled by `smarter/settings/base.py (smtp config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L527>`_
 for local development and testing environments, and by Kubernetes Secrets for AWS cloud based deployments, as described above. In both cases, the following orders of precedence are observed:
