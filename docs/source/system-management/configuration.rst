@@ -224,7 +224,7 @@ Smarter currently relies on four primary mechanisms for secrets management:
 
 *Less is more, and simpler is better, so the fewer secrets management mechanisms you have to deal with, the better.*
 
-1. Logging Configuration
+9. Logging Configuration
 ------------------------
 
 Smarter application logs are highly configurable. By default, Smarter uses Python's built-in logging module to log messages to an application log file that
@@ -260,7 +260,7 @@ for local development and testing environments, and by Kubernetes Secrets for AW
   However, they operate at different layers of the application stack. Kubernetes Secrets are used for securely storing and managing secrets at the infrastructure level,
   while Pydantic SecretStr is used within the application code itself to ensure that sensitive information is not inadvertently exposed in logs or error messages.
 
-1.  Email/Notification Settings
+11.  Email/Notification Settings
 -------------------------------
 
 Smarter's SMTP email and notification settings follow the same configuration precedence rules as database configuration described above.
