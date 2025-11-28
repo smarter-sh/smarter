@@ -25,6 +25,12 @@ Initial Builds take approximately 30 minutes to complete due to the multi-archit
 significantly faster due to caching, and usually take less than 5 minutes. Builds are approximately 850MB in size, but are split
 into multiple layers for more efficient distribution, none which exceed 225MB.
 
+.. raw:: html
+
+   <img src="https://cdn.smarter.sh/images/github-actions-build.png"
+        style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
+        alt="Smarter GitHub Actions Build"/>
+
 Docker Hub
 -----------
 

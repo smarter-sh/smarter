@@ -36,7 +36,7 @@ to the same Account as the resource being accessed.
 Smarter Chat React Component
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-See `smarter/lib/drf/views/token_authentication_helpers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/views/token_authentication_helpers.py>`_
+API Backend: see `smarter/lib/drf/views/token_authentication_helpers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/views/token_authentication_helpers.py>`_
 
 .. code-block:: python
 
@@ -49,7 +49,7 @@ See `smarter/lib/drf/views/token_authentication_helpers.py <https://github.com/s
       authentication_classes = [SmarterTokenAuthentication]
 
 
-See `https://github.com/smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`_
+Client front-end: see `https://github.com/smarter-sh/smarter-chat <https://github.com/smarter-sh/smarter-chat>`_
 
 .. code-block:: json
 
@@ -71,7 +71,7 @@ See `https://github.com/smarter-sh/smarter-chat <https://github.com/smarter-sh/s
 Smarter Command-line Interface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-See `smarter/apps/api/v1/cli/views/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/views/base.py>`_
+API Backend: see `smarter/apps/api/v1/cli/views/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/views/base.py>`_
 
 .. code-block:: python
 
@@ -81,7 +81,7 @@ See `smarter/apps/api/v1/cli/views/base.py <https://github.com/smarter-sh/smarte
     """
     authentication_classes = (SmarterTokenAuthentication,)
 
-See `https://github.com/smarter-sh/smarter-cli <https://github.com/smarter-sh/smarter-cli>`_
+Client front-end: see `https://github.com/smarter-sh/smarter-cli <https://github.com/smarter-sh/smarter-cli>`_
 
 .. code-block:: bash
 
