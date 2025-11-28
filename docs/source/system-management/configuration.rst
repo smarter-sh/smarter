@@ -254,42 +254,61 @@ for local development and testing environments, and by Kubernetes Secrets for AW
 3. Default values hardcoded in `smarter/settings/base.py (local database config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L336>`_ for local development and testing environments,
    and `settings/base_aws.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base_aws.py#L37>`_ for AWS cloud based deployments regardless of environment.
 
+Regardless of how the configuration values were ingested, the final database configuration values are accessible via both Django settings and smarter_settings.
+
+  .. code-block:: ini
+
+      MYSQL_HOST: mysql.example.com
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: smarter_platform_prod
+      MYSQL_PASSWORD: <A SECURE PASSWORD SET IN KUBERNETES SECRET OR .env FILE>
+      MYSQL_USERNAME: smarter_platform_prod
+
 .. note::
 
   Pydantic SecretStr and Kubernetes Secrets serve similar purposes in securely handling sensitive configuration values such as database and vendor api credentials.
   However, they operate at different layers of the application stack. Kubernetes Secrets are used for securely storing and managing secrets at the infrastructure level,
   while Pydantic SecretStr is used within the application code itself to ensure that sensitive information is not inadvertently exposed in logs or error messages.
 
-11.  Email/Notification Configuration
+1.   Email/Notification Configuration
 ---------------------------------------
 
 SMTP Email Services allow your system to send emails using an external SMTP server.
 Smarter uses `AWS Simple Email Service <https://aws.amazon.com/ses/>`_ (SES) by default, but you can configure it to use any SMTP server of your choice.
 
-.. warning::
+.. note::
 
    It is highly recommended to use AWS Simple Email Service (SES) for sending emails as this is known to be both cost effective and reliable.
    It is also recommended to use Smarter's provided Terraform scripts to set up the necessary SES resources as this is a more complex operation than might be expected, and the Terraform scripts will automate all of this for you. See `Cloud Infrastructure <cloud-infrastructure.html>`__ for more information.
 
-Configuration
--------------
-
 To configure SMTP Email Services, follow these steps:
 
-1. Prepare your AWS SES account. This is taken care automatically if you use the Smarter `Terraform scripts <cloud-infrastructure.html>`_.
+- Prepare your AWS SES account. This is taken care automatically if you use the Smarter `Terraform scripts <cloud-infrastructure.html>`_.
    This will create the necessary SES resources including verified domains and SMTP credentials, and it will also generate
    a Kubernetes Secret containing the SMTP credentials to be used by Smarter's default GitHub Actions deployment workflow.
 
-2. Otherwise, in your Smarter settings for deployment ensure that you have included the following in your .env file:
+- Otherwise, in your Smarter settings for deployment ensure that you have included the following in your .env file:
+
+SMTP settings are ultimately controlled by `smarter/settings/base.py (smtp config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L527>`_
+for local development and testing environments, and by Kubernetes Secrets for AWS cloud based deployments, as described above. In both cases, the following orders of precedence are observed:
+
+1. Environment variables set in the Docker container or Kubernetes pod.
+   These are consumed and validated by the smarter_settings module, internally encrypted by Pydantic SecretStr where applicable, and passed down to Django settings.
+2. Kubernetes Secrets (for AWS cloud deployments) or .env files (for local development and testing). These in point of fact, are environment variables subject to the same treatment
+   as #1 above, albeit these take a more colorful route to get there.
+3. Default values hardcoded in `smarter/settings/base.py (local database config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L336>`_ for local development and testing environments,
+   and `settings/base_aws.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base_aws.py#L37>`_ for AWS cloud based deployments regardless of environment.
+
+Regardless of how the configuration values were ingested, the final database configuration values are accessible via both Django settings and smarter_settings.
 
    .. code-block:: ini
 
-    SMTP_HOST: email-smtp.us-east-2.amazonaws.com
-    SMTP_PASSWORD: <A CREDENTIAL GENERATED IN AWS SES>
-    SMTP_PORT: "587"
-    SMTP_USE_SSL: "false"
-    SMTP_USE_TLS: "true"
-    SMTP_USERNAME: <A USERNAME GENERATED IN AWS SES>
+      SMTP_HOST: email-smtp.us-east-2.amazonaws.com
+      SMTP_PASSWORD: <A CREDENTIAL GENERATED IN AWS SES>
+      SMTP_PORT: "587"
+      SMTP_USE_SSL: "false"
+      SMTP_USE_TLS: "true"
+      SMTP_USERNAME: <A USERNAME GENERATED IN AWS SES>
 
 You can test your SMTP configuration by sending a test email from the Django console:
 
@@ -297,7 +316,7 @@ You can test your SMTP configuration by sending a test email from the Django con
 
    python manage.py send_welcome_email --email user@example.com
 
-1.  Static & Media Files Configuration
+12.  Static & Media Files Configuration
 ---------------------------------------------
 
 Smarter serves static and media files using Amazon S3 and CloudFront in AWS cloud deployments, and 'whitenoise.storage.CompressedStaticFilesStorage'
