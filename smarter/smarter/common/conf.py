@@ -372,7 +372,27 @@ def empty_str_to_int_default(v: str, default: int) -> int:
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-many-instance-attributes
 class Settings(BaseSettings):
-    """Settings for Lambda functions"""
+    """
+    Smarter derived settings. This is intended to be instantiated as
+    an immutable singleton object called `smarter_settings`. smarter_settings
+    contains superseding, validated, and derived settings values for the platform.
+
+    Where applicable, smarter_settings supersede Django settings values. That is,
+    smarter_settings should be used in preference to Django settings wherever
+    possible. Django settings are initialized from smarter_settings values where
+    applicable.
+
+    Notes:
+    - Settings values are immutable after instantiation.
+    - Sensitive values are stored as pydantic SecretStr types.
+    - Settings values are initialized according to the following prioritization sequence:
+        1. constructor
+        2. environment variables
+        3. `.env` file
+        4. defaults
+    - The dump property returns a dictionary of all configuration values.
+    - Settings values should be accessed via the smarter_settings singleton instance.
+    """
 
     # pylint: disable=too-few-public-methods
     class Config:

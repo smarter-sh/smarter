@@ -260,12 +260,12 @@ for local development and testing environments, and by Kubernetes Secrets for AW
   However, they operate at different layers of the application stack. Kubernetes Secrets are used for securely storing and managing secrets at the infrastructure level,
   while Pydantic SecretStr is used within the application code itself to ensure that sensitive information is not inadvertently exposed in logs or error messages.
 
-11.  Email/Notification Settings
+11.  Email/Notification Configuration
 -------------------------------
 
 Smarter's SMTP email and notification settings follow the same configuration precedence rules as database configuration described above.
 
-12. Static & Media Files
+12. Static & Media Files Configuration
 ------------------------
 
 Smarter serves static and media files using Amazon S3 and CloudFront in AWS cloud deployments, and 'whitenoise.storage.CompressedStaticFilesStorage'
