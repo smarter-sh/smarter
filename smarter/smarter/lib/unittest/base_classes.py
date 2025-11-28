@@ -47,17 +47,20 @@ class SmarterTestBase(unittest.TestCase):
 
     @classmethod
     def get_readonly_yaml_file(cls, file_path) -> dict:
+        """Read a YAML file in read-only mode."""
         with open(file_path, encoding="utf-8") as file:
             return yaml.safe_load(file)
 
     @classmethod
     def get_readonly_csv_file(cls, file_path) -> Union[dict, list[dict]]:
+        """Read a CSV file in read-only mode."""
         with open(file_path, encoding="utf-8") as file:
             reader = csv.DictReader(file)
             return list(reader)
 
     @classmethod
     def get_readonly_json_file(cls, file_path) -> Union[dict, list]:
+        """Read a JSON file in read-only mode."""
         with open(file_path, encoding="utf-8") as file:
             return json.load(file)
 
@@ -67,6 +70,7 @@ class SmarterTestBase(unittest.TestCase):
         return hash_factory(length=length)
 
     def create_generic_request(self, url="http://example.com") -> HttpRequest:
+        """Create a generic HTTP request for testing purposes."""
         factory = RequestFactory()
         json_data = {
             "session_key": "6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b",

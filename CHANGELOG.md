@@ -1,22 +1,20 @@
-## [0.13.33](https://github.com/smarter-sh/smarter/compare/v0.13.32...v0.13.33) (2025-11-21)
-
-
-### Bug Fixes
-
-* ensure that aws deployments fail gracefully if aws is not configured ([227ef6b](https://github.com/smarter-sh/smarter/commit/227ef6ba905390e3bfba6b154f6c42a3ecd930ac))
-
-## [0.13.32](https://github.com/smarter-sh/smarter/compare/v0.13.31...v0.13.32) (2025-11-21)
-
-
-### Bug Fixes
-
-* fail gracefully if aws is not configured ([7f63c65](https://github.com/smarter-sh/smarter/commit/7f63c6549d65e22cfd4a1ffb41a33e478f4a7211))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.13.33](https://github.com/smarter-sh/smarter/compare/v0.13.32...v0.13.33) (2025-11-21)
+
+### Bug Fixes
+
+- ensure that aws deployments fail gracefully if aws is not configured ([227ef6b](https://github.com/smarter-sh/smarter/commit/227ef6ba905390e3bfba6b154f6c42a3ecd930ac))
+
+## [0.13.32](https://github.com/smarter-sh/smarter/compare/v0.13.31...v0.13.32) (2025-11-21)
+
+### Bug Fixes
+
+- fail gracefully if aws is not configured ([7f63c65](https://github.com/smarter-sh/smarter/commit/7f63c6549d65e22cfd4a1ffb41a33e478f4a7211))
 
 ## [0.13.31](https://github.com/smarter-sh/smarter/compare/v0.13.30...v0.13.31) (2025-11-21)
 

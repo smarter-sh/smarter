@@ -75,7 +75,7 @@ f3bf3acbd087   smarter        "bash -c 'watchmedo …"   About a minute ago   Up
 
 ## Good Coding Best Practices
 
-This project demonstrates a wide variety of good coding best practices for managing mission-critical cloud-based micro services in a team environment, namely its adherence to [12-Factor Methodology](./docs/12-FACTOR.md). Please see this [Code Management Best Practices](./docs/GOOD_CODING_PRACTICE.md) for additional details.
+This project demonstrates a wide variety of good coding best practices for managing mission-critical cloud-based micro services in a team environment, namely its adherence to [12-Factor Methodology](./docs/legacy/12-FACTOR.md). Please see this [Code Management Best Practices](https://docs.smarter.sh/en/latest/developers/developer-guidelines.html) for additional details.
 
 We want to make this project more accessible to students and learners as an instructional tool while not adding undue code review workloads to anyone with merge authority for the project. To this end we've also added several pre-commit code linting and code style enforcement tools, as well as automated procedures for version maintenance of package dependencies, pull request evaluations, and semantic releases.
 
