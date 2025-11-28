@@ -8,8 +8,8 @@ The configuration values are initialized according to the following
 prioritization sequence:
 
     1. constructor
-    2. environment variables
-    3. `.env` file
+    2. `.env` file
+    3. environment variables (if present, these are overridden by .env file values)
     4. defaults
 
 The Settings class also provides a dump property that returns a dictionary of all
@@ -383,15 +383,17 @@ class Settings(BaseSettings):
     applicable.
 
     Notes:
+    -----------------
     - Settings values are immutable after instantiation.
+    - Every property/attribute in this smarter_settings has a value.
     - Sensitive values are stored as pydantic SecretStr types.
     - Settings values are initialized according to the following prioritization sequence:
         1. constructor
-        2. environment variables
-        3. `.env` file
+        2. `.env` file
+        3. environment variables (if present, these are overridden by .env file values)
         4. defaults
     - The dump property returns a dictionary of all configuration values.
-    - Settings values should be accessed via the smarter_settings singleton instance.
+    - Settings values should be accessed via the smarter_settings singleton instance when possible.
     """
 
     # pylint: disable=too-few-public-methods
