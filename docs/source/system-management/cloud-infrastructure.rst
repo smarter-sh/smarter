@@ -8,7 +8,9 @@ resources required for normal operation of the Smarter platform.
 
 These scripts can be found in the `https://github.com/smarter-sh/smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`_ repository.
 See the README file in that repository for detailed instructions on how to use Terraform scripts
-to deploy and manage Smarter infrastructure on AWS.
+to deploy and manage Smarter infrastructure on AWS. This set of Terraform scripts will store its
+state remotely in an S3 bucket, and it will also enable state locking using DynamoDB
+to prevent concurrent modifications to the infrastructure. See `smarter-infrastructure/aws/terragrunt.hcl <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terragrunt.hcl>`_ for more details.
 
 Smarter's Terraform scripts are designed to be used with Terragrunt, a thin wrapper for Terraform
 that provides extra tools for working with multiple Terraform modules and managing remote state.
