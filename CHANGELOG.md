@@ -1,3 +1,10 @@
+## [0.13.35](https://github.com/smarter-sh/smarter/compare/v0.13.34...v0.13.35) (2025-11-29)
+
+
+### Bug Fixes
+
+* grant amnesty to cert-manager requests to .well-known/acme-challenge/ ([ff6e1a5](https://github.com/smarter-sh/smarter/commit/ff6e1a5a99489abe3222de3ff45f0ef1736e8c59))
+
 ## [0.13.34](https://github.com/smarter-sh/smarter/compare/v0.13.33...v0.13.34) (2025-11-29)
 
 
