@@ -6,6 +6,9 @@ Security is a critical aspect of system management. This section covers best pra
 Firewall
 ---------
 
+**Smarter does not provide a built-in firewall solution.** However, many of the items that follow are directly or indirectly related to firewall configuration and management,
+including for example, limitations on hosts and remote access, ports, ingress design, DNS configuration, and so forth.
+
 The Smarter project production environment is designed to be installed on an **existing** AWS Virtual Private Cloud (VPC).
 AWS VPC provides robust firewall capabilities that allow you to control inbound and outbound traffic to your instances.
 It is recommended to configure security groups and network ACLs to restrict access to only necessary ports and IP addresses.
@@ -137,12 +140,28 @@ Prompt Engineer Workbench and Django Admin interface. This affords the Smarter p
 luxury of minimizing its attack surface primarily to http and https traffic only, and at that,
 to a limited set of URL endpoints.
 
+If you follow Smarter's recommended deployment architecture on AWS Elastic Kubernetes Service (EKS),
+you can further limit remote access to the Smarter platform in that this will/can prevent remote
+ssh access to the underlying host instances altogether. Instead, all remote access to the Smarter
+platform is performed securely over https using strong authentication mechanisms such as OAuth2
+and Smarter's token-based authentication for API access.
+
+Additionally, a Kubernetes-based deployment will lead to all domain traffic being routed through
+a secure AWS Classic Load Balancer (ALB) which can be further configured via Kubernetes Nginx Ingress Controller
+to provide additional layers of security such as Web Application Firewall (WAF), DDoS protection, SSL/TLS termination,
+and more. AWS Load balancers inherently behave as reverse proxies / firewalls, in that they
+only allow traffic to reach the underlying host instances on specific ports (e.g., 80, 443)
+and only for specific domain names. Think of this as a "belt & suspenders" additional layer of firewall protection.
+
+*Less is more. Simpler is better.*
+
 Smarter Authentication
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Smarter implements a proprietary token-based authentication mechanism for its API endpoints
 which is based on Django knox. This enables enhanced Journal support as well as log warnings
-for API keys that have exceeded their maximum lifetime. See `smarter/lib/drf/middleware.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/middleware.py>`_ for details.
+for API keys that have exceeded their maximum lifetime.
+See `smarter/lib/drf/token_authentication.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/token_authentication.py>`_ and `smarter/lib/drf/middleware.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/middleware.py>`_ for details.
 
 
 Audit Logging
