@@ -63,7 +63,7 @@ class SmarterAuthTokenManager(AuthTokenManager):
 
 
 class SmarterAuthToken(AuthToken, TimestampedModel):
-    """API Key model."""
+    """Smarter API Key model."""
 
     objects = SmarterAuthTokenManager()
 

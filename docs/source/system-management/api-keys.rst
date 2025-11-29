@@ -25,6 +25,35 @@ Managing API Keys
 
 Use Django admin to view, enable/disable, or delete existing API keys.
 
+Configuration Options
+---------------------
+
+Smarter inherits and extends `Django Knox AuthToken <https://jazzband.github.io/django-rest-knox/>`__, which itself has several configuration options
+that can be set in the Django settings file.
+
+`SMARTER_API_KEY_MAX_LIFETIME_DAYS <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/const.py#L41>`__ determines the maximum recommended lifetime of
+an API key in days. After this period, the application will generate warnings in the logs indicating that the key is beyond its
+recommended expiration.
+
+.. code-block:: python
+
+    # Maximum lifetime of an API key in days. After this period, the key will expire and become invalid.
+    SMARTER_API_KEY_MAX_LIFETIME_DAYS = 365 * 3  # 3 years
+
+Extensions to the Django Know model include the following fields and methods:
+
+.. code-block:: python
+
+    class SmarterAuthToken(AuthToken, TimestampedModel):
+
+        description = models.CharField(max_length=255, blank=True, null=True)
+        last_used_at = models.DateTimeField(blank=True, null=True)
+        is_active = models.BooleanField(default=True)
+        def activate(self):
+        def deactivate(self):
+        def toggle_active(self):
+
+
 Using API Keys
 -----------------
 
