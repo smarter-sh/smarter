@@ -41,8 +41,15 @@ except ImportError:
     logger.warning("Django is not installed. Some validation features may not work.")
 
     # pylint: disable=missing-function-docstring,unused-argument
-    def URLValidator(*args, **kwargs):
-        pass
+
+    # pylint: disable=missing-class-docstring
+    class URLValidator:
+        def __init__(self, *args, **kwargs):
+            logger.warning("Django is not installed. URLValidator will not function properly.")
+
+        def __call__(self, value):
+            # Optionally, you could raise NotImplementedError or just pass
+            logger.warning("Django is not installed. URLValidator will not function properly.")
 
     # pylint: disable=missing-function-docstring,unused-argument
     def validate_email(*args, **kwargs):
