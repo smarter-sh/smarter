@@ -43,3 +43,19 @@ tracks the following cost metrics:
      - The Provider LLM model used for the request. eg gpt-4o-mini
    * - Reference
      - External provider billing reference. eg fp_b547601dbd
+
+An example of a custom SQL query to aggregate token usage by session for a given month is shown below. Other
+Django models associated with cost accounting include: `ChatBotRequests`, `PluginSelectorHistory`, and `Chat`.
+
+.. code-block:: sql
+
+    USE smarter_platform_prod;
+
+    SELECT	session_key,
+            SUM(prompt_tokens) as prompt_tokens,
+            SUM(completion_tokens) as completion_tokens,
+            SUM(total_tokens) as total_tokens
+    FROM 	account_charge
+    WHERE	MONTH(created_at) = 11 AND
+            YEAR(created_at) = 2025
+    GROUP BY session_key
