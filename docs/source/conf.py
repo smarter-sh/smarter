@@ -3,6 +3,8 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import datetime
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import os
@@ -12,7 +14,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../../smarter"))
 
 project = "Smarter"
-copyright = "2025, Project: Smarter"
+copyright = f"{datetime.datetime.now().year}, The {project} Project"
 author = "Lawrence McDaniel"
 release = "3.13.33"
 
