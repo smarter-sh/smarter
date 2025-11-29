@@ -1,3 +1,4 @@
+# pylint: disable=C0413
 """
 Internal validation features. This module contains functions for validating various data types.
 Before adding anything to this module, please first check if there is a built-in Python function
@@ -8,21 +9,53 @@ TODO: add `import validators` and study this library to see what can be removed 
 """
 
 import logging
+
+
+logger = logging.getLogger(__name__)
+
 import re
 import warnings
 from typing import Optional
 from urllib.parse import urlparse, urlunparse
 
 import validators
-from django.core.exceptions import ValidationError
-from django.core.validators import URLValidator, validate_email, validate_ipv4_address
+
+
+try:
+    from django.core.exceptions import ValidationError  # type: ignore
+except ImportError:
+    logger.warning("Django is not installed. Some validation features may not work.")
+
+    # pylint: disable=missing-class-docstring
+    class ValidationError(Exception):
+        pass
+
+
+try:
+    from django.core.validators import URLValidator  # type: ignore
+    from django.core.validators import (
+        validate_email,
+        validate_ipv4_address,
+    )
+except ImportError:
+    logger.warning("Django is not installed. Some validation features may not work.")
+
+    # pylint: disable=missing-function-docstring,unused-argument
+    def URLValidator(*args, **kwargs):
+        pass
+
+    # pylint: disable=missing-function-docstring,unused-argument
+    def validate_email(*args, **kwargs):
+        pass
+
+    # pylint: disable=missing-function-docstring,unused-argument
+    def validate_ipv4_address(*args, **kwargs):
+        pass
+
 
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
-
-
-logger = logging.getLogger(__name__)
 
 
 # pylint: disable=R0904
