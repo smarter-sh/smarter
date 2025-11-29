@@ -5,3 +5,7 @@ div[class^="literal-block-wrapper"],
   border: none !important;
   padding: 0 !important;
 }
+
+section#smarter-settings dt.sig.sig-object.py {
+  display: none;
+}
