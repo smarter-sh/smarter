@@ -52,37 +52,37 @@ Smarter Security Features
 Django Security Features
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Host and Domain Validation**. Smarter accepts http requests only from allowed hosts/domains.
-- **HTTPS Enforcement** (via settings and middleware). All traffic is redirected to HTTPS.
-- **HSTS (HTTP Strict Transport Security)**. Enforces secure connections to the server.
-- **SSL/TLS Configuration** (via settings). Ensures secure data transmission.
-- **Content Security Policy (CSP)**. Helps prevent XSS attacks by specifying allowed content sources.
-- **Cross-Origin Resource Sharing (CORS)**. Controls resource sharing between different origins. For example, cdn.smarter.sh is allowed to access resources from smarter.sh.
-- **Cross-Site Request Forgery (CSRF) Protection**. Prevents CSRF attacks using tokens that validate requests and expire after a certain period.
-- **XSS Protection**. Mitigates Cross-Site Scripting attacks through input sanitization and output encoding.
-- **Clickjacking Protection**. Uses X-Frame-Options header to prevent clickjacking attacks.
-- **No DNS Prefetching**. Disabled to prevent information leakage.
-- **Secure Headers**. Implements various HTTP security headers to enhance security
-- **Secure File Uploads**. Validates and sanitizes file uploads to prevent malicious files from being uploaded.
-- **SQL Injection Prevention**. Utilizes Django's ORM to prevent SQL injection attacks.
-- **Security Middleware** (custom and built-in). Implements various security measures through middleware components.
-- **Session Security**. Manages user session expiration and secure cookie settings.
-- **Secure Cookie Settings**. Ensures cookies are transmitted securely and are protected from cross-site scripting.
-- **Secret Key Management**. Handles the secure generation and storage of secret keys used for cryptographic signing.
-- **Password Validation**. Enforces strong password policies to enhance account security.
-- **Authentication Backends and Social Auth**. Supports multiple authentication methods including social authentication.
-- **Middleware for Security** (custom and built-in). Applies additional security measures through middleware layers.
-- **Sensitive File Access Blocking**. Prevents unauthorized access to sensitive files.
-- **Logging of Security Events**. Records security-related events for monitoring and auditing.
-- **Allowed File Extensions for Uploads**. Restricts file uploads to safe and approved types.
-- **SMTP Security (SSL/TLS)**. Ensures secure email transmission using SSL/TLS.
-- **Resource Limit Logging (for container hardening)**. Monitors and logs resource usage to enhance container security.
-- **Stripe/Dj-Stripe Webhook Security**. Secures webhook endpoints to prevent unauthorized access.
-- **Wagtail Admin Security Settings**. Applies security configurations specific to the Wagtail admin interface.
-- **Static and Media File Storage Security (S3, FileSystem)**. Ensures secure storage and access controls for static and media files.
-- **JSON Error Handling (to avoid leaking sensitive info)**. Handles JSON errors securely to prevent information leakage.
-- **Internal IP/Host Restrictions**. Limits access based on internal IP addresses and hostnames.
-- **Security Headers** (e.g., X-Frame-Options via middleware)
+- **Host and Domain Validation**. Smarter accepts http requests only from allowed hosts/domains. See `Host and Domain Validation <https://docs.djangoproject.com/en/stable/ref/settings/#allowed-hosts>`_
+- **HTTPS Enforcement** (via settings and middleware). All traffic is redirected to HTTPS. See `SECURE_SSL_REDIRECT <https://docs.djangoproject.com/en/stable/ref/settings/#secure-ssl-redirect>`_
+- **HSTS (HTTP Strict Transport Security)**. Enforces secure connections to the server. See `SECURE_HSTS_SECONDS <https://docs.djangoproject.com/en/stable/ref/settings/#secure-hsts-seconds>`_
+- **SSL/TLS Configuration** (via settings). Ensures secure data transmission. See `SSL/HTTPS <https://docs.djangoproject.com/en/stable/topics/security/#ssl-https>`_
+- **Content Security Policy (CSP)**. Helps prevent XSS attacks by specifying allowed content sources. See `Content Security Policy <https://docs.djangoproject.com/en/stable/ref/csp/>`_
+- **Cross-Origin Resource Sharing (CORS)**. Controls resource sharing between different origins. For example, cdn.smarter.sh is allowed to access resources from smarter.sh. See `CORS <https://docs.djangoproject.com/en/stable/ref/cors/>`_
+- **Cross-Site Request Forgery (CSRF) Protection**. Prevents CSRF attacks using tokens that validate requests and expire after a certain period. See `CSRF Protection <https://docs.djangoproject.com/en/stable/ref/csrf/>`_
+- **XSS Protection**. Mitigates Cross-Site Scripting attacks through input sanitization and output encoding. See `XSS Protection <https://docs.djangoproject.com/en/stable/topics/security/#cross-site-scripting-xss-protection>`_
+- **Clickjacking Protection**. Uses X-Frame-Options header to prevent clickjacking attacks. See `Clickjacking Protection <https://docs.djangoproject.com/en/stable/ref/clickjacking/>`_
+- **No DNS Prefetching**. Disabled to prevent information leakage. See `SECURE_REFERRER_POLICY <https://docs.djangoproject.com/en/stable/ref/settings/#secure-referrer-policy>`_
+- **Secure Headers**. Implements various HTTP security headers to enhance security. See `Security Middleware <https://docs.djangoproject.com/en/stable/topics/security/#security-middlewares>`_
+- **Secure File Uploads**. Validates and sanitizes file uploads to prevent malicious files from being uploaded. See `Managing Files <https://docs.djangoproject.com/en/stable/topics/files/>`_
+- **SQL Injection Prevention**. Utilizes Django's ORM to prevent SQL injection attacks. See `SQL Injection Protection <https://docs.djangoproject.com/en/stable/topics/security/#sql-injection-protection>`_
+- **Security Middleware** (custom and built-in). Implements various security measures through middleware components. See `Security Middleware <https://docs.djangoproject.com/en/stable/topics/security/#security-middlewares>`_
+- **Session Security**. Manages user session expiration and secure cookie settings. See `Session Security <https://docs.djangoproject.com/en/stable/topics/http/sessions/#security>`_
+- **Secure Cookie Settings**. Ensures cookies are transmitted securely and are protected from cross-site scripting. See `Cookie Security <https://docs.djangoproject.com/en/stable/ref/settings/#std-setting-SESSION_COOKIE_SECURE>`_
+- **Secret Key Management**. Handles the secure generation and storage of secret keys used for cryptographic signing. See `SECRET_KEY <https://docs.djangoproject.com/en/stable/ref/settings/#secret-key>`_
+- **Password Validation**. Enforces strong password policies to enhance account security. See `Password Validation <https://docs.djangoproject.com/en/stable/topics/auth/passwords/#password-validation>`_
+- **Authentication Backends and Social Auth**. Supports multiple authentication methods including social authentication. See `Authentication Backends <https://docs.djangoproject.com/en/stable/topics/auth/customizing/#authentication-backends>`_
+- **Middleware for Security** (custom and built-in). Applies additional security measures through middleware layers. See `Middleware <https://docs.djangoproject.com/en/stable/topics/http/middleware/>`_
+- **Sensitive File Access Blocking**. Prevents unauthorized access to sensitive files. See `Serving files <https://docs.djangoproject.com/en/stable/howto/static-files/#serving-files-uploaded-by-a-user-during-development>`_
+- **Logging of Security Events**. Records security-related events for monitoring and auditing. See `Logging <https://docs.djangoproject.com/en/stable/topics/logging/>`_
+- **Allowed File Extensions for Uploads**. Restricts file uploads to safe and approved types. See `File Uploads <https://docs.djangoproject.com/en/stable/topics/http/file-uploads/>`_
+- **SMTP Security (SSL/TLS)**. Ensures secure email transmission using SSL/TLS. See `Email Security <https://docs.djangoproject.com/en/stable/topics/email/#email-backends>`_
+- **Resource Limit Logging (for container hardening)**. Monitors and logs resource usage to enhance container security. See `Logging <https://docs.djangoproject.com/en/stable/topics/logging/>`_
+- **Stripe/Dj-Stripe Webhook Security**. Secures webhook endpoints to prevent unauthorized access. See `Webhooks Security <https://docs.djangoproject.com/en/stable/topics/security/#webhooks>`_
+- **Wagtail Admin Security Settings**. Applies security configurations specific to the Wagtail admin interface. See `Wagtail Security <https://docs.wagtail.org/en/stable/topics/security.html>`_
+- **Static and Media File Storage Security (S3, FileSystem)**. Ensures secure storage and access controls for static and media files. See `Managing Files <https://docs.djangoproject.com/en/stable/topics/files/>`_
+- **JSON Error Handling (to avoid leaking sensitive info)**. Handles JSON errors securely to prevent information leakage. See `Error Reporting <https://docs.djangoproject.com/en/stable/ref/views/#django.views.defaults.server_error>`_
+- **Internal IP/Host Restrictions**. Limits access based on internal IP addresses and hostnames. See `INTERNAL_IPS <https://docs.djangoproject.com/en/stable/ref/settings/#internal-ips>`_
+- **Security Headers** (e.g., X-Frame-Options via middleware). See `Security Middleware <https://docs.djangoproject.com/en/stable/topics/security/#security-middlewares>`_
 
 
 Secure Remote Access
