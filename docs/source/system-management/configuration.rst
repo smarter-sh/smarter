@@ -210,7 +210,7 @@ Smarter currently relies on four primary mechanisms for secrets management:
   See `example-dot-env <https://github.com/smarter-sh/smarter/blob/main/docs/example-dot-env>`_ file is provided in the repository for reference
   and can be automatically initialized for you by running `make` on the command line from the root of the repository.
 
-  .. warning::
+  .. danger::
 
     .env files are intended for local development and testing purposes only. They should **NEVER** be used in production environments.
     Storing sensitive information in plain text files poses significant security risks. Always use secure secrets management mechanisms,
