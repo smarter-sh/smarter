@@ -6,7 +6,8 @@ div[class^="literal-block-wrapper"],
   padding: 0 !important;
 }
 
-section#smarter-settings dl.class > dt.sig.sig-object.py,
-section#smarter\.common\.conf\.Settings dl.class > dt.sig.sig-object.py {
+section#smarter-settings
+  dl.class
+  > dt#smarter\.common\.conf\.Settings.sig.sig-object.py {
   display: none;
 }
