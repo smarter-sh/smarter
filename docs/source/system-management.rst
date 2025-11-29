@@ -13,7 +13,6 @@ for managing a Smarter installation.
    system-management/installation
    system-management/django-admin
    system-management/url-patterns
-   system-management/content-moderation
    system-management/account-management
    system-management/user-management
    system-management/api-keys

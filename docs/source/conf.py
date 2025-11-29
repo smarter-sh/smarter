@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../../smarter"))
 
 project = "Smarter"
-copyright = "2025, Lawrence McDaniel"
+copyright = "2025, Project: Smarter"
 author = "Lawrence McDaniel"
 release = "3.13.33"
 
