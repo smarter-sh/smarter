@@ -12,8 +12,8 @@ class SAMJournal(models.Model):
     """Maintains a journal of all the changes made to the SAM database via api/v1/cli manifests."""
 
     key = models.CharField(primary_key=True, default=None, editable=False, max_length=64, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, db_index=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True, db_index=True)
     thing = models.CharField(
         max_length=24, choices=SmarterJournalThings.choices(), default=SmarterJournalThings.CHAT.value, blank=True
     )
