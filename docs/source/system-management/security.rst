@@ -34,6 +34,13 @@ Smarter Security Features
         alt="Smarter AWS Route53 Hosted Zone for Deployed ChatBots/Agents"/>
 
 - **Sensitive File Blocking**. Custom middleware blocks access to sensitive files access attempts such as .env, .git, and others. See `smarter/lib/django/middleware/sensitive_files.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/sensitive_files.py>`_
+
+.. raw:: html
+
+   <img src="https://cdn.smarter.sh/images/smarter-sensitive-file-blocking.png"
+        style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
+        alt="Smarter Sensitive File Blocking"/>
+
 - **Excessive 404 Protection**. Custom middleware (above DRF's rate-limiting) to protect against blind/random file access attempts. See `smarter/lib/django/middleware/excessive_404.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/excessive_404.py>`_
 - **Enhanced CSRF Protection**. Custom middleware to enhance CSRF protection for Smarter ChatBot/Agent API endpoints. See `smarter/lib/django/middleware/csrf.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/csrf.py>`_
 - **Enhanced CORS Protection**. Custom middleware to enhance CORS protection for Smarter ChatBot/Agent API endpoints. See `smarter/lib/django/middleware/cors.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/middleware/cors.py>`_
