@@ -10,6 +10,7 @@ Some good references for learning about Django administration and management com
 
 .. list-table:: Good Resources for Learning Django
    :header-rows: 1
+   :widths: 30 70
 
    * - Resource
      - Description

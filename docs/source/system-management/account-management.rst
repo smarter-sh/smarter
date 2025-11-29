@@ -19,6 +19,6 @@ Use the manage.py command to create new Accounts:
 
    python manage.py create_account --company_name "My Organization" --account-number "####-####-####"
 
-.. important::
+.. note::
 
   Users do not have access to Smarter resources across accounts. Each Account is a Chinese wall.
