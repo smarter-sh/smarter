@@ -36,7 +36,7 @@ diagnostics insights into application behavior, and are not intended to be a sou
 
 .. raw:: html
 
-   <img src="https://django-admin-waffle-switches.png"
+   <img src="https://cdn.smarter.sh/images/django-admin-waffle-switches.png"
         style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
         alt="Django Admin - Waffle Switches"/>
 
