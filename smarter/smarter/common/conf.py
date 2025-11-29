@@ -816,6 +816,15 @@ class Settings(BaseSettings):
 
         Returns:
             int: The maximum number of days an API key is valid.
+
+        Example:
+            >>> settings.smarter_api_key_max_lifetime_days
+            90
+
+        Warning:
+            Changing this value requires a platform redeploy and could invalidate existing API keys.
+            Expired API keys still function but will log warnings.
+
         """
         return SMARTER_API_KEY_MAX_LIFETIME_DAYS
 
