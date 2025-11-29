@@ -10,7 +10,7 @@ resources required for normal operation of the Smarter platform.
 
 See the README file in that repository for detailed instructions on how to use Terraform scripts
 to deploy and manage Smarter infrastructure on AWS. This set of Terraform scripts will store its
-state remotely in an `AWS S3 bucket<https://aws.amazon.com/s3/>`_, and it will also enable state locking using `AWS DynamoDB <https://aws.amazon.com/dynamodb/>`_
+state remotely in an `AWS S3 bucket <https://aws.amazon.com/s3/>`_, and it will also enable state locking using `AWS DynamoDB <https://aws.amazon.com/dynamodb/>`_
 to prevent concurrent modifications to the infrastructure. See `smarter-infrastructure/aws/terragrunt.hcl <https://github.com/smarter-sh/smarter-infrastructure/blob/main/aws/terragrunt.hcl>`_ for more details.
 
 Smarter's Terraform scripts also use `Terragrunt <https://terragrunt.gruntwork.io/>`_, a thin wrapper for Terraform
