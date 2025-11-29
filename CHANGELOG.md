@@ -1,24 +1,22 @@
-## [0.13.35](https://github.com/smarter-sh/smarter/compare/v0.13.34...v0.13.35) (2025-11-29)
-
-
-### Bug Fixes
-
-* grant amnesty to cert-manager requests to .well-known/acme-challenge/ ([ff6e1a5](https://github.com/smarter-sh/smarter/commit/ff6e1a5a99489abe3222de3ff45f0ef1736e8c59))
-
-## [0.13.34](https://github.com/smarter-sh/smarter/compare/v0.13.33...v0.13.34) (2025-11-29)
-
-
-### Bug Fixes
-
-* add db index to created_at to resolve django.db.utils.OperationalError: (1038, 'Out of sort memory, consider increasing server sort buffer size') ([46e33f7](https://github.com/smarter-sh/smarter/commit/46e33f75047cb0d74588d355540fc4aadcc20932))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.13.33](https://github.com/smarter-sh/smarter/compare/v0.13.32...v0.13.33) (2025-11-21)
+## [0.13.35](https://github.com/smarter-sh/smarter/compare/v0.13.34...v0.13.35) (2025-11-29)
+
+### Bug Fixes
+
+- grant amnesty to cert-manager requests to .well-known/acme-challenge/ ([ff6e1a5](https://github.com/smarter-sh/smarter/commit/ff6e1a5a99489abe3222de3ff45f0ef1736e8c59))
+
+## [0.13.34](https://github.com/smarter-sh/smarter/compare/v0.13.35...v0.13.34) (2025-11-29)
+
+### Bug Fixes
+
+- add db index to created_at to resolve django.db.utils.OperationalError: (1038, 'Out of sort memory, consider increasing server sort buffer size') ([46e33f7](https://github.com/smarter-sh/smarter/commit/46e33f75047cb0d74588d355540fc4aadcc20932))
+
+## [0.13.35](https://github.com/smarter-sh/smarter/compare/v0.13.32...v0.13.35) (2025-11-21)
 
 ### Bug Fixes
 
