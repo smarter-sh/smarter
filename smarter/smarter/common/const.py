@@ -37,6 +37,9 @@ SMARTER_IS_INTERNAL_API_REQUEST = "smarter_is_internal_api_request"
 # Default cache expiration expressed in seconds for Redis based Django caching.
 SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 5  # 5 minutes
 
+# Default maximum lifetime for Smarter API keys in days.
+SMARTER_API_KEY_MAX_LIFETIME_DAYS = 365 * 3  # 3 years
+
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter

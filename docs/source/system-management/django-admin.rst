@@ -2,8 +2,8 @@ Django Admin
 ==============
 
 Smarter's admin console is customized.
-See `smarter/urls/console.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/urls/console.py>`
-for further details on the URL configuration.
+See `smarter/apps/dashboard/admin.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/dashboard/admin.py#L70>`_
+for further details on Models that are intentionally removed from default Django admin console.
 
 You'll need an admin user account to log into the Django admin interface. If you don't have one yet, you can create one by running the following command
 from your Smarter installation directory:

@@ -46,6 +46,7 @@ from ..lib.django.validators import SmarterValidator
 # our stuff
 from .const import (
     IS_USING_TFVARS,
+    SMARTER_API_KEY_MAX_LIFETIME_DAYS,
     SMARTER_API_SUBDOMAIN,
     SMARTER_PLATFORM_SUBDOMAIN,
     TFVARS,
@@ -800,6 +801,15 @@ class Settings(BaseSettings):
         True if a tfvars file was loaded, False otherwise.
         """
         return IS_USING_TFVARS
+
+    @property
+    def smarter_api_key_max_lifetime_days(self) -> int:
+        """Maximum lifetime for Smarter API keys in days.
+
+        Returns:
+            int: The maximum number of days an API key is valid.
+        """
+        return SMARTER_API_KEY_MAX_LIFETIME_DAYS
 
     @property
     def tfvars_variables(self) -> dict:

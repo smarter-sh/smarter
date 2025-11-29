@@ -5,11 +5,13 @@ knox.auth TokenAuthentication tokens.
 
 import logging
 import traceback
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Optional
 
 from django.contrib.auth import login
 from django.http import HttpRequest
+from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 from knox.settings import knox_settings
 from rest_framework.authentication import get_authorization_header
@@ -25,6 +27,7 @@ from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
+from .models import SmarterAuthToken
 from .signals import (
     smarter_token_authentication_failure,
     smarter_token_authentication_request,
@@ -110,7 +113,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
         )
         request.auth = SmarterTokenAuthentication()  # type: ignore[assignment]
         try:
-            user, _ = request.auth.authenticate(request)  # type: ignore[assignment]
+            user, auth_obj = request.auth.authenticate(request)  # type: ignore[assignment]
             if user:
                 request.user = user
                 login(request, user, backend="django.contrib.auth.backends.ModelBackend")
@@ -119,6 +122,24 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
                     user=user,
                     token=self.masked_token,
                 )
+                # --- BEGIN: check token creation date ---
+                token = None
+                if hasattr(auth_obj, "digest"):
+                    try:
+                        token = SmarterAuthToken.objects.get(digest=auth_obj.digest)
+                        if token.created < timezone.now() - timedelta(
+                            days=smarter_settings.smarter_api_key_max_lifetime_days
+                        ):
+                            logger.warning(
+                                "%s token for user %s has exceeded max lifetime of %d days",
+                                self.formatted_class_name,
+                                user,
+                                smarter_settings.smarter_api_key_max_lifetime_days,
+                            )
+                    except SmarterAuthToken.DoesNotExist:
+                        logger.warning("%s token digest not found in AuthToken table", self.formatted_class_name)
+                # --- END: Get token creation date ---
+
             else:
                 raise AuthenticationFailed(
                     "SmarterTokenAuthentication.authenticate() did not return"

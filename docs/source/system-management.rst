@@ -22,6 +22,5 @@ for managing a Smarter installation.
    system-management/security
    system-management/backup-and-restore
    system-management/monitoring
-   system-management/logging
    system-management/updates
    system-management/troubleshooting
