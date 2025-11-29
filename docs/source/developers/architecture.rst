@@ -6,6 +6,7 @@ Architecture
    :caption: Architecture
 
    architecture/summary
+   architecture/smarter-settings
    architecture/chatbot
    architecture/chat
    architecture/plugin

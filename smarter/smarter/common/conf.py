@@ -180,7 +180,7 @@ class SettingsDefaults:
     LLAMA_API_KEY: SecretStr = SecretStr(os.environ.get("LLAMA_API_KEY", DEFAULT_MISSING_VALUE))
 
     LLM_DEFAULT_PROVIDER = "openai"
-    LLM_DEFAULT_MODEL = "gpt-4-turbo"
+    LLM_DEFAULT_MODEL = "gpt-4o-mini"
     LLM_DEFAULT_SYSTEM_ROLE = (
         "You are a helpful chatbot. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "
@@ -269,7 +269,7 @@ class SettingsDefaults:
     def to_dict(cls):
         """Convert SettingsDefaults to dict"""
         return {
-            key: "***MASKED***" if key in ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"] else value
+            key: value
             for key, value in SettingsDefaults.__dict__.items()
             if not key.startswith("__") and not callable(key) and key != "to_dict"
         }
@@ -653,19 +653,19 @@ class Settings(BaseSettings):
 
         Example::
 
-        [
-            'api.example.com',
-            'api.alpha.platform.example.com',
-            'api.beta.platform.example.com',
-            'api.localhost:8000',
-            'api.next.platform.example.com',
-            'example.com',
-            'platform.example.com',
-            'alpha.platform.example.com',
-            'beta.platform.example.com',
-            'localhost:8000',
-            'next.platform.example.com'
-        ]
+            [
+                'api.example.com',
+                'api.alpha.platform.example.com',
+                'api.beta.platform.example.com',
+                'api.localhost:8000',
+                'api.next.platform.example.com',
+                'example.com',
+                'platform.example.com',
+                'alpha.platform.example.com',
+                'beta.platform.example.com',
+                'localhost:8000',
+                'next.platform.example.com'
+            ]
 
         """
         environments = [
