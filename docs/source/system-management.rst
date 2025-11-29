@@ -38,6 +38,5 @@ Some good references for learning about Django administration and management com
    system-management/configuration
    system-management/security
    system-management/backup-and-restore
-   system-management/monitoring
    system-management/updates
    system-management/troubleshooting
