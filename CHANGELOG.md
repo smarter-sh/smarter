@@ -1,3 +1,10 @@
+## [0.13.34](https://github.com/smarter-sh/smarter/compare/v0.13.33...v0.13.34) (2025-11-29)
+
+
+### Bug Fixes
+
+* add db index to created_at to resolve django.db.utils.OperationalError: (1038, 'Out of sort memory, consider increasing server sort buffer size') ([46e33f7](https://github.com/smarter-sh/smarter/commit/46e33f75047cb0d74588d355540fc4aadcc20932))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
