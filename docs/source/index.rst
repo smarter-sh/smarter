@@ -83,7 +83,7 @@ Smarter requires a .env file with your credentials and configuration. You can sc
 
    make                # creates a .env file in the root of the repo
 
-.. tip::
+.. important::
 
    Open the newly created .env file and add your credentials (API keys, passwords, etc.) as needed. The application will not run without this step.
    Note that `.env` contains copious inline documentation that you can refer to for specific configuration and technical guidance.
