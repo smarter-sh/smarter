@@ -53,11 +53,11 @@ except ImportError:
 
     # pylint: disable=missing-function-docstring,unused-argument
     def validate_email(*args, **kwargs):
-        pass
+        logger.warning("Django is not installed. validate_email will not function properly.")
 
     # pylint: disable=missing-function-docstring,unused-argument
     def validate_ipv4_address(*args, **kwargs):
-        pass
+        logger.warning("Django is not installed. validate_ipv4_address will not function properly.")
 
 
 from smarter.common.const import SmarterEnvironments
