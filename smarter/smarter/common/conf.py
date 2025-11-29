@@ -426,7 +426,7 @@ class Settings(BaseSettings):
 
     shared_resource_identifier: str = Field(
         SettingsDefaults.SHARED_RESOURCE_IDENTIFIER,
-        description=("Smarter 1-word identifier to be used when " "naming any shared resource."),
+        description="Smarter 1-word identifier to be used when naming any shared resource.",
         examples=["smarter", "mycompany", "myproject"],
     )
     debug_mode: bool = Field(SettingsDefaults.DEBUG_MODE)
