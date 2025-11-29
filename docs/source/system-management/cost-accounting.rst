@@ -1,7 +1,7 @@
 Cost Accounting
 ===============
 
-Smarter persists detailed cost accounting information for all external service requests and responses.
+Smarter's asynchronous workers persist detailed cost accounting information for all external service requests and responses.
 This information can be used for billing, cost analysis, and budgeting purposes. Specifically, Smarter
 tracks the following cost metrics:
 
@@ -51,11 +51,11 @@ Django models associated with cost accounting include: `ChatBotRequests`, `Plugi
 
     USE smarter_platform_prod;
 
-    SELECT	session_key,
+    SELECT  session_key,
             SUM(prompt_tokens) as prompt_tokens,
             SUM(completion_tokens) as completion_tokens,
             SUM(total_tokens) as total_tokens
-    FROM 	account_charge
-    WHERE	MONTH(created_at) = 11 AND
+    FROM    account_charge
+    WHERE   MONTH(created_at) = 11 AND
             YEAR(created_at) = 2025
     GROUP BY session_key
