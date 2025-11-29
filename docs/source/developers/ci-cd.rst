@@ -62,7 +62,7 @@ At the point of instantiation of the pod the container image contains only the b
 and afterwards, any software explicitly declared by the workflow itself. Also note that it is necessary to explicitly
 check out the repository code using the `actions/checkout` action, as shown in the example above.
 
-.. note::
+.. important::
 
   You must explicitly declare everything you need in the workflow, as the environment starts out completely blank.
   Once the workflow completes, the pod and container are destroyed, so no state is preserved between runs. However,

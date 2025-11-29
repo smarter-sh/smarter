@@ -21,7 +21,7 @@ known to work, and is the recommended path; initially at least.
    These workflows are supported and are known to work.
    See `GitHub Actions Workflows <../developers/ci-cd.html>`_ for details on how to use these workflows.
 
-.. note::
+.. caution::
 
    While it is possible to deploy Smarter using other methods (e.g., manually applying Kubernetes manifests, using other CI/CD systems,
    or deploying to other cloud providers), you should keep in mind that there are **MANY** details involved in deploying this platform correctly and securely.

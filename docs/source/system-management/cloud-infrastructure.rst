@@ -19,7 +19,7 @@ It is highly recommended to use Terragrunt when working with the Smarter infrast
 Terraform scripts as this facilitates reuse of the Terraform modules across different environments
 (e.g., alpha, beta, next, production) and simplifies management of remote state files in S3.
 
-.. warning::
+.. danger::
 
   **THERE ARE COSTS ASSOCIATED WITH RUNNING CLOUD INFRASTRUCTURE.**  Be sure to review the AWS pricing documentation
   for each of the services that will be created by the Terraform scripts to understand the potential costs involved.
