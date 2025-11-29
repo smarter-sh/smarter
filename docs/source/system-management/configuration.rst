@@ -276,7 +276,7 @@ Regardless of how the configuration values were ingested, the final database con
 SMTP Email Services allow your system to send emails using an external SMTP server.
 Smarter uses `AWS Simple Email Service <https://aws.amazon.com/ses/>`_ (SES) by default, but you can configure it to use any SMTP server of your choice.
 
-.. note::
+.. tip::
 
    It is highly recommended to use AWS Simple Email Service (SES) for sending emails as this is known to be both cost effective and reliable.
    It is also recommended to use Smarter's provided Terraform scripts to set up the necessary SES resources as this is a more complex operation than might be expected, and the Terraform scripts will automate all of this for you. See `Cloud Infrastructure <cloud-infrastructure.html>`__ for more information.

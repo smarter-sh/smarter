@@ -83,7 +83,7 @@ Smarter requires a .env file with your credentials and configuration. You can sc
 
    make                # creates a .env file in the root of the repo
 
-.. note::
+.. tip::
 
    Open the newly created .env file and add your credentials (API keys, passwords, etc.) as needed. The application will not run without this step.
    Note that `.env` contains copious inline documentation that you can refer to for specific configuration and technical guidance.
@@ -127,7 +127,7 @@ Go to http://localhost:8000/login/ and log in with:
 Username: admin@smarter.sh
 Password: smarter
 
-.. note::
+.. attention::
    For security reasons, be sure to change the default password after your first login.
 
 **7. Download the Smarter Command-Line Interface.**
