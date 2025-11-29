@@ -25,8 +25,8 @@ Application Security
 
 Smarter implements the following application security measures:
 
-Smarter Security Features
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Proprietary Security Features
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - **No DNS Wildcards**. Prevents wildcard DNS entries to avoid subdomain takeover attacks. Smarter maintains strict DNS records for each deployed ChatBot/Agent using AWS Route53 Hosted Zones. Kubernetes Ingress resources are configured to only respond to specific domain names associated with each ChatBot/Agent, and Kubernetes cert-manager manages dedicated TLS certificates for these domains. This ensures that requests to undefined subdomains are not inadvertently routed to the application, thereby mitigating the risk of subdomain takeover attacks.
 
