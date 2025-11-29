@@ -522,6 +522,7 @@ SENSITIVE_FILES_AMNESTY_PATTERNS = [
     re.compile(r"^/docs/manifest(/.*)?$"),
     re.compile(r"^/docs/json-schema(/.*)?$"),
     re.compile(r".*stackademy.*"),
+    re.compile(r"^/\.well-known/acme-challenge(/.*)?$"),
 ]
 
 SMTP_SENDER = smarter_settings.smtp_sender
