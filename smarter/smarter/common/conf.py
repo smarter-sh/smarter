@@ -424,7 +424,11 @@ class Settings(BaseSettings):
         # pylint: disable=logging-fstring-interpolation
         logger.debug("Settings initialized")
 
-    shared_resource_identifier: str = Field(SettingsDefaults.SHARED_RESOURCE_IDENTIFIER)
+    shared_resource_identifier: str = Field(
+        SettingsDefaults.SHARED_RESOURCE_IDENTIFIER,
+        description=("Smarter 1-word identifier to be used when " "naming any shared resource."),
+        examples=["smarter", "mycompany", "myproject"],
+    )
     debug_mode: bool = Field(SettingsDefaults.DEBUG_MODE)
     default_missing_value: str = Field(DEFAULT_MISSING_VALUE)
 
