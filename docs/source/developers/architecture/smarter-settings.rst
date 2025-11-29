@@ -7,4 +7,3 @@ Smarter Settings
     :private-members:
     :show-inheritance:
     :exclude-members: to_dict
-    :no-signature:
