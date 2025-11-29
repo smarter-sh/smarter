@@ -1,10 +1,25 @@
 System Management
 =================
 
-Smarter is written on the `Django web framework <https://docs.djangoproject.com/>`, which provides a powerful
+Smarter is written on the `Django web framework <https://docs.djangoproject.com/>`__, which provides a powerful
 administration interface out of the box. A basic familiarity with Django's
 admin interface, as well as running Django management commands, is helpful
 for managing a Smarter installation.
+
+Some good references for learning about Django administration and management commands include:
+
+- `Official Django Documentation <https://docs.djangoproject.com/en/stable/>`__
+  The best place to start, with tutorials, guides, and reference material.
+
+- `Two Scoops of Django 3.x (Book) <https://www.feldroy.com/two-scoops-of-django>`_
+  (Recommended) A comprehensive book covering best practices for Django development and administration.
+
+- `Real Python Django Tutorials <https://realpython.com/tutorials/django/>`__
+  High-quality articles and video tutorials on Django topics.
+
+- `Django for Beginners (Book) <https://djangoforbeginners.com/>`__
+  A book that walks you through building several Django projects.
+
 
 .. toctree::
    :maxdepth: 2
