@@ -1,6 +1,9 @@
 # Documentation
 sphinx==8.2.3                       # for Readthedocs
 sphinx-rtd-theme==3.0.2             # Sphinx theme for Readthedocs
+
+# Stuff for smarter.common.conf.Settings
+# --------------------------------------
 boto3==1.40.49
 botocore==1.40.49
 python-dotenv==1.1.1

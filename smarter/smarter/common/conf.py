@@ -54,13 +54,17 @@ from .const import (
     SmarterEnvironments,
 )
 from .exceptions import SmarterConfigurationError, SmarterValueError
-from .utils import recursive_sort_dict
 
 
 logger = logging.getLogger(__name__)
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
 TFVARS = TFVARS or {}
 DOT_ENV_LOADED = load_dotenv()
+
+
+def recursive_sort_dict(d):
+    """Recursively sort a dictionary by key."""
+    return {k: recursive_sort_dict(v) if isinstance(v, dict) else v for k, v in sorted(d.items())}
 
 
 def bool_environment_variable(var_name: str, default: bool) -> bool:
