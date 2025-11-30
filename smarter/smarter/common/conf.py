@@ -2170,32 +2170,35 @@ class Settings(BaseSettings):
         return retval
 
     @field_validator("smtp_use_ssl")
-    def check_smtp_use_ssl(cls, v: Optional[bool]) -> Optional[bool]:
+    def check_smtp_use_ssl(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the `smtp_use_ssl` field.
 
         Args:
-            v (Optional[bool]): The SMTP use SSL flag to validate.
+            v (Optional[Union[bool, str]]): The SMTP use SSL flag to validate.
 
         Returns:
-            Optional[bool]: The validated SMTP use SSL flag.
+            bool: The validated SMTP use SSL flag.
         """
+        if isinstance(v, bool):
+            return v
         if v in [None, ""]:
             return SettingsDefaults.SMTP_USE_SSL
-        return v
+        return str(v).lower() in ["true", "1", "yes", "on"]
 
     @field_validator("smtp_use_tls")
-    def check_smtp_use_tls(cls, v: Optional[bool]) -> Optional[bool]:
+    def check_smtp_use_tls(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the `smtp_use_tls` field.
 
         Args:
-            v (Optional[bool]): The SMTP use TLS flag to validate.
-
+            v (Optional[Union[bool, str]]): The SMTP use TLS flag to validate.
         Returns:
-            Optional[bool]: The validated SMTP use TLS flag.
+            bool: The validated SMTP use TLS flag.
         """
+        if isinstance(v, bool):
+            return v
         if v in [None, ""]:
             return SettingsDefaults.SMTP_USE_TLS
-        return v
+        return str(v).lower() in ["true", "1", "yes", "on"]
 
     @field_validator("smtp_username")
     def check_smtp_username(cls, v: Optional[str]) -> Optional[str]:
