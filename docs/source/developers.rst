@@ -25,14 +25,14 @@ A walkthrough of setting up your development environment and running Smarter loc
    :maxdepth: 2
    :caption: Developer Resources
 
-   developers/contributing
-   developers/12-factor-app
+   developers/architecture
    developers/build
    developers/test
    developers/deployment
    developers/ci-cd
-   developers/architecture
+   developers/12-factor-app
    developers/docker
-   developers/developer-guidelines
    developers/semantic-versioning
+   developers/contributing
+   developers/developer-guidelines
    developers/code-of-conduct

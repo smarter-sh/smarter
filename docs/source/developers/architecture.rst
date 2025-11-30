@@ -7,6 +7,10 @@ Architecture
 
    architecture/summary
    architecture/smarter-settings
+   architecture/django
+   architecture/lib
+   architecture/helpers
+   architecture/mixins
    architecture/chatbot
    architecture/chat
    architecture/plugin
@@ -15,7 +19,6 @@ Architecture
    architecture/api
    architecture/aws
    architecture/broker-model
-   architecture/django
    architecture/pydantic
    architecture/react
    architecture/logging
