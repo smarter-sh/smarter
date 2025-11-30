@@ -1,13 +1,13 @@
 Django Rest Framework (DRF)
 ===========================
 
-.. autoclass:: smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware
+.. autoclass:: smarter.lib.drf.token_authentication.SmarterTokenAuthentication
     :members:
     :undoc-members:
     :show-inheritance:
     :exclude-members: __init__
 
-.. autoclass:: smarter.lib.drf.token_authentication.SmarterTokenAuthentication
+.. autoclass:: smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware
     :members:
     :undoc-members:
     :show-inheritance:
