@@ -48,6 +48,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
     """Enhanced Django Rest Framework (DRF) knox TokenAuthentication
 
     This subclass adds:
+
     - adds Django signals for token authentication events
     - adds app logging
     - verifies token activity.

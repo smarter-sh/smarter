@@ -54,6 +54,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
     incoming requests.
 
     Does the following:
+
     - Checks for the presence of an Authorization header with a valid token.
     - Uses SmarterTokenAuthentication to authenticate the token.
     - Logs authentication attempts and outcomes.

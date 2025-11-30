@@ -43,6 +43,7 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
     """Smarter base class for DRF API detail views that require authentication.
 
     Does the following:
+
     - Adds SmarterRequestMixin to the view, so that base Smarter functionality is available to all subclasses.
     - Adds SmarterTokenAuthentication to the default SessionAuthentication for authentication.
     - Overrides Django's logic for initializing the request object to ensure that SmarterRequestMixin is fully initialized before any other logic runs.
@@ -116,6 +117,7 @@ class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
     """Smarter base class for DRF API list views that require authentication.
 
     Does the following:
+
     - Adds SmarterRequestMixin to the view, so that base Smarter functionality is available to all subclasses.
     - Adds SmarterTokenAuthentication to the default SessionAuthentication for authentication.
     - Overrides Django's logic for initializing the request object to ensure that SmarterRequestMixin is fully initialized before any other logic runs.
@@ -150,6 +152,7 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
     """Smarter base class for DRF API views that require admin authentication.
 
     Does the following:
+
     - Adds SmarterRequestMixin to the view, so that base Smarter functionality is available to all subclasses.
     - Adds SmarterTokenAuthentication to the default SessionAuthentication for authentication.
     - Overrides Django's logic for initializing the request object to ensure that
@@ -238,6 +241,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
     """Smarter base class for DRF list views that require admin access.
 
     Does the following:
+
     - Adds SmarterRequestMixin to the view, so that base Smarter functionality is available to all subclasses.
     - Adds SmarterTokenAuthentication to the default SessionAuthentication for authentication.
     - Overrides Django's logic for initializing the request object to ensure that
