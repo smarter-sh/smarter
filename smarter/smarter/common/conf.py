@@ -556,7 +556,20 @@ class Settings(BaseSettings):
 
     @property
     def smtp_is_configured(self) -> bool:
-        """Return True if SMTP is configured"""
+        """
+        Return True if SMTP is configured. All required smtp fields must be set.
+
+        Example:
+            >>> print(smarter_settings.smtp_is_configured)
+            True
+
+        See Also:
+            - smarter_settings.smtp_host
+            - smarter_settings.smtp_port
+            - smarter_settings.smtp_username
+            - smarter_settings.smtp_password
+            - smarter_settings.smtp_from_email
+        """
         required_fields = [
             self.smtp_host,
             self.smtp_port,
@@ -568,7 +581,17 @@ class Settings(BaseSettings):
 
     @property
     def protocol(self) -> str:
-        """Return the protocol: http or https"""
+        """
+        Return the protocol: http or https.
+
+        Example:
+            >>> print(smarter_settings.protocol)
+            'https'
+
+        See Also:
+            - smarter_settings.environment
+            - SmarterEnvironments()
+        """
         if self.environment in SmarterEnvironments.aws_environments:
             return "https"
         return "http"
@@ -577,22 +600,49 @@ class Settings(BaseSettings):
     def data_directory(self) -> str:
         """
         Return the path to the data directory:
-        - /home/smarter_user/data
+
+        Example:
+            >>> print(smarter_settings.data_directory)
+            '/home/smarter_user/data'
+
+        Note:
+            This is based on the Dockerfile located in the root of the repository.
+            See https://github.com/smarter-sh/smarter/blob/main/Dockerfile
         """
         return "/home/smarter_user/data"
 
     @property
     def environment_is_local(self) -> bool:
-        """Return True if the environment is local"""
+        """
+        Return True if the environment is local.
+
+        Example:
+            >>> print(smarter_settings.environment_is_local)
+            True
+
+        See Also:
+            - smarter_settings.environment
+            - SmarterEnvironments()
+        """
         return self.environment == SmarterEnvironments.LOCAL
 
     @property
     def environment_cdn_domain(self) -> str:
         """
-        Return the CDN domain.
-        examples:
-        - cdn.alpha.platform.example.com
-        - cdn.localhost:8000
+        Return the CDN domain based on the environment domain.
+
+        Examples:
+            >>> print(smarter_settings.environment_cdn_domain)
+            'cdn.alpha.platform.example.com'
+            >>> print(smarter_settings.environment_cdn_domain)
+            'cdn.localhost:8000'
+
+        See Also:
+            - SMARTER_PLATFORM_SUBDOMAIN
+            - smarter_settings.environment_platform_domain
+            - smarter_settings.environment
+            - SMARTER_PLATFORM_SUBDOMAIN
+            - SmarterEnvironments()
         """
         if self.environment == SmarterEnvironments.LOCAL:
             return f"cdn.{SmarterEnvironments.ALPHA}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
@@ -601,9 +651,28 @@ class Settings(BaseSettings):
     @property
     def environment_cdn_url(self) -> str:
         """
-        Return the CDN URL.
-        example: https://cdn.alpha.platform.example.com
-        or https://cdn.localhost:8000
+        Return the CDN URL for the environment.
+
+        Example:
+            >>> print(smarter_settings.environment_cdn_url)
+            https://cdn.alpha.platform.example.com
+            >>> print(smarter_settings.environment_cdn_url)
+            https://cdn.localhost:8000
+
+        Raises:
+            SmarterConfigurationError: If the constructed URL is invalid.
+
+        Note:
+            See https://github.com/smarter-sh/smarter-infrastructure for CDN setup details.
+            Based on AWS CloudFront, AWS S3 and AWS Route 53. But, there are many details
+            with regard to bucket policies, CNAME setup, SSL certificates, and so forth
+            that are outside the scope of this comment. Please refer to the Terraform
+            infrastructure repository for more information.
+
+        See Also:
+            - SmarterValidator.urlify()
+            - smarter_settings.environment_cdn_domain
+            - smarter_settings.environment
         """
         if self.environment == SmarterEnvironments.LOCAL:
             retval = SmarterValidator.urlify(self.environment_cdn_domain, environment=SmarterEnvironments.ALPHA)
@@ -619,16 +688,34 @@ class Settings(BaseSettings):
     @property
     def root_platform_domain(self) -> str:
         """
-        Return the platform domain name.
-        example: platform.example.com
+        Return the platform domain name for the root domain.
+
+        Example:
+            >>> print(smarter_settings.root_platform_domain)
+            'platform.example.com'
+
+        See Also:
+            - SMARTER_PLATFORM_SUBDOMAIN
+            - smarter_settings.root_domain
         """
         return f"{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def platform_url(self) -> str:
         """
-        Return the platform URL.
-        example: https://platform.example.com
+        Return the platform URL for the root platform domain and environment.
+
+        Example:
+            >>> print(smarter_settings.platform_url)
+            https://platform.example.com
+
+        Raises:
+            SmarterConfigurationError: If the constructed URL is invalid.
+
+        See Also:
+            - SmarterValidator.urlify()
+            - smarter_settings.root_platform_domain
+            - smarter_settings.environment
         """
         retval = SmarterValidator.urlify(self.root_platform_domain, environment=self.environment)
         if retval is None:
@@ -640,10 +727,22 @@ class Settings(BaseSettings):
     @property
     def environment_platform_domain(self) -> str:
         """
-        Return the complete domain name.
-        examples:
-        - alpha.platform.example.com
-        - localhost:8000
+        Return the complete domain name, including environment prefix if applicable.
+
+        Examples:
+            >>> print(smarter_settings.environment_platform_domain)
+            'alpha.platform.example.com'
+            >>> print(smarter_settings.environment_platform_domain)
+            'localhost:8000'
+
+        Note:
+            Returns the root domain for the production environment. Otherwise,
+            the returned domain is based on the environment and platform configuration.
+
+        See Also:
+            - smarter_settings.root_platform_domain
+            - SmarterEnvironments()
+            - self.environment
         """
         if self.environment == SmarterEnvironments.PROD:
             return self.root_platform_domain
@@ -657,7 +756,9 @@ class Settings(BaseSettings):
     @property
     def all_domains(self) -> List[str]:
         """
-        Return all domains for the environment.
+        Return all domains for the environment. Domains are
+        generated from the root domain, subdomains, and environments and
+        are returned as a sorted list.
 
         Example::
 
@@ -675,6 +776,13 @@ class Settings(BaseSettings):
                 'next.platform.example.com'
             ]
 
+        See Also:
+            - SmarterEnvironments()
+            - SMARTER_PLATFORM_SUBDOMAIN
+            - SMARTER_API_SUBDOMAIN
+            - smarter_settings.root_domain
+            - smarter_settings.root_api_domain
+            - smarter_settings.root_platform_domain
         """
         environments = [
             None,  # for root domains (no environment prefix)
@@ -703,8 +811,19 @@ class Settings(BaseSettings):
     @property
     def environment_url(self) -> str:
         """
-        Return the environment URL.
-        example: https://alpha.platform.example.com
+        Return the environment URL, derived from the environment platform domain.
+
+        Example:
+            >>> print(smarter_settings.environment_url)
+            https://alpha.platform.example.com
+
+        Raises:
+            SmarterConfigurationError: If the constructed URL is invalid.
+
+        See Also:
+            - SmarterValidator.urlify()
+            - smarter_settings.environment_platform_domain
+            - smarter_settings.environment
         """
         retval = SmarterValidator.urlify(self.environment_platform_domain, environment=self.environment)
         if retval is None:
@@ -717,8 +836,14 @@ class Settings(BaseSettings):
     @property
     def platform_name(self) -> str:
         """
-        Return the platform name.
-        example: smarter
+        Return the platform name, derived from the root domain.
+
+        Example:
+            >>> print(smarter_settings.platform_name)
+            'smarter'
+
+        See Also:
+            - smarter_settings.root_domain
         """
         return self.root_domain.split(".")[0]
 
@@ -726,7 +851,13 @@ class Settings(BaseSettings):
     def function_calling_identifier_prefix(self) -> str:
         """
         Return the prefix for function calling identifiers.
-        example: smarter_plugin
+
+        Example:
+            >>> print(smarter_settings.function_calling_identifier_prefix)
+            'smarter_plugin'
+
+        See Also:
+            - smarter_settings.platform_name
         """
         return f"{self.platform_name}_plugin"
 
@@ -734,7 +865,15 @@ class Settings(BaseSettings):
     def environment_namespace(self) -> str:
         """
         Return the Kubernetes namespace for the environment.
-        example: smarter-platform-alpha
+
+        Example:
+            >>> print(smarter_settings.environment_namespace)
+            'smarter-platform-alpha'
+
+        See Also:
+            - SMARTER_PLATFORM_SUBDOMAIN
+            - smarter_settings.platform_name
+            - smarter_settings.environment
         """
         return f"{self.platform_name}-{SMARTER_PLATFORM_SUBDOMAIN}-{settings.environment}"
 
