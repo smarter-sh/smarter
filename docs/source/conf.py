@@ -12,6 +12,19 @@ import sys
 
 
 sys.path.insert(0, os.path.abspath("../../smarter"))
+from smarter.common.conf import settings as smarter_settings
+
+
+if not smarter_settings.environment:
+    raise RuntimeError("The 'smarter_settings.environment' variable is not set.")
+
+os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
+
+import django
+
+
+django.setup()
+
 
 project = "Smarter"
 copyright = f"{datetime.datetime.now().year}, The {project} Project"
