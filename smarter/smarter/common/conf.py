@@ -250,7 +250,7 @@ class SettingsDefaults:
         os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", DEFAULT_MISSING_VALUE)
     )
 
-    SECRET_KEY = os.getenv("SECRET_KEY")
+    SECRET_KEY = os.getenv("SECRET_KEY", DEFAULT_MISSING_VALUE)
 
     SMTP_SENDER = os.environ.get("SMTP_SENDER", DEFAULT_MISSING_VALUE)
     SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
@@ -1320,22 +1320,51 @@ class Settings(BaseSettings):
         return self._dump
 
     @field_validator("shared_resource_identifier")
-    def validate_shared_resource_identifier(cls, v) -> str:
-        """Validate shared_resource_identifier"""
+    def validate_shared_resource_identifier(cls, v: Optional[str]) -> str:
+        """Validates the `shared_resource_identifier` field.
+        Uses SettingsDefaults if no value is received.
+
+        Args:
+            v (Optional[str]): The shared resource identifier to validate.
+
+        Returns:
+            str: The validated shared resource identifier.
+        """
         if v in [None, ""]:
             return SettingsDefaults.SHARED_RESOURCE_IDENTIFIER
         return v
 
     @field_validator("aws_profile")
-    def validate_aws_profile(cls, v) -> Optional[str]:
-        """Validate aws_profile"""
+    def validate_aws_profile(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `aws_profile` field.
+        Uses SettingsDefaults if no value is received.
+
+        Args:
+            v (Optional[str]): The AWS profile value to validate.
+
+        Returns:
+            Optional[str]: The validated AWS profile.
+        """
         if v in [None, ""]:
             return SettingsDefaults.AWS_PROFILE
         return v
 
     @field_validator("aws_access_key_id")
-    def validate_aws_access_key_id(cls, v, values: ValidationInfo) -> SecretStr:
-        """Validate aws_access_key_id"""
+    def validate_aws_access_key_id(cls, v: Optional[SecretStr], values: ValidationInfo) -> SecretStr:
+        """Validates the `aws_access_key_id` field.
+        Uses SettingsDefaults if no value is received.
+
+
+        Args:
+            v (Optional[SecretStr]): The AWS access key ID value to validate.
+            values (ValidationInfo): The validation info containing other field values.
+
+        Returns:
+            SecretStr: The validated AWS access key ID.
+
+        Returns:
+            SecretStr: The validated AWS access key ID.
+        """
         if not isinstance(v, SecretStr):
             v = SecretStr(v)
         if v.get_secret_value() in [None, ""]:
@@ -1348,8 +1377,17 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("aws_secret_access_key")
-    def validate_aws_secret_access_key(cls, v, values: ValidationInfo) -> SecretStr:
-        """Validate aws_secret_access_key"""
+    def validate_aws_secret_access_key(cls, v: Optional[SecretStr], values: ValidationInfo) -> SecretStr:
+        """Validates the `aws_secret_access_key` field.
+        Uses SettingsDefaults if no value is received.
+
+        Args:
+            v (Optional[SecretStr]): The AWS secret access key value to validate.
+            values (ValidationInfo): The validation info containing other field values.
+
+        Returns:
+            SecretStr: The validated AWS secret access key.
+        """
         if not isinstance(v, SecretStr):
             v = SecretStr(v)
         if v.get_secret_value() in [None, ""]:
@@ -1362,8 +1400,18 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("aws_region")
-    def validate_aws_region(cls, v, values: ValidationInfo, **kwargs) -> Optional[str]:
-        """Validate aws_region"""
+    def validate_aws_region(cls, v: Optional[str], values: ValidationInfo, **kwargs) -> Optional[str]:
+        """Validates the `aws_region` field.
+        Uses SettingsDefaults if no value is received.
+
+        Args:
+            v (Optional[str]): The AWS region value to validate.
+            values (ValidationInfo): The validation info containing other field values.
+
+        Returns:
+            Optional[str]: The validated AWS region.
+        """
+
         valid_regions = values.data.get("aws_regions", ["us-east-1"])
         if v in [None, ""]:
             return SettingsDefaults.AWS_REGION
@@ -1372,15 +1420,35 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("environment")
-    def validate_environment(cls, v) -> Optional[str]:
-        """Validate environment"""
+    def validate_environment(cls, v: Optional[str]) -> str:
+        """Validates the `environment` field.
+
+        Args:
+            v (Optional[str]): The environment value to validate.
+
+        Returns:
+            Optional[str]: The validated environment.
+        """
         if v in [None, ""]:
             return SettingsDefaults.ENVIRONMENT
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("environment is not a str.")
         return v
 
     @field_validator("fernet_encryption_key")
-    def validate_fernet_encryption_key(cls, v) -> Optional[str]:
-        """Validate fernet_encryption_key"""
+    def validate_fernet_encryption_key(cls, v: Optional[str]) -> str:
+        """Validates the `fernet_encryption_key` field.
+
+        Args:
+            v (Optional[str]): The Fernet encryption key value to validate.
+
+        Raises:
+            ValueError: If the Fernet encryption key is invalid.
+            SmarterValueError: If the Fernet encryption key is not found.
+
+        Returns:
+            Optional[str]: The validated Fernet encryption key.
+        """
 
         if v in [None, ""]:
             return SettingsDefaults.FERNET_ENCRYPTION_KEY
@@ -1397,246 +1465,567 @@ class Settings(BaseSettings):
         except (TypeError, ValueError, base64.binascii.Error) as e:  # type: ignore[catch-base-exception]
             raise SmarterValueError(f"Invalid Fernet encryption key: {v}. Error: {e}") from e
 
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("fernet_encryption_key is not a str.")
         return v
 
     @field_validator("local_hosts")
-    def validate_local_hosts(cls, v) -> List[str]:
-        """Validate local_hosts"""
+    def validate_local_hosts(cls, v: Optional[List[str]]) -> List[str]:
+        """Validates the `local_hosts` field.
+
+        Args:
+            v (Optional[List[str]]): The local hosts value to validate.
+
+        Returns:
+            List[str]: The validated local hosts.
+        """
         if v in [None, ""]:
             return SettingsDefaults.LOCAL_HOSTS
+
+        if not isinstance(v, list):
+            raise SmarterConfigurationError("local_hosts is not a list")
         return v
 
     @field_validator("root_domain")
-    def validate_aws_apigateway_root_domain(cls, v) -> str:
-        """Validate root_domain"""
+    def validate_aws_apigateway_root_domain(cls, v: Optional[str]) -> str:
+        """
+        Validates the `root_domain` field.
+
+        If the value is not set, returns the default root domain.
+
+        Args:
+            v (Optional[str]): The root domain value to validate.
+
+        Returns:
+            str: The validated root domain.
+        """
         if v in [None, ""]:
             return SettingsDefaults.ROOT_DOMAIN
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("root_domain is not a str.")
+
         return v
 
     @field_validator("aws_eks_cluster_name")
-    def validate_aws_eks_cluster_name(cls, v) -> str:
-        """Validate aws_eks_cluster_name"""
+    def validate_aws_eks_cluster_name(cls, v: Optional[str]) -> str:
+        """Validates the `aws_eks_cluster_name` field.
+
+        Args:
+            v (Optional[str]): The AWS EKS cluster name value to validate.
+
+        Returns:
+            str: The validated AWS EKS cluster name.
+        """
         if v in [None, ""]:
             return SettingsDefaults.AWS_EKS_CLUSTER_NAME
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("aws_eks_cluster_name is not a str.")
+
         return v
 
     @field_validator("aws_db_instance_identifier")
-    def validate_aws_db_instance_identifier(cls, v) -> str:
-        """Validate aws_db_instance_identifier"""
+    def validate_aws_db_instance_identifier(cls, v: Optional[str]) -> str:
+        """Validates the `aws_db_instance_identifier` field.
+
+        Args:
+            v (Optional[str]): The AWS RDS DB instance identifier value to validate.
+
+        Returns:
+            str: The validated AWS RDS DB instance identifier.
+        """
         if v in [None, ""]:
             return SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("aws_db_instance_identifier is not a str.")
+
         return v
 
     @field_validator("anthropic_api_key")
-    def validate_anthropic_api_key(cls, v) -> SecretStr:
-        """Validate anthropic_api_key"""
+    def validate_anthropic_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `anthropic_api_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The Anthropic API key value to validate.
+
+        Returns:
+            SecretStr: The validated Anthropic API key.
+        """
         if v in [None, ""]:
             return SettingsDefaults.ANTHROPIC_API_KEY
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("anthropic_api_key is not a SecretStr.")
+
         return v
 
     @field_validator("debug_mode")
-    def parse_debug_mode(cls, v) -> bool:
-        """Parse debug_mode"""
+    def parse_debug_mode(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'debug_mode' field.
+
+        Args:
+            v (Union[bool, str]): the debug_mode value to validate
+
+        Returns:
+            bool: The validated debug_mode.
+        """
         if isinstance(v, bool):
             return v
         if v in [None, ""]:
             return SettingsDefaults.DEBUG_MODE
-        return v.lower() in ["true", "1", "t", "y", "yes"]
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError("could not validate debug_mode")
 
     @field_validator("dump_defaults")
-    def parse_dump_defaults(cls, v) -> bool:
-        """Parse dump_defaults"""
+    def parse_dump_defaults(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'dump_defaults' field.
+
+        Args:
+            v (Optional[Union[bool, str]]): the dump_defaults value to validate
+
+        Returns:
+            bool: The validated dump_defaults.
+        """
         if isinstance(v, bool):
             return v
         if v in [None, ""]:
             return SettingsDefaults.DUMP_DEFAULTS
-        return v.lower() in ["true", "1", "t", "y", "yes"]
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError("could not validate dump_defaults")
 
     @field_validator("google_maps_api_key")
-    def check_google_maps_api_key(cls, v) -> SecretStr:
-        """Check google_maps_api_key"""
+    def check_google_maps_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `google_maps_api_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The Google Maps API key value to validate.
+
+        Returns:
+            SecretStr: The validated Google Maps API key.
+        """
         if str(v) in [None, ""]:
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("google_maps_api_key is not a SecretStr.")
         return v
 
     @field_validator("google_service_account")
-    def check_google_service_account(cls, v) -> dict:
-        """Check google_service_account"""
+    def check_google_service_account(cls, v: Optional[dict[str, Any]]) -> dict[str, Any]:
+        """Validates the `google_service_account` field.
+
+        Args:
+            v (Optional[dict[str, Any]]): The Google service account value to validate.
+        Returns:
+            dict[str, str]: The validated Google service account.
+        """
         if v in [None, {}]:
             return SettingsDefaults.GOOGLE_SERVICE_ACCOUNT
+
+        if not isinstance(v, dict):
+            raise SmarterConfigurationError("google_service_account is not a dict.")
+
         return v
 
     @field_validator("gemini_api_key")
-    def check_gemini_api_key(cls, v) -> SecretStr:
-        """Check gemini_api_key"""
+    def check_gemini_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `gemini_api_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The Gemini API key value to validate.
+
+        Returns:
+            SecretStr: The validated Gemini API key.
+        """
         if str(v) in [None, ""]:
             return SettingsDefaults.GEMINI_API_KEY
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("gemini_api_key is not a SecretStr.")
+
         return v
 
     @field_validator("llama_api_key")
-    def check_llama_api_key(cls, v) -> SecretStr:
-        """Check llama_api_key"""
+    def check_llama_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `llama_api_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The Llama API key value to validate.
+
+        Returns:
+            SecretStr: The validated Llama API key.
+        """
         if str(v) in [None, ""]:
             return SettingsDefaults.LLAMA_API_KEY
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("llama_api_key is not a SecretStr.")
         return v
 
     @field_validator("social_auth_google_oauth2_key")
-    def check_social_auth_google_oauth2_key(cls, v) -> SecretStr:
-        """Check social_auth_google_oauth2_key"""
-        if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY:
+    def check_social_auth_google_oauth2_key(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `social_auth_google_oauth2_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The Google OAuth2 key value to validate.
+        Returns:
+            SecretStr: The validated Google OAuth2 key.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY:
             return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("social_auth_google_oauth2_key is not a SecretStr.")
         return v
 
     @field_validator("social_auth_google_oauth2_secret")
-    def check_social_auth_google_oauth2_secret(cls, v) -> SecretStr:
-        """Check social_auth_google_oauth2_secret"""
-        if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET is not None:
+    def check_social_auth_google_oauth2_secret(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `social_auth_google_oauth2_secret` field.
+
+        Args:
+            v (Optional[SecretStr]): The Google OAuth2 secret value to validate.
+
+        Returns:
+            SecretStr: The validated Google OAuth2 secret.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET is not None:
             return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("social_auth_google_oauth2_secret is not a SecretStr.")
         return v
 
     @field_validator("social_auth_github_key")
-    def check_social_auth_github_key(cls, v) -> SecretStr:
-        """Check social_auth_github_key"""
-        if v in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY is not None:
+    def check_social_auth_github_key(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `social_auth_github_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The GitHub OAuth2 key value to validate.
+        Returns:
+            SecretStr: The validated GitHub OAuth2 key.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY is not None:
             return SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("social_auth_github_key is not a SecretStr")
+
         return v
 
     @field_validator("social_auth_github_secret")
-    def check_social_auth_github_secret(cls, v) -> SecretStr:
-        """Check social_auth_github_secret"""
-        if v in [None, ""]:
+    def check_social_auth_github_secret(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `social_auth_github_secret` field.
+
+        Args:
+            v (Optional[SecretStr]): The GitHub OAuth2 secret value to validate.
+        Returns:
+            SecretStr: The validated GitHub OAuth2 secret.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET is not None:
             return SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("social_auth_github_secret is not a SecretStr.")
         return v
 
     @field_validator("social_auth_linkedin_oauth2_key")
-    def check_social_auth_linkedin_oauth2_key(cls, v) -> SecretStr:
-        """Check social_auth_linkedin_oauth2_key"""
-        if v in [None, ""]:
+    def check_social_auth_linkedin_oauth2_key(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `social_auth_linkedin_oauth2_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The LinkedIn OAuth2 key value to validate.
+        Returns:
+            SecretStr: The validated LinkedIn OAuth2 key.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY is not None:
             return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("social_auth_linkedin_oauth2_key is not a SecretStr.")
         return v
 
     @field_validator("social_auth_linkedin_oauth2_secret")
-    def check_social_auth_linkedin_oauth2_secret(cls, v) -> SecretStr:
-        """Check social_auth_linkedin_oauth2_secret"""
-        if v in [None, ""]:
+    def check_social_auth_linkedin_oauth2_secret(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `social_auth_linkedin_oauth2_secret` field.
+
+        Args:
+            v (Optional[SecretStr]): The LinkedIn OAuth2 secret value to validate.
+
+        Returns:
+            SecretStr: The validated LinkedIn OAuth2 secret.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET is not None:
             return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("social_auth_linkedin_oauth2_secret is not a SecretStr.")
         return v
 
     @field_validator("langchain_memory_key")
-    def check_langchain_memory_key(cls, v) -> str:
-        """Check langchain_memory_key"""
-        if v in [None, ""] and SettingsDefaults.LANGCHAIN_MEMORY_KEY:
+    def check_langchain_memory_key(cls, v: Optional[str]) -> str:
+        """Validates the `langchain_memory_key` field.
+
+        Args:
+            v (Optional[str]): The Langchain memory key value to validate.
+        Returns:
+            str: The validated Langchain memory key.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.LANGCHAIN_MEMORY_KEY is not None:
             return SettingsDefaults.LANGCHAIN_MEMORY_KEY
         return str(v)
 
     @field_validator("logo")
-    def check_logo(cls, v) -> str:
-        """Check logo"""
-        if v in [None, ""]:
+    def check_logo(cls, v: Optional[str]) -> str:
+        """Validates the `logo` field.
+
+        Args:
+            v (str): The logo value to validate.
+
+        Returns:
+            str: The validated logo.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.LOGO is not None:
             return SettingsDefaults.LOGO
-        return v
+        return str(v)
 
     @field_validator("mailchimp_api_key")
-    def check_mailchimp_api_key(cls, v) -> SecretStr:
-        """Check mailchimp_api_key"""
-        if v in [None, ""] and SettingsDefaults.MAILCHIMP_API_KEY is not None:
+    def check_mailchimp_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `mailchimp_api_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The Mailchimp API key value to validate.
+
+        Returns:
+            SecretStr: The validated Mailchimp API key.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.MAILCHIMP_API_KEY is not None:
             return SettingsDefaults.MAILCHIMP_API_KEY
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("mailchimp_api_key is not a SecretStr")
         return v
 
     @field_validator("mailchimp_list_id")
-    def check_mailchimp_list_id(cls, v) -> Optional[str]:
-        """Check mailchimp_list_id"""
-        if v in [None, ""]:
+    def check_mailchimp_list_id(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `mailchimp_list_id` field.
+
+        Args:
+            v (Optional[str]): The Mailchimp list ID value to validate.
+
+        Returns:
+            Optional[str]: The validated Mailchimp list ID.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.MAILCHIMP_LIST_ID is not None:
             return SettingsDefaults.MAILCHIMP_LIST_ID
         return v
 
     @field_validator("marketing_site_url")
-    def check_marketing_site_url(cls, v) -> str:
-        """Check marketing_site_url. example: https://example.com"""
-        if v in [None, ""]:
+    def check_marketing_site_url(cls, v: Optional[str]) -> str:
+        """Validates the `marketing_site_url` field.
+
+        Args:
+            v (Optional[str]): The marketing site URL value to validate.
+        Returns:
+            str: The validated marketing site URL.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.MARKETING_SITE_URL is not None:
             return SettingsDefaults.MARKETING_SITE_URL
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("marketing_site_url is not a str.")
         SmarterValidator.validate_url(v)
         return v
 
     @field_validator("openai_api_organization")
-    def check_openai_api_organization(cls, v) -> Optional[str]:
-        """Check openai_api_organization"""
-        if v in [None, ""]:
+    def check_openai_api_organization(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `openai_api_organization` field.
+
+        Args:
+            v (Optional[str]): The OpenAI API organization value to validate.
+
+        Returns:
+            Optional[str]: The validated OpenAI API organization.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.OPENAI_API_ORGANIZATION is not None:
             return SettingsDefaults.OPENAI_API_ORGANIZATION
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("openai_api_organization is not a str.")
         return v
 
     @field_validator("openai_api_key")
-    def check_openai_api_key(cls, v) -> SecretStr:
-        """Check openai_api_key"""
-        if v in [None, ""]:
+    def check_openai_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
+        """Validates the `openai_api_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The OpenAI API key value to validate.
+        Returns:
+            SecretStr: The validated OpenAI API key.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.OPENAI_API_KEY is not None:
             return SettingsDefaults.OPENAI_API_KEY
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("openai_api_key is not a SecretStr")
+
         return v
 
     @field_validator("openai_endpoint_image_n")
-    def check_openai_endpoint_image_n(cls, v) -> int:
-        """Check openai_endpoint_image_n"""
+    def check_openai_endpoint_image_n(cls, v: Optional[int]) -> int:
+        """Validates the `openai_endpoint_image_n` field.
+
+        Args:
+            v (Optional[int]): The OpenAI endpoint image number value to validate.
+        Returns:
+            int: The validated OpenAI endpoint image number.
+        """
         if isinstance(v, int):
             return v
-        if v in [None, ""]:
+        if str(v) in [None, ""] and SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N is not None:
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N
+        if not isinstance(v, int):
+            raise SmarterConfigurationError("openai_endpoint_image_n is not an int.")
+
         return int(v)
 
     @field_validator("openai_endpoint_image_size")
-    def check_openai_endpoint_image_size(cls, v) -> str:
-        """Check openai_endpoint_image_size"""
-        if v in [None, ""]:
+    def check_openai_endpoint_image_size(cls, v: Optional[str]) -> str:
+        """Validates the `openai_endpoint_image_size` field.
+
+        Args:
+            v (Optional[str]): The OpenAI endpoint image size value to validate.
+
+        Returns:
+            str: The validated OpenAI endpoint image size.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE is not None:
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("openai_endpoint_image_size is not a str.")
+
         return v
 
     @field_validator("llm_default_model")
-    def check_openai_default_model(cls, v) -> str:
-        """Check llm_default_model"""
-        if v in [None, ""]:
+    def check_openai_default_model(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `llm_default_model` field.
+
+        Args:
+            v (Optional[str]): The LLM default model value to validate.
+
+        Returns:
+            Optional[str]: The validated LLM default model.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.LLM_DEFAULT_MODEL is not None:
             return SettingsDefaults.LLM_DEFAULT_MODEL
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("llm_default_model is not a str.")
         return v
 
     @field_validator("llm_default_provider")
-    def check_openai_default_provider(cls, v) -> str:
-        """Check llm_default_provider"""
-        if v in [None, ""]:
+    def check_openai_default_provider(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `llm_default_provider` field.
+
+        Args:
+            v (Optional[str]): The LLM default provider value to validate.
+
+        Returns:
+            Optional[str]: The validated LLM default provider.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.LLM_DEFAULT_PROVIDER is not None:
             return SettingsDefaults.LLM_DEFAULT_PROVIDER
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("llm_default_provider is not a str.")
         return v
 
     @field_validator("llm_default_system_role")
-    def check_openai_default_system_prompt(cls, v) -> str:
-        """Check llm_default_system_role"""
-        if v in [None, ""]:
+    def check_openai_default_system_prompt(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `llm_default_system_role` field.
+
+        Args:
+            v (Optional[str]): The LLM default system role value to validate.
+
+        Returns:
+            Optional[str]: The validated LLM default system role.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE is not None:
             return SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("llm_default_system_role is not a str.")
         return v
 
     @field_validator("llm_default_temperature")
-    def check_openai_default_temperature(cls, v) -> float:
-        """Check llm_default_temperature"""
+    def check_openai_default_temperature(cls, v: Optional[float]) -> float:
+        """Validates the `llm_default_temperature` field.
+
+        Args:
+            v (Optional[float]): The LLM default temperature value to validate.
+        Returns:
+            float: The validated LLM default temperature.
+        """
         if isinstance(v, float):
             return v
         if v in [None, ""]:
             return SettingsDefaults.LLM_DEFAULT_TEMPERATURE
-        return float(v)
+        try:
+            retval = float(v)  # type: ignore
+            return retval
+        except (TypeError, ValueError) as e:
+            raise SmarterConfigurationError("llm_default_temperature is not a float.") from e
 
     @field_validator("llm_default_max_tokens")
-    def check_openai_default_max_completion_tokens(cls, v) -> int:
-        """Check llm_default_max_tokens"""
+    def check_openai_default_max_completion_tokens(cls, v: Optional[int]) -> int:
+        """Validates the `llm_default_max_tokens` field.
+
+        Args:
+            v (Optional[int]): The LLM default max tokens value to validate.
+
+        Returns:
+            int: The validated LLM default max tokens.
+        """
         if isinstance(v, int):
             return v
         if v in [None, ""]:
             return SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
-        return int(v)
+
+        try:
+            retval = int(v)  # type: ignore
+            return retval
+        except (TypeError, ValueError) as e:
+            raise SmarterConfigurationError("llm_default_max_tokens is not an int.") from e
 
     @field_validator("pinecone_api_key")
-    def check_pinecone_api_key(cls, v) -> SecretStr:
-        """Check pinecone_api_key"""
-        if v in [None, ""]:
+    def check_pinecone_api_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+        """Validates the `pinecone_api_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The Pinecone API key value to validate.
+
+        Returns:
+            SecretStr: The validated Pinecone API key.
+        """
+        if str(v) in [None, ""] and SettingsDefaults.PINECONE_API_KEY is not None:
             return SettingsDefaults.PINECONE_API_KEY
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("pinecone_api_key is not a SecretStr")
+
         return v
 
     @field_validator("stripe_live_secret_key")
-    def check_stripe_live_secret_key(cls, v) -> str:
-        """Check stripe_live_secret_key"""
+    def check_stripe_live_secret_key(cls, v: Optional[str]) -> str:
+        """Validates the `stripe_live_secret_key` field.
+
+        Args:
+            v (Optional[str]): The Stripe live secret key to validate.
+
+        Returns:
+            str: The validated Stripe live secret key.
+        """
         if v in [None, ""]:
             warnings.warn(
                 "The 'stripe_live_secret_key' field is deprecated and will be removed in a future release.",
@@ -1644,85 +2033,180 @@ class Settings(BaseSettings):
                 stacklevel=2,
             )
             return SettingsDefaults.STRIPE_LIVE_SECRET_KEY
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("stripe_live_secret_key is not a str.")
         return v
 
     @field_validator("stripe_test_secret_key")
-    def check_stripe_test_secret_key(cls, v) -> str:
-        """Check stripe_test_secret_key"""
+    def check_stripe_test_secret_key(cls, v: Optional[str]) -> str:
+        """Validates the `stripe_test_secret_key` field.
+
+        Args:
+            v (Optional[str]): The Stripe test secret key to validate.
+        Returns:
+            str: The validated Stripe test secret key.
+        """
         if v in [None, ""]:
             warnings.warn(
-                "The 'stripe_live_secret_key' field is deprecated and will be removed in a future release.",
+                "The 'stripe_test_secret_key' field is deprecated and will be removed in a future release.",
                 DeprecationWarning,
                 stacklevel=2,
             )
             return SettingsDefaults.STRIPE_TEST_SECRET_KEY
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("stripe_test_secret_key is not a str.")
         return v
 
     @field_validator("secret_key")
-    def check_secret_key(cls, v) -> str:
-        """Check secret_key"""
+    def check_secret_key(cls, v: Optional[str]) -> str:
+        """Validates the `secret_key` field.
+
+        Args:
+            v (Optional[str]): The secret key value to validate.
+        Returns:
+            str: The validated secret key.
+        """
         if v in [None, ""] and SettingsDefaults.SECRET_KEY is not None:
             return SettingsDefaults.SECRET_KEY
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"secret_key {type(v)} is not a str.")
         return v
 
     @field_validator("smtp_sender")
-    def check_smtp_sender(cls, v) -> Optional[str]:
-        """Check smtp_sender"""
+    def check_smtp_sender(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `smtp_sender` field.
+
+        Args:
+            v (Optional[str]): The SMTP sender email address to validate.
+
+        Returns:
+            Optional[str]: The validated SMTP sender email address.
+        """
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_SENDER
             SmarterValidator.validate_domain(v)
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("smtp_sender is not a str.")
         return v
 
     @field_validator("smtp_from_email")
-    def check_smtp_from_email(cls, v) -> str:
-        """Check smtp_from_email"""
+    def check_smtp_from_email(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `smtp_from_email` field.
+
+        Args:
+            v (Optional[str]): The SMTP from email address to validate.
+
+        Returns:
+            Optional[str]: The validated SMTP from email address.
+        """
         if v in [None, ""]:
-            v = SettingsDefaults.SMTP_FROM_EMAIL
-        if v not in [None, ""]:
+            return SettingsDefaults.SMTP_FROM_EMAIL
+
+        if isinstance(v, str):
             SmarterValidator.validate_email(v)
-        return v
+            return v
+
+        raise SmarterConfigurationError("could not validate smtp_from_email.")
 
     @field_validator("smtp_host")
-    def check_smtp_host(cls, v) -> str:
-        """Check smtp_host"""
+    def check_smtp_host(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `smtp_host` field.
+
+        Args:
+            v (Optional[str]): The SMTP host to validate.
+
+        Returns:
+            Optional[str]: The validated SMTP host.
+        """
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_HOST
             SmarterValidator.validate_domain(v)
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("smtp_host is not a str.")
         return v
 
     @field_validator("smtp_password")
-    def check_smtp_password(cls, v) -> str:
-        """Check smtp_password"""
+    def check_smtp_password(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `smtp_password` field.
+
+        Args:
+            v (Optional[str]): The SMTP password to validate.
+
+        Returns:
+            Optional[str]: The validated SMTP password.
+        """
         if v in [None, ""]:
             return SettingsDefaults.SMTP_PASSWORD
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("smtp_password is not a str.")
         return v
 
     @field_validator("smtp_port")
-    def check_smtp_port(cls, v) -> int:
-        """Check smtp_port"""
+    def check_smtp_port(cls, v: Optional[int]) -> Optional[int]:
+        """Validates the `smtp_port` field.
+
+        Args:
+            v (Optional[int]): The SMTP port to validate.
+
+        Returns:
+            int: The validated SMTP port.
+        """
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_PORT
-        if not str(v).isdigit() or not 1 <= int(v) <= 65535:
+        try:
+            retval = int(v)  # type: ignore
+        except ValueError as e:
+            raise SmarterValueError("Could not convert port number to int.") from e
+
+        if not str(retval).isdigit() or not 1 <= int(retval) <= 65535:
             raise SmarterValueError("Invalid port number")
-        return int(v)
+
+        return retval
 
     @field_validator("smtp_use_ssl")
-    def check_smtp_use_ssl(cls, v) -> bool:
-        """Check smtp_use_ssl"""
+    def check_smtp_use_ssl(cls, v: Optional[bool]) -> Optional[bool]:
+        """Validates the `smtp_use_ssl` field.
+
+        Args:
+            v (Optional[bool]): The SMTP use SSL flag to validate.
+
+        Returns:
+            Optional[bool]: The validated SMTP use SSL flag.
+        """
         if v in [None, ""]:
             return SettingsDefaults.SMTP_USE_SSL
         return v
 
     @field_validator("smtp_use_tls")
-    def check_smtp_use_tls(cls, v) -> bool:
-        """Check smtp_use_tls"""
+    def check_smtp_use_tls(cls, v: Optional[bool]) -> Optional[bool]:
+        """Validates the `smtp_use_tls` field.
+
+        Args:
+            v (Optional[bool]): The SMTP use TLS flag to validate.
+
+        Returns:
+            Optional[bool]: The validated SMTP use TLS flag.
+        """
         if v in [None, ""]:
             return SettingsDefaults.SMTP_USE_TLS
         return v
 
     @field_validator("smtp_username")
-    def check_smtp_username(cls, v) -> str:
-        """Check smtp_username"""
+    def check_smtp_username(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `smtp_username` field.
+
+        Args:
+            v (Optional[str]): The SMTP username to validate.
+
+        Returns:
+            Optional[str]: The validated SMTP username.
+        """
         if v in [None, ""]:
             return SettingsDefaults.SMTP_USERNAME
         return v
