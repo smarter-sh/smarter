@@ -45,10 +45,16 @@ class SmarterTokenAuthenticationError(SmarterException):
 
 
 class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
-    """
-    Custom token authentication for smarter.
-    This is used to authenticate API keys. It is a subclass of the default knox
-    behavior, but it also checks that the API key is active.
+    """Enhanced Django Rest Framework (DRF) knox TokenAuthentication
+
+    This subclass adds:
+    - adds Django signals for token authentication events
+    - adds app logging
+    - verifies token activity.
+    - adds timestamp update on token use
+
+    Raises:
+        AuthenticationFailed: for any failure to authenticate the token the request.
     """
 
     model = SmarterAuthToken
@@ -64,8 +70,19 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
 
     @cache_results(CACHE_TIMEOUT)
     def authenticate_credentials(self, token: bytes) -> tuple[User, SmarterAuthToken]:
-        # authenticate the user using the normal token authentication
-        # this will raise an AuthenticationFailed exception if the token is invalid
+        """Override parent authenticate_credentials() to add token activity check and logging.
+
+        Args:
+            token (bytes): The authentication token provided in the request.
+
+        Raises:
+            AuthenticationFailed: for any failure to authenticate the token the request.
+            AuthenticationFailed: _if the token is not active.
+            AuthenticationFailed: if the token is not a bytes instance.
+
+        Returns:
+            tuple[User, SmarterAuthToken]: A tuple containing the authenticated User and SmarterAuthToken.
+        """
         if not isinstance(token, bytes):
             raise AuthenticationFailed("Invalid token type. Expected bytes")
         masked_token = mask_string(string=token.decode())
@@ -133,6 +150,14 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
 
     @classmethod
     def get_user_from_request(cls, request):
+        """Override get_user_from_request() to add logging and to use SmarterAuthToken.
+
+        Args:
+            request (HttpRequest): a Django request object.
+
+        Returns:
+            User or None: The authenticated user if the token is valid, otherwise None.
+        """
         auth_header = request.META.get("HTTP_AUTHORIZATION")
         if not auth_header or not auth_header.startswith("Token "):
             return None
