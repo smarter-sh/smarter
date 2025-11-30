@@ -741,18 +741,28 @@ class Settings(BaseSettings):
     @property
     def root_api_domain(self) -> str:
         """
-        Return the root API domain name.
-        example: api.example.com
+        Return the root API domain name, generated
+        from the system constant `SMARTER_API_SUBDOMAIN` and the root platform domain.
+
+        Example:
+            api.example.com
         """
         return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def environment_api_domain(self) -> str:
         """
-        Return the customer API domain name.
-        examples:
-        - alpha.api.platform.example.com
-        - api.localhost:8000
+        Return the API domain name for the current environment.
+
+        Examples:
+            - 'alpha.api.platform.example.com'
+            - 'api.localhost:8000'
+
+        Note:
+            Returns the root domain for the production environment. Otherwise,
+            the returned domain is based on the environment and platform configuration.
+            In production, this will be the root API domain; in local or other environments,
+            it will be prefixed accordingly.
         """
         if self.environment == SmarterEnvironments.PROD:
             return self.root_api_domain
@@ -766,8 +776,17 @@ class Settings(BaseSettings):
     @property
     def environment_api_url(self) -> str:
         """
-        Return the API URL for the environment.
-        example: https://alpha.api.platform.example.com
+        Creates a valid url from smarter_settings.environment_api_domain.
+        Based on the Smarter shared resource identifier and the root platform domain.
+        Uses urlify() to ensure consistency in http protocol and formatting and
+        trailing slash.
+
+        Example:
+            >>> print(settings.environment_api_url)
+            'https://alpha.api.platform.example.com'
+
+        Raises:
+            SmarterConfigurationError: If the constructed URL is invalid.
         """
         retval = SmarterValidator.urlify(self.environment_api_domain, environment=self.environment)
         if retval is None:
@@ -780,8 +799,16 @@ class Settings(BaseSettings):
     @property
     def aws_s3_bucket_name(self) -> str:
         """
-        Return the S3 bucket name.
-        example: alpha.platform.smarter.sh
+        Returns the AWS S3 bucket name for the current environment.
+        The bucket name is constructed from the Smarter shared resource identifier
+        and the root platform domain.
+
+        Example:
+            >>> print(settings.aws_s3_bucket_name)
+            'alpha.platform.smarter.sh'
+
+        Note:
+            In local environments, this returns 'alpha.platform.smarter.sh' as a proxy.
         """
         if self.environment == SmarterEnvironments.LOCAL:
             return f"{SmarterEnvironments.ALPHA}.{self.root_platform_domain}"
@@ -790,35 +817,91 @@ class Settings(BaseSettings):
     @property
     def is_using_dotenv_file(self) -> bool:
         """
-        Is the dotenv file being used?
-        True if a .env file was loaded, False otherwise.
+        Indicates whether a `.env` file was loaded for this instance of smarter_settings.
+
+        Returns:
+            bool: True if a `.env` file was loaded, False otherwise.
+
+        Example:
+            >>> print(settings.is_using_dotenv_file)
+            True
+
+        Note:
+            This property reflects the state at the time the settings object was created.
+            It would gemnerally only be expected to be True in local development environments.
         """
         return DOT_ENV_LOADED
 
     @property
     def environment_variables(self) -> List[str]:
         """
-        List of all set environment variables
+        Lists all environment variables.
+
+        Returns:
+            List[str]: A list of the environment variable names currently set in the OS environment
+                in which the application is running (e.g., the Linux process environment,
+                the operating Kubernetes Pod).
+        Example:
+            >>> settings.environment_variables
+            [
+                'PAT',
+                'SECRET_KEY',
+                'FERNET_ENCRYPTION_KEY',
+                'SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME',
+                'SMARTER_MYSQL_TEST_DATABASE_PASSWORD',
+                'ENVIRONMENT',
+                'PYTHONPATH',
+                'NODE_MAJOR',
+                'DEVELOPER_MODE',
+                'GEMINI_API_KEY',
+                'ANTHROPIC_API_KEY',
+                'COHERE_API_KEY',
+                'FIREWORKS_API_KEY',
+                'LLAMA_API_KEY',
+                'MISTRAL_API_KEY',
+                'OPENAI_API_KEY',
+                'TOGETHERAI_API_KEY',
+                'GOOGLE_SERVICE_ACCOUNT_B64',
+                'GOOGLE_MAPS_API_KEY',
+                'SOCIAL_AUTH_GOOGLE_OAUTH2_KEY',
+                'SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET',
+                'SOCIAL_AUTH_GITHUB_KEY',
+                'SOCIAL_AUTH_GITHUB_SECRET',
+                'SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY',
+                'SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET',
+                'MAILCHIMP_API_KEY',
+                'MAILCHIMP_LIST_ID',
+                'PINECONE_API_KEY',
+                'PINECONE_ENVIRONMENT',
+                'ROOT_DOMAIN',
+                'NAMESPACE',
+                'MYSQL_HOST',
+                'MYSQL_PORT',
+                'SMARTER_MYSQL_DATABASE',
+                'SMARTER_MYSQL_PASSWORD',
+                'SMARTER_MYSQL_USERNAME',
+                'MYSQL_ROOT_USERNAME',
+                'MYSQL_ROOT_PASSWORD',
+                'SMARTER_LOGIN_URL',
+                'SMARTER_ADMIN_PASSWORD',
+                'SMARTER_ADMIN_USERNAME',
+                'SMARTER_DOCKER_IMAGE'
+            ]
+
+        Note:
+            This list reflects the environment at the time the settings object was created.
         """
         return list(os.environ.keys())
-
-    @property
-    def is_using_tfvars_file(self) -> bool:
-        """
-        Is the tfvars file being used?
-        True if a tfvars file was loaded, False otherwise.
-        """
-        return IS_USING_TFVARS
 
     @property
     def smarter_api_key_max_lifetime_days(self) -> int:
         """Maximum lifetime for Smarter API keys in days.
 
         Returns:
-            int: The maximum number of days an API key is valid.
+            int: The number of days.
 
         Example:
-            >>> settings.smarter_api_key_max_lifetime_days
+            >>> print(settings.smarter_api_key_max_lifetime_days)
             90
 
         Warning:
@@ -827,16 +910,6 @@ class Settings(BaseSettings):
 
         """
         return SMARTER_API_KEY_MAX_LIFETIME_DAYS
-
-    @property
-    def tfvars_variables(self) -> dict:
-        """
-        Lists all Terraform variables
-        """
-        masked_tfvars = TFVARS.copy()
-        if "aws_account_id" in masked_tfvars:
-            masked_tfvars["aws_account_id"] = "****"
-        return masked_tfvars
 
     @property
     def version(self) -> str:
@@ -864,7 +937,6 @@ class Settings(BaseSettings):
 
         self._dump = {
             "environment": {
-                "is_using_tfvars_file": self.is_using_tfvars_file,
                 "is_using_dotenv_file": self.is_using_dotenv_file,
                 "os": os.name,
                 "system": platform.system(),
@@ -907,9 +979,6 @@ class Settings(BaseSettings):
 
         if self.is_using_dotenv_file:
             self._dump["environment"]["dotenv"] = self.environment_variables
-
-        if self.is_using_tfvars_file:
-            self._dump["environment"]["tfvars"] = self.tfvars_variables
 
         self._dump = recursive_sort_dict(self._dump)
         return self._dump
