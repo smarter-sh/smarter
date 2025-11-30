@@ -1211,7 +1211,7 @@ class Settings(BaseSettings):
             90
 
         Warning:
-            Changing this value requires a platform redeploy and could invalidate existing API keys.
+            Changing this value requires a platform rebuild/redeploy.
             Expired API keys still function but will log warnings.
 
         See Also:
@@ -1358,9 +1358,6 @@ class Settings(BaseSettings):
         Args:
             v (Optional[SecretStr]): The AWS access key ID value to validate.
             values (ValidationInfo): The validation info containing other field values.
-
-        Returns:
-            SecretStr: The validated AWS access key ID.
 
         Returns:
             SecretStr: The validated AWS access key ID.
