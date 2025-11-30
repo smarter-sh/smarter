@@ -39,15 +39,5 @@
       "throttle_settings_burst_limit",
       "throttle_settings_rate_limit"
     ]
-  },
-  "aws_apigateway": {
-    "root_domain": "lawrencemcdaniel.com",
-    "aws_apigateway_create_custom_domaim": true,
-    "aws_apigateway_custom_domain_name": "api.openai.lawrencemcdaniel.com"
-  },
-  "openai_passthrough": {
-    "langchain_memory_key": "chat_history",
-    "openai_endpoint_image_n": 4,
-    "openai_endpoint_image_size": "1024x768"
   }
 }

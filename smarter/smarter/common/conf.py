@@ -28,6 +28,7 @@ import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
 import re
+import warnings
 from functools import lru_cache
 from importlib.metadata import distributions
 from typing import Any, List, Optional, Tuple, Union
@@ -138,12 +139,6 @@ class SettingsDefaults:
             and AWS_SECRET_ACCESS_KEY.get_secret_value() != DEFAULT_MISSING_VALUE
         )
     )
-
-    # aws api gateway defaults
-    AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = bool(os.environ.get("create_custom_domain", False))
-    AWS_APIGATEWAY_READ_TIMEOUT: int = int(os.environ.get("aws_apigateway_read_timeout", 70))
-    AWS_APIGATEWAY_CONNECT_TIMEOUT: int = int(os.environ.get("aws_apigateway_connect_timeout", 70))
-    AWS_APIGATEWAY_MAX_ATTEMPTS: int = int(os.environ.get("aws_apigateway_max_attempts", 10))
 
     AWS_EKS_CLUSTER_NAME = os.environ.get(
         "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
@@ -429,130 +424,275 @@ class Settings(BaseSettings):
         description="Smarter 1-word identifier to be used when naming any shared resource.",
         examples=["smarter", "mycompany", "myproject"],
     )
-    debug_mode: bool = Field(SettingsDefaults.DEBUG_MODE)
-    default_missing_value: str = Field(DEFAULT_MISSING_VALUE)
+    debug_mode: bool = Field(
+        SettingsDefaults.DEBUG_MODE,
+        description="True if debug mode is enabled. This enables verbose logging and other debug features.",
+    )
+    default_missing_value: str = Field(
+        DEFAULT_MISSING_VALUE,
+        description="Default missing value placeholder string. Used for consistency across settings.",
+        examples=["SET-ME-PLEASE"],
+    )
 
     # new in 0.13.26
     # True if developer mode is enabled. Used as a means to configure a production
     # Docker container to run locally for student use.
-    developer_mode: bool = Field(SettingsDefaults.DEVELOPER_MODE)
-    django_default_file_storage: str = Field(SettingsDefaults.DJANGO_DEFAULT_FILE_STORAGE)
-
+    developer_mode: bool = Field(
+        SettingsDefaults.DEVELOPER_MODE,
+        description="True if developer mode is enabled. Used as a means to configure a production Docker container to run locally for student use.",
+    )
+    django_default_file_storage: str = Field(
+        SettingsDefaults.DJANGO_DEFAULT_FILE_STORAGE,
+        description="The default Django file storage backend.",
+        examples=["storages.backends.s3boto3.S3Boto3Storage", "django.core.files.storage.FileSystemStorage"],
+    )
     log_level: int = Field(
-        SettingsDefaults.LOG_LEVEL
-    )  # e.g., logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
-    dump_defaults: bool = Field(SettingsDefaults.DUMP_DEFAULTS)
+        SettingsDefaults.LOG_LEVEL,
+        description="The logging level for the platform based on Python logging levels: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL",
+        examples=[logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL],
+    )
+    dump_defaults: bool = Field(
+        SettingsDefaults.DUMP_DEFAULTS, description="True if default values should be dumped for debugging purposes."
+    )
     aws_profile: Optional[str] = Field(
         SettingsDefaults.AWS_PROFILE,
+        description="The AWS profile to use for authentication. If present, this will take precedence over AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.",
+        examples=["default", "smarter-profile"],
     )
     aws_access_key_id: SecretStr = Field(
         SettingsDefaults.AWS_ACCESS_KEY_ID,
+        description="The AWS access key ID for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.",
+        examples=["^AKIA[0-9A-Z]{16}$"],
     )
     aws_secret_access_key: SecretStr = Field(
         SettingsDefaults.AWS_SECRET_ACCESS_KEY,
+        description="The AWS secret access key for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.",
+        examples=["^[0-9a-zA-Z/+]{40}$"],
     )
-    aws_regions: List[str] = Field(AWS_REGIONS, description="The list of AWS regions")
+    aws_regions: List[str] = Field(
+        AWS_REGIONS,
+        description="A list of AWS regions considered valid for this platform.",
+        examples=["us-east-1", "us-west-2", "eu-west-1"],
+    )
     aws_region: str = Field(
         SettingsDefaults.AWS_REGION,
+        description="The single AWS region in which all AWS service clients will operate.",
+        examples=["us-east-1", "us-west-2", "eu-west-1"],
     )
     aws_is_configured: bool = Field(
         SettingsDefaults.AWS_IS_CONFIGURED,
-        description="True if AWS is configured",
-    )
-    aws_apigateway_create_custom_domaim: bool = Field(
-        SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN,
+        description="True if AWS is configured. This is determined by the presence of either AWS_PROFILE or both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.",
     )
     aws_eks_cluster_name: str = Field(
         SettingsDefaults.AWS_EKS_CLUSTER_NAME,
+        description="The name of the AWS EKS cluster used for hosting applications.",
+        examples=["apps-hosting-service"],
     )
     aws_db_instance_identifier: str = Field(
         SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
+        description="The RDS database instance identifier used for the platform's primary database.",
+        examples=["apps-hosting-service"],
     )
     anthropic_api_key: SecretStr = Field(
         SettingsDefaults.ANTHROPIC_API_KEY,
+        description="The API key for Anthropic services. Masked by pydantic SecretStr.",
+        examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
     )
     environment: str = Field(
         SettingsDefaults.ENVIRONMENT,
+        description="The deployment environment for the platform.",
+        examples=SmarterEnvironments.all,
     )
     fernet_encryption_key: str = Field(
         SettingsDefaults.FERNET_ENCRYPTION_KEY,
+        description="The Fernet encryption key used for encrypting Smarter Secrets data.",
+        examples=["gAAAAABh..."],
     )
     local_hosts: List[str] = Field(
         SettingsDefaults.LOCAL_HOSTS,
+        description="A list of hostnames considered local for development and testing purposes.",
+        examples=SettingsDefaults.LOCAL_HOSTS,
     )
     root_domain: str = Field(
         SettingsDefaults.ROOT_DOMAIN,
+        description="The root domain for the platform.",
+        examples=["example.com"],
     )
     init_info: Optional[str] = Field(
         None,
     )
     google_maps_api_key: SecretStr = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
+        description="The API key for Google Maps services. Masked by pydantic SecretStr. Used for geocoding, maps, and places APIs, for the OpenAI get_weather() example function.",
+        examples=["AIzaSy..."],
     )
     google_service_account: dict = Field(
         SettingsDefaults.GOOGLE_SERVICE_ACCOUNT,
+        description="The Google service account credentials as a dictionary. Used for Google Cloud services integration.",
+        examples=[{"type": "service_account", "project_id": "my-project", "...": "..."}],
     )
     gemini_api_key: SecretStr = Field(
         SettingsDefaults.GEMINI_API_KEY,
+        description="The API key for Google Gemini services. Masked by pydantic SecretStr.",
+        examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
     )
     llama_api_key: SecretStr = Field(
         SettingsDefaults.LLAMA_API_KEY,
+        description="The API key for LLaMA services. Masked by pydantic SecretStr.",
+        examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
     )
     smarter_mysql_test_database_secret_name: Optional[str] = Field(
         SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME,
+        description="The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        examples=["smarter-mysql-test-db-secret"],
     )
     smarter_mysql_test_database_password: Optional[str] = Field(
         SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_PASSWORD,
+        description="The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        examples=["your_password_here"],
     )
     social_auth_google_oauth2_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
+        description="The OAuth2 key for Google social authentication. Masked by pydantic SecretStr.",
+        examples=["your-google-oauth2-key"],
     )
     social_auth_google_oauth2_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
+        description="The OAuth2 secret for Google social authentication. Masked by pydantic SecretStr.",
+        examples=["your-google-oauth2-secret"],
     )
     social_auth_github_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY,
+        description="The OAuth2 key for GitHub social authentication. Masked by pydantic SecretStr.",
+        examples=["your-github-oauth2-key"],
     )
     social_auth_github_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET,
+        description="The OAuth2 secret for GitHub social authentication. Masked by pydantic SecretStr.",
+        examples=["your-github-oauth2-secret"],
     )
     social_auth_linkedin_oauth2_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY,
+        description="The OAuth2 key for LinkedIn social authentication. Masked by pydantic SecretStr.",
+        examples=["your-linkedin-oauth2-key"],
     )
     social_auth_linkedin_oauth2_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET,
+        description="The OAuth2 secret for LinkedIn social authentication. Masked by pydantic SecretStr.",
+        examples=["your-linkedin-oauth2-secret"],
     )
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY)
     logo: Optional[str] = Field(SettingsDefaults.LOGO)
     mailchimp_api_key: Optional[SecretStr] = Field(SettingsDefaults.MAILCHIMP_API_KEY)
     mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID)
     marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL)
-    openai_api_organization: Optional[str] = Field(SettingsDefaults.OPENAI_API_ORGANIZATION)
-    openai_api_key: SecretStr = Field(SettingsDefaults.OPENAI_API_KEY)
-    openai_endpoint_image_n: Optional[int] = Field(SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N)
-    openai_endpoint_image_size: Optional[str] = Field(SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
-    llm_default_provider: str = Field(SettingsDefaults.LLM_DEFAULT_PROVIDER)
-    llm_default_model: str = Field(SettingsDefaults.LLM_DEFAULT_MODEL)
-    llm_default_system_role: str = Field(SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE)
-    llm_default_temperature: float = Field(SettingsDefaults.LLM_DEFAULT_TEMPERATURE)
-    llm_default_max_tokens: int = Field(SettingsDefaults.LLM_DEFAULT_MAX_TOKENS)
-    pinecone_api_key: SecretStr = Field(SettingsDefaults.PINECONE_API_KEY)
-    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY)
-    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY)
+    openai_api_organization: Optional[str] = Field(
+        SettingsDefaults.OPENAI_API_ORGANIZATION,
+        description="The OpenAI API organization ID.",
+        examples=["org-xxxxxxxxxxxxxxxx"],
+    )
+    openai_api_key: SecretStr = Field(
+        SettingsDefaults.OPENAI_API_KEY,
+        description="The API key for OpenAI services. Masked by pydantic SecretStr.",
+        examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
+    )
+    openai_endpoint_image_n: Optional[int] = Field(
+        SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N,
+        description="The number of images to generate per request to the OpenAI image endpoint.",
+        examples=[1, 2, 4],
+    )
+    openai_endpoint_image_size: Optional[str] = Field(
+        SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE,
+        description="The size of images to generate from the OpenAI image endpoint.",
+        examples=["256x256", "512x512", "1024x768"],
+    )
+    llm_default_provider: str = Field(
+        SettingsDefaults.LLM_DEFAULT_PROVIDER,
+        description="The default LLM provider to use for language model interactions.",
+        examples=["openai", "anthropic", "gemini", "llama"],
+    )
+    llm_default_model: str = Field(
+        SettingsDefaults.LLM_DEFAULT_MODEL,
+        description="The default LLM model to use for language model interactions.",
+        examples=["gpt-4o-mini", "claude-2", "gemini"],
+    )
+    llm_default_system_role: str = Field(
+        SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE,
+        description="The default system role prompt to use for language model interactions.",
+        examples=["You are a helpful chatbot..."],
+    )
+    llm_default_temperature: float = Field(
+        SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+        description="The default temperature to use for language model interactions.",
+        examples=[0.0, 0.5, 1.0],
+    )
+    llm_default_max_tokens: int = Field(
+        SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+        description="The default maximum number of tokens to generate for language model interactions.",
+        examples=[256, 512, 1024, 2048],
+    )
+    pinecone_api_key: SecretStr = Field(
+        SettingsDefaults.PINECONE_API_KEY,
+        description="The API key for Pinecone services. Masked by pydantic SecretStr.",
+        examples=["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
+    )
+    stripe_live_secret_key: Optional[str] = Field(
+        SettingsDefaults.STRIPE_LIVE_SECRET_KEY,
+        description="DEPRECATED: The secret key for Stripe live environment.",
+        examples=["sk_live_xxxxxxxxxxxxxxxxxxxxxxxx"],
+    )
+    stripe_test_secret_key: Optional[str] = Field(
+        SettingsDefaults.STRIPE_TEST_SECRET_KEY,
+        description="DEPRECATED: The secret key for Stripe test environment.",
+        examples=["sk_test_xxxxxxxxxxxxxxxxxxxxxxxx"],
+    )
 
-    secret_key: Optional[str] = Field(SettingsDefaults.SECRET_KEY)
+    secret_key: Optional[str] = Field(
+        SettingsDefaults.SECRET_KEY,
+        description="The Django secret key for cryptographic signing.",
+        examples=["your-django-secret-key"],
+    )
 
-    smtp_sender: Optional[str] = Field(SettingsDefaults.SMTP_SENDER)
-    smtp_from_email: Optional[str] = Field(SettingsDefaults.SMTP_FROM_EMAIL)
-    smtp_host: Optional[str] = Field(SettingsDefaults.SMTP_HOST)
-    smtp_password: Optional[str] = Field(SettingsDefaults.SMTP_PASSWORD)
-    smtp_port: Optional[int] = Field(SettingsDefaults.SMTP_PORT)
-    smtp_use_ssl: Optional[bool] = Field(SettingsDefaults.SMTP_USE_SSL)
-    smtp_use_tls: Optional[bool] = Field(SettingsDefaults.SMTP_USE_TLS)
-    smtp_username: Optional[str] = Field(SettingsDefaults.SMTP_USERNAME)
-
-    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY)
-    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY)
+    smtp_sender: Optional[str] = Field(
+        SettingsDefaults.SMTP_SENDER,
+        description="The sender email address for SMTP emails.",
+        examples=["sender@example.com"],
+    )
+    smtp_from_email: Optional[str] = Field(
+        SettingsDefaults.SMTP_FROM_EMAIL,
+        description="The from email address for SMTP emails.",
+        examples=["from@example.com"],
+    )
+    smtp_host: Optional[str] = Field(
+        SettingsDefaults.SMTP_HOST,
+        description="The SMTP host address for sending emails.",
+        examples=["smtp.example.com"],
+    )
+    smtp_password: Optional[str] = Field(
+        SettingsDefaults.SMTP_PASSWORD,
+        description="The SMTP password for authentication.",
+        examples=["your-smtp-password"],
+    )
+    smtp_port: Optional[int] = Field(
+        SettingsDefaults.SMTP_PORT,
+        description="The SMTP port for sending emails.",
+        examples=[25, 465, 587],
+    )
+    smtp_use_ssl: Optional[bool] = Field(
+        SettingsDefaults.SMTP_USE_SSL,
+        description="Whether to use SSL for SMTP connections.",
+        examples=[True, False],
+    )
+    smtp_use_tls: Optional[bool] = Field(
+        SettingsDefaults.SMTP_USE_TLS,
+        description="Whether to use TLS for SMTP connections.",
+        examples=[True, False],
+    )
+    smtp_username: Optional[str] = Field(
+        SettingsDefaults.SMTP_USERNAME,
+        description="The SMTP username for authentication.",
+        examples=["your-smtp-username"],
+    )
 
     @property
     def smtp_is_configured(self) -> bool:
@@ -1102,8 +1242,24 @@ class Settings(BaseSettings):
 
     def dump(self) -> dict:
         """
-        Dump all settings.
-        This is useful for debugging and logging.
+        Dump all settings. Useful for debugging and logging.
+
+        Returns:
+            dict: A dictionary containing all settings and their values.
+
+        Example:
+            >>> import json
+            >>> print(json.dumps(smarter_settings.dump(), indent=2))
+            {
+              "environment": {
+                "is_using_dotenv_file": true,
+                "os": "posix",
+                ....
+                },
+
+        Note:
+            Sensitive values are masked by Pydantic SecretStr and will not be displayed in full.
+            The dump is cached after the first call for performance.
         """
 
         def get_installed_packages():
@@ -1256,15 +1412,6 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             return SettingsDefaults.ROOT_DOMAIN
         return v
-
-    @field_validator("aws_apigateway_create_custom_domaim")
-    def validate_aws_apigateway_create_custom_domaim(cls, v) -> bool:
-        """Validate aws_apigateway_create_custom_domaim"""
-        if isinstance(v, bool):
-            return v
-        if v in [None, ""]:
-            return SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN
-        return v.lower() in ["true", "1", "t", "y", "yes"]
 
     @field_validator("aws_eks_cluster_name")
     def validate_aws_eks_cluster_name(cls, v) -> str:
@@ -1491,6 +1638,11 @@ class Settings(BaseSettings):
     def check_stripe_live_secret_key(cls, v) -> str:
         """Check stripe_live_secret_key"""
         if v in [None, ""]:
+            warnings.warn(
+                "The 'stripe_live_secret_key' field is deprecated and will be removed in a future release.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             return SettingsDefaults.STRIPE_LIVE_SECRET_KEY
         return v
 
@@ -1498,6 +1650,11 @@ class Settings(BaseSettings):
     def check_stripe_test_secret_key(cls, v) -> str:
         """Check stripe_test_secret_key"""
         if v in [None, ""]:
+            warnings.warn(
+                "The 'stripe_live_secret_key' field is deprecated and will be removed in a future release.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             return SettingsDefaults.STRIPE_TEST_SECRET_KEY
         return v
 
