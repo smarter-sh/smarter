@@ -745,7 +745,12 @@ class Settings(BaseSettings):
         from the system constant `SMARTER_API_SUBDOMAIN` and the root platform domain.
 
         Example:
-            api.example.com
+            >>> print(smarter_settings.root_api_domain)
+            'api.platform.example.com'
+
+        See Also:
+            - SMARTER_API_SUBDOMAIN
+            - smarter_settings.root_domain
         """
         return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
@@ -754,15 +759,23 @@ class Settings(BaseSettings):
         """
         Return the API domain name for the current environment.
 
-        Examples:
-            - 'alpha.api.platform.example.com'
-            - 'api.localhost:8000'
+        Example:
+            >>> print(smarter_settings.environment_api_domain)
+            'alpha.api.platform.example.com'
+            >>> print(smarter_settings.environment_api_domain)
+            'api.localhost:8000'
 
         Note:
             Returns the root domain for the production environment. Otherwise,
             the returned domain is based on the environment and platform configuration.
             In production, this will be the root API domain; in local or other environments,
             it will be prefixed accordingly.
+
+        See Also:
+            - smarter_settings.root_api_domain
+            - smarter_settings.aws_environments
+            - SmarterEnvironments()
+            - SMARTER_API_SUBDOMAIN
         """
         if self.environment == SmarterEnvironments.PROD:
             return self.root_api_domain
@@ -782,11 +795,16 @@ class Settings(BaseSettings):
         trailing slash.
 
         Example:
-            >>> print(settings.environment_api_url)
+            >>> print(smarter_settings.environment_api_url)
             'https://alpha.api.platform.example.com'
 
         Raises:
             SmarterConfigurationError: If the constructed URL is invalid.
+
+        See Also:
+            - SmarterValidator.urlify()
+            - smarter_settings.environment_api_domain
+            - smarter_settings.environment
         """
         retval = SmarterValidator.urlify(self.environment_api_domain, environment=self.environment)
         if retval is None:
@@ -804,11 +822,17 @@ class Settings(BaseSettings):
         and the root platform domain.
 
         Example:
-            >>> print(settings.aws_s3_bucket_name)
+            >>> print(smarter_settings.aws_s3_bucket_name)
             'alpha.platform.smarter.sh'
 
         Note:
             In local environments, this returns 'alpha.platform.smarter.sh' as a proxy.
+
+        See Also:
+            - smarter_settings.shared_resource_identifier
+            - smarter_settings.root_platform_domain
+            - SmarterEnvironments()
+            - smarter_settings.environment_platform_domain
         """
         if self.environment == SmarterEnvironments.LOCAL:
             return f"{SmarterEnvironments.ALPHA}.{self.root_platform_domain}"
@@ -823,12 +847,15 @@ class Settings(BaseSettings):
             bool: True if a `.env` file was loaded, False otherwise.
 
         Example:
-            >>> print(settings.is_using_dotenv_file)
+            >>> print(smarter_settings.is_using_dotenv_file)
             True
 
         Note:
             This property reflects the state at the time the settings object was created.
             It would gemnerally only be expected to be True in local development environments.
+
+        See Also:
+            - DOT_ENV_LOADED
         """
         return DOT_ENV_LOADED
 
@@ -901,22 +928,36 @@ class Settings(BaseSettings):
             int: The number of days.
 
         Example:
-            >>> print(settings.smarter_api_key_max_lifetime_days)
+            >>> print(smarter_settings.smarter_api_key_max_lifetime_days)
             90
 
         Warning:
             Changing this value requires a platform redeploy and could invalidate existing API keys.
             Expired API keys still function but will log warnings.
 
+        See Also:
+            - SMARTER_API_KEY_MAX_LIFETIME_DAYS
         """
         return SMARTER_API_KEY_MAX_LIFETIME_DAYS
 
     @property
     def version(self) -> str:
         """
-        Current version of the Smarter platform codebase.
-        example: 0.1.17
-        Note: this is necessarily not the same as the version of the deployed platform.
+        Current version of the Smarter platform codebase
+        based on the semantic version currently persisted
+        to smarter.__version__.py.
+
+        Example:
+            >>> print(smarter_settings.version)
+            '0.13.35'
+
+        Note:
+            This value is managed by the NPM semantic-release tooling
+            process and should not be modified manually. Versions are
+            bumped automatically via a GitHub Actions workflow that is
+            executed on merges to the main branch. The nature of the
+            version bump is based on commit messages in the merge.
+            See https://github.com/smarter-sh/smarter/blob/main/docs/legacy/SEMANTIC_VERSIONING.md for more information.
         """
         return get_semantic_version()
 
