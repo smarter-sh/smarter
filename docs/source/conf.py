@@ -24,6 +24,7 @@ release = "3.13.33"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinxcontrib.autodoc_pydantic",
     "sphinx_rtd_theme",
 ]
 
