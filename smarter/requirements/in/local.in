@@ -55,3 +55,8 @@ pylint==3.3.4                       # code linter
 pylint-django==2.6.1                # Django support for pylint
 tox                                 # testing tool
 watchdog>=4.0.1                     # file system monitoring
+
+# Documentation
+sphinx==8.2.3                       # for Readthedocs
+sphinx-rtd-theme==3.0.2             # Sphinx theme for Readthedocs
+autodoc_pydantic==2.2.0             # Sphinx extension for Pydantic models
