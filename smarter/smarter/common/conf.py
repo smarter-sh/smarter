@@ -46,7 +46,6 @@ from ..lib.django.validators import SmarterValidator
 
 # our stuff
 from .const import (
-    IS_USING_TFVARS,
     SMARTER_API_KEY_MAX_LIFETIME_DAYS,
     SMARTER_API_SUBDOMAIN,
     SMARTER_PLATFORM_SUBDOMAIN,
@@ -1332,6 +1331,10 @@ class Settings(BaseSettings):
         """
         if v in [None, ""]:
             return SettingsDefaults.SHARED_RESOURCE_IDENTIFIER
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("shared_resource_identifier is not a str.")
+
         return v
 
     @field_validator("aws_profile")
@@ -1362,8 +1365,11 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated AWS access key ID.
         """
-        if not isinstance(v, SecretStr):
+        if isinstance(v, str):
             v = SecretStr(v)
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("could not convert aws_access_key_id value to SecretStr")
+
         if v.get_secret_value() in [None, ""]:
             return SettingsDefaults.AWS_ACCESS_KEY_ID
         aws_profile = values.data.get("aws_profile", None)
@@ -1385,8 +1391,10 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated AWS secret access key.
         """
-        if not isinstance(v, SecretStr):
+        if isinstance(v, str):
             v = SecretStr(v)
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("could not convert aws_secret_access_key value to SecretStr")
         if v.get_secret_value() in [None, ""]:
             return SettingsDefaults.AWS_SECRET_ACCESS_KEY
         aws_profile = values.data.get("aws_profile", None)
@@ -1452,6 +1460,9 @@ class Settings(BaseSettings):
 
         if v == DEFAULT_MISSING_VALUE:
             return v
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("fernet_encryption_key is not a str.")
 
         try:
             # Decode the key using URL-safe base64
