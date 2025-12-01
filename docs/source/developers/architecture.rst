@@ -2,13 +2,11 @@ Architecture
 ============
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Architecture
 
    architecture/summary
-   architecture/smarter-settings
    architecture/django
-   architecture/lib
    architecture/helpers
    architecture/mixins
    architecture/chatbot
