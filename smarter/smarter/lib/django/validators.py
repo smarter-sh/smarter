@@ -76,9 +76,7 @@ class SmarterValidator:
     """
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
-
     LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
-
     LOCAL_HOSTS.append("testserver")
     """List of local hosts used for validation purposes."""
 
