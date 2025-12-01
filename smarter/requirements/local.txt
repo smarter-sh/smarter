@@ -162,6 +162,7 @@ django==5.2.7
     #   drf-yasg
     #   laces
     #   social-auth-app-django
+    #   sphinxcontrib-django
     #   wagtail
 django-celery-beat==2.8.1
     # via -r smarter/requirements/in/base.in
@@ -444,6 +445,8 @@ pluggy==1.6.0
     #   -r smarter/requirements/in/constraints.in
     #   pytest
     #   tox
+pprintpp==0.4.0
+    # via sphinxcontrib-django
 pre-commit==4.3.0
     # via -r smarter/requirements/in/local.in
 prompt-toolkit==3.0.52
@@ -636,6 +639,7 @@ sphinx==8.2.3
     #   -r smarter/requirements/in/local.in
     #   autodoc-pydantic
     #   sphinx-rtd-theme
+    #   sphinxcontrib-django
     #   sphinxcontrib-jquery
 sphinx-rtd-theme==3.0.2
     # via -r smarter/requirements/in/local.in
@@ -643,6 +647,8 @@ sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-devhelp==2.0.0
     # via sphinx
+sphinxcontrib-django==2.5
+    # via -r smarter/requirements/in/local.in
 sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-jquery==4.1

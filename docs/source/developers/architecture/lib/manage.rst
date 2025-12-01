@@ -6,7 +6,6 @@ provide more consistent console output and app logging. SmarterCommand
 is the base class for all management commands in Smarter, and serves
 as a drop-in replacement for Django's base command class.
 
-
 .. autoclass:: smarter.lib.django.management.base.SmarterCommand
     :members:
     :undoc-members:

@@ -77,7 +77,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
         # Short-circuit for any requests born from internal IP address hosts
         # This is unlikely, but not impossible.
-        if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
+        if any(host.startswith(prefix) for prefix in settings.SMARTER_INTERNAL_IP_PREFIXES):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,

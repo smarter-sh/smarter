@@ -20,6 +20,6 @@ Architecture
    architecture/aws
    architecture/broker-model
    architecture/pydantic
-   architecture/react
+   architecture/react-integration
    architecture/logging
    architecture/wagtail

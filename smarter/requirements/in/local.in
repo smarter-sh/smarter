@@ -60,3 +60,4 @@ watchdog>=4.0.1                     # file system monitoring
 sphinx==8.2.3                       # for Readthedocs
 sphinx-rtd-theme==3.0.2             # Sphinx theme for Readthedocs
 autodoc_pydantic==2.2.0             # Sphinx extension for Pydantic models
+sphinxcontrib-django==2.5           # Sphinx for django settings

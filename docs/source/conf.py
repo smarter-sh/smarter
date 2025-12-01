@@ -36,6 +36,8 @@ release = "3.13.33"
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinxcontrib_django",
+    "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinxcontrib.autodoc_pydantic",
     "sphinx_rtd_theme",
@@ -43,7 +45,7 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = []
-
+django_settings = "smarter.settings.prod"
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
