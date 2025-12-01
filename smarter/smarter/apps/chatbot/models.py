@@ -624,28 +624,67 @@ def get_cached_chatbot(
 
 
 class ChatBotHelper(SmarterRequestMixin):
-    """Maps urls and attribute data to their respective ChatBot models.
-    Abstracts url parsing logic so that we can use it in multiple
-    places: inside this module, in middleware, in Views, etc.
+    """
+    Provides a mapping between URLs and their corresponding ChatBot models,
+    abstracting URL parsing logic for reuse across the codebase.
 
-    Also caches the ChatBot object for a given url so that we don't have to
-    parse the url multiple times.
+    This helper class is designed to centralize and standardize the logic
+    required to resolve a ChatBot instance from a given URL or request context.
+    It is intended for use in various locations, including within this module,
+    Django middleware, and view logic.
 
-    examples of valid urls:
-    # authentication optional urls
-    - https://example.3141-5926-5359.alpha.api.smarter.sh/
-    - https://example.3141-5926-5359.alpha.api.smarter.sh/config/
+    The class also implements caching of ChatBot objects for specific URLs,
+    reducing redundant parsing and database queries for repeated requests.
 
-    # authenticated urls
-    - https://alpha.api.smarter.sh/smarter/example/
-    - https://example.smarter.sh/chatbot/
-    - https://alpha.api.smarter.sh/workbench/1/
-    - https://alpha.api.smarter.sh/workbench/example/
+    **Supported URL Patterns**
 
-    # legacy pre v0.12 urls
-    - https://alpha.api.smarter.sh/chatbots/1/
-    - https://alpha.api.smarter.sh/chatbots/example/
+    The following are examples of valid URLs that this helper can process:
 
+    - **Authentication Optional URLs:**
+        - ``https://example.3141-5926-5359.alpha.api.smarter.sh/``
+        - ``https://example.3141-5926-5359.alpha.api.smarter.sh/config/``
+
+    - **Authenticated URLs:**
+        - ``https://alpha.api.smarter.sh/smarter/example/``
+        - ``https://example.smarter.sh/chatbot/``
+        - ``https://alpha.api.smarter.sh/workbench/1/``
+        - ``https://alpha.api.smarter.sh/workbench/example/``
+
+    - **Legacy (pre v0.12) URLs:**
+        - ``https://alpha.api.smarter.sh/chatbots/1/``
+        - ``https://alpha.api.smarter.sh/chatbots/example/``
+
+    **Features**
+
+    - Abstracts and encapsulates URL parsing and ChatBot resolution logic.
+    - Provides a consistent interface for retrieving ChatBot instances from URLs.
+    - Caches ChatBot objects to avoid redundant lookups.
+    - Supports both authenticated and unauthenticated URL patterns.
+    - Handles legacy URL formats for backward compatibility.
+
+    **Usage**
+
+    This class is typically instantiated with a Django ``HttpRequest`` object.
+    It can then be used to access the resolved ChatBot instance and related
+    metadata, such as the associated account, chatbot ID, and custom domain.
+
+    Example::
+
+        helper = ChatBotHelper(request)
+        chatbot = helper.chatbot
+        if helper.is_valid:
+            # Proceed with chatbot logic
+
+    :param request: The Django HttpRequest object containing the URL and user context.
+    :type request: django.http.HttpRequest
+    :param args: Additional positional arguments.
+    :param kwargs: Additional keyword arguments, such as 'chatbot', 'chatbot_custom_domain', etc.
+
+    :raises SmarterConfigurationError: If the helper cannot resolve a valid ChatBot instance.
+
+    .. note::
+        This class is intended for internal use within the Smarter platform and
+        should not be used directly in user-facing code without proper validation.
     """
 
     __slots__ = (
@@ -660,12 +699,35 @@ class ChatBotHelper(SmarterRequestMixin):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the formatted class name for the ChatBotHelper.
+        Get the formatted class name for this instance of ChatBotHelper.
+
+        :returns: The formatted class name as a string, including the parent class name.
+        :rtype: str
+
+        This property returns a string representation of the class name,
+        formatted to include the parent class's formatted name and the
+        ``ChatBotHelper`` class. This is useful for logging and debugging
+        purposes, as it provides a clear and consistent identifier for
+        instances of this helper class.
+
+        Example
+        -------
+        >>> helper = ChatBotHelper(request)
+        >>> helper.formatted_class_name
+        'SmarterRequestMixin.ChatBotHelper()'
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.ChatBotHelper()"
 
     def __init__(self, request: HttpRequest, *args, **kwargs):
+        """
+        Initializes the ChatBotHelper instance.
+
+        :param request: The Django HttpRequest object.
+        :type request: django.http.HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        """
         self._instance_id = id(self)
         self._chatbot: Optional[ChatBot] = kwargs.get("chatbot")
         self._chatbot_custom_domain: Optional[ChatBotCustomDomain] = kwargs.get("chatbot_custom_domain")
@@ -746,8 +808,18 @@ class ChatBotHelper(SmarterRequestMixin):
     @property
     def account(self) -> Optional[Account]:
         """
-        Override the account based on the named url, if available.
-        example: http://education.3141-5926-5359.api.localhost:8000/config/
+        Return the associated :class:`Account` for this ChatBotHelper instance,
+        optionally overriding the default account based on the account number
+        parsed from the URL, if available.
+
+        If the URL contains an account number (for example,
+        ``http://education.3141-5926-5359.api.localhost:8000/config/``),
+        this method will attempt to retrieve and return the corresponding
+        cached Account object. If no account number is found in the URL,
+        the default account from the superclass is returned.
+
+        :returns: The resolved :class:`Account` instance, or ``None`` if not found.
+        :rtype: Optional[Account]
         """
         account_number = account_number_from_url(self.url)
         if account_number:
@@ -760,7 +832,17 @@ class ChatBotHelper(SmarterRequestMixin):
     @property
     def chatbot_id(self) -> Optional[int]:
         """
-        Returns the ChatBot.id for the ChatBotHelper.
+        Returns the :attr:`ChatBot.id` for this ChatBotHelper instance.
+
+        This property attempts to resolve the ChatBot's unique integer ID using several strategies:
+
+        1. If a chatbot ID was provided at initialization, it is returned immediately.
+        2. If a ChatBot object is already cached, its ID is returned.
+        3. If the parent :class:`SmarterRequestMixin` provides a chatbot ID (e.g., parsed from the URL), it is used.
+        4. If both a chatbot name and account are available, attempts to resolve and cache the ChatBot object and its ID.
+
+        :returns: The resolved ChatBot ID, or ``None`` if not found.
+        :rtype: Optional[int]
         """
         # check for a value passed in
         if self._chatbot_id:
@@ -806,11 +888,16 @@ class ChatBotHelper(SmarterRequestMixin):
     def name(self) -> Optional[str]:
         """
         Returns the name of the chatbot.
-        valid possibilities:
-        - self._name, assigned in __init__()
-        - self.chatbot.name
-        - self.subdomain when is_chatbot_named_url
-        - self.path slug when is_chatbot_sandbox_url
+
+        This property attempts to resolve the chatbot's name using several strategies, in order of precedence:
+
+        1. ``self._name``: The name assigned during initialization, if available.
+        2. ``self.chatbot.name``: The name attribute of the resolved ChatBot instance, if present.
+        3. ``self.subdomain``: If the URL is a named chatbot URL (i.e., ``is_chatbot_named_url`` is True), the subdomain is used as the name.
+        4. Path slug: If the URL is a sandbox chatbot URL (i.e., ``is_chatbot_sandbox_url`` is True), the path slug is used as the name.
+
+        :returns: The resolved chatbot name, or ``None`` if not found.
+        :rtype: Optional[str]
         """
         if self._chatbot:
             self._name = self._chatbot.name
@@ -821,13 +908,19 @@ class ChatBotHelper(SmarterRequestMixin):
     @property
     def rfc1034_compliant_name(self) -> Optional[str]:
         """
-        Returns a url friendly name for the chatbot.
-        This is a convenience property that returns
-        a RFC 1034 compliant name for the chatbot.
+        Returns a URL-friendly name for the chatbot.
 
-        example:
-        - self.name: 'Example ChatBot 1'
-        - self.rfc1034_compliant_name: 'example-chatbot-1'
+        This is a convenience property that returns a RFC 1034 compliant name for the chatbot.
+
+        Examples
+        --------
+        .. code-block:: python
+
+            self.name  # 'Example ChatBot 1'
+            self.rfc1034_compliant_name  # 'example-chatbot-1'
+
+        :returns: The RFC 1034 compliant name for the chatbot, or ``None`` if not available.
+        :rtype: Optional[str]
         """
         if self._chatbot:
             return self._chatbot.rfc1034_compliant_name
@@ -836,9 +929,13 @@ class ChatBotHelper(SmarterRequestMixin):
     @property
     def is_chatbothelper_ready(self) -> bool:
         """
-        Returns True if the ChatBotHelper is ready to be used.
+        Returns ``True`` if the ChatBotHelper is ready to be used.
+
         This is a convenience property that checks if the ChatBotHelper
-        is initialized and has a valid ChatBot instance.
+        is initialized and has a valid :class:`ChatBot` instance.
+
+        :returns: ``True`` if the helper is initialized and has a valid ChatBot, otherwise ``False``.
+        :rtype: bool
         """
         if not isinstance(self._chatbot, ChatBot):
             self._err = f"{self.formatted_class_name}.is_chatbothelper_ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
@@ -848,6 +945,12 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @property
     def ready(self) -> bool:
+        """
+        Returns ``True`` if the ChatBotHelper and its ChatBot are ready to be used
+
+        :returns: ``True`` if both the helper and ChatBot are ready, otherwise ``False``.
+        :rtype: bool
+        """
         retval = bool(super().ready)
         if not retval:
             self._err = f"{self.formatted_class_name}.ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
@@ -856,7 +959,13 @@ class ChatBotHelper(SmarterRequestMixin):
 
     def to_json(self) -> dict[str, Any]:
         """
-        Serialize the ChatBotHelper.
+        Serialize the ChatBotHelper to a dictionary.
+
+        This method returns a dictionary representation of the ChatBotHelper instance,
+        including key metadata and related objects such as the chatbot, account, and custom domain.
+
+        :returns: A dictionary containing the serialized state of the ChatBotHelper.
+        :rtype: dict[str, Any]
         """
         return {
             "ready": self.ready,
@@ -880,21 +989,27 @@ class ChatBotHelper(SmarterRequestMixin):
     @property
     def api_host(self) -> Optional[str]:
         """
-        Returns the API host for a ChatBot API url.
-        :return: The API host or None if not found.
+        Returns the API host for a ChatBot API URL.
 
-        named url:
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-          returns 'alpha.api.smarter.sh'
+        This property extracts and returns the API host component from the chatbot URL,
+        supporting named, sandbox, and custom domain URLs.
 
-        sandbox url:
-        - http://api.localhost:8000/api/v1/chatbots/1/chat/
-          return 'api.localhost:8000'
+        Examples
+        --------
+        Named URL:
+            - ``https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/``
+              returns ``'alpha.api.smarter.sh'``
 
-        custom domain url:
-        - https://hr.smarter.sh/chatbot/
-          return 'hr.smarter.sh'
+        Sandbox URL:
+            - ``http://api.localhost:8000/api/v1/chatbots/1/chat/``
+              returns ``'api.localhost:8000'``
 
+        Custom domain URL:
+            - ``https://hr.smarter.sh/chatbot/``
+              returns ``'hr.smarter.sh'``
+
+        :returns: The API host as a string, or ``None`` if not found.
+        :rtype: Optional[str]
         """
         if not self.smarter_request:
             return None
@@ -916,6 +1031,9 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         Validates whether the ChatBot is in a ready state,
         and if it is usable for making API calls.
+
+        :returns: ``True`` if the ChatBot is valid and ready, otherwise ``False``.
+        :rtype: bool
         """
         if not self.ready:
             self._err = f"is_valid() returning false because ChatBotHelper is not in a ready state: {self._url}"
@@ -931,6 +1049,12 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @cached_property
     def is_authentication_required(self) -> bool:
+        """
+        Determines if authentication is required to access the ChatBot.
+
+        :returns: ``True`` if authentication is required, otherwise ``False``.
+        :rtype: bool
+        """
         if self.is_chatbot_sandbox_url:
             return True
 
@@ -941,7 +1065,15 @@ class ChatBotHelper(SmarterRequestMixin):
     @property
     def chatbot(self) -> Optional[ChatBot]:
         """
-        Returns a lazy instance of the ChatBot
+        Returns a lazy instance of the ChatBot.
+
+        Examples
+        --------
+        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+          returns ChatBot(name='hr', account=Account(...))
+
+        :returns: The ChatBot instance, or ``None`` if not found.
+        :rtype: Optional[ChatBot]
         """
         if self._chatbot:
             return self._chatbot
@@ -969,16 +1101,26 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @property
     def is_custom_domain(self) -> bool:
+        """
+        Returns ``True`` if the ChatBot is using a custom domain.
+
+        :returns: ``True`` if a custom domain is configured, otherwise ``False``.
+        :rtype: bool
+        """
         return self._chatbot_custom_domain is not None
 
     @property
     def chatbot_custom_domain(self) -> Optional[ChatBotCustomDomain]:
         """
-        Returns a lazy instance of the ChatBotCustomDomain
+        Returns a lazy instance of the ChatBotCustomDomain.
 
-        examples:
-        - https://hr.smarter.sh/chatbot/
-          returns ChatBotCustomDomain(domain_name='smarter.sh')
+        Examples
+        --------
+        - ``https://hr.smarter.sh/chatbot/``
+          returns ``ChatBotCustomDomain(domain_name='smarter.sh')``
+
+        :returns: The ChatBotCustomDomain instance, or ``None`` if not found.
+        :rtype: Optional[ChatBotCustomDomain]
         """
         if self._chatbot_custom_domain:
             return self._chatbot_custom_domain
@@ -1007,17 +1149,40 @@ class ChatBotHelper(SmarterRequestMixin):
 
     def helper_logger(self, message: str):
         """
-        Create a log entry
+        Create a log entry.
+
+        This method writes an informational log entry using the
+        :data:`chatbot_helper_logger`, including the formatted class name
+        and the provided message.
+
+        :param message: The message to log.
+        :type message: str
         """
         chatbot_helper_logger.info("%s: %s", self.formatted_class_name, message)
 
     def helper_warning(self, message: str):
         """
-        Create a log entry
+        Create a log warning entry.
+
+        This method writes an informational log entry using the
+        :data:`chatbot_helper_logger`, including the formatted class name
+        and the provided message.
+
+        :param message: The message to log.
+        :type message: str
         """
         logger.warning("%s: %s", self.formatted_class_name, message)
 
     def log_dump(self):
+        """
+        Dumps the ChatBotHelper state to the helper logger.
+        This method serializes the current state of the ChatBotHelper
+        instance to JSON format and logs it using the helper logger.
+        It includes horizontal lines for better readability in the logs.
+
+        :returns: None if the ChatBot is not initialized or logging is disabled.
+        :rtype: None
+        """
         if not self._chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
             return None
 
