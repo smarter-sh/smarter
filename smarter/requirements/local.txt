@@ -638,9 +638,12 @@ sphinx==8.2.3
     # via
     #   -r smarter/requirements/in/local.in
     #   autodoc-pydantic
+    #   sphinx-copybutton
     #   sphinx-rtd-theme
     #   sphinxcontrib-django
     #   sphinxcontrib-jquery
+sphinx-copybutton==0.5.2
+    # via -r smarter/requirements/in/local.in
 sphinx-rtd-theme==3.0.2
     # via -r smarter/requirements/in/local.in
 sphinxcontrib-applehelp==2.0.0
