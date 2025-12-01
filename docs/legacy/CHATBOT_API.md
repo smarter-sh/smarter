@@ -92,11 +92,11 @@ For Django to accept http requests from a domain, it must be included in Django'
 
 ### CORS
 
-We subclassed the standard `corsheaders` as `smarter.apps.chatbot.middleware.cors.CorsMiddleware` in order to performantly append API domain names to `CORS_ALLOWED_ORIGINS` at run time..
+We subclassed the standard `corsheaders` as `smarter.apps.chatbot.middleware.cors.SmarterCorsMiddleware` in order to performantly append API domain names to `CORS_ALLOWED_ORIGINS` at run time..
 
 ### Cross-Site Request Forgery
 
-We subclassed Django's csrf library as `smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware` in order to append API domain names to `CSRF_TRUSTED_ORIGINS` at run time.
+We subclassed Django's csrf library as `smarter.apps.chatbot.middleware.csrf.SmarterCsrfViewMiddleware` in order to append API domain names to `CSRF_TRUSTED_ORIGINS` at run time.
 
 ### TLS/SSL Certificates
 

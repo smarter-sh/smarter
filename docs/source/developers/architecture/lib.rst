@@ -7,8 +7,8 @@ smarter/lib
    :caption: smarter/lib
 
    lib/drf
-   lib/knox
    lib/manage
+   lib/token-generators
    lib/middleware
    lib/object-caching
    lib/react-integration

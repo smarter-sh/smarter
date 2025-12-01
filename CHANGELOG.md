@@ -1,9 +1,8 @@
 ## [0.13.36](https://github.com/smarter-sh/smarter/compare/v0.13.35...v0.13.36) (2025-11-29)
 
-
 ### Bug Fixes
 
-* remove import django.core.serializers.json.DjangoJSONEncoder ([95cffb8](https://github.com/smarter-sh/smarter/commit/95cffb8b41baf7b4b9f1a0d42a3a3c0bb4422a73))
+- remove import django.core.serializers.json.DjangoJSONEncoder ([95cffb8](https://github.com/smarter-sh/smarter/commit/95cffb8b41baf7b4b9f1a0d42a3a3c0bb4422a73))
 
 # Change Log
 
@@ -447,8 +446,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - allow internal ip address to pass ([a5b4c09](https://github.com/smarter-sh/smarter/commit/a5b4c09fe63e0d651e2142a3128ab8ca44c278eb))
 - authenticate the request ([cf44aa4](https://github.com/smarter-sh/smarter/commit/cf44aa41091d4f4ba271063349496fa7dff2901d))
-- broken import for BlockSensitiveFilesMiddleware ([eca10cf](https://github.com/smarter-sh/smarter/commit/eca10cfa488401cd09b19fff9dd6e31a74f0d41f))
-- broken import for BlockSensitiveFilesMiddleware ([57f226f](https://github.com/smarter-sh/smarter/commit/57f226f297c314c93e5f575d81f2d4fa3358d8e3))
+- broken import for SmarterBlockSensitiveFilesMiddleware ([eca10cf](https://github.com/smarter-sh/smarter/commit/eca10cfa488401cd09b19fff9dd6e31a74f0d41f))
+- broken import for SmarterBlockSensitiveFilesMiddleware ([57f226f](https://github.com/smarter-sh/smarter/commit/57f226f297c314c93e5f575d81f2d4fa3358d8e3))
 - chatbot_id and chatbot_name are removed ([1d8ada5](https://github.com/smarter-sh/smarter/commit/1d8ada570308fe292f45c0fc119716fe10275f4b))
 - chatbot_id was removed ([93feac2](https://github.com/smarter-sh/smarter/commit/93feac27137f8807c40588fcc12c14019b3d0db8))
 - chatbot_name was removed ([730a944](https://github.com/smarter-sh/smarter/commit/730a94460c5eb2b8af4c240bdfd8c408a1e40243))

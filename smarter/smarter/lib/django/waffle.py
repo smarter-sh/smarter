@@ -110,22 +110,30 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
             cache_key = f"{func.__name__}_{args}_{kwargs}"
             result = None
             try:
-                result = cache.get(cache_key)
-            except (RedisConnectionError, ConnectionInterrupted) as e:
-                logger.error("Redis connection error while accessing cache: %s", e, exc_info=True)
-            # pylint: disable=broad-except
-            except Exception as e:
-                logger.error("Unexpected error while attempting to access cache: %s", e, exc_info=True)
-
-            if not result:
-                result = func(*args, **kwargs)
                 try:
-                    cache.set(cache_key, result, timeout)
-                except (RedisConnectionError, ConnectionInterrupted) as e:
-                    logger.error("Redis connection error while setting cache: %s", e, exc_info=True)
+                    result = cache.get(cache_key)
+                except (
+                    RedisConnectionError,
+                    ConnectionInterrupted,
+                ) as e:
+                    logger.error("Redis connection error while accessing cache: %s", e, exc_info=True)
                 # pylint: disable=broad-except
                 except Exception as e:
                     logger.error("Unexpected error while attempting to access cache: %s", e, exc_info=True)
+
+                if not result:
+                    result = func(*args, **kwargs)
+                    try:
+                        cache.set(cache_key, result, timeout)
+                    except (RedisConnectionError, ConnectionInterrupted) as e:
+                        logger.error("Redis connection error while setting cache: %s", e, exc_info=True)
+                    # pylint: disable=broad-except
+                    except Exception as e:
+                        logger.error("Unexpected error while attempting to access cache: %s", e, exc_info=True)
+                return result
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("An error occurred in cache_results decorator: %s", e, exc_info=True)
             return result
 
         def invalidate(*args, **kwargs):

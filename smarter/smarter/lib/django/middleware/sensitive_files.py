@@ -23,7 +23,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
+class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     """Block requests for common sensitive files."""
 
     THROTTLE_LIMIT = 5

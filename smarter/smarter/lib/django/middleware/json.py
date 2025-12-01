@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 
 
-class JsonErrorMiddleware(MiddlewareMixin):
+class SmarterJsonErrorMiddleware(MiddlewareMixin):
     """
     Middleware to ensure that all requests for 'application/JSON' return responses
     that are also in JSON format.

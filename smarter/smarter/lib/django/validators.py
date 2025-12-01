@@ -173,7 +173,7 @@ class SmarterValidator:
             return False
 
     @staticmethod
-    def validate_json(value: str) -> str:
+    def validate_json(value: str) -> Optional[str]:
         """Validate JSON format"""
         try:
             if not isinstance(value, str):
