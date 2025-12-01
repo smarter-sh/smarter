@@ -1,5 +1,9 @@
-smarter/lib
+lib
 ===========
+
+The `smarter.lib` namespace contains all modifications and extensions to third-party
+libraries used by the Smarter platform. In the repository this is generally organized
+by library name (e.g. django, drf, etc.) of the third-party library being extended.
 
 
 .. toctree::
@@ -11,12 +15,11 @@ smarter/lib
    lib/token-generators
    lib/middleware
    lib/object-caching
-   lib/react-integration
    lib/security
-   lib/settings
    lib/signals
    lib/tasks
    lib/templates
    lib/validators
    lib/views
    lib/waffle
+   lib/settings

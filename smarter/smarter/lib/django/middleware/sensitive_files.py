@@ -35,7 +35,9 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
         # grant amnesty for specific patterns
         self.allowed_patterns = (
-            settings.SENSITIVE_FILES_AMNESTY_PATTERNS if hasattr(settings, "SENSITIVE_FILES_AMNESTY_PATTERNS") else []
+            settings.SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS
+            if hasattr(settings, "SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS")
+            else []
         )
         self.sensitive_files = {
             ".env",
