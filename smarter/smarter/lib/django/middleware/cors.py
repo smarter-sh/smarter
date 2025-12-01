@@ -36,7 +36,51 @@ logger.info("Loading smarter.lib.django.middleware.cors.SmarterCorsMiddleware")
 
 
 class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
-    """SmarterCorsMiddleware is used to handle CORS headers for the application."""
+    """
+    Middleware for handling Cross-Origin Resource Sharing (CORS) headers in the application.
+
+    This middleware extends the default CORS handling to dynamically add chatbot URLs to the
+    allowed origins at runtime. It ensures that requests from valid chatbot origins are permitted
+    by updating the CORS allowed origins list based on the current request context.
+
+    The middleware also provides additional logic to handle internal IP addresses, health check
+    endpoints, and logging for debugging and auditing purposes.
+
+    :cvar _url: The parsed URL (as a :class:`urllib.parse.SplitResult`) for the current request, or None.
+    :vartype _url: Optional[SplitResult]
+    :cvar _chatbot: The chatbot instance associated with the current request, or None.
+    :vartype _chatbot: Optional[ChatBot]
+    :cvar request: The current Django HTTP request object, or None.
+    :vartype request: Optional[HttpRequest]
+
+    **Key Features**
+
+    - Dynamically adds chatbot URLs to the CORS allowed origins list.
+    - Handles requests from internal IP addresses and health check endpoints.
+    - Provides detailed logging for CORS-related events and decisions.
+    - Integrates with Django and the `django-cors-headers` package.
+
+    .. note::
+        - The chatbot URL is only added to the allowed origins if a chatbot is associated with the request.
+        - Internal requests and health checks are short-circuited for efficiency.
+        - Logging is controlled via a waffle switch and the application's log level.
+
+    **Example**
+
+    To enable this middleware, add it to your Django project's middleware settings::
+
+        MIDDLEWARE = [
+            ...
+            'smarter.lib.django.middleware.cors.SmarterCorsMiddleware',
+            ...
+        ]
+
+    :param request: The incoming HTTP request object.
+    :type request: django.http.HttpRequest
+
+    :returns: The HTTP response object, potentially with CORS headers added.
+    :rtype: django.http.response.HttpResponseBase or Awaitable[HttpResponseBase]
+    """
 
     _url: Optional[SplitResult] = None
     _chatbot: Optional[ChatBot] = None
