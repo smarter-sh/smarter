@@ -1,4 +1,4 @@
-# pylint: disable=C0413
+# pylint: disable=C0413,C0302
 """
 Internal validation features. This module contains functions for validating various data types.
 Before adding anything to this module, please first check if there is a built-in Python function
@@ -982,19 +982,19 @@ class SmarterValidator:
 
     @staticmethod
     def is_valid_uuid(uuid: str) -> bool:
-        """Check if hostname is valid
+        """Check if UUID is valid
 
-        Checks whether the provided hostname is valid.
+        Checks whether the provided UUID is valid.
 
-        :param hostname: The hostname to check.
-        :type hostname: str
-        :returns: True if the hostname is valid, otherwise False.
+        :param uuid: The UUID string to check.
+        :type uuid: str
+        :returns: True if the UUID is valid, otherwise False.
         :rtype: bool
 
         Example::
 
-            SmarterValidator.is_valid_hostname("example.com")         # returns True
-            SmarterValidator.is_valid_hostname("invalid_hostname!")   # returns False
+            SmarterValidator.is_valid_uuid("123e4567-e89b-12d3-a456-426614174000")  # returns True
+            SmarterValidator.is_valid_uuid("invalid")                                # returns False
 
         """
         try:

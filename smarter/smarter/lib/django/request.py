@@ -66,70 +66,71 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock]]
+"""Type alias for all Smarter request types."""
 
 
 class SmarterRequestMixin(AccountMixin):
     """
     Helper class for the Django request object that enforces authentication and
-    provides lazy loading of the user, account, user profile and session_key.
+    provides lazy loading of the user, account, user profile, and session_key.
 
-    Works with any Django request object and any valid url, but is designed
-    as a helper class for Smarter ChatBot urls.
+    This mixin works with any Django request object and any valid URL, but is designed
+    as a helper class for Smarter ChatBot URLs.
 
-    Fix note: we've been boxed into making the request object an optional positional
-    argument, because Django view lifecycles do not recognize the request object
-    until well after class __init__(). Meanwhile, SmarterRequestMixin is
-    included as a mixin in the Smarter base view classes.
+    .. note::
+        The request object is an optional positional argument due to Django view lifecycles,
+        which do not recognize the request object until after class ``__init__()``.
+        ``SmarterRequestMixin`` is included as a mixin in the Smarter base view classes.
 
-    valid end points:
-        1.) root end points for named urls. Public or authenticated chats
-            self.is_chatbot_named_url==True
-        --------
-        - http://example.3141-5926-5359.api.localhost:8000/			            -> smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView
-        - http://example.3141-5926-5359.api.localhost:8000/config		        -> smarter.apps.prompt.views.ChatConfigView
+    **Valid endpoints:**
 
-        2.) authenticated sandbox end points. Authenticated chats
-            self.is_chatbot_sandbox_url==True
-        --------
-        - http://localhost:8000/workbench/<str:name>/				            -> smarter.apps.prompt.views.ChatAppWorkbenchView
-        - http://localhost:8000/workbench/<str:name>/config/			            -> smarter.apps.prompt.views.ChatConfigView
+    1. Root endpoints for named URLs (public or authenticated chats)
+       (``self.is_chatbot_named_url == True``)
 
-        3.) smarter.sh/v1 end points. Public or authenticated chats
-            self.is_chatbot_smarter_api_url==True
-        --------
-        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/		    -> smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView
-        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/	-> smarter.apps.prompt.views.ChatConfigView
+       - ``http://example.3141-5926-5359.api.localhost:8000/`` → ``smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView``
+       - ``http://example.3141-5926-5359.api.localhost:8000/config`` → ``smarter.apps.prompt.views.ChatConfigView``
 
-        4.) command-line interface api end points. Authenticated chats
-            self.is_chatbot_cli_api_url==True
-        --------
-        - http://localhost:8000/api/v1/cli/chat/<str:name>/			            -> smarter.apps.chatbot.api.v1.cli.views.nonbrokered.chat.ApiV1CliChatApiView -> * non-brokered view based on url returned by ChatConfigView
-        - http://localhost:8000/api/v1/cli/chat/config/<str:name>/", 		    -> smarter.apps.chatbot.api.v1.cli..views.nonbrokered.chat_config.ApiV1CliChatConfigApiView	-> ChatConfigView
+    2. Authenticated sandbox endpoints (authenticated chats)
+       (``self.is_chatbot_sandbox_url == True``)
 
-        5.) wtf are these???????
-        - http://localhost:8000/api/v1/chat/        ** these seem to be dead ends
-        - http://localhost:8000/api/v1/chat/
+       - ``http://localhost:8000/workbench/<str:name>/`` → ``smarter.apps.prompt.views.ChatAppWorkbenchView``
+       - ``http://localhost:8000/workbench/<str:name>/config/`` → ``smarter.apps.prompt.views.ChatConfigView``
 
-    example urls:
-    - http://testserver
-    - http://localhost:8000/
-    - http://localhost:8000/docs/
-    - http://localhost:8000/dashboard/
-    - https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
-    - http://example.com/contact/
-    - http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-    - https://hr.3141-5926-5359.alpha.api.smarter.sh/
-    - https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
-    - http://example.3141-5926-5359.api.localhost:8000/
-    - http://example.3141-5926-5359.api.localhost:8000/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
-    - http://example.3141-5926-5359.api.localhost:8000/config/
-    - http://example.3141-5926-5359.api.localhost:8000/config/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
-    - http://localhost:8000/api/v1/workbench/1/chat/
-    - http://localhost:8000/api/v1/cli/chat/smarter/?new_session=false&uid=mcdaniel
-    - https://hr.smarter.sh/
+    3. smarter.sh/v1 endpoints (public or authenticated chats)
+       (``self.is_chatbot_smarter_api_url == True``)
 
-    session_key is a unique identifier for a chat session.
-    It originates from generate_session_key() in this class.
+       - ``http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/`` → ``smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView``
+       - ``http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/`` → ``smarter.apps.prompt.views.ChatConfigView``
+
+    4. Command-line interface API endpoints (authenticated chats)
+       (``self.is_chatbot_cli_api_url == True``)
+
+       - ``http://localhost:8000/api/v1/cli/chat/<str:name>/`` → ``smarter.apps.chatbot.api.v1.cli.views.nonbrokered.chat.ApiV1CliChatApiView``
+       - ``http://localhost:8000/api/v1/cli/chat/config/<str:name>/`` → ``smarter.apps.chatbot.api.v1.cli.views.nonbrokered.chat_config.ApiV1CliChatConfigApiView``
+
+    5. Other endpoints (possibly deprecated or unused)
+       - ``http://localhost:8000/api/v1/chat/``
+
+    **Example URLs:**
+
+    - ``http://testserver``
+    - ``http://localhost:8000/``
+    - ``http://localhost:8000/docs/``
+    - ``http://localhost:8000/dashboard/``
+    - ``https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/``
+    - ``http://example.com/contact/``
+    - ``http://localhost:8000/workbench/example/config/?session_key=...``
+    - ``https://hr.3141-5926-5359.alpha.api.smarter.sh/``
+    - ``https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=...``
+    - ``http://example.3141-5926-5359.api.localhost:8000/``
+    - ``http://example.3141-5926-5359.api.localhost:8000/?session_key=...``
+    - ``http://example.3141-5926-5359.api.localhost:8000/config/``
+    - ``http://example.3141-5926-5359.api.localhost:8000/config/?session_key=...``
+    - ``http://localhost:8000/api/v1/workbench/1/chat/``
+    - ``http://localhost:8000/api/v1/cli/chat/smarter/?new_session=false&uid=mcdaniel``
+    - ``https://hr.smarter.sh/``
+
+    :ivar session_key: Unique identifier for a chat session, generated by :meth:`generate_session_key`.
     """
 
     __slots__ = (
@@ -171,9 +172,28 @@ class SmarterRequestMixin(AccountMixin):
 
     def init(self, request: HttpRequest, *args, **kwargs):
         """
-        Handles initializations that require a valid request. This is called
-        from __init__() iif the request object is passed. It is also called
-        from the smarter_request setter.
+        Handles initializations that require a valid request.
+
+        This method is called from ``__init__()`` if the request object is passed.
+        It is also called from the ``smarter_request`` setter.
+
+        Args:
+            request (HttpRequest): Django HttpRequest object.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Raises:
+            SmarterValueError: If the request URL is missing or invalid.
+
+        Example::
+
+            from smarter.lib.django.request import SmarterRequestMixin
+
+            class Foo(SmarterRequestMixin):
+                pass
+
+            foo = Foo(request)
+            foo.init(request)
         """
         url = smarter_build_absolute_uri(self.smarter_request) if self.smarter_request else None
 
@@ -249,8 +269,24 @@ class SmarterRequestMixin(AccountMixin):
 
     def invalidate_cached_properties(self):
         """
-        Invalidate cached properties to force re-evaluation.
-        This is useful for testing or when the request object changes.
+        Invalidates all cached properties on the instance to force re-evaluation.
+
+        This method removes all attributes cached by `@cached_property` decorators
+        from the instance's `__dict__`. It is useful for testing or when the request
+        object changes and you need to ensure that all dependent properties are recalculated.
+
+        Example::
+
+            from smarter.lib.django.request import SmarterRequestMixin
+
+            class Foo(SmarterRequestMixin):
+                pass
+
+            foo = Foo(request)
+            foo.invalidate_cached_properties(request)
+
+        Raises:
+            None
         """
         for cls in self.__class__.__mro__:
             for name, value in inspect.getmembers(cls):
@@ -259,7 +295,21 @@ class SmarterRequestMixin(AccountMixin):
 
     @property
     def smarter_request(self) -> SmarterRequestType:
-        """renaming this to avoid potential name collisions in child classes"""
+        """
+        Returns the current request object.
+
+        This property is named to avoid potential name collisions in child classes.
+        This property is preferred over standard Django request types in that
+        it more elegantly resolves idiosyncratic usage like Unit tests, Sphinx docs,
+        and other non-standard request objects.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            req = request_mixin.smarter_request
+
+        :return: The current request object.
+        """
         return self._smarter_request
 
     @smarter_request.setter
@@ -275,7 +325,17 @@ class SmarterRequestMixin(AccountMixin):
 
     @cached_property
     def auth_header(self) -> Optional[str]:
-        """Get the Authorization header from the request."""
+        """Get the Authorization header from the request.
+
+        :return: The value of the "Authorization" header if present, otherwise None.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            print(request_mixin.auth_header)
+
+        :return: The Authorization header as a string, or None if not present.
+        """
         return (
             self._smarter_request.META.get("HTTP_AUTHORIZATION")
             if self._smarter_request and hasattr(self._smarter_request, "META")
@@ -284,7 +344,18 @@ class SmarterRequestMixin(AccountMixin):
 
     @cached_property
     def api_token(self) -> Optional[bytes]:
-        """Get the API token from the request."""
+        """
+        Get the API token from the request.
+
+        :return: The API token as bytes if present in the Authorization header, otherwise None.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            token = request_mixin.api_token
+
+        :return: The API token as bytes, or None if not present.
+        """
         if isinstance(self.auth_header, str) and self.auth_header.startswith("Token "):
             return self.auth_header.split("Token ")[1].encode()
         return None
@@ -292,9 +363,34 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def qualified_request(self) -> bool:
         """
-        A cursory screening of the wsgi request object to look for
-        any disqualifying conditions that confirm that this is not a
+        A cursory screening of the WSGI request object to look for
+        any disqualifying conditions that confirm this is not a
         request that we are interested in.
+
+        The request is considered "qualified" if **all** of the following are true:
+
+        - The request object (`self._smarter_request`) is present.
+        - The URL path is present and non-empty.
+        - The request does **not** originate from an internal AWS Kubernetes subnet (netloc starts with `192.168`).
+        - The path is **not** in the list of `amnesty_urls`.
+        - The path does **not** start with `/admin/`.
+        - The path does **not** start with `/docs/`.
+        - The path does **not** end with a static file extension (e.g., `.css`, `.js`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.woff`, `.woff2`, `.ttf`, `.eot`, `.ico`).
+
+        :return: True if the request passes all checks and is of interest, otherwise False.
+
+        Example::
+
+            # True case: a valid chatbot request
+            request_mixin = SmarterRequestMixin(request)
+            if request_mixin.qualified_request:
+                print("This is a qualified chatbot request.")
+
+            # False case: a static asset or admin/docs request
+            static_request = SmarterRequestMixin(static_asset_request)
+            if not static_request.qualified_request:
+                print("This request is not of interest.")
+
         """
         if not self._smarter_request:
             return False
@@ -336,7 +432,16 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def url(self) -> str:
         """
-        The str representation of the ParseResult object stored in _parse_result.
+        The string representation of the ParseResult object stored in _parse_result.
+
+        :return: The URL as a string.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            url_str = request_mixin.url
+            print(url_str)  # e.g., 'https://example.com/path/'
+
         """
         if not isinstance(self._parse_result, ParseResult):
             raise SmarterValueError(
@@ -355,7 +460,16 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def parsed_url(self) -> ParseResult:
         """
-        expose our private url
+        Expose the private ParseResult URL object as a public property.
+
+        :return: The parsed URL as a `ParseResult` object.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            parsed = request_mixin.parsed_url
+            print(parsed.netloc)  # e.g., 'example.com'
+
         """
         if not isinstance(self._parse_result, ParseResult):
             raise SmarterValueError("The URL has not been initialized as a ParseResult.")
@@ -365,16 +479,34 @@ class SmarterRequestMixin(AccountMixin):
     def url_path_parts(self) -> list:
         """
         Extract the path parts from the URL.
+
+        :return: A list of strings representing each part of the URL path.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            parts = request_mixin.url_path_parts
+            print(parts)  # e.g., ['api', 'v1', 'workbench', '1', 'chat']
+
         """
         return self.parsed_url.path.strip("/").split("/")
 
     @property
     def params(self) -> Optional[QueryDict]:
         """
-        The query string parameters from the Django request object. This extracts
-        the query string parameters from the request object and converts them to a
-        dictionary. This is used in child views to pass optional command-line
-        parameters to the broker.
+        The query string parameters from the Django request object.
+
+        This extracts the query string parameters from the request object and converts them to a dictionary.
+        Used in child views to pass optional command-line parameters to the broker.
+
+        :return: QueryDict containing the query string parameters.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            params = request_mixin.params
+            print(params)  # e.g., {'session_key': 'abc123', 'uid': 'xyz'}
+
         """
         if not self._params:
             try:
@@ -391,8 +523,18 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def uid(self) -> Optional[str]:
         """
-        Unique identifier for the client. This is assumed to be a
-        combination of the machine mac address and the hostname.
+        Unique identifier for the client.
+
+        This is assumed to be a combination of the machine MAC address and the hostname.
+
+        :return: The client UID as a string, or None if not available.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            uid = request_mixin.uid
+            print(uid)  # e.g., '00:1A:2B:3C:4D:5E-myhost'
+
         """
         return self.params.get("uid") if isinstance(self.params, QueryDict) else None
 
@@ -400,15 +542,25 @@ class SmarterRequestMixin(AccountMixin):
     def cache_key(self) -> Optional[str]:
         """
         Returns a cache key for the request.
-        This is used to cache the chat request thread.
 
-        The key is a combination of the class name, authenticated username,
-        the chat name, and the client UID. Currently used by the
-        ApiV1CliChatConfigApiView and ApiV1CliChatApiView as a means of sharing the session_key.
+        This is used to cache the chat request thread. The key is a combination of:
+        - the class name,
+        - authenticated username,
+        - the chat name,
+        - and the client UID.
 
-        :param name: a generic object or resource name
-        :param uid: UID of the client, assumed to have been created from the
-         machine mac address and the hostname of the client
+        Currently used by the ApiV1CliChatConfigApiView and ApiV1CliChatApiView as a means of sharing the session_key.
+
+        :param name: A generic object or resource name.
+        :param uid: UID of the client, assumed to have been created from the machine MAC address and the hostname of the client.
+        :return: A unique cache key string.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            key = request_mixin.cache_key
+            print(key)  # e.g., 'a1b2c3d4e5f6...'
+
         """
         if self._cache_key:
             return self._cache_key
@@ -431,10 +583,23 @@ class SmarterRequestMixin(AccountMixin):
         return self._cache_key
 
     @property
-    def session_key(self):
+    def session_key(self) -> str:
         """
-        Getter for the session_key property. The session_key is a unique identifier
-        for a chat session. It is used to identify the chat session across multiple requests.
+        Getter for the session_key property.
+
+        The session_key is a unique identifier for a chat session.
+        It is used to identify the chat session across multiple requests.
+        If the session_key is not already set, it attempts to find it
+        in the URL parameters. Barring that, it generates a new one.
+
+        :return: The session key as a string.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            session_key = request_mixin.session_key
+            print(session_key)  # e.g., '38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc'
+
         """
         if not self._session_key:
             self._session_key = self.find_session_key() or self.generate_session_key()
@@ -446,7 +611,13 @@ class SmarterRequestMixin(AccountMixin):
     def smarter_request_chatbot_id(self) -> Optional[int]:
         """
         Extract the chatbot id from the URL.
-        example: http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/
+
+        Example:
+            http://localhost:8000/api/v1/workbench/1912/chat/config/
+
+            return 1912
+
+        :return: The chatbot id as an integer, or None if not found.
         """
         if not self.smarter_request:
             return None
@@ -464,8 +635,15 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def url_account_number(self) -> Optional[str]:
         """
-        http://example.3141-5926-5359.api.localhost:8000/config
-        SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
+        Extract the account number from the URL using the pattern defined in
+        SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN.
+
+        Example:
+            http://example.3141-5926-5359.api.localhost:8000/config
+
+            returns "3141-5926-5359"
+
+        :return: The account number as a string, or None if not found.
         """
         if self._url_account_number:
             return self._url_account_number
@@ -481,7 +659,13 @@ class SmarterRequestMixin(AccountMixin):
     def smarter_request_chatbot_name(self) -> Optional[str]:
         """
         Extract the chatbot name from the URL.
-        http://example.3141-5926-5359.api.localhost:8000/config
+
+        Example:
+            http://example.3141-5926-5359.api.localhost:8000/config
+
+            returns "example"
+
+        :return: The chatbot name as a string, or None if not found.
         """
         if not self.is_chatbot:
             return None
@@ -531,8 +715,16 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def timestamp(self):
         """
-        create a consistent timestamp
-        based on the time that this object was instantiated.
+        Create a consistent timestamp based on the time that this object was instantiated.
+
+        :return: The timestamp as a `datetime` object.
+
+        Example:
+            ```python
+            request_mixin = SmarterRequestMixin(request)
+            ts = request_mixin.timestamp
+            print(ts)  # e.g., 2025-12-01 12:34:56.789012
+            ```
         """
         return self._timestamp
 
@@ -540,7 +732,17 @@ class SmarterRequestMixin(AccountMixin):
     def data(self) -> Optional[Union[dict, list, str]]:
         """
         Get the request body data as a dictionary, list or str.
-        used for setting the session_key.
+
+        Used for setting the session_key.
+
+        :return: The request body data as a dict, list, or str, or None if not available.
+
+        Example:
+            ```python
+            request_mixin = SmarterRequestMixin(request)
+            data = request_mixin.data
+            print(data)  # e.g., {'session_key': 'abc123', ...}
+            ```
         """
         if self._data:
             return self._data
@@ -606,13 +808,26 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def unique_client_string(self) -> str:
         """
-        Generate a unique string based on:
-         - account number
-         - url
-         - user agent
-         - ip address
-         - timestamp
-        Used for generating session_key and client_key.
+        Generate a unique string based on several request attributes.
+
+        This string is used for generating `session_key` and `client_key`.
+
+        The unique string is composed of:
+            - Account number
+            - URL
+            - User agent
+            - IP address
+            - Timestamp
+
+        Returns:
+            str: A unique string representing the client and request context.
+
+        Example:
+            ```python
+            request_mixin = SmarterRequestMixin(request)
+            unique_str = request_mixin.unique_client_string
+            print(unique_str)
+            ```
         """
         if not self.smarter_request:
             return "unique_client_string"
@@ -624,8 +839,12 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def client_key(self) -> Optional[str]:
         """
-        for smarter.sh/v1 api endpoints, the client_key is used to identify the client.
-        Generate a unique client key based on the client's IP address, user agent, and the current datetime.
+        (Deprecated) For smarter.sh/v1 API endpoints, the `client_key` is used to identify the client.
+
+        Generates a unique client key based on the client's IP address, user agent, and the current datetime.
+
+        Returns:
+            str: A unique client key string.
         """
         warnings.warn(
             "The 'client_key' property is deprecated and will be removed in a future version.",
@@ -636,6 +855,22 @@ class SmarterRequestMixin(AccountMixin):
 
     @cached_property
     def ip_address(self) -> Optional[str]:
+        """
+        Get the client's IP address from the request object.
+
+        This property attempts to extract the IP address from the request's META dictionary,
+        using the "REMOTE_ADDR" key. If the IP address is not available, it returns None.
+
+        Returns:
+            Optional[str]: The client's IP address as a string, or None if not found.
+
+        Example:
+            ```python
+            request_mixin = SmarterRequestMixin(request)
+            ip = request_mixin.ip_address
+            print(ip)  # e.g., '192.168.1.100'
+            ```
+        """
         if (
             self.smarter_request is not None
             and hasattr(self.smarter_request, "META")
@@ -646,6 +881,22 @@ class SmarterRequestMixin(AccountMixin):
 
     @cached_property
     def user_agent(self) -> Optional[str]:
+        """
+        Get the client's user agent string from the request object.
+
+        This property attempts to extract the user agent from the request's META dictionary,
+        using the "HTTP_USER_AGENT" key. If the user agent is not available, it returns a default value.
+
+        Returns:
+            Optional[str]: The client's user agent string, or None if not found.
+
+        Example:
+            ```python
+            request_mixin = SmarterRequestMixin(request)
+            ua = request_mixin.user_agent
+            print(ua)  # e.g., 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...'
+            ```
+        """
         if (
             self.smarter_request is not None
             and hasattr(self.smarter_request, "META")
@@ -662,21 +913,26 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def is_config(self) -> bool:
         """
-        Returns True if the url resolves to a config endpoint.
+        Returns True if the URL resolves to a config endpoint.
 
-        examples:
-        - http://testserver/api/v1/cli/chat/config/testc7098865f39202d5/
-        - http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-        - http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/
-        - http://example.api.localhost:8000/config
+        Examples:
+            http://testserver/api/v1/cli/chat/config/testc7098865f39202d5/
+            http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+            http://localhost:8000/api/v1/workbench/<int:chatbot_id>/chat/config/
+            http://example.api.localhost:8000/config
 
+        Returns:
+            bool: True if the URL is a config endpoint, otherwise False.
         """
         return "config" in self.url_path_parts
 
     @cached_property
     def is_dashboard(self) -> bool:
         """
-        Returns True if the url resolves to a dashboard endpoint.
+        Returns True if the URL resolves to a dashboard endpoint.
+
+        Returns:
+            bool: True if the URL is a dashboard endpoint, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -685,7 +941,10 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_workbench(self) -> bool:
         """
-        Returns True if the url resolves to a workbench endpoint.
+        Returns True if the URL resolves to a workbench endpoint.
+
+        Returns:
+            bool: True if the URL is a workbench endpoint, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -693,6 +952,12 @@ class SmarterRequestMixin(AccountMixin):
 
     @cached_property
     def is_environment_root_domain(self) -> bool:
+        """
+        Returns True if the URL resolves to the environment root domain.
+
+        Returns:
+            bool: True if the URL is the environment root domain, otherwise False.
+        """
         if not self.smarter_request:
             return False
         if not self.parsed_url:
@@ -702,14 +967,19 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_chatbot(self) -> bool:
         """
-        Returns True if the url resolves to a chatbot. Conditions are called in a lazy
-        sequence intended to avoid unnecessary processing.
-        examples:
-        - http://localhost:8000/api/v1/prompt/1/chat/
-        - http://localhost:8000/api/v1/cli/chat/example/
-        - http://example.3141-5926-5359.api.localhost:8000/
-        - http://localhost:8000/workbench/<str:name>/chat/
-        - http://localhost:8000/api/v1/chatbots/1556/chat/
+        Returns True if the URL resolves to a chatbot endpoint.
+
+        Conditions are checked in a lazy sequence to avoid unnecessary processing.
+
+        Examples:
+            - http://localhost:8000/api/v1/prompt/1/chat/
+            - http://localhost:8000/api/v1/cli/chat/example/
+            - http://example.3141-5926-5359.api.localhost:8000/
+            - http://localhost:8000/workbench/<str:name>/chat/
+            - http://localhost:8000/api/v1/chatbots/1556/chat/
+
+        Returns:
+            bool: True if the URL is a chatbot endpoint, otherwise False.
         """
 
         return self.qualified_request and (
@@ -722,10 +992,14 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_smarter_api(self) -> bool:
         """
-        Returns True if the url is of the form http://localhost:8000/api/v1/
-        examples:
-        - path_parts: ['api', 'v1', 'chatbots', '1', 'chat']
-        - http://api.localhost:8000/
+        Returns True if the URL is of the form http://localhost:8000/api/v1/.
+
+        Examples:
+            - path_parts: ['api', 'v1', 'chatbots', '1', 'chat']
+            - http://api.localhost:8000/
+
+        Returns:
+            bool: True if the URL matches the smarter API pattern, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -738,14 +1012,16 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_chatbot_smarter_api_url(self) -> bool:
         """
-        Returns True if the url is of the form
-        - http://localhost:8000/api/v1/workbench/1/chat/
-          path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+        Returns True if the URL is of the form:
 
-        - http://localhost:8000/api/v1/chatbots/1556/chat/
-          path_parts: ['api', 'v1', 'chatbots', '<int:pk>', 'chat']
+            - http://localhost:8000/api/v1/workbench/1/chat/
+              path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
 
+            - http://localhost:8000/api/v1/chatbots/1556/chat/
+              path_parts: ['api', 'v1', 'chatbots', '<int:pk>', 'chat']
 
+        Returns:
+            bool: True if the URL matches a smarter API chatbot endpoint, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -774,8 +1050,13 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_chatbot_cli_api_url(self) -> bool:
         """
-        Returns True if the url is of the form http://localhost:8000/api/v1/cli/chat/example/
-        path_parts: ['api', 'v1', 'cli', 'chat', 'example']
+        Returns True if the URL is of the form http://localhost:8000/api/v1/cli/chat/example/.
+
+        The expected path parts are:
+            ['api', 'v1', 'cli', 'chat', 'example']
+
+        Returns:
+            bool: True if the URL matches the CLI chatbot API pattern, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -796,10 +1077,14 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_chatbot_named_url(self) -> bool:
         """
-        Returns True if the url is of the form
-        - https://example.3141-5926-5359.api.smarter.sh/
-        - http://example.3141-5926-5359.api.localhost:8000/
-        - http://example.3141-5926-5359.api.localhost:8000/config/
+        Returns True if the url is of the form:
+
+            - https://example.3141-5926-5359.api.smarter.sh/
+            - http://example.3141-5926-5359.api.localhost:8000/
+            - http://example.3141-5926-5359.api.localhost:8000/config/
+
+        Returns:
+            bool: True if the URL matches the named chatbot pattern, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -831,19 +1116,24 @@ class SmarterRequestMixin(AccountMixin):
     @cached_property
     def is_chatbot_sandbox_url(self) -> bool:
         """
-        example urls:
-        - https://alpha.platform.smarter.sh/workbench/example/
-          https://<environment_domain>/workbench/<name>
-          path_parts: ['workbench', 'example']
+        Example URLs for chatbot sandbox endpoints.
 
-        - http://localhost:8000/workbench/<str:name>/chat/
-        - https://alpha.platform.smarter.sh/workbench/example/config/
-          https://<environment_domain>/workbench/<name>/config/
-          path_parts: ['workbench', 'example', 'config']
+        Examples:
 
-        - http://localhost:8000/api/v1/prompt/1/chat/
-          http://<environment_domain>/api/v1/prompt/<int:chatbot_id>/chat/
+            https://alpha.platform.smarter.sh/workbench/example/
+            https://<environment_domain>/workbench/<name>
+            path_parts: ['workbench', 'example']
 
+            http://localhost:8000/workbench/<str:name>/chat/
+            https://alpha.platform.smarter.sh/workbench/example/config/
+            https://<environment_domain>/workbench/<name>/config/
+            path_parts: ['workbench', 'example', 'config']
+
+            http://localhost:8000/api/v1/prompt/1/chat/
+            http://<environment_domain>/api/v1/prompt/<int:chatbot_id>/chat/
+
+        Returns:
+            bool: True if the URL matches a chatbot sandbox endpoint, otherwise False.
         """
         if not self.smarter_request:
             logger.warning("%s.is_chatbot_sandbox_url() - request is None or not set.", self.formatted_class_name)
@@ -899,7 +1189,12 @@ class SmarterRequestMixin(AccountMixin):
     def is_default_domain(self) -> bool:
         """
         Returns True if the URL is the default domain for the environment.
-        example: api.alpha.platform.smarter.sh
+
+        Example:
+            api.alpha.platform.smarter.sh
+
+        :return:
+            bool: True if the URL is the default environment domain, otherwise False.
         """
         if not self.smarter_request:
             return False
@@ -911,11 +1206,13 @@ class SmarterRequestMixin(AccountMixin):
     def path(self) -> Optional[str]:
         """
         Extracts the path from the URL.
-        :return: The path or None if not found.
 
-        examples:
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-          returns '/chatbot/'
+        :return:
+            Optional[str]: The path as a string, or None if not found.
+
+        Examples:
+            - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+              returns '/chatbot/'
         """
         if not self.smarter_request:
             return None
@@ -931,14 +1228,16 @@ class SmarterRequestMixin(AccountMixin):
     def root_domain(self) -> Optional[str]:
         """
         Extracts the root domain from the URL.
+
         :return: The root domain or None if not found.
 
-        examples:
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-            returns 'smarter.sh'
+        Example::
 
-        - http://localhost:8000/
-            returns 'localhost'
+            request_mixin = SmarterRequestMixin(request)
+            print(request_mixin.root_domain)
+            # For 'https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/' → 'smarter.sh'
+            # For 'http://localhost:8000/' → 'localhost'
+
         """
         if not self.smarter_request:
             return None
@@ -957,11 +1256,15 @@ class SmarterRequestMixin(AccountMixin):
     def subdomain(self) -> Optional[str]:
         """
         Extracts the subdomain from the URL.
+
         :return: The subdomain or None if not found.
 
-        examples:
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-          returns 'hr.3141-5926-5359.alpha'
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            sub = request_mixin.subdomain
+            print(sub)  # e.g., 'hr.3141-5926-5359.alpha' for
+                        # 'https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/'
         """
         if not self.smarter_request:
             return None
@@ -975,8 +1278,12 @@ class SmarterRequestMixin(AccountMixin):
         """
         Extracts the API subdomain from the URL.
 
-        example: https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-        returns 'hr'
+        :return: The API subdomain or None if not found.
+
+        example::
+
+            - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+            returns 'hr'
         """
         if not self.smarter_request:
             return None
@@ -993,11 +1300,13 @@ class SmarterRequestMixin(AccountMixin):
     def domain(self) -> Optional[str]:
         """
         Extracts the domain from the URL.
+
         :return: The domain or None if not found.
 
-        examples:
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-          returns 'hr.3141-5926-5359.alpha.api.smarter.sh'
+        examples::
+
+            - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+              returns 'hr.3141-5926-5359.alpha.api.smarter.sh'
         """
         if not self.smarter_request:
             return None
@@ -1010,6 +1319,8 @@ class SmarterRequestMixin(AccountMixin):
         """
         Returns the class name in a formatted string
         along with the name of this mixin.
+
+        :return: Formatted class name string.
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.SmarterRequestMixin()"
@@ -1019,6 +1330,8 @@ class SmarterRequestMixin(AccountMixin):
         """
         Returns True if the request mixin is ready for processing.
         This is a convenience property to check if the request is ready.
+
+        :return: True if the request mixin is ready, False otherwise.
         """
         # cheap and easy way to fail.
         if not isinstance(self._smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
@@ -1051,6 +1364,9 @@ class SmarterRequestMixin(AccountMixin):
     def ready(self) -> bool:
         """
         returns True if the request is ready for processing.
+
+        :return: True if the request is ready, False otherwise.
+
         """
         retval = bool(super().ready)
         if not retval:
@@ -1078,6 +1394,8 @@ class SmarterRequestMixin(AccountMixin):
     def generate_session_key(self) -> str:
         """
         Generate a session_key based on a unique string and the current datetime.
+
+        :return: A unique session key string.
         """
         session_key = hash_factory(length=64)
         self.helper_logger(f"Generated new session key: {session_key}")
@@ -1085,25 +1403,21 @@ class SmarterRequestMixin(AccountMixin):
 
     def find_session_key(self) -> Optional[str]:
         """
-        returns the unique chat session key value for this request.
-        session_key is managed by the /config/ endpoint for the chatbot
+        Returns the unique chat session key value for this request.
 
-        The React app calls this endpoint at app initialization to get a
-        json dict that includes, among other pertinent info, this session_key
-        which uniquely identifies the device and the individual chatbot session
-        for the device.
+        The session_key is managed by the /config/ endpoint for the chatbot. The React app calls this endpoint at app initialization to get a JSON dict that includes, among other info, this session_key, which uniquely identifies the device and the individual chatbot session for the device.
 
-        for subsequent chat prompt requests the session_key is intended to be
-        sent in the body of the request as a key-value pair,
-        e.g. {"session_key": "1234567890"}.
+        For subsequent chat prompt requests, the session_key is intended to be sent in the body of the request as a key-value pair, e.g. {"session_key": "1234567890"}.
 
-        But, this method will also check the request headers for the session_key.
-        Get the session key from one of the following:
-         - url parameter http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-         - request json body {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
-         - request header {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
-         - a session_key generator
+        This method will also check the request headers and cookies for the session_key. The session key can be found in one of the following:
 
+         - URL parameter: http://localhost:8000/workbench/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+         - Request JSON body: {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
+         - Request header: {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
+         - Cookie
+         - A session_key generator
+
+        :return: The session key as a string, or None if not found.
         """
         if self._session_key:
             return self._session_key
@@ -1153,6 +1467,8 @@ class SmarterRequestMixin(AccountMixin):
     def to_json(self) -> dict[str, Any]:
         """
         serializes the object.
+
+        :return: A dictionary representation of the object.
         """
         if not self.is_requestmixin_ready:
             return super().to_json()
@@ -1200,6 +1516,23 @@ class SmarterRequestMixin(AccountMixin):
         """
         If we are a chatbot, based on analysis of the URL format
         then we need to make a follow up check of the user and account.
+
+        Examples:
+
+            - http://example.3141-5926-5359.api.localhost:8000/
+            - https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
+            - http://localhost:8000/api/v1/cli/chat/example/
+
+        1.) For named urls, we extract the account number from the url,
+            then we load the account and admin user for that account.
+
+        2.) For smarter api urls, we would extract the chatbot id from the url,
+            then we would load the chatbot, account, and admin user for that account.
+
+        3.) For cli api urls, we would extract the chatbot name from the url,
+            then we would load the chatbot, account, and admin user for that account.
+
+
         """
         if not self.is_chatbot:
             return

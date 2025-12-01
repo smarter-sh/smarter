@@ -8,7 +8,6 @@ Architecture
    architecture/summary
    architecture/django
    architecture/helpers
-   architecture/mixins
    architecture/chatbot
    architecture/chat
    architecture/plugin
