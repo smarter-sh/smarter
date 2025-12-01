@@ -6,7 +6,6 @@ Django
    :caption: Django
 
    django/manage
-   django/middleware
    django/signals
    django/tasks
    django/templates

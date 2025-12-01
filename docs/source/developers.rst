@@ -31,6 +31,7 @@ A walkthrough of setting up your development environment and running Smarter loc
    developers/smarter-settings
    developers/smarter-validators
    developers/smarter-mixins
+   developers/smarter-middleware
    developers/smarter-helpers
    developers/build
    developers/test
