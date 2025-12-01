@@ -33,6 +33,7 @@ A walkthrough of setting up your development environment and running Smarter loc
    developers/smarter-mixins
    developers/smarter-middleware
    developers/smarter-helpers
+   developers/smarter-token-authentication
    developers/build
    developers/test
    developers/deployment

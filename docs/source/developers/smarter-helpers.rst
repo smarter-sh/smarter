@@ -1,8 +1,12 @@
 Smarter Helpers
 ================
 
-ChatBotHelper
-ChatHelper
-EmailHelper
-aws_helper = AWSInfrastructureConfig()
-kubernetes_helper = KubernetesHelper()
+.. toctree::
+   :maxdepth: 2
+   :caption: Django
+
+   helpers/chatbot
+   helpers/chat
+   helpers/email
+   helpers/aws
+   helpers/kubernetes

@@ -1,9 +1,10 @@
-Django Rest Framework (DRF)
-===========================
+Smarter Token Authentication
+=============================
 
-Smarter uses Django Rest Framework (DRF) for building its API endpoints. The following
-components are the entirety of modifications and extensions made to DRF within the Smarter
-codebase. These components primarily focus on adding and enhancing authentication mechanisms and
+Smarter extends Django Rest Framework's token authentication mechanism to implement
+a more robust and feature-rich Api key based authentication system tailored to the needs of the Smarter platform.
+The following components are designed to facilitate secure and efficient token-based authentication.
+These components primarily focus on adding and enhancing authentication mechanisms and
 providing specialized views for authenticated users.
 
 .. autoclass:: smarter.lib.drf.token_authentication.SmarterTokenAuthentication

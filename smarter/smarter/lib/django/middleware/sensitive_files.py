@@ -25,7 +25,10 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     """
-    Middleware to block requests for common sensitive files.
+    Middleware to return HttpResponseForbidden for common sensitive files, regardless of whether these
+    do or do not exist. This is a countermeasure against simple, brute-force attacks
+    and automated 'bot' clients probing for sensitive files. This middleware works from a static list
+    of common sensitive files and patterns, returning a 403 Forbidden response for requests matching these files.
 
     This middleware inspects incoming HTTP requests and blocks access to files and paths that are commonly
     targeted by attackers or bots, such as configuration files, environment files, backup files, and private keys.

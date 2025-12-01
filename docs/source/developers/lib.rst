@@ -11,6 +11,5 @@ by library name (e.g. django, drf, etc.) of the third-party library being extend
    :caption: lib
 
    lib/django
-   lib/drf
    lib/object-caching
    lib/security
