@@ -737,11 +737,6 @@ class SmarterValidator:
         :returns: The validated header value.
         :rtype: str
 
-        Example::
-
-            SmarterValidator.validate_http_request_header_value("Valid Value")  # returns "Valid Value"
-            SmarterValidator.validate_http_request_header_value("Invalid\nValue")  # raises SmarterValueError
-
         """
         if not re.match(r"^[\t\x20-\x7E\x80-\xFF]*$", value):
             raise SmarterValueError("Header value contains invalid characters (e.g., control characters).")
@@ -783,12 +778,6 @@ class SmarterValidator:
         :type value: str
         :returns: True if the header value is valid, otherwise False.
         :rtype: bool
-
-        Example::
-
-            SmarterValidator.is_valid_http_request_header_value("Valid Value")  # returns True
-            SmarterValidator.is_valid_http_request_header_value("Invalid\nValue")  # returns False
-
         """
         try:
             SmarterValidator.validate_http_request_header_value(value)

@@ -6,7 +6,7 @@ import logging
 import os
 import subprocess
 import time
-from typing import Tuple
+from typing import Optional, Tuple
 
 from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
@@ -26,12 +26,34 @@ class KubernetesHelperException(SmarterException):
 
 
 class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
-    """A helper class for interacting with Kubernetes clusters."""
+    """
+    Helper class for interacting with Kubernetes clusters.
 
-    _kubeconfig: dict = None
+    This class provides a set of utility methods to manage and verify Kubernetes resources
+    such as Ingresses, Certificates, and Secrets, as well as to apply manifests and update
+    kubeconfig files for EKS clusters. It is designed to be used as a singleton and integrates
+    with AWS EKS and cert-manager.
+
+    Attributes
+    ----------
+    _kubeconfig : dict
+        The loaded kubeconfig as a dictionary.
+    _configured : bool
+        Indicates whether the kubeconfig has been configured.
+
+    Parameters
+    ----------
+    kubeconfig : dict, optional
+        The kubeconfig dictionary to use. If not provided, a default is used.
+    configured : bool, optional
+        Whether the helper is already configured.
+
+    """
+
+    _kubeconfig: Optional[dict] = None
     _configured: bool = False
 
-    def __init__(self, kubeconfig: dict = None, configured: bool = False, **kwargs):
+    def __init__(self, kubeconfig: Optional[dict] = None, configured: bool = False, **kwargs):
         super().__init__()
         default_kubeconfig = {"apiVersion": "v1"}
         self._configured = configured
@@ -39,22 +61,48 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
 
     @property
     def configured(self) -> bool:
+        """
+        Return whether the kubeconfig has been configured.
+
+        :return: True if configured, False otherwise.
+        :rtype: bool
+        """
         return self._configured
 
     @property
     def kubeconfig_path(self) -> str:
+        """
+        Return the path to the kubeconfig file.
+
+        :return: The kubeconfig file path.
+        :rtype: str
+        """
         return os.path.join(smarter_settings.data_directory, ".kube", "config")
 
     @property
     def kubeconfig(self) -> dict:
-        """Return the kubeconfig file as a dictionary."""
+        """
+        Return the kubeconfig file as a dictionary.
+
+        :return: The kubeconfig dictionary.
+        :rtype: dict
+        """
         if self._kubeconfig:
             return self._kubeconfig
         self._kubeconfig = get_readonly_yaml_file(self.kubeconfig_path)
         return self._kubeconfig
 
     def update_kubeconfig(self):
-        """Generate a fresh kubeconfig file for the EKS cluster."""
+        """
+        Generate a fresh kubeconfig file for the EKS cluster.
+
+        This method uses the AWS CLI to update the kubeconfig file for the specified EKS cluster.
+
+        :raises KubernetesHelperException: If the kubeconfig update fails.
+
+        :return: None
+        :rtype: None
+        """
         if self.configured:
             return
 
@@ -78,7 +126,15 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         self._configured = True
 
     def apply_manifest(self, manifest: str):
-        """Apply a Kubernetes manifest to the cluster."""
+        """
+        Apply a Kubernetes manifest to the cluster.
+
+        :param manifest: The Kubernetes manifest as a string.
+        :type manifest: str
+        :raises KubernetesHelperException: If applying the manifest fails.
+        :return: None
+        :rtype: None
+        """
         prefix = formatted_text(f"{module_prefix}.apply_manifest()")
 
         logger.info(
@@ -100,6 +156,19 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         """
         Verify that an ingress and all child resources exist in the
         cluster.
+
+        commands:
+        - kubectl get ingress education.3141-5926-5359.api.smarter.sh -n smarter-platform-prod -o json
+        - kubectl get certificate education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod -o json
+        - kubectl get secret education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod -o json
+
+        :param hostname: The hostname of the ingress.
+        :type hostname: str
+        :param namespace: The namespace of the ingress.
+        :type namespace: str
+        :return: A tuple of booleans indicating whether the ingress, certificate, and secret were verified.
+        :rtype: Tuple[bool, bool, bool]
+
         """
         prefix = formatted_text(f"{module_prefix}.verify_ingress_resources()")
 
@@ -145,8 +214,16 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
     def verify_ingress(self, name: str, namespace: str) -> bool:
         """
         Verify that an Ingress resource exists in the cluster.
-        command:
+
+        commands:
         - kubectl get ingress smarter.3141-5926-5359.api.smarter.sh -n smarter-platform-prod -o json
+
+        :param name: The name of the ingress.
+        :type name: str
+        :param namespace: The namespace of the ingress.
+        :type namespace: str
+        :return: True if the ingress exists, False otherwise.
+        :rtype: bool
         """
         prefix = formatted_text(f"{module_prefix}.verify_ingress()")
         logger.info(
@@ -180,6 +257,13 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
 
         parse json response and check for the following:
         - status.conditions.type == Ready
+
+        :param name: The name of the certificate.
+        :type name: str
+        :param namespace: The namespace of the certificate.
+        :type namespace: str
+        :return: True if the certificate exists and is ready, False otherwise.
+        :rtype: bool
         """
         prefix = formatted_text(f"{module_prefix}.verify_certificate()")
         logger.info(
@@ -195,7 +279,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             self.update_kubeconfig()
             output = subprocess.check_output(command, text=True)
             logger.info("%s found certificate resource for %s %s", prefix, name, namespace)
-            certificate_info: dict = None
+            certificate_info: dict
             try:
                 certificate_info = json.loads(output)
                 logger.info("%s parsed json certificate data %s %s", prefix, name, namespace)
@@ -241,6 +325,13 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Verify that a secret resource exists in the cluster.
         command:
         - kubectl get secret smarter.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod -o json
+
+        :param name: The name of the secret.
+        :type name: str
+        :param namespace: The namespace of the secret.
+        :type namespace: str
+        :return: True if the secret exists, False otherwise.
+        :rtype: bool
         """
         prefix = formatted_text(f"{module_prefix}.verify_secret()")
         logger.info(
@@ -273,6 +364,13 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         - kubectl delete ingress education.3141-5926-5359.api.smarter.sh -n smarter-platform-prod
         - kubectl delete certificate education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod
         - kubectl delete secret education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod
+
+        :param hostname: The hostname of the ingress.
+        :type hostname: str
+        :param namespace: The namespace of the ingress.
+        :type namespace: str
+        :return: A tuple of booleans indicating whether the ingress, certificate, and secret were deleted.
+        :rtype: Tuple[bool, bool, bool]
         """
         logger.info(
             "%s.delete_ingress_resources() deleting ingress resources from cluster %s, hostname %s, namespace %s",
@@ -298,6 +396,13 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete an Ingress resource from the cluster.
         command:
         - kubectl delete ingress education.3141-5926-5359.api.smarter.sh -n smarter-platform-prod
+
+        :param ingress_name: The name of the ingress.
+        :type ingress_name: str
+        :param namespace: The namespace of the ingress.
+        :type namespace: str
+        :return: True if the ingress was deleted, False otherwise.
+        :rtype: bool
         """
         logger.info(
             "%s.delete_ingress() deleting ingress from cluster %s, name %s, namespace %s",
@@ -320,6 +425,13 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete a cert-manager certificate resource from the cluster.
         command:
         - kubectl delete certificate education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod
+
+        :param certificate_name: The name of the certificate.
+        :type certificate_name: str
+        :param namespace: The namespace of the certificate.
+        :type namespace: str
+        :return: True if the certificate was deleted, False otherwise.
+        :rtype: bool
         """
         logger.info(
             "%s.delete_ingress() deleting certificate from cluster %s, certificate_name %s, namespace %s",
@@ -342,6 +454,13 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Delete a secret resource from the cluster.
         commands:
         - kubectl delete secret education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod
+
+        :param secret_name: The name of the secret.
+        :type secret_name: str
+        :param namespace: The namespace of the secret.
+        :type namespace: str
+        :return: True if the secret was deleted, False otherwise.
+        :rtype: bool
         """
         logger.info(
             "%s.delete_ingress() deleting secret from cluster %s, secret_name %s, namespace %s",
@@ -360,7 +479,12 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         return True
 
     def get_namespaces(self) -> dict:
-        """Get all namespaces in the Kubernetes cluster."""
+        """
+        Get all namespaces in the Kubernetes cluster.
+
+        :return: A dictionary of namespaces.
+        :rtype: dict
+        """
         logger.info("retrieving namespaces from Kubernetes cluster %s", smarter_settings.aws_eks_cluster_name)
         self.update_kubeconfig()
         output = subprocess.check_output(["kubectl", "get", "pods", "-n", "kube-system", "-o", "json"])

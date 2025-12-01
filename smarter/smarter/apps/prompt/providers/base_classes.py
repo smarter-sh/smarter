@@ -862,7 +862,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
     def handle_plugin_selected(self, plugin: PluginBase) -> None:
         # does the prompt have anything to do with any of the search terms defined in a plugin?
-        # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_completion_tokens
+        # TODO: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_completion_tokens
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_plugin_selected()"))
         logger.warning(
             "smarter.apps.prompt.providers.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."

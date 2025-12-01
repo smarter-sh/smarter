@@ -50,7 +50,7 @@ class TestSmarterCorsMiddleware(TestAccountMixin):
             middleware.request.user = self.admin_user
             middleware.url = split_url
 
-            # FIX NOTE: need assertions here.
+            # TODO: need assertions here.
 
     @patch("smarter.lib.django.middleware.cors.conf")
     def test_CORS_ALLOWED_ORIGINS_with_chatbot(self, mock_conf):

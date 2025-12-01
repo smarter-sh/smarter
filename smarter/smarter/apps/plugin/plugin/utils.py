@@ -107,7 +107,7 @@ class PluginExample:
         """Return the plugin as a yaml string."""
         return self._yaml
 
-    # FIX NOTE: this fails on Plugin.create() due to missing tags
+    # TODO: this fails on Plugin.create() due to missing tags
     # django.core.exceptions.ValidationError: ["Invalid data: missing meta_data['tags']"]
     def to_json(self) -> Optional[Union[dict, list]]:
         """Return the plugin as a dictionary."""
