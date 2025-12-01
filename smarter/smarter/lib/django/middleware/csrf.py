@@ -39,11 +39,47 @@ logger.info("Loading smarter.apps.chatbot.middleware.csrf.SmarterCsrfViewMiddlew
 
 class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
     """
-    Require a present and correct csrfmiddlewaretoken for POST requests that
-    have a CSRF cookie, and set an outgoing CSRF cookie.
+    Middleware for enforcing CSRF (Cross-Site Request Forgery) protection with dynamic trusted origins.
 
-    This middleware should be used in conjunction with the {% csrf_token %}
-    template tag.
+    This middleware extends Django's built-in CSRF middleware to support dynamic addition of trusted
+    origins, particularly for chatbot-related requests. It ensures that POST requests with a CSRF cookie
+    require a valid ``csrfmiddlewaretoken``, and it sets outgoing CSRF cookies as needed.
+
+    The middleware is designed to work seamlessly with the ``{% csrf_token %}`` template tag and
+    provides additional logic for chatbot requests, health checks, and internal IP addresses. It also
+    integrates with application logging and waffle switches for feature toggling.
+
+    :cvar smarter_request: The current request wrapped in a SmarterRequestMixin, or None.
+    :vartype smarter_request: Optional[SmarterRequestMixin]
+
+    **Key Features**
+
+    - Dynamically adds chatbot URLs to the list of CSRF trusted origins.
+    - Exempts chatbot requests from CSRF checks when appropriate.
+    - Handles health check endpoints and internal IP addresses efficiently.
+    - Provides detailed logging for CSRF-related events and decisions.
+    - Integrates with Django's CSRF protection and application-specific settings.
+
+    .. note::
+        - Chatbot requests can be exempted from CSRF checks based on waffle switches.
+        - Trusted origins are dynamically extended for chatbot and config requests.
+        - Logging is controlled via a waffle switch and the application's log level.
+
+    **Example**
+
+    To enable this middleware, add it to your Django project's middleware settings::
+
+        MIDDLEWARE = [
+            ...
+            'smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware',
+            ...
+        ]
+
+    :param request: The incoming HTTP request object.
+    :type request: django.http.HttpRequest
+
+    :returns: The HTTP response object, or None if the request is exempted from CSRF checks.
+    :rtype: django.http.HttpResponse or None
     """
 
     smarter_request: Optional[SmarterRequestMixin] = None
