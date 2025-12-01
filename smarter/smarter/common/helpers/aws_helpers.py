@@ -36,7 +36,36 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=too-many-instance-attributes
 class AWSInfrastructureConfig(metaclass=Singleton):
-    """AWS Infrastructure Configuration class with lazy loading of services."""
+    """
+    Provides a unified, singleton-based interface for accessing AWS services within the application.
+
+    This class is designed to centralize and simplify interactions with various AWS services by exposing
+    each service as a lazily-loaded property. When a property corresponding to a specific AWS service
+    (such as S3, DynamoDB, Lambda, etc.) is accessed for the first time, the class will instantiate the
+    appropriate service client and cache it for future use. This approach ensures that resources are only
+    allocated when needed, improving efficiency and reducing unnecessary overhead.
+
+    The configuration for AWS access (such as credentials and region) is sourced from environment variables
+    and managed by the `smarter.common.conf` module, which uses Pydantic for validation and parsing.
+    This allows the application to be easily configured for different environments without code changes.
+
+    The singleton pattern is enforced via the `Singleton` metaclass, guaranteeing that only one instance
+    of this configuration class exists throughout the application's lifecycle. This ensures consistent
+    state and avoids redundant initialization of AWS service clients.
+
+    The class provides convenient properties for each supported AWS service, including but not limited to:
+    S3, DynamoDB, Lambda, IAM, RDS, Route53, Rekognition, ACM, API Gateway, and EKS. Each property checks
+    if AWS is ready (properly configured and accessible) before instantiating the service client.
+
+    In addition to service clients, the class exposes properties for retrieving AWS account metadata,
+    such as the current identity, IAM ARN, and account ID, as well as the version of the underlying
+    botocore library.
+
+    This design enables developers to interact with AWS services in a consistent and Pythonic way,
+    abstracting away the boilerplate of client initialization and configuration management. It also
+    facilitates testing and maintenance by providing a single, well-defined entry point for all AWS
+    interactions within the application.
+    """
 
     _aws: Optional[AWSBase] = None
     _acm: Optional[AWSCertificateManager] = None
@@ -56,34 +85,64 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
     @property
     def identity(self) -> Optional[dict]:
-        """Return the AWS identity."""
+        """
+        Return the AWS identity.
+
+        :return: AWS identity dictionary or None if not available.
+        :rtype: Optional[dict]
+        """
         return self.aws.identity
 
     @property
     def aws_iam_arn(self) -> Optional[str]:
-        """Return the AWS IAM ARN."""
+        """
+        Return the AWS IAM ARN.
+
+        :return: AWS IAM ARN or None if not available.
+        :rtype: Optional[str]
+        """
         return self.aws.aws_iam_arn
 
     @property
     def aws_account_id(self) -> Optional[str]:
-        """Return the AWS Account ID."""
+        """
+        Return the AWS Account ID.
+
+        :return: AWS Account ID or None if not available.
+        :rtype: Optional[str]
+        """
         return self.aws.aws_account_id
 
     @property
     def get_botocore_version(self) -> str:
-        """Return the botocore version"""
+        """
+        Return the botocore version
+
+        :return: Botocore version string.
+        :rtype: str
+        """
         return self.aws.version
 
     @property
     def aws(self) -> AWSBase:
-        """Return the AWS Base"""
+        """
+        Return the AWS Base
+
+        :return: AWSBase instance.
+        :rtype: AWSBase
+        """
         if not self._aws:
             self._aws = AWSBase()
         return self._aws
 
     @property
     def acm(self) -> Optional[AWSCertificateManager]:
-        """Return the AWS Certificate Manager"""
+        """
+        Return the AWS Certificate Manager
+
+        :return: AWSCertificateManager instance or None if not available.
+        :rtype: Optional[AWSCertificateManager]
+        """
         if not self._acm:
             if self.ready():
                 self._acm = AWSCertificateManager()
@@ -91,7 +150,12 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
     @property
     def api_gateway(self) -> Optional[AWSAPIGateway]:
-        """Return the AWS API Gateway"""
+        """
+        Return the AWS API Gateway
+
+        :return: AWSAPIGateway instance or None if not available.
+        :rtype: Optional[AWSAPIGateway]
+        """
         if not self._api_gateway:
             if self.ready():
                 self._api_gateway = AWSAPIGateway()
@@ -99,7 +163,12 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
     @property
     def dynamodb(self) -> Optional[AWSDynamoDB]:
-        """Return the AWS DynamoDB"""
+        """
+        Return the AWS DynamoDB
+
+        :return: AWSDynamoDB instance or None if not available.
+        :rtype: Optional[AWSDynamoDB]
+        """
         if not self._dynamodb:
             if self.ready():
                 self._dynamodb = AWSDynamoDB()
@@ -107,7 +176,12 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
     @property
     def eks(self) -> Optional[AWSEks]:
-        """Return the AWS EKS"""
+        """
+        Return the AWS EKS
+
+        :return: AWSEks instance or None if not available.
+        :rtype: Optional[AWSEks]
+        """
         if not self._eks:
             if self.ready():
                 self._eks = AWSEks()
@@ -115,7 +189,12 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
     @property
     def lambda_function(self) -> Optional[AWSLambdaFunction]:
-        """Return the AWS Lambda Function"""
+        """
+        Return the AWS Lambda Function
+
+        :return: AWSLambdaFunction instance or None if not available.
+        :rtype: Optional[AWSLambdaFunction]
+        """
         if not self._lambda_function:
             if self.ready():
                 self._lambda_function = AWSLambdaFunction()
@@ -123,7 +202,12 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
     @property
     def iam(self) -> Optional[AWSIdentifyAccessManagement]:
-        """Return the AWS IAM"""
+        """
+        Return the AWS IAM
+
+        :return: AWSIdentifyAccessManagement instance or None if not available.
+        :rtype: Optional[AWSIdentifyAccessManagement]
+        """
         if not self._iam:
             if self.ready():
                 self._iam = AWSIdentifyAccessManagement()
@@ -131,7 +215,12 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
     @property
     def rds(self) -> Optional[AWSRds]:
-        """Return the AWS RDS"""
+        """
+        Return the AWS RDS
+
+        :return: AWSRds instance or None if not available.
+        :rtype: Optional[AWSRds]
+        """
         if not self._rds:
             if self.ready():
                 self._rds = AWSRds()
@@ -139,7 +228,12 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
     @property
     def rekognition(self) -> Optional[AWSRekognition]:
-        """Return the AWS Rekognition"""
+        """
+        Return the AWS Rekognition
+
+        :return: AWSRekognition instance or None if not available.
+        :rtype: Optional[AWSRekognition]
+        """
         if not self._rekognition:
             if self.ready():
                 self._rekognition = AWSRekognition()
@@ -147,7 +241,12 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
     @property
     def route53(self) -> Optional[AWSRoute53]:
-        """Return the AWS Route53"""
+        """
+        Return the AWS Route53
+
+        :return: AWSRoute53 instance or None if not available.
+        :rtype: Optional[AWSRoute53]
+        """
         if not self._route53:
             if self.ready():
                 self._route53 = AWSRoute53()
@@ -155,7 +254,12 @@ class AWSInfrastructureConfig(metaclass=Singleton):
 
     @property
     def s3(self) -> Optional[AWSSimpleStorageSystem]:
-        """Return the AWS S3"""
+        """
+        Return the AWS S3
+
+        :return: AWSSimpleStorageSystem instance or None if not available.
+        :rtype: Optional[AWSSimpleStorageSystem]
+        """
         if not self._s3:
             if self.ready():
                 self._s3 = AWSSimpleStorageSystem()

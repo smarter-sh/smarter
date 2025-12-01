@@ -25,13 +25,60 @@ class AWSHostedZoneNotFound(Exception):
 
 
 class AWSRoute53(AWSBase):
-    """AWS Route53 helper class."""
+    """
+    Provides a comprehensive, high-level interface for managing AWS Route53 resources within the application.
+
+    This helper class abstracts the complexities of interacting directly with the AWS Route53 API, offering
+    a set of convenient methods for common DNS management tasks such as creating, retrieving, updating, and
+    deleting hosted zones and DNS records. By encapsulating these operations, the class enables developers
+    to manage DNS infrastructure programmatically in a consistent and reliable manner.
+
+    The class is designed to be used as part of a broader AWS infrastructure management system, leveraging
+    the application's AWS session and configuration. It ensures that all Route53 operations are performed
+    using the correct credentials and region, as determined by the application's environment and settings.
+
+    Key features include:
+
+    - **Lazy Initialization:** The underlying boto3 Route53 client is instantiated only when first needed,
+      reducing unnecessary resource usage and startup time.
+    - **Hosted Zone Management:** Methods are provided to retrieve existing hosted zones, create new ones
+      if necessary, and delete hosted zones along with their associated records. This simplifies the
+      lifecycle management of DNS zones for dynamic environments.
+    - **DNS Record Operations:** The class supports creating, updating, retrieving, and deleting DNS records
+      (such as A and NS records) within a hosted zone. It handles the nuances of AWS Route53's API, including
+      batching changes and waiting for DNS propagation.
+    - **Domain Verification:** Utilities are included to verify DNS record propagation, accounting for the
+      variable delays inherent in global DNS systems.
+    - **Error Handling:** Custom exceptions are raised for common failure scenarios, such as missing hosted
+      zones or DNS records, making it easier to diagnose and handle errors in higher-level application logic.
+    - **Integration with Application Settings:** The class uses application-level settings (such as default TTL)
+      and logging, ensuring that DNS operations are traceable and configurable.
+
+    By using this class, developers can automate DNS management tasks as part of deployment, scaling, or
+    teardown workflows, reducing manual intervention and the risk of configuration drift. The class is
+    intended to be subclassed or instantiated as part of a larger AWS infrastructure management toolkit,
+    and is suitable for both production and testing environments.
+
+    Example use cases include:
+
+    - Automatically provisioning DNS records for new application environments or tenants.
+    - Verifying that DNS changes have propagated before proceeding with dependent operations.
+    - Cleaning up DNS resources as part of environment teardown or migration processes.
+
+    This design promotes maintainability, reliability, and clarity in DNS management, making Route53
+    operations accessible and robust for all parts of the application.
+    """
 
     _client = None
 
     @property
     def client(self):
-        """Return the AWS Route53 client."""
+        """
+        Return the AWS Route53 client.
+
+        :return: Boto3 Route53 client.
+        :rtype: botocore.client.Route53
+        """
         if not self.aws_session:
             raise SmarterAWSException("AWS session is not initialized.")
         if not self._client:
@@ -39,7 +86,12 @@ class AWSRoute53(AWSBase):
         return self._client
 
     def get_hosted_zone(self, domain_name) -> Optional[str]:
-        """Return the hosted zone."""
+        """
+        Return the hosted zone.
+
+        :return: Hosted zone dictionary or None if not found.
+        :rtype: Optional[dict]
+        """
         logger.info("%s.get_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         response = self.client.list_hosted_zones()
@@ -50,28 +102,46 @@ class AWSRoute53(AWSBase):
 
     def get_or_create_hosted_zone(self, domain_name) -> tuple[dict, bool]:
         """
-        Return the hosted zone.
-        example return:
-            {
-                'HostedZone': {
-                    'Id': '/hostedzone/Z148QEXAMPLE8V',
-                    'Name': 'example.com.',
-                    'CallerReference': 'my hosted zone',
-                    'Config': {
-                        'Comment': 'This is my hosted zone',
-                        'PrivateZone': False
+        Retrieve an existing hosted zone for the given domain, or create one if it does not exist.
+
+        This method checks if a Route53 hosted zone exists for the specified domain name. If the hosted zone
+        is found, it is returned along with a boolean flag indicating that it was not newly created. If the
+        hosted zone does not exist, the method creates a new public hosted zone for the domain, waits for
+        its creation, and then returns the new hosted zone along with a boolean flag indicating creation.
+
+        The returned dictionary contains details about the hosted zone and its delegation set, including
+        the hosted zone ID, name, configuration, and the list of authoritative name servers.
+
+        Example return value:
+
+        .. code-block:: json
+
+                    {
+                    "HostedZone": {
+                        "Id": "/hostedzone/Z148QEXAMPLE8V",
+                        "Name": "example.com.",
+                        "CallerReference": "my hosted zone",
+                        "Config": {
+                            "Comment": "This is my hosted zone",
+                            "PrivateZone": false
+                        },
+                        "ResourceRecordSetCount": 2
                     },
-                    'ResourceRecordSetCount': 2
-                },
-                'DelegationSet': {
-                    'NameServers': [
-                        'ns-2048.awsdns-64.com',
-                        'ns-2049.awsdns-65.net',
-                        'ns-2050.awsdns-66.org',
-                        'ns-2051.awsdns-67.co.uk'
-                    ]
+                    "DelegationSet": {
+                        "NameServers": [
+                            "ns-2048.awsdns-64.com",
+                            "ns-2049.awsdns-65.net",
+                            "ns-2050.awsdns-66.org",
+                            "ns-2051.awsdns-67.co.uk"
+                        ]
+                    }
                 }
-            }
+
+        :param domain_name: The domain name for which to retrieve or create the hosted zone.
+        :type domain_name: str
+        :return: A tuple containing the hosted zone dictionary and a boolean indicating if it was created.
+        :rtype: Tuple[dict, bool]
+        :raises AWSHostedZoneNotFound: If the hosted zone could not be found or created.
         """
         logger.info("%s.get_or_create_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
@@ -91,7 +161,15 @@ class AWSRoute53(AWSBase):
         return (hosted_zone, True)
 
     def get_hosted_zone_id(self, hosted_zone) -> str:
-        """Return the hosted zone id."""
+        """
+        Return the hosted zone id.
+
+        :param hosted_zone: The hosted zone dictionary.
+        :type hosted_zone: dict
+        :return: The hosted zone ID.
+        :rtype: str
+        :raises AWSHostedZoneNotFound: If the hosted zone ID could not be found.
+        """
         logger.info("%s.get_hosted_zone_id() hosted_zone: %s", self.formatted_class_name, hosted_zone)
         if isinstance(hosted_zone, dict) and "Id" in hosted_zone:
             return hosted_zone["Id"].split("/")[-1]
@@ -99,11 +177,26 @@ class AWSRoute53(AWSBase):
             raise AWSHostedZoneNotFound(f"Hosted zone not found for {hosted_zone}. Expected a dict with 'Id' key.")
 
     def get_hosted_zone_by_id(self, hosted_zone_id) -> Optional[dict]:
-        """Return the AWS Route53 Hosted zone for the zone id"""
-        pass
+        """
+        (NOT IMPLEMENTED) Return the AWS Route53 Hosted zone for the zone id
+
+        :param hosted_zone_id: The hosted zone ID.
+        :type hosted_zone_id: str
+        :return: Hosted zone dictionary or None if not found.
+        :rtype: Optional[dict]
+
+        .. todo:: implement this method
+        """
 
     def get_hosted_zone_id_for_domain(self, domain_name) -> str:
-        """Return the hosted zone id for the domain."""
+        """
+        Return the hosted zone id for the domain.
+
+        :param domain_name: The domain name.
+        :type domain_name: str
+        :return: The hosted zone ID.
+        :rtype: str
+        """
         logger.info("%s.get_hosted_zone_id_for_domain() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         hosted_zone, _ = self.get_or_create_hosted_zone(domain_name)
@@ -111,28 +204,33 @@ class AWSRoute53(AWSBase):
 
     def get_ns_records_for_domain(self, domain: str) -> dict:
         """
-        helper to find NS records for a hosted zone.
+        Retrieve the NS (Name Server) records for a hosted zone associated with the given domain.
 
-        returns a dict of this form:
+        This helper method locates the hosted zone for the specified domain and returns the NS record set,
+        which contains the authoritative name servers for the domain. The returned dictionary includes the
+        record name, type, TTL, and a list of name server values.
+
+        Example return value:
+
+        .. code-block:: json
+
             {
                 "Name": "example.com.",
                 "Type": "NS",
                 "TTL": 600,
                 "ResourceRecords": [
-                    {
-                        "Value": "ns-2048.awsdns-64.com"
-                    },
-                    {
-                        "Value": "ns-2049.awsdns-65.net"
-                    },
-                    {
-                        "Value": "ns-2050.awsdns-66.org"
-                    },
-                    {
-                        "Value": "ns-2051.awsdns-67.co.uk"
-                    }
+                    {"Value": "ns-2048.awsdns-64.com"},
+                    {"Value": "ns-2049.awsdns-65.net"},
+                    {"Value": "ns-2050.awsdns-66.org"},
+                    {"Value": "ns-2051.awsdns-67.co.uk"}
                 ]
             }
+
+        :param domain: The domain name for which to retrieve NS records.
+        :type domain: str
+        :return: A dictionary representing the NS record set for the domain.
+        :rtype: dict
+        :raises AWSHostedZoneNotFound: If NS records cannot be found for the domain.
         """
         domain = self.domain_resolver(domain)
         hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name=domain)
@@ -151,6 +249,14 @@ class AWSRoute53(AWSBase):
         )
 
     def delete_hosted_zone(self, domain_name):
+        """
+        Delete the hosted zone and all its record sets.
+
+        :param domain_name: The domain name of the hosted zone to delete.
+        :type domain_name: str
+        :return: None
+        :rtype: None
+        """
         # Get the hosted zone id
         logger.info("%s.delete_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
@@ -177,17 +283,32 @@ class AWSRoute53(AWSBase):
     def get_dns_record(self, hosted_zone_id: str, record_name: str, record_type: str) -> Optional[dict]:
         """
         Return the DNS record from the hosted zone.
-        example return value:
-        {
-            "Name": "example.com.",
-            "Type": "A",
-            "TTL": 300,
-            "ResourceRecords": [
-                {
-                    "Value": "192.1.1.1"
-                    }
+
+        This method retrieves a specific DNS record from the given hosted zone, matching both the record name and type.
+        It searches through all resource record sets in the hosted zone and returns the first record that matches
+        the provided name and type. If no matching record is found, the method returns None.
+
+        Example return value:
+
+        .. code-block:: json
+
+            {
+                "Name": "example.com.",
+                "Type": "A",
+                "TTL": 300,
+                "ResourceRecords": [
+                    {"Value": "192.1.1.1"}
                 ]
             }
+
+        :param hosted_zone_id: The ID of the hosted zone to search.
+        :type hosted_zone_id: str
+        :param record_name: The DNS record name to look for.
+        :type record_name: str
+        :param record_type: The DNS record type (e.g., "A", "CNAME", "NS").
+        :type record_type: str
+        :return: The DNS record dictionary if found, otherwise None.
+        :rtype: Optional[dict]
         """
         prefix = self.formatted_class_name + ".get_dns_record()"
         logger.info(
@@ -216,29 +337,34 @@ class AWSRoute53(AWSBase):
 
     def get_ns_records(self, hosted_zone_id: str):
         """
-        Return the NS records from the hosted zone.
-        example return value:
-        [
-            {
-                "Name": "example.com.",
-                "Type": "NS",
-                "TTL": 600,
-                "ResourceRecords": [
-                    {
-                        "Value": "ns-2048.awsdns-64.com"
-                    },
-                    {
-                        "Value": "ns-2049.awsdns-65.net"
-                    },
-                    {
-                        "Value": "ns-2050.awsdns-66.org"
-                    },
-                    {
-                        "Value": "ns-2051.awsdns-67.co.uk"
-                    }
-                ]
-            },
-        ]
+        Return the NS (Name Server) records from the hosted zone.
+
+        This method retrieves all NS records associated with the specified hosted zone. The returned value is a list
+        of dictionaries, each representing an NS record set, including the record name, type, TTL, and the list of
+        authoritative name servers.
+
+        Example return value:
+
+        .. code-block:: json
+
+            [
+                {
+                    "Name": "example.com.",
+                    "Type": "NS",
+                    "TTL": 600,
+                    "ResourceRecords": [
+                        {"Value": "ns-2048.awsdns-64.com"},
+                        {"Value": "ns-2049.awsdns-65.net"},
+                        {"Value": "ns-2050.awsdns-66.org"},
+                        {"Value": "ns-2051.awsdns-67.co.uk"}
+                    ]
+                }
+            ]
+
+        :param hosted_zone_id: The ID of the hosted zone from which to retrieve NS records.
+        :type hosted_zone_id: str
+        :return: A list of dictionaries representing the NS record sets for the hosted zone.
+        :rtype: list
         """
         logger.info("%s.get_ns_records() hosted_zone_id: %s", self.formatted_class_name, hosted_zone_id)
         response = self.client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
@@ -258,6 +384,30 @@ class AWSRoute53(AWSBase):
         record_alias_target: Optional[dict] = None,
         record_value=None,  # can be a single text value of a list of dict
     ) -> Tuple[dict, bool]:
+        """
+        Get or create the DNS record in the hosted zone.
+
+        This method attempts to retrieve a DNS record from the specified hosted zone. If the record exists and
+        matches the provided values or alias target, it is returned along with a flag indicating that it was not created.
+        If the record does not exist or does not match, the method creates or updates the record accordingly.
+        The method waits for the record to be created or updated before returning.
+
+        :param hosted_zone_id: The ID of the hosted zone.
+        :type hosted_zone_id: str
+        :param record_name: The DNS record name.
+        :type record_name: str
+        :param record_type: The DNS record type (e.g., "A", "CNAME", "NS").
+        :type record_type: str
+        :param record_ttl: The TTL (Time to Live) for the DNS record.
+        :type record_ttl: int
+        :param record_alias_target: The alias target for the DNS record, if applicable.
+        :type record_alias_target: Optional[dict]
+        :param record_value: The value(s) for the DNS record, which can be a single text value or a list of dictionaries.
+        :type record_value: Union[str, List[dict], None]
+        :return: A tuple containing the DNS record dictionary and a boolean indicating whether the record was created (True) or already existed (False).
+        :rtype: Tuple[dict, bool]
+
+        """
         action: Optional[str] = None
         fn_name = self.formatted_class_name + ".get_or_create_dns_record()"
         logger.info(
@@ -373,7 +523,24 @@ class AWSRoute53(AWSBase):
         alias_target=None,  # may or may not exist
         record_resource_records=None,  # can be a single text value of a list of dict
     ) -> None:
-        """Destroy the DNS record."""
+        """
+        Destroy the DNS record.
+
+        :param hosted_zone_id: The ID of the hosted zone.
+        :type hosted_zone_id: str
+        :param record_name: The DNS record name.
+        :type record_name: str
+        :param record_type: The DNS record type (e.g., "A", "CNAME", "NS").
+        :type record_type: str
+        :param record_ttl: The TTL (Time to Live) for the DNS record.
+        :type record_ttl: int
+        :param alias_target: The alias target for the DNS record, if applicable.
+        :type alias_target: Optional[dict]
+        :param record_resource_records: The value(s) for the DNS record, which can be a single text value or a list of dictionaries.
+        :type record_resource_records: Union[str, List[dict], None]
+        :return: None
+        :rtype: None
+        """
         logger.info(
             "%s.destroy_dns_record() hosted_zone_id: %s record_name: %s record_type: %s",
             self.formatted_class_name,
@@ -415,13 +582,26 @@ class AWSRoute53(AWSBase):
     def get_environment_A_record(self, domain: Optional[str] = None) -> Optional[dict]:
         """
         Return the DNS A record for the environment domain.
-        example return value:
-        {
-            "Name": "example.com.",
-            "Type": "A",
-            "TTL": 300,
-            "ResourceRecords": [{"Value": "192.1.1.1"}]
-        }
+
+        This method retrieves the DNS A record associated with the environment's domain. If no domain is provided,
+        it uses the default environment domain configured for the application. The returned dictionary contains
+        details about the A record, including the record name, type, TTL, and the list of IP address values.
+
+        Example return value:
+
+        .. code-block:: json
+
+            {
+                "Name": "example.com.",
+                "Type": "A",
+                "TTL": 300,
+                "ResourceRecords": [{"Value": "192.1.1.1"}]
+            }
+
+        :param domain: The domain name for which to retrieve the A record. If None, uses the environment domain.
+        :type domain: Optional[str]
+        :return: The DNS A record dictionary if found, otherwise None.
+        :rtype: Optional[dict]
         """
         logger.info("%s.get_environment_A_record() domain: %s", self.formatted_class_name, domain)
         domain = domain or self.environment_domain
@@ -433,16 +613,20 @@ class AWSRoute53(AWSBase):
 
     def verify_dns_record(self, domain_name: str) -> bool:
         """
-        Verify the DNS record.
-        DNS propagation can take time, and it fluctuates wildly based on the
-        DNS provider and where you are located. In mexico city, it can take
-        up to an hour for AWS Route53 records to propagate. On the other
-        hand, inside the AWS VPC it generally takes less than 5 minutes.
+        Verify the DNS record for the given domain name.
 
-        This function will try to resolve the domain name every 60 seconds
-        for up to 15 minutes. Keep in mind that other Kubernetes
-        functions that depend on DNS records will likely be able to see
-        DNS records if you cannot.
+        DNS propagation can take a variable amount of time depending on the DNS provider and geographic location.
+        For example, in some regions it may take up to an hour for AWS Route53 records to propagate, while within
+        an AWS VPC it typically takes less than 5 minutes. This method attempts to resolve the domain's A record
+        every 60 seconds for up to 15 minutes, allowing for DNS propagation delays.
+
+        Note that other Kubernetes functions or AWS services that depend on DNS records may be able to see
+        the records before they are visible from your current location.
+
+        :param domain_name: The domain name to verify.
+        :type domain_name: str
+        :return: True if the DNS A record is found within the timeout period, otherwise False.
+        :rtype: bool
         """
         prefix = self.formatted_class_name + ".verify_dns_record()"
         logger.info("%s - %s", prefix, domain_name)
@@ -461,7 +645,17 @@ class AWSRoute53(AWSBase):
         return False
 
     def create_domain_a_record(self, hostname: str, api_host_domain: str) -> dict:  # type: ignore[no-untyped-def]
-        """Creates an A record inside an AWS Route53 hosted zone."""
+        """
+        Creates an A record inside an AWS Route53 hosted zone.
+
+        :param hostname: The full hostname for the A record to create (e.g., "api.example.com").
+        :type hostname: str
+        :param api_host_domain: The parent domain where the hosted zone exists (e.g., "example.com").
+        :type api_host_domain: str
+        :return: The created DNS record dictionary.
+        :rtype: dict
+        :raises AWSHostedZoneNotFound: If the hosted zone or deployment record cannot be found
+        """
         fn_name = formatted_text(module_prefix + "create_domain_a_record()")
         logger.info("%s for hostname %s, api_host_domain %s", fn_name, hostname, api_host_domain)
 

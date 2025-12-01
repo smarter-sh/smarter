@@ -150,17 +150,83 @@ class ChatPluginUsageSerializer(serializers.ModelSerializer):
 
 class ChatHelper(SmarterRequestMixin):
     """
-    Helper class for working with Chat objects. Provides methods for
-    creating and retrieving Chat objects and managing the cache.
+    Helper class for working with :class:`Chat` objects.
+
+    This class provides methods for creating and retrieving :class:`Chat` objects,
+    as well as managing the cache for chat sessions. It is designed to simplify
+    the process of interacting with chat-related data and to ensure consistent
+    handling of chat sessions, chatbots, and associated metadata.
+
+    **Features**
+
+    - Abstracts the logic for creating and retrieving chat sessions.
+    - Manages caching of chat objects to improve performance and reduce database queries.
+    - Provides access to related chat history, tool calls, and plugin usage.
+    - Integrates with Django's request and session handling.
+    - Ensures that chat sessions are always associated with a valid :class:`ChatBot` and :class:`Account`.
+
+    **Usage**
+
+    Typically, this class is instantiated with a Django :class:`HttpRequest` object and a session key.
+    Optionally, a :class:`ChatBot` instance can be provided to associate the chat session with a specific chatbot.
+
+    Example
+    -------
+    .. code-block:: python
+
+        helper = ChatHelper(request, session_key)
+        if helper.ready:
+            chat = helper.chat
+            chatbot = helper.chatbot
+            history = helper.history
+
+    :param request: The Django HttpRequest object for the current session.
+    :type request: django.http.HttpRequest
+    :param session_key: The session key identifying the chat session.
+    :type session_key: Optional[str]
+    :param chatbot: An optional ChatBot instance to associate with the chat session.
+    :type chatbot: Optional[ChatBot]
+    :param args: Additional positional arguments.
+    :param kwargs: Additional keyword arguments.
+
+    :raises SmarterValueError: If neither a session key nor a ChatBot instance is provided.
+    :raises SmarterConfigurationError: If there is an error creating a new Chat object.
+
+    .. note::
+        This class is intended for internal use within the Smarter platform and
+        should not be used directly in user-facing code without proper validation.
+
+    .. todo::
+        - Remove the session_key parameter and rely solely on the ChatBot instance for chat session management.
+
+    .. seealso::
+        - :class:`smarter.apps.chatbot.models.ChatBot`
+        - :class:`smarter.apps.account.models.Account`
+        - :class:`smarter.apps.chat.models.Chat`
+        - :class:`smarter.lib.django.request.SmarterRequestMixin`
     """
 
     _chat: Optional[Chat] = None
     _chatbot: Optional[ChatBot] = None
 
-    # FIX NOTE: remove session_key
     def __init__(
         self, request: HttpRequest, session_key: Optional[str], *args, chatbot: Optional[ChatBot] = None, **kwargs
     ) -> None:
+        """
+        Initialize the ChatHelper instance.
+
+        :param request: The Django HttpRequest object for the current session.
+        :type request: django.http.HttpRequest
+        :param session_key: The session key identifying the chat session.
+        :type session_key: Optional[str]
+        :param chatbot: An optional ChatBot instance to associate with the chat session.
+        :type chatbot: Optional[ChatBot]
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :raises SmarterValueError: If neither a session key nor a ChatBot instance is provided.
+        :raises SmarterConfigurationError: If there is an error creating a new Chat object.
+        """
         logger.info(
             "ChatHelper().__init__() - received request: %s session_key: %s, chatbot: %s",
             self.smarter_build_absolute_uri(request),
@@ -212,13 +278,26 @@ class ChatHelper(SmarterRequestMixin):
     def ready(self) -> bool:
         """
         Check if the ChatHelper is ready to use.
-        Returns True if the chat instance is available, otherwise False.
+
+        This property returns ``True`` if the chat instance is available and all required
+        attributes are set, otherwise returns ``False``. It is useful for determining
+        whether the ChatHelper is fully initialized and ready for chat operations.
+
+        :returns: ``True`` if the ChatHelper is ready to use, otherwise ``False``.
+        :rtype: bool
         """
         return bool(super().ready) and bool(self._session_key) and bool(self._chat) and bool(self._chatbot)
 
     def to_json(self) -> dict[str, Any]:
         """
         Convert the ChatHelper instance to a JSON serializable dictionary.
+
+        This method returns a dictionary representation of the ChatHelper instance,
+        including key metadata and related objects such as the chat, chatbot, chat history,
+        and a unique client string.
+
+        :returns: A dictionary containing the serialized state of the ChatHelper.
+        :rtype: dict[str, Any]
         """
         return {
             **super().to_json(),
@@ -233,33 +312,85 @@ class ChatHelper(SmarterRequestMixin):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the formatted class name for the ChatBotHelper.
+        Returns the formatted class name for the ChatHelper.
+
+        This property returns a string representation of the class name,
+        formatted to include the parent class's formatted name and the
+        ``ChatHelper`` class. This is useful for logging and debugging
+        purposes, as it provides a clear and consistent identifier for
+        instances of this helper class.
+
+        Example
+        -------
+        .. code-block:: python
+
+            helper = ChatHelper(request, session_key)
+            helper.formatted_class_name
+            # 'SmarterRequestMixin.ChatHelper()'
+
+        :returns: The formatted class name as a string, including the parent class name.
+        :rtype: str
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.ChatHelper()"
 
     @property
     def chat(self):
+        """
+        Get the chat instance for the current request.
+
+        :returns: The Chat instance associated with the current session.
+        :rtype: Chat
+        """
         return self._chat
 
     @property
     def chatbot(self):
+        """
+        Returns a lazy instance of the ChatBot.
+
+        Examples
+        --------
+        - ``https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/``
+          returns ``ChatBot(name='hr', account=Account(...))``
+
+        :returns: The ChatBot instance.
+        :rtype: ChatBot
+        """
         if self._chatbot:
             return self._chatbot
         self._chatbot = get_cached_chatbot_by_request(request=self.smarter_request)
 
     @property
     def chat_history(self) -> Union[models.QuerySet, list]:
+        """
+        Get the most recent chat history for the current chat session.
+
+        :returns: The most recent ChatHistory instance's chat_history field, or an empty list if none found.
+        :rtype: Union[models.QuerySet, list]
+        """
         rec = ChatHistory.objects.filter(chat=self.chat).order_by("-created_at").first()
         return rec.chat_history if rec else []
 
     @property
     def chat_tool_call(self) -> Union[models.QuerySet, list]:
+        """
+        Get the most recent chat tool call history for the current chat session.
+
+        :returns: A queryset of ChatToolCall instances for the current chat session, ordered by creation date.
+        :rtype: Union[models.QuerySet, list]
+        """
         recs = ChatToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
         return recs
 
     @property
     def chat_plugin_usage(self) -> Union[models.QuerySet, list]:
+        """
+        Get the most recent chat plugin usage history for the current chat session.
+
+        :returns: A queryset of ChatPluginUsage instances for the current chat session, ordered by creation date.
+        :rtype: Union[models.QuerySet, list]
+        """
         recs = ChatPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
         return recs
 
@@ -267,6 +398,9 @@ class ChatHelper(SmarterRequestMixin):
     def history(self) -> dict:
         """
         Serialize the most recent logged history output for the chat session.
+
+        :returns: A dictionary containing serialized chat, chat history, tool calls, and plugin usage.
+        :rtype: dict
         """
         chat_serializer = ChatSerializer(self.chat)
         chat_tool_call_serializer = ChatToolCallSerializer(self.chat_tool_call, many=True)
@@ -282,6 +416,12 @@ class ChatHelper(SmarterRequestMixin):
 
     @property
     def unique_client_string(self):
+        """
+        Generate a unique client string for the chat session.
+
+        :returns: A unique string combining account number, URL, user agent, and IP address.
+        :rtype: str
+        """
         if not self.account:
             return f"{self.url}{self.user_agent}{self.ip_address}"
         return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
@@ -289,6 +429,14 @@ class ChatHelper(SmarterRequestMixin):
     def get_cached_chat(self) -> Optional[Chat]:
         """
         Get the chat instance for the current request.
+
+        This method retrieves the Chat instance associated with the current session key
+        from the cache. If the Chat instance is not found in the cache, it attempts to
+        retrieve it from the database. If it still cannot be found, a new Chat instance
+        is created using the provided ChatBot and request metadata.
+
+        :returns: The Chat instance associated with the current session, or ``None`` if not found.
+        :rtype: Optional[Chat]
         """
         if not self.smarter_request:
             logger.error("%s - request object is required for ChatHelper.", self.formatted_class_name)

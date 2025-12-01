@@ -268,7 +268,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
         self.assertIsNotNone(chat_histories)
 
         # test url api endpoint for chat history
-        # FIX NOTE: THIS SELECTION CRITERIA IS PATHETIC.
+        # TODO: THIS SELECTION CRITERIA IS PATHETIC.
         chat = ChatHistory.objects.order_by("-id").first()
         self.assertIsNotNone(chat)
         url = reverse("prompt_workbench:api:v1:chathistory", kwargs={"pk": chat.id})

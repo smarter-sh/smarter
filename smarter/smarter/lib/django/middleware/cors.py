@@ -178,7 +178,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
 
     @property
     def CORS_ALLOWED_ORIGIN_REGEXES(self) -> Sequence[str | Pattern[str]]:
-        # FIX NOTE: ADD CHATBOT URL
+        # TODO: ADD CHATBOT URL
         return conf.CORS_ALLOWED_ORIGIN_REGEXES
 
     def origin_found_in_white_lists(self, origin: str, url: SplitResult) -> bool:
