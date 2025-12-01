@@ -38,6 +38,9 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinxcontrib_django",
     "sphinx.ext.viewcode",
+    "sphinx_copybutton",
+    "sphinx.ext.todo",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinxcontrib.autodoc_pydantic",
     "sphinx_rtd_theme",
@@ -46,6 +49,12 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = []
 django_settings = "smarter.settings.prod"
+todo_include_todos = True
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "django": ("https://docs.djangoproject.com/en/5.2/", "https://docs.djangoproject.com/en/5.2/_objects/"),
+}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

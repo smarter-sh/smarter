@@ -22,10 +22,14 @@ A high-level introduction to the Smarter project, its goals, and how to get star
 A walkthrough of setting up your development environment and running Smarter locally.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Developer Resources
 
    developers/architecture
+   developers/lib
+   developers/django-settings
+   developers/smarter-settings
+   developers/smarter-validators
    developers/build
    developers/test
    developers/deployment

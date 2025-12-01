@@ -8,6 +8,5 @@ for easy access without instantiating the class.
 
 .. autoclass:: smarter.lib.django.validators.SmarterValidator
     :members:
-    :undoc-members:
     :show-inheritance:
     :exclude-members: __init__

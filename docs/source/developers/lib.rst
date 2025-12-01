@@ -7,19 +7,10 @@ by library name (e.g. django, drf, etc.) of the third-party library being extend
 
 
 .. toctree::
-   :maxdepth: 2
-   :caption: smarter/lib
+   :maxdepth: 3
+   :caption: lib
 
+   lib/django
    lib/drf
-   lib/manage
-   lib/token-generators
-   lib/middleware
    lib/object-caching
    lib/security
-   lib/signals
-   lib/tasks
-   lib/templates
-   lib/validators
-   lib/views
-   lib/waffle
-   lib/settings
