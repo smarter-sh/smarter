@@ -14,8 +14,9 @@ import waffle as waffle_orig
 from django.core.cache import cache
 from django.db import connections
 from django.db.utils import OperationalError, ProgrammingError
+from django_redis import get_redis_connection
 from django_redis.exceptions import ConnectionInterrupted
-from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import ConnectionError
 from waffle.admin import SwitchAdmin
 
 
@@ -104,16 +105,29 @@ class SmarterWaffleSwitches:
 
 def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
 
+    def is_redis_ready():
+        try:
+            conn = get_redis_connection("default")
+            conn.ping()
+            return True
+        except Exception:
+            return False
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             cache_key = f"{func.__name__}_{args}_{kwargs}"
             result = None
+
+            if not is_redis_ready():
+                logger.warning("Redis cache is not available. Bypassing cache for %s.", func.__name__)
+                return func(*args, **kwargs)
+
             try:
                 try:
                     result = cache.get(cache_key)
                 except (
-                    RedisConnectionError,
+                    ConnectionError,
                     ConnectionInterrupted,
                 ) as e:
                     logger.error("Redis connection error while accessing cache: %s", e, exc_info=True)
@@ -125,12 +139,14 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
                     result = func(*args, **kwargs)
                     try:
                         cache.set(cache_key, result, timeout)
-                    except (RedisConnectionError, ConnectionInterrupted) as e:
+                    except (ConnectionError, ConnectionInterrupted) as e:
                         logger.error("Redis connection error while setting cache: %s", e, exc_info=True)
                     # pylint: disable=broad-except
                     except Exception as e:
                         logger.error("Unexpected error while attempting to access cache: %s", e, exc_info=True)
                 return result
+            except (ConnectionError, ConnectionInterrupted) as e:
+                logger.error("Redis connection error in cache_results decorator: %s", e, exc_info=True)
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error("An error occurred in cache_results decorator: %s", e, exc_info=True)
