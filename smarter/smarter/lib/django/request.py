@@ -1,3 +1,4 @@
+# pylint: disable=C0302
 """
 Smarter request mixin.
 
@@ -168,7 +169,7 @@ class SmarterRequestMixin(AccountMixin):
             )
             super().__init__(request, *args, api_token=self.api_token, **kwargs)
         if self.smarter_request:
-            self.smarter_request.user = self.user
+            self.smarter_request.user = self.user  # type: ignore
 
     def init(self, request: HttpRequest, *args, **kwargs):
         """
@@ -510,7 +511,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         if not self._params:
             try:
-                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", ""))
+                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", ""))  # type: ignore
             except AttributeError as e:
                 logger.error(
                     "%s.params() internal error. Could not parse query string parameters: %s",

@@ -1,7 +1,9 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+Configuration file for the Sphinx documentation builder.
+
+For the full list of built-in configuration values, see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
 
 import datetime
 
@@ -12,6 +14,8 @@ import sys
 
 
 sys.path.insert(0, os.path.abspath("../../smarter"))
+
+# pylint: disable=wrong-import-position
 from smarter.common.conf import settings as smarter_settings
 
 
@@ -20,6 +24,7 @@ if not smarter_settings.environment:
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
 
+# pylint: disable=wrong-import-position
 import django
 
 
@@ -27,6 +32,8 @@ django.setup()
 
 
 project = "Smarter"
+
+# pylint: disable=redefined-builtin
 copyright = f"{datetime.datetime.now().year}, The {project} Project"
 author = "Lawrence McDaniel"
 release = "3.13.33"
@@ -39,6 +46,7 @@ extensions = [
     "sphinxcontrib_django",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
+    "sphinx_autodoc_typehints",
     "sphinx.ext.todo",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
