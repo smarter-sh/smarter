@@ -284,7 +284,7 @@ environment:
        "corsheaders",
    ]
    MIDDLEWARE += [
-       "corsheaders.middleware.CorsMiddleware",
+       "corsheaders.middleware.SmarterCorsMiddleware",
        "django.middleware.common.CommonMiddleware",
    ]
 

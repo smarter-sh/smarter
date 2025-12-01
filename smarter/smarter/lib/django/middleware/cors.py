@@ -10,7 +10,7 @@ from typing import Optional, Pattern, Sequence
 from urllib.parse import SplitResult, urlsplit
 
 from corsheaders.conf import conf
-from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
+from corsheaders.middleware import CorsMiddleware
 from django.conf import settings
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
@@ -32,11 +32,11 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-logger.info("Loading smarter.lib.django.middleware.cors.CorsMiddleware")
+logger.info("Loading smarter.lib.django.middleware.cors.SmarterCorsMiddleware")
 
 
-class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
-    """CORSMiddleware is used to handle CORS headers for the application."""
+class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
+    """SmarterCorsMiddleware is used to handle CORS headers for the application."""
 
     _url: Optional[SplitResult] = None
     _chatbot: Optional[ChatBot] = None

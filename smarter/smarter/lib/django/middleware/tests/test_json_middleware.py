@@ -1,20 +1,20 @@
-"""test JsonErrorMiddleware class"""
+"""test SmarterJsonErrorMiddleware class"""
 
 from unittest.mock import MagicMock
 
 from django.http import HttpResponse, JsonResponse
 
 from smarter.lib import json
-from smarter.lib.django.middleware.json import JsonErrorMiddleware
+from smarter.lib.django.middleware.json import SmarterJsonErrorMiddleware
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestJsonErrorMiddleware(SmarterTestBase):
-    """Test the JsonErrorMiddleware class."""
+class TestSmarterJsonErrorMiddleware(SmarterTestBase):
+    """Test the SmarterJsonErrorMiddleware class."""
 
     def setUp(self):
         super().setUp()
-        self.middleware = JsonErrorMiddleware(get_response=MagicMock())
+        self.middleware = SmarterJsonErrorMiddleware(get_response=MagicMock())
 
     def test_process_response_non_json_accept(self):
         request = MagicMock()

@@ -234,27 +234,27 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django_hosts.middleware.HostsRequestMiddleware",
-    # this replaces corsheaders.middleware.CorsMiddleware"
-    "smarter.lib.django.middleware.cors.CorsMiddleware",
+    # this replaces corsheaders.middleware.SmarterCorsMiddleware"
+    "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
     # this replaces django.middleware.security.SecurityMiddleware
     # simple middleware to block requests for common sensitive files
     # like .env, private key files, etc.
     # -------------------------------
-    "smarter.lib.django.middleware.sensitive_files.BlockSensitiveFilesMiddleware",
+    "smarter.lib.django.middleware.sensitive_files.SmarterBlockSensitiveFilesMiddleware",
     # to log and block excessive 404 errors, which is a growing problem
     # from botnets probing for vulnerabilities.
     # -------------------------------
-    "smarter.lib.django.middleware.excessive_404.BlockExcessive404Middleware",
+    "smarter.lib.django.middleware.excessive_404.SmarterBlockExcessive404Middleware",
     #
     # -------------------------------
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
     "django.middleware.common.CommonMiddleware",
-    # this replaces django.middleware.csrf.CsrfViewMiddleware
+    # this replaces django.middleware.csrf.SmarterCsrfViewMiddleware
     # to add chatbot-specific CSRF handling
     # -------------------------------
-    "smarter.lib.django.middleware.csrf.CsrfViewMiddleware",
+    "smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware",
     #
     # -------------------------------
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -265,7 +265,7 @@ MIDDLEWARE = [
     # -------------------------------
     # to ensure that all http responses are in json format
     # -------------------------------
-    "smarter.lib.django.middleware.json.JsonErrorMiddleware",
+    "smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware",
     # -------------------------------
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",

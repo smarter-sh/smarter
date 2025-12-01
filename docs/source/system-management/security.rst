@@ -108,15 +108,15 @@ Django Security Features
 
         MIDDLEWARE = [
             "django_hosts.middleware.HostsRequestMiddleware",
-            "smarter.lib.django.middleware.cors.CorsMiddleware",
-            "smarter.lib.django.middleware.sensitive_files.BlockSensitiveFilesMiddleware",
-            "smarter.lib.django.middleware.excessive_404.BlockExcessive404Middleware",
+            "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
+            "smarter.lib.django.middleware.sensitive_files.SmarterBlockSensitiveFilesMiddleware",
+            "smarter.lib.django.middleware.excessive_404.SmarterBlockExcessive404Middleware",
             "django.contrib.sessions.middleware.SessionMiddleware",
             "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
-            "smarter.lib.django.middleware.csrf.CsrfViewMiddleware",
+            "smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware",
             "django.contrib.auth.middleware.AuthenticationMiddleware",
             "smarter.apps.chatbot.middleware.security.SecurityMiddleware",
-            "smarter.lib.django.middleware.json.JsonErrorMiddleware",
+            "smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware",
             "django.middleware.clickjacking.XFrameOptionsMiddleware",
             "django_hosts.middleware.HostsResponseMiddleware",
         ]

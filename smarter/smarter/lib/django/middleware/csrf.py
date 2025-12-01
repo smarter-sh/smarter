@@ -1,6 +1,6 @@
 """
-This module contains the CsrfViewMiddleware class, which is a subclass of Django's
-CsrfViewMiddleware. It adds the ability to add the ChatBot's URL to the list of
+This module contains the SmarterCsrfViewMiddleware class, which is a subclass of Django's
+SmarterCsrfViewMiddleware. It adds the ability to add the ChatBot's URL to the list of
 trusted origins for CSRF protection.
 """
 
@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import HttpResponseForbidden
-from django.middleware.csrf import CsrfViewMiddleware as DjangoCsrfViewMiddleware
+from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.functional import cached_property
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
@@ -34,10 +34,10 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-logger.info("Loading smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware")
+logger.info("Loading smarter.apps.chatbot.middleware.csrf.SmarterCsrfViewMiddleware")
 
 
-class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
+class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
     """
     Require a present and correct csrfmiddlewaretoken for POST requests that
     have a CSRF cookie, and set an outgoing CSRF cookie.
@@ -138,7 +138,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
             logger.info("=" * 80)
             logger.info("%s ChatBot: %s", self.formatted_class_name, url)
             for cookie in request.COOKIES:
-                logger.info("CsrfViewMiddleware request.COOKIES: %s", cookie)
+                logger.info("SmarterCsrfViewMiddleware request.COOKIES: %s", cookie)
             logger.info("%s cookie settings", self.formatted_class_name)
             logger.info("%s settings.CSRF_COOKIE_NAME: %s", self.formatted_class_name, settings.CSRF_COOKIE_NAME)
             logger.info(

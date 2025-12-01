@@ -221,7 +221,7 @@ INSTALLED_APPS += [
     "corsheaders",
 ]
 MIDDLEWARE += [
-    "corsheaders.middleware.CorsMiddleware",
+    "corsheaders.middleware.SmarterCorsMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
 

@@ -27,7 +27,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class BlockExcessive404Middleware(SmarterMiddlewareMixin):
+class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
     """Block clients that trigger excessive 404 responses."""
 
     THROTTLE_LIMIT = 25
