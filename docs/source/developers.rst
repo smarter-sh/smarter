@@ -30,6 +30,8 @@ A walkthrough of setting up your development environment and running Smarter loc
    developers/django-settings
    developers/smarter-settings
    developers/smarter-validators
+   developers/smarter-mixins
+   developers/smarter-helpers
    developers/build
    developers/test
    developers/deployment
