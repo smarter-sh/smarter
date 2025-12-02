@@ -230,7 +230,25 @@ class SmarterWebHtmlView(SmarterView):
 @method_decorator(never_cache, name="dispatch")
 class SmarterNeverCachedWebView(SmarterWebHtmlView):
     """
-    An optimized web view that is never cached.
+    An optimized web view that requires authentication and is never cached.
+
+    This class combines two critical behaviors for secure and dynamic web applications:
+
+    1. **Authentication Enforcement**: Inherits from `SmarterAuthenticatedWebView`, which applies the
+       `@login_required` decorator to the `dispatch` method. This ensures that only authenticated users
+       can access the view. If an unauthenticated user attempts access, they are redirected to the login page,
+       and the cache is expired to prevent sensitive data leakage.
+
+    2. **Cache Prevention**: Uses the `@never_cache` decorator (applied via `method_decorator` to the
+       `dispatch` method). This instructs Django and downstream proxies/browsers to never cache responses
+       from this view. This is essential for views that display user-specific or sensitive information,
+       ensuring that no part of the response is stored or reused.
+
+    By combining these decorators, `SmarterAuthenticatedNeverCachedWebView` guarantees that:
+    - Only logged-in users can access the view.
+    - Every response is generated fresh for each request, with no caching at any layer.
+
+    This makes it ideal for pages displaying private, frequently changing, or security-sensitive data.
     """
 
 
@@ -239,8 +257,19 @@ class SmarterNeverCachedWebView(SmarterWebHtmlView):
 class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     """
     An optimized view that requires authentication.
-    Includes helpers for getting the account and user profile.
-    and forces a 404 response for users without a profile.
+
+    This class uses the `@login_required` decorator, applied via Django's `method_decorator` to the `dispatch` method.
+    The `@login_required` decorator ensures that only authenticated users can access any HTTP method (GET, POST, etc.)
+    on this view. If an unauthenticated user attempts to access the view, they are redirected to the login page.
+    Additionally, the `dispatch` method is overridden to expire any cache for anonymous users, further protecting
+    sensitive data from being stored or leaked.
+
+    The view also includes helpers for retrieving the account and user profile associated with the request,
+    and will force a 404 response for users who do not have a valid profile, ensuring that only properly
+    provisioned users can access protected resources.
+
+    By enforcing authentication at the dispatch level, this view provides a robust foundation for building
+    secure, user-specific pages in the Smarter platform.
     """
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
@@ -263,7 +292,24 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
 @method_decorator(cache_control(max_age=settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
 @method_decorator(cache_page(settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
 class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
-    """An optimized and cached web view that requires authentication."""
+    """
+    An optimized and cached web view that requires authentication.
+
+    This class uses two important Django decorators, both applied via `method_decorator` to the `dispatch` method:
+
+    1. **@cache_control**: Sets HTTP cache headers on responses from this view, specifying the maximum age for cached content.
+       This instructs browsers and proxies to cache the response for a defined period, improving performance for repeat visits.
+
+    2. **@cache_page**: Enables full-page caching at the Django view level, storing rendered responses in the cache backend.
+       This dramatically reduces server load and speeds up response times for authenticated users accessing the same content.
+
+    Both decorators work together to ensure that authenticated users receive cached content when appropriate, while still
+    enforcing authentication via the parent class (`SmarterAuthenticatedWebView`), which uses the `@login_required` decorator.
+
+    This view is ideal for pages where content is user-specific but does not change frequently, allowing for efficient caching
+    without compromising security. The dispatch method also patches vary headers to ensure proper cache differentiation based
+    on cookies, further protecting user data.
+    """
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
@@ -283,9 +329,37 @@ class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
 
 @method_decorator(never_cache, name="dispatch")
 class SmarterAuthenticatedNeverCachedWebView(SmarterAuthenticatedWebView):
-    """An optimized web view that requires authentication and is never cached."""
+    """
+    An optimized web view that requires authentication and is never cached.
+
+    This class uses two key Django decorators, both applied via `method_decorator` to the `dispatch` method:
+
+    1. **@login_required** (inherited from `SmarterAuthenticatedWebView`): Ensures that only authenticated users can access any HTTP method (GET, POST, etc.) on this view. If an unauthenticated user attempts access, they are redirected to the login page and the cache is expired to prevent sensitive data leakage.
+
+    2. **@never_cache**: Explicitly instructs browsers, proxies, and Django itself to never cache responses from this view. This is critical for views that display user-specific or sensitive information, ensuring that no part of the response is stored or reused.
+
+    By combining these decorators, this view guarantees that:
+    - Only logged-in users can access the view.
+    - Every response is generated fresh for each request, with no caching at any layer.
+
+    This makes it ideal for pages displaying private, frequently changing, or security-sensitive data, where both authentication and cache prevention are essential.
+    """
 
 
 @method_decorator(staff_member_required, name="dispatch")
 class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
-    """An admin-only optimized web view that is never cached."""
+    """
+    An admin-only optimized web view that is never cached.
+
+    This class uses the `@staff_member_required` decorator, applied via Django's `method_decorator` to the `dispatch` method.
+    The `@staff_member_required` decorator ensures that only users who are marked as staff in Django's authentication system
+    can access any HTTP method (GET, POST, etc.) on this view. Non-staff users are redirected to the admin login page.
+
+    In addition, this view inherits from `SmarterAuthenticatedNeverCachedWebView`, which itself applies both the
+    `@login_required` and `@never_cache` decorators. This means:
+    - Only authenticated staff members can access the view.
+    - Every response is generated fresh for each request, with no caching at any layer.
+
+    This combination makes the view ideal for admin pages that display sensitive or frequently changing data, ensuring
+    both strict access control and cache prevention.
+    """
