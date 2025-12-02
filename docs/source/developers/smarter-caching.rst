@@ -1,5 +1,5 @@
-Object Caching
-==============
+Smarter Caching
+=================
 
 Smarter implements a proprietary function result caching system (not an
 object cache per se), which is designed as a one-size-fits-all solution
