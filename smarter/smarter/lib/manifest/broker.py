@@ -133,16 +133,27 @@ class SAMBrokerErrorNotFound(SAMBrokerError):
 
 class AbstractBroker(ABC, SmarterRequestMixin):
     """
-    Smarter API Manifest Broker abstract base class. This class is responsible
-    for:
-    - loading, and partially validating and parsing a Smarter Api yaml manifest,
-      sufficient to enable us to initialize a Pydantic model.
-    - implementing the broker service pattern for the underlying object
-    - initializing the corresponding Pydantic models.
-    - instantiating the underlying Python object
+    Abstract base class for the Smarter Broker Model.
 
-    AbstractBroker defines the broker pattern that provides the generic services
-    for the manifest: get, post, put, delete, patch.
+    This class defines the core broker service pattern for the Smarter API, and is the
+    foundation for all concrete Broker implementations. Brokers are responsible for
+    processing Smarter YAML manifests, initializing Pydantic models, and brokering
+    the correct implementation class for CLI and API operations.
+
+    Responsibilities
+    ----------------
+    - Load, partially validate, and parse a Smarter API YAML manifest, sufficient to
+      initialize a Pydantic model.
+    - Implement the broker service pattern for the underlying object.
+    - Initialize the corresponding Pydantic models.
+    - Instantiate the underlying Python object for the resource.
+
+    The broker pattern provides generic services for manifest operations, including:
+    ``get``, ``post``, ``put``, ``delete``, and ``patch``.
+
+    Subclasses must implement the abstract methods to provide resource-specific
+    logic for CLI and API commands such as ``apply``, ``describe``, ``delete``,
+    ``deploy``, ``example_manifest``, ``get``, ``logs``, and ``undeploy``.
     """
 
     _api_version: Optional[str] = None
@@ -227,13 +238,20 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         Returns the formatted class name for logging purposes.
         This is used to provide a more readable class name in logs.
+
+        :return: The formatted class name.
+        :rtype: str
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.AbstractBroker()"
 
     @property
     def request(self) -> Optional[HttpRequest]:
-        """Return the request object."""
+        """Return the request object.
+
+        :return: The request object.
+        :rtype: Optional[HttpRequest]
+        """
         return self.smarter_request
 
     @property
@@ -243,6 +261,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         scenarios to consider:
         1. the request is a Django HttpRequest object (the expected case)
         2. the request is a Python PreparedRequest object (the edge case)
+
+        :return: The query parameters from the url of the request.
+        :rtype: Optional[QueryDict]
         """
         if isinstance(self.request, PreparedRequest):
             query = urlparse(self.request.url).query
@@ -259,7 +280,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @property
     def uri(self) -> Optional[str]:
-        """Return the full uri of the request."""
+        """Return the full uri of the request.
+
+        :return: The full uri of the request.
+        :rtype: Optional[str]
+        """
         if not self.request:
             return None
 
@@ -276,7 +301,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @property
     def created(self) -> bool:
-        """Return True if the broker was created successfully."""
+        """Return True if the broker was created successfully.
+
+        :return: True if the broker was created successfully.
+        :rtype: bool
+        """
         return self._created
 
     @property
@@ -285,18 +314,34 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @property
     def thing(self) -> SmarterJournalThings:
+        """
+        The Smarter Journal Thing for this broker.
+
+        :return: The Smarter Journal Thing for this broker.
+        :rtype: SmarterJournalThings, an enumeration of all Smarter AI resource types.
+        """
         if not self._thing:
             self._thing = SmarterJournalThings(self.kind)
         return self._thing
 
     @property
     def kind(self) -> Optional[str]:
-        """The kind of manifest."""
+        """
+        The kind of manifest.
+
+        :return: The kind of manifest.
+        :rtype: Optional[str]
+        """
         return self._kind
 
     @property
     def name(self) -> Optional[str]:
-        """The name of the manifest."""
+        """
+        The name of the manifest.
+
+        :return: The name of the manifest.
+        :rtype: Optional[str]
+        """
         if self._name:
             return self._name
         if (
@@ -318,10 +363,22 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @property
     def api_version(self) -> Optional[str]:
+        """
+        The API version of the manifest.
+
+        :return: The API version of the manifest.
+        :rtype: Optional[str]
+        """
         return self._api_version
 
     @property
     def loader(self) -> Optional[SAMLoader]:
+        """
+        The SAMLoader instance for this broker.
+
+        :return: The SAMLoader instance for this broker.
+        :rtype: Optional[SAMLoader]
+        """
         if self._loader and self._loader.ready:
             return self._loader
 
@@ -333,26 +390,44 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ###########################################################################
     @property
     def serializer(self) -> Optional[ModelSerializer]:
-        """Return the serializer for the broker."""
+        """
+        Return the serializer for the broker.
+
+        :return: The serializer class definition for the broker.
+        :rtype: Optional[ModelSerializer]
+        """
         raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
 
     @property
     def model_class(self) -> Type[TimestampedModel]:
-        """Return the Django ORM model class for the broker."""
+        """
+        Return the Django ORM model class for the broker.
+
+        :return: The Django ORM model class definition for the broker.
+        :rtype: Type[TimestampedModel]
+        """
         raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
 
     @property
     def pydantic_model(self) -> Type[AbstractSAMBase]:
-        """Return the Pydantic model for the broker."""
+        """
+        Return the Pydantic model for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[AbstractSAMBase]
+        """
         return self._pydantic_model
 
     @property
-    def manifest(self) -> Optional[AbstractSAMBase]:
+    def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
         """
         The Pydantic model representing the manifest. This is a reference
         implementation of the abstract property, for documentation purposes
         to illustrate the correct way to initialize a AbstractSAMBase Pydantic model.
         The actual property must be implemented by the concrete broker class.
+
+        :return: The Pydantic model representing the manifest.
+        :rtype: Optional[AbstractSAMBase]
         """
         if not self._manifest and self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = AbstractSAMBase(
@@ -378,12 +453,27 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
-        apply a manifest, which works like a upsert.
-        metadata:
-            description: new description
-            name: test71d12b8212b628df
-            version: 1.0.0
+        Apply a manifest, which works like an upsert operation. Designed
+        around the Kubernetes ``kubectl apply`` command.
 
+        This method processes a Smarter YAML manifest and either creates or updates
+        the corresponding resource, depending on whether it already exists.
+
+        Example manifest metadata::
+
+            metadata:
+                description: new description
+                name: test71d12b8212b628df
+                version: 1.0.0
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse if implemented, otherwise None.
+        :rtype: Optional[SmarterJournaledJsonResponse]
+
+        .. todo:: Research why this is not an abstract method.
         """
         logger.info(
             "AbstractBroker.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
@@ -396,33 +486,78 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """chat with the broker."""
+        """
+        Invoke a chat operation.
+
+        This abstract method should be implemented by subclasses to provide
+        chat-based interactions with the broker resource.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse containing the chat response.
+        :rtype: SmarterJournaledJsonResponse
+        """
         raise SAMBrokerErrorNotImplemented(
             message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
         )
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """describe a resource.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse containing the description of the resource.
+        :rtype: SmarterJournaledJsonResponse
+        """
         raise SAMBrokerErrorNotImplemented(
-            message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DESCRIBE
+            message="describe() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DESCRIBE
         )
 
     @abstractmethod
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """delete a resource."""
+        """delete a resource.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse containing the result of the delete operation.
+        :rtype: SmarterJournaledJsonResponse
+        """
         raise SAMBrokerErrorNotImplemented(
             message="delete() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DELETE
         )
 
     @abstractmethod
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """deploy a resource."""
+        """deploy a resource.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse containing the result of the deploy operation.
+        :rtype: SmarterJournaledJsonResponse
+        """
         raise SAMBrokerErrorNotImplemented(
             message="deploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DEPLOY
         )
 
     @abstractmethod
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Returns an example yaml manifest document for the kind of resource."""
+        """Returns an example yaml manifest document for the kind of resource.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse containing the example manifest.
+        :rtype: SmarterJournaledJsonResponse
+        """
         raise SAMBrokerErrorNotImplemented(
             message="example_manifest() not implemented",
             thing=self.thing,
@@ -431,27 +566,59 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @abstractmethod
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """get information about specified resources."""
+        """get information about specified resources.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse containing the result of the get operation.
+        :rtype: SmarterJournaledJsonResponse
+        """
         raise SAMBrokerErrorNotImplemented(
             message="get() not implemented", thing=self.thing, command=SmarterJournalCliCommands.GET
         )
 
     @abstractmethod
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """get logs for a resource."""
+        """get logs for a resource.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse containing the logs for the resource.
+        :rtype: SmarterJournaledJsonResponse
+        """
         raise SAMBrokerErrorNotImplemented(
             message="logs() not implemented", thing=self.thing, command=SmarterJournalCliCommands.LOGS
         )
 
     @abstractmethod
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """undeploy a resource."""
+        """undeploy a resource.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse containing the result of the undeploy operation.
+        :rtype: SmarterJournaledJsonResponse
+        """
         raise SAMBrokerErrorNotImplemented(
             message="undeploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.UNDEPLOY
         )
 
     def schema(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Return the published JSON schema for the Pydantic model."""
+        """Return the published JSON schema for the Pydantic model.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse containing the JSON schema.
+        :rtype: SmarterJournaledJsonResponse
+        """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -474,6 +641,19 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         Get or create a Smarter Secret in the database. This is used to store
         secrets that are passed in the manifest.
+
+        :param user_profile: The UserProfile to associate the secret with.
+        :type user_profile: UserProfile
+        :param name: The name of the secret.
+        :type name: str
+        :param value: The value of the secret.
+        :type value: Optional[str]
+        :param description: A description of the secret.
+        :type description: Optional[str]
+        :param expiration: The expiration date of the secret.
+        :type expiration: Optional[datetime]
+        :return: The created or retrieved Secret object.
+        :rtype: Secret
         """
         secret: Optional[Secret] = None
         try:
@@ -533,7 +713,23 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     def json_response_ok(
         self, command: SmarterJournalCliCommands, data: Optional[dict] = None, message: Optional[str] = None
     ) -> SmarterJournaledJsonResponse:
-        """Return a common success response."""
+        """Return a common success response.
+
+        :param command: The command that was executed.
+        :type command: SmarterJournalCliCommands
+        :param data: The data to return in the response.
+        :type data: Optional[dict]
+        :param message: An optional message to include in the response.
+        :type message: Optional[str]
+        :return: A SmarterJournaledJsonResponse containing the success response.
+        :rtype: SmarterJournaledJsonResponse
+        """
+        if self.request is None:
+            raise SAMBrokerError(
+                message="Cannot create JSON response without a valid request object",
+                thing=self.thing,
+                command=command,
+            )
         data = data or {}
 
         operated = SmarterJournalCliCommands.past_tense().get(str(command), command)
@@ -556,7 +752,19 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     def json_response_err_readonly(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
-        """Return a common read-only response."""
+        """Return a common read-only response.
+
+        :param command: The command that was executed.
+        :type command: SmarterJournalCliCommands
+        :return: A SmarterJournaledJsonResponse containing the read-only response.
+        :rtype: SmarterJournaledJsonResponse
+        """
+        if self.request is None:
+            raise SAMBrokerError(
+                message="Cannot create JSON response without a valid request object",
+                thing=self.thing,
+                command=command,
+            )
         message = f"{self.kind} {self.name} is read-only"
 
         error = {
@@ -574,7 +782,19 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     def json_response_err_notimplemented(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
-        """Return a common not implemented response."""
+        """Return a common not implemented response.
+
+        :param command: The command that was executed.
+        :type command: SmarterJournalCliCommands
+        :return: A SmarterJournaledJsonResponse containing the not implemented response.
+        :rtype: SmarterJournaledJsonResponse
+        """
+        if self.request is None:
+            raise SAMBrokerError(
+                message="Cannot create JSON response without a valid request object",
+                thing=self.thing,
+                command=command,
+            )
         message = f"command not implemented for {self.kind} resources"
         error = {
             SmarterJournalApiResponseErrorKeys.ERROR_CLASS: SAMBrokerErrorNotImplemented.__name__,
@@ -591,7 +811,19 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     def json_response_err_notready(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
-        """Return a common not ready response."""
+        """Return a common not ready response.
+
+        :param command: The command that was executed.
+        :type command: SmarterJournalCliCommands
+        :return: A SmarterJournaledJsonResponse containing the not ready response.
+        :rtype: SmarterJournaledJsonResponse
+        """
+        if self.request is None:
+            raise SAMBrokerError(
+                message="Cannot create JSON response without a valid request object",
+                thing=self.thing,
+                command=command,
+            )
         message = f"{self.kind} {self.name} not ready"
         error = {
             SmarterJournalApiResponseErrorKeys.ERROR_CLASS: SAMBrokerErrorNotReady.__name__,
@@ -610,7 +842,21 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     def json_response_err_notfound(
         self, command: SmarterJournalCliCommands, message: Optional[str] = None
     ) -> SmarterJournaledJsonResponse:
-        """Return a common not found response."""
+        """Return a common not found response.
+
+        :param command: The command that was executed.
+        :type command: SmarterJournalCliCommands
+        :param message: An optional custom message to include in the response.
+        :type message: Optional[str]
+        :return: A SmarterJournaledJsonResponse containing the not found response.
+        :rtype: SmarterJournaledJsonResponse
+        """
+        if self.request is None:
+            raise SAMBrokerError(
+                message="Cannot create JSON response without a valid request object",
+                thing=self.thing,
+                command=command,
+            )
         message = message or f"{self.kind} {self.name} not found"
         error = {
             SmarterJournalApiResponseErrorKeys.ERROR_CLASS: SAMBrokerErrorNotFound.__name__,
@@ -630,7 +876,20 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         Return a structured error response that can be unpacked and rendered
         by the cli in a variety of formats.
+
+        :param command: The command that was executed.
+        :type command: SmarterJournalCliCommands
+        :param e: The exception that was raised.
+        :type e: Exception
+        :return: A SmarterJournaledJsonResponse containing the error response.
+        :rtype: SmarterJournaledJsonResponse
         """
+        if self.request is None:
+            raise SAMBrokerError(
+                message="Cannot create JSON response without a valid request object",
+                thing=self.thing,
+                command=command,
+            )
         stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
         return SmarterJournaledJsonErrorResponse(
             request=self.request,
@@ -648,6 +907,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         Set self.name from the 'name' query string param and then verify that it
         was actually passed.
+
+        :param command: The command being executed, for error reporting purposes.
+        :type command: Optional[SmarterJournalCliCommands]
+        :raises SAMBrokerErrorNotReady: If neither a manifest nor a name param is provided.
+        :return: None
         """
         self._name = kwargs.get("name", None) or self._name
         if not self.manifest and not self.name:
@@ -662,6 +926,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         For tabular output from get() implementations. Returns a list of field names and types
         from the Django model serializer.
+
+        :param serializer: The Django model serializer instance.
+        :type serializer: ModelSerializer
+        :return: A list of field names and types.
+        :rtype: Optional[list[dict[str, str]]]
         """
         fields_and_types: list[dict[str, str]] = []
         for field_name, field in serializer.fields.items():
@@ -671,14 +940,28 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return fields_and_types
 
     def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
-        """Converts camelCase dict keys to snake_case."""
+        """Converts camelCase dict keys to snake_case.
+
+        :param data: The data to convert.
+        :type data: Union[str, dict, list]
+        :return: The converted data.
+        :rtype: Optional[Union[str, dict, list]]
+        """
 
         return util_camel_to_snake(data)
 
     def snake_to_camel(
         self, data: Union[str, dict, list], convert_values: bool = False
     ) -> Optional[Union[str, dict, list]]:
-        """Converts snake_case dict keys to camelCase."""
+        """Converts snake_case dict keys to camelCase.
+
+        :param data: The data to convert.
+        :type data: Union[str, dict, list]
+        :param convert_values: Whether to convert the values as well.
+        :type convert_values: bool
+        :return: The converted data.
+        :rtype: Optional[Union[str, dict, list]]
+        """
 
         return util_snake_to_camel(data, convert_values)
 
@@ -687,6 +970,15 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         - Remove any leading or trailing whitespace from the param.
         - Ensure that the param is a string.
         - Return the cleaned param.
+
+        :param param: The param to clean.
+        :type param: Any
+        :param param_name: The name of the param, for logging purposes.
+        :type param_name: str
+        :param url: The url from which the param was extracted, for logging purposes.
+        :type url: Optional[str]
+        :return: The cleaned param.
+        :rtype: Optional[str]
         """
         class_name = self.__class__.__name__ + "().clean_cli_param()"
         class_name = formatted_text(class_name)
