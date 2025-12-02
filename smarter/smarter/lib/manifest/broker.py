@@ -383,7 +383,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return self._loader
 
     def __str__(self):
-        return f"{self.manifest.apiVersion if self.manifest else "Unknown Version"} {self.kind} Broker"
+        if isinstance(self.manifest, AbstractSAMBase):
+            return f"{self.manifest.apiVersion if self.manifest else "Unknown Version"} {self.kind} Broker"
+        if isinstance(self.manifest, dict):
+            return f"{self.manifest.get("apiVersion", "Unknown Version")} {self.kind} Broker"
+        return f"Unknown Version {self.kind} Broker"
 
     ###########################################################################
     # Abstract Properties
