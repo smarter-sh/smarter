@@ -10,7 +10,6 @@ Overview goes here. Design principles, architecture, and key components of the S
    smarter-api/authentication
    smarter-api/base-class
    smarter-api/broker-model
-   smarter-api/chat-completions
    smarter-api/cli
    smarter-api/error-handling
    smarter-api/logging
