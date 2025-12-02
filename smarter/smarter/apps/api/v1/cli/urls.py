@@ -1,15 +1,20 @@
 """
-Smarter API command-line interface URL configuration.
+URL configuration for the Smarter API command-line interface.
 
-- https://platform.smarter.sh/api/v1/cli/get/            # Return information about the  specified resource
-- https://platform.smarter.sh/api/v1/cli/apply/          # Apply a manifest
-- https://platform.smarter.sh/api/v1/cli/describe/       # print the manifest
-- https://platform.smarter.sh/api/v1/cli/deploy/         # Deploy a resource
-- https://platform.smarter.sh/api/v1/cli/logs/           # Get logs for a resource
-- https://platform.smarter.sh/api/v1/cli/delete/         # Delete a resource
-- https://platform.smarter.sh/api/v1/cli/status/         # Smarter platform status
-- https://platform.smarter.sh/api/v1/cli/version/        # returns detailed version information on the platform
-- https://platform.smarter.sh/api/v1/cli/whoami/         # Return information about the current IAM user
+This module defines the URL patterns for CLI-related API endpoints.
+
+Endpoints
+---------
+
+- ``/api/v1/cli/get/``            -- Return information about the specified resource
+- ``/api/v1/cli/apply/``          -- Apply a manifest
+- ``/api/v1/cli/describe/``       -- Print the manifest
+- ``/api/v1/cli/deploy/``         -- Deploy a resource
+- ``/api/v1/cli/logs/``           -- Get logs for a resource
+- ``/api/v1/cli/delete/``         -- Delete a resource
+- ``/api/v1/cli/status/``         -- Smarter platform status
+- ``/api/v1/cli/version/``        -- Returns detailed version information on the platform
+- ``/api/v1/cli/whoami/``         -- Return information about the current IAM user
 """
 
 from django.urls import path
@@ -35,7 +40,32 @@ app_name = namespace
 
 
 class ApiV1CliReverseViews:
-    """Reverse views for the CLI commands"""
+    """
+    Reverse views for the CLI commands
+    Provides named references for reversing CLI-related API endpoints.
+
+    This class is used for reverse URL resolution in Django, where each attribute
+    corresponds to a CLI command endpoint. The names are derived from the actual
+    API view class names, ensuring consistency and reducing the risk of typos
+    when using Django's URL reversing features.
+
+    All CLI commands available in the Smarter platform are included as attributes
+    of this class. This centralizes the reverse URL names for all CLI endpoints,
+    making it easier to maintain and reference them throughout the codebase.
+
+    Usage
+    -----
+    Use these attributes with Django's ``reverse()`` function or in templates
+    to generate URLs for CLI API endpoints based on the view class names.
+
+    Example
+    -------
+    .. code-block:: python
+
+        from django.urls import reverse
+        url = reverse(ApiV1CliReverseViews.deploy, kwargs={'kind': 'example'})
+
+    """
 
     namespace = "api:v1:cli:"
 

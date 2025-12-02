@@ -7,12 +7,13 @@ that are intended to be initiated by the Smarter CLI tool. See `github.com/smart
 
 See :doc:`base/cli-base` for details on the base CLI view CliBaseApiView.
 
+AI Resources that implement the Broker Model will subclass the AbstractBroker class (see class referencebelow).
+
 .. autoclass:: smarter.apps.api.v1.cli.brokers.Brokers
    :members:
    :undoc-members:
    :show-inheritance:
 
-AI Resources that implement the Broker Model will subclass the AbstractBroker class.
 
 .. autoclass:: smarter.lib.manifest.broker.AbstractBroker
    :members:

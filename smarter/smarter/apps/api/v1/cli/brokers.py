@@ -164,7 +164,8 @@ class Brokers:
         determine the broker to use when the kind is not provided in the
         request.
 
-        example: http://localhost:8000/api/v1/cli/example_manifest/Account/
+        example: http://localhost:8000/api/v1/cli/example_manifest/account/
+        returns: "Account"
         """
         parsed_url = urlparse(url)
         if parsed_url:
