@@ -167,26 +167,47 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
 
 class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     """
-    An enhanced HTTP error response class that serializes error information
-    in a format that the cli can consume, format and echo to the user console.
+    Enhanced HTTP error response for Smarter CLI commands.
 
-    Smarter parameters:
-    ---------------------------
-    :request: The original Django request object.
-    :thing: a noun. whatever it is that we're journaliing.
-    :command: The command that was run on the thing.
-    :e: a Python exception object that was raised.
+    This class serializes error information in a structured JSON format
+    consumable by the Smarter CLI, allowing for consistent error formatting
+    and display in the user console. It is the common error response for all
+    CLI commands.
 
-    Django inherited parameters:
-    ---------------------------
-    :param data: Data to be dumped into json. By default only ``dict`` objects
-      are allowed to be passed due to a security flaw before ECMAScript 5. See
-      the ``safe`` parameter for more information.
-    :param encoder: Should be a json encoder class. Defaults to
-      ``django.core.serializers.json.DjangoJSONEncoder``.
-    :param safe: Controls if only ``dict`` objects may be serialized. Defaults
-      to ``True``.
-    :param json_dumps_params: A dictionary of kwargs passed to json.dumps().
+    :param request: The original Django request object.
+    :type request: django.http.HttpRequest
+    :param e: The Python exception object that was raised.
+    :type e: Exception
+    :param encoder: JSON encoder class. Defaults to ``django.core.serializers.json.DjangoJSONEncoder``.
+    :type encoder: type
+    :param safe: Controls if only ``dict`` objects may be serialized. Defaults to ``True``.
+    :type safe: bool
+    :param thing: The resource or entity being operated on (noun).
+    :type thing: SmarterJournalThings or str, optional
+    :param command: The CLI command executed on the resource.
+    :type command: SmarterJournalCliCommands, optional
+    :param json_dumps_params: Additional kwargs for ``json.dumps()``.
+    :type json_dumps_params: dict, optional
+    :param stack_trace: The stack trace for the exception.
+    :type stack_trace: str, optional
+    :param description: Human-readable error description.
+    :type description: str, optional
+    :param kwargs: Additional keyword arguments passed to the parent class.
+
+    **Example error response JSON**::
+
+        {
+            "error": {
+                "error_class": "ValueError",
+                "stack_trace": "...",
+                "description": "Invalid input",
+                "status": 400,
+                "args": "...",
+                "cause": "...",
+                "context": "thing=account, command=create"
+            }
+        }
+
     """
 
     # pylint: disable=too-many-arguments,too-many-locals

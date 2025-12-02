@@ -1,0 +1,2 @@
+Smarter Journal
+================
