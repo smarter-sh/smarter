@@ -52,42 +52,53 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     """
     Base viewset for all ChatBot API endpoints.
 
-    This class serves as the foundational viewset for all chatbot-related APIs in the Smarter platform.
-    It is designed as a subclass of Django REST Framework (DRF) views, providing common functionality
-    and lifecycle management for chatbot API requests.
+    This class serves as the foundational viewset for all chatbot-related APIs in the Smarter platform,
+    including prompt completions that leverage the Smarter LLM Tool Call Plugin architecture.
 
-    Key Responsibilities
-    --------------------
-    - API key authentication and request validation.
-    - Initialization of Account, ChatBot, ChatBotHelper, and ChatHelper objects.
-    - Request dispatching and routing to the appropriate handler methods.
-    - Plugin discovery and initialization for chatbot extensibility.
-    - Logging and observability for all major lifecycle events.
+    **Key Responsibilities:**
 
-    DRF Integration
-    ---------------
-    As a subclass of DRF's view system, this base viewset participates in the standard DRF request/response
-    lifecycle. It overrides and extends methods such as ``setup()``, ``dispatch()``, ``get()``, and ``post()``
-    to provide chatbot-specific logic while maintaining compatibility with DRF's middleware, authentication,
-    and response handling mechanisms.
+    - **API Key Authentication and Request Validation:**
+      Enforces authentication for all API requests, rejecting those without a valid API key.
 
-    Examples
-    --------
-    Example API endpoints using this base viewset:
+    - **Lifecycle Management:**
+      Handles initialization of Account, ChatBot, ChatBotHelper, and ChatHelper objects, and manages request dispatching
+      and routing to the appropriate handler methods.
 
-    - ``https://customer-support.3141-5926-5359.api.smarter.sh/``
-    - ``https://platform.smarter/workbench/example/``
-    - ``https://platform.smarter/api/v1/workbench/1/chat/``
+    - **Plugin Discovery and Extensibility:**
+      Discovers and initializes plugins for chatbot extensibility, supporting the Smarter LLM Tool Call Plugin architecture.
 
-    Notes
-    -----
-    - This class is intended to be subclassed by concrete chatbot API views.
-    - It provides robust error handling and logging for all major operations.
-    - Authentication is enforced by default, and requests without a valid API key will be rejected.
-    - The viewset is CSRF-exempt to support API clients.
+    - **Logging and Observability:**
+      Provides robust logging and observability for all major lifecycle events, including error handling.
 
-    :see also: `Django REST Framework ViewSets <https://www.django-rest-framework.org/api-guide/viewsets/>`__
+    **Django Integration:**
 
+    - Subclasses Django's view-template system (not DRF), participating in the standard request/response lifecycle.
+    - Overrides and extends methods such as ``setup()``, ``dispatch()``, ``get()``, and ``post()`` to provide chatbot-specific logic.
+    - CSRF-exempt to support API clients.
+
+    **Prompt Completion & LLM Tool Call Plugins:**
+
+    - This base view is designed to support prompt completion endpoints that utilize Smarter's LLM Tool Call Plugin architecture.
+    - Plugins can be discovered and invoked as part of the chatbot's response generation, enabling extensible and dynamic tool use.
+
+    **Examples:**
+
+        - ``https://customer-support.3141-5926-5359.api.smarter.sh/``
+        - ``https://platform.smarter/workbench/example/``
+        - ``https://platform.smarter/api/v1/workbench/1/chat/``
+
+    **Notes:**
+
+    - Intended to be subclassed by concrete chatbot API views.
+    - Provides robust error handling and logging for all major operations.
+    - Authentication is enforced by default.
+    - CSRF-exempt for API compatibility.
+
+    **See Also:**
+        - Django REST Framework View lifecycle: https://www.django-rest-framework.org/api-guide/views/#view-initialization
+        - SmarterRequestMixin for request context management.
+        - ChatBotHelper and ChatHelper for chatbot and chat session logic.
+        - Smarter LLM Tool Call Plugin architecture documentation.
     """
 
     _chatbot_id: Optional[int] = None

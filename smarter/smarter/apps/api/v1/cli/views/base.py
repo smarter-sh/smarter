@@ -94,7 +94,6 @@ class SmarterAPIV1CLIViewErrorNotAuthenticated(APIV1CLIViewError):
 class CliBaseApiView(APIView, SmarterRequestMixin):
     """
     Base class for all Smarter API v1 command-line interface (CLI) views.
-
     This class provides common functionality for all `/api/v1/cli` endpoints, including:
 
     - Authentication using either Knox TokenAuthentication or Django SessionAuthentication.
