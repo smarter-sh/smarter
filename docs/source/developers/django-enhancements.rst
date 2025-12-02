@@ -3,7 +3,7 @@ Django Enhancements
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Django Enhancements
 
    django/manage
