@@ -48,13 +48,38 @@ def redirect_and_expire_cache(path: str = "/"):
 # ------------------------------------------------------------------------------
 class SmarterView(View, SmarterRequestMixin):
     """
-    Base view for smarter views.
+    The foundational base view for all Smarter platform views.
+
+    This class serves as the root for every view within the Smarter application, providing a
+    unified interface and shared functionality for web, XML, and text-based views.
+    By inheriting from both Django's ``View`` and the custom ``SmarterRequestMixin``, it
+    ensures consistent request handling and integration with Smarter-specific request features.
+
+    All other view classes in the platform are designed to extend this base, inheriting its
+    core logic and conventions. This approach centralizes common behaviors, such as context management,
+    template rendering, HTML minification, and logging, enabling maintainable and scalable
+    development across the platform.
+
+    The ``SmarterView`` class is intended to be subclassed, allowing developers to build
+    specialized views while leveraging the robust foundation it provides. It encapsulates
+    essential mechanisms for error handling, template processing, and integration with platform-wide
+    configuration, making it the cornerstone of the Smarter view architecture.
     """
 
     template_path: str = ""
     context: dict = {}
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the SmarterView with request and other arguments.
+        This method initializes the SmarterRequestMixin with the request.
+
+        :param args: Positional arguments, where the first argument is expected to be the HttpRequest.
+        :param kwargs: Keyword arguments, which may include the HttpRequest under the 'request'
+                          key.
+        :return: None
+        :rtype: None
+        """
         request: Optional[HttpRequest] = None
         if args:
             request = args[0]
@@ -66,15 +91,40 @@ class SmarterView(View, SmarterRequestMixin):
 
     @register.filter
     def remove_comments(self, html):
-        """Remove HTML comments from an html string."""
+        """
+        Remove HTML comments from an html string.
+
+        :param html: The HTML string from which to remove comments.
+        :type html: str
+        :return: The HTML string without comments.
+        :rtype: str
+        """
         return re.sub(r"<!--.*?-->", "", html)
 
     def minify_html(self, html):
-        """Minify an html string."""
+        """
+        Minify an html string.
+
+        :param html: The HTML string to minify.
+        :type html: str
+        :return: The minified HTML string.
+        :rtype: str
+        """
         return minify(html, remove_empty_space=True)
 
     def render_clean_html(self, request: HttpRequest, template_path, context=None):
-        """Render a template as a string, with comments removed and minified."""
+        """
+        Render a template as a string, with comments removed and minified.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param template_path: The path to the template to render.
+        :type template_path: str
+        :param context: The context to use for rendering the template.
+        :type context: dict, optional
+        :return: The rendered, cleaned HTML string.
+        :rtype: str
+        """
         context = context or self.context
         response = None
         try:
@@ -100,6 +150,13 @@ class SmarterView(View, SmarterRequestMixin):
         """
         Setup the view with the request and any additional arguments.
         This method initializes the SmarterRequestMixin with the request.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: The result of the superclass setup method.
+        :rtype: Any
         """
         logger.info(
             "%s.setup() - request: %s, args: %s, kwargs: %s",
@@ -135,15 +192,36 @@ class SmarterWebHtmlView(SmarterView):
     """
     Base view for smarter web views.
     Includes helpers for rendering, minifying and stripping out developer comments.
+
+
     """
 
     # pylint: disable=W0613
     def clean_http_response(self, request: HttpRequest, template_path, *args, context=None, **kwargs):
-        """Render a template and return an HttpResponse with comments removed."""
+        """
+        Render a template and return an HttpResponse with comments removed.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param template_path: The path to the template to render.
+        :type template_path: str
+        :param context: The context to use for rendering the template.
+        :type context: dict, optional
+        :return: An HttpResponse with the cleaned HTML content.
+        :rtype: HttpResponse
+        """
         minified_html = self.render_clean_html(request, template_path, context)
         return HttpResponse(content=minified_html, content_type="text/html")
 
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests and return a cleaned HttpResponse.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :return: An HttpResponse with the cleaned HTML content.
+        :rtype: HttpResponse
+        """
         return self.clean_http_response(
             request, template_path=self.template_path, context=self.context, *args, **kwargs
         )
@@ -151,7 +229,9 @@ class SmarterWebHtmlView(SmarterView):
 
 @method_decorator(never_cache, name="dispatch")
 class SmarterNeverCachedWebView(SmarterWebHtmlView):
-    """An optimized web view that is never cached."""
+    """
+    An optimized web view that is never cached.
+    """
 
 
 @method_decorator(login_required, name="dispatch")
@@ -164,7 +244,14 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     """
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
+        """
+        Dispatch the request, redirecting to login if the user is anonymous.
 
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :return: An HttpResponse object.
+        :rtype: HttpResponse
+        """
         if request.user.is_anonymous:
             return redirect_and_expire_cache(path="/login/")
 
@@ -179,6 +266,14 @@ class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
     """An optimized and cached web view that requires authentication."""
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
+        """
+        Dispatch the request and patch vary headers for successful responses.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :return: An HttpResponse object.
+        :rtype: HttpResponse
+        """
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
             return response

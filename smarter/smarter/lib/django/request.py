@@ -720,12 +720,12 @@ class SmarterRequestMixin(AccountMixin):
 
         :return: The timestamp as a `datetime` object.
 
-        Example:
-            ```python
+        Example::
+
             request_mixin = SmarterRequestMixin(request)
             ts = request_mixin.timestamp
             print(ts)  # e.g., 2025-12-01 12:34:56.789012
-            ```
+
         """
         return self._timestamp
 
@@ -738,12 +738,12 @@ class SmarterRequestMixin(AccountMixin):
 
         :return: The request body data as a dict, list, or str, or None if not available.
 
-        Example:
-            ```python
+        Example::
+
             request_mixin = SmarterRequestMixin(request)
             data = request_mixin.data
             print(data)  # e.g., {'session_key': 'abc123', ...}
-            ```
+
         """
         if self._data:
             return self._data
@@ -823,12 +823,12 @@ class SmarterRequestMixin(AccountMixin):
         Returns:
             str: A unique string representing the client and request context.
 
-        Example:
-            ```python
+        Example::
+
             request_mixin = SmarterRequestMixin(request)
             unique_str = request_mixin.unique_client_string
             print(unique_str)
-            ```
+
         """
         if not self.smarter_request:
             return "unique_client_string"
@@ -865,12 +865,12 @@ class SmarterRequestMixin(AccountMixin):
         Returns:
             Optional[str]: The client's IP address as a string, or None if not found.
 
-        Example:
-            ```python
+        Example::
+
             request_mixin = SmarterRequestMixin(request)
             ip = request_mixin.ip_address
             print(ip)  # e.g., '192.168.1.100'
-            ```
+
         """
         if (
             self.smarter_request is not None
@@ -891,12 +891,12 @@ class SmarterRequestMixin(AccountMixin):
         Returns:
             Optional[str]: The client's user agent string, or None if not found.
 
-        Example:
-            ```python
+        Example::
+
             request_mixin = SmarterRequestMixin(request)
             ua = request_mixin.user_agent
             print(ua)  # e.g., 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...'
-            ```
+
         """
         if (
             self.smarter_request is not None

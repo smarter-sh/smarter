@@ -12,4 +12,3 @@ Django Enhancements
    django/templates
    django/token-generators
    django/views
-   django/waffle
