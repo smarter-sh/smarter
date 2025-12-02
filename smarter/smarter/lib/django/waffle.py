@@ -1,10 +1,43 @@
 """
-This module provides a wrapper around the django-waffle library to
-add caching and to handle an init scendario where the database is not ready.
-It is used to check if a feature flag (switch) is active.
+smarter.lib.django.waffle
+------------------------------
 
-Warning and Fix Note: waffle is a Django app that relies on database tables. If the database is not ready (e.g., during initial migrations),
-attempting to access waffle switches can lead to errors. This module includes checks to ensure the database is ready before accessing waffle switches.
+Enhanced, managed Django-waffle wrapper with short-lived Redis-based caching
+and database readiness checks.
+
+Features:
+
+- Caching: Integrates short-lived Redis-based caching to optimize feature flag (switch) checks.
+- Database Readiness Handling: Implements safeguards to prevent errors when the database is not ready.
+- Feature Flag Management: Centralized mechanism to check if a feature flag (switch) is active.
+- Custom Django Admin: Customized Django Admin class for managing waffle switches.
+- Fixed Set of Switches: Defines a fixed set of waffle switches for the Smarter API.
+
+.. important::
+
+    These are managed feature flags; add any new switches to the SmarterWaffleSwitches class. These switches
+    are verified duing deployments to ensure that they exist in the database. Missing switches are
+    automatically created with a default inactive state.
+
+.. important::
+
+    django-waffle relies on database tables as well as Redis for storing and caching feature flags. If the database is not ready, waffle switch values
+    will default to inactive (False) to prevent application errors.
+
+Example:
+    .. code-block:: python
+
+        from smarter.lib.django.waffle import switch_is_active
+
+        if switch_is_active('log_api'):
+            print("API logging is enabled.")
+
+Dependencies:
+
+- `django-waffle <https://waffle.readthedocs.io/en/stable/>`_
+- `django-redis <https://django-redis.readthedocs.io/en/stable/>`_
+- `Redis <https://redis.io/documentation>`_
+- `Django <https://docs.djangoproject.com/en/stable/>`_
 """
 
 import logging
@@ -16,7 +49,7 @@ from django.db import connections
 from django.db.utils import OperationalError, ProgrammingError
 from django_redis import get_redis_connection
 from django_redis.exceptions import ConnectionInterrupted
-from redis.exceptions import ConnectionError
+from redis.exceptions import ConnectionError as RedisConnectionError
 from waffle.admin import SwitchAdmin
 
 
@@ -57,26 +90,83 @@ class SmarterSwitchAdmin(SwitchAdmin):
 
 
 class SmarterWaffleSwitches:
-    """A class representing the fixed set of Waffle switches for the Smarter API."""
+    """
+    Enumerated data type for predefined, managed Smarter waffle switches.
+
+    This class defines the fixed set of feature flags (Waffle switches) used by the Smarter Platform.
+    Each class attribute represents a unique, centrally managed switch. These switches are
+    automatically verified and created (if missing) during deployments, ensuring consistency
+    and preventing runtime errors due to missing flags.
+
+    .. note::
+
+        Only switches defined in this class are considered valid for use in the Smarter codebase.
+        To add a new feature flag, declare it as a class attribute here.
+
+    Example usage:
+
+        .. code-block:: python
+
+            from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+
+            if switch_is_active(SmarterWaffleSwitches.API_LOGGING):
+                print("API logging is enabled.")
+
+    """
 
     ACCOUNT_LOGGING = "log_account"
+    """Enables logging throughout the smarter.app.account namespace."""
+
     API_LOGGING = "log_api"
+    """Enables logging throughout the smarter.api namespace."""
+
     CACHE_LOGGING = "log_caching"
+    """Enables detailed logging for caching operations including cache hits, misses, and errors."""
+
     PROMPT_LOGGING = "log_prompt"
+    """Enables logging throughout the smarter.app.prompt namespace."""
+
     CHATAPP_LOGGING = "log_chatapp"
+    """For the React Chat UI component. Enables debug-level javascript console logging inside the browser"""
+
     CHATBOT_LOGGING = "log_chatbot"
+    """Enables logging throughout the smarter.app.chatbot namespace."""
+
     CHATBOT_HELPER_LOGGING = "log_chatbothelper"
+    """Enables logging within the smarter.apps.chatbot.model.ChatBotHelper class."""
+
     CSRF_SUPPRESS_FOR_CHATBOTS = "disable_csrf_middleware_for_chatbots"
+    """Disables CSRF middleware checks for chat completion endpoints."""
+
     JOURNAL = "enable_journal"
+    """Enables the Smarter Journal feature."""
+
     MANIFEST_LOGGING = "log_manifest_brokers"
+    """Enables detailed diagnostic logging for manifest initialization, validation and brokered operations."""
+
     MIDDLEWARE_LOGGING = "log_middleware"
+    """Enables detailed diagnostic logging for all middleware operations."""
+
     PLUGIN_LOGGING = "log_plugin"
+    """Enables logging throughout the smarter.app.plugin namespace."""
+
     PROVIDER_LOGGING = "log_provider"
+    """Enables logging throughout the smarter.app.provider namespace."""
+
     REACTAPP_DEBUG_MODE = "enable_reactapp_debug_mode"
+    """Enables React app debug mode within the Smarter React Chat component."""
+
     REQUEST_MIXIN_LOGGING = "log_request_mixin"
+    """Enables detailed diagnostic logging for the SmarterRequestMixin class."""
+
     RECEIVER_LOGGING = "log_receivers"
+    """Enables logging in all Django signal receivers throughout the Smarter codebase."""
+
     TASK_LOGGING = "log_tasks"
+    """Enables logging in all Celery tasks throughout the Smarter codebase."""
+
     VIEW_LOGGING = "log_views"
+    """Enables logging in all Django views throughout the Smarter codebase."""
 
     @property
     def all(self):
@@ -104,12 +194,21 @@ class SmarterWaffleSwitches:
 
 
 def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
+    """
+    A decorator to cache the results of the switch_is_active() function using Redis.
+    This is a slight modification of Smarter's standard cache_results decorator
+    to handle Redis connection issues.
+
+    :param timeout: Cache expiration time in seconds.
+    :return: Decorated function with caching.
+    """
 
     def is_redis_ready():
         try:
             conn = get_redis_connection("default")
             conn.ping()
             return True
+        # pylint: disable=broad-except
         except Exception:
             return False
 
@@ -127,7 +226,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
                 try:
                     result = cache.get(cache_key)
                 except (
-                    ConnectionError,
+                    RedisConnectionError,
                     ConnectionInterrupted,
                 ) as e:
                     logger.error("Redis connection error while accessing cache: %s", e, exc_info=True)
@@ -139,13 +238,13 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
                     result = func(*args, **kwargs)
                     try:
                         cache.set(cache_key, result, timeout)
-                    except (ConnectionError, ConnectionInterrupted) as e:
+                    except (RedisConnectionError, ConnectionInterrupted) as e:
                         logger.error("Redis connection error while setting cache: %s", e, exc_info=True)
                     # pylint: disable=broad-except
                     except Exception as e:
                         logger.error("Unexpected error while attempting to access cache: %s", e, exc_info=True)
                 return result
-            except (ConnectionError, ConnectionInterrupted) as e:
+            except (RedisConnectionError, ConnectionInterrupted) as e:
                 logger.error("Redis connection error in cache_results decorator: %s", e, exc_info=True)
             # pylint: disable=broad-except
             except Exception as e:
@@ -163,6 +262,13 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
 
 
 def is_database_ready(alias="default"):
+    """
+    Check if the database is ready by verifying the connection and
+    the existence of the waffle_switch table.
+
+    :param alias: The database alias to check.
+    :return: True if the database is ready, False otherwise.
+    """
 
     if db_state.ready:
         return True
@@ -183,6 +289,26 @@ def is_database_ready(alias="default"):
 
 @cache_results(timeout=CACHE_EXPIRATION)
 def switch_is_active(switch_name: str) -> bool:
+    """
+    Check if a Waffle switch is active, with caching and database readiness checks.
+
+    .. important::
+
+        This is the preferred method for checking Waffle switches in the Smarter codebase.
+        It includes caching to optimize performance and handles database readiness to prevent errors.
+
+    Example:
+        .. code-block:: python
+
+            from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+
+            if switch_is_active(SmarterWaffleSwitches.API_LOGGING):
+                print("API logging is enabled.")
+
+    :param switch_name: The name of the Waffle switch to check.
+    :return: True if the switch is active, False otherwise.
+    :rtype: bool
+    """
     if not is_database_ready():
         logger.warning("%s Database not ready, assuming switch %s is inactive.", prefix, switch_name)
         return False
