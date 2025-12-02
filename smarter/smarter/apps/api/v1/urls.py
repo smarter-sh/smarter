@@ -1,18 +1,31 @@
 """
-URL configuration for smarter api.
+smarter.apps.api.v1.urls
+-----------------------------
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+URL configuration for the Smarter API V1. The `urlpatterns`
+list in this module maps URL patterns to their corresponding views or sub-URL configurations. This enables Django to route incoming HTTP requests to the appropriate logic for handling API operations.
+
+Structure
+~~~~~~~~~~
+
+- The root path (`""`) includes the chatbot API, supporting endpoints such as `https://example.3141-5926-5359.alpha.api.smarter.sh`.
+- The following subpaths are defined for the main API:
+
+  - ``accounts/``: User account management (CRUD operations).
+  - ``chatbots/``: Management of chatbot resources (CRUD operations).
+  - ``prompts/``: Endpoints supporting client-side interactions with chatbots.
+  - ``plugins/``: Management of plugins and connections to external services.
+  - ``providers/``: Management of provider integrations.
+  - ``cli/``: Brokered services supporting the CLI, implemented within this module.
+  - ``tests/``: Endpoints for unit testing, implemented within this module.
+
+Namespaces are used for each included URL configuration to avoid naming conflicts and to provide clear separation between different API components.
+
+See Also
+~~~~~~~~~~
+
+`Django URL dispatcher documentation <https://docs.djangoproject.com/en/5.0/topics/http/urls/>`_
+
 """
 
 from django.urls import include, path

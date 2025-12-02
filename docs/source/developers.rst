@@ -42,3 +42,4 @@ A walkthrough of setting up your development environment and running Smarter loc
    developers/smarter-settings
    developers/smarter-token-authentication
    developers/smarter-validators
+   developers/smarter-waffle
