@@ -63,9 +63,3 @@ which properly formats the error details for CLI client consumption.
                 status=status,
                 stack_trace=traceback.format_exc(),
             )
-
-
-.. autoclass:: smarter.lib.journal.http.SmarterJournaledJsonErrorResponse
-   :members:
-   :undoc-members:
-   :show-inheritance:
