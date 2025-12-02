@@ -11,3 +11,4 @@ for easy access without instantiating the class.
     :members:
     :show-inheritance:
     :exclude-members: __init__
+    :caption: Smarter Validator

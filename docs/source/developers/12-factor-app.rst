@@ -22,9 +22,8 @@ practices.
    the package.
 
 4. **Backing services**: [✅] Treat backing services as attached
-   resources. We’re using `LangChain <https://www.langchain.com/>`__
-   in this project to further abstract the code from the technical
-   specifics of whichever LLM we use for prompting.
+   resources. We’re using MySql, Redis, and AWS SES in this project,
+   all of which are configurable using Django settings.
 
 5. **Build, release, run**: [✅] Strictly separate build and run
    stages. ``Build`` is implemented in Makefile, ``release`` is
