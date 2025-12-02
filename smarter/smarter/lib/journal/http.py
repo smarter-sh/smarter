@@ -34,34 +34,40 @@ logger = logging.getLogger(__name__)
 
 class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
     """
-    An enhanced HTTP response class that adds Smarter api manifest structural
-    information and metadata.
+    An enhanced HTTP response class for the Smarter API that augments standard Django JSON responses
+    with additional manifest structure and metadata.
 
-    Smarter parameters:
-    ---------------------------
-    :request: The original Django request object.
-    :thing: a noun. whatever it is that we're journaliing.
-    :command: The command that was run on the thing.
-    :data: The Smarter api response data for the request.
+    This class is designed to provide a consistent response format for all Smarter API endpoints,
+    embedding contextual information about the request and operation performed. It automatically
+    attaches metadata such as the API version, the entity ("thing") being operated on, and the
+    command executed. When journaling is enabled, it also creates a corresponding journal entry
+    in the database, capturing the request, response, user, and status code for audit and traceability.
 
-    Django inherited parameters:
-    ---------------------------
-    :param data: Data to be dumped into json. By default only ``dict`` objects
-      are allowed to be passed due to a security flaw before ECMAScript 5. See
-      the ``safe`` parameter for more information.
-    :param encoder: Should be a json encoder class. Defaults to
-      ``django.core.serializers.json.DjangoJSONEncoder``.
-    :param safe: Controls if only ``dict`` objects may be serialized. Defaults
-      to ``True``.
-    :param json_dumps_params: A dictionary of kwargs passed to json.dumps().
+    Smarter-specific parameters include the original Django request object, the noun ("thing") being
+    journaled, the command performed, and the API response data. Standard Django JsonResponse parameters
+    such as `data`, `encoder`, `safe`, and `json_dumps_params` are also supported.
 
-    data = {
-        "api": "v1",
-        "thing": "account",
-        "metadata": {
-            "command": "create"
-        },
+    Example
+    -------
+    A typical response data structure produced by this class::
 
+        {
+            "api": "v1",
+            "thing": "account",
+            "metadata": {
+                "command": "create"
+            }
+        }
+
+    When journaling is active, the metadata may also include a unique journal key for the entry.
+
+    See Also
+    --------
+
+    :doc:`model` for the database model used to store journal entries.
+    :class:`django.http.JsonResponse` for inherited response behavior.
+    :func:`smarter.common.utils.hash_factory` for key generation.
+    :mod:`smarter.lib.django.http.serializers` for request serialization.
     """
 
     # pylint: disable=too-many-arguments
