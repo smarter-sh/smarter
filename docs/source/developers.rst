@@ -25,12 +25,13 @@ A walkthrough of setting up your development environment and running Smarter loc
    :maxdepth: 1
    :caption: Developer Area
 
-   developers/architecture
    developers/django-settings
    developers/django-enhancements
+   developers/smarter-architecture
    developers/smarter-api
    developers/smarter-api-manifests
    developers/smarter-caching
+   developers/smarter-guides
    developers/smarter-devops
    developers/smarter-helpers
    developers/smarter-mixins
@@ -39,8 +40,3 @@ A walkthrough of setting up your development environment and running Smarter loc
    developers/smarter-settings
    developers/smarter-token-authentication
    developers/smarter-validators
-   developers/12-factor-app
-   developers/semantic-versioning
-   developers/contributing
-   developers/developer-guidelines
-   developers/code-of-conduct
