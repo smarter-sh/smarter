@@ -1,5 +1,5 @@
-Developers
-==========
+Developer Area
+==============
 
 Smarter is an open-source project, and we welcome contributions from developers of all skill levels.
 This section provides guidelines and resources to help you get started with contributing to the Smarter codebase.
@@ -22,8 +22,8 @@ A high-level introduction to the Smarter project, its goals, and how to get star
 A walkthrough of setting up your development environment and running Smarter locally.
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Developer Resources
+   :maxdepth: 1
+   :caption: Developer Area
 
    developers/architecture
    developers/django-settings
@@ -31,6 +31,7 @@ A walkthrough of setting up your development environment and running Smarter loc
    developers/smarter-api
    developers/smarter-api-manifests
    developers/smarter-caching
+   developers/smarter-devops
    developers/smarter-helpers
    developers/smarter-mixins
    developers/smarter-middleware
@@ -38,12 +39,7 @@ A walkthrough of setting up your development environment and running Smarter loc
    developers/smarter-settings
    developers/smarter-token-authentication
    developers/smarter-validators
-   developers/build
-   developers/test
-   developers/deployment
-   developers/ci-cd
    developers/12-factor-app
-   developers/docker
    developers/semantic-versioning
    developers/contributing
    developers/developer-guidelines
