@@ -1,4 +1,4 @@
-Smarter Api CLI Base Class Reference
+CLI Base Class Reference
 =====================================
 
 .. autoclass:: smarter.apps.api.v1.cli.views.base.CliBaseApiView

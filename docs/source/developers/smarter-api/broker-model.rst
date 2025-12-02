@@ -1,2 +1,2 @@
-Smarter Api Broker Model
+CLI Broker Model
 ================================

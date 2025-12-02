@@ -1,2 +1,2 @@
-Smarter Api Rate Limiting
+Rate Limiting
 ================================

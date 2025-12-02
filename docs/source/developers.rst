@@ -30,13 +30,14 @@ A walkthrough of setting up your development environment and running Smarter loc
    developers/django-enhancements
    developers/smarter-api
    developers/smarter-api-manifests
-   developers/smarter-settings
-   developers/smarter-validators
+   developers/smarter-caching
+   developers/smarter-helpers
    developers/smarter-mixins
    developers/smarter-middleware
-   developers/smarter-helpers
+   developers/smarter-plugin
+   developers/smarter-settings
    developers/smarter-token-authentication
-   developers/smarter-caching
+   developers/smarter-validators
    developers/build
    developers/test
    developers/deployment

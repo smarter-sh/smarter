@@ -1,2 +1,2 @@
-Smarter Api Chat Completion Endpoints
+Chat Completion Endpoints
 =======================================================

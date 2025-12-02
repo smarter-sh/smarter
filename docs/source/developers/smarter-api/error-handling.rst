@@ -1,2 +1,2 @@
-Smarter Api Error Handling
+Error Handling
 ================================
