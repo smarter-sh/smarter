@@ -197,7 +197,8 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
     """
     A decorator to cache the results of the switch_is_active() function using Redis.
     This is a slight modification of Smarter's standard cache_results decorator
-    to handle Redis connection issues.
+    to mitigate pre-deployment run-time cases where the Redis and/or database connections
+    are not yet in a ready state.
 
     :param timeout: Cache expiration time in seconds.
     :return: Decorated function with caching.
