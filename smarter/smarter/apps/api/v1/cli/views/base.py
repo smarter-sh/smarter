@@ -93,41 +93,33 @@ class SmarterAPIV1CLIViewErrorNotAuthenticated(APIV1CLIViewError):
 
 class CliBaseApiView(APIView, SmarterRequestMixin):
     """
-    Smarter API command-line interface Base class API view. Handles
-    common tasks for all /api/v1/cli views:
-    - Authenticates the request using either knox TokenAuthentication
-      or Django SessionAuthentication.
-    - Initializes the SAMLoader and AbstractBroker instances.
-    - Resolves the manifest kind and broker for the yaml manifest document.
-    - Sets the user profile for the request.
+    Base class for all Smarter API v1 command-line interface (CLI) views.
 
-    We want to take care of as
-    much housekeeping as possible in the base class. This includes
-    setting following attributes:
+    This class provides common functionality for all `/api/v1/cli` endpoints, including:
 
-    - manifest_name: the name identifier of the manifest could be passed
-        from insider the raw manifest data, or it could be passed as part of a url.
+    - Authentication using either Knox TokenAuthentication or Django SessionAuthentication.
+    - Initialization of the :class:`SAMLoader` and :class:`AbstractBroker` instances.
+    - Resolution of the manifest kind and broker for the YAML manifest document.
+    - Setting the user profile for the request.
 
-    - manifest: the http request body might contain raw manifest text
-        in yaml or json format. The manifest text is passed to the SAMLoader that will load,
-        and partially validate and parse the manifest. This is then used to
-        fully initialize a Pydantic manifest model. The Pydantic manifest
-        model will be passed to a AbstractBroker for the manifest 'kind', which
-        implements the broker service pattern for the underlying object.
+    The base class is responsible for as much request "housekeeping" as possible, so that
+    child views can focus on business logic. The following attributes are set up and managed:
 
-    - kind: the kind of the manifest is used to identify the broker that will
 
-    - user/account: the user, account and user_profile are all derived from the
-        authenticated user in the Django request object.
+    Notes
+    -----
+    - The base class is designed to minimize boilerplate in child views.
+    - Manifest parsing and broker instantiation are implemented lazily.
+    - Authentication is enforced by default, but can be bypassed for internal API requests.
 
-    - command: the command is derived from the request path. The command is
-        used to determine the type of operation that the view should perform.
-        For example, if the url path is '/api/v1/cli/apply/', then the command
-        will be SmarterJournalCliCommands.APPLY.
+    Examples
+    --------
+    Example URL with a manifest name:
+        ``/api/v1/cli/describe/chatbot/<str:name>/``
 
-    - broker: the broker is a class that implements the broker service pattern.
-        It provides a service interface that 'brokers' the http request for the
-        underlying object that provides the object-specific service (create, update, get, delete, etc).
+    Example command extraction:
+        If the URL path is ``/api/v1/cli/apply/``, then the command will be
+        :attr:`SmarterJournalCliCommands.APPLY`.
     """
 
     permission_classes = (SmarterAuthenticatedPermissionClass,)
@@ -152,6 +144,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         Returns the class name in a formatted string
         along with the name of this mixin.
+
+        :return: Formatted class name string
+        :rtype: str
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.CliBaseApiView()"
@@ -163,6 +158,12 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         raw manifest text into a Pydantic model. It performs cursory validations
         such as validating the file format, and identifying required dict key values
         such as the api version, the manifest kind and its name.
+
+        The loader is instantiated lazily, so it will only be created
+        when it is first accessed.
+
+        :return: SAMLoader instance or None
+        :rtype: Optional[SAMLoader]
         """
         if not self._loader and self.manifest_data and not self._manifest_load_failed:
             try:
@@ -185,6 +186,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         Get the broker class for the manifest kind. This is used to
         instantiate a broker for the manifest kind.
+
+        :return: Broker class for the manifest kind
+        :rtype: Type[AbstractBroker]
         """
         if not self._BrokerClass:
             if self.manifest_kind:
@@ -202,6 +206,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         implements the broker service pattern. It provides a service interface
         that 'brokers' the http request for the underlying object that provides
         the object-specific service (create, update, get, delete, etc).
+
+        :return: Broker instance for the manifest kind
+        :rtype: AbstractBroker
         """
         if not self._broker:
             BrokerClass = self.BrokerClass
@@ -225,6 +232,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         The raw manifest data from the request body. The manifest data is a json object
         which needs to be rendered into a Pydantic model. The Pydantic model is then
         used to instantiate a broker for the manifest kind.
+
+        :return: Raw manifest data as a json object
+        :rtype: Optional[dict]
         """
         if self._manifest_data:
             # belt & suspenders: ensure that the manifest data is a json object.
@@ -242,6 +252,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         it can be passed as part of a url path.
 
         Example url path with a name: /api/v1/cli/describe/chatbot/<str:name>/
+
+        :return: The name of the manifest
+        :rtype: Optional[str]
         """
         if not self._manifest_name and self.manifest_data:
             self._manifest_name = self.manifest_data.get("metadata", {}).get("name", None)
@@ -255,6 +268,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         The kind of the manifest. The manifest kind is used to identify the type
         of resource that the manifest is describing. The kind is used to identify
         the broker that will be used to broker the http request for the resource.
+
+        :return: The kind of the manifest
+        :rtype: str
         """
         if not self._manifest_kind and self.manifest_data:
             self._manifest_kind = str(self.manifest_data.get("kind", None))
@@ -287,6 +303,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         url:
          - http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
          - http://testserver/api/v1/cli/apply
+
+        :return: SmarterJournalCliCommands enum instance
+        :rtype: SmarterJournalCliCommands
         """
         match = re.search(r"/cli/([^/]+)/", self.url or "")
         if match:
@@ -298,6 +317,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         Setup the view. This is called by Django before dispatch() and is used to
         set up the view for the request.
+
+        :param request: The HTTP request object
+        :type request: Request
         """
         super().setup(request, *args, **kwargs)
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
@@ -315,11 +337,61 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
     def initial(self, request: Request, *args, **kwargs):
         """
-        Initialize the view. This is called by DRF after setup() but before dispatch().
+        Perform view initialization after setup and before dispatch.
 
-        This is the earliest point in the DRF view lifecycle where the request object is available.
-        Up to this point our SmarterRequestMixin, and AccountMixin classes are only partially
-        initialized. This method takes care of the rest of the initialization.
+        This method is called by Django REST Framework (DRF) after the `setup()` method
+        but before the `dispatch()` method. It is the earliest point in the DRF view
+        lifecycle where the request object is fully available and can be used to
+        complete any additional initialization required by the view.
+
+        In DRF, the `initial()` method is responsible for performing tasks such as:
+        - Completing any remaining setup that depends on the request object.
+        - Enforcing authentication and permission checks.
+        - Raising appropriate exceptions if the request is not valid or not authenticated.
+
+        In this implementation, `initial()` ensures that the `SmarterRequestMixin` and
+        any related mixins are fully initialized with the request object. It also
+        performs authentication checks, sets up user and account context, and prepares
+        manifest data or prompt text for downstream processing. If authentication fails,
+        it raises a custom error with detailed logging.
+
+        Parameters
+        ----------
+        request : Request
+            The HTTP request object provided by DRF. This object contains all
+            request data, headers, user information, and other context needed
+            for processing the API call.
+
+        *args
+            Additional positional arguments passed to the view.
+
+        **kwargs
+            Additional keyword arguments passed to the view, often including
+            URL parameters extracted by the router.
+
+        Raises
+        ------
+        SmarterAPIV1CLIViewErrorNotAuthenticated
+            If the request is not authenticated and is not an internal API request,
+            this exception is raised to indicate authentication failure.
+
+        SmarterConfigurationError
+            If the request object is not properly set up in the view, this error
+            is raised to indicate a misconfiguration.
+
+        Notes
+        -----
+        - This method is a critical part of the DRF request lifecycle, ensuring that
+          all necessary context and validation is in place before the main handler
+          methods (`get`, `post`, etc.) are called.
+        - Manifest parsing and broker instantiation are deferred (lazy) and only
+          performed when needed by child views.
+        - The method also logs key events and warnings for observability.
+
+        See Also
+        --------
+        https://www.django-rest-framework.org/api-guide/views/#view-initialization
+            DRF documentation on the view initialization process.
         """
         url = smarter_build_absolute_uri(request)
         logger.info("%s.initial() - called for request: %s", self.formatted_class_name, url)
@@ -442,19 +514,50 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request: Request, *args, **kwargs):
         """
-        Dispatch the request to the appropriate handler method. This is
-        called by the Django REST framework when a request is received.
-        It is responsible for handling the request and returning a
-        response.
+        Dispatch the request to the appropriate handler method.
 
-        Our only objective in the base class is to accurately
-        map exceptions to HTTP status codes, and where possible
-        add context to the error message.
+        This method is a core part of the Django REST Framework (DRF) view lifecycle. It is called automatically by DRF when an HTTP request is received and is responsible for routing the request to the correct handler method (such as ``get()``, ``post()``, ``put()``, etc.) based on the HTTP method of the request.
 
-        Ideally, the child views have handled their own exceptions
-        and returned their own SmarterJournaledJson response. Here
-        we're just trying to catch any unhandled exceptions and
-        return a generic error message with a bug report URL.
+        In DRF, the ``dispatch()`` method performs several critical functions:
+
+        - It determines which handler method should process the request.
+        - It manages the execution of middleware and mixins.
+        - It handles exceptions that may be raised during request processing.
+        - It returns a DRF ``Response`` object to the client.
+
+        In this base class implementation, the primary objective is to provide robust exception handling for all CLI API views. The method attempts to map known exceptions to appropriate HTTP status codes and, where possible, adds additional context to error messages. This ensures that clients receive meaningful and actionable error responses, even if an unexpected error occurs.
+
+        Ideally, child views should handle their own exceptions and return a ``SmarterJournaledJsonErrorResponse`` or similar structured response. However, this base implementation acts as a safety net, catching any unhandled exceptions and returning a generic error message along with a bug report URL for further troubleshooting.
+
+        Signals are emitted to indicate the completion or failure of API requests, which can be used for logging, auditing, or triggering other side effects.
+
+        Parameters
+        ----------
+        request : Request
+            The HTTP request object provided by DRF, containing all request data, headers, and user context.
+
+        *args
+            Additional positional arguments passed to the view.
+
+        **kwargs
+            Additional keyword arguments passed to the view, often including URL parameters.
+
+        Returns
+        -------
+        Response
+            A DRF ``Response`` object representing the result of the request, or an error response if an exception was raised.
+
+        Notes
+        -----
+        - This method is a critical integration point with DRF's request/response lifecycle.
+        - Exception mapping is comprehensive, covering both application-specific and DRF exceptions.
+        - Unhandled exceptions are logged and reported with a generic message and bug report instructions.
+        - Signals are used for observability and integration with other parts of the application.
+
+        See Also
+        --------
+        https://www.django-rest-framework.org/api-guide/views/#view-methods
+            DRF documentation on view methods and the dispatch process.
         """
         response = None
         try:
