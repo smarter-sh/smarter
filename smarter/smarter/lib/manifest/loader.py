@@ -77,6 +77,73 @@ def validate_key(key: str, key_value: Any, spec: Any):
 class SAMLoader(SmarterHelperMixin):
     """
     Smarter API Manifest Loader base class.
+
+    This class provides the foundational logic for loading, parsing, and validating
+    Smarter API Manifest files. It is designed to handle manifests provided as JSON or YAML,
+    and supports loading from a string, dictionary, file path, or URL. The loader ensures
+    that the manifest conforms to a specified schema, validating both the structure and
+    the data types of the manifest's contents.
+
+    **Usage Overview**
+
+    The `SAMLoader` is intended to be subclassed for specific manifest types. It performs
+    the following core functions:
+
+    - **Manifest Acquisition**: Accepts manifest data in various forms, including a raw string,
+      a Python dictionary, a file path, or a URL. Only one source should be provided at a time.
+      The loader reads and stores the manifest data for further processing.
+
+    - **Specification Enforcement**: Maintains a specification dictionary that defines the
+      required structure and data types for the manifest. This includes top-level keys such as
+      API version, kind, metadata, spec, and status, as well as nested metadata requirements.
+
+    - **Format Detection**: Automatically detects whether the manifest data is in JSON or YAML
+      format, and parses it accordingly. If the format is invalid or unsupported, an error is raised.
+
+    - **Validation**: Recursively validates the manifest data against the specification. This
+      includes checking for required keys, verifying data types, and ensuring that values conform
+      to enumerated options where applicable. Validation errors are raised as exceptions.
+
+    - **Extensibility**: Designed for subclassing, allowing child classes to override the
+      specification and validation logic to accommodate custom manifest structures.
+
+    **Manifest Structure**
+
+    The expected manifest structure includes the following top-level keys:
+
+    - `apiVersion`: The version of the Smarter API. Must be supported by the loader.
+    - `kind`: The type of manifest. Can be specified directly or inferred from the manifest data.
+    - `metadata`: A dictionary containing descriptive information such as name, description,
+      version, tags, and annotations. Certain fields are required, while others are optional.
+    - `spec`: The specification section, which is required and typically defined by subclasses.
+    - `status`: An optional, read-only section for status information.
+
+    **Validation Process**
+
+    Upon initialization, the loader validates the manifest by:
+
+    1. Ensuring the manifest data is present and in a supported format.
+    2. Recursively checking each key and value against the specification.
+    3. Raising detailed errors if any required keys are missing, data types are incorrect,
+       or values are invalid.
+
+    **Subclassing**
+
+    To support custom manifest types, create a subclass of `SAMLoader` and override the
+    `_specification` attribute and the `validate_manifest` method as needed. This allows
+    for the enforcement of additional keys, custom validation logic, and specialized
+    handling of manifest data.
+
+    **Error Handling**
+
+    All validation and loading errors are raised as `SAMLoaderError` exceptions, providing
+    clear feedback on the nature of the issue encountered.
+
+    **Logging**
+
+    The loader uses Python's standard logging library to emit warnings and errors during
+    the validation process, aiding in debugging and traceability.
+
     """
 
     _raw_data: Optional[str] = None
@@ -108,6 +175,36 @@ class SAMLoader(SmarterHelperMixin):
         file_path: Optional[str] = None,
         url: Optional[str] = None,
     ):
+        """
+        Initialize a new instance of the :class:`SAMLoader`.
+
+        This constructor is responsible for acquiring, parsing, and validating a Smarter API Manifest.
+        It supports loading manifest data from several sources, but only one source should be provided at a time.
+
+        :param api_version: The API version of the manifest. Must be one of the supported API versions.
+        :type api_version: str
+        :param kind: The kind of manifest. If not provided, it will be inferred from the manifest data.
+        :type kind: str, optional
+        :param manifest: The manifest data, provided as a JSON/YAML string or a Python dictionary.
+        :type manifest: str or dict, optional
+        :param file_path: Path to a file containing the manifest data.
+        :type file_path: str, optional
+        :param url: URL pointing to the manifest data.
+        :type url: str, optional
+
+        :raises SAMLoaderError: If the API version is not supported, if no manifest source is provided,
+            if multiple sources are provided, or if the manifest format is invalid.
+
+        **Acquisition and Validation Process**
+
+        1. The constructor checks that the provided API version is supported.
+        2. It ensures that exactly one manifest source is specified (manifest, file_path, or url).
+        3. The manifest data is loaded from the specified source.
+        4. The loader sets the specification keys for API version and kind.
+        5. The manifest is validated against the specification, checking for required keys and correct data types.
+
+        Child classes may override the specification and validation logic to support custom manifest structures.
+        """
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMLoaderError(f"Unsupported API version: {api_version}")
 
@@ -210,10 +307,26 @@ class SAMLoader(SmarterHelperMixin):
 
     def pydantic_model_dump(self) -> dict:
         """
-        Returns a Pydantic model of the manifest data. This *SHOULD* be
-        readable by any descedent of the AbstractSAMBase class using
-        this syntax:
-            `SAMObject(**loader.pydantic_model_dump())`
+        Return a dictionary representation of the manifest data suitable for use with Pydantic models.
+
+        This method produces a dictionary that can be directly passed as keyword arguments to any
+        descendant of the ``AbstractSAMBase`` class. This enables seamless integration with Pydantic-based
+        data validation and serialization workflows.
+
+        The returned dictionary includes the following keys:
+
+        - ``apiVersion``: The API version of the manifest.
+        - ``kind``: The kind of manifest.
+        - ``metadata``: The manifest metadata section.
+        - ``spec``: The manifest specification section.
+        - ``status``: The manifest status section.
+
+        Example usage::
+
+            SAMObject(**loader.pydantic_model_dump())
+
+        :return: Dictionary representation of the manifest data, suitable for Pydantic model instantiation.
+        :rtype: dict
         """
         return {
             SAMKeys.APIVERSION.value: self.manifest_api_version,
@@ -227,6 +340,14 @@ class SAMLoader(SmarterHelperMixin):
     # class methods
     # -------------------------------------------------------------------------
     def get_key(self, key) -> Any:
+        """
+        Get a key from the manifest's JSON data.
+
+        :param key: The key to retrieve.
+        :type key: str
+        :return: The value of the key, or None if the key does not exist.
+        :rtype: Any
+        """
         try:
             return self.json_data[key] if isinstance(self.json_data, dict) else None
         except (KeyError, TypeError):
@@ -234,8 +355,31 @@ class SAMLoader(SmarterHelperMixin):
 
     def validate_manifest(self):
         """
-        Validate the manifest data. Recursively validate dict keys based on the
-        contents of spec.
+        Validate the manifest data.
+
+        This method performs a comprehensive validation of the manifest data against the expected specification.
+        Validation is performed recursively, ensuring that all required keys are present, that values are of the correct
+        data types, and that any enumerated or restricted values are respected. The validation process is driven by the
+        specification dictionary defined for the loader, which outlines the required structure and constraints for the manifest.
+
+        The validation process includes the following steps:
+
+        1. Checks that the manifest data is present and not empty.
+        2. Ensures that the manifest data is in a supported format (JSON or YAML).
+        3. Recursively traverses the manifest data, validating each key and value against the corresponding entry in the specification.
+        4. For each key:
+           - If the specification entry is a dictionary, validation is performed recursively on the nested structure.
+           - If the specification entry is a tuple, the method checks for required keys, correct data types, and any special options (such as optional or read-only).
+           - If the specification entry is a list, the method checks that the value is one of the allowed options.
+           - Otherwise, the method checks for exact value and type matches.
+        5. Raises a ``SAMLoaderError`` with a descriptive message if any validation check fails.
+
+        This method is intended to be called automatically during loader initialization, but can also be invoked manually
+        to re-validate the manifest after modifications.
+
+        Subclasses may override this method to implement additional or custom validation logic as needed.
+
+        :raises SAMLoaderError: If the manifest data is missing, in an unsupported format, or fails validation.
         """
 
         def recursive_validator(recursed_data: Optional[dict] = None, recursed_spec: Optional[dict] = None):
@@ -273,43 +417,102 @@ class SAMLoader(SmarterHelperMixin):
     # -------------------------------------------------------------------------
     @property
     def manifest_metadata_keys(self) -> list[str]:
+        """
+        Returns a list of all metadata keys defined in the SAMMetadataKeys enumeration.
+
+        :return: A list of metadata key strings.
+        :rtype: list[str]
+        """
         return SAMMetadataKeys.all_values()
 
     @property
     def manifest_spec_keys(self) -> list[str]:
+        """
+        Returns a list of all spec keys defined in the SAMSpecKeys enumeration.
+        This should be overridden by child classes to provide the specific spec keys
+        relevant to their manifest type.
+
+        :return: A list of spec key strings.
+        :rtype: list[str]
+        """
         return []
 
     @property
     def manifest_status_keys(self) -> list[str]:
+        """
+        Returns a list of all status keys defined in the SAMStatusKeys enumeration.
+        This should be overridden by child classes to provide the specific status keys
+        relevant to their manifest type.
+
+        :return: A list of status key strings.
+        :rtype: list[str]
+        """
         return []
 
     @property
     def manifest_api_version(self) -> str:
+        """
+        Returns the API version of the manifest.
+
+        :return: The API version string.
+        :rtype: str
+        """
         return self.get_key(SAMKeys.APIVERSION.value)
 
     @property
     def manifest_kind(self) -> str:
+        """
+        Returns the kind of the manifest.
+
+        :return: The kind string.
+        :rtype: str
+        """
         if not self._specification[SAMKeys.KIND]:
             self._specification[SAMKeys.KIND] = self.get_key(SAMKeys.KIND.value)
         return self.get_key(SAMKeys.KIND.value)
 
     @property
     def manifest_metadata(self) -> dict:
+        """
+        Returns the metadata section of the manifest.
+
+        :return: The metadata dictionary.
+        :rtype: dict
+        """
         return self.get_key(SAMKeys.METADATA.value)
 
     @property
     def manifest_spec(self) -> dict:
+        """
+        Returns the spec section of the manifest.
+
+        :return: The spec dictionary.
+        :rtype: dict
+        """
         return self.get_key(SAMKeys.SPEC.value)
 
     @property
     def manifest_status(self) -> dict:
+        """
+        Returns the status section of the manifest.
+
+        :return: The status dictionary.
+        :rtype: dict
+        """
         return self.get_key(SAMKeys.STATUS.value)
 
     @property
     def ready(self) -> bool:
         """
-        Returns True if the manifest is ready to be used. This means that
-        the manifest has been validated and is in a valid state.
+        Returns whether the manifest is ready for use.
+
+        This property returns ``True`` if the manifest has been successfully validated and is in a valid state.
+        A manifest is considered ready if all required sections—API version, kind, metadata, and spec—are present
+        and non-empty. This property is useful for checking the readiness of a manifest before attempting to use
+        it in downstream processes or integrations.
+
+        :return: ``True`` if the manifest is valid and ready to be used, otherwise ``False``.
+        :rtype: bool
         """
         return (
             bool(self.manifest_api_version)

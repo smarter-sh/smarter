@@ -167,7 +167,7 @@ A:
 - Ask for help: `Lawrence McDaniel <https://lawrencemcdaniel.com>`__
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: User Guide
 
    system-management
@@ -177,7 +177,7 @@ A:
    adr
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: External Resources
 
    external-links/smarter-docs
