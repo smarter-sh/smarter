@@ -1,5 +1,5 @@
-Config Endpoint
-=================
+Prompt Completion Config Class Reference
+=========================================
 
 .. autoclass:: smarter.apps.prompt.views.ChatConfigView
    :members:

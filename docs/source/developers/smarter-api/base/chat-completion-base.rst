@@ -1,4 +1,4 @@
-Chat Completion Base Class Reference
+Prompt Completion Base Class Reference
 =====================================================
 
 

@@ -33,7 +33,9 @@ A walkthrough of setting up your development environment and running Smarter loc
    developers/smarter-caching
    developers/smarter-guides
    developers/smarter-devops
+   developers/smarter-journal
    developers/smarter-helpers
+   developers/smarter-logging
    developers/smarter-mixins
    developers/smarter-middleware
    developers/smarter-plugin
