@@ -1,4 +1,4 @@
-Smarter Api Base Class Reference
+Base Class Reference
 ================================
 
 .. toctree::

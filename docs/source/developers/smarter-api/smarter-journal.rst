@@ -1,2 +1,2 @@
-Smarter Api Journal
+Journal
 ================================

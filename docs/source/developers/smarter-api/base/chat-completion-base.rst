@@ -1,4 +1,4 @@
-Smarter Api Chat Completion Base Class Reference
+Chat Completion Base Class Reference
 =====================================================
 
 
