@@ -32,6 +32,7 @@ import warnings
 from functools import lru_cache
 from importlib.metadata import distributions
 from typing import Any, List, Optional, Tuple, Union
+from urllib.parse import urljoin
 
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
@@ -40,6 +41,7 @@ from dotenv import load_dotenv
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 
+from smarter.common.api import SmarterApiVersions
 from smarter.lib import json
 
 from ..lib.django.validators import SmarterValidator
@@ -222,6 +224,7 @@ class SettingsDefaults:
         "SMARTER_MYSQL_TEST_DATABASE_PASSWORD",
         DEFAULT_MISSING_VALUE,
     )
+    SMARTER_REACTJS_APP_LOADER_PATH = os.environ.get("SMARTER_REACTJS_APP_LOADER_PATH", "/ui-chat/app-loader.js")
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
@@ -549,6 +552,11 @@ class Settings(BaseSettings):
         SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_PASSWORD,
         description="The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["your_password_here"],
+    )
+    smarter_reactjs_app_loader_path: str = Field(
+        SettingsDefaults.SMARTER_REACTJS_APP_LOADER_PATH,
+        description="The path to the ReactJS app loader script.",
+        examples=["/ui-chat/app-loader.js"],
     )
     social_auth_google_oauth2_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
@@ -1217,6 +1225,47 @@ class Settings(BaseSettings):
             - SMARTER_API_KEY_MAX_LIFETIME_DAYS
         """
         return SMARTER_API_KEY_MAX_LIFETIME_DAYS
+
+    @property
+    def smarter_reactjs_app_loader_url(self) -> str:
+        """
+        Return the full URL to the ReactJS app loader script.
+        This is used for loading the ReactJS Chat
+        frontend component into html web pages.
+
+        Example:
+            >>> print(smarter_settings.smarter_reactjs_app_loader_url)
+            'https://alpha.platform.example.com/ui-chat/app-loader.js'
+
+        See Also:
+            - smarter_settings.environment_cdn_url
+            - smarter_settings.smarter_reactjs_app_loader_path
+        """
+        return urljoin(self.environment_cdn_url, self.smarter_reactjs_app_loader_path)
+
+    @property
+    def smarter_reactjs_root_div_id(self) -> str:
+        """
+        Return the HTML div ID used as the root for the ReactJS Chat app.
+        Start with a string like: "smarter.sh/v1/ui-chat/root", then
+        convert it into an html safe id like: "smarter-sh-v1-ui-chat-root"
+
+        Example:
+            >>> print(smarter_settings.smarter_reactjs_root_div_id)
+            'smarter-sh-v1-ui-chat-root'
+        """
+        APP_LOADER_FILENAME = "app-loader.js"
+
+        loader_path = self.smarter_reactjs_app_loader_path
+        if APP_LOADER_FILENAME not in loader_path:
+            raise SmarterConfigurationError(
+                f"Expected 'app-loader.js' in smarter_reactjs_app_loader_path, got: {loader_path}"
+            )
+
+        div_root_id = SmarterApiVersions.V1 + self.smarter_reactjs_app_loader_path.replace(APP_LOADER_FILENAME, "root")
+        div_root_id = div_root_id.replace(".", "-").replace("/", "-")
+
+        return div_root_id
 
     @property
     def version(self) -> str:
@@ -2081,6 +2130,30 @@ class Settings(BaseSettings):
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"secret_key {type(v)} is not a str.")
+        return v
+
+    @field_validator("smarter_reactjs_app_loader_path")
+    def check_smarter_reactjs_app_loader_path(cls, v: Optional[str]) -> str:
+        """Validates the `smarter_reactjs_app_loader_path` field. Needs
+        to start with a slash (/) and end with '.js'. The final string value
+        should be url friendly. example: /ui-chat/app-loader.js
+
+        Args:
+            v (Optional[str]): The Smarter ReactJS app loader path value to validate.
+
+        Returns:
+            str: The validated Smarter ReactJS app loader path.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.SMARTER_REACTJS_APP_LOADER_PATH
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("smarter_reactjs_app_loader_path is not a str.")
+
+        if not v.startswith("/"):
+            raise SmarterConfigurationError("smarter_reactjs_app_loader_path must start with '/'")
+        if not v.endswith(".js"):
+            raise SmarterConfigurationError("smarter_reactjs_app_loader_path must end with '.js'")
         return v
 
     @field_validator("smtp_sender")

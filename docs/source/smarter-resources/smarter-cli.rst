@@ -7,6 +7,47 @@ on Windows, macOS and Linux. It is separately managed in
 It is a lightweight command-line UI for interacting with the `Smarter
 API <../smarter/smarter/apps/api/v0/cli/>`__.
 
+Installation
+------------
+
+See `https://smarter.sh/cli <https://smarter.sh/cli>`__ for download instructions for Windows, macOS and Linux.
+
+Usage
+------------
+
+Works like kubectl, the Smarter cli uses a verb-noun command structure to
+interact with Smarter resources. The general format is:
+
+.. code-block:: shell
+
+  smarter [command] [flags]
+
+  Available Commands:
+    apply       Apply a Smarter manifest
+    chat        Chat with a deployed ChatBot
+    completion  Generate the autocompletion script for the specified shell
+    configure   Configure the smarter command-line interface
+    delete      Permanently delete a Smarter resource
+    deploy      Deploy a resource
+    describe    Return a manifest for the resource kind
+    get         Generate a list of Smarter resources
+    help        Help about any command
+    logs        Returns the logs for a resource
+    manifest    Generate an example manifest for the resource kind
+    status      Retrieve real-time status of the Smarter Platform
+    undeploy    Undo a Smarter resource deployment.
+    version     Retrieve version information
+    whoami      Retrieve information about the api_key owner
+
+  Flags:
+        --api_key string         Smarter API key to use
+        --config string          config file (default is $HOME/.smarter/config.yaml)
+        --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+    -h, --help                   help for smarter
+    -o, --output_format string   output format: json, yaml (default "json")
+    -v, --verbose                verbose output
+
+
 Commands
 --------
 
@@ -37,12 +78,12 @@ The cli implements a set of verbs for working with Smarter resources
 Related API endpoints
 ---------------------
 
-- https://api.smarter.sh/v0/cli/apply/: Apply a manifest
-- https://api.smarter.sh/v0/cli/describe/: print the manifest
-- https://api.smarter.sh/v0/cli/deploy/: Deploy a resource
-- https://api.smarter.sh/v0/cli/logs/: Get logs for a resource
-- https://api.smarter.sh/v0/cli/delete/: Delete a resource
-- https://api.smarter.sh/v0/cli/status/: Smarter platform status
+- https://api.smarter.sh/v1/cli/apply/: Apply a manifest
+- https://api.smarter.sh/v1/cli/describe/: print the manifest
+- https://api.smarter.sh/v1/cli/deploy/: Deploy a resource
+- https://api.smarter.sh/v1/cli/logs/: Get logs for a resource
+- https://api.smarter.sh/v1/cli/delete/: Delete a resource
+- https://api.smarter.sh/v1/cli/status/: Smarter platform status
 
 Manifest Spec
 -------------

@@ -43,19 +43,11 @@ Features
 - Prompt engineering workbench for designing, testing, deploying, and managing AI resources.
 - Thriving developer ecosystem: `PyPi <https://pypi.org/project/smarter-api/>`__, `NPM <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__, `VS Code Extension <https://marketplace.visualstudio.com/items/?itemName=Querium.smarter-manifest>`__, `Homebrew <https://smarter.sh/cli>`__, `Chocolately <https://smarter.sh/cli>`__ and more.
 
-.. raw:: html
+Usage
+------
 
-   <div style="text-align: center;">
-     <video src="https://cdn.smarter.sh/videos/read-the-docs2.mp4"
-            autoplay loop muted playsinline
-            style="width: 100%; height: auto; display: block; margin: 0; border-radius: 0;">
-       Sorry, your browser doesn't support embedded videos.
-     </video>
-     <div style="font-size: 0.95em; color: #666; margin-top: 0.5em;">
-       <em>Smarter Prompt Engineering Workbench Demo</em>
-     </div>
-   </div>
-   <br/>
+1. Create a Smarter manifest
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
    :caption: Example Smarter Manifest
@@ -91,6 +83,30 @@ Features
         - stackademy_sql
       functions:
         - weather
+
+2. Apply the Manifest
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: console
+
+   smarter apply -f stackademy_chatbot.yaml
+
+3. Interact with the Chatbot
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. raw:: html
+
+   <div style="text-align: center;">
+     <video src="https://cdn.smarter.sh/videos/read-the-docs2.mp4"
+            autoplay loop muted playsinline
+            style="width: 100%; height: auto; display: block; margin: 0; border-radius: 0;">
+       Sorry, your browser doesn't support embedded videos.
+     </video>
+     <div style="font-size: 0.95em; color: #666; margin-top: 0.5em;">
+       <em>Smarter Prompt Engineering Workbench Demo</em>
+     </div>
+   </div>
+   <br/>
 
 
 

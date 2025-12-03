@@ -28,8 +28,6 @@ A walkthrough of setting up your development environment and running Smarter loc
    developers/django-settings
    developers/django-enhancements
    developers/smarter-architecture
-   developers/smarter-api
-   developers/smarter-api-manifests
    developers/smarter-caching
    developers/smarter-guides
    developers/smarter-devops
