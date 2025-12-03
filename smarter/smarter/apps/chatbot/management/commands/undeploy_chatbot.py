@@ -11,8 +11,27 @@ from smarter.lib.django.management.base import SmarterCommand
 # pylint: disable=E1101
 class Command(SmarterCommand):
     """
-    Undeploy a customer API. Provide either an account number or a company name.
-    Undeploys by deleting the DNS A record of the form [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/
+    Undeploy a customer-facing chatbot API for a Smarter account.
+
+    This management command allows administrators to remove a deployed chatbot from a specific account,
+    identified either by account number or company name. The undeployment process deletes the DNS A record
+    associated with the chatbot, effectively disabling its public endpoint at
+    ``[subdomain].[account-number].api.smarter.sh/chatbot/``.
+
+    **Usage:**
+      - Specify the account using either ``--account_number`` or ``--company_name``.
+      - Provide the chatbot's name (subdomain) via ``--name``.
+      - Optionally use ``--foreground`` to run the undeployment synchronously.
+
+    **Command Workflow:**
+      - Retrieve the account by account number or company name.
+      - Locate the chatbot by name within the account.
+      - Verify that the chatbot is currently deployed and DNS is verified.
+      - Initiate undeployment, either synchronously or as a background Celery task.
+      - Output progress and completion messages.
+
+    This command is useful for decommissioning chatbots, managing DNS records, and ensuring that
+    endpoints are properly removed when chatbots are no longer needed or require redeployment.
     """
 
     def add_arguments(self, parser):

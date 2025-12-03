@@ -8,7 +8,22 @@ from smarter.lib.drf.models import SmarterAuthToken
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Add an api key to a chatbot."""
+    """
+    Management command for associating an API key with a chatbot.
+
+    This command allows administrators to link an existing API key to a specific chatbot instance
+    within a Smarter account. The command requires the account number, the API key ID (UUID format),
+    and the chatbot's name (typically its subdomain).
+
+    The command performs the following steps:
+      - Retrieves the API key using the provided key ID.
+      - Locates the account using the specified account number.
+      - Finds the chatbot by its name within the account.
+      - Associates the API key with the chatbot, creating the relationship if it does not already exist.
+      - Outputs a success message indicating whether the association was newly created or already existed.
+
+    This is useful for managing chatbot authentication and access control in multi-tenant environments.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""

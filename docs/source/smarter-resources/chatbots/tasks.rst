@@ -1,4 +1,4 @@
-Smarter ChatBot Tasks
+Tasks
 ======================
 
 .. automodule:: smarter.apps.chatbot.tasks

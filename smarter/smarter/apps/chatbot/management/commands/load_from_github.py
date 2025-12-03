@@ -27,7 +27,40 @@ from smarter.lib.manifest.loader import SAMLoader
 
 # pylint: disable=E1101,too-many-instance-attributes
 class Command(SmarterCommand):
-    """Deploy customer APIs from a GitHub repository of plugin YAML files organized by customer API name."""
+    """
+    Deploy customer APIs and plugins from a GitHub repository containing YAML manifest files.
+
+    This management command automates the deployment of chatbots and plugins for Smarter accounts
+    by processing a public GitHub repository. The repository should contain YAML manifest files
+    organized either by directories representing customer APIs (subdomains) or by separate
+    'plugins' and 'chatbots' folders, depending on the selected repo version.
+
+    The command supports two repository layouts:
+
+    - **Version 1:** Each folder in the repository represents a customer API (subdomain), and contains
+      YAML plugin manifests. The command creates a chatbot for each folder and attaches plugins
+      found within.
+
+    - **Version 2:** The repository contains 'plugins' and 'chatbots' directories. All plugin manifests
+      are processed first (to satisfy dependencies), followed by chatbot manifests.
+
+    The deployment process includes:
+
+    - Cloning the specified GitHub repository to a local directory.
+    - Iterating through manifest files and applying them to the Smarter platform.
+    - Creating chatbots and associating plugins as defined by the manifests.
+    - Deploying chatbots asynchronously using Celery tasks.
+    - Outputting progress, error, and completion messages to the console.
+
+    Administrators can specify the target account by account number and optionally a username.
+    The command ensures that all required account, user, and profile objects are available before
+    processing manifests. It validates URLs, manages local repository cleanup, and handles errors
+    encountered during manifest application or plugin loading.
+
+    This command is useful for bulk provisioning, migration, or onboarding scenarios where multiple
+    chatbots and plugins need to be deployed from a structured repository. It streamlines the process
+    of setting up complex environments and ensures consistent deployment across accounts.
+    """
 
     _url: Optional[str] = None
     user: User
@@ -241,7 +274,6 @@ class Command(SmarterCommand):
         )
 
     def handle(self, *args, **options):
-        """Process the GitHub repository"""
         self.handle_begin()
 
         self.url = options["url"]

@@ -1,4 +1,4 @@
-Smarter ChatBot Helper Class
+Helper Class
 ============================
 
 See :py:class:`smarter.apps.chatbot.models.ChatBotHelper`

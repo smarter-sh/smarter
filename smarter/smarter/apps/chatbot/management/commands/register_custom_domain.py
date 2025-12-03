@@ -9,7 +9,23 @@ from smarter.lib.django.management.base import SmarterCommand
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """This module is used to register a custom domain for a customer account."""
+    """
+    Register a custom domain for a Smarter customer account.
+
+    This management command enables administrators to associate a custom domain name with a specific
+    Smarter account. It verifies domain ownership, ensures the domain is not already registered to
+    another account, and initiates the registration process using AWS Route 53.
+
+    The command performs the following steps:
+    - Accepts the account number and desired domain name as arguments.
+    - Checks if the domain name exists and is associated with the correct account.
+    - Initiates the registration of the domain using the Smarter platform's domain registration task.
+    - Retrieves the AWS Route 53 NS records for the domain's hosted zone.
+    - Outputs instructions for completing DNS verification by updating the root domain's NS records.
+
+    This command is useful for onboarding new customers who require branded chatbot endpoints,
+    ensuring proper DNS setup and ownership validation for custom domains.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -17,7 +33,6 @@ class Command(SmarterCommand):
         parser.add_argument("domain", type=str, help="The domain name to register.")
 
     def handle(self, *args, **options):
-        """register the custom domain."""
         self.handle_begin()
 
         account_number = options["account_number"]
