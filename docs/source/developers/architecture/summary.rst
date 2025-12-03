@@ -196,6 +196,6 @@ Optional requirements:
 - `Google Maps API
   key <https://developers.google.com/maps/documentation/geocoding/overview>`__.
   This is used the OpenAI API Function Calling coding example,
-  “`get_current_weather() <https://platform.openai.com/docs/guides/function-calling>`__”.
+  “`get_weather() <https://platform.openai.com/docs/guides/function-calling>`__”.
 - `Pinecone API key <https://docs.pinecone.io/docs/quickstart>`__. This
   is used for OpenAI API Embedding examples.

@@ -1,4 +1,4 @@
-get_current_weather
+get_weather()
 =======================
 
 .. automodule:: smarter.apps.prompt.functions.function_weather
