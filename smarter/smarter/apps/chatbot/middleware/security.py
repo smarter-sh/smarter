@@ -34,22 +34,59 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-logger.info("Loading smarter.apps.chatbot.middleware.security.SecurityMiddleware")
+logger.info("Loading smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware")
 
 
-class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
+class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
     """
-    Override Django's SecurityMiddleware to create our own implementation
-    of ALLOWED_HOSTS, referred to as SMARTER_ALLOWED_HOSTS.
+    This middleware overrides Django’s built-in ``SecurityMiddleware`` to provide custom host validation logic for the Smarter platform.
 
-    We not only need to evaluate the traditional list of ALLOWED_HOSTS, but
-    also need to check if the host is a domain for a deployed ChatBot. If the
-    host is a domain for a deployed ChatBot, we should allow the request to
-    pass through.
+    **Key Features:**
 
-    This middleware is also used to suppress the stock DisallowedHost exception
-    in favor of our own HttpResponseBadRequest response, which is a non-logged
-    response that is more user-friendly.
+    - **Custom Host Validation:**
+      Instead of relying solely on Django’s ``ALLOWED_HOSTS``, this middleware introduces ``SMARTER_ALLOWED_HOSTS``. It checks incoming requests against both the traditional allowed hosts and a dynamic list of domains associated with deployed ChatBots.
+
+    - **ChatBot Domain Support:**
+      If the request’s host matches a domain for a deployed ChatBot, the request is allowed to pass through. This enables flexible multi-tenant deployments where each ChatBot can have its own domain.
+
+    - **Friendly Error Handling:**
+      The middleware suppresses Django’s default ``DisallowedHost`` exception. Instead, it returns a ``HttpResponseBadRequest`` (400) response, which is not logged and is more user-friendly for clients.
+
+    - **Health Check Short-Circuiting:**
+      Requests from internal IP addresses or for health/readiness endpoints are allowed to pass through without further validation. This ensures that infrastructure health checks do not get blocked by host validation.
+
+    - **Logging:**
+      Uses a custom logger that respects feature flags (waffle switches) for granular control over middleware and chatbot logging.
+
+    **Request Validation Steps:**
+
+    1. **Internal IPs:**
+       Requests from internal IP addresses (e.g., load balancer health checks) are allowed.
+
+    2. **Local Hosts:**
+       Requests from local hosts (e.g., ``localhost``, ``127.0.0.1``) are allowed.
+
+    3. **Health/Readiness URLs:**
+       Requests to health or readiness endpoints are allowed.
+
+    4. **Allowed Hosts:**
+       Requests matching any pattern in ``SMARTER_ALLOWED_HOSTS`` are allowed.
+
+    5. **ChatBot Domains:**
+       Requests where the host matches a deployed ChatBot’s domain are allowed.
+
+    6. **Fallback:**
+       All other requests are rejected with a ``400 Bad Request`` response.
+
+    **Example Usage:**
+
+     .. code-block:: python
+
+         MIDDLEWARE = [
+             ...
+             'smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware',
+             ...
+         ]
 
     """
 

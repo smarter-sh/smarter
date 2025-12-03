@@ -88,7 +88,7 @@ There are multiple Django configuration implications to the API domain naming co
 
 ### ALLOWED_HOSTS
 
-For Django to accept http requests from a domain, it must be included in Django's `ALLOWED_HOSTS` setting which is managed by Django middleware that we've subclassed as `smarter.apps.chatbot.middleware.security.SecurityMiddleware` in order to append API domain names to `ALLOWED_HOSTS` at run time.
+For Django to accept http requests from a domain, it must be included in Django's `ALLOWED_HOSTS` setting which is managed by Django middleware that we've subclassed as `smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware` in order to append API domain names to `ALLOWED_HOSTS` at run time.
 
 ### CORS
 

@@ -25,7 +25,7 @@ This is specicific to Smarter and not officially part of Django settings.
 
 SMARTER_INTERNAL_IP_PREFIXES = ["192.168."]
 """
-Supplemental list of internal IP prefixes used in smarter.apps.chatbot.middleware.security.SecurityMiddleware
+Supplemental list of internal IP prefixes used in smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware
 and smarter.lib.django.middleware security features.
 
 The default value is based on the default internal IP range used by Kubernetes clusters

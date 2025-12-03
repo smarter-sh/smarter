@@ -35,7 +35,6 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistorySerializer,
 )
 from smarter.apps.prompt.models import Chat, ChatHelper
-from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
@@ -139,7 +138,7 @@ class SmarterChatSession(SmarterHelperMixin):
         """
         if self._session_key is None:
             raise SmarterConfigurationError(
-                "Session key is not set. This should not happen. " "Please report this issue to the Smarter team."
+                "Session key is not set. This should not happen. Please report this issue to the Smarter team."
             )
         return self._session_key
 
@@ -552,7 +551,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
             self.chatbot,
             self.session.session_key if self.session else "(Missing session)",
         )
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)  # type: ignore[return-value]
 
     def __str__(self):
         return str(self.chatbot) if self.chatbot else "ChatConfigView"

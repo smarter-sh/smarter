@@ -115,7 +115,7 @@ Django Security Features
             "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
             "smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware",
             "django.contrib.auth.middleware.AuthenticationMiddleware",
-            "smarter.apps.chatbot.middleware.security.SecurityMiddleware",
+            "smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware",
             "smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware",
             "django.middleware.clickjacking.XFrameOptionsMiddleware",
             "django_hosts.middleware.HostsResponseMiddleware",
