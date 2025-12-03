@@ -188,6 +188,24 @@ during the normal page load.
   <script class="smarter-chat"
       src="https://cdn.platform.smarter.sh/ui-chat/assets/main-C4x7rKYv.js"></script>
 
+6. See the Chat Component in Action
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. raw:: html
+
+   <div style="text-align: center;">
+     <video src="https://cdn.smarter.sh/videos/read-the-docs2.mp4"
+            autoplay loop muted playsinline
+            style="width: 100%; height: auto; display: block; margin: 0; border-radius: 0;">
+       Sorry, your browser doesn't support embedded videos.
+     </video>
+     <div style="font-size: 0.95em; color: #666; margin-top: 0.5em;">
+       <em>Smarter Prompt Engineering Workbench Demo</em>
+     </div>
+   </div>
+   <br/>
+
+
 
 See Also
 --------
