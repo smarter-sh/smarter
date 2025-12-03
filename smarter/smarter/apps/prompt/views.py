@@ -8,7 +8,6 @@ import logging
 import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Union
-from urllib.parse import urljoin
 
 from django.conf import settings
 from django.db import models
@@ -628,16 +627,11 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
 
     # The React app originates from
     #  - https://github.com/smarter-sh/smarter-chat and
-    #  - https://github.com/smarter-sh/smarter-workbench
+    #  - https://github.com/smarter-sh/web-integration-example
     # and is built-deployed to AWS Cloudfront. The React app is loaded from
     # a url like: https://cdn.alpha.platform.smarter.sh/ui-chat/index.html
-    reactjs_cdn_path = "/ui-chat/app-loader.js"
-    reactjs_loader_url = urljoin(smarter_settings.environment_cdn_url, reactjs_cdn_path)
-
-    # start with a string like: "smarter.sh/v1/ui-chat/root"
-    # then convert it into an html safe id like: "smarter-sh-v1-ui-chat-root"
-    div_root_id = SmarterApiVersions.V1 + reactjs_cdn_path.replace("app-loader.js", "root")
-    div_root_id = div_root_id.replace(".", "-").replace("/", "-")
+    reactjs_cdn_path = smarter_settings.smarter_reactjs_app_loader_path
+    reactjs_loader_url = smarter_settings.smarter_reactjs_app_loader_url
 
     chatbot: Optional[ChatBot] = None
     chatbot_helper: Optional[ChatBotHelper] = None
@@ -755,7 +749,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         # the basic idea is to pass the names of the necessary cookies to the React app, and then
         # it is supposed to find and read the cookies to get the chat session key, csrf token, etc.
         context = {
-            "div_id": self.div_root_id,
+            "div_id": smarter_settings.smarter_reactjs_root_div_id,
             "app_loader_url": self.reactjs_loader_url,
             "chatbot_api_url": self.chatbot.url,
             "toggle_metadata": True,
