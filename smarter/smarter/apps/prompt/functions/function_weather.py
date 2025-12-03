@@ -1,22 +1,51 @@
 """
-OpenAI API example function: https://platform.openai.com/docs/guides/function-calling
-This function returns the current weather in a given location as a 24-hour forecast.
-The function is called by the OpenAI API and returns a JSON object.
+This module provides weather-related functions for use with the OpenAI API function calling feature.
+This is a functioning implementation of the get_weather function described in the OpenAI documentation:
+https://platform.openai.com/docs/guides/function-calling
 
-Geocoding: Google Maps API
-Documentation:
-- https://developers.google.com/maps/documentation/geocoding/overview
-- https://pypi.org/project/googlemaps/
-- https://github.com/googlemaps/google-maps-services-python
+Overview
+--------
+The main purpose of this module is to enable retrieval of current weather data and 24-hour forecasts for a given location, suitable for integration with LLM function calling. It leverages external APIs for geocoding and weather data, and includes reliability, caching, and logging features.
 
+Features
+--------
+- Converts user-supplied location strings into geographic coordinates using the Google Maps Geocoding API.
+- Fetches hourly temperature and precipitation data from the Open-Meteo API for the specified location.
+- Returns weather data in either metric (Celsius, millimeters) or US customary units (Fahrenheit, inches).
+- Caches weather API responses for one hour to reduce redundant requests.
+- Retries failed requests automatically to improve reliability.
+- Emits custom signals when tools are presented, requested, and responded to, for integration with other system components.
+- Logging is controlled via a Waffle switch and respects the configured log level.
+- Handles errors gracefully, including missing or invalid API keys and API errors.
 
-Open-Meteo API:
-Documentation:  https://open-meteo.com/en/docs
-                https://pypi.org/project/openmeteo-requests/
+API Integrations
+----------------
+- **Google Maps Geocoding API**: Used for geocoding location names to latitude and longitude.
+  - Documentation: https://developers.google.com/maps/documentation/geocoding/overview
+  - Python package: https://pypi.org/project/googlemaps/
+  - GitHub: https://github.com/googlemaps/google-maps-services-python
 
-The Open-Meteo API is used to get the weather data. The API is rate-limited to 1 request per second. It is called with the
-openmeteo_requests Python package, which is a wrapper for the requests package. It is used to cache the API responses
-to avoid repeated API calls, and to retry failed API calls.
+- **Open-Meteo API**: Used for fetching hourly weather data.
+  - Documentation: https://open-meteo.com/en/docs
+  - Python package: https://pypi.org/project/openmeteo-requests/
+
+Dependencies
+------------
+- googlemaps
+- openmeteo_requests
+- pandas
+- requests_cache
+- retry_requests
+
+Configuration
+-------------
+Requires a valid Google Maps API key set in the environment variable `GOOGLE_MAPS_API_KEY`.
+
+Signals
+-------
+- `llm_tool_presented`
+
+See individual function documentation for usage details.
 """
 
 import logging
@@ -75,7 +104,38 @@ openmeteo = openmeteo_requests.Client(session=WEATHER_API_RETRY_SESSION)
 
 # pylint: disable=too-many-locals
 def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit="METRIC") -> str:
-    """Get the current weather in a given location as a 24-hour forecast"""
+    """
+    Retrieves the current weather and a 24-hour forecast for a specified location.
+
+    This function uses the Google Maps Geocoding API to convert a user-supplied location string
+    (such as a city and state) into geographic coordinates (latitude and longitude). It then
+    queries the Open-Meteo API to obtain hourly temperature and precipitation data for the next
+    24 hours at the resolved location.
+
+    Weather data can be returned in either metric units (Celsius, millimeters) or US customary
+    units (Fahrenheit, inches), depending on the `unit` parameter.
+
+    The function emits signals to indicate when a tool is requested and when a response is sent,
+    enabling integration with other system components. Logging is performed according to the
+    configured log level and Waffle switch.
+
+    If the Google Maps API key is missing or invalid, or if an error occurs during geocoding,
+    a descriptive error message is returned.
+
+    Parameters
+    ----------
+    tool_call : ChatCompletionMessageToolCall
+        The OpenAI tool call object containing metadata about the request.
+    location : str
+        The location for which to retrieve weather data (e.g., "San Francisco, CA").
+    unit : str, optional
+        The unit system for the returned weather data. Accepts "METRIC" (default) or "USCS".
+
+    Returns
+    -------
+    str
+        A JSON string containing the hourly weather forecast for the next 24 hours, or an error message.
+    """
     llm_tool_requested.send(sender=get_current_weather, tool_call=tool_call.model_dump(), location=location, unit=unit)
     if gmaps is None:
         retval = {
@@ -140,7 +200,24 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit
 
 
 def weather_tool_factory() -> dict:
-    """Return a list of tools that can be called by the OpenAI API"""
+    """
+    Constructs and returns a JSON-compatible dictionary defining the weather tool for OpenAI LLM function calling.
+
+    This factory function builds the tool specification required by the OpenAI API to enable function calling from language models.
+    The returned dictionary describes the `get_current_weather` function, including its name, description, and parameter schema.
+    The schema specifies the expected input parameters (`location` and `unit`), their types, and constraints, ensuring correct invocation
+    by the LLM.
+
+    The function also emits a signal (`llm_tool_presented`) to notify other system components that the tool definition has been presented,
+    supporting integration and observability.
+
+    The output is intended for use in OpenAI-compatible tool registration workflows, allowing LLMs to discover and call weather-related functions.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the tool definition for `get_current_weather`, formatted for OpenAI LLM function calling.
+    """
     tool = {
         "type": "function",
         "function": {
