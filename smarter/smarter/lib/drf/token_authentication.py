@@ -49,6 +49,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
 
     This subclass adds:
 
+    - adds an activation field to enable/disable tokens
     - adds Django signals for token authentication events
     - adds app logging
     - verifies token activity.
