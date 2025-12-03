@@ -1,5 +1,5 @@
-Smarter Chat Component
-=======================
+Smarter React Chat Component
+============================
 
 The Smarter project maintains a React-based drop-in chat component that can be integrated into
 any html web page. see `https://www.npmjs.com/package/@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__ for details.

@@ -49,42 +49,12 @@ Usage
 1. Create a Smarter manifest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: yaml
+.. literalinclude:: ../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-sql.yaml
+   :language: yaml
    :caption: Example Smarter Manifest
 
-    apiVersion: smarter.sh/v1
-    kind: Chatbot
-    metadata:
-      name: stackademy_sql
-      description: Stackademy University course catalogue inquiries using the Stackademy SQL plugin.
-      version: 1.0.0
-    spec:
-      config:
-        deployed: false
-        provider: openai
-        defaultModel: gpt-4o-mini
-        defaultSystemRole: >
-          You are a helpful assistant. When given the opportunity to utilize
-          function calling, you should always do so. This will allow you to
-          provide the best possible responses to the user. DO NOT GUESS. IF
-            YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.
-        defaultTemperature: 0.5
-        defaultMaxTokens: 1024
-        appName: Stackademy SQL Chatbot
-        appAssistant: Stanley
-        appWelcomeMessage: Welcome to Stackademy SQL Chatbot! How can I help you today?
-        appExamplePrompts:
-          - "Do you offer any courses on AI?"
-          - "My budget is $1,000. What courses can I take?"
-          - "I want to study programming. What do you suggest?"
-        appPlaceholder: "Ask me anything about Stackademy courses..."
-        appInfoUrl: https://stackademy.edu/online-courses
-      plugins:
-        - stackademy_sql
-      functions:
-        - weather
 
-2. Apply the Manifest
+1. Apply the Manifest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: console

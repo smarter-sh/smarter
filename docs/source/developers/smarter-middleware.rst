@@ -13,4 +13,5 @@ support for ChatBot/Agent http requests.
    middleware/cors
    middleware/csrf
    middleware/json
+   middleware/security
    middleware/sensitive-files

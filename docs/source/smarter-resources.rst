@@ -16,4 +16,5 @@ Smarter Resources
    smarter-resources/smarter-llm-providers
    smarter-resources/smarter-manifests
    smarter-resources/smarter-plugins
+   smarter-resources/smarter-prompt
    smarter-resources/smarter-secrets

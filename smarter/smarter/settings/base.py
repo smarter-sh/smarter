@@ -44,7 +44,7 @@ ALLOWED_HOSTS = ["*"]
 """
 A list of strings representing the host/domain names that this Django site can serve.
 Smarter implements its own middleware to validate host names.
-See smarter.apps.chatbot.middleware.security.SecurityMiddleware.
+See smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware.
 
 Default: ["*"]
 
@@ -595,7 +595,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     # to manage ALLOWED_HOSTS
     # -------------------------------
-    "smarter.apps.chatbot.middleware.security.SecurityMiddleware",
+    "smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware",
     #
     # -------------------------------
     # to ensure that all http responses are in json format

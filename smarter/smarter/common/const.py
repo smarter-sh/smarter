@@ -40,6 +40,10 @@ SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 5  # 5 minutes
 # Default maximum lifetime for Smarter API keys in days.
 SMARTER_API_KEY_MAX_LIFETIME_DAYS = 365 * 3  # 3 years
 
+# Default path to the Smarter Chat Component app-loader.js script
+# used to load the React chat component into a web page.
+SMARTER_DEFAULT_APP_LOADER_PATH = "/ui-chat/app-loader.js"
+
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter

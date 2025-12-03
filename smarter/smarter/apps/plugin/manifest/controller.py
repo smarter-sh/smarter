@@ -69,7 +69,64 @@ class SAMPluginControllerError(SAMExceptionBase):
 
 
 class PluginController(AbstractController):
-    """Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
+    """
+    Provides a unified interface for mapping between Pydantic manifest models, plugin implementations,
+    and Django ORM models within the Smarter platform.
+
+    The PluginController is responsible for orchestrating the instantiation and management of plugin
+    objects based on manifest data, plugin metadata, or plugin names. It supports dynamic loading of
+    plugin classes, validation of manifest kinds, and ensures that only valid plugin configurations
+    are accepted. This controller acts as a bridge between the declarative plugin manifests (often
+    defined in YAML or JSON), the underlying plugin Python classes, and the persistent plugin metadata
+    stored in the database.
+
+    **Key Responsibilities**
+
+    - Validates and processes plugin manifest data, ensuring compatibility with supported plugin kinds.
+    - Dynamically selects and instantiates the appropriate plugin class (API, SQL, or Static) based on manifest or metadata.
+    - Maintains references to the manifest, plugin instance, and plugin metadata for coordinated access.
+    - Integrates with user and account context to support multi-tenant plugin management.
+    - Provides error handling for invalid or ambiguous plugin initialization scenarios.
+
+    **Model Relationships**
+
+    - Utilizes :class:`smarter.apps.plugin.models.PluginMeta` for persistent plugin metadata.
+    - Interacts with Pydantic manifest models such as :class:`smarter.apps.plugin.manifest.models.api_plugin.model.SAMApiPlugin`,
+      :class:`smarter.apps.plugin.manifest.models.sql_plugin.model.SAMSqlPlugin`, and
+      :class:`smarter.apps.plugin.manifest.models.static_plugin.model.SAMStaticPlugin`.
+    - Supports plugin implementations including :class:`smarter.apps.plugin.plugin.api.ApiPlugin`,
+      :class:`smarter.apps.plugin.plugin.sql.SqlPlugin`, and :class:`smarter.apps.plugin.plugin.static.StaticPlugin`.
+
+    **Usage Example**
+
+    .. code-block:: python
+
+        # Initialize a PluginController with manifest data
+        my_user_profile = get_cached_user_profile(admin_user)
+        controller = PluginController(
+            account=my_account,
+            user=admin_user,
+            manifest=my_manifest,
+            user_profile=my_user_profile
+        )
+        plugin_instance = controller.plugin
+
+        # Initialize with plugin metadata
+        my_plugin_meta = PluginMeta.objects.get(id=plugin_id)
+        controller = PluginController(
+            account=my_account,
+            user=admin_user,
+            plugin_meta=my_plugin_meta,
+            user_profile=my_user_profile
+        )
+        plugin_instance = controller.plugin
+
+    **Notes**
+
+    - Only one of `manifest`, `plugin_meta`, or `name` should be provided during initialization.
+    - The controller enforces validation of manifest kinds and plugin class compatibility.
+    - Logging and error handling are integrated using the Smarter platform's logging and exception infrastructure.
+    """
 
     _manifest: SAMPlugins = None
     _plugin: Plugins = None

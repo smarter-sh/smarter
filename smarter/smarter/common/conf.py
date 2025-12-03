@@ -50,6 +50,7 @@ from ..lib.django.validators import SmarterValidator
 from .const import (
     SMARTER_API_KEY_MAX_LIFETIME_DAYS,
     SMARTER_API_SUBDOMAIN,
+    SMARTER_DEFAULT_APP_LOADER_PATH,
     SMARTER_PLATFORM_SUBDOMAIN,
     TFVARS,
     VERSION,
@@ -224,7 +225,7 @@ class SettingsDefaults:
         "SMARTER_MYSQL_TEST_DATABASE_PASSWORD",
         DEFAULT_MISSING_VALUE,
     )
-    SMARTER_REACTJS_APP_LOADER_PATH = os.environ.get("SMARTER_REACTJS_APP_LOADER_PATH", "/ui-chat/app-loader.js")
+    SMARTER_REACTJS_APP_LOADER_PATH = os.environ.get("SMARTER_REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
