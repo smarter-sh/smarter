@@ -1,4 +1,4 @@
-Smarter ChatBot Signals
+Signals
 =======================
 
 .. automodule:: smarter.apps.chatbot.signals
