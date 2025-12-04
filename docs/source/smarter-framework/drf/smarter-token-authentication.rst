@@ -7,10 +7,16 @@ The following components are designed to facilitate secure and efficient token-b
 These components primarily focus on adding and enhancing authentication mechanisms and
 providing specialized views for authenticated users.
 
+The principal enhancements include:
+
+- an ability to enable/disable token authentication via the Django admin console.
+- an last-used timestamp on tokens to track their usage.
+
 .. toctree::
     :maxdepth: 1
 
+    token-authentication/smarter-token-authentication
+    token-authentication/django-model
+    token-authentication/smarter-token-authentication-middleware
     token-authentication/smarter-authenticated-list-api-view
     token-authentication/smarter-authenticated-api-view
-    token-authentication/smarter-token-authentication
-    token-authentication/smarter-token-authentication-middleware

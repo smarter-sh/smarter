@@ -1,4 +1,4 @@
-SAM Broker Model
+Broker Model
 =================
 
 The Smarter Broker Model for the command-line interface (CLI) establishes an abstract set of pattnerns
@@ -9,13 +9,7 @@ See :doc:`/smarter-resources/smarter-api/base/cli-base` for details on the base 
 
 AI Resources that implement the Broker Model will subclass the AbstractBroker class (see class referencebelow).
 
-.. autoclass:: smarter.apps.api.v1.cli.brokers.Brokers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-.. autoclass:: smarter.lib.manifest.broker.AbstractBroker
+.. automodule:: smarter.lib.manifest.broker
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,5 +1,5 @@
-Smarter Token Authentication Middleware
-=============================================
+SmarterTokenAuthenticationMiddleware
+=======================================
 
 .. autoclass:: smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware
     :members:

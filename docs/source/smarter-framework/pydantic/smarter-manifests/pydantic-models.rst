@@ -1,21 +1,10 @@
-Base Pydantic Models
-==========================
+Pydantic Model Base Classes
+============================
 
 These are the base Pydantic models used as the foundations for all Smarter Api Manifest (SAM) models.
 
 
-Base Pydantic Model
---------------------
-
-.. autoclass:: smarter.lib.manifest.models.AbstractSAMBase
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Base Pydantic Metadata Model
-----------------------------
-
-.. autoclass:: smarter.lib.manifest.models.AbstractSAMMetadataBase
+.. automodule:: smarter.lib.manifest.models
    :members:
    :undoc-members:
    :show-inheritance:
