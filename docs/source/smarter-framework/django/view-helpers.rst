@@ -1,4 +1,4 @@
-Smarter View Helpers
+View Helpers
 ====================
 
 The Smarter View Helpers are a collection of Django view classes that provide
@@ -16,10 +16,10 @@ HTML sanitizing, minimization, rendering and caching.
 .. toctree::
    :maxdepth: 1
 
-   smarter-view-helpers/smarter-view
-   smarter-view-helpers/smarter-web-html-view
-   smarter-view-helpers/smarter-web-never-cached
-   smarter-view-helpers/smarter-web-authenticated
-   smarter-view-helpers/smarter-authenticated-cached
-   smarter-view-helpers/smarter-authenticated-never-cached
-   smarter-view-helpers/smarter-admin-webview
+   view-helpers/smarter-view
+   view-helpers/smarter-web-html-view
+   view-helpers/smarter-web-never-cached
+   view-helpers/smarter-web-authenticated
+   view-helpers/smarter-authenticated-cached
+   view-helpers/smarter-authenticated-never-cached
+   view-helpers/smarter-admin-webview

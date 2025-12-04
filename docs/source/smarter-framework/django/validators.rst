@@ -1,4 +1,4 @@
-Smarter Validator
+Validators
 =================
 
 SmarterValidator is a utiility helper class

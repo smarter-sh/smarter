@@ -24,7 +24,6 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    smarter-framework/smarter-mixins
    smarter-framework/smarter-middleware
    smarter-framework/smarter-settings
-   smarter-framework/smarter-validators
    smarter-framework/smarter-waffle
    smarter-framework/smarter-utils
    smarter-framework/guides

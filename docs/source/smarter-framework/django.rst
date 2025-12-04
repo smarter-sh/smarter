@@ -12,3 +12,5 @@ Django
    django/templates
    django/token-generators
    django/views
+   django/view-helpers
+   django/validators
