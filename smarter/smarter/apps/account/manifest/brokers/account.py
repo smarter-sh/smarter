@@ -175,13 +175,29 @@ class SAMAccountBroker(AbstractBroker):
     @property
     def manifest(self) -> Optional[SAMAccount]:
         """
-        SAMAccount() is a Pydantic model
-        that is used to represent the Smarter API Account manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        Get the manifest for the Smarter API Account as a Pydantic model.
+
+        :returns: A `SAMAccount` Pydantic model instance representing the Smarter API Account manifest, or None if not initialized.
+
+        .. note::
+
+                   The top-level manifest model (`SAMAccount`) must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
+
+        .. tip::
+
+                   Child models within the manifest are automatically cascade-initialized by Pydantic, passing ``**data`` to each child's constructor.
+
+        .. warning::
+
+                   If the manifest loader or manifest metadata is missing, or if the account is not set, the manifest will not be initialized and None may be returned or an exception raised.
+
+
+        **Example usage**::
+
+            # Access the manifest property
+            manifest = broker.manifest
+            if manifest:
+                print(manifest.apiVersion, manifest.kind)
         """
         if self._manifest:
             return self._manifest

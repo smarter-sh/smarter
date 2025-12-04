@@ -55,7 +55,35 @@ module_prefix = "smarter.apps.account.tasks."
     queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def create_charge(*args, **kwargs):
-    """Create a charge record."""
+    """
+    Create a charge record for a user or account.
+
+    :param user_id: Integer, optional. The ID of the user for whom the charge is created.
+    :param account_id: Integer, optional. The ID of the account for which the charge is created.
+    :param session_key: String, optional. The session key associated with the charge.
+    :param provider: String, optional. The provider for the charge.
+    :param charge_type: String, optional. The type of charge (e.g., usage, subscription).
+    :param prompt_tokens: Integer, optional. Number of prompt tokens used.
+    :param completion_tokens: Integer, optional. Number of completion tokens used.
+    :param total_tokens: Integer, optional. Total number of tokens used.
+    :param model: String, optional. The model used for the charge.
+    :param reference: String, optional. Reference information for the charge.
+
+    .. note::
+
+           - Either ``user_id`` or ``account_id`` must be provided to associate the charge.
+           - This task is automatically retried on failure, with backoff and maximum retries configured via Celery settings.
+
+
+    **Example usage**::
+
+        # Create a charge for a user
+        create_charge.delay(user_id=123, charge_type="usage", prompt_tokens=100, completion_tokens=50)
+
+        # Create a charge for an account
+        create_charge.delay(account_id=456, charge_type="subscription", total_tokens=200)
+
+    """
 
     account: Optional[Account] = None
     user = None
@@ -118,7 +146,21 @@ def create_charge(*args, **kwargs):
     queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def aggregate_charges():
-    """top-level wrapper for celery aggregation tasks"""
+    """
+    Top-level Celery task for aggregating charge records.
+
+    This task triggers the aggregation of daily billing records by calling
+    :func:`aggregate_daily_billing_records`. It is typically scheduled via Celery Beat.
+
+
+    **Example usage**::
+
+        # Trigger aggregation from code
+        aggregate_charges.delay()
+
+        # Schedule with Celery Beat for daily aggregation
+        # (see your Celery Beat configuration)
+    """
 
     prefix = formatted_text(module_prefix + "aggregate_charges()")
     logger.info(prefix)
@@ -133,9 +175,24 @@ def aggregate_charges():
 )
 def aggregate_daily_billing_records():
     """
-    Aggregate daily records and delete individual Charge records.
-    Runs as a Celery task called from Celery Beat. This task is idempotent
-    and can be run multiple times without issue.
+    Aggregate daily billing records and delete individual Charge records.
+
+    This Celery task is typically scheduled via Celery Beat and is designed to be idempotent,
+    meaning it can be safely run multiple times without causing duplicate records.
+
+    .. note::
+
+           - This task aggregates all charges for each user/account/date/charge_type combination,
+           - updates or creates a corresponding DailyBillingRecord, and deletes the original Charge records.
+
+
+    **Example usage**::
+
+        # Trigger aggregation from code
+        aggregate_daily_billing_records.delay()
+
+        # Schedule with Celery Beat for daily aggregation
+        # (see your Celery Beat configuration)
     """
     MAX_AGGREGATION_ERROR_THRESHOLD = 10
     message_prefix = formatted_text(module_prefix + "aggregate_daily_billing_records()")
