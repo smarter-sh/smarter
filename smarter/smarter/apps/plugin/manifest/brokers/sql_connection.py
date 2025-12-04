@@ -102,13 +102,15 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     @property
     def manifest(self) -> Optional[SAMSqlConnection]:
         """
-        SAMSqlConnection() is a Pydantic model
-        that is used to represent the Smarter API SqlConnection manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        Returns the manifest for the SQL connection as a `SAMSqlConnection` Pydantic model.
+
+        This property loads and initializes the top-level manifest model for a SQL connection.
+        If the manifest has already been loaded, it is returned from cache. Otherwise, if the loader is available and its manifest kind matches,
+        a new `SAMSqlConnection` model is constructed using the manifest data provided by the loader.
+
+        Child models within the manifest are automatically initialized by Pydantic when the top-level model is constructed.
+
+        :returns: The manifest as a `SAMSqlConnection` instance, or `None` if not available.
         """
         if self._manifest:
             return self._manifest

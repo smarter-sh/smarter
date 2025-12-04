@@ -15,6 +15,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../smarter"))
 
+from smarter.__version__ import __version__  # noqa: F401
+
 # pylint: disable=wrong-import-position
 from smarter.common.conf import settings as smarter_settings
 
@@ -31,12 +33,12 @@ import django
 django.setup()
 
 
-project = "Smarter"
+project = "Smarter Documentation"
 
 # pylint: disable=redefined-builtin
-copyright = f"{datetime.datetime.now().year}, The {project} Project"
+copyright = f"{datetime.datetime.now().year}, The Smarter Project"
 author = "Lawrence McDaniel"
-release = "3.13.33"
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -63,6 +65,9 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "django": ("https://docs.djangoproject.com/en/5.2/", "https://docs.djangoproject.com/en/5.2/_objects/"),
 }
+rst_epilog = f"""
+.. |project_version| replace:: {release}
+"""
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
