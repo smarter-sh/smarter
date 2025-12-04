@@ -3,16 +3,13 @@ Smarter Resources
 
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Smarter Resources:
+   :maxdepth: 1
+   :caption: Technical Reference
 
    smarter-resources/smarter-api
    smarter-resources/smarter-chatbots
-   smarter-resources/smarter-chatbot-api
-   smarter-resources/smarter-chat-ui
    smarter-resources/smarter-cli
    smarter-resources/smarter-connections
-   smarter-resources/smarter-json-schemas
    smarter-resources/smarter-llm-providers
    smarter-resources/smarter-plugins
    smarter-resources/smarter-prompt

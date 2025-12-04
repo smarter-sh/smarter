@@ -10,18 +10,6 @@ Hence, they are only here in order to keep the code DRY (Don't Repeat Yourself).
 The module is intended for internal use within the Smarter framework and is
 designed to be compatible with Python 3, Django, DRF, and Pydantic.
 
-.. admonition:: Contributor Note
-
-    Please adhere to the Smarter framework's style guide when contributing to this module.
-
-    - Use Sphinx-style docstrings with clear parameter definitions, notes, warnings, and usage examples.
-    - Follow PEP 8 for code formatting and naming conventions.
-    - Prefer DRY (Don't Repeat Yourself) principles; utility functions should be generic and reusable.
-    - Document any deprecations or breaking changes clearly.
-    - Ensure compatibility with Python 3, Django, DRF, and Pydantic.
-
-    For more details, refer to the project's CONTRIBUTING.md and internal documentation.
-
 """
 import csv
 import hashlib
@@ -483,7 +471,7 @@ def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_
     """
     Masks a string by replacing all but the last ``mask_length`` characters with ``mask_char``.
 
-    .. deprecated:: 1.2.0
+    .. deprecated:: 0.10.0
         This function is deprecated and will be removed in a future release.
         Use Pydantic's ``SecretStr`` or other secure alternatives for string masking.
 
