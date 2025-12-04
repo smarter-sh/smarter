@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Smarter
-=======
+Smarter |project_version| Documentation
+=========================================
 
 .. image:: https://img.shields.io/badge/Website-smarter.sh-brightgreen
    :target: https://smarter.sh

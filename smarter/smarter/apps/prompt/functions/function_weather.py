@@ -213,10 +213,36 @@ def weather_tool_factory() -> dict:
 
     The output is intended for use in OpenAI-compatible tool registration workflows, allowing LLMs to discover and call weather-related functions.
 
+    Example
+    -------
+    .. code-block:: python
+
+        tool_definition = weather_tool_factory()
+        print(tool_definition)
+        {
+            "type": "function",
+            "function": {
+                "name": "get_current_weather",
+                "description": "Get the current weather in a given location",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The city and state, e.g. San Francisco, CA",
+                        },
+                        "unit": {"type": "string", "enum": ["METRIC", "USCS"]},
+                    },
+                    "required": ["location"],
+                },
+            },
+        }
+
     Returns
     -------
     dict
         A dictionary containing the tool definition for `get_current_weather`, formatted for OpenAI LLM function calling.
+
     """
     tool = {
         "type": "function",

@@ -101,13 +101,22 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
         """
-        SAMStaticPlugin() is a Pydantic model
-        that is used to represent the Smarter API StaticPlugin manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        Returns the manifest for the static plugin as a Pydantic model instance.
+
+        This property initializes and returns a `SAMStaticPlugin` object, which represents the full manifest for a static plugin.
+        The manifest is constructed using data loaded from the manifest loader, including API version, kind, metadata, and specification.
+        Child models within the manifest (such as metadata and spec) are automatically initialized by Pydantic using the provided data.
+
+        The manifest loader must match the expected manifest kind for initialization to proceed. If the manifest has already been
+        initialized, the cached instance is returned.
+
+        The resulting manifest object provides a structured, validated representation of the plugin manifest, suitable for further
+        processing, serialization, or validation within the Smarter API system.
+
+        Returns
+        -------
+        Optional[SAMStaticPlugin]
+            The initialized static plugin manifest as a Pydantic model, or None if not available.
         """
         if self._manifest:
             return self._manifest
@@ -166,62 +175,55 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Return a JSON response with the manifest data.
-        example response:
-        {
-            "apiVersion": "smarter.sh/v1",
-            "kind": "Plugin",
-            "metadata": {
-                "name": "cli_test_plugin",
-                "description": "A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
-                "version": "0.2.0",
-                "tags": [],
-                "annotations": null,
-                "pluginClass": "static"
-            },
-            "spec": {
-                "prompt": {
-                    "provider": "openai",
-                    "systemRole": "Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n",
-                    "model": "gpt-4-turbo",
-                    "temperature": 0.5,
-                    "maxTokens": 256
-                },
-                "selector": {
-                    "directive": "search_terms",
-                    "searchTerms": [
-                        "Cli Test",
-                        "cli test plugin",
-                        "test plugin"
-                    ]
-                },
-                "data": {
-                    "description": "A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
-                    "staticData": {
-                        "description": "an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
-                        "staticData": {
-                            "about": "In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\n",
-                            "links": [
-                                {
-                                    "documentation": "https://platform.openai.com/docs/guides/function-calling"
-                                },
-                                {
-                                    "website": "https://openai.com/"
-                                },
-                                {
-                                    "wikipedia": "https://en.wikipedia.org/wiki/OpenAI"
-                                }
-                            ],
-                            "platformProvider": "OpenAI"
-                        }
-                    }
-                }
-            },
-            "status": {
-                "created": "2025-06-24T21:38:36.368058+00:00",
-                "modified": "2025-06-24T21:38:36.434526+00:00"
-            }
-        }
+        Serialize and return the manifest for a static plugin as a JSON response.
+
+        This method collects and validates all required components of a static plugin manifest, including metadata,
+        prompt configuration, selector criteria, and static data. It ensures that all plugin objects are present and
+        ready, and provides informative error responses if any required component is missing or invalid.
+
+        The returned manifest contains the following top-level fields:
+
+        - ``apiVersion``: Manifest API version string.
+        - ``kind``: Manifest kind (usually "Plugin").
+        - ``metadata``: Plugin metadata (name, description, version, tags, annotations, plugin class).
+        - ``spec``: Specification details (prompt configuration, selector criteria, static plugin data).
+        - ``status``: Creation and last modification timestamps.
+
+        Example response:
+
+        .. code-block:: json
+
+           {
+               "apiVersion": "smarter.sh/v1",
+               "kind": "Plugin",
+               "metadata": {
+                   "name": "cli_test_plugin",
+                   "description": "...",
+                   "version": "0.2.0",
+                   "tags": [],
+                   "annotations": null,
+                   "pluginClass": "static"
+               },
+               "spec": {
+                   "prompt": {  },
+                   "selector": {  },
+                   "data": {  }
+               },
+               "status": {
+                   "created": "2025-06-24T21:38:36.368058+00:00",
+                   "modified": "2025-06-24T21:38:36.434526+00:00"
+               }
+           }
+
+        Error handling:
+            - If the plugin is not found or not ready, a ``SAMBrokerErrorNotReady`` is raised.
+            - If required plugin metadata, selector, or prompt objects are missing or invalid, a ``SAMPluginBrokerError`` is raised.
+            - Any unexpected errors during manifest serialization will raise a generic ``Exception``.
+
+        Returns
+        -------
+        SmarterJournaledJsonResponse
+            JSON response containing the plugin manifest or error details.
 
         """
         command = self.describe.__name__

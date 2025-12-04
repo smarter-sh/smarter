@@ -95,13 +95,22 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     @property
     def manifest(self) -> Optional[SAMSqlPlugin]:
         """
-        SAMSqlPlugin() is a Pydantic model
-        that is used to represent the Smarter API Plugin manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        Initializes and returns the manifest for the SQL plugin as a Pydantic model instance.
+
+        This property constructs a `SAMSqlPlugin` object using data provided by the manifest loader, including API version,
+        kind, metadata, specification, and status. The top-level manifest model is explicitly initialized, while child models
+        (such as metadata, spec, and status) are automatically cascade-initialized by Pydantic using the relevant data.
+
+        If the manifest loader's kind matches the expected plugin kind, the manifest is created and cached for future access.
+        If the manifest has already been initialized, the cached instance is returned.
+
+        The resulting manifest object provides a validated, structured representation of the SQL plugin manifest, suitable for
+        further processing, serialization, or validation within the Smarter API system.
+
+        Returns
+        -------
+        Optional[SAMSqlPlugin]
+            The initialized SQL plugin manifest as a Pydantic model, or None if not available.
         """
         if self._manifest:
             return self._manifest
