@@ -46,23 +46,20 @@ Features
 Usage
 ------
 
-1. Create a Smarter manifest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**1. Create a Smarter manifest**
 
 .. literalinclude:: ../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-sql.yaml
    :language: yaml
    :caption: Example Smarter Manifest
 
 
-1. Apply the Manifest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**2. Apply the Manifest**
 
 .. code-block:: console
 
    smarter apply -f stackademy_chatbot.yaml
 
-3. Interact with the Chatbot
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**3. Interact with the Chatbot**
 
 .. raw:: html
 
