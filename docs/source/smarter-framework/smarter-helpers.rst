@@ -11,7 +11,6 @@ enabling developers to initiate and monitor complex operations with minimal code
 
 .. toctree::
    :maxdepth: 1
-   :caption: Smarter Helpers
 
    helpers/chatbot
    helpers/chat

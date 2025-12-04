@@ -1,4 +1,4 @@
-Smarter Security Middleware
+Security Middleware
 ===========================
 
 .. autoclass:: smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware

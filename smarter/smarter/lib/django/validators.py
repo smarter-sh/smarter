@@ -729,7 +729,7 @@ class SmarterValidator:
     def validate_http_request_header_value(value: str) -> str:
         """
         Validate HTTP request header value format
-        HTTP header value must not contain control characters like \n or \r
+        HTTP header value must not contain control characters like escaped nor special characters.
 
         :param value: The HTTP header value to validate.
         :type value: str

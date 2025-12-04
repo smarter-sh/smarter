@@ -36,7 +36,7 @@ Features
 - Easy `Docker-based <https://hub.docker.com/r/mcdaniel0073/smarter>`__ `installation <https://github.com/smarter-sh/smarter-deploy>`__ for Windows, macOS and Linux. See the `Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__ for native Kubernetes support.
 - Supports a growing list of LLM providers: DeepSeek, OpenAI, Google AI, Meta AI, and more.
 - Web console, REST API, and `command-line interface <https://smarter.sh/cli>`__.
-- Extensibility model for LLM tool calls, for securely integrating remote data sources like SQL databases and remote APIs. See :doc:`developers/architecture/plugin`.
+- Extensibility model for LLM tool calls, for securely integrating remote data sources like SQL databases and remote APIs. See :doc:`smarter-framework/architecture/plugin`.
 - Agentic workflow support for building multi-step AI processes.
 - Robust prompt management with versioning, testing, and deployment tracking.
 - Built-in prompt content moderation, detailed logging, security, cost accounting, and audit features.
@@ -191,10 +191,9 @@ A:
    :maxdepth: 1
    :caption: User Guide
 
-   system-management
+   smarter-platform
    smarter-resources
-   developers
-   integrations
+   smarter-framework
    adr
 
 .. toctree::

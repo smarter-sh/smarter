@@ -1,4 +1,4 @@
-System Management
+Smarter Platform
 =================
 
 Smarter is written on the `Django web framework <https://docs.djangoproject.com/>`__, which provides a powerful
@@ -27,17 +27,17 @@ Some good references for learning about Django administration and management com
 .. toctree::
    :maxdepth: 2
 
-   system-management/cloud-infrastructure
-   system-management/installation
-   system-management/django-admin
-   system-management/url-patterns
-   system-management/account-management
-   system-management/user-management
-   system-management/api-keys
-   system-management/cost-accounting
-   system-management/smarter-journal
-   system-management/configuration
-   system-management/security
-   system-management/backup-and-restore
-   system-management/updates
-   system-management/troubleshooting
+   smarter-platform/cloud-infrastructure
+   smarter-platform/installation
+   smarter-platform/django-admin
+   smarter-platform/url-patterns
+   smarter-platform/account-management
+   smarter-platform/user-management
+   smarter-platform/api-keys
+   smarter-platform/cost-accounting
+   smarter-platform/smarter-journal
+   smarter-platform/configuration
+   smarter-platform/security
+   smarter-platform/backup-and-restore
+   smarter-platform/updates
+   smarter-platform/troubleshooting

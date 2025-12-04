@@ -16,7 +16,6 @@ and performance optimization.
 
    smarter-api/authentication
    smarter-api/base-class
-   smarter-api/broker-model
    smarter-api/cli
    smarter-api/error-handling
    smarter-api/logging
