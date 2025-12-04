@@ -82,15 +82,42 @@ class SAMSecretBrokerError(SAMBrokerError):
 
 class SAMSecretBroker(AbstractBroker):
     """
-    Smarter API Secret Manifest Broker. This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml Secret manifests
-    - using the manifest to initialize the corresponding Pydantic model
+    Smarter API Secret Manifest Broker
 
-    This Broker class interacts with the collection of Django ORM models that
-    represent the Smarter API Secret manifests. The Broker class is responsible
-    for creating, updating, deleting and querying the Django ORM models, as well
-    as transforming the Django ORM models into Pydantic models for serialization
-    and deserialization.
+    This class manages the lifecycle of Smarter API Secret manifests, including loading, validating, parsing, and transforming them between Django ORM models and Pydantic models for serialization and deserialization.
+
+    **Responsibilities:**
+
+      - Load, validate, and parse Smarter API YAML Secret manifests.
+      - Initialize the corresponding Pydantic model from manifest data.
+      - Interact with Django ORM models representing Secret manifests.
+      - Create, update, delete, and query Secret ORM models.
+      - Transform ORM models into Pydantic models for API serialization.
+
+    **Parameters:**
+
+      - manifest (Optional[Union[SAMSecret, str, dict]]): The manifest data, which can be a `SAMSecret` instance, a YAML/JSON string, or a dictionary.
+
+    **Example Usage:**
+
+      .. code-block:: python
+
+         broker = SAMSecretBroker(manifest=manifest_data)
+         manifest_model = broker.manifest
+         if manifest_model:
+             print(manifest_model.spec.config)
+
+    .. note::
+
+       The manifest can be provided as a string, dictionary, or `SAMSecret` instance. If not a `SAMSecret`, it will be loaded and validated automatically.
+
+    .. seealso::
+
+       - :class:`SAMSecret`
+       - :class:`SAMSecretMetadata`
+       - :class:`SAMSecretSpec`
+       - :meth:`SAMLoader`
+
     """
 
     # override the base abstract manifest model with the Secret model
@@ -127,7 +154,26 @@ class SAMSecretBroker(AbstractBroker):
     @property
     def secret_transformer(self) -> SecretTransformer:
         """
-        Return the SecretTransformer instance for this manifest.
+        Get the `SecretTransformer` instance associated with this manifest.
+
+        The `SecretTransformer` provides methods for creating, saving, and accessing the Django ORM `Secret` model based on the manifest data.
+
+        :returns: SecretTransformer
+            The transformer for this manifest.
+
+        .. important::
+
+           The `user_profile` must be set before accessing this property, or an error will be raised.
+
+        **Example usage**::
+
+            transformer = broker.secret_transformer
+            if transformer.ready:
+                transformer.save()
+
+        .. seealso::
+
+           :class:`SecretTransformer`
         """
         if self.user_profile is None:
             raise SAMBrokerErrorNotReady(
@@ -144,13 +190,55 @@ class SAMSecretBroker(AbstractBroker):
     @property
     def secret(self) -> Optional[Secret]:
         """
-        Return the Secret model instance for this manifest.
+        Retrieve the Django ORM `Secret` model instance associated with this manifest.
+
+        This property provides direct access to the underlying `Secret` object, allowing you to interact with its fields and methods.
+
+        :returns: Optional[Secret]
+            The corresponding Django ORM model instance, or `None` if unavailable.
+
+        .. important::
+
+           The returned object reflects the current state of the manifest in the database. If the manifest has not been applied or the secret does not exist, this property will return `None`.
+
+
+        **Example usage**::
+
+            secret_obj = broker.secret
+            if secret_obj:
+                print(secret_obj.get_secret())
+                print(secret_obj.expires_at)
+
+        .. seealso::
+
+           :class:`Secret`
+           :meth:`secret_transformer`
         """
         return self.secret_transformer.secret
 
     def manifest_to_django_orm(self) -> Optional[dict]:
         """
-        Transform the Smarter API Secret manifest into a Django ORM model.
+        Convert the Smarter API Secret manifest into a Django ORM model dictionary.
+
+        This method serializes the manifest's configuration data, converting camelCase keys to snake_case for compatibility with Django ORM conventions.
+
+        :returns: Optional[dict]
+            A dictionary suitable for creating or updating a Django ORM `Secret` model, or `None` if the manifest is unavailable.
+
+        .. important::
+
+           The returned dictionary is intended for direct use with Django ORM operations. Ensure that required fields are present before saving.
+
+        **Example usage**::
+
+            orm_data = broker.manifest_to_django_orm()
+            if orm_data:
+                secret_obj = Secret.objects.create(**orm_data)
+
+        .. seealso::
+
+           :class:`Secret`
+           :meth:`django_orm_to_manifest_dict`
         """
         config_dump = self.manifest.spec.config.model_dump()  # type: ignore[return-value]
         config_dump = self.camel_to_snake(config_dump)
@@ -158,8 +246,37 @@ class SAMSecretBroker(AbstractBroker):
 
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
-        Transform the Django ORM model into a Pydantic readable
-        Smarter API Secret manifest dict.
+        Convert a Django ORM `Secret` model instance into a Pydantic-compatible manifest dictionary.
+
+        This method serializes the ORM model, transforms its keys to camelCase, and structures the output for use as a Smarter API Secret manifest.
+
+        :returns: Optional[dict]
+            A dictionary formatted for Pydantic model consumption, or `None` if the secret is unavailable.
+
+        .. important::
+
+           The returned dictionary is suitable for API responses, configuration export, or further Pydantic validation.
+
+        .. warning::
+
+           If the underlying secret does not exist, this method returns `None` and logs a warning.
+
+        **Example usage**::
+
+            manifest_dict = broker.django_orm_to_manifest_dict()
+            if manifest_dict:
+                print(manifest_dict["spec"]["config"]["value"])
+
+        .. seealso::
+
+           :class:`Secret`
+           :meth:`manifest_to_django_orm`
+           :class:`SAMSecret`
+           :class:`SAMSecretMetadataKeys`
+           :class:`SAMSecretSpecKeys`
+           :class:`SAMSecretStatusKeys`
+           :class:`SAMKeys`
+
         """
         if not self.secret:
             logger.warning("%s.django_orm_to_manifest_dict() called with no secret", self.formatted_class_name)
@@ -223,14 +340,37 @@ class SAMSecretBroker(AbstractBroker):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the formatted class name for logging purposes.
-        This is used to provide a more readable class name in logs.
+        Get a human-readable class name for logging and diagnostics.
+
+        This property returns a formatted string representing the class name, which is useful for log messages and debugging output.
+
+        :returns: str
+            The formatted class name.
+
+
+        **Example usage**::
+
+            logger.info(broker.formatted_class_name)
+
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.SAMSecretBroker()"
 
     @property
     def kind(self) -> str:
+        """
+        Return the manifest kind for Smarter API Secret.
+
+        :returns: str
+            The manifest kind string.
+
+        **Example usage**::
+
+            broker = SAMSecretBroker(manifest=manifest_data)
+            print(broker.kind)  # Output
+                "Secret"
+
+        """
         return MANIFEST_KIND
 
     @property
@@ -278,10 +418,41 @@ class SAMSecretBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self):
+    def model_class(self) -> Type[Secret]:
+        """
+        Return the Django ORM model class for Smarter API Secret.
+
+        :returns: Type[Secret]
+            The Django ORM model class.
+
+        **Example usage**::
+
+            broker = SAMSecretBroker(manifest=manifest_data)
+            model_cls = broker.model_class
+            secret_instance = model_cls.objects.get(name="my_secret")
+        """
         return Secret
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return an example Smarter API Secret manifest.
+
+        :param request: HttpRequest
+            The incoming HTTP request.
+        :param args: tuple
+            Additional positional arguments.
+        :param kwargs: dict
+            Additional keyword arguments.
+
+        :returns: SmarterJournaledJsonResponse
+            A JSON response containing the example manifest.
+
+        **Example usage**::
+
+            response = broker.example_manifest(request)
+            print(response.data)
+
+        """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         current_date = datetime.now(timezone.utc)
@@ -310,6 +481,31 @@ class SAMSecretBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Retrieve Smarter API Secret manifests based on query parameters.
+
+        :param request: HttpRequest
+            The incoming HTTP request.
+        :param args: tuple
+            Additional positional arguments.
+        :param kwargs: dict
+            Additional keyword arguments.
+
+        :raises SAMSecretBrokerError:
+            If there is an error during manifest retrieval or serialization.
+
+
+        :returns: SmarterJournaledJsonResponse
+            A JSON response containing the retrieved manifests.
+
+        See also::
+
+            :class:`Secret`
+            :class:`SecretSerializer`
+            :class:`SAMKeys`
+            :class:`SCLIResponseGet`
+            :class:`SCLIResponseGetData`
+        """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
@@ -351,13 +547,34 @@ class SAMSecretBroker(AbstractBroker):
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        apply the manifest. copy the manifest data to the Django ORM model and
-        save the model to the database. Call super().apply() to ensure that the
-        manifest is loaded and validated before applying the manifest to the
-        Django ORM model.
-        Note that there are fields included in the manifest that are not editable
-        and are therefore removed from the Django ORM model dict prior to attempting
-        the save() command. These fields are defined in the readonly_fields list.
+        Apply the manifest by copying its data to the Django ORM model and saving it to the database.
+
+        This method ensures the manifest is loaded and validated before persisting it. Non-editable fields defined in `readonly_fields` are excluded from the ORM model prior to saving.
+
+        :param request: HttpRequest
+            The incoming HTTP request.
+        :param args: tuple
+            Additional positional arguments.
+        :param kwargs: dict
+            Additional keyword arguments.
+
+        :returns: SmarterJournaledJsonResponse
+            A JSON response indicating success or error.
+
+        .. caution::
+
+           Fields marked as read-only in the manifest will be removed before saving to prevent accidental overwrites.
+
+        **Example usage**::
+
+            response = broker.apply(request)
+            if response.success:
+                print("Secret applied successfully.")
+
+        .. seealso::
+
+           :meth:`manifest_to_django_orm`
+           :meth:`django_orm_to_manifest_dict`
         """
         super().apply(request, kwargs)
         command = self.apply.__name__
@@ -380,11 +597,48 @@ class SAMSecretBroker(AbstractBroker):
             return self.json_response_err(command=command, e=err)
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+
+        .. attention::
+
+            this is not implemented for Smarter API Secret manifests.
+
+        :param request: HttpRequest
+            The incoming HTTP request.
+        :param args: tuple
+            Additional positional arguments.
+        :param kwargs: dict
+            Additional keyword arguments.
+
+        :raises SAMBrokerErrorNotImplemented:
+            Always raised to indicate that chat functionality is not available for this manifest type.
+
+        :returns: SmarterJournaledJsonResponse
+            This method does not return a response; it always raises an error.
+        """
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Describe the Smarter API Secret manifest by retrieving its details from the database.
+
+        :param request: HttpRequest
+            The incoming HTTP request.
+        :param args: tuple
+            Additional positional arguments.
+        :param kwargs: dict
+            Additional keyword arguments.
+
+        :raises SAMSecretBrokerError:
+            If there is an error during manifest retrieval or serialization.
+
+        :returns: SmarterJournaledJsonResponse
+            A JSON response containing the manifest details.
+
+
+        """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         if self.user_profile is None:
@@ -420,6 +674,22 @@ class SAMSecretBroker(AbstractBroker):
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delete the Smarter API Secret manifest from the database.
+
+        :param request: HttpRequest
+            The incoming HTTP request.
+        :param args: tuple
+            Additional positional arguments.
+        :param kwargs: dict
+            Additional keyword arguments.
+
+        :raises SAMSecretBrokerError:
+            If there is an error during manifest deletion.
+
+        :returns: SmarterJournaledJsonResponse
+            A JSON response indicating success or error.
+        """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.secret:
@@ -436,16 +706,64 @@ class SAMSecretBroker(AbstractBroker):
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+
+        .. attention::
+
+            this is not implemented for Smarter API Secret manifests.
+
+        :param request: HttpRequest
+            The incoming HTTP request.
+        :param args: tuple
+            Additional positional arguments.
+        :param kwargs: dict
+            Additional keyword arguments.
+
+        :raises SAMBrokerErrorNotImplemented:
+            Always raised to indicate that deploy functionality is not available for this manifest type.
+        """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+
+        .. attention::
+
+            this is not implemented for Smarter API Secret manifests.
+
+        :param request: HttpRequest
+            The incoming HTTP request.
+        :param args: tuple
+            Additional positional arguments.
+        :param kwargs: dict
+            Additional keyword arguments.
+
+        :raises SAMBrokerErrorNotImplemented:
+            Always raised to indicate that undeploy functionality is not available for this manifest type.
+        """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+
+        .. attention::
+
+            this is not implemented for Smarter API Secret manifests.
+
+        :param request: HttpRequest
+            The incoming HTTP request.
+        :param args: tuple
+            Additional positional arguments.
+        :param kwargs: dict
+            Additional keyword arguments.
+
+        :raises SAMBrokerErrorNotImplemented:
+            Always raised to indicate that logs functionality is not available for this manifest type.
+        """
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)

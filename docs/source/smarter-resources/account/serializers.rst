@@ -1,5 +1,5 @@
-Serializers
-===========
+DRF Serializers
+================
 
 .. automodule:: smarter.apps.account.serializers
     :members:

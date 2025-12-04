@@ -1,5 +1,5 @@
-Models
-=======
+Pydantic Models
+================
 
 .. toctree::
    :maxdepth: 2
