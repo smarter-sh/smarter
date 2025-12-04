@@ -26,14 +26,15 @@ ChatBots are managed with the :doc:`Smarter command-line interface (CLI) <smarte
    :maxdepth: 1
    :caption: Technical Reference
 
+   chatbots/models
+   chatbots/sam
+   chatbots/serializers
    chatbots/api
    chatbots/react-ui
-   chatbots/broker
    chatbots/helper
    chatbots/kubernetes-ingress
    chatbots/management-commands
    chatbots/middleware
-   chatbots/models
    chatbots/tasks
    chatbots/signals
    chatbots/urls
