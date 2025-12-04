@@ -26,4 +26,4 @@ Smarter AI Resource Enumerations
 ---------------------------------
 
 The Smarter API is designed to provide a robust and flexible interface for interacting with Smarter AI resources,
-which include the following. See :doc:`../../developers/smarter-journal/enumerations`
+which include the following. See :doc:`smarter-journal/enumerations`

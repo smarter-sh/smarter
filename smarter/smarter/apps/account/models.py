@@ -200,7 +200,10 @@ class Account(TimestampedModel):
     account_number = models.CharField(
         validators=[account_number_format], max_length=255, unique=True, default="9999-9999-9999", blank=True, null=True
     )
-    is_default_account = models.BooleanField(default=False)
+    is_default_account = models.BooleanField(
+        default=False,
+        help_text="Indicates if this is the default account for the organization. Only one account should be marked as default.",
+    )
     company_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
     address1 = models.CharField(max_length=255, blank=True, null=True)
@@ -361,9 +364,16 @@ class AccountContact(TimestampedModel):
     last_name = models.CharField(max_length=255)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
-    is_primary = models.BooleanField(default=False)
-    is_test = models.BooleanField(default=False)
-    welcomed = models.BooleanField(default=False)
+    is_primary = models.BooleanField(
+        default=False,
+        help_text="Indicates if this contact is the primary contact for the account. Only one contact can be primary per account.",
+    )
+    is_test = models.BooleanField(
+        default=False, help_text="Indicates if this contact is used for unit testing purposes."
+    )
+    welcomed = models.BooleanField(
+        default=False, help_text="Indicates if a welcome email has been sent to this contact."
+    )
 
     def send_email(self, subject: str, body: str, html: bool = False, from_email: Optional[str] = None):
         """
@@ -612,7 +622,9 @@ class UserProfile(TimestampedModel):
         related_name="user_profile",
     )
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
-    is_test = models.BooleanField(default=False)
+    is_test = models.BooleanField(
+        default=False, help_text="Indicates if this profile is used for unit testing purposes."
+    )
 
     def add_to_account_contacts(self, is_primary: bool = False):
         """
@@ -730,7 +742,13 @@ class UserProfile(TimestampedModel):
 
 
 class PaymentMethod(TimestampedModel):
-    """Payment method model."""
+    """
+    Payment method model.
+
+    .. attention::
+
+        This model is not in use.
+    """
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="payment_methods")
     name = models.CharField(max_length=255)
@@ -765,6 +783,10 @@ class LLMPrices(TimestampedModel):
         # Calculate account charge for provider/model usage
         markup = LLMPrices.objects.get(provider="openai", model="gpt-4").price
         account_charge = provider_cost * markup * account_usage_ratio
+
+    :TODO: create a Choice or FK to charge_type field.
+    :TODO: create some form of referential integrity for model and provider fields.
+    :TODO: establish reasonable boundaries on price field.
 
     .. seealso::
 

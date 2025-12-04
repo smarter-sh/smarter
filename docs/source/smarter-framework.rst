@@ -14,6 +14,7 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    smarter-framework/django
    smarter-framework/drf
    smarter-framework/pydantic
+   smarter-framework/smarter-api
    smarter-framework/smarter-architecture
    smarter-framework/smarter-caching
    smarter-framework/smarter-enum
