@@ -2,14 +2,6 @@ Smarter Plugins
 ===============
 
 
-Static
-------
-
-SqlPlugin
----------
-
-ApiPlugin
----------
 
 .. toctree::
    :maxdepth: 1
