@@ -9,10 +9,8 @@ See the complete set of Django settings available to the Smarter
 platform at `docs.djangoproject.com <https://docs.djangoproject.com/en/5.2/ref/settings/>`_.
 
 
-.. automodule:: smarter.settings.base
-   :members:
-   :show-inheritance:
+.. toctree::
+    :maxdepth: 1
 
-.. automodule:: smarter.settings.smarter
-   :members:
-   :show-inheritance:
+    settings/base
+    settings/smarter

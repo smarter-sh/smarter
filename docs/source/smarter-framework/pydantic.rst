@@ -2,6 +2,6 @@ Pydantic
 ========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
 
    pydantic/smarter-manifests
