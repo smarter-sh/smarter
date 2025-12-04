@@ -1,4 +1,4 @@
-Smarter Plugin Models
+Django ORM
 ======================
 
 .. toctree::

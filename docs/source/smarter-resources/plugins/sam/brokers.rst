@@ -1,4 +1,4 @@
-SAM Brokers
+Brokers
 =================
 
 .. toctree::
