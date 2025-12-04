@@ -1,4 +1,4 @@
-SAM Enumeration Classes
+Enumeration Classes
 ========================
 
 .. automodule:: smarter.apps.plugin.manifest.enum

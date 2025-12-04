@@ -1,9 +1,9 @@
-SAM Classes
-=================
+Smarter API Manifests (SAM)
+===========================
 
 .. toctree::
     :maxdepth: 1
 
-    manifests/brokers
-    manifests/enum
-    manifests/models
+    sam/brokers
+    sam/enum
+    sam/models
