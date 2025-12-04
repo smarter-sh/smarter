@@ -11,8 +11,10 @@ environments.
    :maxdepth: 1
    :caption: Smarter API Manifests Technical References
 
+   smarter-manifests/enum
    smarter-manifests/pydantic-models
    smarter-manifests/sam-loader
+   smarter-manifests/controller
    smarter-manifests/broker-model
    smarter-manifests/error-handling
    smarter-manifests/validation-strategy

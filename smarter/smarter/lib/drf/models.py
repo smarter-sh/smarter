@@ -63,7 +63,58 @@ class SmarterAuthTokenManager(AuthTokenManager):
 
 
 class SmarterAuthToken(AuthToken, TimestampedModel):
-    """Smarter API Key model."""
+    """
+    Represents a Smarter API Key used for authenticating and authorizing access to the Smarter platform.
+
+    This model extends Knox's `AuthToken` and includes additional metadata and management features
+    for API keys, such as naming, description, activation status, and usage tracking.
+
+    **Parameters:**
+        key_id (UUIDField): Unique identifier for the API key.
+        name (str): Human-readable name for the API key.
+        description (str, optional): Optional description of the API key's purpose.
+        last_used_at (datetime, optional): Timestamp of the last usage of the API key.
+        is_active (bool): Indicates whether the API key is currently active.
+
+    **Usage Example:**
+
+        .. code-block:: python
+
+            # Creating an API key for a staff user
+            user = User.objects.get(username="admin")
+            token, key = SmarterAuthToken.objects.create(
+                user=user,
+                name="Production Key",
+                description="Key for production API access"
+            )
+
+            # Activating or deactivating the key
+            token.activate()
+            token.deactivate()
+
+            # Toggling active status
+            token.toggle_active()
+
+            # Tracking usage
+            token.accessed()
+
+    .. note::
+
+        - API keys can only be created for staff users. Attempting to create a key for a non-staff user
+          will raise a `SmarterBusinessRuleViolation`.
+        - The `identifier` property returns a masked version of the key digest for display purposes.
+
+    .. warning::
+
+        - Ensure that API keys are managed securely. Deactivated keys cannot be used for authentication.
+        - The `has_permissions` method checks if a user is staff or superuser before allowing management actions.
+
+    .. rubric:: Related Models
+
+        - `User`: The owner of the API key.
+        - `TimestampedModel`: Provides created/modified timestamps.
+
+    """
 
     objects = SmarterAuthTokenManager()
 
