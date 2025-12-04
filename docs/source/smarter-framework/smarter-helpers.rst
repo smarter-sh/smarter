@@ -17,4 +17,3 @@ enabling developers to initiate and monitor complex operations with minimal code
    helpers/email
    helpers/aws
    helpers/kubernetes
-   smarter-view-helpers
