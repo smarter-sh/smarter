@@ -109,10 +109,11 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
         - Ensure that API keys are managed securely. Deactivated keys cannot be used for authentication.
         - The `has_permissions` method checks if a user is staff or superuser before allowing management actions.
 
-    .. rubric:: Related Models
+    Related Models
+    --------------
 
-        - `User`: The owner of the API key.
-        - `TimestampedModel`: Provides created/modified timestamps.
+    - ``User``: The owner of the API key.
+    - ``TimestampedModel``: Provides created/modified timestamps.
 
     """
 

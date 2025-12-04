@@ -1,5 +1,5 @@
-manage.py
-=========
+Management Commands
+=====================
 
 Smarter subclasses Django's management command framework in order to
 provide more consistent console output and app logging. SmarterCommand

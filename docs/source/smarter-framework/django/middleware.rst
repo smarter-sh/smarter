@@ -1,4 +1,4 @@
-Smarter Middleware
+Middleware
 =======================
 
 Smarter provides several custom middleware classes that extend Django's
@@ -7,7 +7,6 @@ support for ChatBot/Agent http requests.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Smarter Middleware
 
    middleware/404
    middleware/cors
