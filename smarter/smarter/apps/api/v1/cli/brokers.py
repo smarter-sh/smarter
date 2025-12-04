@@ -5,6 +5,7 @@ that implement the broker service pattern for an underlying object. Brokers
 receive a Yaml manifest representation of a model, convert this to a Pydantic
 model, and then instantiate the appropriate Python class that performs
 the necessary operations to facilitate cli requests that include:
+
     - delete
     - deploy
     - describe

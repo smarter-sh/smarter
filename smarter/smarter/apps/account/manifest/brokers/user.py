@@ -152,13 +152,25 @@ class SAMUserBroker(AbstractBroker):
     @property
     def manifest(self) -> Optional[SAMUser]:
         """
-        SAMUser() is a Pydantic model
-        that is used to represent the Smarter API User manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        Get the manifest for the Smarter API User as a Pydantic model.
+
+        :returns: A `SAMUser` Pydantic model instance representing the Smarter API User manifest, or None if not initialized.
+
+        .. note::
+           The top-level manifest model (`SAMUser`) must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
+
+        .. tip::
+           Child models within the manifest are automatically cascade-initialized by Pydantic, passing ``**data`` to each child's constructor.
+
+        .. warning::
+           If the manifest loader or manifest metadata is missing, the manifest will not be initialized and None may be returned.
+
+        **Example usage**::
+
+            # Access the manifest property
+            manifest = broker.manifest
+            if manifest:
+                print(manifest.apiVersion, manifest.kind)
         """
         if self._manifest:
             return self._manifest

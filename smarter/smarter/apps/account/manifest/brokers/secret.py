@@ -236,13 +236,32 @@ class SAMSecretBroker(AbstractBroker):
     @property
     def manifest(self) -> Optional[SAMSecret]:
         """
-        SAMSecret() is a Pydantic model
-        that is used to represent the Smarter API Secret manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        Return the Pydantic model representing the Smarter API Secret manifest.
+
+        The `SAMSecret` Pydantic model is initialized with manifest data, typically loaded via the manifest loader and passed as keyword arguments.
+        While the top-level manifest model must be explicitly initialized, its child models are automatically cascade-initialized by Pydantic,
+        with their respective data passed implicitly.
+
+        :returns: Optional[SAMSecret]
+            The initialized manifest model, or None if not available.
+
+        .. tip::
+
+            Use this property to access the validated manifest as a Pydantic object for further processing or serialization.
+
+        **Example usage**::
+
+            broker = SAMSecretBroker(manifest=manifest_data)
+            manifest_model = broker.manifest
+            if manifest_model:
+                print(manifest_model.spec.config)
+
+        .. seealso::
+
+            :class:`SAMSecret`
+            :class:`SAMSecretMetadata`
+            :class:`SAMSecretSpec`
+            :meth:`SAMLoader`
         """
         if self._manifest:
             return self._manifest
