@@ -1,4 +1,4 @@
-Smarter JSON Middleware
+JSON Middleware
 ==============================
 
 

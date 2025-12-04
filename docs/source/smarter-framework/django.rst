@@ -1,11 +1,11 @@
-Django Enhancements
-=============================
+Django
+========
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Django Enhancements
 
+   django/settings
    django/manage
    django/signals
    django/tasks

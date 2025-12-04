@@ -1,4 +1,4 @@
-Smarter CSRF Middleware
+CSRF Middleware
 =======================================
 
 .. autoclass:: smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware

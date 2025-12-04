@@ -1431,8 +1431,34 @@ class PluginBase(ABC, SmarterHelperMixin):
         """
         Convert snake_case to camelCase.
 
+        :param data: The data to convert.
+        :type data: Union[str, dict, list]
+        :param convert_values: Whether to convert values as well as keys. Default is False.
+        :type convert_values: bool
+
+        :examples:
+            .. code-block:: python
+
+                # Convert a snake_case string to camelCase
+                result = self.snake_to_camel("my_variable_name")
+                # result: "myVariableName"
+
+                # Convert a dictionary with snake_case keys
+                data = {"user_name": "alice", "account_number": 123}
+                result = self.snake_to_camel(data)
+                # result: {"userName": "alice", "accountNumber": 123}
+
+                # Convert a list of snake_case strings
+                result = self.snake_to_camel(["first_name", "last_name"])
+                # result: ["firstName", "lastName"]
+
+
         return: The converted data.
         :rtype: Optional[Union[str, dict, list]]
+
+        See also:
+
+        - :func:`smarter.common.utils.snake_to_camel`
 
         """
         return util_snake_to_camel(data, convert_values)
@@ -1444,8 +1470,29 @@ class PluginBase(ABC, SmarterHelperMixin):
         :param data: The data to convert.
         :type data: Union[str, dict, list]
 
-        return: The converted data.
+        :examples:
+
+            .. code-block:: python
+
+                # Convert a camelCase string to snake_case
+                result = self.camel_to_snake("myVariableName")
+                # result: "my_variable_name"
+
+                # Convert a dictionary with camelCase keys
+                data = {"userName": "alice", "accountNumber": 123}
+                result = self.camel_to_snake(data)
+                # result: {"user_name": "alice", "account_number": 123}
+
+                # Convert a list of camelCase strings
+                result = self.camel_to_snake(["firstName", "lastName"])
+                # result: ["first_name", "last_name"]
+                #         return: The converted data.
+
         :rtype: Optional[Union[str, dict, list]]
+
+        See also:
+
+        - :func:`smarter.common.utils.camel_to_snake`
 
         """
         return util_camel_to_snake(data)

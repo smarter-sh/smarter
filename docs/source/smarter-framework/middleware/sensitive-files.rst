@@ -1,4 +1,4 @@
-Smarter Sensitive Files Middleware
+Sensitive Files Middleware
 =======================================
 
 .. autoclass:: smarter.lib.django.middleware.sensitive_files.SmarterBlockSensitiveFilesMiddleware

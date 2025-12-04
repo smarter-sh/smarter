@@ -1,11 +1,26 @@
 Contributing
 ============
 
-Thank you for considering contributing to this project! You should be
-able to work unencumbered in any of Linux, macOS or Windows. There are
-various technology-specific resources that you’ll need to initialize in
-your development environment. See setup instructions below for each
-technology.
+Thank you for considering contributing to this project!
+Alternatively, if you've forked the repository and
+want to understand how to build and test your changes locally,
+you'll find detailed instructions here as well.
+You should be able to work unencumbered in any of Linux, macOS or Windows.
+There are various technology-specific resources that you’ll
+need to initialize in your development environment.
+See setup instructions below for each technology.
+
+.. admonition:: Contributor Note
+
+    Please adhere to the Smarter framework's style guide when contributing to this module.
+
+    - Use Sphinx-style docstrings with clear parameter definitions, notes, warnings, and usage examples.
+    - Follow PEP 8 for code formatting and naming conventions.
+    - Prefer DRY (Don't Repeat Yourself) principles; utility functions should be generic and reusable.
+    - Document any deprecations or breaking changes clearly.
+    - Ensure compatibility with Python 3.12 or later, Django 5.x or later, DRF 3.x or later, and Pydantic 2.9 or later.
+
+
 
 How to Contribute
 -----------------
@@ -394,3 +409,20 @@ additional AWS resources:
 - S3 cloud storage service
 - SES SMTP email service
 - EC2 compute infrastructure and load balancers
+
+Onboarding Videos
+~~~~~~~~~~~~~~~~~~~
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/YtVxkjHzZrE" title="Smarter Developer Onboarding #1" frameborder="0" allowfullscreen></iframe>
+
+**Smarter Developer Onboarding #1**
+A high-level introduction to the Smarter project, its goals, and how to get started as a contributor.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/G2RSCzxxupE" title="Smarter Developer Onboarding #2" frameborder="0" allowfullscreen></iframe>
+
+**Smarter Developer Onboarding #2**
+A walkthrough of setting up your development environment and running Smarter locally.

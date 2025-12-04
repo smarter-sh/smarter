@@ -1,4 +1,4 @@
-Smarter CORS Middleware
+CORS Middleware
 =======================================
 
 
