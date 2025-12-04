@@ -1,4 +1,4 @@
-Smarter ChatBot API
+REST API Endpoints
 ===================
 
 ChatBot’s are accessible via REST API. End points to deployed ChatBots

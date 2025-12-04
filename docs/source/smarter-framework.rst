@@ -1,10 +1,16 @@
 Smarter Framework
 ==================
 
+The Smarter framework is written on the `Django web framework <https://docs.djangoproject.com/>`__,
+`Django REST Framework (DRF) <https://www.django-rest-framework.org/>`__, and `Pydantic <https://pydantic.dev/>`__,
+leveraging the strengths of each to provide a robust and flexible foundation for building enterprise class applications.
+
 
 .. toctree::
    :maxdepth: 1
+   :caption: Technical Reference
 
+   smarter-framework/getting-started
    smarter-framework/django
    smarter-framework/drf
    smarter-framework/pydantic

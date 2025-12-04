@@ -16,7 +16,7 @@ See setup instructions below for each technology.
 
     - Use Sphinx-style docstrings with clear parameter definitions, notes, warnings, and usage examples.
     - Follow PEP 8 for code formatting and naming conventions.
-    - Prefer DRY (Don't Repeat Yourself) principles; utility functions should be generic and reusable.
+    - Prefer DRY (Don't Repeat Yourself) principles; code should be generic and reusable.
     - Document any deprecations or breaking changes clearly.
     - Ensure compatibility with Python 3.12 or later, Django 5.x or later, DRF 3.x or later, and Pydantic 2.9 or later.
 

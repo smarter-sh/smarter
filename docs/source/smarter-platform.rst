@@ -1,31 +1,26 @@
 Smarter Platform
 =================
 
-Smarter is written on the `Django web framework <https://docs.djangoproject.com/>`__, which provides a powerful
-administration interface out of the box. A basic familiarity with Django's
-admin interface, as well as running Django management commands, is helpful
-for managing a Smarter installation.
+The Smarter platform is a batteries-included solution
+that is designed to provide large organizations with a robust and scalable foundation
+for deploying and managing AI applications in production environments.
 
-Some good references for learning about Django administration and management commands include:
+Smarter runs natively on Kubernetes in the cloud at Amazon Web Services (AWS).
+It provides the necessary infrastructure and services to host and manage
+AI-driven workflows, agents and chatbots that are securely integrated to
+enterprise data sources and systems.
 
-.. list-table:: Good Resources for Learning Django
-   :header-rows: 1
-   :widths: 30 70
+The Smarter platform's fundamental building blocks to this extent are:
 
-   * - Resource
-     - Description
-   * - `Official Django Documentation <https://docs.djangoproject.com/en/stable/>`__
-     - The best place to start, with tutorials, guides, and reference material.
-   * - `Two Scoops of Django 3.x (Book) <https://www.feldroy.com/two-scoops-of-django>`_
-     - (Recommended) A comprehensive book covering best practices for Django development and administration.
-   * - `Real Python Django Tutorials <https://realpython.com/tutorials/django/>`__
-     - High-quality articles and video tutorials on Django topics.
-   * - `Django for Beginners (Book) <https://djangoforbeginners.com/>`__
-     - A book that walks you through building several Django projects.
-
+- This documentation. See `Smarter Documentation <https://docs.smarter.sh/>`__
+- Managed Docker containers. See `Smarter on DockerHub <https://hub.docker.com/r/mcdaniel0073/smarter>`__
+- Managed Helm charts. See `Smarter Helm Chart <https://artifacthub.io/packages/search?repo=project-smarter>`__
+- Managed cloud infrastructure. See `Smarter Terraforms <https://github.com/smarter-sh/smarter-infrastructure>`__
+- Broad support for our developer ecosystem. See `Smarter Developer Resources <https://smarter.sh/>`__
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :caption: Platform Administration Guide
 
    smarter-platform/cloud-infrastructure
    smarter-platform/installation
