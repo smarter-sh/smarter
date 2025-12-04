@@ -8,8 +8,8 @@ Smarter Manifests enable developers to easily manage and deploy configurations i
 environments.
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Smarter API Manifests Technical References
+   :maxdepth: 2
+   :caption: Technical References
 
    smarter-manifests/enum
    smarter-manifests/pydantic-models

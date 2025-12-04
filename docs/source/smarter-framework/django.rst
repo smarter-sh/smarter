@@ -3,14 +3,14 @@ Django
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   django/settings
    django/http
    django/manage
    django/middleware
    django/models
    django/serializers
+   django/settings
    django/signals
    django/tasks
    django/templates

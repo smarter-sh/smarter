@@ -21,21 +21,120 @@ SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
 
 
 class SAMLoaderError(SAMExceptionBase):
-    """Base class for all SAMLoader errors."""
+    """
+    Exception class for all errors raised by the Smarter API Manifest Loader.
+
+    This is the base error type for manifest validation, parsing, and loading operations in the Smarter API system.
+    All errors encountered during manifest handling, including schema violations, unsupported formats, and missing data,
+    should be raised as or derived from `SAMLoaderError`.
+
+    **Parameters**
+
+    This class does not require any parameters for instantiation, but it may be initialized with a custom error message
+    describing the specific failure.
+
+    :param message: A descriptive error message explaining the cause of the error.
+    :type message: str, optional
+
+    **Usage Example**
+
+    .. code-block:: python
+
+        # Example: Raising a loader error for a missing required key
+        if not manifest.get("apiVersion"):
+            raise SAMLoaderError("Missing required key: apiVersion")
+
+        # Example: Handling loader errors in client code
+        try:
+            loader = SAMLoader(manifest=my_manifest)
+        except SAMLoaderError as err:
+            print(f"Manifest validation failed: {err}")
+
+    .. note::
+
+        - All manifest validation and parsing errors should use this class for consistency and traceability.
+        - The `get_formatted_err_message` property provides a static, human-readable error label for logging and display.
+
+
+
+    .. attention::
+
+        - Catching this exception broadly may mask specific validation issues. Always inspect the error message for details.
+        - This class is intended for use within the manifest loader and related validation logic. For other error types,
+          use the appropriate exception class.
+
+    :raises: This class is raised directly or via subclassing for any manifest loader error.
+
+    """
 
     @property
     def get_formatted_err_message(self):
+        """
+        Return the static formatted error message for SAMLoader errors.
+        """
         return "Smarter API Manifest Loader Error"
 
 
 def validate_key(key: str, key_value: Any, spec: Any):
     """
-    Validate a key against a spec. Of note:
-    - If a key's value is a list then validate the value of the key against the list
-    - If a key's value is a tuple then validate the value of the key against the tuple, as follows:
-        - The first element of the tuple is the expected data type
-        - The second element of the tuple is the key type (required, optional, readonly)
-    - otherwise, validate the value of the key against spec value
+    Validate a manifest key and its value against a specification.
+
+    This function enforces schema rules for manifest keys and values, supporting multiple validation strategies
+    based on the type of the specification provided. It is a foundational utility for manifest validation
+    and is used throughout the Smarter API Manifest Loader system.
+
+    **Parameters**
+
+    :param key: The manifest key to validate. Must be a string or an Enum with a string value.
+    :type key: str
+
+    :param key_value: The value associated with the manifest key. The expected type and constraints depend on the specification.
+    :type key_value: Any
+
+    :param spec: The specification against which the key and value are validated. This can be:
+        - A list: The value must be one of the items in the list.
+        - A tuple: The first element is the expected data type; the second is a list of key options (e.g., required, optional, readonly).
+        - Any other type: The value must match the type and value of the spec.
+    :type spec: Any
+
+    **Validation Logic**
+
+    - If the specification is a list, the value must be present in the list.
+    - If the specification is a tuple, the value's type and presence are validated according to the tuple's contents:
+        - The first element is the expected type (e.g., `str`, `dict`).
+        - The second element is a list of options, such as `REQUIRED`, `OPTIONAL`, or `READONLY`.
+        - If the key is required and the value is missing or empty, an error is raised.
+        - If the value's type does not match the expected type, an error is raised.
+    - If the specification is any other type, the value must match both the type and the value of the spec.
+
+    **Examples**
+
+    .. code-block:: python
+
+        # Example 1: List validation
+        validate_key("color", "red", ["red", "green", "blue"])
+        # Passes if "red" is in the list
+
+        # Example 2: Tuple validation
+        validate_key("name", "Widget", (str, [SAMSpecificationKeyOptions.REQUIRED]))
+        # Passes if "Widget" is a string and the key is required
+
+        # Example 3: Exact value validation
+        validate_key("apiVersion", "v1", "v1")
+        # Passes if the value matches the spec exactly
+
+    .. note::
+
+        - All manifest keys must be strings. If an Enum is provided, its value is used.
+        - If the value is missing or of the wrong type, a `SAMLoaderError` is raised with a descriptive message.
+        - This function is intended for internal use in manifest validation routines and is not typically called directly.
+
+    .. attention::
+
+        - Ensure that the specification accurately reflects the schema requirements for your manifest type.
+        - Improper use of this function may result in manifest validation failures or runtime errors.
+
+    :raises SAMLoaderError: If the key or value does not conform to the specification.
     """
     # all keys must be strings
     if isinstance(key, Enum):
