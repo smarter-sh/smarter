@@ -8,3 +8,5 @@ Smarter Plugins
    :caption: Technical Reference
 
    plugins/models
+   plugins/signals
+   plugins/plugin

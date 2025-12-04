@@ -131,7 +131,34 @@ class StaticPlugin(PluginBase):
 
     @property
     def custom_tool(self) -> Optional[dict[str, Any]]:
-        """Return the plugin tool."""
+        """
+        Return the plugin tool definition for OpenAI function calling.
+
+        See the OpenAI documentation:
+        https://platform.openai.com/docs/assistants/tools/function-calling/quickstart
+
+        **Example:**
+
+        .. code-block:: python
+
+            tool = {
+                "type": "function",
+                "function": {
+                    "name": "static_plugin_function",
+                    "description": "Static Plugin",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "inquiry_type": {
+                                "type": "string",
+                                "enum": ["contact", "biographical", "sales_promotions", "coupon_codes"],
+                            },
+                        },
+                        "required": ["inquiry_type"],
+                    },
+                },
+            }
+        """
         if self.ready:
             return {
                 "type": "function",
