@@ -105,13 +105,21 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     @property
     def manifest(self) -> Optional[SAMApiConnection]:
         """
-        SAMApiConnection() is a Pydantic model
-        that is used to represent the Smarter API ApiConnection manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        Returns the manifest as a Pydantic model representing the Smarter API ApiConnection manifest.
+
+        This property initializes and returns a ``SAMApiConnection`` Pydantic model using data
+        loaded from the manifest loader. The manifest loader provides the manifest's API version,
+        kind, metadata, spec, and status, which are passed to the model constructor.
+
+        The top-level manifest model must be explicitly initialized, while child models
+        (such as metadata, spec, and status) are automatically cascade-initialized by Pydantic,
+        passing the relevant data to each child's constructor.
+
+        If the loader's manifest kind does not match the expected kind, a warning is logged
+        and the manifest is not initialized.
+
+        :return: The manifest as a ``SAMApiConnection`` Pydantic model, or ``None`` if not initialized.
+        :rtype: Optional[SAMApiConnection]
         """
         if not self._manifest and self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMApiConnection(
@@ -375,41 +383,55 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        apply the manifest. copy the manifest data to the Django ORM model and
-        save the model to the database. Call super().apply() to ensure that the
-        manifest is loaded and validated before applying the manifest to the
-        Django ORM model.
+        Apply the manifest. Copy the manifest data to the Django ORM model and
+        save the model to the database.
+
+        This method calls :meth:`super().apply` to ensure that the manifest is loaded
+        and validated before applying the manifest to the Django ORM model.
+
         Note that there are fields included in the manifest that are not editable
         and are therefore removed from the Django ORM model dict prior to attempting
-        the save() command. These fields are defined in the readonly_fields list.
-        {
-        "apiVersion": "smarter.sh/v1",          <-- read only
-        "kind": "ApiConnection",                <-- read only
-        "metadata": {                           <-- updated in super().apply()
-            "name": "testf232a0619cb19da0",
-            "description": "new description",
-            "version": "1.0.0"
-        },
-        "spec": {                               <-- updated here.
-            "connection": {
-                "kind": "ApiConnection",
-                "version": "1.0.0",
-                "account": "2194-1233-0815",
-                "baseUrl": "http://localhost:8000/api/v1/cli/example_manifest/plugin/",
-                "apiKey": "testf232a0619cb19da0",
-                "authMethod": "basic",
-                "timeout": 30,
-                "proxyProtocol": "http",
-                "proxyHost": null,
-                "proxyPort": null,
-                "proxyUsername": null,
-                "proxyPassword": null
+        the ``save()`` command. These fields are defined in the ``readonly_fields`` list.
+
+        Example manifest structure::
+
+            {
+                "apiVersion": "smarter.sh/v1",          # read only
+                "kind": "ApiConnection",                # read only
+                "metadata": {                           # updated in super().apply()
+                    "name": "testf232a0619cb19da0",
+                    "description": "new description",
+                    "version": "1.0.0"
+                },
+                "spec": {                               # updated here.
+                    "connection": {
+                        "kind": "ApiConnection",
+                        "version": "1.0.0",
+                        "account": "2194-1233-0815",
+                        "baseUrl": "http://localhost:8000/api/v1/cli/example_manifest/plugin/",
+                        "apiKey": "testf232a0619cb19da0",
+                        "authMethod": "basic",
+                        "timeout": 30,
+                        "proxyProtocol": "http",
+                        "proxyHost": null,
+                        "proxyPort": null,
+                        "proxyUsername": null,
+                        "proxyPassword": null
+                    }
+                },
+                "status": {                             # read only
+                    "connection_string": "http://localhost:8000/api/v1/cli/example_manifest/plugin/ (Auth: ******)",
+                    "is_valid": false
+                }
             }
-        },
-        "status": {                             <-- read only
-            "connection_string": "http://localhost:8000/api/v1/cli/example_manifest/plugin/ (Auth: ******)",
-            "is_valid": false
-        }
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: JSON response indicating success and the updated manifest data.
+        :rtype: SmarterJournaledJsonResponse
+        :raises SAMConnectionBrokerError: If an error occurs during update or save.
         """
         super().apply(request, kwargs)
         updated = False
