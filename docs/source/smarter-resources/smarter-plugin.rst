@@ -1,4 +1,4 @@
-Smarter Plugins
+Smarter Plugin
 ===============
 
 

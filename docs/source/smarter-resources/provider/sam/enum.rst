@@ -1,7 +1,7 @@
 Enumerations Classes
 ======================
 
-.. automodule:: smarter.apps.chatbot.manifest.enum
+.. automodule:: smarter.apps.account.manifest.enum
     :members:
     :undoc-members:
     :show-inheritance:
