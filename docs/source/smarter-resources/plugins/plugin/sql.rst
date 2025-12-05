@@ -1,7 +1,7 @@
 SQL Plugin
 ======================
 
-.. autoclass:: smarter.apps.plugin.plugin.sql.SqlPlugin
+.. automodule:: smarter.apps.plugin.plugin.sql
    :members:
    :undoc-members:
    :inherited-members:

@@ -1,7 +1,7 @@
 Base Class
 ======================
 
-.. autoclass:: smarter.apps.plugin.plugin.base.PluginBase
+.. automodule:: smarter.apps.plugin.plugin.base
     :members:
     :undoc-members:
     :inherited-members:

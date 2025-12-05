@@ -1,8 +1,7 @@
 Static Plugin
 ======================
 
-.. autoclass:: smarter.apps.plugin.plugin.static.StaticPlugin
-   :members:
-   :undoc-members:
-   :inherited-members:
-   :show-inheritance:
+.. automodule:: smarter.apps.plugin.plugin.static
+    :members:
+    :undoc-members:
+    :show-inheritance:
