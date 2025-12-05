@@ -1,5 +1,5 @@
-Enumerations Classes
-======================
+SAM Enumerations Classes
+=========================
 
 .. automodule:: smarter.lib.manifest.enum
    :members:

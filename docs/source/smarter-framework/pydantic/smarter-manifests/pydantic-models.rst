@@ -1,4 +1,4 @@
-Pydantic Model Base Classes
+SAM Pydantic Base Classes
 ============================
 
 These are the base Pydantic models used as the foundations for all Smarter Api Manifest (SAM) models.
