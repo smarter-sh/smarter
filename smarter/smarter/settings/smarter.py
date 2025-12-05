@@ -86,7 +86,7 @@ SMARTER_CHAT_CACHE_EXPIRATION = 5  # 5 seconds. just enough to fend off a DDOS a
 Default cache expiration time for chat message related views. Intended to
 act as a mild deterrent against DDOS attacks.
 
-see: smarter.apps.prompt.models.ChatHelper
+see: :class:`smarter.apps.prompt.models.ChatHelper`
 """
 
 # ChatBot settings
