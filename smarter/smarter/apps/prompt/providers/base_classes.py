@@ -136,28 +136,6 @@ class InternalKeys:
 class ChatProviderBase(ProviderDbMixin):
     """
     Base class for all chat providers.
-
-    Attributes:
-        chat: The chat instance.
-        data: The request data.
-        plugins: A list of plugins.
-        model: The model to use for chat completions.
-        temperature: The temperature to use for chat completions.
-        max_completion_tokens: The maximum tokens to use for chat completions.
-        input_text: The input text for the chat completion.
-        completion_tokens: The number of completion tokens used.
-        prompt_tokens: The number of prompt tokens used.
-        total_tokens: The total number of tokens used.
-        reference: The reference for the chat completion.
-        iteration: The iteration number.
-        request_meta_data: The request meta data.
-        first_iteration: The first iteration request and response.
-        first_response: The first response.
-        second_response: The second response.
-        second_iteration: The second iteration request and response.
-        serialized_tool_calls: A list of serialized tool calls.
-        tools: A list of tools.
-        available_functions: A dictionary of available functions.
     """
 
     __slots__ = (
