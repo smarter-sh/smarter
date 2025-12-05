@@ -5,9 +5,11 @@ Smarter Prompt
    :maxdepth: 1
    :caption: Technical Reference
 
+
+   prompt/models
+   prompt/sam
    prompt/const
    prompt/functions
-   prompt/models
    prompt/providers
    prompt/signals
    prompt/tasks
