@@ -92,9 +92,9 @@ class ApiPlugin(PluginBase):
         :return: The kind of the plugin.
         :rtype: str
 
-        See Also:
+        .. seealso::
 
-        - :const:`smarter.apps.plugin.manifest.models.api_plugin.const.MANIFEST_KIND`
+            - :const:`smarter.apps.plugin.manifest.models.api_plugin.const.MANIFEST_KIND`
 
         """
         return MANIFEST_KIND
@@ -280,19 +280,19 @@ class ApiPlugin(PluginBase):
         :return: An example manifest for the ApiPlugin.
         :rtype: dict
 
-        See Also:
+        .. seealso::
 
-        - :const:`smarter.apps.plugin.manifest.models.api_plugin.const.MANIFEST_KIND`
-        - :class:`smarter.lib.manifest.enum.SAMKeys`
-        - :class:`smarter.lib.manifest.enum.SAMMetadataKeys`
-        - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonMetadataKeys`
-        - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonMetadataClassValues`
-        - :class:`smarter.apps.plugin.manifest.enum.SAMPluginSpecKeys`
-        - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecSelectorKeys`
-        - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecSelectorKeyDirectiveValues`
-        - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecPromptKeys`
-        - :class:`smarter.apps.plugin.manifest.models.api_plugin.enumSAMApiPluginSpecApiData`
-        - :class:`smarter.apps.plugin.manifest.models.common.plugin.enum.SAMPluginCommonSpecTestValues`
+            - :const:`smarter.apps.plugin.manifest.models.api_plugin.const.MANIFEST_KIND`
+            - :class:`smarter.lib.manifest.enum.SAMKeys`
+            - :class:`smarter.lib.manifest.enum.SAMMetadataKeys`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonMetadataKeys`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonMetadataClassValues`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginSpecKeys`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecSelectorKeys`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecSelectorKeyDirectiveValues`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecPromptKeys`
+            - :class:`smarter.apps.plugin.manifest.models.api_plugin.enumSAMApiPluginSpecApiData`
+            - :class:`smarter.apps.plugin.manifest.models.common.plugin.enum.SAMPluginCommonSpecTestValues`
 
         """
         api_plugin = {

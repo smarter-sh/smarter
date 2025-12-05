@@ -43,29 +43,42 @@ class StaticPlugin(PluginBase):
     """
     Implements a plugin that returns a static JSON object stored within the plugin itself.
 
-    This class is designed for scenarios where plugin data does not change at runtime and can be defined entirely in the plugin's manifest or configuration.
-    The static data is made available through the plugin interface and can be accessed via function calls, such as those used by OpenAI's function calling API.
+    This class is intended for use cases where plugin data is immutable at runtime and fully defined in the manifest or configuration. The static data is exposed via the plugin interface and can be accessed through function calls, including those compatible with OpenAI's function calling API.
 
-    The static data is typically used to provide information such as product details, contact information, sales promotions, coupon codes, or biographical background.
-    The plugin supports both manifest-based and Django ORM-based initialization, allowing for flexible integration with the broader Smarter plugin system.
+    Typical uses include providing product details, company contact information, sales promotions, coupon codes, or biographical background. The plugin supports both manifest-based and Django ORM-based initialization for flexible integration.
 
-    Key Features:
+    **Key Features:**
+
         - Returns static data defined in the plugin manifest or configuration.
         - Integrates with Django ORM for plugin data persistence.
         - Provides a tool definition compatible with OpenAI function calling.
         - Handles serialization and validation of static data.
         - Emits signals when the plugin is called and when it responds.
 
-    Example Use Cases:
+    :param manifest: Optional manifest object for plugin initialization.
+    :type manifest: Optional[SAMStaticPlugin]
+    :param args: Additional positional arguments.
+    :type args: tuple
+    :param kwargs: Additional keyword arguments.
+    :type kwargs: dict
+
+    .. note::
+
+        Signals are emitted on plugin call and response for observability and integration.
+
+    .. seealso::
+
+        :class:`PluginBase`
+        :class:`PluginDataStatic`
+        :class:`PluginStaticSerializer`
+        `OpenAI Function Calling Quickstart <https://platform.openai.com/docs/assistants/tools/function-calling/quickstart>`_
+
+    **Example Use Cases:**
+
         - Providing static product information for a chatbot.
         - Supplying company contact details or promotional codes.
         - Returning biographical information about a company founder.
 
-    See Also:
-        - :class:`PluginBase`
-        - :class:`PluginDataStatic`
-        - :class:`PluginStaticSerializer`
-        - https://platform.openai.com/docs/assistants/tools/function-calling/quickstart
     """
 
     SAMPluginType = SAMStaticPlugin

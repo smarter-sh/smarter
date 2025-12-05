@@ -58,8 +58,47 @@ class SAMPluginBaseBroker(AbstractBroker):
     @property
     def plugin(self) -> Optional[PluginBase]:
         """
-        PluginController() is a helper class to map the manifest model
-        metadata.plugin_class to an instance of the the correct plugin class.
+        Smarter API Plugin Manifest Broker.
+
+        This abstract base class provides shared functionality for plugin brokers, including common logic for applying manifest data to Django ORM models. Subclasses must implement the `plugin_data` property to specify the concrete plugin data model.
+
+        Responsibilities include:
+
+        - Handling common tasks for plugin brokers, such as updating metadata and synchronizing manifest data.
+        - Providing a standardized `apply()` method to copy manifest data to the database, with validation and logging.
+        - Mapping manifest model metadata to the correct plugin class via `PluginController`.
+
+        :param plugin: The plugin instance mapped from manifest metadata. May be set by subclasses or via `PluginController`.
+        :type plugin: Optional[PluginBase]
+        :param plugin_meta: The plugin metadata ORM instance. May be set by subclasses or resolved by name/account.
+        :type plugin_meta: Optional[PluginMeta]
+        :param plugin_data: The plugin data ORM instance. Must be implemented by subclasses.
+        :type plugin_data: Optional[PluginDataBase]
+
+        .. attention::
+
+            The `PluginController` is used to map manifest metadata to the correct plugin class instance.
+
+        .. error::
+            Any error during manifest application, plugin resolution, or database update is logged and may raise an exception.
+
+        .. seealso::
+
+            :class:`AbstractBroker`
+            :class:`PluginBase`
+            :class:`PluginMeta`
+            :class:`PluginDataBase`
+            :class:`PluginController`
+
+        **Example usage**::
+
+            class MyPluginBroker(SAMPluginBaseBroker):
+                @property
+                def plugin_data(self):
+                    return MyPluginData.objects.get(...)
+
+            broker = MyPluginBroker(...)
+            broker.apply(request, manifest_data=manifest_dict)
         """
         if self._plugin:
             return self._plugin
@@ -88,6 +127,37 @@ class SAMPluginBaseBroker(AbstractBroker):
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:
+        """
+        Retrieve the `PluginMeta` ORM instance associated with this broker.
+
+        This property returns the plugin metadata object for the current plugin, resolving it by `name` and `account` if not already cached. If the metadata cannot be found, `None` is returned.
+
+        :return: The `PluginMeta` instance for this broker, or `None` if unavailable.
+        :rtype: Optional[PluginMeta]
+
+        .. note::
+
+            The metadata is cached after the first successful lookup for efficient repeated access.
+
+        .. warning::
+
+            If the plugin metadata does not exist in the database, no exception is raised; `None` is returned.
+
+        .. seealso::
+
+            :class:`PluginMeta`
+            :meth:`SAMPluginBaseBroker.plugin`
+            :meth:`SAMPluginBaseBroker.plugin_data`
+
+        **Example usage**::
+
+            meta = broker.plugin_meta
+            if meta:
+                print(meta.name, meta.account)
+            else:
+                print("No plugin metadata found.")
+
+        """
         if self._plugin_meta:
             return self._plugin_meta
         if self.name and self.account:
@@ -107,8 +177,31 @@ class SAMPluginBaseBroker(AbstractBroker):
 
     def plugin_metadata_orm2pydantic(self) -> SAMPluginCommonMetadata:
         """
-        Convert the plugin metadata from a dict repr of the Dajngo ORM model
-        format (ie the OpenAI Api format) to the Pydantic manifest format.
+        Convert plugin metadata from the Django ORM model format to the Pydantic manifest format.
+
+        This method transforms the plugin metadata, typically retrieved as a dictionary from the Django ORM (`PluginMeta`), into a Pydantic model (`SAMPluginCommonMetadata`). It ensures the metadata is properly camel-cased and validated for use in manifest serialization and API responses.
+
+        :return: The plugin metadata as a Pydantic model.
+        :rtype: SAMPluginCommonMetadata
+
+        :raises SAMPluginBrokerError:
+            If the plugin metadata or plugin instance is not found, or if conversion fails.
+
+        .. error::
+
+            Any error during conversion, such as missing metadata or invalid format, is wrapped and raised as :class:`SAMPluginBrokerError`.
+
+        .. seealso::
+
+            :class:`PluginMeta`
+            :class:`SAMPluginCommonMetadata`
+            :meth:`SAMPluginBaseBroker.plugin_meta`
+            :meth:`SAMPluginBaseBroker.plugin`
+
+        **Example usage**::
+
+            metadata = broker.plugin_metadata_orm2pydantic()
+            print(metadata.name, metadata.description)
 
         """
         command = SmarterJournalCliCommands("describe")
@@ -152,8 +245,38 @@ class SAMPluginBaseBroker(AbstractBroker):
 
     def plugin_data_orm2pydantic(self) -> dict[str, Any]:
         """
-        Convert the plugin data from a dict repr of the Dajngo ORM model
-        format (ie the OpenAI Api format) to the Pydantic manifest format.
+        Convert plugin data from the Django ORM model format to the Pydantic manifest format.
+
+        This method transforms plugin data, typically retrieved as a dictionary from the Django ORM (`plugin_data`), into a format suitable for Pydantic manifest models. It handles conversion of nested structures, such as parameters, and ensures all fields are properly camel-cased and validated.
+
+        :return: The plugin data as a dictionary formatted for Pydantic manifest models.
+        :rtype: dict[str, Any]
+
+        :raises SAMPluginBrokerError:
+            If the plugin or plugin data is not found, or if conversion fails.
+
+        .. note::
+
+            - This method automatically converts parameter definitions from a dict-of-dicts to a list of dicts, merging required flags for each property.
+            - The conversion process expects the plugin data to follow the expected ORM structure. Unexpected formats may result in errors.
+
+        .. error::
+
+            Any error during conversion, such as missing plugin data or invalid format, is wrapped and raised as :class:`SAMPluginBrokerError`.
+
+        .. seealso::
+
+            :class:`PluginDataBase`
+            :meth:`SAMPluginBaseBroker.plugin_data`
+            :meth:`SAMPluginBaseBroker.plugin`
+            :class:`SAMPluginSpecCommonData`
+            :class:`SmarterJournalCliCommands`
+
+
+        **Example usage**::
+
+            data = broker.plugin_data_orm2pydantic()
+            print(data["parameters"])
 
         """
         command = SmarterJournalCliCommands("describe")
@@ -251,6 +374,31 @@ class SAMPluginBaseBroker(AbstractBroker):
         return plugin_data
 
     def plugin_prompt_orm2pydantic(self) -> SAMPluginCommonSpecPrompt:
+        """
+        Convert plugin prompt data from the Django ORM model format to the Pydantic manifest format.
+        This method transforms the plugin prompt data, typically retrieved as a dictionary from the Django ORM (`PluginPrompt`), into a Pydantic model (`SAMPluginCommonSpecPrompt`). It ensures the prompt data is properly camel-cased and validated for use in manifest serialization and API responses.
+
+        :return: The plugin prompt data as a Pydantic model.
+        :rtype: SAMPluginCommonSpecPrompt
+        :raises SAMPluginBrokerError:
+            If the plugin prompt or plugin instance is not found, or if conversion fails.
+
+        .. error::
+
+            Any error during conversion, such as missing prompt data or invalid format, is wrapped and raised as :class:`SAMPluginBrokerError`.
+
+        .. seealso::
+
+            :class:`PluginPrompt`
+            :class:`SAMPluginCommonSpecPrompt`
+            :meth:`SAMPluginBaseBroker.plugin_prompt`
+            :meth:`SAMPluginBaseBroker.plugin`
+
+        **Example usage**::
+
+            prompt = broker.plugin_prompt_orm2pydantic()
+            print(prompt.template, prompt.variables)
+        """
         command = SmarterJournalCliCommands("describe")
         if self.plugin_meta is None:
             raise SAMPluginBrokerError(
@@ -293,6 +441,33 @@ class SAMPluginBaseBroker(AbstractBroker):
             raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
 
     def plugin_selector_orm2pydantic(self) -> SAMPluginCommonSpecSelector:
+        """
+        Convert plugin selector data from the Django ORM model format to the Pydantic manifest format.
+
+        This method transforms the plugin selector data, typically retrieved as a dictionary from the Django ORM (`PluginSelector`), into a Pydantic model (`SAMPluginCommonSpecSelector`). It ensures the selector data is properly camel-cased and validated for use in manifest serialization and API responses.
+
+        :return: The plugin selector data as a Pydantic model.
+        :rtype: SAMPluginCommonSpecSelector
+
+        :raises SAMPluginBrokerError:
+            If the plugin selector, plugin metadata, or plugin instance is not found, or if conversion fails.
+
+        .. error::
+            Any error during conversion, such as missing selector data or invalid format, is wrapped and raised as :class:`SAMPluginBrokerError`.
+
+        .. seealso::
+
+            :class:`PluginSelector`
+            :class:`SAMPluginCommonSpecSelector`
+            :meth:`SAMPluginBaseBroker.plugin`
+            :meth:`SAMPluginBaseBroker.plugin_meta`
+
+        **Example usage**::
+
+            selector = broker.plugin_selector_orm2pydantic()
+            print(selector.type, selector.options)
+
+        """
         command = SmarterJournalCliCommands("describe")
         if self.plugin is None:
             raise SAMPluginBrokerError(
@@ -335,10 +510,36 @@ class SAMPluginBaseBroker(AbstractBroker):
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
-        apply the manifest. copy the manifest data to the Django ORM model and
-        save the model to the database. Call super().apply() to ensure that the
-        manifest is loaded and validated before applying the manifest to the
-        Django ORM model.
+        Apply the manifest to the Django ORM model and persist changes to the database.
+
+        This method orchestrates the application of manifest data by first invoking the superclass's `apply()` to ensure the manifest is loaded and validated. It then copies the manifest data to the corresponding Django ORM model and saves the model instance. Logging is performed to record the invocation and parameters.
+
+        :param request: The HTTP request initiating the manifest application.
+        :type request: HttpRequest
+        :param args: Additional positional arguments passed to the method.
+        :type args: tuple
+        :param kwargs: Additional keyword arguments, typically including manifest data.
+        :type kwargs: dict
+        :return: Optionally returns a `SmarterJournaledJsonResponse` if the operation produces a journaled response, otherwise `None`.
+        :rtype: Optional[SmarterJournaledJsonResponse]
+
+        .. attention::
+
+            - Always call `super().apply()` to guarantee manifest validation before applying changes to the ORM model.
+            - Any error during manifest application, such as validation failure or database error, will be logged and may raise a `SAMPluginBrokerError`.
+
+
+        .. seealso::
+
+            :meth:`AbstractBroker.apply`
+            :class:`SmarterJournaledJsonResponse`
+            :class:`SAMPluginBrokerError`
+
+        **Example usage**::
+
+            response = broker.apply(request, manifest_data=manifest_dict)
+            if response:
+                print(response.status, response.data)
         """
         super().apply(request, kwargs)
         logger.info("SAMPluginBaseBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)

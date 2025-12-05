@@ -38,7 +38,33 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class ConnectionDetailView(DocsBaseView):
     """
-    detail view for Smarter dashboard.
+    Renders the detail view for a Smarter dashboard connection.
+
+    This view renders a detailed manifest for a specific connection, including its configuration and metadata, in YAML format. It is intended for authenticated users and provides error handling for missing or unsupported connection kinds and names.
+
+    :param request: Django HTTP request object.
+    :type request: WSGIRequest
+    :param args: Additional positional arguments.
+    :type args: tuple
+    :param kwargs: Keyword arguments, must include 'name' (connection name) and 'kind' (connection type).
+    :type kwargs: dict
+
+    :returns: Rendered HTML page with connection manifest details, or a 404 error page if the connection is not found or parameters are invalid.
+    :rtype: HttpResponse
+
+    .. note::
+
+        The connection name and kind must be provided and valid. Otherwise, a "not found" response is returned.
+
+    .. seealso::
+
+        :class:`ConnectionBase` for connection metadata retrieval.
+        :class:`ApiV1CliDescribeApiView` for API details.
+
+    **Example usage**::
+
+        GET /connection/detail/?name=my_connection&kind=custom
+
     """
 
     template_path = "plugin/manifest_detail.html"
@@ -104,8 +130,28 @@ class ConnectionDetailView(DocsBaseView):
 
 class ConnectionListView(SmarterAuthenticatedNeverCachedWebView):
     """
-    list view for smarter workbench web console. It generates cards for each
-    Connection.
+    Render the connection list view for the Smarter Workbench web console.
+
+    This view displays all connections available to the authenticated user as cards, providing a summary and quick access to connection details.
+
+    :param request: Django HTTP request object.
+    :type request: WSGIRequest
+    :param args: Additional positional arguments.
+    :type args: tuple
+    :param kwargs: Additional keyword arguments.
+    :type kwargs: dict
+
+    :returns: Rendered HTML page with a card for each connection, or a 404 error page if the user is not authenticated.
+    :rtype: HttpResponse
+
+    .. seealso::
+
+        :class:`ConnectionBase` for connection metadata and retrieval.
+
+    **Example usage**::
+
+        GET /connection/list/
+
     """
 
     template_path = "plugin/connection_list.html"

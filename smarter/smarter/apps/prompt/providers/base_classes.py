@@ -475,51 +475,55 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     @property
     def openai_messages(self) -> list[dict[str, Any]]:
         """
-        Sanitize the message list to ensure compatibility with OpenAI's chat completion API.
-        Principally, this removes Smarter annotations from the messages list, such
-        as meta data about tool calls and interim completion token charges.
+        Return a sanitized list of messages compatible with OpenAI's chat completion API.
 
-        mcdaniel 2025-09-26:
-            {
-                'message': \"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_TRlKNPrjLZJnaZoggJiJnmYe\",
-                'type': 'invalid_request_error',
-                'param': 'messages.[5].role',
-                'code': None
-            }
+        This property processes the internal message list, removing Smarter-specific annotations
+        (such as metadata about tool calls and interim completion token charges) to ensure that
+        only valid OpenAI message fields are included. This is essential for avoiding API errors
+        related to unexpected or extraneous fields.
 
-            Example input messages:
-            {
+        :returns: A list of dictionaries representing chat messages, formatted for OpenAI's API.
+        :rtype: list[dict[str, Any]]
+
+        :raises SmarterValueError: If the internal message list is not a list.
+
+        Example::
+
+            [
+                {
                     "role": "assistant",
-                    "audio": null,
-                    "content": null,
-                    "refusal": null,
-                    "tool_calls": [                     <- IF THIS IS PRESENT
+                    "content": "Welcome to Smarter!",
+                    "tool_calls": [
                         {
-                            "id": "call_TRlKNPrjLZJnaZoggJiJnmYe",
+                            "id": "call_ABC123",
                             "type": "function",
                             "function": {
                                 "name": "smarter_plugin_0000000045",
                                 "arguments": "{\"description\":\"AI\"}"
                             }
                         }
-                    ],
-                    "annotations": [],
-                    "function_call": null,
-                    "smarter_is_new": true
+                    ]
                 },
                 {
-                    "role": "smarter",
-                    "content": "openai called this tool: smarter_plugin_0000000045({'description': 'AI'})",
-                    "smarter_is_new": true
-                },
-                {                                       <- THEN OPENAI EXPECTS TO SEE THIS IMMEDIATELY AFTER
-                    "name": "smarter_plugin_0000000045",
                     "role": "tool",
-                    "content": "SqlPlugin stackademy_sql response: [{\"course_code\": \"CS210\", \"course_name\": \"Artificial Intelligence\", \"description\": \"Introduction to AI concepts and techniques.\", \"prerequisite_course_code\": \"CS107\"}, {\"course_code\": \"CS316\", \"course_name\": \"AI for Robotics\", \"description\": \"Applying AI techniques to robotics.\", \"prerequisite_course_code\": \"CS301\"}, {\"course_code\": \"CS319\", \"course_name\": \"AI in Healthcare\", \"description\": \"Applications of AI in healthcare.\", \"prerequisite_course_code\": \"CS301\"}, {\"course_code\": \"CS405\", \"course_name\": \"AI Capstone Project\", \"description\": \"Team-based AI project.\", \"prerequisite_course_code\": \"CS301\"}]",
-                    "tool_call_id": "call_TRlKNPrjLZJnaZoggJiJnmYe",
-                    "smarter_is_new": true
-                },
-            }
+                    "name": "smarter_plugin_0000000045",
+                    "content": "SqlPlugin stackademy_sql response: ...",
+                    "tool_call_id": "call_ABC123"
+                }
+            ]
+
+        .. important::
+
+            - OpenAI expects that every assistant message with a ``tool_calls`` field is immediately followed by a corresponding ``tool`` message for each ``tool_call_id``. Failure to do so will result in an API error.
+
+            - If you include Smarter-specific fields (such as ``smarter_is_new``) in the message list, OpenAI's API may reject the request.
+
+            - On the first iteration, tool call responses are excluded from the message list to comply with OpenAI's requirements.
+
+        .. seealso::
+
+            - https://platform.openai.com/docs/api-reference/chat/create
+            - :class:`OpenAIMessageKeys`
         """
         if not isinstance(self.messages, list):
             raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
@@ -900,35 +904,68 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
     def handler(self, chat: Chat, data: dict, plugins: Optional[list[PluginBase]], user: User) -> Union[dict, list]:
         """
-        Chat prompt handler. Responsible for processing incoming requests and
-        invoking the appropriate OpenAI API endpoint based on the contents of
-        the request.
+        Process a chat prompt request and invoke the appropriate OpenAI-compatible API endpoint.
 
-        Args:
-            chat: Chat instance
-            data: Request data (see below)
-            plugins: a List of plugins to potentially show to the LLM
-            user: User instance
+        This method orchestrates the entire chat completion workflow, including:
 
-        data: {
-            'session_key': '6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b',
-            'messages': [
-                    {
-                        'role': 'system',
-                        'content': "You are a helpful assistant."
-                    },
-                    {
-                        'role': 'assistant',
-                        'content': "Welcome to Smarter!. Following are some example prompts: blah blah blah"
-                    },
-                    {   "role": "smarter",
-                        "content": "Tool call: smarter_plugin_0002({\"inquiry_type\":\"about\"})"}
-                    {
-                        'role': 'user',
-                        'content': 'Hello, World!'
-                    }
-                ]
-            }
+        - Validating input and internal state.
+        - Initializing or updating the message thread.
+        - Selecting and configuring plugins for the LLM.
+        - Preparing and sending requests to the OpenAI API (or compatible provider).
+        - Handling tool calls and plugin responses.
+        - Managing billing, logging, and signal dispatch.
+        - Returning a formatted HTTP response with the LLM's output and relevant metadata.
+
+        :param chat: The chat session instance associated with this request.
+        :type chat: Chat
+        :param data: The request payload, typically containing a session key and a list of message dictionaries.
+        :type data: dict
+
+            Example::
+
+                {
+                    'session_key': '6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b',
+                    'messages': [
+                        {'role': 'system', 'content': "You are a helpful assistant."},
+                        {'role': 'assistant', 'content': "Welcome to Smarter! ..."},
+                        {'role': 'smarter', 'content': "Tool call: smarter_plugin_0002({\"inquiry_type\":\"about\"})"},
+                        {'role': 'user', 'content': 'Hello, World!'}
+                    ]
+                }
+
+        :param plugins: A list of plugin instances to be considered for selection and presentation to the LLM.
+        :type plugins: Optional[list[PluginBase]]
+        :param user: The user instance making the request.
+        :type user: User
+
+        :returns: An HTTP response dictionary (or list) containing the LLM's output, tool call results, and metadata.
+        :rtype: dict or list
+
+        :raises SmarterValueError: If required parameters are missing or invalid.
+        :raises SmarterConfigurationError: If there are configuration issues with the provider or plugins.
+        :raises SmarterIlligalInvocationError: If the method is invoked in an invalid state.
+
+        .. note::
+
+            This method manages both the initial and any required follow-up LLM requests (e.g., for tool calls).
+            It also handles plugin selection logic and ensures that all required signals and billing events are triggered.
+
+        .. seealso::
+
+            :class:`InternalKeys`
+            :class:`OpenAIMessageKeys`
+            :class:`PluginBase`
+            :class:`ChatCompletion`
+            :class:`ChatCompletionMessageToolCall`
+
+        Example usage::
+
+            response = provider.handler(
+                chat=chat_instance,
+                data=request_data,
+                plugins=[plugin1, plugin2],
+                user=current_user
+            )
         """
         logger.info("%s %s", self.formatted_class_name, formatted_text("handler()"))
         self._chat = chat
