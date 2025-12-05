@@ -8,3 +8,4 @@ Plugin Classes
    plugin/api
    plugin/sql
    plugin/static
+   plugin/utils

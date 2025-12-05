@@ -52,16 +52,13 @@ def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
 
     .. note::
 
-        - This function applies sample secrets and connections using Django management commands.
-        Manifests for these are located in smarter/apps/plugin/data.
+        - This function applies sample secrets and connections using Django management commands. Manifests for these are located in smarter/apps/plugin/data.
         - This function is called during deployment jobs.
 
     .. important::
 
-        - The `user_profile` parameter must be a valid `UserProfile` instance. Passing `None` or
-        an incorrect type will result in an error.
-        - If any manifest or secret update fails, the function raises an exception and does not
-        proceed with plugin creation.
+        - The `user_profile` parameter must be a valid `UserProfile` instance. Passing `None` or an incorrect type will result in an error.
+        - If any manifest or secret update fails, the function raises an exception and does not proceed with plugin creation.
 
 
     .. seealso::
