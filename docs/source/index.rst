@@ -31,28 +31,29 @@ Smarter |project_version| Documentation
    :alt: AGPL-3 License
 
 
-A declarative AI resource management system and developer framework.
+A `declarative <smarter-framework/pydantic/smarter-manifests.rst>`_ AI resource management `platform <smarter-platform.rst>`_ and `developer framework <smarter-framework.rst>`_.
 
 - **From scratch** | :doc:`smarter-platform/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://platform.smarter.sh/docs/learn/>`__
 - **Platform**
 
-  - Helps you manage all your AI resources using easy YAML files (like how Kubernetes works).
-  - Installs quickly using Docker, and can also run on Kubernetes with a Helm chart.
-  - Gives you three ways to manage resources: a web dashboard, a REST API, and a command-line tool.
-  - Keeps track of logs, safety checks, costs, and security so nothing gets lost or misused.
+  - Helps you manage all your :doc:`AI resources <smarter-resources>` using easy YAML files (like how `Kubernetes <https://kubernetes.io/>`_ works).
+  - Installs quickly using `Docker <https://hub.docker.com/r/mcdaniel0073/smarter>`_, and can also run on Kubernetes with the `official Smarter Helm chart <https://artifacthub.io/packages/search?repo=project-smarter>`_.
+  - Gives you three ways to manage resources: a web dashboard, a :doc:`REST API <smarter-framework/smarter-api>`, and a :doc:`command-line tool <smarter-platform/cli>`.
+  - Keeps track of :doc:`logs <smarter-framework/smarter-journal>`, safety checks, :doc:`costs <smarter-platform/cost-accounting>`, and :doc:`security <smarter-platform/security>` so nothing gets lost or misused.
 
 - **AI Resource Management**
 
-  - Works with many AI model providers — OpenAI, Google, Meta, DeepSeek, and others.
-  - Lets you organize and version your prompts, and see how they change over time.
-  - Supports “agents” and multi-step AI workflows so you can build bigger, smarter tasks.
+  - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>` — `OpenAI <https://platform.openai.com/docs/api-reference/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, `DeepSeek <https://api-docs.deepseek.com/>`_, and others.
+  - Lets you :doc:`organize <smarter-resources/smarter-chatbot>` and version your prompts, and see how they change over time.
+  - Supports “:doc:`agents <smarter-resources/smarter-plugin>`” and multi-step AI workflows so you can build bigger, smarter tasks.
+  - Integrates with :doc:`external data sources <smarter-resources/smarter-plugin>` like :doc:`databases <smarter-resources/plugins/plugin/sql>` and :doc:`APIs <smarter-resources/plugins/plugin/api>` to give your AI access to up-to-date information.
 
 - **Application Development Framework**
 
-  - Built on Django, Django REST Framework, and Pydantic.
-  - Lets you build your own tools to connect the AI to things like enterprise databases and APIs.
-  - Includes a workbench for testing prompts and building your AI flows before you deploy them.
-  - Has a vibrant developer community: packages on PyPI, NPM, VS Code extensions, and more.
+  - Built on :doc:`Django <smarter-framework/django>`, :doc:`Django REST Framework <smarter-framework/drf>`, and :doc:`Pydantic <smarter-framework/pydantic>`.
+  - Lets you build your own tools to connect the AI to things like :doc:`enterprise databases <smarter-resources/plugins/plugin/sql>` and :doc:`APIs <smarter-resources/plugins/plugin/api>`.
+  - Includes a :doc:`workbench <smarter-resources/chatbots/react-ui>` for testing prompts and building your AI flows before you deploy them.
+  - Has a vibrant developer community: packages on `PyPI <https://pypi.org/project/smarter-api/>`_, `NPM <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, `VS Code extensions <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_, and more.
 
 
 Usage
