@@ -17,6 +17,7 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    smarter-framework/smarter-api
    smarter-framework/smarter-architecture
    smarter-framework/smarter-caching
+   smarter-framework/smarter-dashboard
    smarter-framework/smarter-enum
    smarter-framework/smarter-devops
    smarter-framework/smarter-journal
