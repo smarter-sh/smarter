@@ -30,8 +30,41 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class SAMConnectionBaseBroker(AbstractBroker):
     """
-    Smarter API Connection Base Manifest Broker. This class is responsible for
-    common tasks including portions of the apply()
+    Smarter API Connection Base Manifest Broker.
+
+    This abstract base class provides common functionality for API connection brokers, including shared logic for applying manifest data to Django ORM models. Subclasses must implement the `model_class` and `connection` properties to specify the concrete connection model and instance.
+
+    Responsibilities include:
+
+      - Handling common tasks for connection brokers, such as updating metadata fields.
+      - Providing a standardized `apply()` method to copy manifest data to the database, with validation and logging.
+      - Managing read-only fields and ensuring only editable fields are persisted.
+
+    :param model_class: The Django ORM model class for the connection. Must be implemented by subclasses.
+    :type model_class: Type[ConnectionBase]
+    :param connection: The connection model instance. Must be implemented by subclasses.
+    :type connection: Optional[ConnectionBase]
+
+    .. seealso::
+
+        :class:`AbstractBroker`
+        :class:`ConnectionBase`
+        :meth:`SAMConnectionBaseBroker.apply`
+
+    **Example usage**::
+
+        class MyConnectionBroker(SAMConnectionBaseBroker):
+            @property
+            def model_class(self):
+                return MyConnectionModel
+
+            @property
+            def connection(self):
+                return MyConnectionModel.objects.get(...)
+
+        broker = MyConnectionBroker(...)
+        broker.apply(request, manifest_data=manifest_dict)
+
     """
 
     _connection: Optional[ConnectionBase] = None
@@ -47,13 +80,35 @@ class SAMConnectionBaseBroker(AbstractBroker):
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
-        apply the manifest. copy the manifest data to the Django ORM model and
-        save the model to the database. Call super().apply() to ensure that the
-        manifest is loaded and validated before applying the manifest to the
-        Django ORM model.
-        Note that there are fields included in the manifest that are not editable
-        and are therefore removed from the Django ORM model dict prior to attempting
-        the save() command. These fields are defined in the readonly_fields list.
+        Apply the manifest by copying its metadata to the Django ORM model and saving it to the database.
+
+        This method ensures the manifest is loaded and validated (via `super().apply`) before updating the database. Only editable fields from the manifest metadata are updated; read-only fields are excluded. All changes are logged, and the connection is saved if any updates occur.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments containing manifest data.
+        :type kwargs: dict
+        :return: Optionally returns a journaled JSON response, depending on subclass implementation.
+        :rtype: Optional[SmarterJournaledJsonResponse]
+
+        :raises SAMBrokerErrorNotReady:
+            If the manifest is not ready or the connection instance is missing.
+
+        .. error::
+
+            Any error during manifest application or database update is logged and may raise an exception.
+
+        .. seealso::
+
+            :class:`ConnectionBase`
+            :class:`SAMBrokerErrorNotReady`
+            :meth:`SAMConnectionBaseBroker.apply`
+
+        **Example usage**::
+
+            broker.apply(request, manifest_data=manifest_dict)
+
         """
         logger.info("%s.apply() called with request: %s", self.formatted_class_name, request.build_absolute_uri())
         super().apply(request, kwargs)

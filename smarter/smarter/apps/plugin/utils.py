@@ -34,7 +34,55 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 # pylint: disable=W0613,C0415
 def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
-    """Create example plugins for a new user."""
+    """
+    Create example plugins for a new user.
+
+    This function provisions example plugins for a user by applying required secrets and connections,
+    then instantiating plugin manifests for validation. It is intended to help new users get started
+    with pre-configured plugin examples.
+
+    :param user_profile: The `UserProfile` instance representing the new user. Must not be `None`.
+    :type user_profile: Optional[UserProfile]
+
+    :return: Returns `True` if all example plugins are created and validated successfully.
+    :rtype: bool
+
+    :raises SmarterValueError: If `user_profile` is not provided, or if manifest/secret application fails,
+        or if a plugin does not have a valid YAML representation.
+
+    .. note::
+
+        - This function applies sample secrets and connections using Django management commands.
+        Manifests for these are located in smarter/apps/plugin/data.
+        - This function is called during deployment jobs.
+
+    .. important::
+
+        - The `user_profile` parameter must be a valid `UserProfile` instance. Passing `None` or
+        an incorrect type will result in an error.
+        - If any manifest or secret update fails, the function raises an exception and does not
+        proceed with plugin creation.
+
+
+    .. seealso::
+
+        - :class:`PluginExamples`
+        - :class:`PluginController`
+        - :class:`SmarterValueError`
+
+    **Example usage**:
+
+    .. code-block:: python
+
+        from smarter.apps.account.models import UserProfile
+        from smarter.apps.plugin.utils import add_example_plugins
+
+        user_profile = UserProfile.objects.get(user__username="newuser")
+        success = add_example_plugins(user_profile)
+        if success:
+            print("Example plugins created successfully.")
+
+    """
 
     plugin_examples = PluginExamples()
     data: Optional[dict] = None
@@ -115,6 +163,31 @@ def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
 
 
 def get_plugin_examples_by_name() -> Optional[list[str]]:
-    """Get the names of all example plugins."""
+    """
+    Get the names of all example plugins.
+
+    This function returns a list of names for all available example plugins, or `None` if no names are found.
+    It is useful for displaying or referencing example plugins in onboarding flows, documentation, or UI elements.
+
+    :return: A list of example plugin names, or `None` if no plugins are available.
+    :rtype: Optional[list[str]]
+
+    .. seealso::
+
+        - :class:`PluginExamples`
+
+    **Example usage**:
+
+    .. code-block:: python
+
+        from smarter.apps.plugin.utils import get_plugin_examples_by_name
+
+        plugin_names = get_plugin_examples_by_name()
+        if plugin_names:
+            print("Available example plugins:", plugin_names)
+        else:
+            print("No example plugins found.")
+
+    """
     plugin_examples = PluginExamples()
     return [plugin.name for plugin in plugin_examples.plugins if plugin.name is not None]

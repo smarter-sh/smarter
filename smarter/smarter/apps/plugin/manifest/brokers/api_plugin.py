@@ -50,12 +50,46 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class SAMApiPluginBroker(SAMPluginBaseBroker):
     """
-    Smarter API ApiPlugin Manifest Broker.This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml ApiPlugin manifests
-    - using the manifest to initialize the corresponding Pydantic model
+    Smarter API ApiPlugin Manifest (SAM) Broker.
 
-    The ApiPlugin object provides the generic services for the ApiPlugin, such as
-    instantiation, create, update, delete, etc.
+    This broker class is responsible for:
+
+      - Loading, validating, and parsing Smarter API YAML `ApiPlugin` manifests.
+      - Initializing the corresponding Pydantic model from manifest data.
+      - Providing generic services for `ApiPlugin` objects, including instantiation, creation, update, and deletion.
+
+    :param loader: Manifest loader providing manifest data.
+    :type loader: Optional[ManifestLoader]
+    :param account: The account context for the plugin.
+    :type account: Account
+    :param user_profile: The user profile associated with the plugin.
+    :type user_profile: UserProfile
+
+    .. important::
+
+        This broker ensures that plugin manifests are validated and structured before any database or API operations.
+
+    .. note::
+
+        The manifest is cached after initialization.
+
+
+    .. seealso::
+
+        :class:`SAMApiPlugin`
+        :class:`ApiPlugin`
+        :class:`PluginDataApi`
+        :class:`PluginMeta`
+        :class:`SAMPluginBrokerError`
+
+    **Example usage**::
+
+        broker = SAMApiPluginBroker(loader=my_loader, account=my_account, user_profile=my_profile)
+        manifest = broker.manifest
+        plugin = broker.plugin
+        plugin_data = broker.plugin_data
+
+
     """
 
     # override the base abstract manifest model with the ApiPlugin model
@@ -71,11 +105,24 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the formatted class name for logging purposes.
-        This is used to provide a more readable class name in logs.
+        Return a human-readable, fully qualified class name for logging.
+
+        This property generates a formatted class name string, combining the parent class name and the current class, to improve log traceability and clarity. It is especially useful for distinguishing log entries in complex inheritance hierarchies.
+
+        :return: Formatted class name string for use in logs.
+        :rtype: str
+
+        .. seealso::
+
+            :meth:`SAMPluginBaseBroker.formatted_class_name`
+
+        **Example usage**::
+
+            logger.info("%s: plugin operation started", broker.formatted_class_name)
+
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMApiPluginBroker()"
+        return f"{parent_class}.{self.__class__.__name__}()"
 
     @property
     def kind(self) -> str:
@@ -100,6 +147,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         -------
         Optional[SAMApiPlugin]
             The initialized API plugin manifest as a Pydantic model, or None if not available.
+
+        .. seealso::
+
+            :class:`SAMApiPlugin`
+            :class:`SAMPluginBaseBroker.manifest`
+            :class:`SAMApiPluginSpec`
+            :class:`SAMPluginCommonMetadata`
+
         """
         if self._manifest:
             return self._manifest
@@ -127,8 +182,32 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     @property
     def plugin_data(self) -> Optional[PluginDataApi]:
         """
-        Returns the PluginDataApi object for this broker.
-        This is used to store the plugin data in the database.
+        Retrieve the `PluginDataApi` object associated with this broker.
+
+        This property is used to access and store plugin-specific data in the database. If the plugin metadata is not initialized, it returns `None`. If the data object does not exist, a warning is logged.
+
+        :return: The `PluginDataApi` instance for this broker, or `None` if unavailable.
+        :rtype: Optional[PluginDataApi]
+
+        .. warning::
+
+            If the `PluginDataApi` object does not exist for the given plugin, a warning is logged and `None` is returned.
+
+        .. seealso::
+
+            :class:`PluginDataApi`
+            :class:`PluginMeta`
+            :meth:`SAMApiPluginBroker.plugin_meta`
+
+        **Example usage**::
+
+            plugin_data = broker.plugin_data
+            if plugin_data:
+                print(plugin_data.connection)
+            else:
+                print("No plugin data found.")
+
+
         """
         if self._plugin_data:
             return self._plugin_data
@@ -151,13 +230,74 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return a JSON response containing an example API plugin manifest.
+
+        This method generates a sample manifest for an API plugin, including all required fields and example values. The manifest is returned as a structured JSON response, which can be used for documentation, testing, or as a template for new plugin configurations.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments to customize the example manifest.
+        :return: JSON response with the example manifest.
+        :rtype: SmarterJournaledJsonResponse
+
+        .. seealso::
+
+            :class:`ApiPlugin`
+            :meth:`ApiPlugin.example_manifest`
+            :class:`SmarterJournaledJsonResponse`
+
+        **Example usage**::
+
+            response = broker.example_manifest(request)
+            print(response.data)
+
+        """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = ApiPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Return a JSON response with the manifest data."""
+        """
+        Return a JSON response containing the manifest data for the current API plugin.
+
+        This method serializes the plugin manifest, metadata, specification, and status into a structured JSON response. It validates the plugin and its associated data, raising an error if any required component is missing or uninitialized.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: JSON response with manifest data.
+        :rtype: SmarterJournaledJsonResponse
+
+        :raises SAMBrokerErrorNotReady:
+            If the plugin is not initialized.
+
+        :raises SAMPluginBrokerError:
+            If plugin data, account, or plugin metadata is missing, or if serialization fails.
+
+        .. error::
+            Any exception during serialization or validation is wrapped and raised as :class:`SAMPluginBrokerError`.
+
+        .. seealso::
+
+            :class:`SAMApiPlugin`
+            :class:`ApiPlugin`
+            :class:`PluginDataApi`
+            :class:`PluginMeta`
+            :class:`SmarterJournaledJsonResponse`
+
+        **Example usage**::
+
+            response = broker.describe(request)
+            print(response.data)
+
+        .. tip::
+            Use this method to inspect the current manifest and plugin details for debugging, API responses, or documentation.
+
+        """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -229,6 +369,45 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             ) from e
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Retrieve API plugins matching the provided criteria and return them in a structured JSON response.
+
+        This method queries the database for `PluginMeta` objects associated with the current account, optionally filtered by name. Each result is serialized, validated, and returned in a journaled JSON response, including metadata such as item count and model titles.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Optional keyword arguments, such as `name` to filter plugins.
+        :type kwargs: dict
+        :return: JSON response containing serialized plugin data and metadata.
+        :rtype: SmarterJournaledJsonResponse
+
+        :raises SAMPluginBrokerError:
+            If serialization or validation of any plugin fails.
+
+        .. error::
+            Any exception during serialization or validation is wrapped and raised as :class:`SAMPluginBrokerError`.
+
+        .. seealso::
+            :class:`PluginMeta`
+            :class:`PluginSerializer`
+            :class:`SmarterJournaledJsonResponse`
+            :class:`SAMKeys`
+            :class:`SAMMetadataKeys`
+            :class:`SCLIResponseGet`
+            :class:`SCLIResponseGetData`
+
+        **Example usage**::
+
+            # Retrieve all plugins for the account
+            response = broker.get(request)
+            print(response.data)
+
+            # Retrieve a specific plugin by name
+            response = broker.get(request, name="my_plugin")
+            print(response.data)
+
+        """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -293,10 +472,46 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
 
     def apply(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """
-        apply the manifest. copy the manifest data to the Django ORM model and
-        save the model to the database. Call super().apply() to ensure that the
-        manifest is loaded and validated before applying the manifest to the
-        Django ORM model.
+        Apply the manifest by copying its data to the Django ORM model and saving it to the database.
+
+        This method ensures the manifest is loaded and validated (via `super().apply`) before updating the database. It creates or updates the plugin and its metadata, and saves changes if the plugin is ready. Errors during creation or saving are returned in the response.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments containing manifest data.
+        :type kwargs: dict
+        :return: JSON response indicating success or error.
+        :rtype: SmarterJournaledJsonResponse
+
+        :raises SAMBrokerError:
+            If the plugin or plugin metadata is not initialized.
+
+        :raises SAMBrokerErrorNotReady:
+            If the plugin is not ready for saving.
+
+        .. error::
+            Any exception during creation or saving is returned in the error response.
+
+        .. seealso::
+
+            :meth:`SAMPluginBaseBroker.apply`
+            :class:`ApiPlugin`
+            :class:`PluginMeta`
+            :class:`SmarterJournaledJsonResponse`
+            :class:`SAMBrokerError`
+            :class:`SAMBrokerErrorNotReady`
+            :class:`SAMPluginBaseBroker`
+            :class:`SmarterJournalCliCommands``
+
+        **Example usage**::
+
+            response = broker.apply(request, manifest_data=manifest_dict)
+            print(response.data)
+
+        .. tip::
+            Use this method to onboard, update, or synchronize plugin manifests with the database.
+
         """
         super().apply(request, kwargs)
         command = self.apply.__name__
@@ -332,11 +547,61 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             return self.json_response_err(command=command, e=err)
 
     def chat(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+        """
+        Handle chat interactions with the API plugin.
+        This is not implemented for this class of Broker.
+
+        :raises SAMBrokerErrorNotImplemented:
+            Always raised to indicate that this method is not implemented.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: Not implemented error response.
+        :rtype: SmarterJournaledJsonResponse
+        """
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+        """
+        Delete the API plugin associated with this broker and return a JSON response indicating the result.
+
+        This method attempts to delete the plugin and its metadata from the database. If the plugin or its metadata is not initialized, or if the plugin is not ready, an appropriate error is raised. On successful deletion, an empty JSON response is returned.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :type kwargs: dict
+        :return: JSON response indicating deletion success or error.
+        :rtype: SmarterJournaledJsonResponse
+
+        :raises SAMBrokerError:
+            If the plugin or plugin metadata is not initialized, or if deletion fails.
+
+        :raises SAMBrokerErrorNotReady:
+            If the plugin is not ready for deletion.
+
+        .. error::
+            Any exception during deletion is wrapped and raised as :class:`SAMBrokerError`.
+
+        .. seealso::
+
+            :class:`ApiPlugin`
+            :class:`PluginMeta`
+            :class:`SmarterJournaledJsonResponse`
+            :class:`SAMBrokerError`
+            :class:`SAMBrokerErrorNotReady`
+
+        **Example usage**::
+
+            response = broker.delete(request, name="my_plugin")
+            print(response.data)
+
+        """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -367,16 +632,58 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         )
 
     def deploy(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+        """
+        Deploy the API plugin.
+        This is not implemented for this class of Broker.
+
+        :raises SAMBrokerErrorNotImplemented:
+            Always raised to indicate that this method is not implemented.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: Not implemented error response.
+        :rtype: SmarterJournaledJsonResponse
+        """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+        """
+        Undeploy the API plugin.
+        This is not implemented for this class of Broker.
+
+        :raises SAMBrokerErrorNotImplemented:
+            Always raised to indicate that this method is not implemented.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: Not implemented error response.
+        :rtype: SmarterJournaledJsonResponse
+        """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+        """
+        Retrieve logs for the API plugin.
+        This is not implemented for this class of Broker.
+
+        :raises SAMBrokerErrorNotImplemented:
+            Always raised to indicate that this method is not implemented.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: Not implemented error response.
+        :rtype: SmarterJournaledJsonResponse
+        """
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

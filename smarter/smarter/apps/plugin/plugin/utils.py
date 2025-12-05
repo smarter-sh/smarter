@@ -1,4 +1,5 @@
-"""Plugin utils module."""
+# pylint: disable=W0613
+"""Plugin utils module for core plugin functionality."""
 
 import logging
 import os
@@ -30,7 +31,31 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class Plugins:
-    """A class for working with multiple plugins."""
+    """
+    A class for managing and interacting with multiple plugins.
+
+    This class provides methods to retrieve, serialize, and work with plugins associated with a user and account. It loads plugins using metadata and controllers, and exposes their data in dictionary and JSON formats.
+
+    :param user: The user for whom plugins are loaded.
+    :type user: User
+    :param account: The account context for plugin retrieval.
+    :type account: Account
+
+    :raises PluginDataValueError:
+        If a plugin cannot be loaded or is malformed
+
+    .. seealso::
+
+        :class:`PluginController` for plugin instantiation.
+        :class:`PluginMeta` for plugin metadata.
+
+    **Example usage**::
+
+        plugins = Plugins(user=my_user, account=my_account)
+        plugin_dicts = plugins.data
+        plugin_json = plugins.to_json()
+
+    """
 
     account: Optional[Account] = None
     user_profile: Optional[UserProfile] = None
@@ -74,7 +99,28 @@ class Plugins:
 
 
 class PluginExample:
-    """A class for working with built-in yaml-based plugin examples."""
+    """
+    A class for loading and working with built-in YAML-based plugin examples.
+
+    This class reads plugin example files in YAML format, parses their contents, and exposes metadata and serialization methods for inspection and testing.
+
+    :param filepath: The directory path containing the YAML file.
+    :type filepath: str
+    :param filename: The name of the YAML file to load.
+    :type filename: str
+
+    .. seealso::
+
+        :class:`PluginExamples` for managing collections of plugin examples.
+
+    **Example usage**::
+
+        example = PluginExample(filepath="/path/to/examples", filename="my_plugin.yaml")
+        print(example.name)
+        print(example.to_yaml())
+        print(example.to_json())
+
+    """
 
     _filename: Optional[str]
     _json: Optional[Union[list, dict]]
@@ -129,7 +175,36 @@ class PluginExample:
 
 
 class PluginExamples:
-    """A class for working with a collection of PluginExample instances."""
+    """
+    A class for managing a collection of :class:`PluginExample` instances.
+
+    This class loads all YAML-based plugin examples from a specified directory, providing access to the collection and utility methods for counting and retrieving examples.
+
+    :param args: Optional positional arguments (unused).
+    :type args: tuple
+    :param kwargs: Optional keyword arguments (unused).
+    :type kwargs: dict
+
+    .. note::
+
+        Only files ending with ``.yaml`` in the plugins path are loaded as examples.
+
+    .. tip::
+
+        Use :meth:`count` to get the number of loaded plugin examples, and the :meth:`plugins` property to access the list.
+
+    .. seealso::
+
+        :class:`PluginExample` for individual example details.
+
+    **Example usage**::
+
+        examples = PluginExamples()
+        print(examples.count())
+        for example in examples.plugins:
+            print(example.filename, example.name)
+
+    """
 
     _plugin_examples: list[PluginExample] = []
     HERE = os.path.abspath(os.path.dirname(__file__))

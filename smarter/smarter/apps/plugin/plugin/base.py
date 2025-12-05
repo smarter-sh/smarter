@@ -96,11 +96,14 @@ class PluginBase(ABC, SmarterHelperMixin):
     using Pydantic models or YAML/JSON representations.
 
     **Initialization Options:**
+
         - Via Pydantic model from a manifest broker (preferred).
         - By Django model plugin ID.
         - From YAML or JSON manifest representations.
 
-    **Responsibilities:**
+    Responsibilities
+    -----------------
+
         - Manages plugin metadata, selector, prompt, and data models.
         - Handles serialization to JSON and YAML formats compatible with Smarter API.
         - Supports OpenAI function calling schema for plugin tools.
@@ -108,22 +111,26 @@ class PluginBase(ABC, SmarterHelperMixin):
         - Ensures validation and readiness of plugin components.
         - Integrates with Django signals for plugin lifecycle events.
 
-    **Usage:**
+    Usage
+    -----
+
         - Subclass this base and implement all abstract properties and methods.
         - Use provided factory and utility methods for parameter and data conversion.
         - Leverage transaction management for safe database operations.
 
-    **Notes:**
+    Notes
+    -----
+
         - All subclasses must define the plugin data class, serializer, and manifest handling.
         - This class expects a valid `UserProfile` for most operations.
         - Exceptions are raised for misconfiguration or invalid states.
 
     See the Smarter API documentation for details on plugin manifest structure and lifecycle.
 
-    See also:
+    .. seealso::
 
-    - :class:`abc.ABC`
-    - :class:`smarter.common.classes.SmarterHelperMixin`
+        - :class:`abc.ABC`
+        - :class:`smarter.common.classes.SmarterHelperMixin`
     """
 
     SAMPluginType = SAMPluginCommon
@@ -167,13 +174,16 @@ class PluginBase(ABC, SmarterHelperMixin):
         This constructor supports several ways to create a plugin object:
 
         - **Manifest-based initialization:**
-          Pass a Pydantic model instance via the ``manifest`` argument. This is the preferred method and is typically used when loading plugins from a manifest broker.
+
+            Pass a Pydantic model instance via the ``manifest`` argument. This is the preferred method and is typically used when loading plugins from a manifest broker.
 
         - **Database model initialization:**
-          Provide a Django model plugin ID via ``plugin_id`` or a ``PluginMeta`` instance via ``plugin_meta`` to load an existing plugin from the database.
+
+            Provide a Django model plugin ID via ``plugin_id`` or a ``PluginMeta`` instance via ``plugin_meta`` to load an existing plugin from the database.
 
         - **YAML/JSON manifest initialization:**
-          Supply a YAML or JSON string (or dictionary) via the ``data`` argument to create a plugin from a manifest representation.
+
+            Supply a YAML or JSON string (or dictionary) via the ``data`` argument to create a plugin from a manifest representation.
 
         See ``./data/sample-plugins/everlasting-gobstopper.yaml`` for an example manifest.
 
@@ -285,6 +295,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         called during initialization or when reloading a plugin to ensure that no stale data remains.
 
         The following attributes are reset:
+
             - ``_plugin_meta``: The plugin metadata model instance.
             - ``_plugin_selector``: The plugin selector model instance.
             - ``_plugin_prompt``: The plugin prompt model instance.
@@ -447,11 +458,12 @@ class PluginBase(ABC, SmarterHelperMixin):
     def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
         """
         Return an example manifest for the plugin.
+        Must be implemented by subclasses.
 
         :param kwargs: Optional keyword arguments to customize the example manifest.
         :type kwargs: Optional[dict[str, Any]]
-        :return: An example manifest for the plugin.
-        :rtype: dict
+        :return: NotImplementedError
+        :rtype: NotImplementedError
         """
         raise NotImplementedError()
 
@@ -516,8 +528,8 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         See also:
 
-        - `smarter.common.api.SmarterApiVersions`
-        - `SMARTER_API_MANIFEST_COMPATIBILITY`
+            - `smarter.common.api.SmarterApiVersions`
+            - `SMARTER_API_MANIFEST_COMPATIBILITY`
         """
         if value not in SMARTER_API_MANIFEST_COMPATIBILITY:
             raise SAMValidationError(
@@ -533,8 +545,9 @@ class PluginBase(ABC, SmarterHelperMixin):
         :return: The kind of the plugin.
         :rtype: str
 
-        See also:
-        - `smarter.apps.plugin.manifest.models.static_plugin.const.MANIFEST_KIND`
+        .. seealso::
+
+            - `smarter.apps.plugin.manifest.models.static_plugin.const.MANIFEST_KIND`
         """
         return MANIFEST_KIND
 
@@ -1437,6 +1450,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         :type convert_values: bool
 
         :examples:
+
             .. code-block:: python
 
                 # Convert a snake_case string to camelCase
@@ -1456,9 +1470,9 @@ class PluginBase(ABC, SmarterHelperMixin):
         return: The converted data.
         :rtype: Optional[Union[str, dict, list]]
 
-        See also:
+        .. seealso::
 
-        - :func:`smarter.common.utils.snake_to_camel`
+            - :func:`smarter.common.utils.snake_to_camel`
 
         """
         return util_snake_to_camel(data, convert_values)
@@ -1490,9 +1504,9 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         :rtype: Optional[Union[str, dict, list]]
 
-        See also:
+        .. seealso::
 
-        - :func:`smarter.common.utils.camel_to_snake`
+            - :func:`smarter.common.utils.camel_to_snake`
 
         """
         return util_camel_to_snake(data)
@@ -1537,6 +1551,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         :raises SmarterPluginError: If an unsupported version is requested.
 
         .. note::
+
             This method requires the plugin to be fully initialized and ready. All serializer
             properties must return valid data. If the plugin is not ready, None is returned.
         """

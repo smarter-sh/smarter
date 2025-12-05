@@ -58,6 +58,7 @@ class SqlPlugin(PluginBase):
     instantiated from either a manifest (Pydantic model) or an existing Django ORM instance.
 
     Key Features:
+
         - Accepts plugin configuration via manifest or ORM model.
         - Validates and recasts parameter definitions to conform to OpenAI function calling schema.
         - Interpolates user-provided arguments into SQL queries, with basic escaping for safety.
@@ -66,17 +67,20 @@ class SqlPlugin(PluginBase):
         - Provides example manifest generation for testing and documentation.
 
     Usage:
+
         - Instantiate with a manifest or ORM model.
         - Use `tool_call_fetch_plugin_response()` to execute SQL queries with arguments from OpenAI tool calls.
         - Use `plugin_data_django_model` to convert manifest data to a Django ORM-compatible dictionary.
         - Use `example_manifest()` to generate a sample manifest for this plugin type.
 
-    Notes:
+    .. note::
+
         - SQL queries are interpolated using simple string replacement; ensure queries are safe and parameterized.
         - The maximum query length is limited to prevent excessive database load.
         - Logging is controlled via feature switches and log level settings.
 
-    See Also:
+    .. seealso::
+
         - OpenAI Function Calling: https://platform.openai.com/docs/guides/function-calling?api-mode=chat
         - Smarter Plugin Manifest Documentation
     """

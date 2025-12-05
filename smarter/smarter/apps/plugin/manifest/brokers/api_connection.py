@@ -62,12 +62,30 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     """
-    Smarter API ApiConnection Manifest Broker.This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml ApiConnection manifests
-    - using the manifest to initialize the corresponding Pydantic model
+    Smarter API ApiConnection Manifest Broker.
 
-    The ApiConnection object provides the generic services for the ApiConnection, such as
-    instantiation, create, update, delete, etc.
+    This class is responsible for loading, validating, and parsing Smarter API YAML ApiConnection manifests, and initializing the corresponding Pydantic model. It provides generic services for ApiConnection objects, including instantiation, creation, update, and deletion.
+
+    :param loader: Manifest loader providing manifest data.
+    :type loader: Optional[ManifestLoader]
+    :param account: The account context for the connection.
+    :type account: Account
+    :param user_profile: The user profile associated with the connection.
+    :type user_profile: UserProfile
+
+    .. seealso::
+
+        :class:`SAMApiConnection`
+        :class:`ApiConnection`
+        :class:`ApiConnectionSerializer`
+        :class:`SAMConnectionBrokerError`
+
+    **Example usage**::
+
+        broker = SAMApiConnectionBroker(loader=my_loader, account=my_account, user_profile=my_profile)
+        manifest = broker.manifest
+        orm_data = broker.manifest_to_django_orm()
+
     """
 
     # override the base abstract manifest model with the ApiConnection model
@@ -82,20 +100,80 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     ###########################################################################
     @property
     def serializer(self) -> Type[ApiConnectionSerializer]:
-        """Return the serializer for the broker."""
+        """
+        Return the serializer class for the broker.
+
+        This property provides the serializer used to convert ApiConnection model instances to and from native Python datatypes, enabling validation and serialization for API responses and internal processing.
+
+        :return: The serializer class for ApiConnection objects.
+        :rtype: Type[ApiConnectionSerializer]
+
+        .. seealso::
+
+            :class:`ApiConnectionSerializer`
+            :class:`ApiConnection`
+            :meth:`SAMApiConnectionBroker.manifest`
+            :meth:`SAMApiConnectionBroker.manifest_to_django_orm`
+
+        **Example usage**::
+
+            serializer_cls = broker.serializer
+            serializer = serializer_cls(api_connection_instance)
+            data = serializer.data
+
+        """
         return ApiConnectionSerializer
 
     @property
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
-        This is used to provide a more readable class name in logs.
+
+        This property generates a human-readable class name string for use in log messages, making it easier to identify the source of log entries. It appends the specific broker class to the parent class name for clarity.
+
+        :return: Formatted class name string for logging.
+        :rtype: str
+
+        .. important::
+
+            Use this property in log statements to improve traceability and debugging.
+
+        .. seealso::
+
+            :meth:`SAMApiConnectionBroker.serializer`
+            :meth:`SAMApiConnectionBroker.manifest`
+            :meth:`SAMApiConnectionBroker.model_class`
+
+        **Example usage**::
+
+            logger.info("%s: operation started", broker.formatted_class_name)
+
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMApiConnectionBroker()"
+        return f"{parent_class}.{self.__class__.__name__}()"
 
     @property
     def model_class(self) -> Type[ApiConnection]:
+        """
+        Return the Django ORM model class for ApiConnection.
+
+        This property provides the class object used for persistent storage and manipulation of API connection data in the database. It is useful for type checking, introspection, and for creating or querying ApiConnection instances.
+
+        :return: The Django ORM model class for API connections.
+        :rtype: Type[ApiConnection]
+
+        .. seealso::
+
+            :class:`ApiConnection`
+            :meth:`SAMApiConnectionBroker.serializer`
+            :meth:`SAMApiConnectionBroker.manifest`
+
+        **Example usage**::
+
+            model_cls = broker.model_class
+            all_connections = model_cls.objects.all()
+
+        """
         return ApiConnection
 
     @property
@@ -146,6 +224,32 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     def manifest_to_django_orm(self) -> dict:
         """
         Transform the Smarter API User manifest into a Django ORM model.
+
+        This method converts the validated manifest data into a dictionary suitable for creating or updating a Django ORM `ApiConnection` instance. It handles field mapping, type conversion, and secret resolution for sensitive fields such as API keys and proxy passwords.
+
+        :returns: Dictionary of ORM-compatible fields for an `ApiConnection` model.
+        :rtype: dict
+
+        .. note::
+
+            - The returned dictionary includes all required fields for ORM persistence, with secrets resolved to their database IDs.
+            - The method automatically converts camelCase keys to snake_case for Django compatibility.
+
+        :raises SAMConnectionBrokerError:
+            If the manifest or its spec is missing or malformed
+
+        .. seealso::
+
+            :class:`ApiConnection`
+            :meth:`SAMApiConnectionBroker.manifest`
+            :meth:`SAMApiConnectionBroker.serializer`
+
+        **Example usage**::
+
+            orm_data = broker.manifest_to_django_orm()
+            connection = ApiConnection(**orm_data)
+            connection.save()
+
         """
         config_dump = self.manifest.spec.connection.model_dump() if self.manifest and self.manifest.spec else None
         if not isinstance(config_dump, dict):
@@ -211,6 +315,28 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     def api_key_secret(self) -> Optional[Secret]:
         """
         Return the api_key secret for the ApiConnection.
+
+        This property retrieves the Django ORM `Secret` instance associated with the API key for the current connection. It resolves the secret either from the manifest or from the existing database record, depending on initialization context.
+
+        :return: The `Secret` object representing the API key, or `None` if not found.
+        :rtype: Optional[Secret]
+
+        .. attention::
+
+            If the secret cannot be found, a warning is logged and `None` is returned.
+
+        .. seealso::
+
+            :class:`Secret`
+            :meth:`SAMApiConnectionBroker.manifest`
+            :meth:`SAMApiConnectionBroker.connection`
+
+        **Example usage**::
+
+            api_key_secret = broker.api_key_secret
+            if api_key_secret:
+                print(api_key_secret.value)
+
         """
         if self._api_key_secret:
             return self._api_key_secret
@@ -237,7 +363,29 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     @property
     def proxy_password_secret(self) -> Optional[Secret]:
         """
-        Return the proxy password secret for the SqlConnection.
+        Return the proxy password secret for the ApiConnection.
+
+        This property retrieves the Django ORM `Secret` instance associated with the proxy password for the current connection. It resolves the secret either from the manifest or from the existing database record, depending on initialization context.
+
+        :return: The `Secret` object representing the proxy password, or `None` if not found.
+        :rtype: Optional[Secret]
+
+        .. attention::
+
+            - If the secret cannot be found, a warning is logged and `None` is returned.
+
+        .. seealso::
+
+            :class:`Secret`
+            :meth:`SAMApiConnectionBroker.manifest`
+            :meth:`SAMApiConnectionBroker.connection`
+
+        **Example usage**::
+
+            proxy_secret = broker.proxy_password_secret
+            if proxy_secret:
+                print(proxy_secret.value)
+
         """
         if self._proxy_password_secret:
             return self._proxy_password_secret
@@ -265,6 +413,36 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
     @property
     def connection(self) -> Optional[ApiConnection]:
+        """
+        Return the Django ORM `ApiConnection` instance for this broker.
+
+        This property retrieves the current `ApiConnection` object from the database using the account and name. If the connection does not exist, it attempts to create one from the manifest data. The returned object represents the persistent state of the API connection.
+
+        :return: The `ApiConnection` ORM instance, or `None` if not found or not created.
+        :rtype: Optional[ApiConnection]
+
+
+        .. attention::
+
+            - If the connection cannot be found or created, an error is logged and `None` is returned.
+
+        .. seealso::
+
+            :class:`ApiConnection`
+            :meth:`SAMApiConnectionBroker.manifest`
+            :meth:`SAMApiConnectionBroker.manifest_to_django_orm`
+            :meth:`SAMApiConnectionBroker.api_key_secret`
+            :meth:`SAMApiConnectionBroker.proxy_password_secret`
+
+        **Example usage**::
+
+            connection = broker.connection
+            if connection:
+                print(connection.base_url)
+                connection.timeout = 60
+                connection.save()
+
+        """
         if self._connection:
             return self._connection
 
@@ -311,6 +489,32 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example ApiConnection manifest.
+
+        This method generates and returns a sample manifest for an ApiConnection, including all required fields and example values for authentication, connection, and metadata. The manifest is validated using the Pydantic model and returned as a JSON response.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: JSON response containing the example manifest.
+        :rtype: SmarterJournaledJsonResponse
+
+        .. seealso::
+
+            :class:`SAMApiConnection`
+            :class:`ApiConnection`
+            :class:`ApiConnectionSerializer`
+            :class:`AuthMethods`
+            :class:`SAMKeys`
+            :class:`SAMMetadataKeys`
+            :class:`SAMApiConnectionSpecConnectionKeys`
+            :class:`SmarterJournalCliCommands`
+
+        **Example usage**::
+
+            response = broker.example_manifest(request)
+            print(response.data)
+
         """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
@@ -346,6 +550,37 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Retrieve a list of ApiConnection objects as a journaled JSON response.
+
+        This method queries the database for `ApiConnection` instances matching the current account and optional name filter, serializes each result, and returns a structured JSON response including metadata, item count, and model titles.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Optional keyword arguments, such as `name` to filter connections.
+        :type kwargs: dict
+        :return: Journaled JSON response containing serialized ApiConnection data.
+        :rtype: SmarterJournaledJsonResponse
+
+        .. seealso::
+
+            :class:`ApiConnection`
+            :class:`ApiConnectionSerializer`
+            :class:`SmarterJournaledJsonResponse`
+            :meth:`SAMApiConnectionBroker.serializer`
+
+        **Example usage**::
+
+            response = broker.get(request)
+            print(response.data)
+
+            # Filter by name
+            response = broker.get(request, name="my_connection")
+            print(response.data)
+
+
+        """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
@@ -480,12 +715,71 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Handle chat operations for the API connection broker.
+
+        This method is intended to process chat requests using the manifest broker. Currently, it is not implemented and will always raise a `SAMBrokerErrorNotImplemented` exception.
+        This method is not implemented. Any invocation will result in an error.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
+        :rtype: SmarterJournaledJsonResponse
+
+        .. seealso::
+
+            :class:`SAMApiConnectionBroker`
+            :class:`SmarterJournalCliCommands`
+            :class:`SAMBrokerErrorNotImplemented`
+
+        **Example usage**::
+
+            try:
+                response = broker.chat(request)
+            except SAMBrokerErrorNotImplemented as e:
+                print("Chat not implemented:", e)
+
+
+        """
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Return a JSON response with the manifest data."""
+        """
+        Return a JSON response containing the manifest data for the current API connection.
+
+        This method serializes the manifest and connection details, including metadata, specification, and status, into a structured JSON response. It validates the connection and includes relevant fields such as connection string and validity status.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: JSON response with manifest data.
+        :rtype: SmarterJournaledJsonResponse
+
+        :raises SAMBrokerErrorNotReady:
+            If no connection is found
+
+        :raises SAMConnectionBrokerError:
+            if serialization or validation fails.
+
+        .. seealso::
+
+            :class:`SAMApiConnection`
+            :class:`ApiConnection`
+            :class:`SmarterJournaledJsonResponse`
+            :meth:`SAMApiConnectionBroker.connection`
+
+        **Example usage**::
+
+            response = broker.describe(request)
+            print(response.data)
+
+
+        """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         is_valid = False
@@ -540,6 +834,39 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delete the current API connection and return a JSON response indicating the result.
+
+        This method attempts to delete the associated `ApiConnection` object from the database. If successful, it returns an empty JSON response. If no connection exists, or if an error occurs during deletion, an appropriate exception is raised.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: JSON response indicating deletion success.
+        :rtype: SmarterJournaledJsonResponse
+
+        :raises SAMBrokerErrorNotReady:
+            If no connection is found to delete.
+
+        :raises SAMConnectionBrokerError:
+            If an error occurs during deletion.
+
+        .. error::
+            Any exception during deletion is wrapped and raised as :class:`SAMConnectionBrokerError`.
+
+        .. seealso::
+
+            :class:`ApiConnection`
+            :class:`SmarterJournaledJsonResponse`
+            :meth:`SAMApiConnectionBroker.connection`
+
+        **Example usage**::
+
+            response = broker.delete(request)
+            print(response.data)
+
+        """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.connection:
@@ -551,16 +878,49 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Handle deploy operations for the API connection broker.
+        This is not implemented and will always raise a `SAMBrokerErrorNotImplemented` exception.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
+        :rtype: SmarterJournaledJsonResponse
+        """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Handle undeploy operations for the API connection broker.
+        This is not implemented and will always raise a `SAMBrokerErrorNotImplemented` exception.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
+        :rtype: SmarterJournaledJsonResponse
+        """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Handle logs operations for the API connection broker.
+        This is not implemented and will always raise a `SAMBrokerErrorNotImplemented` exception.
+
+        :param request: Django HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
+        :rtype: SmarterJournaledJsonResponse
+        """
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Logs not implemented", thing=self.kind, command=command)
