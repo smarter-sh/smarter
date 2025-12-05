@@ -8,3 +8,4 @@ Smarter API Manifests (SAM)
    sam/enum
    sam/models
    sam/transformers
+   sam/example-manifests
