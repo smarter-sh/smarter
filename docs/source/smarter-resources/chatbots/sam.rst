@@ -7,3 +7,4 @@ Smarter API Manifests (SAM)
    sam/broker
    sam/enum
    sam/models
+   sam/example-manifest
