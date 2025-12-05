@@ -720,6 +720,34 @@ def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -
     return retval
 
 
+def pascal_to_snake(name: str) -> str:
+    """
+    Converts a PascalCase string to pascal_case snake_case format.
+
+    :param name: The PascalCase string to convert.
+    :type name: str
+
+    :return: The converted string in snake_case format.
+    :rtype: str
+
+    .. note::
+        - Spaces in the input string are replaced with underscores.
+        - Multiple consecutive underscores are collapsed into a single underscore.
+
+    **Example usage:**
+
+    .. code-block:: python
+
+        from smarter.common.utils import pascal_to_snake
+
+        print(pascal_to_snake("UserProfile"))  # Output: user_profile
+        print(pascal_to_snake("FirstName LastName"))  # Output: first_name_last_name
+
+    """
+    pattern = re.compile(r"(?<!^)(?=[A-Z])")
+    return pattern.sub("_", name).lower()
+
+
 def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
     """
     Converts camelCase strings, dictionary keys, or lists of such, to snake_case format.

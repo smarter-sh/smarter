@@ -148,6 +148,7 @@ FROM venv AS application
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
 COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
+RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 
 ################################# permissuions #######################################
 FROM application AS permissions
