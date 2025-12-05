@@ -7,7 +7,7 @@ Smarter Resources
    :caption: Technical Reference
 
    smarter-resources/smarter-account
-   smarter-resources/smarter-chatbots
-   smarter-resources/smarter-llm-providers
-   smarter-resources/smarter-plugins
+   smarter-resources/smarter-chatbot
+   smarter-resources/smarter-provider
+   smarter-resources/smarter-plugin
    smarter-resources/smarter-prompt

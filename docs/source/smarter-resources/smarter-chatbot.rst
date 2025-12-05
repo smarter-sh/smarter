@@ -1,4 +1,4 @@
-Smarter Chatbots
+Smarter Chatbot
 ================
 
 .. attention::
