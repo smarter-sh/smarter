@@ -1,0 +1,56 @@
+apiVersion: smarter.sh/v1
+kind: SqlPlugin
+metadata:
+  annotations: []
+  description: Get additional information about the admin account of the Smarter platform.
+  name: sql_example
+  pluginClass: sql
+  tags:
+    - db
+    - sql
+    - database
+  version: 0.1.0
+spec:
+  connection: example_connection
+  prompt:
+    maxTokens: 2048
+    model: gpt-4-turbo
+    provider: openai
+    systemRole:
+      You are a helpful assistant for Smarter platform. You can provide
+      information about the admin account of the Smarter platform.
+
+    temperature: 0.5
+  selector:
+    directive: search_terms
+    searchTerms:
+      - smarter
+      - users
+      - admin
+  sqlData:
+    description:
+      Query the Django User model to retrieve detailed account information
+      about the admin account for the Smarter platform .
+    limit: 1
+    parameters:
+      - default: admin
+        description: The username to query.
+        enum: null
+        name: username
+        required: true
+        type: string
+      - default: Celsius
+        description: The temperature unit to use. Infer this from the users location.
+        enum:
+          - Celsius
+          - Fahrenheit
+        name: unit
+        required: false
+        type: string
+    sqlQuery: SELECT * FROM auth_user WHERE username = {username};
+
+    testValues:
+      - name: username
+        value: admin
+      - name: unit
+        value: Celsiu

@@ -26,6 +26,9 @@ from pathlib import Path
 
 from corsheaders.defaults import default_headers
 from django import get_version
+from django.core.cache import cache
+from django.db import connections
+from django.db.utils import OperationalError
 from social_core.backends.linkedin import LinkedinOAuth2
 
 from smarter.__version__ import __version__ as smarter_version
@@ -569,7 +572,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django_hosts.middleware.HostsRequestMiddleware",
-    # this replaces corsheaders.middleware.SmarterCorsMiddleware"
+    # this replaces corsheaders.middleware.CorsMiddleware"
     "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
     # this replaces django.middleware.security.SecurityMiddleware
     # simple middleware to block requests for common sensitive files
@@ -1365,6 +1368,20 @@ if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
     logger.info("Smarter v%s", smarter_version)
     logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)
     logger.info("Storages backend: %s", STORAGES["default"]["BACKEND"])
+
+    logger.info("Cache backend: %s", CACHES["default"]["BACKEND"])
+
+    try:
+        cache.set("test_key", "test_value", timeout=5)
+        value = cache.get("test_key")
+        if value == "test_value":
+            logger.info("Redis is up and reachable.")
+        else:
+            logger.error("Redis is not working as expected.")
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.error("Redis is NOT reachable: %s", e)
+
     if smarter_settings.smtp_is_configured:
         logger.info("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)
     else:

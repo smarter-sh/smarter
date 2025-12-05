@@ -1,3 +1,4 @@
+# pylint: disable=C0413,C0411
 """
 Configuration file for the Sphinx documentation builder.
 
@@ -16,8 +17,6 @@ import sys
 sys.path.insert(0, os.path.abspath("../../smarter"))
 
 from smarter.__version__ import __version__  # noqa: F401
-
-# pylint: disable=wrong-import-position
 from smarter.common.conf import settings as smarter_settings
 
 
@@ -26,7 +25,6 @@ if not smarter_settings.environment:
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
 
-# pylint: disable=wrong-import-position
 import django
 
 
