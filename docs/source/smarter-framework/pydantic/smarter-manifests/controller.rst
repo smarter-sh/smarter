@@ -1,5 +1,5 @@
-AbstractController Class
-==========================
+SAM AbstractController Class
+==============================
 
 .. autoclass:: smarter.lib.manifest.controller.AbstractController
    :members:

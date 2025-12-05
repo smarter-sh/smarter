@@ -7,10 +7,38 @@ written in YAML format and provide a structured way to declare resources, settin
 Smarter Manifests enable developers to easily manage and deploy configurations in a consistent manner across different
 environments.
 
+The Smarter API invokes database commands, AWS cloud infrastructure operations, and Kubernetes orchestration tasks
+based on the declarations found in Smarter Manifests. SAM manifests provide you and your team with an important
+layer of abstraction that enables you to focus on achieving the desired state of your AI resources rather than
+on the low-level implementation details of how to get there.
+
+The basic stsructure of a Smarter Api Manifest (SAM) YAML document includes the following key sections:
+
+- **apiVersion**: Specifies the version of the API schema that the manifest adheres to.
+- **kind**: Indicates the type of resource being defined (e.g., Account, Plugin, Chatbot).
+- **metadata**: Contains metadata about the resource, such as its name, labels, and annotations. Metadata varies by resource kind, but always includes a name, description and version.
+- **spec**: Defines the desired state and configuration of the resource. The spec section varies considerably by resource kind.
+- **status**: (Optional) Provides information about the current state of the resource. This section is read-only and managed by the system.
+
+In addition to this basic structure, there are also a number of important style conventions that
+Pydantic helps to enforce for SAM manifests:
+
+- YAML fields use `camelCase` naming convention.
+- Values that are in effect, foreign keys, or references to other resources use `snake_case` naming convention.
+
+Pydantic is also instrumental in validating the rules and relationships between individual fields
+within a manifest, ensuring that manifests are well-formed and adhere to the expected structure. The Smarter API
+must be able to read, validate, and correctly execute the commands necessary to bring the real-world
+resources defined in the manifests in sync to the declaration of the manifest.
+
+
+The modules and classes below establish the foundation of Smarter's SAM data models.
+
 .. toctree::
    :maxdepth: 2
    :caption: Technical References
 
+   smarter-manifests/example-manifest
    smarter-manifests/enum
    smarter-manifests/pydantic-models
    smarter-manifests/sam-loader
@@ -18,34 +46,3 @@ environments.
    smarter-manifests/broker-model
    smarter-manifests/error-handling
    smarter-manifests/validation-strategy
-
-.. literalinclude:: ../../../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-sql.yaml
-   :language: yaml
-   :caption: Example Smarter Manifest
-
-
-The point of using YAML manifest files is to facilitate a human readable way to define complex
-AI resources and their configurations, taking into consideration that something systematic on
-the backend will ulimately need to be able to read, validate and correctly execute the commands
-necessary to bring those resources to life. By ‘resource’ we mean to say anything from an AI Model,
-to a Data Pipeline, to an entire Application. Persisting such resources may involve any number
-of kinds of technologies, 3rd party services, and infrastructure.
-
-The authors saw first hand how effectively the `Kubernetes <https://kubernetes.io/>`__ project
-was able to solve similar
-problems in the DevOps space by defining a systematic way to describe infrastructure resources
-using YAML manifest files, and then building a robust ecosystem of tools around those manifests
-to validate, deploy, and manage those resources. Inspired by this success, the authors designed
-the Smarter Api Manifest (SAM) specification to bring similar benefits to the AI development space.
-
-Example Manifests
------------------
-
-See the `Smarter Cloud Platform Docs <https://platform.smarter.sh/docs/manifests/>`__ for a
-complete set of example manifests.
-
-Json Schemas
-------------
-
-Developers can build on top of the Smarter Manifest framework by leveraging our prebuilt Smarter
-JSON Schemas, See the `Smarter Json Schemas Docs <https://platform.smarter.sh/docs/json-schemas/>`__ for details.

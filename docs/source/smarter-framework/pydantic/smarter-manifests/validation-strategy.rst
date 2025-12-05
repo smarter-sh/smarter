@@ -1,4 +1,4 @@
-Validation Strategy
+SAM Validation Strategy
 =====================
 
 The point of using yaml manifest files is to facilitate a human readable way to define

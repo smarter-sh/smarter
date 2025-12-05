@@ -1,5 +1,5 @@
-Error Handling
-================
+SAM Error Handling
+===================
 
 Smarter Api Manifest (SAM) yaml manifest and Pydantic validation processing is handled in-line as part
 of normal Smarter Api operations. Failures due to yaml parsing errors, Pydantic validation errors, missing
