@@ -23,6 +23,7 @@ AWS Helper Classes
    :maxdepth: 1
 
    aws/overview
+   aws/base
    aws/route53
    aws/acm
    aws/eks

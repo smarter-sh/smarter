@@ -14,13 +14,18 @@ responses. Namely, these chatbots leverage the Smarter Plugin architecture, whic
 provides extensible tool integration capabilities, including secure access to
 to private, secure data sources and external APIs.
 
-ChatBots are recognized by the yaml-based :doc:`Smarter API Manifest (SAM) <smarter-api>` architecture,
+ChatBots are recognized by the yaml-based :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>` architecture,
 facilitating both behavioral and visual customization. This allows developers to
 tailor the chatbot's functionality and appearance to meet specific use cases and
 user preferences.
 
-ChatBots are managed with the :doc:`Smarter command-line interface (CLI) <smarter-cli>`.
+ChatBots are managed with the :doc:`Smarter command-line interface (CLI) <../smarter-platform/cli>`.
 
+React UI Integration
+------------------------
+
+See :doc:`Smarter React UI <../smarter-framework/smarter-react-ui>` for details on integrating
+the Smarter React Chat Component into your web applications.
 
 .. toctree::
    :maxdepth: 1
@@ -30,7 +35,6 @@ ChatBots are managed with the :doc:`Smarter command-line interface (CLI) <smarte
    chatbots/sam
    chatbots/serializers
    chatbots/api
-   chatbots/react-ui
    chatbots/helper
    chatbots/kubernetes-ingress
    chatbots/management-commands

@@ -1,5 +1,5 @@
-React UI
-=========
+Smarter React UI
+===================
 
 The Smarter project maintains a React-based drop-in chat component that can be integrated into
 any html web page. see `https://www.npmjs.com/package/@smarter.sh/ui-chat <https://www.npmjs.com/package/@smarter.sh/ui-chat>`__ for details.
@@ -129,7 +129,7 @@ To integrate the Smarter Chat Component into your web page, you should
 - include a DOM element with the React app id where you want the chat component to render.
 - include the app-loader.js script near the bottom of your html page
 
-.. literalinclude:: ../../../../smarter/smarter/templates/prompt/workbench.html
+.. literalinclude:: ../../../smarter/smarter/templates/prompt/workbench.html
    :language: html
    :caption: smarter/templates/prompt/workbench.html
 
@@ -188,7 +188,7 @@ during the normal page load.
   <script class="smarter-chat"
       src="https://cdn.platform.smarter.sh/ui-chat/assets/main-C4x7rKYv.js"></script>
 
-6. See the Chat Component in Action
+1. See the Chat Component in Action
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. raw:: html
