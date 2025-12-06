@@ -29,19 +29,19 @@ See :doc:`django/hosts` for more details.
    :undoc-members:
    :show-inheritance:
 
+.. literalinclude:: ../../../smarter/smarter/apps/api/v1/urls.py
+   :language: python
+   :linenos:
+   :lines: 28-
+
+
 .. toctree::
    :maxdepth: 1
 
-   smarter-api/authentication
-   smarter-api/base-class
    smarter-api/cli
+   smarter-api/chat
+   smarter-api/authentication
    smarter-api/error-handling
    smarter-api/logging
    smarter-api/rate-limiting
    smarter-api/smarter-journal
-
-Smarter AI Resource Enumerations
----------------------------------
-
-The Smarter API is designed to provide a robust and flexible interface for interacting with Smarter AI resources,
-which include the following. See :doc:`smarter-journal/enumerations`

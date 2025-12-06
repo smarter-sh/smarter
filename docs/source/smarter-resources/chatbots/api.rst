@@ -1,6 +1,11 @@
 REST API Endpoints
 ===================
 
+.. toctree::
+   :maxdepth: 1
+
+   api/views
+
 ChatBot’s are accessible via REST API. End points to deployed ChatBots
 are publicly accessible unless the customer has chosen to attach a
 Smarter API key. Http requests should substantially conform this command

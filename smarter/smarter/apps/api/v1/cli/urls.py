@@ -1,20 +1,32 @@
 """
-URL configuration for the Smarter API command-line interface.
-
-This module defines the URL patterns for CLI-related API endpoints.
+URL configuration for the Smarter API command-line interface (CLI).
 
 Endpoints
----------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-- ``/api/v1/cli/get/``            -- Return information about the specified resource
-- ``/api/v1/cli/apply/``          -- Apply a manifest
-- ``/api/v1/cli/describe/``       -- Print the manifest
-- ``/api/v1/cli/deploy/``         -- Deploy a resource
-- ``/api/v1/cli/logs/``           -- Get logs for a resource
-- ``/api/v1/cli/delete/``         -- Delete a resource
-- ``/api/v1/cli/status/``         -- Smarter platform status
-- ``/api/v1/cli/version/``        -- Returns detailed version information on the platform
-- ``/api/v1/cli/whoami/``         -- Return information about the current IAM user
+.. list-table::
+   :header-rows: 1
+
+   * - Endpoint
+     - Description
+   * - /api/v1/cli/get/
+     - Return information about the specified resource
+   * - /api/v1/cli/apply/
+     - Apply a manifest
+   * - /api/v1/cli/describe/
+     - Print the manifest
+   * - /api/v1/cli/deploy/
+     - Deploy a resource
+   * - /api/v1/cli/logs/
+     - Get logs for a resource
+   * - /api/v1/cli/delete/
+     - Delete a resource
+   * - /api/v1/cli/status/
+     - Smarter platform status
+   * - /api/v1/cli/version/
+     - Returns detailed version information on the platform
+   * - /api/v1/cli/whoami/
+     - Return information about the current IAM user
 """
 
 from django.urls import path
