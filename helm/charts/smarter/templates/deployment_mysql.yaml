@@ -1,3 +1,4 @@
+{{- if .Values.mysql.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -71,3 +72,4 @@ spec:
         - name: mysql-data
           persistentVolumeClaim:
             claimName: {{ .Values.names.appName | default "smarter" }}-{{ .Values.names.mysqlName | default "mysql" }}
+{{- end }}
