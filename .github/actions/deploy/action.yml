@@ -270,6 +270,7 @@ runs:
       run: |-
         cd helm/charts/smarter
         helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo add grafana https://grafana.github.io/helm-charts
         helm dependency build
 
     # Create a temporary values file with secrets
