@@ -1,4 +1,4 @@
-"""Test BlockSensitiveFilesMiddleware."""
+"""Test SmarterBlockSensitiveFilesMiddleware."""
 
 from http import HTTPStatus
 
@@ -6,16 +6,18 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.lib.django.middleware.sensitive_files import BlockSensitiveFilesMiddleware
+from smarter.lib.django.middleware.sensitive_files import (
+    SmarterBlockSensitiveFilesMiddleware,
+)
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestBlockSensitiveFilesMiddleware(SmarterTestBase, AccountMixin):
-    """Test BlockSensitiveFilesMiddleware."""
+class TestSmarterBlockSensitiveFilesMiddleware(SmarterTestBase, AccountMixin):
+    """Test SmarterBlockSensitiveFilesMiddleware."""
 
     def setUp(self):
         super().setUp()
-        self.middleware = BlockSensitiveFilesMiddleware(lambda req: HttpResponse())
+        self.middleware = SmarterBlockSensitiveFilesMiddleware(lambda req: HttpResponse())
         self.factory = RequestFactory()
 
     def test_non_sensitive_file(self):

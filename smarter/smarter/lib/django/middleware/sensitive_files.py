@@ -23,8 +23,57 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
-    """Block requests for common sensitive files."""
+class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
+    """
+    Middleware to return HttpResponseForbidden for common sensitive files, regardless of whether these
+    do or do not exist. This is a countermeasure against simple, brute-force attacks
+    and automated 'bot' clients probing for sensitive files. This middleware works from a static list
+    of common sensitive files and patterns, returning a 403 Forbidden response for requests matching these files.
+
+    This middleware inspects incoming HTTP requests and blocks access to files and paths that are commonly
+    targeted by attackers or bots, such as configuration files, environment files, backup files, and private keys.
+    If a client attempts to access these files more than a configurable threshold within a time window, their
+    requests are throttled and further attempts are blocked with a 403 Forbidden response.
+
+    The middleware also supports an "amnesty" mechanism, allowing certain patterns to bypass blocking, and
+    provides detailed logging for all blocking and throttling events.
+
+    :cvar int THROTTLE_LIMIT: The maximum number of blocked sensitive file requests allowed from a single client IP within the timeout period before blocking is triggered. Default is 5.
+    :cvar int THROTTLE_TIMEOUT: The duration of the timeout window in seconds during which blocked requests are counted and blocking is enforced. Default is 600 seconds (10 minutes).
+    :cvar allowed_patterns: Patterns for which requests are granted amnesty and not blocked, even if they match sensitive files.
+    :vartype allowed_patterns: tuple
+    :cvar sensitive_files: Set of filenames and patterns considered sensitive and subject to blocking.
+    :vartype sensitive_files: set
+
+    **Key Features**
+
+    - Blocks requests for a comprehensive list of sensitive files and file patterns.
+    - Throttles repeated attempts from the same client IP and blocks further requests after a threshold.
+    - Supports amnesty patterns to allow exceptions for specific paths.
+    - Provides detailed logging for all blocking, throttling, and amnesty events.
+    - Integrates with Django's cache for tracking request counts and with application logging.
+
+    .. note::
+        - Amnesty patterns can be configured via the ``SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS`` Django setting.
+        - Logging is controlled via a waffle switch and the application's log level.
+        - The client IP is determined using the :meth:`get_client_ip` method.
+
+    **Example**
+
+    To enable this middleware, add it to your Django project's middleware settings::
+
+        MIDDLEWARE = [
+            ...
+            'smarter.lib.django.middleware.sensitive_files.SmarterBlockSensitiveFilesMiddleware',
+            ...
+        ]
+
+    :param get_response: The next middleware or view in the Django request/response chain.
+    :type get_response: callable
+
+    :returns: The HTTP response object, or a 403 Forbidden response if the request is blocked.
+    :rtype: django.http.HttpResponse or django.http.HttpResponseForbidden
+    """
 
     THROTTLE_LIMIT = 5
     THROTTLE_TIMEOUT = 600  # seconds (10 minutes)
@@ -35,7 +84,9 @@ class BlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
         # grant amnesty for specific patterns
         self.allowed_patterns = (
-            settings.SENSITIVE_FILES_AMNESTY_PATTERNS if hasattr(settings, "SENSITIVE_FILES_AMNESTY_PATTERNS") else []
+            settings.SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS
+            if hasattr(settings, "SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS")
+            else []
         )
         self.sensitive_files = {
             ".env",

@@ -1,3 +1,0 @@
-# Documentation
-sphinx==8.2.3                       # for Readthedocs
-sphinx-rtd-theme==3.0.2             # Sphinx theme for Readthedocs

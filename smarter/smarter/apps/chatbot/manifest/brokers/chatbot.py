@@ -78,15 +78,33 @@ class ChatBotSerializer(ModelSerializer):
 
 class SAMChatbotBroker(AbstractBroker):
     """
-    Smarter API Chatbot Manifest Broker. This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml Chatbot manifests
-    - using the manifest to initialize the corresponding Pydantic model
+    Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` Chatbot manifests.
 
-    This Broker class interacts with the collection of Django ORM models that
-    represent the Smarter API Chatbot manifests. The Broker class is responsible
-    for creating, updating, deleting and querying the Django ORM models, as well
-    as transforming the Django ORM models into Pydantic models for serialization
-    and deserialization.
+    This class provides a high-level abstraction for managing chatbot manifests
+    within the Smarter platform. It acts as the central coordinator for the
+    lifecycle of chatbot manifests, bridging the gap between declarative YAML
+    files and persistent application state.
+
+    The broker is responsible for:
+
+    - Managing the lifecycle of chatbot manifests, including loading, validation,
+      and parsing of YAML files.
+    - Initializing Pydantic models from manifest data to ensure robust schema
+      validation and serialization.
+    - Integrating with Django ORM models that represent chatbot manifests,
+      supporting creation, update, deletion, and querying of database records.
+    - Transforming data between Django ORM models and Pydantic models to enable
+      seamless conversion between database and API representations.
+    - Coordinating composite models, such as ChatBot, ChatBotAPIKey,
+      ChatBotPlugin, and ChatBotFunctions, to ensure all components of a chatbot
+      are synchronized according to the manifest specification.
+    - Ensuring atomic and consistent application of changes using Django's
+      transaction management.
+    - Providing detailed logging and error handling integrated with the Smarter
+      platform's diagnostics systems.
+
+    This broker is a key component in the deployment, configuration, and
+    lifecycle management of chatbots in the Smarter Framework.
     """
 
     # override the base abstract manifest model with the Chatbot model
@@ -99,8 +117,23 @@ class SAMChatbotBroker(AbstractBroker):
     @property
     def name(self) -> Optional[str]:
         """
-        The name property is a string that represents the name of the ChatBot.
-        The name is used to uniquely identify the ChatBot in the database.
+        Retrieve the unique name identifier for the ChatBot instance managed by this broker.
+
+        This property accesses the name used to distinguish the ChatBot within the database and across
+        the Smarter platform. The name is first returned from an internal cache if available. If not cached,
+        and if a manifest is present, the name is extracted from the manifest's metadata and stored for
+        subsequent access.
+
+        The name is essential for database queries, model lookups, and for associating related resources
+        such as API keys, plugins, and functions with the correct ChatBot instance.
+
+        :returns: The name of the ChatBot as a string, or ``None`` if the name is not set or cannot be determined.
+        :rtype: Optional[str]
+
+        .. note::
+
+            The name property is a critical identifier used throughout the broker to ensure correct
+            mapping between manifest data and persistent application state.
         """
         if self._name:
             return self._name
@@ -111,10 +144,26 @@ class SAMChatbotBroker(AbstractBroker):
     @property
     def chatbot(self) -> Optional[ChatBot]:
         """
-        The ChatBot object is a Django ORM model that represents the Smarter ChatBot.
-        The ChatBot object is used to store the configuration and state of the ChatBot
-        in the database. The ChatBot object is retrieved from the database, if it exists,
-        or created from the manifest if it does not.
+        Provides access to the Django ORM model instance representing the current Smarter ChatBot.
+
+        This property retrieves the ChatBot object associated with the broker's account and name.
+        If a matching ChatBot record exists in the database, it is returned and cached for future access.
+        If no such record exists, and a manifest is available, a new ChatBot instance is created using
+        data extracted from the manifest and then persisted to the database.
+
+        This property ensures that the broker always has access to a valid ChatBot model, either by
+        fetching an existing record or by creating one from the manifest specification. The ChatBot
+        model stores the configuration and runtime state of the chatbot, and is used for all database
+        operations related to the chatbot's lifecycle.
+
+        :returns: The Django ORM ChatBot instance if found or created, otherwise ``None`` if neither
+                  a database record nor a manifest is available.
+        :rtype: Optional[ChatBot]
+
+        .. note::
+
+            The returned ChatBot object is essential for linking related resources such as API keys,
+            plugins, and functions, and for performing updates or queries on the chatbot's state.
         """
         if not self._chatbot:
             try:
@@ -134,9 +183,26 @@ class SAMChatbotBroker(AbstractBroker):
     @property
     def chatbot_api_key(self) -> Optional[ChatBotAPIKey]:
         """
-        The ChatBotAPIKey object is a Django ORM model that represents the API Key
-        used by the ChatBot for authentication. The ChatBotAPIKey object is used to
-        store the API Key in the database.
+        Provides access to the API key associated with the current ChatBot instance.
+
+        This property retrieves the ``ChatBotAPIKey`` Django ORM model object that is linked to
+        the ChatBot managed by this broker. The API key is used for authenticating requests made
+        by the ChatBot and is stored securely in the database.
+
+        If the API key has already been retrieved and cached, it is returned immediately.
+        Otherwise, the property attempts to fetch the API key from the database using the
+        current ChatBot instance. If no API key is found, ``None`` is returned.
+
+        This property is essential for operations that require authentication or authorization
+        on behalf of the ChatBot, such as invoking external APIs or managing secure resources.
+
+        :returns: The ``ChatBotAPIKey`` instance associated with the ChatBot, or ``None`` if no API key exists.
+        :rtype: Optional[ChatBotAPIKey]
+
+        .. important::
+
+            If the ChatBotAPIKey is ``None``, it indicates that no API key has been set for the ChatBot,
+            which in turn will enable anonymous unauthenticated access for the ChatBot.
         """
         if self._chatbot_api_key:
             return self._chatbot_api_key
@@ -148,7 +214,24 @@ class SAMChatbotBroker(AbstractBroker):
 
     def manifest_to_django_orm(self) -> dict:
         """
-        Transform the Smarter API Chatbot manifest into a Django ORM model.
+        Convert the Smarter API Chatbot manifest into a dictionary suitable for creating or updating a Django ORM ChatBot model.
+
+        This method extracts all relevant configuration, metadata, and versioning information from the loaded manifest
+        and transforms it into a dictionary format compatible with Django ORM operations. The manifest's configuration
+        is first dumped and converted from camelCase to snake_case to match Django's field naming conventions.
+
+        The resulting dictionary includes the account, name, description, and version fields from the manifest metadata,
+        as well as all configuration fields from the manifest specification. This dictionary can be used to instantiate
+        or update a ChatBot ORM model instance in the database.
+
+        If the manifest is not loaded or is invalid, an exception is raised to indicate that the broker is not ready
+        to perform the transformation.
+
+        :returns: A dictionary containing all fields required to create or update a Django ORM ChatBot model.
+        :rtype: dict
+
+        :raises SAMBrokerErrorNotReady: If the manifest is not loaded or cannot be found.
+        :raises SAMChatbotBrokerError: If the manifest configuration cannot be converted to a dictionary.
         """
         if not self.manifest:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind)
@@ -168,8 +251,30 @@ class SAMChatbotBroker(AbstractBroker):
 
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
-        Transform the Django ORM model into a Pydantic readable
-        Smarter API Chatbot manifest dict.
+        Transform the Django ORM ChatBot model instance into a dictionary compatible with the Smarter API Chatbot manifest format.
+
+        This method converts the current ChatBot ORM model and its related resources (plugins, functions, API key)
+        into a dictionary structure that matches the expected schema for a Pydantic manifest. The conversion includes
+        renaming fields from snake_case to camelCase, removing internal-only fields, and assembling metadata, spec,
+        and status sections as required by the manifest.
+
+        The resulting dictionary contains all configuration, metadata, plugin, function, and status information
+        necessary to reconstruct the manifest for the chatbot. This enables seamless round-trip conversion between
+        database state and manifest representation.
+
+        If the ChatBot model is not available, the method logs a warning and returns ``None``. If the conversion
+        fails, an exception is raised to indicate the error.
+
+        :returns: A dictionary representing the Smarter API Chatbot manifest, or ``None`` if the ChatBot model is not set.
+        :rtype: Optional[dict]
+
+        :raises SAMChatbotBrokerError: If the ORM model cannot be converted to a manifest dictionary.
+
+        See also:
+
+        - :py:meth:`smarter.apps.chatbot.manifest.brokers.chatbot.SAMChatbotBroker.manifest_to_django_orm`
+        - :py:class:`smarter.lib.manifest.enumSAMKeys`
+        - :py:class:`smarter.apps.chatbot.manifest.enum.SAMMetadataKeys`
         """
         if not self.chatbot:
             logger.warning(
@@ -234,26 +339,71 @@ class SAMChatbotBroker(AbstractBroker):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the formatted class name for logging purposes.
-        This is used to provide a more readable class name in logs.
+        Returns a formatted string representing the class name for logging purposes.
+
+        This property generates a human-readable class name that is used to improve the clarity
+        and consistency of log messages throughout the broker. The formatted class name includes
+        the parent class name and appends the specific broker class identifier, making it easier
+        to trace log entries back to their source within the codebase.
+
+        The formatted class name is especially useful in environments where multiple brokers or
+        components are active, as it helps distinguish log messages and aids in debugging and
+        monitoring application behavior.
+
+        :returns: A string containing the formatted class name, suitable for use in log output.
+        :rtype: str
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.SAMChatbotBroker()"
 
     @property
     def kind(self) -> str:
+        """
+        Returns the manifest kind for the Smarter API Chatbot.
+
+        This property provides the specific kind identifier used to classify the Smarter API Chatbot
+        manifest within the Smarter platform. The kind is a key component of the manifest schema,
+        allowing the system to recognize and process chatbot manifests appropriately. The kind value is defined as a constant in the chatbot manifest model
+        and is used throughout the broker to ensure consistency when handling chatbot manifests.
+
+        :returns: The manifest kind string for the Smarter API Chatbot.
+        :rtype: str
+
+        .. important::
+
+            The kind property is essential for manifest validation, routing, and processing within
+            the Smarter platform.
+        """
         return MANIFEST_KIND
 
     @property
     def manifest(self) -> Optional[SAMChatbot]:
         """
-        SAMChatbot() is a Pydantic model
-        that is used to represent the Smarter API Chatbot manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        Returns the Smarter API Chatbot manifest as a Pydantic model.
+
+        This method constructs and returns an instance of the ``SAMChatbot`` Pydantic model,
+        which represents the full manifest for a Smarter API Chatbot. The manifest contains
+        all configuration, metadata, and specification details required to describe and deploy
+        a chatbot within the Smarter platform.
+
+        The manifest is initialized using data provided by the manifest loader. The loader
+        supplies the manifest's API version, kind, metadata, and specification, which are
+        passed to the respective fields of the ``SAMChatbot`` model. The metadata and spec
+        fields are themselves Pydantic models (``SAMChatbotMetadata`` and ``SAMChatbotSpec``),
+        and are recursively initialized with their corresponding data.
+
+        Unlike child models, which are automatically cascade-initialized by Pydantic when
+        constructing the parent model, the top-level manifest model must be explicitly
+        instantiated in this method. This ensures that all manifest data is validated and
+        structured according to the schema defined by the ``SAMChatbot`` model.
+
+        If the manifest has already been initialized and cached, this method returns the
+        cached instance. If the loader is present and its manifest kind matches the expected
+        kind, a new manifest instance is created and cached before returning.
+
+        :returns: An instance of ``SAMChatbot`` representing the chatbot manifest, or ``None``
+                if the manifest cannot be initialized.
+        :rtype: Optional[SAMChatbot]
         """
         if self._manifest:
             return self._manifest
@@ -271,9 +421,31 @@ class SAMChatbotBroker(AbstractBroker):
     ###########################################################################
     @property
     def model_class(self) -> Type[ChatBot]:
+        """
+        The Django ORM model class for the ChatBot.
+
+        :returns: The ChatBot Django ORM model class.
+        :rtype: Type[ChatBot]
+        """
         return ChatBot
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return an example manifest for the Smarter API Chatbot.
+
+        :returns: A JSON response containing an example Smarter API Chatbot manifest.
+        :rtype: SmarterJournaledJsonResponse
+
+        See also:
+
+        - :py:class:`smarter.apps.chatbot.manifest.models.chatbot.SAMChatbot`
+        - :py:class:`smarter.lib.manifest.enumSAMKeys`
+        - :py:class:`smarter.apps.chatbot.manifest.enum.SAMMetadataKeys`
+        - :py:class:`smarter.apps.chatbot.manifest.enum.SCLIResponseGet`
+        - :py:class:`smarter.apps.chatbot.manifest.enum.SCLIResponseGetData`
+        - :py:class:`from smarter.common.conf.SettingsDefaults`
+
+        """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {

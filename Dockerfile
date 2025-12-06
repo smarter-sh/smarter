@@ -23,7 +23,7 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
   license="GNU AGPL v3" \
   vcs-url="https://github.com/smarter-sh/smarter" \
   org.opencontainers.image.title="Smarter API" \
-  org.opencontainers.image.version="0.13.33" \
+  org.opencontainers.image.version="0.13.37" \
   org.opencontainers.image.authors="Lawrence McDaniel <lpm0073@gmail.com>" \
   org.opencontainers.image.url="https://smarter-sh.github.io/smarter/" \
   org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
@@ -55,6 +55,10 @@ RUN echo "ENVIRONMENT: $ENVIRONMENT"
 # procps                    provides the 'ps' command, used for liveness/readiness probes of the beat pod in kubernetes
 FROM linux_base AS system_packages
 
+# Install system packages
+# The Python slim trixie image is based on Debian and is a limited installation. Most of these packages
+# would ordinarily be included in a full Debian installation, but are missing from the slim image and
+# we therefore need to "add these back in" as part of our Dockerfile.
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   build-essential \
   libssl-dev \
@@ -71,7 +75,10 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   procps && \
   rm -rf /var/lib/apt/lists/*
 
-# Install kubectl, required for smarter/common/helpers/k8s_helpers.py
+# Install kubectl, required for smarter/common/helpers/k8s_helpers.py used for ChatBot/Agent
+# deployments in which dedicated Kubernetes ingress and TLS certificates are created. There
+# are Kubernetes builds for both amd64 and arm64 architectures (we build both for DockerHub
+# multi-arch support).
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
       KUBECTL_ARCH="arm64"; \
     else \
@@ -82,6 +89,9 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
     mv ./kubectl /usr/local/bin/kubectl
 
 # install aws cli, required for smarter/common/helpers/aws/
+# We rely extensively on AWS support, for Route53, S3, Simple Email Service,
+# Elastic Kubernetes Service, etc. There are AWS CLI builds for both
+# amd64 and arm64 architectures (we build both for DockerHub multi-arch support).
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
       curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"; \
     else \
@@ -138,6 +148,7 @@ FROM venv AS application
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
 COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
+RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 
 ################################# permissuions #######################################
 FROM application AS permissions
@@ -182,14 +193,22 @@ COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
 
-# Collect static files
 ############################## collect_assets ##################################
+# This is a Django application, so we need to collect static assets.
+# We do this in a separate stage so that if the application code changes
+# but the static assets do not change, we can take advantage of Docker's
+# caching mechanism.
 FROM data AS collect_assets
 WORKDIR /home/smarter_user/smarter
 RUN python manage.py collectstatic --noinput
 
 
 ################################# final #######################################
+# This is the final stage that will be used to run the application.
+# Gunicorn is used as the application server.
+# "smarter.wsgi:application" is the WSGI application callable and corresponds
+# to the "application" variable in smarter/wsgi.py.
+# The application will listen on all interfaces (0.0.0.0).
 FROM collect_assets AS serve_application
 
 WORKDIR /home/smarter_user/smarter

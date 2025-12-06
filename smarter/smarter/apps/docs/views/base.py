@@ -15,6 +15,7 @@ from django.shortcuts import render
 from django.test import RequestFactory
 from django.urls import reverse
 
+from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST, SmarterEnvironments
@@ -51,8 +52,11 @@ class DocsBaseView(SmarterWebHtmlView):
 
     def get_brokered_json_response(self, reverse_name: str, view, request: HttpRequest, *args, **kwargs):
         """Get the JSON response from the brokered smarter.sh/api endpoint."""
-        if request.user is None:
-            raise DocsError("request.user is None. This should not happen.")
+        if not hasattr(request, "user") or request.user is None:
+            logger.warning(
+                "Request does not have a user associated with it. "
+                "Anonymous requests may have limited access to certain manifests."
+            )
 
         logger.info(
             "Getting brokered JSON response for reverse_name=%s, kind=%s, request.user=%s",
@@ -71,7 +75,7 @@ class DocsBaseView(SmarterWebHtmlView):
         factory = RequestFactory(SERVER_NAME=parsed_url.netloc, wsgi_url_scheme=scheme)
         path = reverse(reverse_name, kwargs={"kind": self.kind})
         cli_request = factory.get(path)
-        cli_request.user = request.user
+        cli_request.user = request.user if hasattr(request, "user") else get_cached_smarter_admin_user_profile().user
         if hasattr(request, SMARTER_IS_INTERNAL_API_REQUEST):
             setattr(cli_request, SMARTER_IS_INTERNAL_API_REQUEST, getattr(request, SMARTER_IS_INTERNAL_API_REQUEST))
         else:

@@ -10,7 +10,7 @@ from typing import Optional, Pattern, Sequence
 from urllib.parse import SplitResult, urlsplit
 
 from corsheaders.conf import conf
-from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
+from corsheaders.middleware import CorsMiddleware
 from django.conf import settings
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
@@ -32,11 +32,55 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-logger.info("Loading smarter.lib.django.middleware.cors.CorsMiddleware")
+logger.info("Loading smarter.lib.django.middleware.cors.SmarterCorsMiddleware")
 
 
-class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
-    """CORSMiddleware is used to handle CORS headers for the application."""
+class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
+    """
+    Middleware for handling Cross-Origin Resource Sharing (CORS) headers in the application.
+
+    This middleware extends the default CORS handling to dynamically add chatbot URLs to the
+    allowed origins at runtime. It ensures that requests from valid chatbot origins are permitted
+    by updating the CORS allowed origins list based on the current request context.
+
+    The middleware also provides additional logic to handle internal IP addresses, health check
+    endpoints, and logging for debugging and auditing purposes.
+
+    :cvar _url: The parsed URL (as a :class:`urllib.parse.SplitResult`) for the current request, or None.
+    :vartype _url: Optional[SplitResult]
+    :cvar _chatbot: The chatbot instance associated with the current request, or None.
+    :vartype _chatbot: Optional[ChatBot]
+    :cvar request: The current Django HTTP request object, or None.
+    :vartype request: Optional[HttpRequest]
+
+    **Key Features**
+
+    - Dynamically adds chatbot URLs to the CORS allowed origins list.
+    - Handles requests from internal IP addresses and health check endpoints.
+    - Provides detailed logging for CORS-related events and decisions.
+    - Integrates with Django and the `django-cors-headers` package.
+
+    .. note::
+        - The chatbot URL is only added to the allowed origins if a chatbot is associated with the request.
+        - Internal requests and health checks are short-circuited for efficiency.
+        - Logging is controlled via a waffle switch and the application's log level.
+
+    **Example**
+
+    To enable this middleware, add it to your Django project's middleware settings::
+
+        MIDDLEWARE = [
+            ...
+            'smarter.lib.django.middleware.cors.SmarterCorsMiddleware',
+            ...
+        ]
+
+    :param request: The incoming HTTP request object.
+    :type request: django.http.HttpRequest
+
+    :returns: The HTTP response object, potentially with CORS headers added.
+    :rtype: django.http.response.HttpResponseBase or Awaitable[HttpResponseBase]
+    """
 
     _url: Optional[SplitResult] = None
     _chatbot: Optional[ChatBot] = None
@@ -57,7 +101,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
 
         # Short-circuit for any requests born from internal IP address hosts
         # This is unlikely, but not impossible.
-        if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
+        if any(host.startswith(prefix) for prefix in settings.SMARTER_INTERNAL_IP_PREFIXES):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
@@ -134,7 +178,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
 
     @property
     def CORS_ALLOWED_ORIGIN_REGEXES(self) -> Sequence[str | Pattern[str]]:
-        # FIX NOTE: ADD CHATBOT URL
+        # TODO: ADD CHATBOT URL
         return conf.CORS_ALLOWED_ORIGIN_REGEXES
 
     def origin_found_in_white_lists(self, origin: str, url: SplitResult) -> bool:

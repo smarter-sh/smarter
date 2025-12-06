@@ -29,6 +29,11 @@ AWS_ACCESS_KEY_ID=SET-ME-PLEASE
 AWS_SECRET_ACCESS_KEY=SET-ME-PLEASE
 
 # -----------------------------------
+# ReactJS Chat app settings
+# -----------------------------------
+SMARTER_REACTJS_APP_LOADER_PATH="/ui-chat/app-loader.js"
+
+# -----------------------------------
 # FOR TESTING HELM CHARTS
 # Kubernetes secrets - smarter-platform-alpha
 # -----------------------------------

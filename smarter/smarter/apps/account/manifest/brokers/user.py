@@ -50,6 +50,12 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 MAX_RESULTS = 1000
+"""
+Maximum number of results to return for list operations.
+This limit helps prevent performance issues and excessive data retrieval.
+
+TODO: Make this configurable via smarter_settings.
+"""
 
 
 class SAMUserBrokerError(SAMBrokerError):
@@ -62,15 +68,47 @@ class SAMUserBrokerError(SAMBrokerError):
 
 class SAMUserBroker(AbstractBroker):
     """
-    Smarter API User Manifest Broker. This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml User manifests
-    - using the manifest to initialize the corresponding Pydantic model
+    Smarter API User Manifest Broker
 
-    This Broker class interacts with the collection of Django ORM models that
-    represent the Smarter API User manifests. The Broker class is responsible
-    for creating, updating, deleting and querying the Django ORM models, as well
-    as transforming the Django ORM models into Pydantic models for serialization
-    and deserialization.
+    This class manages the lifecycle of Smarter API User manifests, including loading, validating, parsing, and mapping them to Django ORM models and Pydantic models for serialization and deserialization.
+
+    **Responsibilities:**
+      - Load and validate Smarter API YAML User manifests.
+      - Parse manifests and initialize the corresponding Pydantic model (`SAMUser`).
+      - Interact with Django ORM models representing user manifests.
+      - Create, update, delete, and query Django ORM models.
+      - Transform Django ORM models into Pydantic models for serialization/deserialization.
+
+    **Parameters:**
+      - `manifest`: Optional[`SAMUser`]
+        The Pydantic model instance representing the manifest.
+      - `pydantic_model`: Type[`SAMUser`]
+        The Pydantic model class used for manifest validation.
+      - `account_contact`: Optional[`AccountContact`]
+        The associated account contact, if available.
+
+    **Example Usage:**
+
+      .. code-block:: python
+
+         broker = SAMUserBroker()
+         manifest = broker.manifest
+         if manifest:
+             print(manifest.apiVersion, manifest.kind)
+
+    .. warning::
+
+       If the manifest loader or manifest metadata is missing, the manifest may not be initialized and `None` may be returned.
+
+    .. seealso::
+
+       - `SAMUser` (Pydantic model)
+       - Django ORM models: `User`, `AccountContact`, `UserProfile`
+
+    .. todo::
+
+       Make the maximum results for list operations configurable via `smarter_settings`.
+
     """
 
     # override the base abstract manifest model with the User model
@@ -80,6 +118,31 @@ class SAMUserBroker(AbstractBroker):
 
     @property
     def account_contact(self) -> Optional[AccountContact]:
+        """
+        Retrieve the `AccountContact` associated with the current authenticated user and account.
+
+        :returns: An `AccountContact` instance if found, otherwise `None`.
+
+        .. note::
+
+           - This property returns `None` if the user is not set or not authenticated.
+           - If no matching `AccountContact` exists for the user's email and account, `None` is returned.
+
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           contact = broker.account_contact
+           if contact:
+               print(contact.first_name, contact.last_name, contact.email)
+
+        See Also:
+
+           - :class:`smarter.apps.account.models.AccountContact`
+           - :class:`smarter.apps.account.models.User`
+           - :class:`smarter.apps.account.models.Account`
+        """
         if self._account_contact:
             return self._account_contact
         if not self.user:
@@ -94,11 +157,54 @@ class SAMUserBroker(AbstractBroker):
 
     @property
     def username(self) -> Optional[str]:
+        """
+        Return the username of the current user, if available.
+
+        :returns: The username as a string, or `None` if the user is not set.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           username = broker.username
+           if username:
+               print(f"Current user: {username}")
+
+        See Also:
+
+           - :class:`smarter.apps.account.models.User`
+        """
         return self.user.username if self.user else None
 
     def manifest_to_django_orm(self) -> dict:
         """
-        Transform the Smarter API User manifest into a Django ORM model.
+        Convert the Smarter API User manifest (Pydantic model) into a dictionary suitable for Django ORM operations.
+
+        :returns: A dictionary with keys and values formatted for Django ORM model assignment.
+
+        .. note::
+
+           Field names are automatically converted from camelCase to snake_case to match Django conventions.
+
+        .. attention::
+
+           The returned dictionary may include fields that are not editable in the Django ORM model. Ensure you filter out read-only fields before saving.
+
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           orm_data = broker.manifest_to_django_orm()
+           for key, value in orm_data.items():
+               setattr(user, key, value)
+           user.save()
+
+        See Also:
+
+           - :meth:`django_orm_to_manifest_dict`
+           - :class:`smarter.apps.account.models.User`
+
         """
         config_dump = self.manifest.spec.config.model_dump()  # type: ignore[return-value]
         config_dump = self.camel_to_snake(config_dump)
@@ -106,8 +212,33 @@ class SAMUserBroker(AbstractBroker):
 
     def django_orm_to_manifest_dict(self) -> Optional[dict]:
         """
-        Transform the Django ORM model into a Pydantic readable
-        Smarter API User manifest dict.
+        Convert a Django ORM `User` model instance into a dictionary formatted for Pydantic manifest consumption.
+
+        :returns: A dictionary representing the Smarter API User manifest, or `None` if the user is not set.
+
+        .. note::
+
+           Field names are automatically converted from snake_case to camelCase for compatibility with Pydantic models.
+
+        :raises: :class:`SAMUserBrokerError` if `self.user` is not set.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           manifest_dict = broker.django_orm_to_manifest_dict()
+           if manifest_dict:
+               print(manifest_dict["spec"]["config"]["email"])
+
+        See Also:
+
+           - :meth:`manifest_to_django_orm`
+           - :class:`SAMUser`
+           - :class:`smarter.apps.account.models.User`
+           - :class:`smarter.lib.manifest.enum.SamKeys`
+           - :class:`smarter.lib.manifest.enumSAMMetadataKeys`
+           - :class:`smarter.lib.manifest.enumSAMUserSpecKeys`
+
         """
         if not self.user:
             raise SAMUserBrokerError("User is not set", thing=self.kind)
@@ -139,26 +270,58 @@ class SAMUserBroker(AbstractBroker):
     @property
     def formatted_class_name(self) -> str:
         """
-        Returns the formatted class name for logging purposes.
-        This is used to provide a more readable class name in logs.
+        Return a formatted class name string for logging and diagnostics.
+
+        :returns: A string representing the fully qualified class name, including the parent class.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           logger.info(broker.formatted_class_name)
+
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.SAMUserBroker()"
 
     @property
     def kind(self) -> str:
+        """
+        Return the manifest kind string for the Smarter API User.
+
+        :returns: The manifest kind as a string (e.g., ``"User"``).
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           if broker.kind == "User":
+               print("This broker handles User manifests.")
+
+        """
         return MANIFEST_KIND
 
     @property
     def manifest(self) -> Optional[SAMUser]:
         """
-        SAMUser() is a Pydantic model
-        that is used to represent the Smarter API User manifest. The Pydantic
-        model is initialized with the data from the manifest loader, which is
-        generally passed to the model constructor as **data. However, this top-level
-        manifest model has to be explicitly initialized, whereas its child models
-        are automatically cascade-initialized by the Pydantic model, implicitly
-        passing **data to each child's constructor.
+        Get the manifest for the Smarter API User as a Pydantic model.
+
+        :returns: A `SAMUser` Pydantic model instance representing the Smarter API User manifest, or None if not initialized.
+
+        .. note::
+
+           The top-level manifest model (`SAMUser`) must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
+
+        .. warning::
+
+           If the manifest loader or manifest metadata is missing, the manifest will not be initialized and None may be returned.
+
+        **Example usage**::
+
+            # Access the manifest property
+            manifest = broker.manifest
+            if manifest:
+                print(manifest.apiVersion, manifest.kind)
         """
         if self._manifest:
             return self._manifest
@@ -175,10 +338,48 @@ class SAMUserBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self):
+    def model_class(self) -> Type[User]:
+        """
+        Return the model class associated with the Smarter API User.
+
+        :returns: The `User` model class.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           model_cls = broker.model_class
+           user_instance = model_cls.objects.get(username="example_user")
+
+        .. seealso::
+
+           - :class:`smarter.apps.account.models.User`
+        """
         return User
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return the Django model class associated with the Smarter API User manifest.
+
+        :returns: The Django `User` model class.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           user_cls = broker.model_class
+           user = user_cls.objects.get(username="example_user")
+
+        .. seealso::
+
+           - :class:`smarter.apps.account.models.User`
+           - :meth:`manifest_to_django_orm`
+           - :meth:`django_orm_to_manifest_dict`
+           - :class:`smarter.apps.SamKeys`
+           - :class:`SAMMetadataKeys`
+           - :class:`SAMUserSpecKeys`
+
+        """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {
@@ -203,6 +404,40 @@ class SAMUserBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Retrieve Smarter API User manifests as a list of serialized Pydantic models.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments, including optional filter parameters.
+
+        :returns: A `SmarterJournaledJsonResponse` containing a list of user manifests and metadata.
+
+        .. note::
+
+           If a username is provided in `kwargs`, only manifests for that user are returned; otherwise, all manifests for the account are listed.
+
+        :raises: :class:`SAMUserBrokerError`
+           If serialization fails for any user
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           response = broker.get(request, name="alice")
+           print(response.data["spec"]["items"])
+
+        See Also:
+
+           - :class:`smarter.apps.account.serializers.UserSerializer`
+           - :meth:`django_orm_to_manifest_dict`
+           - :class:`smarter.lib.manifest.response.SmarterJournaledJsonResponse`
+           - :class:`smarter.lib.manifest.enum.SamKeys`
+           - :class:`smarter.lib.manifest.enum.SAMMetadataKeys`
+           - :class:`smarter.lib.manifest.enum.SCLIResponseGet`
+           - :class:`smarter.lib.manifest.enum.SCLIResponseGetData`
+
+        """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
@@ -242,13 +477,39 @@ class SAMUserBroker(AbstractBroker):
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        apply the manifest. copy the manifest data to the Django ORM model and
-        save the model to the database. Call super().apply() to ensure that the
-        manifest is loaded and validated before applying the manifest to the
-        Django ORM model.
-        Note that there are fields included in the manifest that are not editable
-        and are therefore removed from the Django ORM model dict prior to attempting
-        the save() command. These fields are defined in the readonly_fields list.
+        Apply the manifest data to the Django ORM `User` model and persist changes to the database.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :returns: A `SmarterJournaledJsonResponse` containing the updated user manifest.
+
+        .. note::
+
+           This method first calls ``super().apply()`` to ensure the manifest is loaded and validated before applying changes.
+
+        .. attention::
+
+           Fields in the manifest that are not editable (e.g., ``id``, ``date_joined``, ``last_login``, ``username``, ``is_superuser``) are removed before saving to the ORM model.
+
+        :raises: :class:`SAMUserBrokerError`
+           If the user instance is not set or is invalid
+
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           response = broker.apply(request)
+           print(response.data)
+
+        See Also:
+
+           - :meth:`manifest_to_django_orm`
+           - :class:`smarter.apps.account.models.User`
+           - :class:`SAMUserBrokerError`
+
         """
         super().apply(request, kwargs)
         command = self.apply.__name__
@@ -272,11 +533,41 @@ class SAMUserBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+
+        .. attention::
+
+            this is not implemented for the Smarter API User manifest.
+
+        :raises: :class:`SAMBrokerErrorNotImplemented`
+            Always raised to indicate that the chat operation is not implemented for this manifest type.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :returns: Never returns; always raises an exception.
+        """
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Describe the Smarter API User manifest by retrieving the corresponding Django ORM `User` model instance.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments, including the username to describe.
+
+        :returns: A `SmarterJournaledJsonResponse` containing the user manifest data.
+
+        :raises: :class:`SAMBrokerErrorNotFound`
+           If the user with the specified username does not exist or is not associated with the account.
+        :raises: :class:`SAMUserBrokerError`
+           If serialization fails for the user.
+
+        """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -307,6 +598,21 @@ class SAMUserBroker(AbstractBroker):
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delete the Smarter API User manifest by removing the corresponding Django ORM `User` model instance.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments, including the username to delete.
+
+        :returns: A `SmarterJournaledJsonResponse` indicating the result of the delete operation.
+
+        :raises: :class:`SAMBrokerErrorNotFound`
+           If the user with the specified username does not exist.
+        :raises: :class:`SAMUserBrokerError`
+           If deletion fails for the user.
+
+        """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -331,6 +637,18 @@ class SAMUserBroker(AbstractBroker):
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Deploy the Smarter API User manifest by activating the corresponding Django ORM `User` model instance.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :raises: :class:`SAMUserBrokerError`
+           If deployment fails for the user.
+
+        :returns: A `SmarterJournaledJsonResponse` indicating the result of the deploy operation.
+        """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.user:
@@ -346,6 +664,16 @@ class SAMUserBroker(AbstractBroker):
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Undeploy the Smarter API User manifest by deactivating the corresponding Django ORM `User` model instance.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :raises: :class:`SAMUserBrokerError`
+           If undeployment fails for the user.
+        """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         if self.user:
@@ -361,6 +689,15 @@ class SAMUserBroker(AbstractBroker):
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Retrieve logs related to the Smarter API User manifest.
+
+        :param request: The Django `HttpRequest` object.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+
+        :returns: A `SmarterJournaledJsonResponse` containing log data.
+        """
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         data = {}

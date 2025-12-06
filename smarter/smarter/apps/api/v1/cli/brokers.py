@@ -5,6 +5,7 @@ that implement the broker service pattern for an underlying object. Brokers
 receive a Yaml manifest representation of a model, convert this to a Pydantic
 model, and then instantiate the appropriate Python class that performs
 the necessary operations to facilitate cli requests that include:
+
     - delete
     - deploy
     - describe
@@ -15,7 +16,7 @@ the necessary operations to facilitate cli requests that include:
 """
 
 import logging
-from typing import Dict, Type
+from typing import Dict, Optional, Type
 from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
@@ -53,7 +54,50 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class Brokers:
-    """Broker service pattern for an underlying object. Maps SAMKinds to Broker classes."""
+    """
+    The Broker service pattern for the Smarter Broker Model.
+
+    This class provides the mapping and logic for selecting the correct Broker
+    implementation based on the manifest ``Kind``. Brokers are used throughout
+    the ``api/v1/cli`` interface to process Smarter YAML manifests and to
+    facilitate common CLI operations, including:
+
+        - ``apply``
+        - ``delete``
+        - ``deploy``
+        - ``describe``
+        - ``get``
+        - ``manifest``
+        - ``example``
+        - ``status``
+        - ``undeploy``
+        - ``logs``
+        - ``schema``
+
+    Each Broker is responsible for brokering the correct implementation class
+    for a given operation by analyzing the manifest's ``Kind`` field. This
+    enables a unified interface for handling different resource types in the
+    Smarter platform.
+
+    Key Methods
+    -----------
+    get_broker(kind: str) -> Optional[Type[AbstractBroker]]:
+        Returns the Broker class definition for the given manifest kind.
+        The lookup is case-insensitive.
+
+    Usage
+    -----
+    Brokers are primarily used for processing Smarter YAML manifests in CLI
+    workflows. By calling :meth:`get_broker`, you can retrieve the appropriate
+    Broker class to handle a specific resource type.
+
+    Example
+    -------
+    >>> broker_cls = Brokers.get_broker("Account")
+    >>> broker = broker_cls()
+    >>> broker.describe(...)
+
+    """
 
     _brokers: Dict[str, Type[AbstractBroker]] = {
         SAMKinds.ACCOUNT.value: SAMAccountBroker,
@@ -77,7 +121,7 @@ class Brokers:
         return {k.lower(): v for k, v in cls._brokers.items()}
 
     @classmethod
-    def get_broker(cls, kind: str) -> Type[AbstractBroker]:
+    def get_broker(cls, kind: str) -> Optional[Type[AbstractBroker]]:
         """Case insensitive broker getter."""
         return cls._brokers.get(kind) or cls._lower_brokers().get(kind.lower())
 
@@ -87,7 +131,7 @@ class Brokers:
         return components[0] + "".join(x.title() for x in components[1:])
 
     @classmethod
-    def get_broker_kind(cls, kind: str) -> str:
+    def get_broker_kind(cls, kind: str) -> Optional[str]:
         """
         Case insensitive broker kind getter. Returns the original SAMKinds
         key string from cls._brokers for the given kind.
@@ -115,13 +159,14 @@ class Brokers:
         return list(cls._brokers.keys())
 
     @classmethod
-    def from_url(cls, url) -> str:
+    def from_url(cls, url) -> Optional[str]:
         """
         Returns the kind of broker from the given URL. This is used to
         determine the broker to use when the kind is not provided in the
         request.
 
-        example: http://localhost:8000/api/v1/cli/example_manifest/Account/
+        example: http://localhost:8000/api/v1/cli/example_manifest/account/
+        returns: "Account"
         """
         parsed_url = urlparse(url)
         if parsed_url:

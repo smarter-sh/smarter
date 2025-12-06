@@ -1,4 +1,4 @@
-"""Test the CorsMiddleware class."""
+"""Test the SmarterCorsMiddleware class."""
 
 # pylint: disable=W0718,W0212
 
@@ -6,15 +6,15 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from urllib.parse import urlsplit
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.lib.django.middleware.cors import CorsMiddleware
+from smarter.lib.django.middleware.cors import SmarterCorsMiddleware
 
 
-class TestCorsMiddleware(TestAccountMixin):
-    """Test the CorsMiddleware class."""
+class TestSmarterCorsMiddleware(TestAccountMixin):
+    """Test the SmarterCorsMiddleware class."""
 
     def setUp(self):
         super().setUp()
-        self.middleware = CorsMiddleware(get_response=MagicMock())
+        self.middleware = SmarterCorsMiddleware(get_response=MagicMock())
         self.request = MagicMock()
         self.request.build_absolute_uri.return_value = "https://example.com/foo"
         self.split_url = urlsplit("https://example.com/foo")
@@ -22,17 +22,19 @@ class TestCorsMiddleware(TestAccountMixin):
     @patch("smarter.lib.django.middleware.cors.waffle")
     def test___call__(self, mock_waffle):
         mock_waffle.switch_is_active.return_value = False
-        with patch.object(CorsMiddleware, "__call__", wraps=super(CorsMiddleware, self.middleware).__call__):
-            # __call__ is inherited from DjangoCorsMiddleware, so just check it calls super
+        with patch.object(
+            SmarterCorsMiddleware, "__call__", wraps=super(SmarterCorsMiddleware, self.middleware).__call__
+        ):
+            # __call__ is inherited from DjangoSmarterCorsMiddleware, so just check it calls super
             try:
                 self.middleware.__call__(self.request)
             except Exception:
-                pass  # DjangoCorsMiddleware.__call__ expects more setup
+                pass  # DjangoSmarterCorsMiddleware.__call__ expects more setup
 
     def test_url_setter_and_chatbot(self):
         split_url = urlsplit("https://example.com")
         request = MagicMock()
-        middleware = CorsMiddleware(get_response=MagicMock())
+        middleware = SmarterCorsMiddleware(get_response=MagicMock())
 
         with (
             patch("smarter.lib.django.middleware.cors.conf") as mock_conf,
@@ -48,7 +50,7 @@ class TestCorsMiddleware(TestAccountMixin):
             middleware.request.user = self.admin_user
             middleware.url = split_url
 
-            # FIX NOTE: need assertions here.
+            # TODO: need assertions here.
 
     @patch("smarter.lib.django.middleware.cors.conf")
     def test_CORS_ALLOWED_ORIGINS_with_chatbot(self, mock_conf):

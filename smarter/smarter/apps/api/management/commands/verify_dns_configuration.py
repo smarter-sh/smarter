@@ -10,10 +10,36 @@ from smarter.lib.django.management.base import SmarterCommand
 # pylint: disable=E1101
 class Command(SmarterCommand):
     """
-    Verify AWS Route53 resources.
-    - root:     example.com
-    - api:      api.example.com, alpha.api.example.com, beta.api.example.com, etc.
-    - platform: platform.example.com, alpha.platform.example.com, beta.platform.example.com, etc.
+    Management command for verifying AWS Route53 DNS resources required by the Smarter platform.
+
+    This command checks the existence and correctness of DNS records and hosted zones for the root domain, API domain, and platform domain, as well as environment-specific domains (such as ``alpha.api.example.com`` or ``beta.platform.example.com``). It ensures that all necessary DNS infrastructure is present and properly configured for both production and non-production environments.
+
+    **Key Features and Workflow:**
+
+    - Verifies that AWS Route53 hosted zones exist for the root, API, and platform domains.
+    - Ensures that each hosted zone contains the required A record alias to the AWS Classic Load Balancer.
+    - Checks for the presence of NS records in the root domain hosted zone for both API and platform domains.
+    - For non-production environments, verifies and creates hosted zones and DNS records for environment-specific domains.
+    - Provides detailed, formatted output for each verification step, including success and error messages.
+
+    **Usage:**
+
+    This command is intended to be run during environment setup, deployment, or DNS troubleshooting. It is especially useful for administrators and DevOps engineers who need to validate or repair DNS infrastructure in AWS Route53 for the Smarter platform.
+
+    **Error Handling and Output:**
+
+    - Raises clear exceptions and outputs descriptive error messages if any required DNS resource is missing or misconfigured.
+    - Fails gracefully if AWS is not configured, or if the Route53 helper is not initialized.
+    - Reports the status of each verification and creation step, making it easy to identify and resolve issues.
+
+    **Intended Audience:**
+
+    System administrators, DevOps engineers, and cloud architects responsible for managing DNS infrastructure for Smarter environments. This command is also useful for onboarding new environments and ensuring DNS consistency across deployments.
+
+    .. seealso::
+
+        :py:class:`smarter.common.helpers.aws.route53.AWSRoute53` - AWS Route53 helper class used for DNS operations.
+        :py:data:`smarter.common.helpers.aws_helpers.aws_helper` - AWS helper module for initializing AWS services.
     """
 
     log_prefix = "smarter.apps.chatbot.management.commands.verify_dns_configuration"

@@ -1,0 +1,46 @@
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  description:
+    To create and deploy an example Smarter chatbot. Prompt with example
+    function calling to trigger the example Static Plugin
+  name: ExampleChatbot
+  version: 0.1.0
+spec:
+  apiKey: camelCaseNameOfApiKey
+  config:
+    appAssistant: Elle
+    appBackgroundImageUrl: https://example.com/background-image.jpg
+    appExamplePrompts:
+      - What is the weather in New York?
+      - Tell me a joke
+      - whats the current price of Apple stock?
+      - How many days ago was 29-Feb-1972?
+    appFileAttachment: false
+    appInfoUrl: https://example.com
+    appLogoUrl: https://example.com/logo.png
+    appName: Example Chatbot
+    appPlaceholder: Ask me anything...
+    appWelcomeMessage: Welcome to the Example Chatbot! How can I help you today?
+    customDomain: null
+    defaultMaxTokens: 2048
+    defaultModel: gpt-4-turbo
+    defaultSystemRole:
+      You are a helpful chatbot. When given the opportunity to utilize
+      function calling, you should always do so. This will allow you to provide the
+      best possible responses to the user. If you are unable to provide a response,
+      you should prompt the user for more information. If you are still unable to
+      provide a response, you should inform the user that you are unable to help them
+      at this time.
+    defaultTemperature: 0.5
+    deployed: true
+    dnsVerificationStatus: Not Verified
+    provider: openai
+    subdomain: example-chatbot
+  functions:
+    - weather
+    - datemath
+    - stockprice
+  plugins:
+    - everlasting_gobstopper
+    - example_configuration

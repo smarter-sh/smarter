@@ -50,7 +50,7 @@ class CardDeclinedView(SmarterAuthenticatedWebView):
     template_path = "account/dashboard/card-declined.html"
 
     def get(self, request):
-        # FIX NOTE: This is a temporary solution to display the card declined page.
+        # TODO: This is a temporary solution to display the card declined page.
         context = {
             "card_declined": {
                 "customer_name": "John Doe",

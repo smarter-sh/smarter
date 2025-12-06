@@ -24,7 +24,6 @@ app_name = namespace
 
 
 urlpatterns = [
-    # TO DO: add paths for langchain, openai and other chatbot providers
     path("", ChatbotListView.as_view(), name="chatbot_list_view"),
     path("<int:chatbot_id>/", ChatbotView.as_view(), name="chatbot_view"),
     path("<int:chatbot_id>/config/", ChatConfigView.as_view(), name="chat_config_view"),

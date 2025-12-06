@@ -1,0 +1,7 @@
+apiVersion: smarter.sh/v1
+kind: ChatHistory
+metadata:
+  description: An example Smarter API manifest for a ChatHistory
+  name: snake-case-name
+  version: 1.0.0
+spec: null

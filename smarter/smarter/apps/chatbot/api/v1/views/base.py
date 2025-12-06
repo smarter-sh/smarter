@@ -4,7 +4,7 @@ import logging
 import traceback
 from http import HTTPStatus
 from typing import List, Optional
-from urllib.parse import urlparse
+from urllib.parse import ParseResult, urlparse
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
@@ -50,16 +50,55 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 @method_decorator(csrf_exempt, name="dispatch")
 class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     """
-    Base viewset for all ChatBot APIs. Handles
-    - api key authentication
-    - Account and ChatBot initializations
-    - dispatching.
+    Base viewset for all ChatBot API endpoints.
 
-    examples:
-    - https://customer-support.3141-5926-5359.api.smarter.sh/
-    - https://platform.smarter/workbench/example/
-    - https://platform.smarter/api/v1/workbench/1/chat/
+    This class serves as the foundational viewset for all chatbot-related APIs in the Smarter platform,
+    including prompt completions that leverage the Smarter LLM Tool Call Plugin architecture.
 
+    **Key Responsibilities:**
+
+    - **API Key Authentication and Request Validation:**
+      Enforces authentication for all API requests, rejecting those without a valid API key.
+
+    - **Lifecycle Management:**
+      Handles initialization of Account, ChatBot, ChatBotHelper, and ChatHelper objects, and manages request dispatching
+      and routing to the appropriate handler methods.
+
+    - **Plugin Discovery and Extensibility:**
+      Discovers and initializes plugins for chatbot extensibility, supporting the Smarter LLM Tool Call Plugin architecture.
+
+    - **Logging and Observability:**
+      Provides robust logging and observability for all major lifecycle events, including error handling.
+
+    **Django Integration:**
+
+    - Subclasses Django's view-template system (not DRF), participating in the standard request/response lifecycle.
+    - Overrides and extends methods such as ``setup()``, ``dispatch()``, ``get()``, and ``post()`` to provide chatbot-specific logic.
+    - CSRF-exempt to support API clients.
+
+    **Prompt Completion & LLM Tool Call Plugins:**
+
+    - This base view is designed to support prompt completion endpoints that utilize Smarter's LLM Tool Call Plugin architecture.
+    - Plugins can be discovered and invoked as part of the chatbot's response generation, enabling extensible and dynamic tool use.
+
+    **Examples:**
+
+        - ``https://customer-support.3141-5926-5359.api.smarter.sh/``
+        - ``https://platform.smarter/workbench/example/``
+        - ``https://platform.smarter/api/v1/workbench/1/chat/``
+
+    **Notes:**
+
+    - Intended to be subclassed by concrete chatbot API views.
+    - Provides robust error handling and logging for all major operations.
+    - Authentication is enforced by default.
+    - CSRF-exempt for API compatibility.
+
+    **See Also:**
+        - Django REST Framework View lifecycle: https://www.django-rest-framework.org/api-guide/views/#view-initialization
+        - SmarterRequestMixin for request context management.
+        - ChatBotHelper and ChatHelper for chatbot and chat session logic.
+        - Smarter LLM Tool Call Plugin architecture documentation.
     """
 
     _chatbot_id: Optional[int] = None
@@ -75,10 +114,23 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     @property
     def chatbot_id(self):
+        """
+        Returns the chatbot ID.
+
+        :return: The chatbot ID.
+        :rtype: Optional[int]
+        """
         return self._chatbot_id
 
     @property
     def chat_helper(self) -> ChatHelper:
+        """
+        Returns the ChatHelper instance.
+        Lazily initializes the ChatHelper if it hasn't been created yet.
+
+        :return: The ChatHelper instance.
+        :rtype: ChatHelper
+        """
         if self._chat_helper:
             return self._chat_helper
 
@@ -99,6 +151,13 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     @property
     def chatbot_helper(self) -> Optional[ChatBotHelper]:
+        """
+        Returns the ChatBotHelper instance.
+        Lazily initializes the ChatBotHelper if it hasn't been created yet.
+
+        :return: The ChatBotHelper instance.
+        :rtype: Optional[ChatBotHelper]
+        """
         if self._chatbot_helper:
             return self._chatbot_helper
         # ensure that we have some combination of properties that can identify a chatbot
@@ -149,12 +208,23 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     @property
     def name(self):
+        """
+        Returns the name of the chatbot.
+
+        :return: The name of the chatbot.
+        :rtype: Optional[str]
+        """
         if self._name:
             return self._name
         self._name = self._chatbot_helper.name if self._chatbot_helper else None
 
     @property
     def chatbot(self):
+        """
+        Returns the ChatBot instance.
+        :return: The ChatBot instance.
+        :rtype: Optional[ChatBot]
+        """
         return self.chatbot_helper.chatbot if self.chatbot_helper else None
 
     @property
@@ -162,12 +232,21 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         """
         Returns the class name in a formatted string
         along with the name of this mixin.
+
+        :return: Formatted class name string.
+        :rtype: str
         """
         inherited_class = super().formatted_class_name
         return f"{inherited_class} ChatBotApiBaseViewSet()"
 
     @property
-    def url(self):
+    def url(self) -> Optional[ParseResult]:
+        """
+        Returns the URL of the chatbot.
+
+        :return: The URL of the chatbot.
+        :rtype: Optional[ParseResult]
+        """
         try:
             return self._url
         # pylint: disable=W0718
@@ -176,6 +255,12 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     @property
     def is_web_platform(self):
+        """
+        Determine if the request is from the web platform domain.
+
+        :return: True if the request is from the web platform domain, False otherwise.
+        :rtype: bool
+        """
         host = self.smarter_request.get_host()
         if host in smarter_settings.environment_platform_domain:
             return True
@@ -184,14 +269,51 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     def helper_logger(self, message: str):
         """
         Create a log entry
+
+        :param message: The message to log.
+        :type message: str
         """
         logger.info("%s: %s", self.formatted_class_name, message)
 
     def setup(self, request: WSGIRequest, *args, **kwargs):
         """
-        Setup method for the ChatBot API base viewset.
-        This method initializes the SmarterRequestMixin with the request,
-        and sets up the ChatBotHelper and ChatHelper instances.
+        Set up the ChatBot API base viewset for request processing.
+
+        This method is called as part of the Django REST Framework (DRF) view lifecycle,
+        immediately after the view instance is created and before the request is dispatched
+        to the appropriate handler method (such as ``get()`` or ``post()``).
+
+        The primary responsibilities of this method are to:
+
+        - Initialize the :class:`SmarterRequestMixin` with the current request and any additional arguments.
+        - Prepare and set up the :class:`ChatBotHelper` and :class:`ChatHelper` instances, which are used
+          throughout the request lifecycle for chatbot-specific logic and chat session management.
+        - Log key setup events for observability and debugging.
+
+        Parameters
+        ----------
+        request : WSGIRequest
+            The HTTP request object provided by Django, containing all request data, headers, and user context.
+
+        *args
+            Additional positional arguments passed to the view.
+
+        **kwargs
+            Additional keyword arguments passed to the view, often including URL parameters.
+
+        Notes
+        -----
+        - This method is a critical integration point with DRF's request/response lifecycle.
+        - It ensures that all necessary context and helper objects are available before
+          the main handler methods are called.
+        - Subclasses may override this method to provide additional setup logic, but should
+          always call ``super().setup()`` to preserve base functionality.
+
+        See Also
+        --------
+        - Django REST Framework View lifecycle: https://www.django-rest-framework.org/api-guide/views/#view-initialization
+        - SmarterRequestMixin for request context management.
+        - ChatBotHelper and ChatHelper for chatbot and chat session logic.
         """
         logger.info(
             "%s.setup() - request: %s, args: %s, kwargs: %s",
@@ -205,9 +327,56 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     def dispatch(self, request: WSGIRequest, *args, name: Optional[str] = None, **kwargs):
         """
-        Setup method for the ChatBot API base viewset.
-        This method initializes the ChatBotHelper and ChatHelper instances,
-        sets up the request, and logs relevant information.
+        Dispatch method for the ChatBot API base viewset.
+
+        This method is invoked as part of the Django REST Framework (DRF) view lifecycle.
+        It is responsible for preparing the viewset for request processing, including
+        initializing the ChatBotHelper and ChatHelper instances, setting up the request context,
+        and logging relevant information for observability and debugging.
+
+        The dispatch method performs the following key actions:
+
+        - Extracts and sets the chatbot ID from the URL parameters, if present.
+        - Initializes the ChatBot and Account context for the request.
+        - Validates the existence and readiness of the ChatBotHelper and ChatBot instances.
+        - Handles error conditions such as missing or invalid chatbot configuration, returning
+          appropriate HTTP error responses.
+        - Loads and attaches plugins for the chatbot, if available.
+        - Emits signals and logs key request metadata for auditing and debugging.
+        - Calls the parent class's dispatch method to continue the DRF request/response lifecycle.
+
+        Parameters
+        ----------
+        request : WSGIRequest
+            The HTTP request object provided by Django, containing all request data, headers, and user context.
+
+        *args
+            Additional positional arguments passed to the view.
+
+        name : Optional[str]
+            The name of the chatbot, if provided as a URL parameter.
+
+        **kwargs
+            Additional keyword arguments passed to the view, often including URL parameters.
+
+        Returns
+        -------
+        JsonResponse or HttpResponse
+            A Django JsonResponse or HttpResponse object representing the result of the request,
+            or an error response if initialization fails.
+
+        Notes
+        -----
+        - This method is a critical integration point with DRF's request/response lifecycle.
+        - It ensures that all necessary context, helpers, and plugins are available before
+          the main handler methods are called.
+        - Subclasses may override this method to provide additional dispatch logic, but should
+          always call ``super().dispatch()`` to preserve base functionality.
+
+        See Also
+        --------
+        - Django REST Framework View dispatch: https://www.django-rest-framework.org/api-guide/views/#view-methods
+        - ChatBotHelper and ChatHelper for chatbot and chat session logic.
         """
         self._chatbot_id = kwargs.get("chatbot_id")
         if self._chatbot_id:
@@ -279,6 +448,13 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         return super().dispatch(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
+        """
+        OPTIONS request handler for the Smarter Chat API.
+        Sets CORS headers to allow cross-origin requests from the Smarter environment URL.
+
+        :param request: The HTTP request object.
+        :type request: WSGIRequest
+        """
         logger.info(
             "%s.options(): url=%s",
             self.formatted_class_name,
@@ -292,6 +468,16 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     # pylint: disable=W0613
     def get(self, request, *args, name: Optional[str] = None, **kwargs):
+        """
+        GET request handler for the Smarter Chat API.
+        Currently, GET requests are not supported and will return a message indicating that POST should be used
+        instead.
+
+        :param request: The HTTP request object.
+        :type request: WSGIRequest
+        :return: A JsonResponse indicating that GET is not supported.
+        :rtype: JsonResponse
+        """
         url = self.chatbot_helper.url if self.chatbot_helper else self.smarter_build_absolute_uri(request)
         logger.info("%s.get(): url=%s", self.formatted_class_name, url)
         logger.info("%s.get(): headers=%s", self.formatted_class_name, request.META)
@@ -311,27 +497,71 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     # pylint: disable=W0613
     def post(self, request, *args, name: Optional[str] = None, **kwargs):
         """
-        POST request handler for the Smarter Chat API. We need to parse the request host
-        to determine which ChatBot instance to use. There are two possible hostname formats:
+        POST request handler for the Smarter Chat API.
 
-        URL with default api domain
+        This method processes POST requests to the chatbot API endpoint. It determines which
+        ChatBot instance to use based on the request's host, supporting both default API domains
+        and custom domains. The logic ensures that the correct ChatBot is selected for each request,
+        and that all necessary context and helpers are available for downstream processing.
+
+        Hostname Resolution
         -------------------
-        example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbot/
-        where
-         - `customer-service' == chatbot.name`
-         - `3141-5926-5359 == chatbot.account.account_number`
-         - `api.smarter.sh == smarter_settings.environment_api_domain`
+        The ChatBot instance is determined by parsing the request host. There are two supported formats:
 
-        URL with custom domain
-        -------------------
-        example: https://api.smarter.sh/chatbot/
-        where
-         - `api.smarter.sh == chatbot.custom_domain`
-         - `ChatBotCustomDomain.is_verified == True` noting that
-           an asynchronous task has verified the domain NS records.
+        1. **URL with default API domain**
+            Example: ``https://customer-support.3141-5926-5359.api.smarter.sh/chatbot/``
+            - ``customer-support``: The chatbot's name.
+            - ``3141-5926-5359``: The chatbot's account number.
+            - ``api.smarter.sh``: The default API domain.
 
-        The ChatBot instance hostname is determined by the following logic:
-        `chatbot.hostname == chatbot.custom_domain or chatbot.default_host`
+        2. **URL with custom domain**
+            Example: ``https://api.smarter.sh/chatbot/``
+            - ``api.smarter.sh``: The chatbot's custom domain.
+            - The custom domain must be verified (``ChatBotCustomDomain.is_verified == True``).
+
+        The ChatBot instance hostname is determined by:
+        ``chatbot.hostname == chatbot.custom_domain or chatbot.default_host``
+
+        Processing Steps
+        ----------------
+        - Logs key request and context information for observability.
+        - Validates that a ChatBot instance is available; returns an error response if not found.
+        - Retrieves the appropriate chat provider handler for the ChatBot.
+        - Ensures a valid ChatHelper instance is available; returns an error response if not found.
+        - Invokes the chat provider handler with the chat session, request data, plugins, and user context.
+        - Wraps the response in a ``SmarterJournaledJsonResponse`` for consistent API output.
+
+        Parameters
+        ----------
+        request : WSGIRequest
+            The HTTP request object provided by Django, containing all request data, headers, and user context.
+
+        *args
+            Additional positional arguments passed to the view.
+
+        name : Optional[str]
+            The name of the chatbot, if provided as a URL parameter.
+
+        **kwargs
+            Additional keyword arguments passed to the view, often including URL parameters.
+
+        Returns
+        -------
+        SmarterJournaledJsonResponse
+            A structured JSON response containing the result of the chat operation, or an error response
+            if the ChatBot or ChatHelper could not be initialized.
+
+        Notes
+        -----
+        - This method is a critical integration point for chatbot conversations in the Smarter platform.
+        - It enforces domain-based routing and robust error handling for missing or invalid chatbot context.
+        - The response format is standardized for journaling and auditing purposes.
+
+        See Also
+        --------
+        - Django REST Framework APIView: https://www.django-rest-framework.org/api-guide/views/
+        - SmarterJournaledJsonResponse for response structure.
+        - ChatBotHelper and ChatHelper for chatbot and chat session logic.
         """
 
         logger.info(

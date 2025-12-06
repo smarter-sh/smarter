@@ -37,7 +37,33 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class PluginDetailView(DocsBaseView):
     """
-    detail view for Smarter dashboard.
+    Renders the detail view for a Smarter dashboard plugin.
+
+    This view renders a detailed manifest for a specific plugin, including its configuration and metadata, in YAML format. It is intended for authenticated users and provides error handling for missing or unsupported plugin kinds and names.
+
+    :param request: Django HTTP request object.
+    :type request: WSGIRequest
+    :param args: Additional positional arguments.
+    :type args: tuple
+    :param kwargs: Keyword arguments, must include 'name' (plugin name) and 'kind' (plugin type).
+    :type kwargs: dict
+
+    :returns: Rendered HTML page with plugin manifest details, or a 404 error page if the plugin is not found or parameters are invalid.
+    :rtype: HttpResponse
+
+    .. note::
+
+        The plugin name and kind must be provided and valid. Otherwise, a "not found" response is returned.
+
+    .. seealso::
+
+        :class:`PluginMeta` for plugin metadata retrieval.
+        :class:`ApiV1CliDescribeApiView` for API details.
+
+    **Example usage**::
+
+        GET /plugin/detail/?name=my_plugin&kind=custom
+
     """
 
     template_path = "plugin/manifest_detail.html"
@@ -99,8 +125,21 @@ class PluginDetailView(DocsBaseView):
 
 class PluginListView(SmarterAuthenticatedNeverCachedWebView):
     """
-    list view for smarter workbench web console. It generates cards for each
-    plugin.
+    Render the plugin list view for the Smarter Workbench web console.
+
+    This view displays all plugins available to the authenticated user as cards, providing a quick overview and access to plugin details.
+
+    :param request: Django HTTP request object.
+    :type request: WSGIRequest
+    :param args: Additional positional arguments.
+    :type args: tuple
+    :param kwargs: Additional keyword arguments.
+    :type kwargs: dict
+
+    :returns: Rendered HTML page with a card for each plugin, or a 404 error page if the user is not authenticated.
+    :rtype: HttpResponse
+
+
     """
 
     template_path = "plugin/plugin_list.html"

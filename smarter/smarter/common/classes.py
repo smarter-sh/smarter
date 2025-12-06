@@ -41,7 +41,11 @@ class Singleton(type):
 
 class SmarterHelperMixin:
     """
-    A generic mixin with helper functions.
+    A generic mixin providing helper functions for Smarter classes.
+
+    This mixin offers utility methods and properties commonly needed
+    across Smarter classes, such as standardized class name formatting,
+    URL amnesty lists, JSON serialization, and data conversion.
     """
 
     def __init__(self, *args, **kwargs):
@@ -50,33 +54,58 @@ class SmarterHelperMixin:
     @property
     def formatted_class_name(self) -> str:
         """
-        For logging. Applies standardized styling to the class name.
+        Returns the class name formatted for logging.
+
+        :return: The formatted class name as a string.
+        :rtype: str
+
         """
         return formatted_text(self.__class__.__name__)
 
     @property
     def unformatted_class_name(self) -> str:
         """
-        For logging. Applies standardized styling to the class name.
+        Returns the raw class name without formatting.
+
+        :return: The unformatted class name as a string.
+        :rtype: str
+
+        This is useful for logging or serialization where the plain class name is needed.
         """
         return self.__class__.__name__
 
     @property
     def ready(self) -> bool:
+        """
+        Indicates whether the object is ready for use. This is a placeholder
+        that should be overridden in subclasses.
+
+        :return: True if ready, False otherwise.
+        :rtype: bool
+        """
         return True
 
     @property
     def amnesty_urls(self) -> list[str]:
         """
-        A list of URLs that are exempt from certain checks.
+        Returns a list of URLs that are exempt from certain checks.
+
         This is a placeholder and should be overridden in subclasses.
+
+        :return: List of URL path strings that are exempt.
+        :rtype: list[str]
         """
         return ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]
 
     def to_json(self) -> dict[str, Any]:
         """
-        A placeholder method for converting the object to JSON.
-        Should be overridden in subclasses.
+        Convert the object to a JSON-serializable dictionary.
+
+        This is a placeholder method and should be overridden in subclasses
+        to provide a complete JSON representation of the object.
+
+        :return: Dictionary representation of the object.
+        :rtype: dict[str, Any]
         """
         return {
             "class_name": self.unformatted_class_name,
@@ -84,12 +113,18 @@ class SmarterHelperMixin:
 
     def smarter_build_absolute_uri(self, request: HttpRequest) -> str:
         """
-        A utility function to attempt to get the request URL from any valid
-        child class of HttpRequest. This mostly protects us from unit tests
-        class mutations that do not implement build_absolute_uri().
+        Attempts to get the absolute URI from a request object.
+
+        This utility function tries to retrieve the request URL from any valid
+        child class of :class:`django.http.HttpRequest`. It is especially useful
+        in unit tests or scenarios where the request object may not implement
+        ``build_absolute_uri()``.
 
         :param request: The request object.
-        :return: The request URL.
+        :type request: HttpRequest
+        :return: The absolute request URL.
+        :rtype: str
+        :raises SmarterValueError: If the URI cannot be built from the request.
         """
         retval = utils_smarter_build_absolute_uri(request)
         if not retval:
@@ -102,6 +137,16 @@ class SmarterHelperMixin:
     def data_to_dict(self, data: Union[dict, str]) -> dict:
         """
         Converts data to a dictionary, handling different types of input.
+
+        This method accepts either a dictionary or a string. If a string is provided,
+        it will attempt to parse it as JSON first, and if that fails, as YAML.
+        If parsing fails or the data type is unsupported, a SmarterValueError is raised.
+
+        :param data: The data to convert, either a dict or a JSON/YAML string.
+        :type data: dict or str
+        :return: The data as a dictionary.
+        :rtype: dict
+        :raises SmarterValueError: If the data cannot be converted to a dictionary.
         """
         if isinstance(data, dict):
             return data
@@ -118,26 +163,35 @@ class SmarterHelperMixin:
 
 
 class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
-    """A mixin for middleware classes with helper functions."""
+    """A mixin for middleware classes with helper functions.
+
+    This mixin provides utilities for extracting client IP addresses,
+    checking authentication indicators, and other middleware-related helpers.
+    Inherits from both Django's :class:`MiddlewareMixin` and :class:`SmarterHelperMixin`.
+    """
 
     def get_client_ip(self, request) -> Optional[str]:
         """
         Get client IP address from request.
 
-        This is harder than it seems due to proxies, load balancers,
-        and CDNs. This implementation checks common headers set by
-        proxies and falls back to REMOTE_ADDR.
+        This method attempts to determine the original client IP address,
+        accounting for proxies, load balancers, and CDNs. It checks common
+        headers set by proxies and falls back to ``REMOTE_ADDR``.
 
-        Note the following:
-        - In AWS CLB -> Kubernetes Nginx setup, the client IP flow is:
-        - Client -> CLB -> Nginx Ingress -> Django
-        - CLB adds X-Forwarded-For with original client IP
-        - Nginx may add X-Real-IP or modify X-Forwarded-For
-        - Django sees REMOTE_ADDR as the Nginx IP (not useful for client IP)
+        Notes
+        -----
+        - In AWS CLB → Kubernetes Nginx setups, the client IP flow is:
+          Client → CLB → Nginx Ingress → Django.
+          - CLB adds ``X-Forwarded-For`` with the original client IP.
+          - Nginx may add ``X-Real-IP`` or modify ``X-Forwarded-For``.
+          - Django sees ``REMOTE_ADDR`` as the Nginx IP (not the client IP).
+        - If using Cloudflare, it adds the ``CF-Connecting-IP`` header.
+        - Always validate IPs to avoid trusting spoofed headers.
 
-        - If using Cloudflare, it adds CF-Connecting-IP header with original client IP
-        - Always validate IPs to avoid trusting spoofed headers
-
+        :param request: The Django request object.
+        :type request: HttpRequest
+        :return: The detected client IP address, or None if not found.
+        :rtype: Optional[str]
         """
 
         # First check X-Forwarded-For (most reliable for CLB)
@@ -209,7 +263,18 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             return True
 
     def has_auth_indicators(self, request):
-        """Check if request has authentication indicators (cookies, headers, etc.)."""
+        """
+        Check if request has authentication indicators (cookies, headers, etc.).
+
+        This method inspects the request for common authentication signals,
+        such as session cookies, CSRF tokens, authorization headers, API keys,
+        or Django's built-in authentication.
+
+        :param request: The Django request object.
+        :type request: HttpRequest
+        :return: True if authentication indicators are present, False otherwise.
+        :rtype: bool
+        """
 
         # Check for Django session cookie
         if request.COOKIES.get("sessionid"):

@@ -52,24 +52,26 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 class AccountMixin(SmarterHelperMixin):
     """
-    AccountMixin
-
-    Provides consistent initializations and short-lived caching of
-    the account, user, and user_profile properties using various sources
+    Provides consistent initialization and short-lived caching of the
+    ``account``, ``user``, and ``user_profile`` properties using various sources,
     such as direct arguments, request objects, or API tokens.
 
-    It prioritizes initialization in the following order:
-    1. Explicit account_number, account, or user arguments.
-    2. Request object (from kwargs or positional args), extracting user and account info.
+    Initialization priority:
+
+    1. Explicit ``account_number``, ``account``, or ``user`` arguments.
+    2. Request object (from ``kwargs`` or positional args), extracting user and account info.
     3. API token authentication if provided.
 
-    Args:
-        *args: Positional arguments, may include a request object.
-        account_number (Optional[str]): Unique account identifier.
-        account (Optional[Account]): Account instance.
-        user (Union[AnonymousUser, User, None]): Django user instance.
-        api_token (Optional[bytes]): API token for authentication.
-        **kwargs: Additional keyword arguments, may include 'request'.
+    :param args: Positional arguments, may include a request object.
+    :param account_number: Unique account identifier (optional).
+    :type account_number: str or None
+    :param account: Account instance (optional).
+    :type account: Account or None
+    :param user: Django user instance (optional).
+    :type user: AnonymousUser, User, or None
+    :param api_token: API token for authentication (optional).
+    :type api_token: bytes or None
+    :param kwargs: Additional keyword arguments, may include ``request``.
 
     The constructor attempts to resolve and cache the account and user information,
     logging relevant events and warnings if data cannot be resolved.

@@ -11,18 +11,22 @@ class WaffleSwitchedLoggerWrapper:
     """
     A wrapper around a standard logger that adds conditional logic.
 
-    usage:
-    import logging
+    Usage:
+        .. code-block:: python
 
-    from smarter.lib.django import waffle
-    from smarter.lib.django.waffle import SmarterWaffleSwitches
-    from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+            import logging
 
-    def should_log_detailed(level):
-        return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+            from smarter.lib.django import waffle
+            from smarter.lib.django.waffle import SmarterWaffleSwitches
+            from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-    base_logger = logging.getLogger(__name__)
-    logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_detailed)
+            def should_log_detailed(level):
+                return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
+
+            base_logger = logging.getLogger(__name__)
+            logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_detailed)
+
+            logger.debug("This is a debug message.")
     """
 
     # log entries will be forced at this level and above

@@ -37,25 +37,28 @@ class DefaultChatbotApiView(ChatBotApiBaseViewSet):
         """
         Smarter API ChatBot dispatch method.
 
-        Args:
-            request: HttpRequest
-            args: tuple
-            name: str
-            kwargs: dict
+        :param request: Django HttpRequest object
+        :param args: Additional positional arguments
+        :param name: Chatbot name (str, optional)
+        :param kwargs: Additional keyword arguments
 
-        request: {
-            "session_key": "dde3dde5e3b97134f5bce5edf26ec05134da71d8485a86dfc9231149aaf0b0af",
-            "messages": [
-                {
-                    "role": "assistant",
-                    "content": "Welcome to Smarter!.  how can I assist you today?"
-                },
-                {
-                    "role": "user",
-                    "content": "Hello, World!"
-                }
-            ]
-        }
+        **Example request payload**:
+
+        .. code-block:: json
+
+           {
+               "session_key": "dde3dde5e3b97134f5bce5edf26ec05134da71d8485a86dfc9231149aaf0b0af",
+               "messages": [
+                   {
+                       "role": "assistant",
+                       "content": "Welcome to Smarter!.  how can I assist you today?"
+                   },
+                   {
+                       "role": "user",
+                       "content": "Hello, World!"
+                   }
+               ]
+           }
         """
         logger.info("%s - dispatch()", self.formatted_class_name)
         self._name = name

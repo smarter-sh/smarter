@@ -15,14 +15,35 @@ logger = logging.getLogger(__name__)
 
 
 class AWSCertificateManager(AWSBase):
-    """AWS Certificate Manager helper class."""
+    """
+    AWS Certificate Manager helper class. Provides a high-level interface for managing AWS Certificate Manager (ACM) resources.
+
+    This helper class encapsulates common operations related to ACM, such as requesting new certificates,
+    retrieving certificate details, handling DNS validation, and verifying certificate status. It abstracts
+    the complexities of interacting directly with the AWS SDK, offering a streamlined way to automate
+    certificate management tasks within AWS environments.
+
+    The class also integrates with AWS Route53 to facilitate DNS-based validation by automatically creating
+    or retrieving the necessary DNS records for certificate verification. It is designed to be used as part
+    of a broader AWS automation or orchestration workflow, ensuring that certificates are requested,
+    validated, and managed efficiently.
+
+    Logging is provided throughout to assist with debugging and operational visibility. Exceptions are
+    raised for error conditions, such as failed verification or missing resources, to allow for robust
+    error handling in consuming code.
+    """
 
     _client = None
     _route53 = None
 
     @property
     def client(self):
-        """Return the AWS ACM client"""
+        """
+        Return the AWS ACM client
+
+        :return: boto3 ACM client
+        :rtype: boto3.client
+        """
         if self._client:
             return self._client
         if not self.aws_session:
@@ -32,7 +53,12 @@ class AWSCertificateManager(AWSBase):
 
     @property
     def route53(self):
-        """Return the AWS Route53 helper."""
+        """
+        Return the AWS Route53 helper.
+
+        :return: AWSRoute53 helper instance
+        :rtype: AWSRoute53
+        """
         if self._route53 is None:
             # pylint: disable=import-outside-toplevel
             from .route53 import AWSRoute53
@@ -41,7 +67,14 @@ class AWSCertificateManager(AWSBase):
         return self._route53
 
     def get_certificate_arn(self, domain_name) -> Optional[str]:
-        """Return the certificate ARN."""
+        """
+        Return the certificate ARN.
+
+        :param domain_name: The domain name to search for.
+        :type domain_name: str
+        :return: The certificate ARN if found, else None.
+        :rtype: Optional[str]
+        """
         response = self.client.list_certificates()
         for certificate in response["CertificateSummaryList"]:
             if certificate["DomainName"] == domain_name:
@@ -52,6 +85,11 @@ class AWSCertificateManager(AWSBase):
         """
         Return the certificate status
         see example return in ./data/aws/certificate_detail.json
+
+        :param certificate_arn: The ARN of the certificate.
+        :type certificate_arn: str
+        :return: The certificate details.
+        :rtype: dict
         """
         sleep_interval = 5
         max_attempts = int(600 / sleep_interval)
@@ -82,7 +120,14 @@ class AWSCertificateManager(AWSBase):
                 time.sleep(sleep_interval)
 
     def get_or_create_certificate(self, domain_name) -> str:
-        """Return the certificate ARN."""
+        """
+        Return the certificate ARN.
+
+        :param domain_name: The domain name for the certificate.
+        :type domain_name: str
+        :return: The certificate ARN.
+        :rtype: str
+        """
         # look for existing certificate
         certificate_arn = self.get_certificate_arn(domain_name)
         if not certificate_arn:
@@ -100,6 +145,10 @@ class AWSCertificateManager(AWSBase):
         """
         Get or create the DNS verification record for the certificate.
 
+        :param certificate_arn: The ARN of the certificate.
+        :type certificate_arn: str
+        :return: The DNS record.
+        :rtype: dict
         """
         # get the certificate details
         certificate_detail = self.get_certificate_status(certificate_arn=certificate_arn)
@@ -124,11 +173,26 @@ class AWSCertificateManager(AWSBase):
         return dns_record
 
     def certificate_is_verified(self, certificate_arn: str) -> bool:
-        """Return whether the certificate is verified."""
+        """
+        Return whether the certificate is verified.
+
+        :param certificate_arn: The ARN of the certificate.
+        :type certificate_arn: str
+        :return: True if the certificate is verified, else False.
+        :rtype: bool
+        """
         certificate_detail = self.get_certificate_status(certificate_arn=certificate_arn)
         return certificate_detail["Certificate"]["Status"] == "SUCCESS"
 
     def verify_certificate(self, certificate_arn: str) -> bool:
+        """
+        Verify the ACM certificate.
+
+        :param certificate_arn: The ARN of the certificate.
+        :type certificate_arn: str
+        :return: True if the certificate is verified, else False.
+        :rtype: bool
+        """
         sleep_interval = 30
         max_attempts = int(600 / sleep_interval)
         attempts = 0
@@ -147,7 +211,12 @@ class AWSCertificateManager(AWSBase):
         return True
 
     def delete_certificate(self, certificate_arn: str):
-        """Delete the certificate."""
+        """
+        Delete the certificate.
+
+        :param certificate_arn: The ARN of the certificate.
+        :type certificate_arn: str
+        """
         try:
             self.client.delete_certificate(CertificateArn=certificate_arn)
         except self.client.exceptions.ResourceNotFoundException:

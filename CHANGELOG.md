@@ -1,10 +1,39 @@
+## [0.13.37](https://github.com/smarter-sh/smarter/compare/v0.13.36...v0.13.37) (2025-12-06)
+
+
+### Bug Fixes
+
+* release sphinx Read the Docs ([1ee9cb0](https://github.com/smarter-sh/smarter/commit/1ee9cb07fadd70073795464f1ddb227cd8ee7093))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.13.33](https://github.com/smarter-sh/smarter/compare/v0.13.32...v0.13.33) (2025-11-21)
+## 0.13.37
+
+- Release first version of Sphinx docs for Read the Docs.
+
+## [0.13.36](https://github.com/smarter-sh/smarter/compare/v0.13.35...v0.13.36) (2025-11-29)
+
+### Bug Fixes
+
+- remove import django.core.serializers.json.DjangoJSONEncoder ([95cffb8](https://github.com/smarter-sh/smarter/commit/95cffb8b41baf7b4b9f1a0d42a3a3c0bb4422a73))
+
+## [0.13.35](https://github.com/smarter-sh/smarter/compare/v0.13.34...v0.13.35) (2025-11-29)
+
+### Bug Fixes
+
+- grant amnesty to cert-manager requests to .well-known/acme-challenge/ ([ff6e1a5](https://github.com/smarter-sh/smarter/commit/ff6e1a5a99489abe3222de3ff45f0ef1736e8c59))
+
+## [0.13.34](https://github.com/smarter-sh/smarter/compare/v0.13.35...v0.13.34) (2025-11-29)
+
+### Bug Fixes
+
+- add db index to created_at to resolve django.db.utils.OperationalError: (1038, 'Out of sort memory, consider increasing server sort buffer size') ([46e33f7](https://github.com/smarter-sh/smarter/commit/46e33f75047cb0d74588d355540fc4aadcc20932))
+
+## [0.13.35](https://github.com/smarter-sh/smarter/compare/v0.13.32...v0.13.35) (2025-11-21)
 
 ### Bug Fixes
 
@@ -428,8 +457,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - allow internal ip address to pass ([a5b4c09](https://github.com/smarter-sh/smarter/commit/a5b4c09fe63e0d651e2142a3128ab8ca44c278eb))
 - authenticate the request ([cf44aa4](https://github.com/smarter-sh/smarter/commit/cf44aa41091d4f4ba271063349496fa7dff2901d))
-- broken import for BlockSensitiveFilesMiddleware ([eca10cf](https://github.com/smarter-sh/smarter/commit/eca10cfa488401cd09b19fff9dd6e31a74f0d41f))
-- broken import for BlockSensitiveFilesMiddleware ([57f226f](https://github.com/smarter-sh/smarter/commit/57f226f297c314c93e5f575d81f2d4fa3358d8e3))
+- broken import for SmarterBlockSensitiveFilesMiddleware ([eca10cf](https://github.com/smarter-sh/smarter/commit/eca10cfa488401cd09b19fff9dd6e31a74f0d41f))
+- broken import for SmarterBlockSensitiveFilesMiddleware ([57f226f](https://github.com/smarter-sh/smarter/commit/57f226f297c314c93e5f575d81f2d4fa3358d8e3))
 - chatbot_id and chatbot_name are removed ([1d8ada5](https://github.com/smarter-sh/smarter/commit/1d8ada570308fe292f45c0fc119716fe10275f4b))
 - chatbot_id was removed ([93feac2](https://github.com/smarter-sh/smarter/commit/93feac27137f8807c40588fcc12c14019b3d0db8))
 - chatbot_name was removed ([730a944](https://github.com/smarter-sh/smarter/commit/730a94460c5eb2b8af4c240bdfd8c408a1e40243))
