@@ -7,6 +7,11 @@ written in YAML format and provide a structured way to declare resources, settin
 Smarter Manifests enable developers to easily manage and deploy configurations in a consistent manner across different
 environments.
 
+Smarter manifests are utf-8 text documents, formatted as either yaml or json, inspired by Kubernetes’ kubectl, itself modeled on the
+`OpenAPI Specification v3.x <https://spec.openapis.org/oas/latest.html>`__. The actual
+implementation of this specification is located `here <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/api>`__. The Smarter API can
+manage `escaped <https://en.wikipedia.org/wiki/Escape_character>`__ representations of characters outside of the utf-8 standard.
+
 The Smarter API invokes database commands, AWS cloud infrastructure operations, and Kubernetes orchestration tasks
 based on the declarations found in Smarter Manifests. SAM manifests provide you and your team with an important
 layer of abstraction that enables you to focus on achieving the desired state of your AI resources rather than
@@ -30,6 +35,7 @@ Pydantic is also instrumental in validating the rules and relationships between 
 within a manifest, ensuring that manifests are well-formed and adhere to the expected structure. The Smarter API
 must be able to read, validate, and correctly execute the commands necessary to bring the real-world
 resources defined in the manifests in sync to the declaration of the manifest.
+
 
 
 The modules and classes below establish the foundation of Smarter's SAM data models.

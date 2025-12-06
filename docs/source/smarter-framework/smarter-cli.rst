@@ -88,17 +88,8 @@ Related API endpoints
 Manifest Spec
 -------------
 
-The cli is designed to work with a manifest utf-8 text document, in yaml
-or json format, inspired by Kubernetes’ kubectl, itself modeled on the
-`OpenAPI Specification
-v3.x <https://spec.openapis.org/oas/latest.html>`__. The actual
-implementation of this specification is located
-`here <../smarter/smarter/apps/api/v0/cli/>`__. The Smarter API can
-manage `escaped <https://en.wikipedia.org/wiki/Escape_character>`__
-representations of characters outside of the utf-8 standard.
+See :doc:`Smarter Manifest Specification <pydantic/smarter-manifests>`
 
-`Example
-manifest <../smarter/smarter/apps/plugin/data/sample-plugins/example-configuration.yaml>`__
 
 Kind
 ~~~~

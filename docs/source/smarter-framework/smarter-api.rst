@@ -38,6 +38,7 @@ See :doc:`django/hosts` for more details.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Smarter API Technical Reference
 
    smarter-api/cli
    smarter-api/chat
@@ -46,3 +47,4 @@ See :doc:`django/hosts` for more details.
    smarter-api/logging
    smarter-api/rate-limiting
    smarter-api/smarter-journal
+   smarter-api/code
