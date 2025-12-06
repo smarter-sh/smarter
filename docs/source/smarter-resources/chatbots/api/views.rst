@@ -1,4 +1,4 @@
-API V1 Views
+Views
 ===============
 
 .. toctree::

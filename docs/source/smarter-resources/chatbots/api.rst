@@ -1,4 +1,4 @@
-REST API Endpoints
+API Reference
 ===================
 
 .. toctree::
