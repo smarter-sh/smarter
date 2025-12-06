@@ -32,7 +32,7 @@ from ..manifest.models.api_plugin.const import MANIFEST_KIND
 from ..manifest.models.api_plugin.enum import SAMApiPluginSpecApiData
 from ..manifest.models.api_plugin.model import SAMApiPlugin
 from ..manifest.models.common.plugin.enum import SAMPluginCommonSpecTestValues
-from ..models import ApiConnection, PluginDataApi
+from ..models import ApiConnection, PluginDataApi, PluginMeta
 from ..serializers import PluginApiSerializer
 from .base import PluginBase, SmarterPluginError
 
@@ -51,7 +51,24 @@ class SmarterApiPluginError(SmarterPluginError):
 
 
 class ApiPlugin(PluginBase):
-    """A Plugin that uses an http request to a REST API to retrieve its return data"""
+    """
+    Implements a plugin that interacts with external REST APIs via HTTP requests.
+
+    This class provides mechanisms to:
+
+    - Retrieve and serialize plugin data using Django ORM and Pydantic models.
+    - Validate and recast API parameters to conform to OpenAI's function calling schema.
+    - Integrate with Smarter's plugin manifest and metadata system.
+    - Handle plugin instantiation from both manifest and database sources.
+    - Manage connections to external APIs using account-specific credentials.
+    - Provide example manifest generation for API plugins.
+    - Enforce configuration and data integrity through custom error handling.
+
+    The plugin expects a manifest describing the API endpoint, parameters, headers, and other metadata.
+    It supports lazy loading and validation of plugin data, and ensures compatibility with Smarter's plugin infrastructure.
+
+    Subclasses must implement the ``tool_call_fetch_plugin_response`` and ``apply`` methods to define custom API interaction logic.
+    """
 
     SAMPluginType = SAMApiPlugin
     _manifest: Optional[SAMApiPlugin] = None
@@ -69,12 +86,27 @@ class ApiPlugin(PluginBase):
 
     @property
     def kind(self) -> str:
-        """Return the kind of the plugin."""
+        """
+        Return the kind of the plugin.
+
+        :return: The kind of the plugin.
+        :rtype: str
+
+        .. seealso::
+
+            - :const:`smarter.apps.plugin.manifest.models.api_plugin.const.MANIFEST_KIND`
+
+        """
         return MANIFEST_KIND
 
     @property
     def manifest(self) -> Optional[SAMApiPlugin]:
-        """Return the Pydandic model of the plugin."""
+        """
+        Return the Pydandic model of the plugin.
+
+        :return: The Pydantic model of the plugin.
+        :rtype: Optional[SAMApiPlugin]
+        """
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
@@ -85,6 +117,9 @@ class ApiPlugin(PluginBase):
     def plugin_data(self) -> Optional[PluginDataApi]:
         """
         Return the plugin data as a Django ORM instance.
+
+        :return: The plugin data as a Django ORM instance.
+        :rtype: Optional[PluginDataApi]
         """
         if self._plugin_data:
             return self._plugin_data
@@ -106,24 +141,47 @@ class ApiPlugin(PluginBase):
 
     @property
     def plugin_data_class(self) -> Type[PluginDataApi]:
-        """Return the plugin data class."""
+        """
+        Return the plugin data class.
+
+        :return: The plugin data class.
+        :rtype: Type[PluginDataApi]
+        """
         return PluginDataApi
 
     @property
     def plugin_data_serializer(self) -> Optional[PluginApiSerializer]:
-        """Return the plugin data serializer."""
+        """
+        Return the plugin data serializer.
+
+        :return: The plugin data serializer.
+        :rtype: Optional[PluginApiSerializer]
+        """
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginApiSerializer(self.plugin_data)
         return self._plugin_data_serializer if isinstance(self._plugin_data_serializer, PluginApiSerializer) else None
 
     @property
     def plugin_data_serializer_class(self) -> Type[PluginApiSerializer]:
-        """Return the plugin data serializer class."""
+        """
+        Return the plugin data serializer class.
+
+        :return: The plugin data serializer class.
+        :rtype: Type[PluginApiSerializer]
+        """
         return PluginApiSerializer
 
     @property
     def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
-        """Return the plugin data definition as a json object."""
+        """
+        Return the plugin data definition as a json object.
+
+        :return: The plugin data definition as a json object.
+        :rtype: Optional[dict[str, Any]]
+
+        :raises SmarterApiPluginError: If the plugin data is invalid.
+
+        """
         if not self._manifest:
             return None
 
@@ -188,6 +246,19 @@ class ApiPlugin(PluginBase):
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
             )
 
+        if not isinstance(self.plugin_meta, PluginMeta):
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required plugin_meta."
+            )
+        if not isinstance(self.manifest, SAMApiPlugin):
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required manifest."
+            )
+        if not isinstance(api_data, dict):
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required api_data."
+            )
+
         return {
             "plugin": self.plugin_meta,
             "description": (
@@ -196,11 +267,34 @@ class ApiPlugin(PluginBase):
                 else self.plugin_meta.description if self.plugin_meta else None
             ),
             **api_data,
-        }
+        }  # type: ignore[return-value]
 
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> dict:
+        """
+        Return an example manifest for the ApiPlugin.
 
+        :param kwargs: Optional dictionary of keyword arguments to customize the example manifest.
+        :type kwargs: Optional[dict[str, Any]]
+
+        :return: An example manifest for the ApiPlugin.
+        :rtype: dict
+
+        .. seealso::
+
+            - :const:`smarter.apps.plugin.manifest.models.api_plugin.const.MANIFEST_KIND`
+            - :class:`smarter.lib.manifest.enum.SAMKeys`
+            - :class:`smarter.lib.manifest.enum.SAMMetadataKeys`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonMetadataKeys`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonMetadataClassValues`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginSpecKeys`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecSelectorKeys`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecSelectorKeyDirectiveValues`
+            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecPromptKeys`
+            - :class:`smarter.apps.plugin.manifest.models.api_plugin.enumSAMApiPluginSpecApiData`
+            - :class:`smarter.apps.plugin.manifest.models.common.plugin.enum.SAMPluginCommonSpecTestValues`
+
+        """
         api_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
@@ -297,6 +391,14 @@ class ApiPlugin(PluginBase):
             raise SmarterConfigurationError(f"{cls.__name__} example_manifest() error: {e}") from e
 
     def create(self):
+        """
+        Create the PluginDataApi instance in the database.
+
+        .. note::
+
+            This method only calls the superclass create method and logs the creation event.
+
+        """
         super().create()
 
         logger.info("PluginDataApi.create() called.")
@@ -304,12 +406,26 @@ class ApiPlugin(PluginBase):
     def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[str]:
         """
         Fetch information from a Plugin object.
+
+        :param function_args: The function arguments to pass to the plugin.
+        :type function_args: dict[str, Any]
+        :return: The response from the plugin.
+        :rtype: Optional[str]
+        :raises NotImplementedError: If the method is not implemented in a subclass.
         """
         raise NotImplementedError("tool_call_fetch_plugin_response() must be implemented in a subclass of PluginBase.")
 
+    # pylint: disable=W0613
     def apply(self, function_args: dict[str, Any]) -> Optional[str]:
         """
         Apply the plugin to the function arguments.
+
+        :param function_args: The function arguments to pass to the plugin.
+        :type function_args: dict[str, Any]
+        :return: The response from the plugin.
+        :rtype: Optional[str]
+        :raises SmarterConfigurationError: If the plugin is not ready.
+        :raises NotImplementedError: If the method is not implemented in a subclass.
         """
         if not self.ready:
             raise SmarterConfigurationError(f"{self.name} PluginDataApi.apply() error: Plugin is not ready.")
@@ -321,6 +437,13 @@ class ApiPlugin(PluginBase):
         Serialize a SqlPlugin in JSON format that is importable by Pydantic. This
         is used to create a Pydantic model from a Django ORM model
         for purposes of rendering a Plugin manifest for the Smarter API.
+
+        :param version: The version of the API to serialize to. Defaults to "v1".
+        :type version: str
+        :return: The serialized JSON representation of the SqlPlugin.
+        :rtype: Optional[dict[str, Any]]
+        :raises SmarterConfigurationError: If the plugin is not ready or if there is an error during serialization.
+        :raises SmarterPluginError: If the version is invalid.
         """
         if self.ready:
             if version == "v1":

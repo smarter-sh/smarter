@@ -10,7 +10,26 @@ from smarter.lib.django.management.base import SmarterCommand
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """generate a JSON list of all chatbots for an account."""
+    """
+    Generate and print a JSON list of all chatbots for a specified Smarter account.
+
+    This management command retrieves all chatbot instances associated with a given account,
+    identified either by account number or company name. It outputs the hostnames of each chatbot
+    to the console in JSON format, allowing administrators to quickly view all deployed chatbots
+    for an account.
+
+    **Usage:**
+      - Specify the account using ``--account_number`` or ``--company_name``.
+
+    **Command Workflow:**
+      - Retrieve the account using the provided identifier.
+      - Query all chatbots linked to the account.
+      - Print the hostname of each chatbot to the console.
+      - Report completion status.
+
+    This command is useful for auditing, monitoring, or exporting chatbot deployment information
+    for a particular account.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""

@@ -12,7 +12,25 @@ from smarter.lib.django.management.base import SmarterCommand
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """Deploy the Smarter demo ChatBot."""
+    """
+    Deploy the Smarter demo ChatBot for demonstration and testing purposes.
+
+    This management command provisions and deploys a pre-configured demo chatbot for the Smarter platform.
+    It is intended to showcase platform features and provide a ready-to-use example for evaluation or onboarding.
+
+    The command performs the following actions:
+      - Retrieves the demo account and its admin user.
+      - Ensures the demo chatbot exists, creating it if necessary.
+      - Sets default provider, model, system role, temperature, and token limits for the chatbot.
+      - Configures demo-specific application metadata, such as name, assistant, welcome message, example prompts, and branding.
+      - Attaches example plugins to the chatbot if they are available for the account.
+      - Initiates deployment of the chatbot, either synchronously (foreground) or asynchronously (Celery task).
+      - Reports deployment status and completion.
+
+    The deployed demo chatbot is accessible via a public URL and is configured to demonstrate typical user interactions,
+    plugin integration, and platform branding. This command is useful for quickly setting up a showcase environment
+    or verifying platform functionality.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""

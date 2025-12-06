@@ -1,20 +1,20 @@
-"""Test the CsrfViewMiddleware class."""
+"""Test the SmarterCsrfViewMiddleware class."""
 
 # pylint: disable=W0718,W0212
 
 from unittest.mock import MagicMock, patch
 
-from smarter.lib.django.middleware.csrf import CsrfViewMiddleware
+from smarter.lib.django.middleware.csrf import SmarterCsrfViewMiddleware
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestCsrfViewMiddleware(SmarterTestBase):
-    """Test the CsrfViewMiddleware class."""
+class TestSmarterCsrfViewMiddleware(SmarterTestBase):
+    """Test the SmarterCsrfViewMiddleware class."""
 
     def setUp(self):
         super().setUp()
         self.get_response = MagicMock()
-        self.middleware = CsrfViewMiddleware(self.get_response)
+        self.middleware = SmarterCsrfViewMiddleware(self.get_response)
         self.request = MagicMock()
         self.request.COOKIES = {}
         self.request.META = {}

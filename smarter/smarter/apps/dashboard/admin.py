@@ -46,7 +46,7 @@ class RestrictedAdminSite(admin.AdminSite):
     and modifies the admin console header title.
     """
 
-    # FIX NOTE: WIRE THESE INTO THE APP CONSTRAINTS
+    # TODO: WIRE THESE INTO THE APP CONSTRAINTS
     blocked_apps = ["djstripe", "knox", "rest_framework", "smarter.apps.account"]
     role: str = "customer"
     site_header = "Smarter Admin Console v" + __version__ + " (" + role + ")"

@@ -25,8 +25,24 @@ from smarter.lib.manifest.loader import SAMLoader
 # pylint: disable=E1101
 class Command(SmarterCommand):
     """
-    Deploy a customer API. Provide either an account number or a company name.
-    Deploys to a URL of the form [chatbot-name].####-####-####.api.smarter.sh/chatbot/
+    Deploy built-in chatbots and plugins for a Smarter account.
+
+    This management command automates the deployment of default chatbots and plugins for a given account.
+    The account can be specified by its account number. The deployment process reads YAML manifest files
+    from predefined directories, applies each manifest to create plugins and chatbots, and then deploys
+    each chatbot as a Celery task.
+
+    The deployed chatbots are accessible at URLs of the form:
+    ``[chatbot-name].[account-number].api.smarter.sh/chatbot/``
+
+    **Deployment Steps:**
+      - Retrieve the account and its admin user using the provided account number.
+      - Iterate through all plugin manifest files and create each plugin.
+      - Iterate through all chatbot manifest files, create each chatbot, and deploy it asynchronously.
+      - Output progress and status messages for each operation.
+
+    This command is intended for administrators to quickly provision standard chatbots and plugins
+    for new or existing accounts, ensuring consistent setup and deployment across environments.
     """
 
     _url: Optional[str] = None

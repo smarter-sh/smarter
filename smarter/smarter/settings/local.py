@@ -41,7 +41,7 @@ ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
 SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS
 
 MIDDLEWARE += [
-    "corsheaders.middleware.CorsMiddleware",
+    "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
 ]
 CORS_ALLOWED_ORIGINS += [
     "http://127.0.0.1:5173",  # Django

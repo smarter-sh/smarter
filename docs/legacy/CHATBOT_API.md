@@ -88,15 +88,15 @@ There are multiple Django configuration implications to the API domain naming co
 
 ### ALLOWED_HOSTS
 
-For Django to accept http requests from a domain, it must be included in Django's `ALLOWED_HOSTS` setting which is managed by Django middleware that we've subclassed as `smarter.apps.chatbot.middleware.security.SecurityMiddleware` in order to append API domain names to `ALLOWED_HOSTS` at run time.
+For Django to accept http requests from a domain, it must be included in Django's `ALLOWED_HOSTS` setting which is managed by Django middleware that we've subclassed as `smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware` in order to append API domain names to `ALLOWED_HOSTS` at run time.
 
 ### CORS
 
-We subclassed the standard `corsheaders` as `smarter.apps.chatbot.middleware.cors.CorsMiddleware` in order to performantly append API domain names to `CORS_ALLOWED_ORIGINS` at run time..
+We subclassed the standard `corsheaders` as `smarter.apps.chatbot.middleware.cors.SmarterCorsMiddleware` in order to performantly append API domain names to `CORS_ALLOWED_ORIGINS` at run time..
 
 ### Cross-Site Request Forgery
 
-We subclassed Django's csrf library as `smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware` in order to append API domain names to `CSRF_TRUSTED_ORIGINS` at run time.
+We subclassed Django's csrf library as `smarter.apps.chatbot.middleware.csrf.SmarterCsrfViewMiddleware` in order to append API domain names to `CSRF_TRUSTED_ORIGINS` at run time.
 
 ### TLS/SSL Certificates
 

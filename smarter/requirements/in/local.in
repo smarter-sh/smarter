@@ -55,3 +55,11 @@ pylint==3.3.4                       # code linter
 pylint-django==2.6.1                # Django support for pylint
 tox                                 # testing tool
 watchdog>=4.0.1                     # file system monitoring
+
+# Documentation
+sphinx==8.2.3                       # for Readthedocs
+sphinx-rtd-theme==3.0.2             # Sphinx theme for Readthedocs
+autodoc_pydantic==2.2.0             # Sphinx extension for Pydantic models
+sphinxcontrib-django==2.5           # Sphinx for django settings
+sphinx-copybutton==0.5.2            # Sphinx code copy button extension
+sphinx-autodoc-typehints==3.5.2     # Sphonx type hint annotation improvements

@@ -54,29 +54,69 @@ class SCLIResponseMetadata:
 
 class SmarterJournalThings(SmarterEnumAbstract):
     """
-    Smarter api cli things that can be added to the Journal. This descends
-    from SmarterEnumAbstract which is generally implemented as a subclassed
-    Singleton. For the avoidance of any doubt, we're doing here as well, but
-    we're also allowing this to be instantiated with a string value, so that
-    a SmarterJournalThings value can passed as a strongly typed object.
+    Enumerates the types of objects ("things") that can be added to the Smarter Journal.
+
+    This class descends from :class:`SmarterEnumAbstract`, typically implemented as a subclassed Singleton.
+    For flexibility, it also allows instantiation with a string value, enabling a ``SmarterJournalThings`` value
+    to be passed as a strongly typed object.
+
+    Each member represents a resource type within the Smarter API, such as plugins, connections, accounts,
+    authentication tokens, users, chats, providers, and secrets.
+
+    Example usage::
+
+        thing = SmarterJournalThings("Plugin")
+        assert thing == SmarterJournalThings.STATIC_PLUGIN
+
     """
 
     STATIC_PLUGIN = "Plugin"
+    """Smarter Static Plugin AI resource. A collection of Django ORM model instances."""
+
     API_PLUGIN = "ApiPlugin"
+    """Smarter API Plugin AI resource. A Django ORM model instance."""
+
     SQL_PLUGIN = "SqlPlugin"
+    """Smarter SQL Plugin AI resource. A Django ORM model instance."""
+
     API_CONNECTION = "ApiConnection"
+    """Smarter API Connection resource. A Django ORM model instance."""
+
     SQL_CONNECTION = "SqlConnection"
+    """Smarter SQL Connection resource. A Django ORM model instance."""
+
     ACCOUNT = "Account"
+    """Smarter Account resource. A Django ORM model instance."""
+
     AUTH_TOKEN = "AuthToken"
+    """Smarter Authentication Token resource. A Django DRF Knox subclass ORM model instance."""
+
     USER = "User"
+    """Smarter User resource. A Django Auth User model instance."""
+
     CHAT = "Chat"
+    """Smarter Chat resource. A Django ORM model instance."""
+
     CHAT_CONFIG = "ChatConfig"
+    """Smarter ChatConfig resource. A JSON dictionary generated real-time"""
+
     CHAT_HISTORY = "ChatHistory"
+    """Smarter ChatHistory resource. A list of Django ORM model instances."""
+
     CHAT_PLUGIN_USAGE = "ChatPluginUsage"
+    """Smarter ChatPluginUsage resource. A list of Django ORM model instances."""
+
     CHAT_TOOL_CALL = "ChatToolCall"
+    """Smarter ChatToolCall resource. A list of Django ORM model instances."""
+
     CHATBOT = "Chatbot"
+    """Smarter Chatbot resource. A Django ORM model instance."""
+
     PROVIDER = "Provider"
+    """Smarter Provider resource. A Django ORM model instance."""
+
     SECRET = "Secret"
+    """Smarter Secret resource. A Django ORM model instance."""
 
     @classmethod
     def choices(cls) -> list[tuple[str, str]]:
@@ -103,11 +143,19 @@ class SmarterJournalThings(SmarterEnumAbstract):
 
 class SmarterJournalCliCommands(SmarterEnumAbstract):
     """
-    Enumerated commands for api/v1/cli requests. This descends
-    from SmarterEnumAbstract which is generally implemented as a subclassed
-    Singleton. For the avoidance of any doubt, we're doing here as well, but
-    we're also allowing this to be instantiated with a string value, so that
-    a SmarterJournalCliCommands value can passed as a strongly typed object.
+    Enumerates the available commands for ``api/v1/cli`` requests.
+
+    This class inherits from :class:`SmarterEnumAbstract`, which is typically implemented as a subclassed Singleton.
+    For flexibility, it also allows instantiation with a string value, enabling a ``SmarterJournalCliCommands`` value
+    to be passed as a strongly typed object.
+
+    Each member represents a supported CLI command in the Smarter API, such as ``apply``, ``chat``, ``delete``, ``deploy``, etc.
+
+    Example usage::
+
+        command = SmarterJournalCliCommands("apply")
+        assert command == SmarterJournalCliCommands.APPLY
+
     """
 
     APPLY = "apply"

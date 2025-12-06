@@ -34,7 +34,7 @@ class SAMTestBroker(AbstractBroker):
     """Test class for unit tests of the abstract broker class."""
 
     # override the base abstract manifest model with the User model
-    # FIX NOTE: We shouldn't be using an implementation of the actual
+    # TODO: We shouldn't be using an implementation of the actual
     #           manifest model here. We should be using a test model.
     _manifest: Optional[SAMStaticPlugin] = None
     _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
@@ -96,7 +96,7 @@ class SAMTestBroker(AbstractBroker):
 
     @property
     def kind(self) -> str:
-        # FIX NOTE: WE SHOULD NOT BE USING AN ACTUAL KIND HERE. WE NEED A
+        # TODO: WE SHOULD NOT BE USING AN ACTUAL KIND HERE. WE NEED A
         #           TEST KIND FOR THE TESTS.
         return MANIFEST_KIND
 

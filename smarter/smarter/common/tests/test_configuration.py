@@ -184,7 +184,6 @@ class TestConfiguration(SmarterTestBase):
             dump_defaults=False,
             aws_profile="test-profile",
             aws_region="eu-west-1",
-            aws_apigateway_create_custom_domaim=False,
             root_domain="test-domain.com",
             langchain_memory_key="TEST_langchain_memory_key",
             openai_api_organization="TEST_openai_api_organization",
@@ -199,7 +198,6 @@ class TestConfiguration(SmarterTestBase):
         self.assertEqual(mock_settings.dump_defaults, False)
         self.assertEqual(mock_settings.aws_profile, "test-profile")
         self.assertEqual(mock_settings.aws_region, "eu-west-1")
-        self.assertEqual(mock_settings.aws_apigateway_create_custom_domaim, False)
         self.assertEqual(mock_settings.root_domain, "test-domain.com")
         self.assertEqual(mock_settings.langchain_memory_key, "TEST_langchain_memory_key")
         self.assertEqual(mock_settings.openai_api_organization, "TEST_openai_api_organization")

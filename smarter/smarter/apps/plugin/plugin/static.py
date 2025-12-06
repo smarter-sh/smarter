@@ -40,7 +40,46 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class StaticPlugin(PluginBase):
-    """A PLugin that returns a static json object stored in the Plugin itself."""
+    """
+    Implements a plugin that returns a static JSON object stored within the plugin itself.
+
+    This class is intended for use cases where plugin data is immutable at runtime and fully defined in the manifest or configuration. The static data is exposed via the plugin interface and can be accessed through function calls, including those compatible with OpenAI's function calling API.
+
+    Typical uses include providing product details, company contact information, sales promotions, coupon codes, or biographical background. The plugin supports both manifest-based and Django ORM-based initialization for flexible integration.
+
+    **Key Features:**
+
+        - Returns static data defined in the plugin manifest or configuration.
+        - Integrates with Django ORM for plugin data persistence.
+        - Provides a tool definition compatible with OpenAI function calling.
+        - Handles serialization and validation of static data.
+        - Emits signals when the plugin is called and when it responds.
+
+    :param manifest: Optional manifest object for plugin initialization.
+    :type manifest: Optional[SAMStaticPlugin]
+    :param args: Additional positional arguments.
+    :type args: tuple
+    :param kwargs: Additional keyword arguments.
+    :type kwargs: dict
+
+    .. note::
+
+        Signals are emitted on plugin call and response for observability and integration.
+
+    .. seealso::
+
+        :class:`PluginBase`
+        :class:`PluginDataStatic`
+        :class:`PluginStaticSerializer`
+        `OpenAI Function Calling Quickstart <https://platform.openai.com/docs/assistants/tools/function-calling/quickstart>`_
+
+    **Example Use Cases:**
+
+        - Providing static product information for a chatbot.
+        - Supplying company contact details or promotional codes.
+        - Returning biographical information about a company founder.
+
+    """
 
     SAMPluginType = SAMStaticPlugin
 
@@ -59,7 +98,23 @@ class StaticPlugin(PluginBase):
 
     @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
-        """Return the Pydandic model of the plugin."""
+        """
+        Return the Pydantic model representation of the plugin manifest.
+
+        This property provides access to the plugin's manifest as a validated Pydantic model
+        (:class:`SAMStaticPlugin`). If the manifest has not been set but the plugin is in a ready state,
+        it will attempt to construct the manifest from the current plugin data using the ``to_json()`` method.
+
+        Returns
+        -------
+        Optional[SAMStaticPlugin]
+            The Pydantic model instance representing the plugin manifest, or ``None`` if unavailable.
+
+        Notes
+        -----
+        This property is useful for accessing structured, validated manifest data regardless of whether
+        the plugin was initialized from a manifest or from Django ORM data.
+        """
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
@@ -70,6 +125,31 @@ class StaticPlugin(PluginBase):
     def plugin_data(self) -> Optional[PluginDataStatic]:
         """
         Return the plugin data as a Django ORM instance.
+
+        This property provides access to the plugin's data as a Django ORM model instance
+        (:class:`PluginDataStatic`). The returned object represents the persistent state of the plugin's
+        static data in the database.
+
+        The property handles several scenarios:
+
+        - If the plugin was initialized from a manifest and is associated with a database record,
+          it will construct the ORM instance from the manifest data.
+        - If the plugin is already present in the database but not initialized from a manifest,
+          it retrieves the existing ORM instance directly.
+        - If neither a manifest nor a database record exists, it returns ``None``.
+
+        This property is useful for interacting with the plugin's data using Django's ORM features,
+        such as querying, updating, or serializing the static data.
+
+        Returns
+        -------
+        Optional[PluginDataStatic]
+            The Django ORM instance representing the plugin's static data, or ``None`` if unavailable.
+
+        Notes
+        -----
+        This property abstracts the logic for resolving the plugin's data source, ensuring that
+        consumers of the property always receive a consistent ORM object when possible.
         """
         if self._plugin_data:
             return self._plugin_data
@@ -91,27 +171,97 @@ class StaticPlugin(PluginBase):
         return self._plugin_data
 
     @property
-    def plugin_data_class(self) -> type:
-        """Return the plugin data class."""
+    def plugin_data_class(self) -> Type[PluginDataStatic]:
+        """
+        Return the Django ORM class used for static plugin data.
+
+        This property provides the class object for the Django model that represents
+        the persistent storage of static plugin data. It is useful for introspection,
+        type checking, and for scenarios where you need to interact with the model class
+        directly (such as creating new instances, performing queries, or using Django's
+        ORM features programmatically).
+
+        The returned class is typically :class:`PluginDataStatic`, which defines the schema
+        for storing static data associated with this plugin type.
+
+        :return: The Django ORM class for static plugin data.
+        :rtype: Type[PluginDataStatic]
+        """
         return PluginDataStatic
 
     @property
     def plugin_data_serializer(self) -> Optional[PluginStaticSerializer]:
-        """Return the plugin data serializer."""
+        """
+        Return the serializer instance for the plugin's static data.
+
+        This property provides a serializer object (:class:`PluginStaticSerializer`) that is
+        initialized with the current plugin data. The serializer is responsible for converting
+        the Django ORM model instance to and from native Python datatypes, as well as validating
+        and serializing the static data for use in APIs or other interfaces.
+
+        If the serializer has not yet been created, it will be instantiated using the current
+        plugin data. This ensures that the serializer always reflects the latest state of the
+        plugin's static data.
+
+        :return: The serializer instance for the plugin's static data, or ``None`` if the plugin data is unavailable.
+        :rtype: Optional[PluginStaticSerializer]
+
+        Notes
+        -----
+        The serializer is useful for tasks such as rendering the plugin data as JSON, validating
+        incoming data, or preparing the data for use in API responses.
+        """
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginStaticSerializer(self.plugin_data)
         return self._plugin_data_serializer
 
     @property
     def plugin_data_serializer_class(self) -> Type[PluginStaticSerializer]:
-        """Return the plugin data serializer class."""
+        """
+        Return the plugin data serializer class.
+
+        This property provides direct access to the serializer class used for static plugin data.
+        The serializer class is responsible for converting Django ORM model instances to and from
+        native Python datatypes, as well as validating and serializing the static data for use in
+        APIs or other interfaces.
+
+        Accessing the serializer class is useful when you need to instantiate a new serializer,
+        perform type checks, or customize serialization behavior for static plugin data.
+
+        :return: The serializer class for static plugin data.
+        :rtype: Type[PluginStaticSerializer]
+
+        Notes
+        -----
+        This property does not return an instance, but rather the class itself, allowing for
+        flexible instantiation and extension in advanced use cases.
+        """
         return PluginStaticSerializer
 
     @property
     def plugin_data_django_model(self) -> Optional[dict[str, Any]]:
         """
-        transform the Pydantic model into a Django ORM model.
-        Return the plugin data definition as a json object.
+        Transform the Pydantic model into a Django ORM-compatible dictionary.
+
+        This property generates a dictionary representation of the plugin's static data,
+        suitable for initializing or updating a Django ORM model instance (:class:`PluginDataStatic`).
+        The dictionary includes all fields required by the ORM model, such as the plugin reference,
+        description, and static data payload.
+
+        The transformation is performed using the current Pydantic manifest model, if available.
+        This allows for seamless conversion between validated manifest data and the persistent
+        database representation used by Django.
+
+        Returns
+        -------
+        Optional[dict[str, Any]]
+            A dictionary containing the fields necessary to create or update a
+            :class:`PluginDataStatic` ORM instance, or ``None`` if the manifest is not available.
+
+        Notes
+        -----
+        This property is useful for bridging the gap between Pydantic-based manifest validation
+        and Django ORM persistence, enabling consistent data handling across both systems.
         """
         # recast the Pydantic model the the PluginDataStatic Django ORM model
         if self._manifest:
@@ -131,7 +281,34 @@ class StaticPlugin(PluginBase):
 
     @property
     def custom_tool(self) -> Optional[dict[str, Any]]:
-        """Return the plugin tool."""
+        """
+        Return the plugin tool definition for OpenAI function calling.
+
+        See the OpenAI documentation:
+        https://platform.openai.com/docs/assistants/tools/function-calling/quickstart
+
+        **Example:**
+
+        .. code-block:: python
+
+            tool = {
+                "type": "function",
+                "function": {
+                    "name": "static_plugin_function",
+                    "description": "Static Plugin",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "inquiry_type": {
+                                "type": "string",
+                                "enum": ["contact", "biographical", "sales_promotions", "coupon_codes"],
+                            },
+                        },
+                        "required": ["inquiry_type"],
+                    },
+                },
+            }
+        """
         if self.ready:
             return {
                 "type": "function",
@@ -154,6 +331,32 @@ class StaticPlugin(PluginBase):
 
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
+        """
+        Return an example manifest for a StaticPlugin.
+
+        :param kwargs: Optional keyword arguments to customize the example manifest.
+        :type kwargs: Optional[dict[str, Any]]
+
+        :return: An example manifest as a dictionary.
+        :rtype: Optional[dict[str, Any]]
+
+        :raises SmarterConfigurationError: If there is an error generating the example manifest.
+
+        See Also:
+
+        - :class:`SAMStaticPlugin`
+        - :class:`SmarterApiVersions`
+        - :class:`SAMKeys`
+        - :class:`SAMMetadataKeys`
+        - :class:`SAMPluginCommonMetadataKeys`
+        - :class:`SAMPluginCommonMetadataClassValues`
+        - :class:`SAMPluginSpecKeys`
+        - :class:`SAMPluginCommonSpecSelectorKeys`
+        - :class:`SAMPluginCommonSpecSelectorKeyDirectiveValues`
+        - :class:`SAMPluginCommonSpecPromptKeys`
+        - :class:`SAMStaticPluginSpecDataKeys`
+
+        """
         static_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
@@ -224,7 +427,41 @@ class StaticPlugin(PluginBase):
 
     def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> str:
         """
-        Fetch the inquiry_type from a StaticPlugin.
+        Fetch a response from the StaticPlugin based on the provided inquiry type.
+
+        This method retrieves the value associated with the specified ``inquiry_type`` from the plugin's static data.
+        It is intended for use with function calling interfaces, such as those provided by OpenAI, where the inquiry
+        type is passed as an argument and the corresponding static data is returned as a JSON-encoded string.
+
+        The method performs several validation steps:
+
+        - Ensures that the ``inquiry_type`` argument is present and is a string.
+        - Verifies that the plugin is in a ready state and that plugin data is available.
+        - Emits signals when the plugin is called and when it responds.
+        - Looks up the value for the given inquiry type in the plugin's static data.
+        - Serializes the result to a JSON string before returning.
+        - Raises detailed errors if any step fails, including missing inquiry types, serialization issues, or invalid data.
+
+        Parameters
+        ----------
+        function_args : dict[str, Any]
+            A dictionary of arguments, expected to include the key ``inquiry_type`` specifying which static data to fetch.
+
+        Returns
+        -------
+        str
+            The JSON-encoded string corresponding to the requested inquiry type.
+
+        Raises
+        ------
+        SmarterPluginError
+            If the inquiry type is missing, not a string, not found in the static data, or if the plugin is not ready or lacks data.
+            Also raised if the return value cannot be serialized to JSON or is not a string.
+
+        Notes
+        -----
+        This method is typically used as the handler for function calling APIs, enabling external systems to retrieve
+        specific pieces of static information from the plugin in a robust and validated manner.
         """
         inquiry_type = function_args.get("inquiry_type")
         if not isinstance(inquiry_type, str):

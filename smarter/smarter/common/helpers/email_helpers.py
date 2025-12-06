@@ -23,11 +23,45 @@ class EmailHelperException(SmarterException):
 
 
 class EmailHelper(metaclass=Singleton):
-    """Helper class for sending emails."""
+    """
+    Helper class for sending emails via AWS Simple Email Service (SES) using SMTP.
+
+    This class provides utility methods for validating email addresses and sending emails
+    through an SMTP server, with configuration provided by Django settings and custom
+    application settings.
+
+    The class is implemented as a singleton to ensure a single instance is used throughout
+    the application.
+    """
 
     @staticmethod
     def validate_mail_list(emails: Union[str, List[str]], quiet: bool = False) -> Union[List[str], None]:
-        """Convert to a list and filter out any invalid email addresses."""
+        """
+        Convert the input into a list and filter out any invalid email addresses.
+
+        This method accepts either a single email address as a string or a list of email addresses.
+        It validates each email address using the `SmarterValidator.is_valid_email` method.
+        Invalid email addresses are filtered out, and warnings are logged if any are found,
+        unless `quiet` is set to True.
+
+        Parameters
+        ----------
+        emails : Union[str, List[str]]
+            A single email address as a string, or a list of email addresses to validate.
+        quiet : bool, optional
+            If True, suppresses warning logs for invalid email addresses (default is False).
+
+        Returns
+        -------
+        Union[List[str], None]
+            A list of valid email addresses, or None if no valid addresses are found.
+
+        Logs
+        ----
+        - Logs a warning if the input is not a string or list.
+        - Logs a warning if invalid email addresses are found (unless `quiet` is True).
+        - Logs a warning if no valid email addresses are found (unless `quiet` is True).
+        """
         if isinstance(emails, str):
             mailto_list = [emails]
         elif isinstance(emails, list):
@@ -54,7 +88,40 @@ class EmailHelper(metaclass=Singleton):
     # pylint: disable=too-many-arguments
     @staticmethod
     def send_email(subject, body, to: Union[str, List[str]], html=False, from_email=None, quiet: bool = False):
-        """Send an email."""
+        """
+        Send an email using the configured SMTP server.
+
+        This method constructs and sends an email message using the SMTP configuration
+        specified in the application settings. It supports sending plain text or HTML emails,
+        and can optionally suppress actual sending for testing or development purposes.
+
+        Parameters
+        ----------
+        subject : str
+            The subject line of the email.
+        body : str
+            The body content of the email. If `html` is True, this should be HTML-formatted.
+        to : Union[str, List[str]]
+            The recipient email address or a list of recipient email addresses.
+        html : bool, optional
+            If True, sends the email as HTML. Otherwise, sends as plain text (default is False).
+        from_email : str, optional
+            The sender's email address. If not provided, uses the configured default sender.
+        quiet : bool, optional
+            If True, does not actually send the email and suppresses warnings (default is False).
+
+        Raises
+        ------
+        EmailHelperException
+            If required SMTP configuration is missing or if an error occurs during sending
+            and developer mode is enabled.
+
+        Logs
+        ----
+        - Logs a warning if SMTP is not configured.
+        - Logs information about emails that would have been sent in quiet mode.
+        - Logs errors if sending fails due to SMTP or unexpected exceptions.
+        """
         if not smarter_settings.smtp_is_configured:
             if not quiet:
                 logger.warning(

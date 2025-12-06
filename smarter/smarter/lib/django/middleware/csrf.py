@@ -1,6 +1,6 @@
 """
-This module contains the CsrfViewMiddleware class, which is a subclass of Django's
-CsrfViewMiddleware. It adds the ability to add the ChatBot's URL to the list of
+This module contains the SmarterCsrfViewMiddleware class, which is a subclass of Django's
+SmarterCsrfViewMiddleware. It adds the ability to add the ChatBot's URL to the list of
 trusted origins for CSRF protection.
 """
 
@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import HttpResponseForbidden
-from django.middleware.csrf import CsrfViewMiddleware as DjangoCsrfViewMiddleware
+from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.functional import cached_property
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
@@ -34,16 +34,52 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-logger.info("Loading smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware")
+logger.info("Loading smarter.apps.chatbot.middleware.csrf.SmarterCsrfViewMiddleware")
 
 
-class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
+class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
     """
-    Require a present and correct csrfmiddlewaretoken for POST requests that
-    have a CSRF cookie, and set an outgoing CSRF cookie.
+    Middleware for enforcing CSRF (Cross-Site Request Forgery) protection with dynamic trusted origins.
 
-    This middleware should be used in conjunction with the {% csrf_token %}
-    template tag.
+    This middleware extends Django's built-in CSRF middleware to support dynamic addition of trusted
+    origins, particularly for chatbot-related requests. It ensures that POST requests with a CSRF cookie
+    require a valid ``csrfmiddlewaretoken``, and it sets outgoing CSRF cookies as needed.
+
+    The middleware is designed to work seamlessly with the ``{% csrf_token %}`` template tag and
+    provides additional logic for chatbot requests, health checks, and internal IP addresses. It also
+    integrates with application logging and waffle switches for feature toggling.
+
+    :cvar smarter_request: The current request wrapped in a SmarterRequestMixin, or None.
+    :vartype smarter_request: Optional[SmarterRequestMixin]
+
+    **Key Features**
+
+    - Dynamically adds chatbot URLs to the list of CSRF trusted origins.
+    - Exempts chatbot requests from CSRF checks when appropriate.
+    - Handles health check endpoints and internal IP addresses efficiently.
+    - Provides detailed logging for CSRF-related events and decisions.
+    - Integrates with Django's CSRF protection and application-specific settings.
+
+    .. note::
+        - Chatbot requests can be exempted from CSRF checks based on waffle switches.
+        - Trusted origins are dynamically extended for chatbot and config requests.
+        - Logging is controlled via a waffle switch and the application's log level.
+
+    **Example**
+
+    To enable this middleware, add it to your Django project's middleware settings::
+
+        MIDDLEWARE = [
+            ...
+            'smarter.lib.django.middleware.csrf.SmarterCsrfViewMiddleware',
+            ...
+        ]
+
+    :param request: The incoming HTTP request object.
+    :type request: django.http.HttpRequest
+
+    :returns: The HTTP response object, or None if the request is exempted from CSRF checks.
+    :rtype: django.http.HttpResponse or None
     """
 
     smarter_request: Optional[SmarterRequestMixin] = None
@@ -97,7 +133,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
 
         # Short-circuit for any requests born from internal IP address hosts.
         # This is unlikely, but not impossible.
-        if any(host.startswith(prefix) for prefix in settings.INTERNAL_IP_PREFIXES):
+        if any(host.startswith(prefix) for prefix in settings.SMARTER_INTERNAL_IP_PREFIXES):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
@@ -138,7 +174,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
             logger.info("=" * 80)
             logger.info("%s ChatBot: %s", self.formatted_class_name, url)
             for cookie in request.COOKIES:
-                logger.info("CsrfViewMiddleware request.COOKIES: %s", cookie)
+                logger.info("SmarterCsrfViewMiddleware request.COOKIES: %s", cookie)
             logger.info("%s cookie settings", self.formatted_class_name)
             logger.info("%s settings.CSRF_COOKIE_NAME: %s", self.formatted_class_name, settings.CSRF_COOKIE_NAME)
             logger.info(

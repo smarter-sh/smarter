@@ -1,2 +1,0 @@
-Smarter Manifests
-=================

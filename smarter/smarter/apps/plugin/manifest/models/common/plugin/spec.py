@@ -151,7 +151,7 @@ class SAMPluginCommonSpecPrompt(BaseModel):
     @field_validator("provider")
     def validate_provider(cls, v) -> str:
 
-        # FIX NOTE: This is a placeholder for the actual valid providers
+        # TODO: This is a placeholder for the actual valid providers
         VALID_PROVIDERS = [SettingsDefaults.LLM_DEFAULT_PROVIDER]
         if v not in VALID_PROVIDERS:
             err_desc_me_name = SAMPluginCommonSpecPromptKeys.PROVIDER.value

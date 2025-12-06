@@ -1,7 +1,15 @@
+/* Custom CSS for Sphinx Documentation */
 div[class^="literal-block-wrapper"],
 .rst-content .literal-block-wrapper {
   background: none !important;
   box-shadow: none !important;
   border: none !important;
   padding: 0 !important;
+}
+
+/* Hides the signature for Settings class in Smarter Settings documentation */
+section#smarter-settings
+  dl.class
+  > dt#smarter\.common\.conf\.Settings.sig.sig-object.py {
+  display: none;
 }

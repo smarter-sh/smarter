@@ -24,7 +24,32 @@ class Command(SmarterCommand):
         parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
 
     def handle(self, *args, **options):
-        """Deploy a customer API."""
+        """
+        Deploy a customer-facing chatbot API for a Smarter account.
+
+        This management command enables administrators to deploy a chatbot for a specific account,
+        identified either by its account number or company name. The chatbot is deployed to a URL
+        structured as ``[subdomain].[account-number].api.smarter.sh/chatbot/``.
+
+        The deployment process checks for the existence of the specified account and chatbot, verifies
+        DNS status, and initiates deployment either synchronously (foreground) or asynchronously
+        (background Celery task).
+
+        **Usage:**
+        - Specify the account using either ``--account_number`` or ``--company_name``.
+        - Provide the chatbot's name (subdomain) via ``--name``.
+        - Optionally use ``--foreground`` to run the deployment synchronously.
+
+        **Deployment Steps:**
+        - Retrieve the account by account number or company name.
+        - Locate the chatbot by name within the account.
+        - If the chatbot is already deployed and DNS is verified, report success.
+        - Otherwise, deploy the chatbot using the appropriate method.
+        - Output progress and completion messages.
+
+        This command streamlines the process of making chatbots available to end users, ensuring
+        proper DNS verification and deployment status.
+        """
 
         self.handle_begin()
 

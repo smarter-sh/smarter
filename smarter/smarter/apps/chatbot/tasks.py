@@ -120,7 +120,7 @@ class ChatBotTaskError(SmarterChatBotException):
 def aggregate_chatbot_history():
     """summarize detail chatbot history into aggregate records."""
 
-    # FIX NOTE: implement me.
+    # TODO: implement me.
     logger.info("Aggregating chatbot history.")
 
 

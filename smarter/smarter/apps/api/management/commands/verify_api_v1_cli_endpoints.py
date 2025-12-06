@@ -26,16 +26,36 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 class Command(SmarterCommand):
     """
-    Utility for running api/v1/cli/ endpoints to verify that they work.
-    This largely recreates the unit tests for the endpoints, albeit with
-    formatted screen output.
+    Management command for verifying the functionality of ``api/v1/cli/`` endpoints in the Smarter platform.
 
-    This is an instructional tool as much as a utility, demonstrating the
-    following:
-    - how to generate an API key for a user
-    - how to add the API key to an http request to api/v1/cli/ endpoints
-    - how to setup an http request for an api/v1/cli/ endpoint
-    - how to work with the response object
+    This command is designed as both a utility and an instructional tool, allowing developers and administrators to manually exercise and validate the API endpoints that are typically covered by automated unit tests. It provides formatted output to facilitate understanding and troubleshooting.
+
+    **Key Features and Demonstrations:**
+
+    - Shows how to generate an API key for a user, which is required for authenticated API requests.
+    - Demonstrates how to include the API key in HTTP requests to ``api/v1/cli/`` endpoints.
+    - Explains how to construct and send HTTP requests to various CLI endpoints, including manifest application and plugin operations.
+    - Illustrates how to handle and interpret the response objects returned by the API, with formatted output for clarity.
+
+    **Usage:**
+
+    This command is intended to be run via Django's ``manage.py`` interface. It accepts a Smarter account number and a username, retrieves the corresponding user and account, and then performs a series of API endpoint verifications using a single-use API token. The command outputs detailed information about the environment, account, user, and API responses.
+
+    **Workflow:**
+
+    1. Validates the provided account and user information.
+    2. Generates a single-use API token for authentication.
+    3. Constructs and sends requests to one or more CLI endpoints, displaying the request URLs and responses.
+    4. Cleans up by deleting the temporary API token after use.
+
+    **Intended Audience:**
+
+    Developers, QA engineers, and system administrators who need to manually verify API endpoint behavior, troubleshoot issues, or learn how to interact with the Smarter CLI endpoints programmatically. This command is especially useful for demonstrations, manual testing, and instructional purposes.
+
+    .. seealso::
+
+        :py:class:`smarter.apps.api.v1.cli.views.ApiV1CliViewSet` - The viewset containing the CLI endpoints being verified.
+        :py:class:`smarter.lib.drf.models.SmarterAuthToken` - The model used for generating API tokens for authentication.
     """
 
     help = "Run API CLI endpoint verifications."

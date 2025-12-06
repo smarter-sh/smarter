@@ -7,13 +7,12 @@ information about how the React app is integrated into the Django app.
 import logging
 import traceback
 from http import HTTPStatus
-from typing import Optional
-from urllib.parse import urljoin
+from typing import Any, Optional, Union
 
 from django.conf import settings
 from django.db import models
 from django.db.models import QuerySet
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -36,7 +35,6 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistorySerializer,
 )
 from smarter.apps.prompt.models import Chat, ChatHelper
-from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
@@ -140,7 +138,7 @@ class SmarterChatSession(SmarterHelperMixin):
         """
         if self._session_key is None:
             raise SmarterConfigurationError(
-                "Session key is not set. This should not happen. " "Please report this issue to the Smarter team."
+                "Session key is not set. This should not happen. Please report this issue to the Smarter team."
             )
         return self._session_key
 
@@ -170,11 +168,60 @@ class SmarterChatSession(SmarterHelperMixin):
 @method_decorator(csrf_exempt, name="dispatch")
 class ChatConfigView(SmarterNeverCachedWebView):
     """
-    Chat config view for smarter web. This view is protected and requires the user
-    to be authenticated. It works with any ChatBot instance but is aimed at chatbots
-    instances running inside the web console in sandbox mode.
+    Chat configuration view for the Smarter web application.
 
-    example: https://smarter.3141-5926-5359.alpha.api.smarter.sh/config/
+    This view is responsible for providing all configuration information required by the ReactJS chat UI component.
+    It is designed to be performant and efficient, as it is invoked on every user-facing browser load and refresh.
+    The endpoint is session-based, with sessions uniquely defined by the `SmarterChatSession` class, which uses a combination
+    of IP address and device-identifying information to distinguish individual chat sessions.
+
+    **Key Features:**
+
+    - **Django Template-Based:**
+      This view uses Django's template system for rendering and does not rely on Django REST Framework (DRF) serializers for its main response.
+      The configuration data is returned as a JSON response, but the view itself is structured as a Django class-based view.
+
+    - **CSRF Exempt:**
+      The view is decorated with `@csrf_exempt` because it is read-only and does not modify server-side data. This exemption is safe in this context
+      and avoids unnecessary CSRF validation for GET and POST requests that only retrieve configuration data.
+
+    - **ReactJS UI Integration:**
+      The endpoint provides all necessary configuration and context information for the ReactJS chat component. This includes chatbot metadata,
+      plugin information, session keys, and historical data relevant to the chat session. The React app consumes this configuration to initialize
+      and render the chat UI in the user's browser.
+
+    - **Session-Based Architecture:**
+      Each chat session is uniquely identified and managed by the `SmarterChatSession` helper class. Sessions are tied to both the user's IP address
+      and device-specific information, ensuring that each device and browser instance receives a unique session key. This session key is critical for
+      tracking chat history, plugin usage, and other session-specific data.
+
+    - **Performance Considerations:**
+      Since this endpoint is called on every browser load and refresh, performance is a primary concern. The view is optimized to minimize database
+      queries and serialization overhead. Only a limited number of plugins (as defined by `MAX_RETURNED_PLUGINS`) are returned to avoid excessive payload sizes.
+      Caching and efficient queryset usage are employed where possible to ensure fast response times for end users.
+
+    **Example Usage:**
+
+        https://smarter.3141-5926-5359.alpha.api.smarter.sh/config/
+
+    **Returns:**
+        JSON response containing:
+            - `session_key`: Unique identifier for the chat session.
+            - `sandbox_mode`: Boolean indicating if the chatbot is running in sandbox mode.
+            - `debug_mode`: Boolean indicating if debug mode is enabled.
+            - `chatbot`: Serialized chatbot configuration.
+            - `history`: Chat and plugin selector history for the session.
+            - `meta_data`: Additional metadata for the chatbot.
+            - `plugins`: Plugin metadata and a limited list of plugins.
+
+    **Security:**
+        - The view is protected and requires the user to be authenticated, unless the chatbot is configured to allow unauthenticated access.
+        - If authentication is required and the user is not authenticated, a 403 Forbidden response is returned.
+
+    **See Also:**
+        - `SmarterChatSession`: Helper class for managing chat sessions.
+        - `ChatBotConfigSerializer`, `ChatBotPluginSerializer`: Serializers for chatbot and plugin data.
+        - `ChatBotHelper`: Helper for chatbot-related operations.
     """
 
     authentication_classes = None
@@ -230,7 +277,176 @@ class ChatConfigView(SmarterNeverCachedWebView):
             self._chatbot = None
             logger.info("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
 
-    def dispatch(self, request: HttpRequest, *args, chatbot_id: Optional[int] = None, **kwargs):
+    def clean_url(self, url: str) -> str:
+        """
+        Clean the url of any query strings and trailing '/config/' strings.
+        """
+        retval = clean_url(url)
+        if retval.endswith("/config/"):
+            retval = retval[:-8]
+        return retval
+
+    def config(self) -> dict[str, Any]:
+        """
+        Assemble and return the configuration dictionary required by the ReactJS chat UI component.
+
+        This method gathers all relevant context and configuration data for the chat session and chatbot,
+        and returns it as a dictionary suitable for JSON serialization. This configuration is consumed by
+        the ReactJS frontend to initialize and render the chat interface.
+
+        **Key Features:**
+
+        - **Django Template-Based:**
+          This logic is part of a Django class-based view and does not use Django REST Framework (DRF) serializers
+          for the main response, though serializers are used for some nested data.
+
+        - **CSRF Exempt:**
+          The parent view is CSRF exempt because this endpoint is strictly read-only and does not modify server-side data.
+
+        - **ReactJS UI Integration:**
+          The returned dictionary provides all configuration and context information needed by the ReactJS chat component,
+          including chatbot metadata, plugin information, session keys, and chat history.
+
+        - **Session-Based:**
+          The configuration is tied to a unique chat session, as defined by the :class:`SmarterChatSession` helper,
+          which uses a combination of the user's IP address and device-identifying information to uniquely identify
+          each session.
+
+        - **Performance:**
+          Since this endpoint is called on every browser load and refresh, the logic is optimized to minimize database
+          queries and serialization overhead. Only a limited number of plugins (see ``MAX_RETURNED_PLUGINS``) are returned
+          to keep payloads small and response times fast.
+
+        Returns
+        -------
+        dict
+            A dictionary containing all configuration data required by the ReactJS chat UI component. The structure includes:
+
+            - ``session_key``: Unique identifier for the chat session.
+            - ``sandbox_mode``: Boolean indicating if the chatbot is running in sandbox mode.
+            - ``debug_mode``: Boolean indicating if debug mode is enabled.
+            - ``chatbot``: Serialized chatbot configuration.
+            - ``history``: Chat and plugin selector history for the session.
+            - ``meta_data``: Additional metadata for the chatbot.
+            - ``plugins``: Plugin metadata and a limited list of plugins.
+
+        Raises
+        ------
+        SmarterValueError
+            If the session or chatbot helper is not set.
+
+        See Also
+        --------
+        SmarterChatSession : Helper class for managing chat sessions.
+        ChatBotConfigSerializer, ChatBotPluginSerializer : Serializers for chatbot and plugin data.
+        ChatBotHelper : Helper for chatbot-related operations.
+        """
+        # add chatbot_request_history and plugin_selector_history to history
+        # these have to be added here due to circular import issues.
+        if self.session is None:
+            raise SmarterValueError("Session is not set. Cannot retrieve chatbot request history.")
+        if self.chatbot_helper is None:
+            raise SmarterValueError("ChatBotHelper is not set. Cannot retrieve chatbot request history.")
+
+        chatbot_serializer = (
+            ChatBotConfigSerializer(self.chatbot, context={"request": self.smarter_request}) if self.chatbot else None
+        )
+
+        # plugins context. the main thing we need here is to constrain the number of plugins
+        # returned to some reasonable number, since we'll probaably have cases where
+        # the chatbot has a lot of plugins (hundreds, thousands...).
+        chatbot_plugins_count = ChatBotPlugin.objects.filter(chatbot=self.chatbot).count()
+        chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot).order_by("-pk")[:MAX_RETURNED_PLUGINS]
+        chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
+        history = self.session.chat_helper.history if self.session.chat_helper else {}
+
+        chatbot_requests_queryset = ChatBotRequests.objects.filter(session_key=self.session.session_key).order_by("-id")
+        chatbot_requests_serializer = ChatBotRequestsSerializer(chatbot_requests_queryset, many=True)
+        history["chatbot_request_history"] = chatbot_requests_serializer.data
+
+        plugin_selector_history_queryset = PluginSelectorHistory.objects.filter(session_key=self.session.session_key)
+        plugin_selector_history_serializer = PluginSelectorHistorySerializer(
+            plugin_selector_history_queryset, many=True
+        )
+        history["plugin_selector_history"] = plugin_selector_history_serializer.data
+
+        retval = {
+            "data": {
+                SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
+                "sandbox_mode": self.chatbot_helper.is_chatbot_sandbox_url,
+                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE),
+                "chatbot": chatbot_serializer.data if chatbot_serializer else None,
+                "history": history,
+                "meta_data": self.chatbot_helper.to_json(),
+                "plugins": {
+                    "meta_data": {
+                        "total_plugins": chatbot_plugins_count,
+                        "plugins_returned": len(chatbot_plugins),
+                    },
+                    "plugins": chatbot_plugin_serializer.data,
+                },
+            },
+        }
+        chat_config_invoked.send(sender=self.__class__, instance=self, request=self.smarter_request, data=retval)
+        return retval
+
+    def dispatch(
+        self, request: HttpRequest, *args, chatbot_id: Optional[int] = None, **kwargs
+    ) -> Union[JsonResponse, HttpResponse, SmarterJournaledJsonErrorResponse]:
+        """
+        Handles incoming HTTP requests for the chat configuration endpoint.
+
+        This method is responsible for orchestrating the retrieval and assembly of all configuration data
+        required by the ReactJS chat UI component. It is invoked on every user-facing browser load and refresh,
+        making performance a critical concern.
+
+        **Key Details:**
+
+        - **Django Template-Based:**
+          This view uses Django's class-based view and template system, not Django REST Framework (DRF).
+          The response is a JSON object, but the view logic is not DRF-based.
+
+        - **CSRF Exempt:**
+          The view is decorated with ``@csrf_exempt`` because it is strictly read-only and does not modify server-side data.
+          This avoids unnecessary CSRF validation for GET and POST requests that only retrieve configuration data.
+
+        - **ReactJS UI Integration:**
+          The endpoint provides all configuration and context information needed by the ReactJS chat component,
+          including chatbot metadata, plugin information, session keys, and chat history.
+
+        - **Session-Based:**
+          Sessions are managed by the :class:`SmarterChatSession` helper, which uniquely defines a chat session
+          using a combination of the user's IP address and device-identifying information. This ensures each device/browser
+          instance receives a unique session key, which is used to track chat history and plugin usage.
+
+        - **Performance:**
+          Since this endpoint is called on every browser load and refresh, it is optimized to minimize database queries
+          and serialization overhead. Only a limited number of plugins are returned (see ``MAX_RETURNED_PLUGINS``)
+          to keep payloads small and response times fast.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request object.
+        chatbot_id : Optional[int], default=None
+            The ID of the chatbot to retrieve configuration for, if specified.
+        *args
+            Additional positional arguments.
+        **kwargs
+            Additional keyword arguments.
+
+        Returns
+        -------
+        Union[JsonResponse, HttpResponse, SmarterJournaledJsonErrorResponse]
+            A JSON response containing all configuration data required by the ReactJS chat UI component,
+            or an error response if the request is invalid or unauthorized.
+
+        See Also
+        --------
+        SmarterChatSession : Helper class for managing chat sessions.
+        ChatBotConfigSerializer, ChatBotPluginSerializer : Serializers for chatbot and plugin data.
+        ChatBotHelper : Helper for chatbot-related operations.
+        """
 
         logger.info(
             "%s.dispatch() called with request=%s, chatbot_id=%s, session_key=%s chatbot_name=%s user_profile=%s",
@@ -335,13 +551,13 @@ class ChatConfigView(SmarterNeverCachedWebView):
             self.chatbot,
             self.session.session_key if self.session else "(Missing session)",
         )
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)  # type: ignore[return-value]
 
     def __str__(self):
         return str(self.chatbot) if self.chatbot else "ChatConfigView"
 
     # pylint: disable=unused-argument
-    def post(self, request: HttpRequest, *args, **kwargs):
+    def post(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Get the chatbot configuration.
         """
@@ -350,7 +566,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     # pylint: disable=unused-argument
-    def get(self, request: HttpRequest, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Get the chatbot configuration.
         """
@@ -358,124 +574,111 @@ class ChatConfigView(SmarterNeverCachedWebView):
         data = self.config()
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
-    def clean_url(self, url: str) -> str:
-        """
-        Clean the url of any query strings and trailing '/config/' strings.
-        """
-        retval = clean_url(url)
-        if retval.endswith("/config/"):
-            retval = retval[:-8]
-        return retval
-
-    def config(self) -> dict:
-        """
-        React context for all templates that render
-        a React app.
-        """
-        # add chatbot_request_history and plugin_selector_history to history
-        # these have to be added here due to circular import issues.
-        if self.session is None:
-            raise SmarterValueError("Session is not set. Cannot retrieve chatbot request history.")
-        if self.chatbot_helper is None:
-            raise SmarterValueError("ChatBotHelper is not set. Cannot retrieve chatbot request history.")
-
-        chatbot_serializer = (
-            ChatBotConfigSerializer(self.chatbot, context={"request": self.smarter_request}) if self.chatbot else None
-        )
-
-        # plugins context. the main thing we need here is to constrain the number of plugins
-        # returned to some reasonable number, since we'll probaably have cases where
-        # the chatbot has a lot of plugins (hundreds, thousands...).
-        chatbot_plugins_count = ChatBotPlugin.objects.filter(chatbot=self.chatbot).count()
-        chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot).order_by("-pk")[:MAX_RETURNED_PLUGINS]
-        chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
-        history = self.session.chat_helper.history if self.session.chat_helper else {}
-
-        chatbot_requests_queryset = ChatBotRequests.objects.filter(session_key=self.session.session_key).order_by("-id")
-        chatbot_requests_serializer = ChatBotRequestsSerializer(chatbot_requests_queryset, many=True)
-        history["chatbot_request_history"] = chatbot_requests_serializer.data
-
-        plugin_selector_history_queryset = PluginSelectorHistory.objects.filter(session_key=self.session.session_key)
-        plugin_selector_history_serializer = PluginSelectorHistorySerializer(
-            plugin_selector_history_queryset, many=True
-        )
-        history["plugin_selector_history"] = plugin_selector_history_serializer.data
-
-        retval = {
-            "data": {
-                SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
-                "sandbox_mode": self.chatbot_helper.is_chatbot_sandbox_url,
-                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE),
-                "chatbot": chatbot_serializer.data if chatbot_serializer else None,
-                "history": history,
-                "meta_data": self.chatbot_helper.to_json(),
-                "plugins": {
-                    "meta_data": {
-                        "total_plugins": chatbot_plugins_count,
-                        "plugins_returned": len(chatbot_plugins),
-                    },
-                    "plugins": chatbot_plugin_serializer.data,
-                },
-            },
-        }
-        chat_config_invoked.send(sender=self.__class__, instance=self, request=self.smarter_request, data=retval)
-        return retval
-
 
 @method_decorator(csrf_exempt, name="dispatch")
 class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Chat app view for smarter web. This view is protected and requires the user
-    to be authenticated. It works with deployed and not-yet-deployed ChatBots.
-    The url is expected to be in one of three formats.
+    Chat app view for the Smarter web application.
 
-    Sandbox mode:
-    - http://smarter.sh/workbench/hr/
-    - http://127.0.0.1:8000/workbench/<str:name>/
+    This view is responsible for serving the main chat application page within the Smarter dashboard web app.
+    It integrates the ReactJS chat UI with the Django template system by injecting a React build artifact snippet
+    (served from an AWS Cloudfront CDN) into the Django-rendered HTML template. The React app then takes over the UI
+    from there.
 
-    Production mode:
-    - https://hr.3141-5926-5359.alpha.api.smarter.sh/workbench/
+    **Key Features:**
 
-    It serves the chat app's main page within the Smarter
-    dashboard web app. React builds are served from an AWS Cloudfront CDN
-    such as https://cdn.platform.smarter.sh/ui-chat/index.html, which
-    returns an html snippet containing reactjs build artifacts such as:
+    - **Django Template Integration:**
+      The view uses Django's template system to render the main chat page. It injects the React app's loader script
+      and root div into the template, allowing seamless integration between Django and React.
 
-        <script type="module" crossorigin src="https://cdn.platform.smarter.sh/ui-chat/assets/main-BNT0OHb-.js"></script>
-        <link rel="stylesheet" crossorigin href="https://cdn.platform.smarter.sh/ui-chat/assets/main-D14Wl0PM.css">
+    - **ReactJS UI Bootstrapping:**
+      The React build (JavaScript and CSS) is loaded from a CDN and injected into the DOM. The React app is responsible
+      for rendering the interactive chat UI after the initial page load.
 
-    Our Django template will inject this html snippet into the DOM, and
-    the React app will take over from there.
+    - **Flexible URL Patterns:**
+      The view supports both sandbox and production URL formats, allowing it to work with deployed and not-yet-deployed ChatBots.
 
-    Cache behavior:
-    We probably don't need to worry about cache behavior.
-    Nonetheless, we're using the `never_cache` decorator to
-    ensure that the browser doesn't cache the page itself, which could cause
-    problems if the user logs out and then logs back in without refreshing the
-    page.
+    - **Authentication Protected:**
+      This view requires the user to be authenticated. If the user is not authenticated, access is denied.
+
+    - **Cache Control:**
+      The view uses Django's `never_cache` decorator to ensure that the browser does not cache the chat page itself.
+      This prevents issues where a user logs out and then logs back in without a full page refresh.
+
+    **Example Usage:**
+
+        Sandbox mode:
+            - http://smarter.sh/workbench/hr/
+            - http://127.0.0.1:8000/workbench/<str:name>/
+
+        Production mode:
+            - https://hr.3141-5926-5359.alpha.api.smarter.sh/workbench/
+
+    **Returns:**
+        Renders the Django template for the chat app, injecting the React loader and configuration context.
+
+    **See Also:**
+        - :doc:`doc/DJANGO-REACT-INTEGRATION` — for details on how React and Django are integrated in this project.
+        - `ChatConfigView` — for the endpoint that provides configuration data to the React app.
     """
 
     template_path = "prompt/workbench.html"
 
     # The React app originates from
     #  - https://github.com/smarter-sh/smarter-chat and
-    #  - https://github.com/smarter-sh/smarter-workbench
+    #  - https://github.com/smarter-sh/web-integration-example
     # and is built-deployed to AWS Cloudfront. The React app is loaded from
     # a url like: https://cdn.alpha.platform.smarter.sh/ui-chat/index.html
-    reactjs_cdn_path = "/ui-chat/app-loader.js"
-    reactjs_loader_url = urljoin(smarter_settings.environment_cdn_url, reactjs_cdn_path)
-
-    # start with a string like: "smarter.sh/v1/ui-chat/root"
-    # then convert it into an html safe id like: "smarter-sh-v1-ui-chat-root"
-    div_root_id = SmarterApiVersions.V1 + reactjs_cdn_path.replace("app-loader.js", "root")
-    div_root_id = div_root_id.replace(".", "-").replace("/", "-")
+    reactjs_cdn_path = smarter_settings.smarter_reactjs_app_loader_path
+    reactjs_loader_url = smarter_settings.smarter_reactjs_app_loader_url
 
     chatbot: Optional[ChatBot] = None
     chatbot_helper: Optional[ChatBotHelper] = None
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
-        Dispatch method to handle the request.
+        Dispatch method to handle the request for the main chat application page.
+
+        This method is responsible for preparing and serving the Django template that bootstraps the ReactJS chat UI
+        within the Smarter dashboard web app. It injects the React loader script and configuration context into the
+        template, enabling seamless integration between Django and React.
+
+        **Key Features:**
+
+        - **Django Template Integration:**
+          Uses Django's template system to render the main chat page, injecting the React app's loader script and root div.
+
+        - **ReactJS UI Bootstrapping:**
+          Loads the React build (JavaScript and CSS) from a CDN and injects it into the DOM. The React app then takes over
+          rendering the interactive chat UI after the initial page load.
+
+        - **Flexible URL Patterns:**
+          Supports both sandbox and production URL formats, allowing the view to work with both deployed and not-yet-deployed ChatBots.
+
+        - **Authentication Protected:**
+          Requires the user to be authenticated. If the user is not authenticated, access is denied.
+
+        - **Cache Control:**
+          Uses Django's `never_cache` decorator to prevent the browser from caching the chat page, ensuring session security.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request object.
+        *args
+            Additional positional arguments.
+        **kwargs
+            Additional keyword arguments.
+
+        Returns
+        -------
+        HttpResponse
+            Renders the Django template for the chat app, injecting the React loader and configuration context.
+
+        See Also
+        --------
+        :doc:`doc/DJANGO-REACT-INTEGRATION` : Details on how React and Django are integrated in this project.
+        ChatConfigView : The endpoint that provides configuration data to the React app.
         """
         retval = super().dispatch(request, *args, **kwargs)
         if retval.status_code >= 400:
@@ -545,7 +748,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         # the basic idea is to pass the names of the necessary cookies to the React app, and then
         # it is supposed to find and read the cookies to get the chat session key, csrf token, etc.
         context = {
-            "div_id": self.div_root_id,
+            "div_id": smarter_settings.smarter_reactjs_root_div_id,
             "app_loader_url": self.reactjs_loader_url,
             "chatbot_api_url": self.chatbot.url,
             "toggle_metadata": True,

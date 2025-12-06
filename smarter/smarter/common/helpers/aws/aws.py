@@ -39,11 +39,24 @@ class SmarterAWSException(SmarterException):
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 class AWSBase(SmarterHelperMixin):
     """
-    AWS helper base class. Responsible for
-    - initializing the AWS connection and ensuring that we don't invoke boto3 until we're in a ready state.
-    - detecting if we're inside an AWS environment like AWS Lambda.
-    - decision making on whether we're working with a known Smarter environment that we consider safe to create billable resources in AWS.
-    - reformatting localhost domain names into proxy domains that will work with AWS Route53 and Kubernetes.
+    Provides a foundational interface for interacting with AWS services in a secure, consistent, and environment-aware manner.
+
+    This base class is responsible for initializing and managing AWS connections, ensuring that credentials and sessions
+    are established only when the application is in a ready state. It supports multiple authentication strategies,
+    including IAM role-based security (for environments like AWS Lambda), AWS profiles, and direct access key credentials.
+    The class automatically detects the execution environment and adapts its behavior accordingly, such as recognizing
+    when it is running inside AWS infrastructure.
+
+    AWSBase also implements logic to determine whether the current environment is a recognized and authorized Smarter
+    environment, which is critical for safely creating or modifying billable AWS resources. It provides mechanisms for
+    reformatting and validating domain names, particularly transforming localhost or development domains into proxy domains
+    compatible with AWS Route53 and Kubernetes, thereby supporting seamless local development and cloud deployment.
+
+    The class exposes properties and methods for accessing AWS account identity, region, authentication sources, and
+    session objects, as well as utility functions for domain validation and environment-specific configuration. It includes
+    robust logging and error handling to facilitate debugging and operational transparency. By centralizing AWS connection
+    logic and environment checks, AWSBase enables derived helper classes to focus on service-specific functionality while
+    maintaining consistent security and configuration practices across the codebase.
     """
 
     LOCAL_HOSTS = smarter_settings.local_hosts
@@ -143,26 +156,36 @@ class AWSBase(SmarterHelperMixin):
     @property
     def identity(self) -> Optional[dict]:
         """
-        Return the AWS identity.
+        Return the AWS identity for the current session.
 
-        example = {
-            "UserId": "AIDARKEXDU3E7KD3L3CRF",
-            "Account": "090511222473",
-            "Arn": "arn:aws:iam::090511222473:user/mcdaniel",
-            "ResponseMetadata": {
-                "RequestId": "4d20b844-7e75-4980-9e92-ca0867b24387",
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                    "x-amzn-requestid": "4d20b844-7e75-4980-9e92-ca0867b24387",
-                    "x-amz-sts-extended-request-id": "MTp1cy1lYXN0LTI6UzoxNzYzNTc5NjUyMzA0OlI6MVFkeG8yZ1Q=",
-                    "content-type": "text/xml",
-                    "content-length": "405",
-                    "date": "Wed, 19 Nov 2025 19:14:12 GMT",
-                },
-                "RetryAttempts": 0,
+        This property retrieves the identity information associated with the current AWS credentials,
+        including the user ID, AWS account number, and IAM ARN. The identity is fetched using the AWS
+        Security Token Service (STS) and is cached for subsequent calls.
+
+        :return: A dictionary containing AWS identity details, or None if not available.
+        :rtype: Optional[dict]
+
+        Example output:
+
+        .. code-block:: json
+
+            {
+                "UserId": "AIDARKEXDU3E7KD3L3CRF",
+                "Account": "090511222473",
+                "Arn": "arn:aws:iam::090511222473:user/mcdaniel",
+                "ResponseMetadata": {
+                    "RequestId": "4d20b844-7e75-4980-9e92-ca0867b24387",
+                    "HTTPStatusCode": 200,
+                    "HTTPHeaders": {
+                        "x-amzn-requestid": "4d20b844-7e75-4980-9e92-ca0867b24387",
+                        "x-amz-sts-extended-request-id": "MTp1cy1lYXN0LTI6UzoxNzYzNTc5NjUyMzA0OlI6MVFkeG8yZ1Q=",
+                        "content-type": "text/xml",
+                        "content-length": "405",
+                        "date": "Wed, 19 Nov 2025 19:14:12 GMT"
+                    },
+                    "RetryAttempts": 0
+                }
             }
-        }
-
         """
         if self._identity:
             return self._identity
@@ -177,37 +200,72 @@ class AWSBase(SmarterHelperMixin):
 
     @property
     def version(self):
-        """Return the version."""
+        """
+        Return the version.
+
+        :return: boto3 version
+        :rtype: str
+        """
         return boto3.__version__
 
     @property
     def debug_mode(self):
-        """Debug mode"""
+        """
+        Debug mode
+
+        :return: debug mode
+        :rtype: bool
+        """
         return self._debug_mode
 
     @property
     def initialized(self):
-        """Is settings initialized?"""
+        """
+        Is settings initialized?
+
+        :return: True if initialized
+        :rtype: bool
+        """
         return self._initialized
 
     @property
     def is_aws_deployed(self) -> bool:
-        """Return True if we're running inside of AWS Lambda."""
+        """
+        Return True if we're running inside of AWS Lambda.
+
+        :return: True if running inside AWS Lambda
+        :rtype: bool
+        """
         return bool(os.environ.get("AWS_DEPLOYED", False))
 
     @property
     def aws_is_configured(self) -> bool:
-        """Return True if AWS is configured."""
+        """
+        Return True if AWS is configured.
+
+        :return: True if AWS is configured
+        :rtype: bool
+        """
         return smarter_settings.aws_is_configured
 
     @property
     def aws_profile(self):
-        """AWS profile"""
+        """
+        AWS profile
+
+        :return: AWS profile
+        :rtype: Optional[str]
+        """
         return self._aws_profile
 
     @property
     def aws_account_id(self):
-        """AWS account id"""
+        """
+        AWS account id
+
+        :return: AWS account id
+        :rtype: Optional[str]
+        """
         if not self.ready:
             return None
 
@@ -218,7 +276,12 @@ class AWSBase(SmarterHelperMixin):
 
     @property
     def aws_iam_arn(self):
-        """AWS IAM ARN"""
+        """
+        AWS IAM ARN
+
+        :return: AWS IAM ARN (Amazon Resource Name)
+        :rtype: Optional[str]
+        """
         if not self.ready:
             return None
 
@@ -229,32 +292,61 @@ class AWSBase(SmarterHelperMixin):
 
     @property
     def aws_region(self):
-        """AWS region"""
+        """
+        AWS region
+
+        :return: AWS region (e.g. 'us-west-2')
+        :rtype: Optional[str]
+        """
         return self._aws_region
 
     @property
     def aws_access_key_id_source(self):
-        """AWS access key id source"""
+        """
+        AWS access key id source
+
+        :return: AWS access key id source
+        :rtype: Optional[str]
+        """
         return self._aws_access_key_id_source
 
     @property
     def aws_access_key_id(self):
-        """AWS access key id"""
+        """
+        AWS access key id
+
+        :return: AWS access key id
+        :rtype: Optional[str]
+        """
         return self._aws_access_key_id
 
     @property
     def aws_secret_access_key_source(self):
-        """AWS secret access key source"""
+        """
+        AWS secret access key source
+        :return: AWS secret access key source
+        :rtype: Optional[str]
+        """
         return self._aws_secret_access_key_source
 
     @property
     def aws_secret_access_key(self):
-        """AWS secret access key"""
+        """
+        AWS secret access key
+
+        :return: AWS secret access key
+        :rtype: Optional[str]
+        """
         return self._aws_secret_access_key
 
     @property
     def aws_auth(self) -> dict:
-        """AWS authentication"""
+        """
+        AWS authentication
+
+        :return: AWS authentication details
+        :rtype: dict
+        """
         retval = {
             "aws_profile": self.aws_profile,
             "aws_access_key_id_source": self.aws_access_key_id_source,
@@ -265,7 +357,12 @@ class AWSBase(SmarterHelperMixin):
 
     @property
     def aws_session(self):
-        """AWS session"""
+        """
+        AWS session
+
+        :return: boto3 AWS session
+        :rtype: Optional[boto3.Session]
+        """
         if self._aws_session:
             return self._aws_session
         if not self.initialized:
@@ -294,12 +391,22 @@ class AWSBase(SmarterHelperMixin):
 
     @property
     def shared_resource_identifier(self):
-        """Return the shared resource identifier."""
+        """
+        Return the shared resource identifier.
+
+        :return: shared resource identifier
+        :rtype: Optional[str]
+        """
         return self._shared_resource_identifier
 
     @property
     def environment(self) -> str:
-        """Return the environment."""
+        """
+        Return the environment.
+
+        :return: environment
+        :rtype: str
+        """
         return self._environment
 
     @property
@@ -307,6 +414,9 @@ class AWSBase(SmarterHelperMixin):
         """
         we need to rebuild these in order to reformat the localhost domain into
         a proxy domain that will work with AWS Route53 and Kubernetes
+
+        :return: environment domain
+        :rtype: str
         """
         return f"{self.environment}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
@@ -315,19 +425,32 @@ class AWSBase(SmarterHelperMixin):
         """
         we need to rebuild these in order to reformat the localhost domain into
         a proxy domain that will work with AWS Route53 and Kubernetes
+
+        :return: environment API domain
+        :rtype: str
         """
         return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def root_domain(self) -> str:
-        """Return the root domain."""
+        """
+        Return the root domain.
+
+        :return: root domain
+        :rtype: str
+        """
         return self._root_domain
 
     # --------------------------------------------------------------------------
     # helper functions
     # --------------------------------------------------------------------------
     def domain_resolver(self, domain: str) -> str:
-        """Validate the domain and swap out localhost for the proxy domain."""
+        """
+        Validate the domain and swap out localhost for the proxy domain.
+
+        :param domain: domain to validate
+        :type domain: str
+        """
         if self.environment == SmarterEnvironments.LOCAL:
             proxy_domain: Optional[str] = None
             if smarter_settings.environment_platform_domain in domain:
@@ -358,11 +481,19 @@ class AWSBase(SmarterHelperMixin):
         """
         Return True if we're working with a known Smarter environment, and
         we consider it safe to create billable resources in AWS.
+
+        :return: True if ready
+        :rtype: bool
         """
         return bool(self.connected()) and bool(smarter_settings.environment in SmarterEnvironments.all)
 
     def connected(self) -> bool:
-        """Test that the AWS connection works."""
+        """
+        Test that the AWS connection works.
+
+        :return: True if connected
+        :rtype: bool
+        """
         if self._connected:
             return True
         if not self.initialized:

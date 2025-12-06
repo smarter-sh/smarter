@@ -1,5 +1,25 @@
 """
-URLs for Smarter deployed Chatbots.
+URL configuration for Smarter deployed Chatbots.
+
+Endpoints
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - Endpoint
+     - Description
+   * - /
+     - Named chatbot configuration view
+   * - /config/
+     - Named chatbot configuration view
+   * - /chat/
+     - Default chatbot API view
+
+.. seealso::
+
+    - :class:`smarter.apps.prompt.views.ChatConfigView`
+    - :class:`smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView`
 """
 
 from django.contrib import admin

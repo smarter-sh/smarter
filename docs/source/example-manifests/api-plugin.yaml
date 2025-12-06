@@ -1,0 +1,74 @@
+apiVersion: smarter.sh/v1
+kind: ApiPlugin
+metadata:
+  annotations: []
+  description: Get additional information about the admin account of the Smarter platform.
+  name: api_example
+  pluginClass: api
+  tags:
+    - example.com
+    - api
+    - rest-api
+  version: 0.1.0
+spec:
+  apiData:
+    body:
+      - default: test
+        description: The test to run.
+        name: test
+        required: true
+        type: string
+      - default: test2
+        description: The second test to run.
+        name: test2
+        required: false
+        type: string
+    endpoint: /stackademy/course-catalogue/
+    headers:
+      - name: X-Debug-Request
+        value: true
+      - name: X-API-Key
+        value: your_api_key_here
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+      - name: X-Request-ID
+        value: 12345
+    limit: 10
+    method: GET
+    parameters:
+      - default: 500.00
+        description: A ceiling on the maximum cost of the course.
+        enum: null
+        name: max_cost
+        required: false
+        type: string
+      - default: Python
+        description: A keyword to search for in the course description.
+        enum: null
+        name: description
+        required: false
+        type: string
+    test_values:
+      - name: username
+        value: admin
+      - name: limit
+        value: 1
+    url_params: null
+  connection: smarter_test_api
+  prompt:
+    maxTokens: 2048
+    model: gpt-4-turbo
+    provider: openai
+    systemRole:
+      You are a helpful assistant for Smarter platform. You can provide
+      information about the admin account of the Smarter platform.
+
+    temperature: 0.5
+  selector:
+    directive: search_terms
+    searchTerms:
+      - admin
+      - Smarter
+      - account

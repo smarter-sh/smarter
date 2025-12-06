@@ -1,4 +1,7 @@
 # pylint: disable=unused-argument
+"""
+Celery tasks for the plugin app.
+"""
 
 import logging
 from typing import Optional
@@ -44,7 +47,56 @@ module_prefix = "smarter.apps.plugin.tasks."
     queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def create_plugin_selector_history(*args, **kwargs):
-    """Create plugin selector history."""
+    """
+    Create plugin selector history.
+
+    This Celery task records a user's plugin selection event, including search terms, input text, messages,
+    and session key. It is typically called when a user interacts with the plugin selector UI.
+
+    :param args: Positional arguments (unused).
+    :type args: tuple
+    :param kwargs: Keyword arguments containing context for the selector history.
+    :type kwargs: dict
+
+    **Expected kwargs:**
+        - user_id (int): The ID of the user performing the selection.
+        - plugin_id (int): The ID of the selected plugin.
+        - input_text (str, optional): The user's input text.
+        - messages (list[dict], optional): List of message objects.
+        - search_term (str, optional): The search term used by the user.
+        - session_key (str, optional): The chat session key.
+
+    :return: None
+
+    .. important::
+
+        - invoked by the ``plugin_selected`` signal.
+        - This task will not create a history record if the plugin or user profile cannot be resolved.
+        - If the plugin controller cannot be instantiated, an error is logged and no history is created.
+
+    .. seealso::
+
+        - :class:`PluginSelectorHistory`
+        - :class:`PluginController`
+        - :class:`SmarterPluginError`
+
+    **Example usage**:
+
+    .. code-block:: python
+
+        from smarter.apps.plugin.tasks import create_plugin_selector_history
+
+        create_plugin_selector_history.apply_async(
+            kwargs={
+                "user_id": 42,
+                "plugin_id": 7,
+                "input_text": "Show me weather plugins",
+                "search_term": "weather",
+                "session_key": "abc123"
+            }
+        )
+
+    """
 
     user = None
     user_profile = None

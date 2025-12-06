@@ -7,7 +7,7 @@ Each ADR is a separate markdown file located in this directory. ADRs provide a c
 See: `Michael Nygard’s ADRs <https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions.html>`_
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    adr/000-intro

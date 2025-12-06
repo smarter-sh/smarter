@@ -8,7 +8,24 @@ from smarter.lib.django.management.base import SmarterCommand
 
 # pylint: disable=E1101
 class Command(SmarterCommand):
-    """This module is used to register a custom domain for a customer account."""
+    """
+    Verify a custom domain for a Smarter customer account.
+
+    This management command initiates and monitors the DNS verification process for a custom domain
+    associated with a Smarter account. It checks that the domain is registered, triggers verification
+    using AWS Route 53, and provides instructions for updating DNS records.
+
+    The command performs the following steps:
+
+    - Accepts the domain name as an argument, with an option to run verification in the foreground.
+    - Checks that the domain is registered to a Smarter account.
+    - Initiates the verification process, either synchronously or as a background Celery task.
+    - Retrieves the AWS Route 53 NS records for the domain's hosted zone.
+    - Outputs instructions for completing DNS verification, including required NS records.
+
+    This command is useful for administrators onboarding new customers or updating domain settings,
+    ensuring that custom domains are properly verified and ready for use with Smarter chatbots.
+    """
 
     def add_arguments(self, parser):
         """Add arguments to the command."""

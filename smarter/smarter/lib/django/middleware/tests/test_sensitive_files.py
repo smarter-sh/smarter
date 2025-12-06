@@ -1,4 +1,4 @@
-"""Test cases for the BlockSensitiveFilesMiddleware class."""
+"""Test cases for the SmarterBlockSensitiveFilesMiddleware class."""
 
 # pylint: disable=W0718,W0212
 
@@ -7,15 +7,17 @@ from unittest.mock import MagicMock
 
 from django.http import HttpResponse, HttpResponseForbidden
 
-from smarter.lib.django.middleware.sensitive_files import BlockSensitiveFilesMiddleware
+from smarter.lib.django.middleware.sensitive_files import (
+    SmarterBlockSensitiveFilesMiddleware,
+)
 
 
-class TestBlockSensitiveFilesMiddleware(unittest.TestCase):
-    """Test the BlockSensitiveFilesMiddleware class."""
+class TestSmarterBlockSensitiveFilesMiddleware(unittest.TestCase):
+    """Test the SmarterBlockSensitiveFilesMiddleware class."""
 
     def setUp(self):
         self.get_response = MagicMock(return_value=HttpResponse("OK"))
-        self.middleware = BlockSensitiveFilesMiddleware(self.get_response)
+        self.middleware = SmarterBlockSensitiveFilesMiddleware(self.get_response)
 
     def make_request(self, path):
         req = MagicMock()

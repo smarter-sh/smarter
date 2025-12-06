@@ -1,0 +1,7 @@
+Excessive 404 Middleware
+=======================================
+
+.. autoclass:: smarter.lib.django.middleware.excessive_404.SmarterBlockExcessive404Middleware
+    :members:
+    :show-inheritance:
+    :exclude-members: __init__

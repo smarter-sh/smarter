@@ -1,0 +1,20 @@
+apiVersion: smarter.sh/v1
+kind: Account
+metadata:
+  accountNumber: 1234-5678-9012
+  description: an example Account manifest
+  name: Example_account
+  version: 1.0.0
+spec:
+  config:
+    address1: 1 Main St
+    address2: Suite 100
+    city: Cambridge
+    companyName: Humble Geniuses, Inc.
+    country: USA
+    currency: USD
+    language: en-US
+    phoneNumber: 617-555-1212
+    postalCode: 02139
+    state: MA
+    timezone: America/New_York

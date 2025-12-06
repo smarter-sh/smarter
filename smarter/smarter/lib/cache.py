@@ -44,7 +44,38 @@ CACHE_MISS_SENTINEL = CacheSentinel("CACHE_MISS")
 
 def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     """
-    Caches the result of a function based on its arguments.
+    Decorator that caches the result of a function based on its arguments.
+
+    The cache key is generated from the function name, positional arguments, and sorted keyword arguments.
+    If the result is already cached, it is returned directly. Otherwise, the function is called and its
+    result is cached. The cache key is created by serializing the function name, its positional arguments,
+    and its sorted keyword arguments using pickle. This serialized data is then hashed with SHA-256,
+    and the first 32 characters of the hash are used as part of the cache key, prefixed by the function’s
+    module and name. This ensures that each unique set of arguments generates a unique cache key.
+    There is a non-zero probability of hash collisions, but it is *EXTREMELY* low for practical purposes.
+    Smarter's cache entries are short-lived, further reducing the risk of collisions impacting functionality.
+
+    :param timeout: The cache timeout in seconds. Defaults to ``SMARTER_DEFAULT_CACHE_TIMEOUT``.
+    :type timeout: int
+    :param logging_enabled: Whether to enable logging for cache hits and misses. Defaults to ``True``.
+    :type logging_enabled: bool
+    :return: The decorated function with caching applied.
+    :rtype: Callable
+
+    .. note::
+        If the function returns ``None``, a sentinel value is cached to distinguish between a cached ``None``
+        and a cache miss.
+
+    Usage example::
+
+        @cache_results(timeout=60)
+        def expensive_function(x, y):
+            return x + y
+
+    The decorator also adds an ``invalidate`` method to the wrapped function, which can be used to
+    manually remove the cached result for specific arguments::
+
+        expensive_function.invalidate(1, 2)
     """
 
     def decorator(func):

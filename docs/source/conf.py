@@ -1,24 +1,73 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+# pylint: disable=C0413,C0411
+"""
+Configuration file for the Sphinx documentation builder.
+
+For the full list of built-in configuration values, see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+
+import datetime
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+import os
+import sys
 
-project = "Smarter"
-copyright = "2025, Lawrence McDaniel"
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+SMARTER_ROOT = os.path.abspath(os.path.join(HERE, "../../smarter"))
+sys.path.insert(0, SMARTER_ROOT)
+
+from smarter.__version__ import __version__  # noqa: F401
+from smarter.common.conf import settings as smarter_settings
+
+
+if not smarter_settings.environment:
+    raise RuntimeError("The 'smarter_settings.environment' variable is not set.")
+
+os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
+
+import django
+
+
+django.setup()
+
+
+project = "Smarter Documentation"
+
+# pylint: disable=redefined-builtin
+copyright = f"{datetime.datetime.now().year}, The Smarter Project"
 author = "Lawrence McDaniel"
-release = "3.13.33"
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinxcontrib_django",
+    "sphinx.ext.viewcode",
+    "sphinx_copybutton",
+    "sphinx_autodoc_typehints",
+    "sphinx.ext.todo",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.napoleon",
+    "sphinxcontrib.autodoc_pydantic",
+    "sphinx_rtd_theme",
+]
 
 templates_path = ["_templates"]
 exclude_patterns = []
+django_settings = "smarter.settings.prod"
+todo_include_todos = True
 
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "django": ("https://docs.djangoproject.com/en/5.2/", "https://docs.djangoproject.com/en/5.2/_objects/"),
+}
+rst_epilog = f"""
+.. |project_version| replace:: {release}
+"""
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

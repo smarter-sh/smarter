@@ -1,0 +1,14 @@
+apiVersion: smarter.sh/v1
+kind: User
+metadata:
+  description: an example user manifest for the Smarter API User
+  name: example_user
+  username: example_user
+  version: 1.0.0
+spec:
+  config:
+    email: joe@mail.com
+    firstName: John
+    isActive: true
+    isStaff: false
+    lastName: Doe
