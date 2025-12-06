@@ -1,12 +1,8 @@
 """
-smarter.apps.api.v1.urls
------------------------------
-
 URL configuration for the Smarter API V1. The `urlpatterns`
 list in this module maps URL patterns to their corresponding views or sub-URL configurations. This enables Django to route incoming HTTP requests to the appropriate logic for handling API operations.
 
-Structure
-~~~~~~~~~~
+**Structure**
 
 - The root path (`""`) includes the chatbot API, supporting endpoints such as `https://example.3141-5926-5359.alpha.api.smarter.sh`.
 - The following subpaths are defined for the main API:
@@ -21,10 +17,9 @@ Structure
 
 Namespaces are used for each included URL configuration to avoid naming conflicts and to provide clear separation between different API components.
 
-See Also
-~~~~~~~~~~
+.. seealso::
 
-`Django URL dispatcher documentation <https://docs.djangoproject.com/en/5.0/topics/http/urls/>`_
+    `Django URL dispatcher documentation <https://docs.djangoproject.com/en/5.0/topics/http/urls/>`_
 
 """
 
