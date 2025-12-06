@@ -15,7 +15,7 @@ spec:
     - Provide a technical definition for the term "machine learning."
     appFileAttachment: false
     appInfoUrl: https://developers.meta.com/ai/
-    appLogoUrl: https://platform.smarter.sh/static/images/logo/smarter-crop.png
+    appLogoUrl: https://cdn.platform.smarter.sh/images/logo/smarter-crop.png
     appName: MetaAI Llama 3.1
     appPlaceholder: Ask me anything...
     appWelcomeMessage: Welcome to Llama 3.1!

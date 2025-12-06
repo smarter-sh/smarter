@@ -16,7 +16,7 @@ spec:
     - Who made you?
     appFileAttachment: false
     appInfoUrl: https://smarter.sh
-    appLogoUrl: https://platform.smarter.sh/static/images/logo/smarter-crop.png
+    appLogoUrl: https://cdn.platform.smarter.sh/images/logo/smarter-crop.png
     appName: Smarter Sales Agent
     appPlaceholder: Ask me anything about Smarter...
     appWelcomeMessage: Welcome to Smarter!
