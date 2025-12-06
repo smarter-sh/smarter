@@ -15,7 +15,7 @@ spec:
     - Provide a technical definition for the term "machine learning."
     appFileAttachment: false
     appInfoUrl: https://cloud.google.com/ai/apis/
-    appLogoUrl: https://platform.smarter.sh/static/images/logo/smarter-crop.png
+    appLogoUrl: https://cdn.platform.smarter.sh/images/logo/smarter-crop.png
     appName: GoogleAI Gemini 1.5
     appPlaceholder: Ask me anything...
     appWelcomeMessage: Welcome to Gemini!
