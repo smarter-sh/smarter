@@ -21,20 +21,15 @@ user preferences.
 
 ChatBots are managed with the :doc:`Smarter command-line interface (CLI) <../smarter-platform/cli>`.
 
-React UI Integration
-------------------------
-
-See :doc:`Smarter React UI <../smarter-framework/smarter-react-ui>` for details on integrating
-the Smarter React Chat Component into your web applications.
-
 .. toctree::
    :maxdepth: 1
    :caption: Technical Reference
 
+   chatbots/api
    chatbots/models
    chatbots/sam
    chatbots/serializers
-   chatbots/api
+   chatbots/react-ui
    chatbots/helper
    chatbots/kubernetes-ingress
    chatbots/management-commands

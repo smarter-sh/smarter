@@ -1,4 +1,4 @@
-API V1 Views
+Views
 =================
 
 .. automodule:: smarter.apps.chatbot.api.v1.views.views
