@@ -54,7 +54,7 @@ global:
 # Application Configuration
 # ----------------------------------------------------------------------------
 app:
-  replicaCount: 2
+  replicaCount: 1
   resources:
     requests:
       cpu: "500m"
@@ -65,7 +65,7 @@ app:
   extraVolumeMounts: []
 
 worker:
-  replicaCount: 2
+  replicaCount: 1
   resources:
     requests:
       cpu: "250m"
