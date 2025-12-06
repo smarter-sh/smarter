@@ -1,3 +1,10 @@
+## [0.13.38](https://github.com/smarter-sh/smarter/compare/v0.13.37...v0.13.38) (2025-12-06)
+
+
+### Bug Fixes
+
+* SmarterSecurityMiddleware should allow .well-known/acme-challenge requests ([b10f91c](https://github.com/smarter-sh/smarter/commit/b10f91c213409756d8a10402839ef5a49c57210a))
+
 ## [0.13.37](https://github.com/smarter-sh/smarter/compare/v0.13.36...v0.13.37) (2025-12-06)
 
 
