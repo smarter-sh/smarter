@@ -58,3 +58,9 @@ files for different environments and use cases.
    python/constraints
    python/docker
    python/local
+
+Dependabot Configuration for Python Dependencies
+----------------------------------------------------
+
+.. literalinclude:: ../../../.github/dependabot.yml
+   :language: yaml
