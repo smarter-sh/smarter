@@ -200,7 +200,7 @@ class SettingsDefaults:
     LOG_LEVEL: int = logging.DEBUG if DEBUG_MODE else logging.INFO
 
     LOGO: str = os.environ.get(
-        "OPENAI_API_ORGANIZATION", "https://platform.smarter.sh/static/images/logo/smarter-crop.png"
+        "OPENAI_API_ORGANIZATION", "https://cdn.platform.smarter.sh/images/logo/smarter-crop.png"
     )
     MAILCHIMP_API_KEY: SecretStr = SecretStr(os.environ.get("MAILCHIMP_API_KEY", DEFAULT_MISSING_VALUE))
     MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", DEFAULT_MISSING_VALUE)
