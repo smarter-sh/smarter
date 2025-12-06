@@ -10,7 +10,7 @@ providing specialized views for authenticated users.
 The principal enhancements include:
 
 - an ability to enable/disable token authentication via the Django admin console.
-- an last-used timestamp on tokens to track their usage.
+- a last-used timestamp on tokens to track their usage.
 
 .. toctree::
     :maxdepth: 1

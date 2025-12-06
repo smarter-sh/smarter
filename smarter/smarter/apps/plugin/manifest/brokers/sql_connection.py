@@ -410,8 +410,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         .. important::
 
-            - The proxy password secret is cached after the first lookup for efficiency. If the underlying secret changes,
-            you must clear the cache to force a reload.
+            - The proxy password secret is cached after the first lookup for efficiency. If the underlying secret changes, you must clear the cache to force a reload.
 
             - If the proxy password secret is missing, proxy authentication may fail. Always check for `None` before use.
 
@@ -473,11 +472,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         .. important::
 
-            - The connection is cached after the first lookup or creation. If the underlying data changes,
-            clear the cache to force a reload.
+            - The connection is cached after the first lookup or creation. If the underlying data changes, clear the cache to force a reload.
 
-            - If neither a manifest nor an existing ORM object is available, this property returns `None`
-            and logs an error.
+            - If neither a manifest nor an existing ORM object is available, this property returns `None` and logs an error.
 
         .. seealso::
 

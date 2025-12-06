@@ -1,5 +1,5 @@
-Smarter AWS Helper
-==================
+Helper Overview for AWS
+===========================
 
 This section provides documentation for the AWS helper classes available in the Smarter framework.
 These helpers facilitate interactions with the AWS services that Smarter supports, providing layers of abstraction
@@ -9,7 +9,7 @@ All AWS helper functions are available through a Singleton instance of the `AWSI
 
 .. code-block:: python
 
-   from smarter.common.helpers.aws_helpers import aws_helper
+   from smarter.common.helpers.helpers import aws_helper
 
    aws_helper.route53.get_or_create_hosted_zone("example.com")
 
@@ -37,15 +37,3 @@ returns a dictionary similar to:
                 ]
             }
         }
-
-.. toctree::
-   :maxdepth: 1
-   :caption: AWS Helpers
-
-   aws_helpers/aws
-   aws_helpers/route53
-   aws_helpers/acm
-   aws_helpers/eks
-   aws_helpers/iam
-   aws_helpers/rds
-   aws_helpers/s3

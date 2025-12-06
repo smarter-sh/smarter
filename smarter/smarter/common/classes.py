@@ -59,7 +59,6 @@ class SmarterHelperMixin:
         :return: The formatted class name as a string.
         :rtype: str
 
-        This uses standardized styling for consistent log output.
         """
         return formatted_text(self.__class__.__name__)
 
