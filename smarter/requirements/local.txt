@@ -754,7 +754,7 @@ uritemplate==4.2.0
     #   google-api-python-client
 url-normalize==2.2.1
     # via requests-cache
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   -r smarter/requirements/in/constraints.in
     #   botocore
