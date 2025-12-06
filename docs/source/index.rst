@@ -48,7 +48,7 @@ A :doc:`declarative <smarter-framework/pydantic/smarter-manifests>` AI resource 
   - Supports “:doc:`agents <smarter-resources/smarter-plugin>`” and multi-step AI workflows so you can build bigger, smarter tasks.
   - Secure integrations to :doc:`external data sources <smarter-resources/smarter-plugin>` like :doc:`databases <smarter-resources/plugins/plugin/sql>` and :doc:`APIs <smarter-resources/plugins/plugin/api>`.
 
-- **Application Development Framework**
+- **Cloud-Native Application Framework**
 
   - Built on :doc:`Django <smarter-framework/django>`, :doc:`Django REST Framework <smarter-framework/drf>`, :doc:`Pydantic <smarter-framework/pydantic>`.
   - Automated :doc:`AWS cloud infrastructure <smarter-framework/helpers/aws>` and :doc:`Kubernetes <smarter-framework/helpers/kubernetes>` management.
