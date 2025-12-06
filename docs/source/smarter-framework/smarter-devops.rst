@@ -7,5 +7,4 @@ Smarter Devops Guide
    devops/build
    devops/test
    devops/deploy
-   devops/docker
    devops/ci-cd
