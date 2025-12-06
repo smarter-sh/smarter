@@ -44,7 +44,7 @@ dependencies:
     version: 23.2.12
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
-icon: https://platform.smarter.sh/static/images/logo/smarter-crop.png
+icon: https://cdn.platform.smarter.sh/images/logo/smarter-crop.png
 keywords:
   - ai
   - llm
