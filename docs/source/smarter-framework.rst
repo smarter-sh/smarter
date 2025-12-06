@@ -1,8 +1,13 @@
-Smarter Framework
-==================
+Smarter Application Framework
+===========================================
 
-The Smarter framework is written on the `Django web framework <https://docs.djangoproject.com/>`__,
-`Django REST Framework (DRF) <https://www.django-rest-framework.org/>`__, and `Pydantic <https://pydantic.dev/>`__,
+The Smarter cloud-native application framework consists fundamentally of a set of software that spans the complete lifecycle of
+cloud-native AI applications. The framework provides solutions for cloud infrastructure, backend API services,
+and frontend user interfaces. While the technologies and programming languages that we use to
+implement these layers do certainly vary considerably, most of the
+work of the Smarter Project consists of the backend API services, written in
+Python on the :doc:`Django web framework <smarter-framework/django>`,
+:doc:`Django REST Framework (DRF) <smarter-framework/drf>`, and :doc:`Pydantic <smarter-framework/pydantic>`,
 leveraging the strengths of each to provide a robust and flexible foundation for building enterprise class applications.
 
 
@@ -11,6 +16,7 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    :caption: Technical Reference
 
    smarter-framework/getting-started
+   smarter-framework/guides
    smarter-framework/aws
    smarter-framework/docker
    smarter-framework/kubernetes
@@ -33,4 +39,3 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    smarter-framework/smarter-settings
    smarter-framework/smarter-waffle
    smarter-framework/smarter-utils
-   smarter-framework/guides
