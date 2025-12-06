@@ -6,6 +6,7 @@ Smarter Prompt
    :caption: Technical Reference
 
 
+   prompt/api
    prompt/models
    prompt/sam
    prompt/const

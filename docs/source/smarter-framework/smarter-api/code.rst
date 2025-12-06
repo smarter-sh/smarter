@@ -1,4 +1,4 @@
-Technical Reference
+Class Reference
 ===================
 
 
