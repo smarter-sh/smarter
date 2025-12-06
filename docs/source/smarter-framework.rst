@@ -1,5 +1,5 @@
-Smarter Application Framework
-===========================================
+Smarter Framework
+======================
 
 The Smarter cloud-native application framework consists fundamentally of a set of software that spans the complete lifecycle of
 cloud-native AI applications. The framework provides solutions for cloud infrastructure, backend API services,
