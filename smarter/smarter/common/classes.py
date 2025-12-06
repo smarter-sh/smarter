@@ -95,7 +95,7 @@ class SmarterHelperMixin:
         :return: List of URL path strings that are exempt.
         :rtype: list[str]
         """
-        return ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml", ".well-known", "acme-challenge"]
+        return ["readiness", "healthz", "favicon.ico", "robots.txt", "sitemap.xml"]
 
     def to_json(self) -> dict[str, Any]:
         """
