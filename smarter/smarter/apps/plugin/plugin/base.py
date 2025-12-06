@@ -171,6 +171,16 @@ class PluginBase(ABC, SmarterHelperMixin):
         """
         Initialize a PluginBase instance.
 
+        Key features:
+
+            - Lazy instantiation of class properties.
+            - Supports multiple initialization methods including manifest, database model, and YAML/JSON.
+            - Integrates with Django ORM for plugin metadata management.
+            - Utilizes Pydantic models for manifest validation and serialization.
+            - Provides hooks for plugin selection and prompt customization.
+            - Ensures plugin readiness and validation before use.
+            - Sends signals upon plugin creation or update.
+
         This constructor supports several ways to create a plugin object:
 
         - **Manifest-based initialization:**
@@ -326,7 +336,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         """
         Return the Django ORM base class for plugin data.
 
-        This abstract property must be implemented by all subclasses of ``PluginBase``.
+        This abstract property must be implemented by all subclasses.
         It should return the Django model class that represents the plugin's data structure.
         This model is used for storing and retrieving plugin-specific data from the database.
 
@@ -337,6 +347,19 @@ class PluginBase(ABC, SmarterHelperMixin):
         :rtype: type[PluginDataBase]
 
         :raises NotImplementedError: If not implemented in a subclass.
+
+        :Example:
+
+            ```python
+            from smarter.apps.plugin.plugin.base import PluginDataBase
+
+            class MyPluginData(PluginDataBase):
+                # Define fields specific to MyPluginData
+                pass
+
+            foo = MyPlugin()
+            assert foo.plugin_data_class == MyPluginData
+
         """
         raise NotImplementedError()
 
@@ -431,6 +454,11 @@ class PluginBase(ABC, SmarterHelperMixin):
                     }
                 }
             ]
+
+        .. seealso::
+
+            - :class:`smarter.lib.openai.enum.OpenAIToolCall`
+            - :class:`smarter.lib.openai.enum.OpenAIToolTypes`
         """
         if not self.ready:
             raise SmarterPluginError(
@@ -492,6 +520,13 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         :return: The plugin parameters.
         :rtype: Optional[dict[str, Any]]
+
+        :Example:
+            ```python
+            foo = MyPlugin()
+            print(foo.params)
+            {"key": "value"}
+            ```
         """
         return self._params
 
@@ -504,6 +539,8 @@ class PluginBase(ABC, SmarterHelperMixin):
         :type value: dict
         """
         logger.info("Setting plugin parameters: %s", value)
+        if not isinstance(value, dict):
+            raise SmarterValueError("Plugin parameters must be a dictionary.")
         self._params = value
 
     @property
@@ -513,6 +550,13 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         :return: The api version of the plugin.
         :rtype: str
+
+        :raises SAMValidationError: If the api version is not valid.
+
+        .. seealso::
+
+            - `smarter.common.api.SmarterApiVersions`
+            - `SMARTER_API_MANIFEST_COMPATIBILITY`
         """
         return self._api_version
 
@@ -526,7 +570,7 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         :raises SAMValidationError: If the api version is not valid.
 
-        See also:
+        .. seealso::
 
             - `smarter.common.api.SmarterApiVersions`
             - `SMARTER_API_MANIFEST_COMPATIBILITY`
@@ -548,6 +592,14 @@ class PluginBase(ABC, SmarterHelperMixin):
         .. seealso::
 
             - `smarter.apps.plugin.manifest.models.static_plugin.const.MANIFEST_KIND`
+
+        :Example:
+
+            ```python
+            foo = MyPlugin()
+            print(foo.kind)
+            "SqlPlugin"
+            ```
         """
         return MANIFEST_KIND
 

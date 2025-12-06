@@ -1,2 +1,0 @@
-Smarter Prompt Architecture
-===========================

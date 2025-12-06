@@ -43,6 +43,9 @@ While the full Dockerfile may include additional instructions, typical elements 
 - **Entrypoint or CMD**: Specifies how the container should start the application.
 - **Multi-Stage Build**: Uses the named stage (``linux_base``) to optimize the final image by copying only necessary files and dependencies.
 
+Smarter's Dockerfile
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. literalinclude:: ../../../Dockerfile
    :language: docker
    :caption: Smarter's Dockerfile

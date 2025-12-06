@@ -14,7 +14,7 @@ URL Patterns
 .. literalinclude:: ../../../../smarter/smarter/urls/chatbots.py
    :language: python
    :linenos:
-   :lines: 23-
+   :lines: 25-
 
 
 ChatConfigView Class Reference

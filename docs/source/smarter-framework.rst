@@ -11,6 +11,7 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    :caption: Technical Reference
 
    smarter-framework/getting-started
+   smarter-framework/aws
    smarter-framework/docker
    smarter-framework/kubernetes
    smarter-framework/python
@@ -25,7 +26,6 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    smarter-framework/smarter-enum
    smarter-framework/smarter-devops
    smarter-framework/smarter-journal
-   smarter-framework/smarter-helpers
    smarter-framework/smarter-logging
    smarter-framework/smarter-mixins
    smarter-framework/smarter-settings
