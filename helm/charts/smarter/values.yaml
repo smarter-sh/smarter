@@ -263,7 +263,7 @@ externalDatabase:
   password: ""    # Will use .Values.env.MYSQL_PASSWORD if empty
 
 mysql:
-  enabled: true
+  enabled: false
   auth:
     rootPassword: ""
     password: ""
