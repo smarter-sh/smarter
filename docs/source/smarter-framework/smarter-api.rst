@@ -1,7 +1,8 @@
 Smarter Api
 ================================
 
-The Smarter API provides support for AI text completion, the command-line interface (CLI), as well as
+The Smarter API provides support for :doc:`AI text prompts <../smarter-resources/smarter-prompt>`,
+the :doc:`command-line interface (CLI) <../smarter-platform/cli>`, as well as
 limited support for anciallary UI features. The API is built on Django REST Framework and
 includes a rich set of enterprise features for enhanced security, audit capability,
 and performance optimization.

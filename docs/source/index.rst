@@ -38,7 +38,7 @@ A :doc:`declarative <smarter-framework/pydantic/smarter-manifests>` AI resource 
 
   - Helps you manage all your :doc:`AI resources <smarter-resources>` using easy :doc:`YAML files <smarter-framework/pydantic/smarter-manifests>` (like how `Kubernetes <https://kubernetes.io/>`_ works).
   - Simple `Docker <https://hub.docker.com/r/mcdaniel0073/smarter>`_ installation. Run on Kubernetes with the `Smarter Helm chart <https://artifacthub.io/packages/search?repo=project-smarter>`_.
-  - Manage AI resources with the :doc:`web dashboard <smarter-resources/chatbots/react-ui>`, the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`command-line tool <smarter-platform/cli>`.
+  - Manage AI resources with the :doc:`web dashboard <smarter-framework/smarter-react-ui>`, the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`command-line tool <smarter-platform/cli>`.
   - Keeps track of :doc:`logs <smarter-framework/smarter-journal>`, safety checks, :doc:`costs <smarter-platform/cost-accounting>`, and :doc:`security <smarter-platform/security>` so nothing gets lost or misused.
 
 - **AI Resource Management**
@@ -51,10 +51,10 @@ A :doc:`declarative <smarter-framework/pydantic/smarter-manifests>` AI resource 
 - **Cloud-Native Application Framework**
 
   - Built on :doc:`Django <smarter-framework/django>`, :doc:`Django REST Framework <smarter-framework/drf>`, :doc:`Pydantic <smarter-framework/pydantic>`.
-  - Automated :doc:`AWS cloud infrastructure <smarter-framework/helpers/aws>` and :doc:`Kubernetes <smarter-framework/helpers/kubernetes>` management.
-  - ReactJS component-based :doc:`UI integration solution <smarter-resources/chatbots/react-ui>` that works for any web page.
+  - Automated :doc:`AWS cloud infrastructure <smarter-framework/aws>` and :doc:`Kubernetes <smarter-framework/kubernetes>` management.
+  - ReactJS component-based :doc:`UI integration solution <smarter-framework/smarter-react-ui>` that works for any web page.
   - Build AI tools that connect to enterprise resources like :doc:`Sql databases <smarter-resources/plugins/plugin/sql>` and :doc:`REST APIs <smarter-resources/plugins/plugin/api>`.
-  - :doc:`Prompt engineer workbench <smarter-resources/chatbots/react-ui>` for testing prompts and workflows before you deploy.
+  - :doc:`Prompt engineer workbench <smarter-framework/smarter-react-ui>` for testing prompts and workflows before you deploy.
   - Vibrant developer community: `PyPI <https://pypi.org/project/smarter-api/>`_, `NPM <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, `VS Code extensions <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_, and more.
 
 
