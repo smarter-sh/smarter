@@ -33,7 +33,7 @@ spec:
         {{- toYaml .Values.global.tolerations | nindent 8 }}
       containers:
         - name: {{ .Values.names.appName }}
-          image: "{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf \"%s:%s\" .Values.global.image.repository .Values.global.image.tag) }}"
+          image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
           command: ["gunicorn", "smarter.wsgi:application", "--bind", "0.0.0.0:{{ .Values.deployment.containerPort }}", "--workers=2", "--timeout=60", "--worker-class=sync"]
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
           resources:
