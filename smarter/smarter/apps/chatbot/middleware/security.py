@@ -103,6 +103,12 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         # Short-circuit for health checks
         if request.path.replace("/", "") in self.amnesty_urls:
+            logger.info(
+                "%s %s found in amnesty_urls: %s",
+                self.formatted_class_name,
+                self.smarter_build_absolute_uri(request),
+                self.amnesty_urls,
+            )
             return None
 
         host = request.get_host()
@@ -161,7 +167,19 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             )
             return None
 
-        # 4.) If the host is in the list of allowed hosts for
+        # 4.) Acme challenge requests should be allowed through
+        #    http://platform.example.com/.well-known/acme-challenge/RYdbP7-MUXbQRZI1CZj-KKySBkHwHze8z04cjyN18Bk
+        #    http://stackademy-sql.3141-5926-5359.api.example.com/.well-known/acme-challenge/QrRzO7QE7y6DhV8UqhfdD4_OoQ3Yh6XLR1qbJCRGcls
+        # ---------------------------------------------------------------------
+        if ".well-known/acme-challenge" in parsed_url.path:
+            logger.info(
+                "%s %s identified as an ACME challenge request, exiting.",
+                self.formatted_class_name,
+                url,
+            )
+            return None
+
+        # 5.) If the host is in the list of allowed hosts for
         #     our environment then allow it to pass through
         # ---------------------------------------------------------------------
         for allowed_host in settings.SMARTER_ALLOWED_HOSTS:
@@ -174,7 +192,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                 )
                 return None
 
-        # 5.) If the host is a domain for a deployed ChatBot, allow it to pass through
+        # 6.) If the host is a domain for a deployed ChatBot, allow it to pass through
         #     FIX NOTE: this is ham fisted and should be refactored. we shouldn't need
         #     to instantiate a ChatBotHelper object just to check if the host is a domain
         #     for a deployed ChatBot.
@@ -183,18 +201,6 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         chatbot: Optional[ChatBot] = get_cached_chatbot_by_request(request=request)
         if chatbot is not None:
             logger.info("%s ChatBotHelper() verified that %s is a chatbot.", self.formatted_class_name, url)
-            return None
-
-        # 6.) Acme challenge requests should be allowed through
-        #    http://platform.example.com/.well-known/acme-challenge/RYdbP7-MUXbQRZI1CZj-KKySBkHwHze8z04cjyN18Bk
-        #    http://stackademy-sql.3141-5926-5359.api.example.com/.well-known/acme-challenge/QrRzO7QE7y6DhV8UqhfdD4_OoQ3Yh6XLR1qbJCRGcls
-        # ---------------------------------------------------------------------
-        if parsed_url.path.startswith("/.well-known/acme-challenge/"):
-            logger.info(
-                "%s %s identified as an ACME challenge request, exiting.",
-                self.formatted_class_name,
-                url,
-            )
             return None
 
         # ---------------------------------------------------------------------

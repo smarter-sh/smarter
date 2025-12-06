@@ -210,7 +210,8 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
             conn.ping()
             return True
         # pylint: disable=broad-except
-        except Exception:
+        except Exception as e:
+            logger.warning("Redis cache is not available. Bypassing cache. Error: %s", e, exc_info=True)
             return False
 
     def decorator(func):
