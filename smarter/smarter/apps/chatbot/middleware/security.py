@@ -185,6 +185,21 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             logger.info("%s ChatBotHelper() verified that %s is a chatbot.", self.formatted_class_name, url)
             return None
 
+        # 6.) Acme challenge requests should be allowed through
+        #    http://platform.example.com/.well-known/acme-challenge/RYdbP7-MUXbQRZI1CZj-KKySBkHwHze8z04cjyN18Bk
+        #    http://stackademy-sql.3141-5926-5359.api.example.com/.well-known/acme-challenge/QrRzO7QE7y6DhV8UqhfdD4_OoQ3Yh6XLR1qbJCRGcls
+        # ---------------------------------------------------------------------
+        if parsed_url.path.startswith("/.well-known/acme-challenge/"):
+            logger.info(
+                "%s %s identified as an ACME challenge request, exiting.",
+                self.formatted_class_name,
+                url,
+            )
+            return None
+
+        # ---------------------------------------------------------------------
+        # End of the road. Reject the request with a 400 Bad Request response.
+        # ---------------------------------------------------------------------
         logger.error("%s %s failed security tests.", self.formatted_class_name, url)
         return SmarterHttpResponseBadRequest(
             request=request, error_message="SecurityMiddleware() Bad Request (400) - Invalid Hostname."
