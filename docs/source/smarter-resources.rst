@@ -14,7 +14,7 @@ capabilities of the various team member roles, and provides usable tools and abs
 - Application developers work with Python and the :doc:`Smarter Application Framework <smarter-framework>`, and it's built-in :doc:`REST APIs <smarter-framework/smarter-api>`.
 - Data scientists work with Python
 - DevOps engineers work with :doc:`Smarter CLI <smarter-platform/cli>`, :doc:`GitHub Actions <smarter-framework/devops/ci-cd>`, and `Kubernetes <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
-- Cloud engineers work with Smarter's :doc:`AWS <smarter-framework/helpers/aws>` and :doc:`Kubernetes <smarter-framework/helpers/kubernetes>` Helpers classes.
+- Cloud engineers work with Smarter's :doc:`AWS <smarter-framework/aws>` and :doc:`Kubernetes <smarter-framework/kubernetes>` Helpers classes.
 
 
 .. toctree::

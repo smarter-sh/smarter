@@ -5,6 +5,7 @@ Smarter Account
    :maxdepth: 1
    :caption: Technical Reference
 
+   account/api
    account/models
    account/sam
    account/serializers

@@ -7,6 +7,7 @@ Smarter Plugin
    :maxdepth: 1
    :caption: Technical Reference
 
+   plugins/api
    plugins/models
    plugins/manifests
    plugins/serializers
