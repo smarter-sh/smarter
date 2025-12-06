@@ -62,6 +62,18 @@ def main():
         f"appVersion: {new_version}",
     )
 
+    # Update helm/charts/smarter/values.yaml
+    # global:
+    #   image:
+    #     pullPolicy: IfNotPresent
+    #     repository: lpm0073/smarter
+    #     tag: v0.13.38
+    update_version_in_file(
+        "helm/charts/smarter/values.yaml",
+        r"(global:\s*\n\s*image:\s*\n(?:.*\n)*?\s*tag:\s*)v\d+\.\d+\.\d+",
+        f"\\1v{new_version}",
+    )
+
 
 if __name__ == "__main__":
     main()
