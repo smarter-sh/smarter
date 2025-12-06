@@ -1,3 +1,10 @@
+## [0.13.37](https://github.com/smarter-sh/smarter/compare/v0.13.36...v0.13.37) (2025-12-06)
+
+
+### Bug Fixes
+
+* release sphinx Read the Docs ([1ee9cb0](https://github.com/smarter-sh/smarter/commit/1ee9cb07fadd70073795464f1ddb227cd8ee7093))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
