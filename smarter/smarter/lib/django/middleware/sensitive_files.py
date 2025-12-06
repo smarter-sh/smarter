@@ -2,6 +2,7 @@
 
 import fnmatch
 import logging
+import re
 
 from django.conf import settings
 from django.core.cache import cache
@@ -83,11 +84,9 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         self.get_response = get_response
 
         # grant amnesty for specific patterns
-        self.allowed_patterns = (
-            settings.SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS
-            if hasattr(settings, "SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS")
-            else []
-        )
+        self.allowed_patterns = [
+            re.compile(pattern) for pattern in getattr(settings, "SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS", [])
+        ]
         self.sensitive_files = {
             ".env",
             "config.php",
@@ -168,8 +167,17 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     def __call__(self, request):
         request_path = request.path.lower()
         if request_path.replace("/", "") in self.amnesty_urls:
-            logger.debug("%s amnesty granted to: %s", self.formatted_class_name, request.path)
+            logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
             return self.get_response(request)
+
+        for pattern in self.allowed_patterns:
+            if pattern.match(request_path):
+                logger.info(
+                    "%s amnesty granted to: %s because it matches an allowed pattern in settings.SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS",
+                    self.formatted_class_name,
+                    request.path,
+                )
+                return self.get_response(request)
 
         client_ip = self.get_client_ip(request)
         if not client_ip:
@@ -194,11 +202,6 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
                 or fnmatch.fnmatch(request_path, sensitive_file)
                 or sensitive_file in request_path
             ):
-                for pattern in self.allowed_patterns:
-                    if pattern.match(request_path):
-                        logger.debug("%s amnesty granted to: %s", self.formatted_class_name, request.path)
-                        return self.get_response(request)
-
                 logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
 
                 try:
