@@ -24,16 +24,41 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 class Command(SmarterCommand):
     """
-    Utility for running api/v1/cli/ endpoints to verify that they work.
-    This largely recreates the unit tests for the endpoints, albeit with
-    formatted screen output.
+    Utility for running ``api/v1/cli/`` endpoints to verify their functionality.
 
-    This is an instructional tool as much as a utility, demonstrating the
-    following:
-    - how to generate an API key for a user
-    - how to add the API key to an http request to api/v1/cli/ endpoints
-    - how to setup an http request for an api/v1/cli/ endpoint
-    - how to work with the response object
+    This management command serves both as a utility and an instructional tool for interacting with Smarter manifests via the API. It is designed to help developers and administrators understand and validate the process of applying manifests through the CLI endpoint.
+
+    **Key Features and Demonstrations:**
+
+    - Shows how to generate an API key for a user, which is required for authenticated requests.
+    - Demonstrates how to include the API key in HTTP requests to ``api/v1/cli/`` endpoints.
+    - Explains how to construct and send HTTP requests to the manifest application endpoint.
+    - Illustrates how to handle and interpret the response object returned by the API.
+
+    **Usage:**
+
+    This command can be invoked via Django's ``manage.py`` interface. It accepts either a manifest file (YAML or JSON) or a manifest string directly, along with the username of the admin user who will apply the manifest. The command will:
+
+    1. Validate the provided manifest input.
+    2. Retrieve the specified user and ensure they have an associated admin profile.
+    3. Generate a single-use API token for authentication.
+    4. Construct the appropriate API endpoint URL, considering the current environment (HTTP/HTTPS).
+    5. Send the manifest data to the API endpoint using an authenticated HTTP POST request.
+    6. Display formatted output, including request details and the API response, with optional verbosity.
+
+    **Error Handling:**
+
+    The command provides clear error messages for common failure scenarios, such as missing user profiles, invalid manifest input, or unsuccessful API responses. All failures are reported with context to aid troubleshooting.
+
+    **Intended Audience:**
+
+    This tool is intended for developers, system administrators, and anyone interested in learning how Smarter manifests are applied programmatically. It is especially useful for instructional purposes, demonstrations, and manual verification of API endpoint behavior.
+
+    .. seealso::
+
+        - :py:class:`smarter.apps.api.v1.cli.urls.ApiV1CliReverseViews`
+        - :py:class:`smarter.lib.drf.models.SmarterAuthToken`
+
     """
 
     help = "Apply a Smarter manifest."

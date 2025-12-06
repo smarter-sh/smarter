@@ -46,8 +46,8 @@ provides better support for IDEs, and enables static type checking with tools li
 Documentation
 --------------
 
-Smarter Framework uses `Sphinx <https://www.sphinx-doc.org/en/master/>`__ for generating documentation.
-The documentation source files are located in the `docs/source` directory of the project.
+See the :doc:`Documentation Style Guide <guides/documentation>`.
+
 
 Dependencies
 --------------
