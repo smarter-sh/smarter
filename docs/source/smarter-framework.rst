@@ -11,6 +11,8 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    :caption: Technical Reference
 
    smarter-framework/getting-started
+   smarter-framework/docker
+   smarter-framework/kubernetes
    smarter-framework/python
    smarter-framework/django
    smarter-framework/drf
