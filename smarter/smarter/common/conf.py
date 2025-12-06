@@ -786,14 +786,13 @@ class Settings(BaseSettings):
             'cdn.localhost:8000'
 
         See Also:
-            - SMARTER_PLATFORM_SUBDOMAIN
+            - smarter_settings.platform_subdomain
             - smarter_settings.environment_platform_domain
             - smarter_settings.environment
-            - SMARTER_PLATFORM_SUBDOMAIN
             - SmarterEnvironments()
         """
         if self.environment == SmarterEnvironments.LOCAL:
-            return f"cdn.{SmarterEnvironments.ALPHA}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+            return f"cdn.{SmarterEnvironments.ALPHA}.{self.platform_subdomain}.{self.root_domain}"
         return f"cdn.{self.environment_platform_domain}"
 
     @property
@@ -834,6 +833,20 @@ class Settings(BaseSettings):
         return retval
 
     @property
+    def platform_subdomain(self) -> str:
+        """
+        Return the platform subdomain.
+
+        Example:
+            >>> print(smarter_settings.platform_subdomain)
+            'platform'
+
+        See Also:
+            - SMARTER_PLATFORM_SUBDOMAIN
+        """
+        return SMARTER_PLATFORM_SUBDOMAIN
+
+    @property
     def root_platform_domain(self) -> str:
         """
         Return the platform domain name for the root domain.
@@ -843,10 +856,10 @@ class Settings(BaseSettings):
             'platform.example.com'
 
         See Also:
-            - SMARTER_PLATFORM_SUBDOMAIN
+            - smarter.settings.platform_subdomain
             - smarter_settings.root_domain
         """
-        return f"{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+        return f"{self.platform_subdomain}.{self.root_domain}"
 
     @property
     def platform_url(self) -> str:
@@ -926,8 +939,8 @@ class Settings(BaseSettings):
 
         See Also:
             - SmarterEnvironments()
-            - SMARTER_PLATFORM_SUBDOMAIN
-            - SMARTER_API_SUBDOMAIN
+            - smarter_settings.platform_subdomain
+            - smarter_settings.api_subdomain
             - smarter_settings.root_domain
             - smarter_settings.root_api_domain
             - smarter_settings.root_platform_domain
@@ -939,8 +952,8 @@ class Settings(BaseSettings):
             SmarterEnvironments.NEXT,
         ]
         subdomains = [
-            SMARTER_PLATFORM_SUBDOMAIN,
-            SMARTER_API_SUBDOMAIN,
+            self.platform_subdomain,
+            self.api_subdomain,
         ]
         domains = set()
         # Add root domains
@@ -1019,11 +1032,25 @@ class Settings(BaseSettings):
             'smarter-platform-alpha'
 
         See Also:
-            - SMARTER_PLATFORM_SUBDOMAIN
+            - smarter_settings.platform_subdomain
             - smarter_settings.platform_name
             - smarter_settings.environment
         """
-        return f"{self.platform_name}-{SMARTER_PLATFORM_SUBDOMAIN}-{settings.environment}"
+        return f"{self.platform_name}-{self.platform_subdomain}-{settings.environment}"
+
+    @property
+    def api_subdomain(self) -> str:
+        """
+        Return the API subdomain for the platform.
+
+        Example:
+            >>> print(smarter_settings.api_subdomain)
+            'api'
+        return SMARTER_API_SUBDOMAIN
+        See Also:
+            - SMARTER_API_SUBDOMAIN
+        """
+        return SMARTER_API_SUBDOMAIN
 
     @property
     def root_api_domain(self) -> str:
@@ -1033,13 +1060,14 @@ class Settings(BaseSettings):
 
         Example:
             >>> print(smarter_settings.root_api_domain)
-            'api.platform.example.com'
+            'api.example.com'
 
         See Also:
             - SMARTER_API_SUBDOMAIN
             - smarter_settings.root_domain
+            - smarter_settings.api_subdomain
         """
-        return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
+        return f"{self.api_subdomain}.{self.root_domain}"
 
     @property
     def environment_api_domain(self) -> str:

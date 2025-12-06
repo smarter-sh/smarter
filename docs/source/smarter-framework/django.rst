@@ -17,9 +17,10 @@ For more information about Django, see the `official Django documentation <https
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Smarter Django Extensions
 
+   django/hosts
    django/http
    django/manage
    django/middleware
