@@ -1,14 +1,18 @@
-## [0.13.36](https://github.com/smarter-sh/smarter/compare/v0.13.35...v0.13.36) (2025-11-29)
-
-### Bug Fixes
-
-- remove import django.core.serializers.json.DjangoJSONEncoder ([95cffb8](https://github.com/smarter-sh/smarter/commit/95cffb8b41baf7b4b9f1a0d42a3a3c0bb4422a73))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## 0.13.37
+
+- Release first version of Sphinx docs for Read the Docs.
+
+## [0.13.36](https://github.com/smarter-sh/smarter/compare/v0.13.35...v0.13.36) (2025-11-29)
+
+### Bug Fixes
+
+- remove import django.core.serializers.json.DjangoJSONEncoder ([95cffb8](https://github.com/smarter-sh/smarter/commit/95cffb8b41baf7b4b9f1a0d42a3a3c0bb4422a73))
 
 ## [0.13.35](https://github.com/smarter-sh/smarter/compare/v0.13.34...v0.13.35) (2025-11-29)
 
