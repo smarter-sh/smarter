@@ -49,6 +49,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
     "sphinx_autodoc_typehints",
+    "sphinx_design",
     "sphinx.ext.todo",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",

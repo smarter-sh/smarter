@@ -82,9 +82,9 @@ SESSION_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "lax"
 
+environment_name = os.path.basename(__file__).replace(".py", "")
 logger.info("Loading smarter.settings.%s", environment_name)
 if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
-    environment_name = os.path.basename(__file__).replace(".py", "")
 
     logger.debug("*" * 80)
     logger.debug("CORS_ALLOW_HEADERS: %s", CORS_ALLOW_HEADERS)

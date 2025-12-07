@@ -451,7 +451,7 @@ GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#secret-key
 """
 
-if not SECRET_KEY:
+if SECRET_KEY == smarter_settings.default_missing_value:
     random_string = secrets.token_urlsafe(64)
     random_bytes = random_string.encode("utf-8")
     hash_object = hashlib.sha256(random_bytes)
