@@ -1,4 +1,25 @@
-"""A PLugin that returns a static json object stored in the Plugin itself."""
+"""
+A PLugin that returns a static json object stored in the Plugin itself.
+
+.. note::
+
+    This is a complex AI resource that exists within the following class hierarchy
+
+    - Smarter SQL Plugin: The plugin that defines the SQL query and it's parameters to run against the remote SQL database server.
+    - Smarter Chatbot: The prompting resource (Chatbot, Agent, Workflow unit, etcetera) that includes the SQL Plugin:
+
+.. sphinx note: these are relative to the rst doc that calls automodule on this file.
+
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/sample-plugins/everlasting-gobstopper.yaml
+    :language: yaml
+    :caption: 1.) Example Static Plugin Manifest
+
+.. literalinclude:: ../../../../../smarter/smarter/apps/chatbot/data/chatbots/chatbot-example.yaml
+    :language: yaml
+    :caption: 2.) Example Chatbot Manifest
+
+
+"""
 
 import logging
 from typing import Any, Optional, Type
