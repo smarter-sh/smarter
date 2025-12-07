@@ -3,18 +3,20 @@ Smarter Platform
 
 The Smarter platform is a batteries-included solution
 that is designed to provide large organizations with a robust and scalable foundation
-for deploying and managing AI applications in production environments.
+for deploying and managing :doc:`AI applications <smarter-resources>` in production environments.
 
-Smarter runs natively on Kubernetes in the cloud at Amazon Web Services (AWS).
-It provides the necessary infrastructure and services to host and manage
-AI-driven workflows, agents and chatbots that are securely integrated to
+Smarter runs natively on :doc:`Kubernetes <smarter-framework/kubernetes>` in
+the cloud at :doc:`Amazon Web Services (AWS) <smarter-framework/aws>`.
+It provides the necessary :doc:`infrastructure <smarter-platform/cloud-infrastructure>` and services to host and manage
+:doc:`AI-driven workflows, agents and chatbots <smarter-resources/smarter-chatbot>` that
+are :doc:`securely integrated <smarter-resources/smarter-plugin>` to
 enterprise data sources and systems.
 
 The Smarter platform's fundamental building blocks to this extent are:
 
 - This documentation. See `Smarter Documentation <https://docs.smarter.sh/>`__
 - Managed Docker containers. See `Smarter on DockerHub <https://hub.docker.com/r/mcdaniel0073/smarter>`__
-- Managed Helm charts. See `Smarter Helm Chart <https://artifacthub.io/packages/search?repo=project-smarter>`__
+- Managed Helm charts. See `Smarter Helm Chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__
 - Managed cloud infrastructure. See `Smarter Terraforms <https://github.com/smarter-sh/smarter-infrastructure>`__
 - Broad support for our developer ecosystem. See `Smarter Developer Resources <https://smarter.sh/>`__
 
