@@ -49,14 +49,15 @@ might have been trained.
             "name": "get_current_weather",
             "description": "Get the current weather for a given location",
             "parameters": {
-              "type": "object",
-              "properties": {
-                "location": {
-                  "type": "string",
-                  "description": "The city and country to get the weather for, e.g. Paris, France"
-                }
-              },
-              "required": ["location"]
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. San Francisco, CA",
+                    },
+                    "unit": {"type": "string", "enum": ["METRIC", "USCS"]},
+                },
+                "required": ["location"],
             }
           }
         ],
