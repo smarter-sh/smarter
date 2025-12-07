@@ -1,5 +1,5 @@
-Resource Types
-=================
+Plugin & Connection Reference
+=======================================
 
 
 .. toctree::

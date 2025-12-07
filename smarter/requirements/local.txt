@@ -217,7 +217,9 @@ djangorestframework==3.16.1
 djangorestframework-stubs==3.16.0
     # via -r smarter/requirements/in/local.in
 dnspython==2.7.0
-    # via -r smarter/requirements/in/base.in
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   email-validator
 docutils==0.21.2
     # via
     #   -r smarter/requirements/in/base.in
@@ -226,6 +228,8 @@ docutils==0.21.2
 draftjs-exporter==5.1.0
     # via wagtail
 drf-yasg==1.21.10
+    # via -r smarter/requirements/in/base.in
+email-validator==2.3.0
     # via -r smarter/requirements/in/base.in
 et-xmlfile==2.0.0
     # via openpyxl
@@ -299,6 +303,7 @@ idna==3.10
     # via
     #   -r smarter/requirements/in/constraints.in
     #   anyio
+    #   email-validator
     #   httpx
     #   requests
     #   tldextract
@@ -640,12 +645,15 @@ sphinx==8.2.3
     #   autodoc-pydantic
     #   sphinx-autodoc-typehints
     #   sphinx-copybutton
+    #   sphinx-design
     #   sphinx-rtd-theme
     #   sphinxcontrib-django
     #   sphinxcontrib-jquery
 sphinx-autodoc-typehints==3.5.2
     # via -r smarter/requirements/in/local.in
 sphinx-copybutton==0.5.2
+    # via -r smarter/requirements/in/local.in
+sphinx-design==0.6.1
     # via -r smarter/requirements/in/local.in
 sphinx-rtd-theme==3.0.2
     # via -r smarter/requirements/in/local.in
