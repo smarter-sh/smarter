@@ -1,12 +1,14 @@
 Smarter Framework
 ======================
 
-The Smarter cloud-native application framework consists fundamentally of a set of software that spans the complete lifecycle of
-cloud-native AI applications. The framework provides solutions for cloud infrastructure, backend API services,
-and frontend user interfaces. While the technologies and programming languages that we use to
+The Smarter :doc:`cloud-native <smarter-framework/kubernetes>` application framework consists fundamentally of a
+set of software that spans the complete lifecycle of
+cloud-native AI applications. The framework provides solutions for :doc:`cloud infrastructure <smarter-framework/aws>`,
+:doc:`backend API services <smarter-framework/smarter-api>`,
+and :doc:`frontend user interfaces <smarter-framework/smarter-react-ui>`. While the technologies and programming languages that we use to
 implement these layers do certainly vary considerably, most of the
 work of the Smarter Project consists of the backend API services, written in
-Python on the :doc:`Django web framework <smarter-framework/django>`,
+:doc:`Python <smarter-framework/python>` on the :doc:`Django web framework <smarter-framework/django>`,
 :doc:`Django REST Framework (DRF) <smarter-framework/drf>`, and :doc:`Pydantic <smarter-framework/pydantic>`,
 leveraging the strengths of each to provide a robust and flexible foundation for building enterprise class applications.
 
