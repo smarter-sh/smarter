@@ -1,4 +1,35 @@
-"""A PLugin that uses a remote SQL database server to retrieve its return data"""
+"""
+A PLugin that uses a remote SQL database server to retrieve its return data
+
+
+.. note::
+
+    This is a complex AI resource that exists within the following class hierarchy
+
+    1. Smarter Secret: The authentication credential for the remote SQL database connection.
+    2. Smarter SQL Connection: The complete connection configuration to the remote SQL database server (host, port, secret, ssh key, username, etc.).
+    3. Smarter SQL Plugin: The plugin that defines the SQL query and it's parameters to run against the remote SQL database server.
+    4. Smarter Chatbot: The prompting resource (Chatbot, Agent, Workflow unit, etcetera) that includes the SQL Plugin:
+
+.. sphinx note: these are relative to the rst doc that calls automodule on this file.
+
+.. literalinclude:: ../../../../../smarter/smarter/apps/account/data/sample-secrets/smarter-test-db.yaml
+    :language: yaml
+    :caption: 1.) Example Smarter Secret Manifest
+
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml
+    :language: yaml
+    :caption: 2.) Example Smarter SQL Connection Manifest
+
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-sql.yaml
+    :language: yaml
+    :caption: 3.) Example Stackademy SQL Plugin Manifest
+
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-sql.yaml
+    :language: yaml
+    :caption: 4.) Example Stackademy Chatbot Manifest
+
+"""
 
 import logging
 import re
