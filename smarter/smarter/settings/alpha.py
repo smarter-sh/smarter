@@ -25,8 +25,8 @@ CORS_ALLOWED_ORIGINS += [
 # see: https://python-social-auth.readthedocs.io/en/latest/configuration/settings.html
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
 
+logger.info("Loading smarter.settings.%s", environment_name)
 if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
-    logger.info("Loading smarter.settings.%s", environment_name)
 
     logger.info("*" * 80)
     logger.info("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)

@@ -826,6 +826,12 @@ Do not change this value unless you know what you are doing.
 See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
 """
 
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["openid", "email", "profile"]
+"""
+The OAuth2 scopes for Google social authentication in Smarter.
+See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+"""
+
 SOCIAL_AUTH_GITHUB_KEY = smarter_settings.social_auth_github_key.get_secret_value()
 """
 Python Social Auth GitHub OAuth2 client ID for Smarter.
