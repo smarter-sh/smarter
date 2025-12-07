@@ -12,9 +12,9 @@ that you can embed into existing web applications or websites like Wordpress/Wix
 sites, salesforce portals, Hubspot, Shopify storefronts, Microsoft Sharepoint sites,
 or your own custom web applications.
 
-   .. raw:: html
+    .. raw:: html
 
-     <img src="https://cdn.smarter.sh/images/smarter-chat-ui-example.png"
+      <img src="https://cdn.smarter.sh/images/smarter-chat-ui-example.png"
           style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
           alt="Smarter Chat Component in Workbench Mode"/>
 
