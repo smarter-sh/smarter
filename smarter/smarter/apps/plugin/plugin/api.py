@@ -1,4 +1,35 @@
-"""A Plugin that uses a REST API to retrieve its return data"""
+"""
+A Plugin that uses a REST API to retrieve its return data
+
+.. note::
+
+    This is a complex AI resource that exists within the following class hierarchy
+
+    1. Smarter Secret: The authentication credential for the remote API connection.
+    2. Smarter API Connection: The complete connection configuration to the remote API database server (host, port, secret, ssh key, username, etc.).
+    3. Smarter API Plugin: The plugin that defines the API query and it's parameters to run against the remote API database server.
+    4. Smarter Chatbot: The prompting resource (Chatbot, Agent, Workflow unit, etcetera) that includes the API Plugin:
+
+.. sphinx note: these are relative to the rst doc that calls automodule on this file.
+
+.. literalinclude:: ../../../../../smarter/smarter/apps/account/data/sample-secrets/smarter-test-db.yaml
+    :language: yaml
+    :caption: 1.) Example Smarter Secret Manifest
+
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/sample-connections/smarter-test-api.yaml
+    :language: yaml
+    :caption: 2.) Example Smarter API Connection Manifest
+
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-api.yaml
+    :language: yaml
+    :caption: 3.) Example Stackademy API Plugin Manifest
+
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-api.yaml
+    :language: yaml
+    :caption: 4.) Example Stackademy Chatbot Manifest
+
+
+"""
 
 # python stuff
 import logging
@@ -47,7 +78,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SmarterApiPluginError(SmarterPluginError):
-    """Base class for all SQL plugin errors."""
+    """Base class for all API plugin errors."""
 
 
 class ApiPlugin(PluginBase):
@@ -188,7 +219,7 @@ class ApiPlugin(PluginBase):
         api_data = self.manifest.spec.apiData.model_dump() if self.manifest else None
         if not api_data:
             raise SmarterApiPluginError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required SQL data."
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required API data."
             )
         api_data = {camel_to_snake(key): value for key, value in api_data.items()}
 
