@@ -1,539 +1,347 @@
 {
-  "data": {
-      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
-      "sandbox_mode": true,
-      "debug_mode": false,
-      "chatbot": {
-          "id": 1,
-          "account": {
-              "account_number": "3141-5926-5359"
-          },
-          "name": "example",
-          "description": "",
-          "version": "0.1.0",
-          "subdomain": null,
-          "custom_domain": null,
-          "deployed": true,
-          "provider": "openai",
-          "default_model": "gpt-4-turbo",
-          "default_system_role": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
-          "default_temperature": 0.5,
-          "default_max_completion_tokens": 256,
-          "app_name": "Smarter Demo",
-          "app_assistant": "Lawrence",
-          "app_welcome_message": "Welcome to the Smarter demo!",
-          "app_example_prompts": [
-              "What is the weather in San Francisco?",
-              "What is an Everlasting Gobstopper?",
-              "example function calling configuration"
-          ],
-          "app_placeholder": "Ask me anything...",
-          "app_info_url": "https://smarter.sh",
-          "app_background_image_url": null,
-          "app_logo_url": "/static/images/logo/smarter-crop.png",
-          "app_file_attachment": false,
-          "dns_verification_status": "Not Verified",
-          "url_chatbot": "https://platform.smarter.sh/api/v1/chatbots/smarter/example/"
-      },
-      "history": {
-          "chat": {
-              "id": 7,
-              "created_at": "2025-01-08T23:09:23.981987Z",
-              "updated_at": "2025-01-08T23:09:23.992270Z",
-              "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
-              "ip_address": "192.168.4.40",
-              "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-              "url": "http://platform.smarter.sh/chatbots/example",
-              "account": null,
-              "chatbot": 1
-          },
-          "chat_history": [
-              {
-                  "role": "system",
-                  "content": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n"
-              },
-              {
-                  "role": "assistant",
-                  "content": "Welcome to the Smarter demo!"
-              },
-              {
-                  "role": "assistant",
-                  "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
-              },
-              {
-                  "role": "user",
-                  "content": "example function calling configuration"
-              },
-              {
-                  "role": "assistant",
-                  "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
-              },
-              {
-                  "role": "assistant",
-                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
-              },
-              {
-                  "role": "user",
-                  "content": "example function calling configuration"
-              },
-              {
-                  "role": "assistant",
-                  "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
-              },
-              {
-                  "role": "assistant",
-                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
-              },
-              {
-                  "role": "user",
-                  "content": "what's the weather like in san francisco california right now?"
-              },
-              {
-                  "role": "assistant",
-                  "content": "Tool call: get_current_weather({\"location\":\"San Francisco, CA\",\"unit\":\"USCS\"})"
-              },
-              {
-                  "role": "assistant",
-                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\nThe current weather in San Francisco, California is approximately 66.3°F with no precipitation expected at this time."
-              },
-              {
-                  "role": "assistant",
-                  "audio": null,
-                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\nThe current weather in San Francisco, California is approximately 66.3°F with no precipitation expected at this time.",
-                  "refusal": null,
-                  "tool_calls": null,
-                  "function_call": null
-              }
-          ],
-          "chat_tool_call_history": [
-              {
-                  "id": 8,
-                  "chat": {
-                      "id": 7,
-                      "created_at": "2025-01-08T23:09:23.981987Z",
-                      "updated_at": "2025-01-08T23:09:23.992270Z",
-                      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
-                      "ip_address": "192.168.4.40",
-                      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                      "url": "http://platform.smarter.sh/chatbots/example",
-                      "account": null,
-                      "chatbot": 1
-                  },
-                  "created_at": "2025-01-09T23:28:48.986843Z",
-                  "updated_at": "2025-01-09T23:28:48.986891Z",
-                  "function_name": "get_current_weather",
-                  "function_args": "{'location': 'San Francisco, CA', 'unit': 'USCS'}",
-                  "request": {
-                      "model": "gpt-4-turbo",
-                      "messages": [
-                          {
-                              "role": "system",
-                              "content": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Welcome to the Smarter demo!"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
-                          },
-                          {
-                              "role": "user",
-                              "content": "example function calling configuration"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
-                          },
-                          {
-                              "role": "user",
-                              "content": "example function calling configuration"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
-                          },
-                          {
-                              "role": "user",
-                              "content": "what's the weather like in san francisco california right now?"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Tool call: get_current_weather({\"location\":\"San Francisco, CA\",\"unit\":\"USCS\"})"
-                          },
-                          "{\"content\":null,\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[{\"id\":\"call_aYUzYSesInBft9bQKfxC5RSQ\",\"function\":{\"arguments\":\"{\\\"location\\\":\\\"San Francisco, CA\\\",\\\"unit\\\":\\\"USCS\\\"}\",\"name\":\"get_current_weather\"},\"type\":\"function\"}]}",
-                          {
-                              "name": "get_current_weather",
-                              "role": "tool",
-                              "content": "\"[{\\\"date\\\":\\\"2025-01-09 00:00\\\",\\\"temperature\\\":62.7917022705,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 01:00\\\",\\\"temperature\\\":58.9216995239,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 02:00\\\",\\\"temperature\\\":56.1316986084,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 03:00\\\",\\\"temperature\\\":53.7017021179,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 04:00\\\",\\\"temperature\\\":50.9117012024,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 05:00\\\",\\\"temperature\\\":51.0917015076,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 06:00\\\",\\\"temperature\\\":50.3717002869,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 07:00\\\",\\\"temperature\\\":47.7616996765,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 08:00\\\",\\\"temperature\\\":46.5917015076,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 09:00\\\",\\\"temperature\\\":47.0417022705,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 10:00\\\",\\\"temperature\\\":44.1616973877,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 11:00\\\",\\\"temperature\\\":43.7117004395,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 12:00\\\",\\\"temperature\\\":44.1616973877,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 13:00\\\",\\\"temperature\\\":44.1616973877,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 14:00\\\",\\\"temperature\\\":45.1516990662,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 15:00\\\",\\\"temperature\\\":43.3516998291,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 16:00\\\",\\\"temperature\\\":43.9817008972,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 17:00\\\",\\\"temperature\\\":48.9317016602,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 18:00\\\",\\\"temperature\\\":55.6817016602,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 19:00\\\",\\\"temperature\\\":58.5616989136,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 20:00\\\",\\\"temperature\\\":62.251701355,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 21:00\\\",\\\"temperature\\\":64.5917053223,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 22:00\\\",\\\"temperature\\\":65.4916992188,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 23:00\\\",\\\"temperature\\\":66.3016967773,\\\"precipitation\\\":0.0}]\"",
-                              "tool_call_id": "call_aYUzYSesInBft9bQKfxC5RSQ"
-                          }
-                      ]
-                  },
-                  "response": {
-                      "id": "chatcmpl-AnwFCOf3HT3zfdsa8E78te6ZXfrKj",
-                      "model": "gpt-4-turbo-2024-04-09",
-                      "usage": {
-                          "total_tokens": 1922,
-                          "prompt_tokens": 1875,
-                          "completion_tokens": 47,
-                          "prompt_tokens_details": {
-                              "audio_tokens": 0,
-                              "cached_tokens": 0
-                          },
-                          "completion_tokens_details": {
-                              "audio_tokens": 0,
-                              "reasoning_tokens": 0,
-                              "accepted_prediction_tokens": 0,
-                              "rejected_prediction_tokens": 0
-                          }
-                      },
-                      "object": "chat.completion",
-                      "choices": [
-                          {
-                              "index": 0,
-                              "message": {
-                                  "role": "assistant",
-                                  "audio": null,
-                                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\nThe current weather in San Francisco, California is approximately 66.3°F with no precipitation expected at this time.",
-                                  "refusal": null,
-                                  "tool_calls": null,
-                                  "function_call": null
-                              },
-                              "logprobs": null,
-                              "finish_reason": "stop"
-                          }
-                      ],
-                      "created": 1736465326,
-                      "service_tier": null,
-                      "system_fingerprint": "fp_f17929ee92"
-                  },
-                  "plugin": null
-              },
-              {
-                  "id": 7,
-                  "chat": {
-                      "id": 7,
-                      "created_at": "2025-01-08T23:09:23.981987Z",
-                      "updated_at": "2025-01-08T23:09:23.992270Z",
-                      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
-                      "ip_address": "192.168.4.40",
-                      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                      "url": "http://platform.smarter.sh/chatbots/example",
-                      "account": null,
-                      "chatbot": 1
-                  },
-                  "created_at": "2025-01-08T23:47:22.615609Z",
-                  "updated_at": "2025-01-08T23:47:22.615656Z",
-                  "function_name": "function_calling_plugin_0002",
-                  "function_args": "{'inquiry_type': 'about'}",
-                  "request": {
-                      "model": "gpt-4-turbo",
-                      "messages": [
-                          {
-                              "role": "system",
-                              "content": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Welcome to the Smarter demo!"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
-                          },
-                          {
-                              "role": "user",
-                              "content": "example function calling configuration"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
-                          },
-                          {
-                              "role": "user",
-                              "content": "example function calling configuration"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
-                          },
-                          "{\"content\":null,\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[{\"id\":\"call_3wv44ZppbjvRYJKWIOBz9Z7k\",\"function\":{\"arguments\":\"{\\\"inquiry_type\\\":\\\"about\\\"}\",\"name\":\"function_calling_plugin_0002\"},\"type\":\"function\"}]}",
-                          {
-                              "name": "function_calling_plugin_0002",
-                              "role": "tool",
-                              "content": "\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\\n\"",
-                              "tool_call_id": "call_3wv44ZppbjvRYJKWIOBz9Z7k"
-                          }
-                      ]
-                  },
-                  "response": {
-                      "id": "chatcmpl-Ana3Y8B8bcKfo4Tf2hL9dksTsRPBr",
-                      "model": "gpt-4-turbo-2024-04-09",
-                      "usage": {
-                          "total_tokens": 1065,
-                          "prompt_tokens": 878,
-                          "completion_tokens": 187,
-                          "prompt_tokens_details": {
-                              "audio_tokens": 0,
-                              "cached_tokens": 0
-                          },
-                          "completion_tokens_details": {
-                              "audio_tokens": 0,
-                              "reasoning_tokens": 0,
-                              "accepted_prediction_tokens": 0,
-                              "rejected_prediction_tokens": 0
-                          }
-                      },
-                      "object": "chat.completion",
-                      "choices": [
-                          {
-                              "index": 0,
-                              "message": {
-                                  "role": "assistant",
-                                  "audio": null,
-                                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\"",
-                                  "refusal": null,
-                                  "tool_calls": null,
-                                  "function_call": null
-                              },
-                              "logprobs": null,
-                              "finish_reason": "stop"
-                          }
-                      ],
-                      "created": 1736380036,
-                      "service_tier": null,
-                      "system_fingerprint": "fp_f17929ee92"
-                  },
-                  "plugin": null
-              },
-              {
-                  "id": 6,
-                  "chat": {
-                      "id": 7,
-                      "created_at": "2025-01-08T23:09:23.981987Z",
-                      "updated_at": "2025-01-08T23:09:23.992270Z",
-                      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
-                      "ip_address": "192.168.4.40",
-                      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                      "url": "http://platform.smarter.sh/chatbots/example",
-                      "account": null,
-                      "chatbot": 1
-                  },
-                  "created_at": "2025-01-08T23:09:39.693884Z",
-                  "updated_at": "2025-01-08T23:09:39.693933Z",
-                  "function_name": "function_calling_plugin_0002",
-                  "function_args": "{'inquiry_type': 'about'}",
-                  "request": {
-                      "model": "gpt-4-turbo",
-                      "messages": [
-                          {
-                              "role": "system",
-                              "content": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Welcome to the Smarter demo!"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
-                          },
-                          {
-                              "role": "user",
-                              "content": "example function calling configuration"
-                          },
-                          {
-                              "role": "assistant",
-                              "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
-                          },
-                          "{\"content\":null,\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[{\"id\":\"call_2Y72Smqx7aDTp7y00sonImhV\",\"function\":{\"arguments\":\"{\\\"inquiry_type\\\":\\\"about\\\"}\",\"name\":\"function_calling_plugin_0002\"},\"type\":\"function\"}]}",
-                          {
-                              "name": "function_calling_plugin_0002",
-                              "role": "tool",
-                              "content": "\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\\n\"",
-                              "tool_call_id": "call_2Y72Smqx7aDTp7y00sonImhV"
-                          }
-                      ]
-                  },
-                  "response": {
-                      "id": "chatcmpl-AnZT2ZtFUkhVMAr1HyAiahr4oGbF7",
-                      "model": "gpt-4-turbo-2024-04-09",
-                      "usage": {
-                          "total_tokens": 602,
-                          "prompt_tokens": 415,
-                          "completion_tokens": 187,
-                          "prompt_tokens_details": {
-                              "audio_tokens": 0,
-                              "cached_tokens": 0
-                          },
-                          "completion_tokens_details": {
-                              "audio_tokens": 0,
-                              "reasoning_tokens": 0,
-                              "accepted_prediction_tokens": 0,
-                              "rejected_prediction_tokens": 0
-                          }
-                      },
-                      "object": "chat.completion",
-                      "choices": [
-                          {
-                              "index": 0,
-                              "message": {
-                                  "role": "assistant",
-                                  "audio": null,
-                                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\"",
-                                  "refusal": null,
-                                  "tool_calls": null,
-                                  "function_call": null
-                              },
-                              "logprobs": null,
-                              "finish_reason": "stop"
-                          }
-                      ],
-                      "created": 1736377772,
-                      "service_tier": null,
-                      "system_fingerprint": "fp_1a5512f3de"
-                  },
-                  "plugin": null
-              }
-          ],
-          "chat_plugin_usage_history": [
-              {
-                  "id": 9,
-                  "chat": {
-                      "id": 7,
-                      "created_at": "2025-01-08T23:09:23.981987Z",
-                      "updated_at": "2025-01-08T23:09:23.992270Z",
-                      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
-                      "ip_address": "192.168.4.40",
-                      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                      "url": "http://platform.smarter.sh/chatbots/example",
-                      "account": null,
-                      "chatbot": 1
-                  },
-                  "created_at": "2025-01-08T23:47:14.738237Z",
-                  "updated_at": "2025-01-08T23:47:14.738283Z",
-                  "input_text": "example function calling configuration",
-                  "plugin": 2
-              },
-              {
-                  "id": 8,
-                  "chat": {
-                      "id": 7,
-                      "created_at": "2025-01-08T23:09:23.981987Z",
-                      "updated_at": "2025-01-08T23:09:23.992270Z",
-                      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
-                      "ip_address": "192.168.4.40",
-                      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                      "url": "http://platform.smarter.sh/chatbots/example",
-                      "account": null,
-                      "chatbot": 1
-                  },
-                  "created_at": "2025-01-08T23:09:30.865634Z",
-                  "updated_at": "2025-01-08T23:09:30.865692Z",
-                  "input_text": "example function calling configuration",
-                  "plugin": 2
-              }
-          ],
-          "chatbot_request_history": [],
-          "plugin_selector_history": []
-      },
-      "meta_data": {
-          "url": "https://platform.smarter.sh/chatbots/example/",
-          "environment": "prod",
-          "domain": "platform.smarter.sh",
-          "path": "/chatbots/example/",
-          "root_domain": "smarter.sh",
-          "subdomain": "platform",
-          "account_number": "3141-5926-5359",
-          "api_subdomain": "platform",
-          "api_host": "/chatbots/example/",
-          "customer_api_domain": "api.smarter.sh",
-          "is_sandbox_domain": true,
-          "is_default_domain": false,
-          "is_custom_domain": false,
-          "is_deployed": true,
-          "is_valid": true,
-          "is_authentication_required": false,
-          "user": "admin",
-          "account": "3141-5926-5359",
-          "chatbot": "example"
-      },
-      "plugins": {
-          "meta_data": {
-              "total_plugins": 2,
-              "plugins_returned": 2
-          },
-          "plugins": [
-              {
-                  "id": 30,
-                  "plugin_meta": {
-                      "name": "ExampleConfiguration",
-                      "account": {
-                          "account_number": "3141-5926-5359"
-                      },
-                      "description": "A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
-                      "pluginClass": "static",
-                      "version": "0.2.0",
-                      "author": {
-                          "user": {
-                              "username": "admin",
-                              "email": "admin@smarter.sh"
-                          },
-                          "account": {
-                              "account_number": "3141-5926-5359"
-                          }
-                      },
-                      "tags": []
-                  },
-                  "created_at": "2024-11-21T17:36:55.506521Z",
-                  "updated_at": "2024-11-21T17:36:55.506549Z",
-                  "chatbot": 1
-              },
-              {
-                  "id": 29,
-                  "plugin_meta": {
-                      "name": "EverlastingGobstopper",
-                      "account": {
-                          "account_number": "3141-5926-5359"
-                      },
-                      "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
-                      "pluginClass": "static",
-                      "version": "0.2.0",
-                      "author": {
-                          "user": {
-                              "username": "admin",
-                              "email": "admin@smarter.sh"
-                          },
-                          "account": {
-                              "account_number": "3141-5926-5359"
-                          }
-                      },
-                      "tags": []
-                  },
-                  "created_at": "2024-11-21T17:36:55.501294Z",
-                  "updated_at": "2024-11-21T17:36:55.501327Z",
-                  "chatbot": 1
-              }
-          ]
-      }
-  },
-  "api": "smarter.sh/v1",
-  "thing": "ChatConfig",
-  "metadata": {
-      "command": "chat_config"
-  }
+    "data": {
+        "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
+        "sandbox_mode": false,
+        "debug_mode": true,
+        "chatbot": {
+            "id": 9,
+            "url_chatbot": "http://localhost:8000/api/v1/chatbots/9/chat/",
+            "account": {
+                "accountNumber": "3141-5926-5359"
+            },
+            "default_system_role": "The current date/time is Monday, 2025-12-08T13:37:43+0000\nYou are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n",
+            "created_at": "2025-11-21T03:20:13.143128Z",
+            "updated_at": "2025-11-21T03:20:13.176363Z",
+            "name": "stackademy_sql",
+            "description": "Stackademy University course catalogue inquiries using the Stackademy SQL plugin.",
+            "version": "1.0.0",
+            "deployed": false,
+            "provider": "openai",
+            "default_model": "gpt-4o-mini",
+            "default_temperature": 0.5,
+            "default_max_tokens": 1024,
+            "app_name": "Stackademy SQL Chatbot",
+            "app_assistant": "Stanley",
+            "app_welcome_message": "Welcome to Stackademy SQL Chatbot! How can I help you today?",
+            "app_example_prompts": [
+                "Do you offer any courses on AI?",
+                "My budget is $1,000. What courses can I take?",
+                "I want to study programming. What do you suggest?"
+            ],
+            "app_placeholder": "Ask me anything about Stackademy courses...",
+            "app_info_url": "https://stackademy.edu/online-courses",
+            "app_background_image_url": null,
+            "app_logo_url": null,
+            "app_file_attachment": null,
+            "dns_verification_status": "Not Verified",
+            "tls_certificate_issuance_status": "No Certificate",
+            "subdomain": null,
+            "custom_domain": null
+        },
+        "history": {
+            "chat": {
+                "id": 6,
+                "created_at": "2025-12-08T13:37:26.056430Z",
+                "updated_at": "2025-12-08T13:37:26.056441Z",
+                "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
+                "ip_address": "172.66.0.243",
+                "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+                "url": "http://localhost:8000/api/v1/chatbots/9/config/",
+                "account": 1,
+                "chatbot": 9
+            },
+            "chat_history": [
+                {
+                    "role": "system",
+                    "content": "The current date/time is Monday, 2025-12-08T13:37:26+0000\nYou are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n\n\nAnd also:\nYou are a helpful student advisor at the fictional Stackademy University that only offers computer science degrees programs. Whenever possible you should defer to the tool calls provided for additional information about the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University should be answered with \"I am sorry, but I can only provide information about the courses offered by Stackademy University.\"\n",
+                    "smarter_is_new": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Welcome to Stackademy SQL Chatbot! How can I help you today?",
+                    "smarter_is_new": false
+                },
+                {
+                    "role": "assistant",
+                    "content": "Some example prompts to get you started:\r\n\r\nDo you offer any courses on AI?\r\nMy budget is $1,000. What courses can I take?\r\nI want to study programming. What do you suggest?\r\n",
+                    "smarter_is_new": false
+                },
+                {
+                    "role": "user",
+                    "content": "Do you offer any courses on AI?",
+                    "smarter_is_new": false
+                },
+                {
+                    "role": "smarter",
+                    "content": "Smarter selected this plugin: stackademy_sql",
+                    "smarter_is_new": false
+                },
+                {
+                    "role": "smarter",
+                    "content": "Prompt configuration: llm=openai, model=gpt-4o-mini, temperature=0.5, max_completion_tokens=2048, tool_choice=auto.",
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "smarter",
+                    "content": "Tool presented: get_current_weather(location: The city and state, e.g. San Francisco, CA, unit: METRIC, USCS) - Get the current weather in a given location ",
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "smarter",
+                    "content": "Tool presented: smarter_plugin_0000000011(max_cost: the maximum cost that a student is willing to pay for a course., description: areas of specialization for courses in the catalogue.) - returns up to 10 rows of course detail data, filtered by the maximum cost a student is willing to pay for a course and the area of specialization.\n ",
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "smarter",
+                    "content": "openai prompt charges: 410 prompt tokens, 20 completion tokens = 430 total tokens charged.",
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "assistant",
+                    "audio": null,
+                    "content": null,
+                    "refusal": null,
+                    "tool_calls": [
+                        {
+                            "id": "call_Rvv0U5O2cLgOeYBVUMQSVfMn",
+                            "type": "function",
+                            "function": {
+                                "name": "smarter_plugin_0000000011",
+                                "arguments": "{\"description\":\"AI\"}"
+                            }
+                        }
+                    ],
+                    "annotations": [],
+                    "function_call": null,
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "smarter",
+                    "content": "openai called this tool: smarter_plugin_0000000011({'description': 'AI'})",
+                    "smarter_is_new": true
+                },
+                {
+                    "name": "smarter_plugin_0000000011",
+                    "role": "tool",
+                    "content": "SqlPlugin stackademy_sql response: [\n  {\n    \"course_code\": \"CS210\",\n    \"course_name\": \"Artificial Intelligence\",\n    \"description\": \"Introduction to AI concepts and techniques.\",\n    \"cost\": \"700.00\",\n    \"prerequisite_course_code\": \"CS107\",\n    \"prerequisite_course_name\": \"Algorithms\"\n  },\n  {\n    \"course_code\": \"CS316\",\n    \"course_name\": \"AI for Robotics\",\n    \"description\": \"Applying AI techniques to robotics.\",\n    \"cost\": \"850.00\",\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine Learning\"\n  },\n  {\n    \"course_code\": \"CS319\",\n    \"course_name\": \"AI in Healthcare\",\n    \"description\": \"Applications of AI in healthcare.\",\n    \"cost\": \"800.00\",\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine Learning\"\n  },\n  {\n    \"course_code\": \"CS405\",\n    \"course_name\": \"AI Capstone Project\",\n    \"description\": \"Team-based AI project.\",\n    \"cost\": \"1000.00\",\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine Learning\"\n  }\n]",
+                    "tool_call_id": "call_Rvv0U5O2cLgOeYBVUMQSVfMn",
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "assistant",
+                    "audio": null,
+                    "content": "Yes, Stackademy University offers several courses on Artificial Intelligence (AI). Here are some options:\n\n1. **Course Code:** CS210  \n   **Course Name:** Artificial Intelligence  \n   **Description:** Introduction to AI concepts and techniques.  \n   **Cost:** $700.00  \n   **Prerequisite:** CS107 - Algorithms  \n\n2. **Course Code:** CS316  \n   **Course Name:** AI for Robotics  \n   **Description:** Applying AI techniques to robotics.  \n   **Cost:** $850.00  \n   **Prerequisite:** CS301 - Machine Learning  \n\n3. **Course Code:** CS319  \n   **Course Name:** AI in Healthcare  \n   **Description:** Applications of AI in healthcare.  \n   **Cost:** $800.00  \n   **Prerequisite:** CS301 - Machine Learning  \n\n4. **Course Code:** CS405  \n   **Course Name:** AI Capstone Project  \n   **Description:** Team-based AI project.  \n   **Cost:** $1000.00  \n   **Prerequisite:** CS301 - Machine Learning  \n\nIf you're interested in any specific course or need more details, feel free to ask!",
+                    "refusal": null,
+                    "tool_calls": null,
+                    "annotations": [],
+                    "function_call": null,
+                    "smarter_is_new": true
+                },
+                {
+                    "role": "smarter",
+                    "content": "openai prompt charges: 559 prompt tokens, 233 completion tokens = 792 total tokens charged.",
+                    "smarter_is_new": true
+                }
+            ],
+            "chat_tool_call_history": [],
+            "chat_plugin_usage_history": [
+                {
+                    "id": 3,
+                    "chat": {
+                        "id": 6,
+                        "created_at": "2025-12-08T13:37:26.056430Z",
+                        "updated_at": "2025-12-08T13:37:26.056441Z",
+                        "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
+                        "ip_address": "172.66.0.243",
+                        "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+                        "url": "http://localhost:8000/api/v1/chatbots/9/config/",
+                        "account": 1,
+                        "chatbot": 9
+                    },
+                    "created_at": "2025-12-08T13:37:37.279189Z",
+                    "updated_at": "2025-12-08T13:37:37.279217Z",
+                    "input_text": "Do you offer any courses on AI?",
+                    "plugin": 11
+                }
+            ],
+            "chatbot_request_history": [
+                {
+                    "id": 4,
+                    "created_at": "2025-12-08T13:37:33.303852Z",
+                    "updated_at": "2025-12-08T13:37:33.303874Z",
+                    "request": {
+                        "messages": [
+                            {
+                                "role": "system",
+                                "content": "The current date/time is Monday, 2025-12-08T13:37:26+0000\nYou are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n"
+                            },
+                            {
+                                "role": "assistant",
+                                "content": "Welcome to Stackademy SQL Chatbot! How can I help you today?"
+                            },
+                            {
+                                "role": "assistant",
+                                "content": "Some example prompts to get you started:\r\n\r\nDo you offer any courses on AI?\r\nMy budget is $1,000. What courses can I take?\r\nI want to study programming. What do you suggest?\r\n"
+                            },
+                            {
+                                "role": "user",
+                                "content": "Do you offer any courses on AI?"
+                            }
+                        ],
+                        "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7"
+                    },
+                    "is_aggregation": false
+                }
+            ],
+            "plugin_selector_history": []
+        },
+        "meta_data": {
+            "ready": true,
+            "name": "stackademy_sql",
+            "api_host": "api.localhost:8000",
+            "chatbot_id": null,
+            "chatbot_name": null,
+            "chatbot_custom_domain": null,
+            "environment_api_domain": "api.localhost:8000",
+            "err": "ChatBotHelper.__init__() not a chatbot. Quitting. http://localhost:8000/api/v1/chatbots/9/chat/config/",
+            "is_custom_domain": false,
+            "is_deployed": false,
+            "is_valid": true,
+            "is_authentication_required": false,
+            "chatbot": {
+                "id": 9,
+                "created_at": "2025-11-21T03:20:13.143128Z",
+                "updated_at": "2025-11-21T03:20:13.176363Z",
+                "account": {
+                    "accountNumber": "3141-5926-5359"
+                },
+                "name": "stackademy_sql",
+                "description": "Stackademy University course catalogue inquiries using the Stackademy SQL plugin.",
+                "version": "1.0.0",
+                "subdomain": null,
+                "custom_domain": null,
+                "deployed": false,
+                "provider": "openai",
+                "default_model": "gpt-4o-mini",
+                "default_system_role": "You are a helpful assistant. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n",
+                "default_temperature": 0.5,
+                "default_max_tokens": 1024,
+                "app_name": "Stackademy SQL Chatbot",
+                "app_assistant": "Stanley",
+                "app_welcome_message": "Welcome to Stackademy SQL Chatbot! How can I help you today?",
+                "app_example_prompts": [
+                    "Do you offer any courses on AI?",
+                    "My budget is $1,000. What courses can I take?",
+                    "I want to study programming. What do you suggest?"
+                ],
+                "app_placeholder": "Ask me anything about Stackademy courses...",
+                "app_info_url": "https://stackademy.edu/online-courses",
+                "app_background_image_url": null,
+                "app_logo_url": null,
+                "app_file_attachment": null,
+                "dns_verification_status": "Not Verified",
+                "tls_certificate_issuance_status": "No Certificate",
+                "url_chatbot": "http://localhost:8000/api/v1/chatbots/9/chat/"
+            },
+            "url": "http://localhost:8000/api/v1/chatbots/9/chat/config/",
+            "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
+            "auth_header": "Bearer****",
+            "api_token": null,
+            "data": {
+                "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7"
+            },
+            "is_smarter_api": true,
+            "is_chatbot": false,
+            "is_chatbot_smarter_api_url": false,
+            "is_chatbot_named_url": false,
+            "is_chatbot_sandbox_url": false,
+            "is_chatbot_cli_api_url": false,
+            "is_default_domain": false,
+            "path": "/api/v1/chatbots/9/chat/config/",
+            "root_domain": "localhost",
+            "subdomain": "",
+            "api_subdomain": null,
+            "domain": "localhost:8000",
+            "timestamp": "2025-12-08T13:37:43.051436",
+            "unique_client_string": "3141-5926-5359.http://localhost:8000/api/v1/chatbots/9/chat/config/.Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36.172.66.0.243.2025-12-08T13:37:43.051436",
+            "client_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7",
+            "ip_address": "172.66.0.243",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "parsed_url": "ParseResult(scheme='http', netloc='localhost:8000', path='/api/v1/chatbots/9/chat/config/', params='', query='session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7', fragment='')",
+            "request": true,
+            "qualified_request": true,
+            "url_path_parts": [
+                "api",
+                "v1",
+                "chatbots",
+                "9",
+                "chat",
+                "config"
+            ],
+            "params": {
+                "session_key": "e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7"
+            },
+            "uid": null,
+            "cache_key": "024304946256a341bf7796262884d72a51478dceb0e8fcdf907e37886e52ab90",
+            "is_config": true,
+            "is_dashboard": false,
+            "is_workbench": false,
+            "is_environment_root_domain": false,
+            "account": {
+                "accountNumber": "3141-5926-5359"
+            },
+            "user": {
+                "username": "admin",
+                "email": "admin@smarter.sh"
+            },
+            "user_profile": {
+                "user": {
+                    "username": "admin",
+                    "email": "admin@smarter.sh"
+                },
+                "account": {
+                    "accountNumber": "3141-5926-5359"
+                }
+            },
+            "class_name": "ChatBotHelper"
+        },
+        "plugins": {
+            "meta_data": {
+                "total_plugins": 1,
+                "plugins_returned": 1
+            },
+            "plugins": [
+                {
+                    "id": 13,
+                    "pluginMeta": {
+                        "name": "stackademy_sql",
+                        "account": {
+                            "accountNumber": "3141-5926-5359"
+                        },
+                        "description": "Online course catalogue inquiries for fictional Stackademy University that only offers computer science degrees programs.",
+                        "pluginClass": "sql",
+                        "version": "0.1.0",
+                        "author": {
+                            "user": {
+                                "username": "admin",
+                                "email": "admin@smarter.sh"
+                            },
+                            "account": {
+                                "accountNumber": "3141-5926-5359"
+                            }
+                        },
+                        "tags": []
+                    },
+                    "createdAt": "2025-11-21T03:20:13.178700Z",
+                    "updatedAt": "2025-11-21T03:20:13.178708Z",
+                    "chatbot": 9
+                }
+            ]
+        }
+    },
+    "api": "smarter.sh/v1",
+    "thing": "ChatConfig",
+    "metadata": {
+        "command": "chat_config"
+    }
 }

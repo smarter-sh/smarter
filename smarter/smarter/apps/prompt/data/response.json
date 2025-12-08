@@ -1,60 +1,86 @@
 {
-  "id": "chatcmpl-ApJVUdtWkWBWwNmQy8QlpOCR4RwsN",
-  "choices": [
-      {
+  "data": {
+    "isBase64Encoded": false,
+    "statusCode": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "id": "chatcmpl-CkVikitSDweABdRFdlUhkhqNCEGrY",
+      "choices": [
+        {
           "finish_reason": "stop",
           "index": 0,
           "logprobs": null,
           "message": {
-              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\"",
-              "refusal": null,
-              "role": "assistant",
-              "audio": null,
-              "function_call": null,
-              "tool_calls": null
+            "content": "Yes, Stackademy University offers several courses on Artificial Intelligence (AI). Here are some options:\n\n1. **Course Code:** CS210  \n   **Course Name:** Artificial Intelligence  \n   **Description:** Introduction to AI concepts and techniques.  \n   **Cost:** $700.00  \n   **Prerequisite:** CS107 - Algorithms  \n\n2. **Course Code:** CS316  \n   **Course Name:** AI for Robotics  \n   **Description:** Applying AI techniques to robotics.  \n   **Cost:** $850.00  \n   **Prerequisite:** CS301 - Machine Learning  \n\n3. **Course Code:** CS319  \n   **Course Name:** AI in Healthcare  \n   **Description:** Applications of AI in healthcare.  \n   **Cost:** $800.00  \n   **Prerequisite:** CS301 - Machine Learning  \n\n4. **Course Code:** CS405  \n   **Course Name:** AI Capstone Project  \n   **Description:** Team-based AI project.  \n   **Cost:** $1000.00  \n   **Prerequisite:** CS301 - Machine Learning  \n\nIf you're interested in any specific course or need more details, feel free to ask!",
+            "refusal": null,
+            "role": "assistant",
+            "annotations": [],
+            "audio": null,
+            "function_call": null,
+            "tool_calls": null
           }
-      }
-  ],
-  "created": 1736793076,
-  "model": "gpt-4-turbo-2024-04-09",
-  "object": "chat.completion",
-  "service_tier": "default",
-  "system_fingerprint": "fp_f17929ee92",
-  "usage": {
-      "completion_tokens": 188,
-      "prompt_tokens": 690,
-      "total_tokens": 878,
-      "completion_tokens_details": {
+        }
+      ],
+      "created": 1765201058,
+      "model": "gpt-4o-mini-2024-07-18",
+      "object": "chat.completion",
+      "service_tier": "default",
+      "system_fingerprint": "fp_11f3029f6b",
+      "usage": {
+        "completion_tokens": 233,
+        "prompt_tokens": 559,
+        "total_tokens": 792,
+        "completion_tokens_details": {
           "accepted_prediction_tokens": 0,
           "audio_tokens": 0,
           "reasoning_tokens": 0,
           "rejected_prediction_tokens": 0
-      },
-      "prompt_tokens_details": {
+        },
+        "prompt_tokens_details": {
           "audio_tokens": 0,
           "cached_tokens": 0
-      }
-  },
-  "metadata": {
-      "tool_calls": null,
-      "model": "gpt-4-turbo",
-      "temperature": 0.5,
-      "max_completion_tokens": 256,
-      "input_text": "example function calling configuration"
-  },
-  "smarter": {
-      "tools": [
-          "get_current_weather",
-          "function_calling_plugin_0002"
-      ],
-      "plugins": [
-          "ExampleConfiguration"
-      ],
-      "messages": [
+        }
+      },
+      "metadata": {
+        "tool_calls": [
           {
-              "role": "assistant",
-              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+            "function_name": "smarter_plugin_0000000011",
+            "function_args": {
+              "description": "AI"
+            },
+            "smarter_plugin": {
+              "name": "stackademy_sql",
+              "account": {
+                "accountNumber": "3141-5926-5359"
+              },
+              "description": "Online course catalogue inquiries for fictional Stackademy University that only offers computer science degrees programs.",
+              "pluginClass": "sql",
+              "version": "0.1.0",
+              "author": {
+                "user": {
+                  "username": "admin",
+                  "email": "admin@smarter.sh"
+                },
+                "account": {
+                  "accountNumber": "3141-5926-5359"
+                }
+              },
+              "tags": []
+            }
           }
-      ]
+        ],
+        "model": "gpt-4-turbo",
+        "temperature": 0.5,
+        "max_completion_tokens": 1024,
+        "input_text": "Do you offer any courses on AI?"
+      }
+    }
+  },
+  "api": "smarter.sh/v1",
+  "thing": "Chatbot",
+  "metadata": {
+    "command": "chat"
   }
 }
