@@ -37,8 +37,8 @@ A :doc:`declarative <smarter-framework/pydantic/smarter-manifests>` :doc:`AI res
 - **Platform**
 
   - Helps you manage all your :doc:`AI resources <smarter-resources>` using easy :doc:`YAML files <smarter-framework/pydantic/smarter-manifests>` (like how `Kubernetes <https://kubernetes.io/>`_ works).
-  - Simple `Docker <https://hub.docker.com/r/mcdaniel0073/smarter>`_ installation. Run on Kubernetes with the `Smarter Helm chart <https://artifacthub.io/packages/search?repo=project-smarter>`_.
-  - Manage AI resources with the :doc:`web dashboard <smarter-framework/smarter-react-ui>`, the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`command-line tool <smarter-platform/cli>`.
+  - Simple `Docker <https://hub.docker.com/r/mcdaniel0073/smarter>`_ installation. Run on Kubernetes with the `Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`_.
+  - Manage AI resources with the :doc:`web dashboard <smarter-framework/smarter-react-ui>`, the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`command-line interface <smarter-platform/cli>`.
   - Keeps track of :doc:`logs <smarter-framework/smarter-journal>`, safety checks, :doc:`costs <smarter-platform/cost-accounting>`, and :doc:`security <smarter-platform/security>` so nothing gets lost or misused.
 
 - **AI Resource Management**
