@@ -6,6 +6,9 @@ Smarter Chatbot
    The term 'ChatBot' is used interchangeably with 'Agent' and 'Workflow Unit' throughout
    this documentation.
 
+Overview
+--------
+
 Smarter Chatbots are highly advanced conversational agents designed to provide
 intelligent and context-aware interactions with human users as well as
 fully automated workflows. They leverage the vanguard
@@ -29,9 +32,31 @@ ChatBots are managed with the :doc:`Smarter command-line interface (CLI) <../sma
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
     - :doc:`Smarter React UI <../smarter-framework/smarter-react-ui>`
 
+Usage
+--------
+
+.. code-block:: bash
+
+  # Smarter Prompt Engineer Workbench
+  curl -X POST http://localhost:8000/api/v1/chatbots/9/chat/?session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7
+
+  # Deployed Smarter Chatbot - Production
+  curl -X GET https://stackademy.3141-5926-5359.api.example.com/chat/?session_key=<SESSION-KEY>
+
+Example Manifest
+----------------
+
+.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-sql.yaml
+   :language: yaml
+   :caption: Example Smarter Manifest
+
+
+
+Technical Reference
+-------------------
+
 .. toctree::
    :maxdepth: 1
-   :caption: Technical Reference
 
    chatbots/api
    chatbots/models
@@ -46,10 +71,6 @@ ChatBots are managed with the :doc:`Smarter command-line interface (CLI) <../sma
    chatbots/signals
    chatbots/urls
 
-
-.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-sql.yaml
-   :language: yaml
-   :caption: Example Smarter Manifest
 
 Sandbox Mode
 ------------

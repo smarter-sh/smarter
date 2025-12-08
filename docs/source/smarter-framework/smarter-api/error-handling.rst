@@ -1,7 +1,7 @@
 CLI Error Handling
 ===================
 
-Smarter API V1 CLI base view (see :doc:`base/cli-base`) implements a common
+Smarter API V1 CLI base view (see :py:class:`smarter.apps.api.v1.cli.views.base.CliBaseApiView`) implements a common
 error handling mechanism in its
 ``dispatch`` method. This mechanism captures and maps exceptions to a finite set of
 HTTP status codes, ensuring consistent error responses across the CLI API.

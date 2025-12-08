@@ -33,7 +33,7 @@ class Command(SmarterCommand):
     each chatbot as a Celery task.
 
     The deployed chatbots are accessible at URLs of the form:
-    ``[chatbot-name].[account-number].api.smarter.sh/chatbot/``
+    ``[chatbot-name].[account-number].api.example.com/chatbot/``
 
     **Deployment Steps:**
       - Retrieve the account and its admin user using the provided account number.
