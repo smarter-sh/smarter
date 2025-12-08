@@ -525,12 +525,12 @@ def account_number_from_url(url: str, invalidate: bool = False) -> Optional[str]
     **Example usage**::
 
         # Extract account number from a URL
-        account_number = account_number_from_url("https://hr.3141-5926-5359.alpha.api.smarter.sh/")
+        account_number = account_number_from_url("https://hr.3141-5926-5359.alpha.api.example.com/")
 
         # Result: '3141-5926-5359'
 
         # Invalidate cache before fetching
-        account_number = account_number_from_url("https://hr.3141-5926-5359.alpha.api.smarter.sh/", invalidate=True)
+        account_number = account_number_from_url("https://hr.3141-5926-5359.alpha.api.example.com/", invalidate=True)
     """
     if not url:
         return None

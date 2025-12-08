@@ -539,9 +539,9 @@ class ChatBot(TimestampedModel):
 
         - self.name: 'example'
         - self.account.account_number: '1234-5678-9012'
-        - smarter_settings.environment_api_domain: 'alpha.api.smarter.sh'
+        - smarter_settings.environment_api_domain: 'alpha.api.example.com'
 
-        example 'example.1234-5678-9012.alpha.api.smarter.sh'
+        example 'example.1234-5678-9012.alpha.api.example.com'
 
         :returns: default hostname
         :rtype: str
@@ -557,7 +557,7 @@ class ChatBot(TimestampedModel):
         """
         The default URL for the ChatBot.
 
-        example 'https://example.1234-5678-9012.alpha.api.smarter.sh'
+        example 'https://example.1234-5678-9012.alpha.api.example.com'
 
         :returns: default URL
         :rtype: str
@@ -648,7 +648,7 @@ class ChatBot(TimestampedModel):
         """
         The URL for the ChatBot depending on its deployment status.
 
-        example: 'https://my-chatbot.1234-5678-9012.alpha.api.smarter.sh' (custom, deployed)
+        example: 'https://my-chatbot.1234-5678-9012.alpha.api.example.com' (custom, deployed)
 
         :returns: URL
         :rtype: str
@@ -1243,18 +1243,18 @@ class ChatBotHelper(SmarterRequestMixin):
     The following are examples of valid URLs that this helper can process:
 
     - **Authentication Optional URLs:**
-        - ``https://example.3141-5926-5359.alpha.api.smarter.sh/``
-        - ``https://example.3141-5926-5359.alpha.api.smarter.sh/config/``
+        - ``https://example.3141-5926-5359.alpha.api.example.com/``
+        - ``https://example.3141-5926-5359.alpha.api.example.com/config/``
 
     - **Authenticated URLs:**
-        - ``https://alpha.api.smarter.sh/smarter/example/``
+        - ``https://alpha.api.example.com/smarter/example/``
         - ``https://example.smarter.sh/chatbot/``
-        - ``https://alpha.api.smarter.sh/workbench/1/``
-        - ``https://alpha.api.smarter.sh/workbench/example/``
+        - ``https://alpha.api.example.com/workbench/1/``
+        - ``https://alpha.api.example.com/workbench/example/``
 
     - **Legacy (pre v0.12) URLs:**
-        - ``https://alpha.api.smarter.sh/chatbots/1/``
-        - ``https://alpha.api.smarter.sh/chatbots/example/``
+        - ``https://alpha.api.example.com/chatbots/1/``
+        - ``https://alpha.api.example.com/chatbots/example/``
 
     **Features**
 
@@ -1599,8 +1599,8 @@ class ChatBotHelper(SmarterRequestMixin):
         Examples
         --------
         Named URL:
-            - ``https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/``
-              returns ``'alpha.api.smarter.sh'``
+            - ``https://hr.3141-5926-5359.alpha.api.example.com/chatbot/``
+              returns ``'alpha.api.example.com'``
 
         Sandbox URL:
             - ``http://api.localhost:8000/api/v1/chatbots/1/chat/``
@@ -1671,7 +1671,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         Examples
         --------
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+        - https://hr.3141-5926-5359.alpha.api.example.com/chatbot/
           returns ChatBot(name='hr', account=Account(...))
 
         :returns: The ChatBot instance, or ``None`` if not found.

@@ -1,6 +1,9 @@
 Smarter Account
 ================
 
+Overview
+--------
+
 The Smarter Account module provides multi-tenant account management capabilities for the Smarter platform.
 It enables organizations to create and manage accounts, users, and secure storage of sensitive information.
 
@@ -10,9 +13,23 @@ It enables organizations to create and manage accounts, users, and secure storag
 - :doc:`Smarter Secret <account/secret>`: A Django ORM-based secure storage for sensitive information like SQL connection strings and API keys.
     Secrets are used by other Smarter resources to provide authentication credentials for remote services.
 
+Usage
+-----
+
+.. note::
+
+  Usage of Smarter Account and User resources is implied as part of your interaction with other Smarter resources.
+  When you create a Smarter resource, it is automatically associated with your current Smarter Account and User.
+
+.. seealso::
+
+  - :doc:`Example Manifests <account/sam/example-manifests>`: An example manifest for creating a Smarter Secret using SAM.
+
+Technical Reference
+-------------------
+
 .. toctree::
    :maxdepth: 1
-   :caption: Technical Reference
 
    account/account
    account/user

@@ -8,7 +8,7 @@
     "X-CSRFToken": "lgjxDjRgTuJdAvz1Heelp7dpE4D1qVgwwfrLyJHevl192cOXvgCd2UoAGuDfjdlN",
     "Origin": "http://localhost:8000",
     "Cookie": "session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7;  _ga=GA1.1.1976586847.1763392590;  _ga_2VG1QMYW93=GS2.1.s1763390277$o8$g1$t1763393028$j60$l0$h0;  sidebar_minimize_state=on;  _ga_SK81M5HQYS=GS2.1.s1765200895$o13$g1$t1765201045$j57$l0$h0",
-    "Authorization": "Bearer ",
+    "Authorization": "Bearer <SMARTER_API_KEY>",
     "User-Agent": "SmarterChat/1.0"
   },
   "body": {

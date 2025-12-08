@@ -16,7 +16,7 @@ class Command(SmarterCommand):
     This management command allows administrators to remove a deployed chatbot from a specific account,
     identified either by account number or company name. The undeployment process deletes the DNS A record
     associated with the chatbot, effectively disabling its public endpoint at
-    ``[subdomain].[account-number].api.smarter.sh/chatbot/``.
+    ``[subdomain].[account-number].api.example.com/chatbot/``.
 
     **Usage:**
       - Specify the account using either ``--account_number`` or ``--company_name``.

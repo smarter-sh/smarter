@@ -8,6 +8,9 @@ Smarter Provider
 
    Legacy LLM providers (OpenAI, Anthropic, MetaAI, GoogleAI and DeepSeek) are stable and will work as expected.
 
+Overview
+--------
+
 The Smarter Provider app is responsible for managing 3rd party LLM provider
 integrations to the Smarter Platform. It provides services for onboarding
 and validating LLM provider models, to make these available for use in Smarter Resources.
@@ -28,9 +31,11 @@ self-onboard their models to your Smarter installation.
     - :doc:`Smarter Installation Guide <../smarter-platform/installation>`
     - :doc:`OpenAI Getting Started Guild <../smarter-framework/guides/openai-api-getting-started-guide>`
 
+Technical Reference
+-------------------
+
 .. toctree::
    :maxdepth: 1
-   :caption: Technical Reference
 
    provider/api
    provider/models

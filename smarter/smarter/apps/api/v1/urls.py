@@ -4,7 +4,7 @@ list in this module maps URL patterns to their corresponding views or sub-URL co
 
 **Structure**
 
-- The root path (`""`) includes the chatbot API, supporting endpoints such as `https://example.3141-5926-5359.alpha.api.smarter.sh`.
+- The root path (`""`) includes the chatbot API, supporting endpoints such as `https://example.3141-5926-5359.alpha.api.example.com`.
 - The following subpaths are defined for the main API:
 
   - ``accounts/``: User account management (CRUD operations).
@@ -39,7 +39,7 @@ app_name = namespace
 
 # /api/v1/ is the main entry point for the API
 urlpatterns = [
-    # for Chatbots of the form https://example.3141-5926-5359.alpha.api.smarter.sh
+    # for Chatbots of the form https://example.3141-5926-5359.alpha.api.example.com
     path("", include("smarter.apps.chatbot.api.v1.urls")),
     # -------------------------------------------
     # for the main API:

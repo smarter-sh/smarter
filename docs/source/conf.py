@@ -11,6 +11,7 @@ import datetime
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import os
+import subprocess
 import sys
 
 
@@ -36,10 +37,25 @@ django.setup()
 project = "Smarter Documentation"
 
 # pylint: disable=redefined-builtin
-copyright = f"{datetime.datetime.now().year}, The Smarter Project"
+copyright = f"{datetime.datetime.now().year}"
 author = "Lawrence McDaniel"
 release = __version__
 
+try:
+    commit = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("utf-8").strip()
+# pylint: disable=broad-except
+except Exception:
+    commit = None
+
+from datetime import datetime
+
+
+last_updated = datetime.now().strftime("%Y-%m-%d")
+
+html_context = {
+    "commit": commit,
+    "last_updated": last_updated,
+}
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 

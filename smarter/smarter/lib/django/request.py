@@ -121,8 +121,8 @@ class SmarterRequestMixin(AccountMixin):
     - ``https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/``
     - ``http://example.com/contact/``
     - ``http://localhost:8000/workbench/example/config/?session_key=...``
-    - ``https://hr.3141-5926-5359.alpha.api.smarter.sh/``
-    - ``https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=...``
+    - ``https://hr.3141-5926-5359.alpha.api.example.com/``
+    - ``https://hr.3141-5926-5359.alpha.api.example.com/config/?session_key=...``
     - ``http://example.3141-5926-5359.api.localhost:8000/``
     - ``http://example.3141-5926-5359.api.localhost:8000/?session_key=...``
     - ``http://example.3141-5926-5359.api.localhost:8000/config/``
@@ -213,8 +213,8 @@ class SmarterRequestMixin(AccountMixin):
 
         # rebuild the url minus any query parameters
         # example:
-        # a request url like https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
-        # will return https://hr.3141-5926-5359.alpha.api.smarter.sh/config/
+        # a request url like https://hr.3141-5926-5359.alpha.api.example.com/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
+        # will return https://hr.3141-5926-5359.alpha.api.example.com/config/
         self._url = urlunsplit((self._parse_result.scheme, self._parse_result.netloc, self._parse_result.path, "", ""))
         self._url = SmarterValidator.urlify(self._url)
 
@@ -1080,7 +1080,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         Returns True if the url is of the form:
 
-            - https://example.3141-5926-5359.api.smarter.sh/
+            - https://example.3141-5926-5359.api.example.com/
             - http://example.3141-5926-5359.api.localhost:8000/
             - http://example.3141-5926-5359.api.localhost:8000/config/
 
@@ -1212,7 +1212,7 @@ class SmarterRequestMixin(AccountMixin):
             Optional[str]: The path as a string, or None if not found.
 
         Examples:
-            - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+            - https://hr.3141-5926-5359.alpha.api.example.com/chatbot/
               returns '/chatbot/'
         """
         if not self.smarter_request:
@@ -1236,7 +1236,7 @@ class SmarterRequestMixin(AccountMixin):
 
             request_mixin = SmarterRequestMixin(request)
             print(request_mixin.root_domain)
-            # For 'https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/' → 'smarter.sh'
+            # For 'https://hr.3141-5926-5359.alpha.api.example.com/chatbot/' → 'smarter.sh'
             # For 'http://localhost:8000/' → 'localhost'
 
         """
@@ -1265,7 +1265,7 @@ class SmarterRequestMixin(AccountMixin):
             request_mixin = SmarterRequestMixin(request)
             sub = request_mixin.subdomain
             print(sub)  # e.g., 'hr.3141-5926-5359.alpha' for
-                        # 'https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/'
+                        # 'https://hr.3141-5926-5359.alpha.api.example.com/chatbot/'
         """
         if not self.smarter_request:
             return None
@@ -1283,7 +1283,7 @@ class SmarterRequestMixin(AccountMixin):
 
         example::
 
-            - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+            - https://hr.3141-5926-5359.alpha.api.example.com/chatbot/
             returns 'hr'
         """
         if not self.smarter_request:
@@ -1306,8 +1306,8 @@ class SmarterRequestMixin(AccountMixin):
 
         examples::
 
-            - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-              returns 'hr.3141-5926-5359.alpha.api.smarter.sh'
+            - https://hr.3141-5926-5359.alpha.api.example.com/chatbot/
+              returns 'hr.3141-5926-5359.alpha.api.example.com'
         """
         if not self.smarter_request:
             return None

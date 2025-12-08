@@ -201,7 +201,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
 
     **Example Usage:**
 
-        https://smarter.3141-5926-5359.alpha.api.smarter.sh/config/
+        https://smarter.3141-5926-5359.alpha.api.example.com/config/
 
     **Returns:**
         JSON response containing:
@@ -506,7 +506,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
         # and managed by the /config/ endpoint for the chatbot
         #
         # examples:
-        # - https://customer-support.3141-5926-5359.api.smarter.sh/workbench/config/?session_key=123456
+        # - https://customer-support.3141-5926-5359.api.example.com/workbench/config/?session_key=123456
         # - http://localhost:8000/api/v1/chatbots/1556/chat/config/?session_key=0733c7b3a33e7eb733c95f6d7fc88d671b6c957e6857a04d05b3f5905167116f
         #
         # The React app calls this endpoint at app initialization to get a
@@ -611,13 +611,12 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             - http://127.0.0.1:8000/workbench/<str:name>/
 
         Production mode:
-            - https://hr.3141-5926-5359.alpha.api.smarter.sh/workbench/
+            - https://hr.3141-5926-5359.alpha.api.example.com/workbench/
 
     **Returns:**
         Renders the Django template for the chat app, injecting the React loader and configuration context.
 
     **See Also:**
-        - :doc:`doc/DJANGO-REACT-INTEGRATION` — for details on how React and Django are integrated in this project.
         - `ChatConfigView` — for the endpoint that provides configuration data to the React app.
     """
 
@@ -676,7 +675,6 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
 
         See Also
         --------
-        :doc:`doc/DJANGO-REACT-INTEGRATION` : Details on how React and Django are integrated in this project.
         ChatConfigView : The endpoint that provides configuration data to the React app.
         """
         retval = super().dispatch(request, *args, **kwargs)

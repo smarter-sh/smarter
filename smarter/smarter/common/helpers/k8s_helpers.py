@@ -158,9 +158,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         cluster.
 
         commands:
-        - kubectl get ingress education.3141-5926-5359.api.smarter.sh -n smarter-platform-prod -o json
-        - kubectl get certificate education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod -o json
-        - kubectl get secret education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod -o json
+        - kubectl get ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod -o json
+        - kubectl get certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod -o json
+        - kubectl get secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod -o json
 
         :param hostname: The hostname of the ingress.
         :type hostname: str
@@ -216,7 +216,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Verify that an Ingress resource exists in the cluster.
 
         commands:
-        - kubectl get ingress smarter.3141-5926-5359.api.smarter.sh -n smarter-platform-prod -o json
+        - kubectl get ingress smarter.3141-5926-5359.api.example.com -n smarter-platform-prod -o json
 
         :param name: The name of the ingress.
         :type name: str
@@ -253,7 +253,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         and is in a ready state.
 
         command:
-        - kubectl get certificate smarter.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod -o json
+        - kubectl get certificate smarter.3141-5926-5359.api.example.com-tls -n smarter-platform-prod -o json
 
         parse json response and check for the following:
         - status.conditions.type == Ready
@@ -324,7 +324,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         """
         Verify that a secret resource exists in the cluster.
         command:
-        - kubectl get secret smarter.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod -o json
+        - kubectl get secret smarter.3141-5926-5359.api.example.com-tls -n smarter-platform-prod -o json
 
         :param name: The name of the secret.
         :type name: str
@@ -361,9 +361,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         """
         Delete an ingress and all child resources from the cluster.
         commands:
-        - kubectl delete ingress education.3141-5926-5359.api.smarter.sh -n smarter-platform-prod
-        - kubectl delete certificate education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod
-        - kubectl delete secret education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod
+        - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod
+        - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
+        - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
 
         :param hostname: The hostname of the ingress.
         :type hostname: str
@@ -395,7 +395,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         """
         Delete an Ingress resource from the cluster.
         command:
-        - kubectl delete ingress education.3141-5926-5359.api.smarter.sh -n smarter-platform-prod
+        - kubectl delete ingress education.3141-5926-5359.api.example.com -n smarter-platform-prod
 
         :param ingress_name: The name of the ingress.
         :type ingress_name: str
@@ -424,7 +424,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         """
         Delete a cert-manager certificate resource from the cluster.
         command:
-        - kubectl delete certificate education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod
+        - kubectl delete certificate education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
 
         :param certificate_name: The name of the certificate.
         :type certificate_name: str
@@ -453,7 +453,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         """
         Delete a secret resource from the cluster.
         commands:
-        - kubectl delete secret education.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod
+        - kubectl delete secret education.3141-5926-5359.api.example.com-tls -n smarter-platform-prod
 
         :param secret_name: The name of the secret.
         :type secret_name: str
