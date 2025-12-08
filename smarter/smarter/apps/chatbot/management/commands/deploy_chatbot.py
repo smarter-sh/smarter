@@ -13,7 +13,7 @@ from smarter.lib.django.management.base import SmarterCommand
 class Command(SmarterCommand):
     """
     Deploy a customer API. Provide either an account number or a company name.
-    Deploys to a URL of the form [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/
+    Deploys to a URL of the form [user-defined-subdomain].####-####-####.api.example.com/chatbot/
     """
 
     def add_arguments(self, parser):
@@ -29,7 +29,7 @@ class Command(SmarterCommand):
 
         This management command enables administrators to deploy a chatbot for a specific account,
         identified either by its account number or company name. The chatbot is deployed to a URL
-        structured as ``[subdomain].[account-number].api.smarter.sh/chatbot/``.
+        structured as ``[subdomain].[account-number].api.example.com/chatbot/``.
 
         The deployment process checks for the existence of the specified account and chatbot, verifies
         DNS status, and initiates deployment either synchronously (foreground) or asynchronously

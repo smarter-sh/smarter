@@ -13,7 +13,7 @@ structure:
 
 .. code:: console
 
-   curl --location 'https://example.3141-5926-5359.api.smarter.sh/chatbot/' \
+   curl --location 'https://example.3141-5926-5359.api.example.com/chatbot/' \
    --header 'x-api-key: api-key-string-of-around-64-hashed-characters' \
    --header 'Content-Type: application/json' \
    --data '{
@@ -91,13 +91,13 @@ Default Domain
 The default domain for each ChatBot is accessible regardless of whether
 the customer has also implemented a custom domain.
 
-example: https://example.3141-5926-5359.beta.api.smarter.sh/chatbot/
+example: https://example.3141-5926-5359.beta.api.example.com/chatbot/
 
 where
 
 - ``'example' == ChatBot.name``
 - ``'3141-5926-5359' == ChatBot.account.account_number``
-- ``'beta.api.smarter.sh' == smarter_settings.customer_api_domain``
+- ``'beta.api.example.com' == smarter_settings.customer_api_domain``
 - ``/chatbot/`` is a URL endpoint defined in smarter/urls.py and
   resolves to a Django View that invokes Chat with an Account object and
   a List of Smarter Plugin objects.
@@ -111,9 +111,9 @@ master Kubernetes ingress controller for the platform. Smarter provides
 ``manage.py`` admin commands for managing the complete lifecycle of
 customer custom domain resources.
 
-example: https://sales.api.smarter.sh/chatbot/ where
+example: https://sales.api.example.com/chatbot/ where
 
-- ``'api.smarter.sh == chatbot.custom_domain'`` is a ChatBotCustomDomain
+- ``'api.example.com == chatbot.custom_domain'`` is a ChatBotCustomDomain
   object
 - ``'sales'`` is a verified A record (ie a subdomain) in the AWS Hosted
   zone for the customer domain
@@ -167,9 +167,9 @@ TLS/SSL Certificates
 
 The certificates issued and managed by ``cert-manager`` in Kubernetes
 for each environment only support the first level of subdomain,
-implemented as a wildcard. For example, ``*.beta.api.smarter.sh``.
+implemented as a wildcard. For example, ``*.beta.api.example.com``.
 Therefore, API domains like for example,
-``example.3141-5926-5359.api.smarter.sh``, fall outside of this scheme.
+``example.3141-5926-5359.api.example.com``, fall outside of this scheme.
 Smarter therefore implements asynchronous tasks for creating
 per-customer and per-chatbot certificates and the requisite DNS TXT
 challenge records.

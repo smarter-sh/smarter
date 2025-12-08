@@ -42,7 +42,7 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
     subdomain: Optional[str] = Field(
         None,
         description=(
-            f"{class_identifier}.subdomain[str]. Optional. The subdomain to use for the chatbot for published public urls. Example: https://<subdomain>.3141-5926-5359.api.smarter.sh"
+            f"{class_identifier}.subdomain[str]. Optional. The subdomain to use for the chatbot for published public urls. Example: https://<subdomain>.3141-5926-5359.api.example.com"
         ),
     )
     customDomain: Optional[SAMChatBotCustomDomain] = Field(

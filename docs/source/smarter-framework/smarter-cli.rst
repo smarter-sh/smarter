@@ -78,12 +78,12 @@ The cli implements a set of verbs for working with Smarter resources
 Related API endpoints
 ---------------------
 
-- https://api.smarter.sh/v1/cli/apply/: Apply a manifest
-- https://api.smarter.sh/v1/cli/describe/: print the manifest
-- https://api.smarter.sh/v1/cli/deploy/: Deploy a resource
-- https://api.smarter.sh/v1/cli/logs/: Get logs for a resource
-- https://api.smarter.sh/v1/cli/delete/: Delete a resource
-- https://api.smarter.sh/v1/cli/status/: Smarter platform status
+- https://api.example.com/v1/cli/apply/: Apply a manifest
+- https://api.example.com/v1/cli/describe/: print the manifest
+- https://api.example.com/v1/cli/deploy/: Deploy a resource
+- https://api.example.com/v1/cli/logs/: Get logs for a resource
+- https://api.example.com/v1/cli/delete/: Delete a resource
+- https://api.example.com/v1/cli/status/: Smarter platform status
 
 Manifest Spec
 -------------
