@@ -21,6 +21,14 @@ user preferences.
 
 ChatBots are managed with the :doc:`Smarter command-line interface (CLI) <../smarter-platform/cli>`.
 
+.. seealso::
+
+    - :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>`
+    - :doc:`Smarter Plugin <../smarter-resources/smarter-plugin>`
+    - :doc:`Smarter Prompt <../smarter-resources/smarter-prompt>`
+    - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
+    - :doc:`Smarter React UI <../smarter-framework/smarter-react-ui>`
+
 .. toctree::
    :maxdepth: 1
    :caption: Technical Reference

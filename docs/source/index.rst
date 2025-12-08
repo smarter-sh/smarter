@@ -31,7 +31,7 @@ Smarter |project_version| Documentation
    :alt: AGPL-3 License
 
 
-A :doc:`declarative <smarter-framework/pydantic/smarter-manifests>` AI resource management :doc:`platform <smarter-platform>` and :doc:`developer framework <smarter-framework>`.
+A :doc:`declarative <smarter-framework/pydantic/smarter-manifests>` :doc:`AI resource management <smarter-resources>` :doc:`platform <smarter-platform>` and :doc:`developer framework <smarter-framework>`.
 
 - **From scratch** | :doc:`smarter-platform/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://platform.smarter.sh/docs/learn/>`__
 - **Platform**
