@@ -83,7 +83,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     **Examples:**
 
-        - ``https://customer-support.3141-5926-5359.api.smarter.sh/``
+        - ``https://customer-support.3141-5926-5359.api.example.com/``
         - ``https://platform.smarter/workbench/example/``
         - ``https://platform.smarter/api/v1/workbench/1/chat/``
 
@@ -509,14 +509,14 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         The ChatBot instance is determined by parsing the request host. There are two supported formats:
 
         1. **URL with default API domain**
-            Example: ``https://customer-support.3141-5926-5359.api.smarter.sh/chatbot/``
+            Example: ``https://customer-support.3141-5926-5359.api.example.com/chatbot/``
             - ``customer-support``: The chatbot's name.
             - ``3141-5926-5359``: The chatbot's account number.
-            - ``api.smarter.sh``: The default API domain.
+            - ``api.example.com``: The default API domain.
 
         2. **URL with custom domain**
-            Example: ``https://api.smarter.sh/chatbot/``
-            - ``api.smarter.sh``: The chatbot's custom domain.
+            Example: ``https://api.example.com/chatbot/``
+            - ``api.example.com``: The chatbot's custom domain.
             - The custom domain must be verified (``ChatBotCustomDomain.is_verified == True``).
 
         The ChatBot instance hostname is determined by:

@@ -351,7 +351,7 @@ class ChatHelper(SmarterRequestMixin):
 
         Examples
         --------
-        - ``https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/``
+        - ``https://hr.3141-5926-5359.alpha.api.example.com/chatbot/``
           returns ``ChatBot(name='hr', account=Account(...))``
 
         :returns: The ChatBot instance.

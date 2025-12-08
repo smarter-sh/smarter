@@ -1,6 +1,9 @@
 Smarter Plugin
 ===============
 
+Overview
+--------
+
 Plugins provide a `declarative <https://en.wikipedia.org/wiki/Declarative_programming>`__ `yaml <https://en.wikipedia.org/wiki/YAML>`__ `manifest <https://kubernetes.io/docs/concepts/overview/working-with-objects/>`__ alternative to programming in Python in order to
 extend :doc:`LLM tool functionality <plugins/how-tools-work>`. :doc:`Smarter Application Manifests (SAM) <../smarter-framework/pydantic/smarter-manifests>`
 are used to :doc:`define Smarter Plugins <plugins/how-it-works>`, which can be used to provide three powerful kinds of
@@ -64,9 +67,37 @@ the tool should be presented to the LLM.
     - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
     - :doc:`Smarter React UI <../smarter-framework/smarter-react-ui>`
 
+Usage
+-----
+
+.. code-block:: yaml
+
+  apiVersion: smarter.sh/v1
+  kind: Chatbot
+  metadata:
+    name: stackademy_sql
+    description: Stackademy University course catalogue inquiries using the Stackademy SQL plugin.
+    version: 1.0.0
+  spec:
+    config:
+      provider: openai
+      defaultModel: gpt-4-turbo
+      defaultSystemRole: You are a helpful assistant.
+    plugins:
+      - stackademy_sql
+
+Example Manifest
+-----------------------
+
+.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-sql.yaml
+    :language: yaml
+    :caption: Example SQL Plugin Manifest
+
+Technical Reference
+-------------------
+
 .. toctree::
    :maxdepth: 1
-   :caption: Technical Reference
 
    plugins/resource-types
    plugins/how-it-works
@@ -82,7 +113,3 @@ the tool should be presented to the LLM.
    plugins/tasks
    plugins/utils
    plugins/views
-
-.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-sql.yaml
-    :language: yaml
-    :caption: Example SQL Plugin Manifest
