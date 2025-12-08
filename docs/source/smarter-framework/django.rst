@@ -31,6 +31,5 @@ For more information about Django, see the `official Django documentation <https
    django/tasks
    django/templates
    django/token-generators
-   django/views
    django/view-helpers
    django/validators

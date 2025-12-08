@@ -1,6 +1,8 @@
 Django Hosts
 ================
 
+The Smarter Framework supports multiple hosts using the `django-hosts <https://django-hosts.readthedocs.io/>`__ package.
+
 .. automodule:: smarter.hosts
    :members:
    :undoc-members:
