@@ -57,10 +57,16 @@ the tool should be presented to the LLM.
    </div>
    <br/>
 
+.. seealso::
+
+    - :doc:`Smarter API Manifest (SAM) <../smarter-framework/smarter-api>`
+    - :doc:`Smarter Chatbot <../smarter-resources/smarter-chatbot>`
+    - :doc:`Smarter CLI <../smarter-framework/smarter-cli>`
+    - :doc:`Smarter React UI <../smarter-framework/smarter-react-ui>`
 
 .. toctree::
    :maxdepth: 1
-   :caption: Plugin Technical References
+   :caption: Technical Reference
 
    plugins/resource-types
    plugins/how-it-works
