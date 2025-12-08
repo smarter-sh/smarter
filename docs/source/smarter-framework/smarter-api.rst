@@ -40,6 +40,7 @@ See :doc:`django/hosts` for more details.
    :maxdepth: 1
    :caption: Smarter API Technical Reference
 
+   smarter-api/documentation
    smarter-api/cli
    smarter-api/chat
    smarter-api/authentication
