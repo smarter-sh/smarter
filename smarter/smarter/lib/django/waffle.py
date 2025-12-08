@@ -29,7 +29,7 @@ Example:
 
         from smarter.lib.django.waffle import switch_is_active
 
-        if switch_is_active('log_api'):
+        if switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING):
             print("API logging is enabled.")
 
 Dependencies:
@@ -47,7 +47,6 @@ import waffle as waffle_orig
 from django.core.cache import cache
 from django.db import connections
 from django.db.utils import OperationalError, ProgrammingError
-from django_redis import get_redis_connection
 from django_redis.exceptions import ConnectionInterrupted
 from redis.exceptions import ConnectionError as RedisConnectionError
 from waffle.admin import SwitchAdmin
@@ -70,6 +69,7 @@ CACHE_EXPIRATION = 60  # seconds
 prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")
 
 
+# pylint: disable=C0115
 class DbState:
     ready = False
 
