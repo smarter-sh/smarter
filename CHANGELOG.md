@@ -1,3 +1,10 @@
+## [0.13.41](https://github.com/smarter-sh/smarter/compare/v0.13.40...v0.13.41) (2025-12-11)
+
+
+### Bug Fixes
+
+* create SmarterValidator.is_api_endpoint and use this to evaluate request path in SmarterTokenAuthenticationMiddleware ([8a157fc](https://github.com/smarter-sh/smarter/commit/8a157fc04a0deb03c2631f660a19245b11c28412))
+
 ## [0.13.40](https://github.com/smarter-sh/smarter/compare/v0.13.39...v0.13.40) (2025-12-11)
 
 
