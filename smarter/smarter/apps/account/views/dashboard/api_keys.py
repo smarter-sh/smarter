@@ -210,3 +210,20 @@ class APIKeyView(APIKeyBase):
             )
         apikey.delete()
         return http.JsonResponse(status=HTTPStatus.OK.value, data={})
+
+
+class APIKeyListView(APIKeyBase):
+    """View for listing API keys."""
+
+    template_path = "account/dashboard/api-keys.html"
+
+    def get(self, request):
+        api_keys = SmarterAuthToken.objects.filter(user=self.user_profile.user).only(
+            "user", "description", "created", "last_used_at", "is_active"
+        )
+        context = {
+            "account_apikeys": {
+                "api_keys": api_keys,
+            }
+        }
+        return self.clean_http_response(request, template_path=self.template_path, context=context)
