@@ -1064,9 +1064,12 @@ class SmarterValidator:
             # checks for /api/ in the full url: example.com/api/v1/
             return True
 
-        if SMARTER_API_SUBDOMAIN in str(SmarterValidator.base_url(url)):
-            # checks for api subdomain in base url: api.example.com
-            return True
+        try:
+            if SMARTER_API_SUBDOMAIN in str(SmarterValidator.base_url(url)):
+                # checks for api subdomain in base url: api.example.com
+                return True
+        except SmarterValueError:
+            return False
 
         return False
 
