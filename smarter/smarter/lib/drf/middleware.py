@@ -22,7 +22,7 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import mask_string
 from smarter.lib.django import waffle
-from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
@@ -136,8 +136,8 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
         """
 
         # this is the earliest point at which we can initialize SmarterRequestMixin
-        smarter_request_mixin = SmarterRequestMixin(request=request, *args, **kwargs)
-        if not smarter_request_mixin.is_smarter_api:
+        url = self.smarter_build_absolute_uri(request)
+        if not SmarterValidator.is_api_endpoint(url):
             # skip token authentication if we're not a Smarter API request
             logger.info("%s skipping token authentication for non-Smarter API request", self.formatted_class_name)
             return self.get_response(request)

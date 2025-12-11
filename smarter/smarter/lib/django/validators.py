@@ -58,6 +58,7 @@ except ImportError:
         logger.warning("Django is not installed. validate_ipv4_address will not function properly.")
 
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
@@ -1038,6 +1039,37 @@ class SmarterValidator:
             return True
         except SmarterValueError:
             return False
+
+    @staticmethod
+    def is_api_endpoint(url: str) -> bool:
+        """
+        Check if the URL is an API endpoint.
+
+        Checks whether the provided URL contains '/api/'.
+
+        :param url: The URL to check.
+        :type url: str
+        :returns: True if the URL is an API endpoint, otherwise False.
+        :rtype: bool
+
+        Example::
+
+            SmarterValidator.is_api_endpoint("/api/v1/tests/unauthenticated/list/")  # returns True
+            SmarterValidator.is_api_endpoint("/v1/tests/unauthenticated/list/")      # returns False
+
+        """
+        if not isinstance(url, str):
+            return False
+
+        if "/api/" in url:
+            # checks for /api/ in the full url: example.com/api/v1/
+            return True
+
+        if smarter_settings.api_subdomain in str(SmarterValidator.base_url(url)):
+            # checks for api subdomain in base url: api.example.com
+            return True
+
+        return False
 
     # --------------------------------------------------------------------------
     # list helpers
