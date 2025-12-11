@@ -15,8 +15,6 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_red,
 )
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)
@@ -40,6 +38,7 @@ class CacheSentinel:
 
 CACHE_NONE_SENTINEL = 'CacheSentinel("CACHE_NONE")'
 CACHE_MISS_SENTINEL = CacheSentinel("CACHE_MISS")
+CACHE_LOGGING = True
 
 
 def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
@@ -138,7 +137,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 result = (
                     None if isinstance(cached_result, str) and cached_result == CACHE_NONE_SENTINEL else cached_result
                 )
-                if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                if logging_enabled and CACHE_LOGGING:
                     logger.info(
                         "%s cache hit for %s: %s",
                         formatted_text_green("@cache_results()"),
@@ -150,12 +149,13 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 result = func(*args, **kwargs)
                 cache_value = CACHE_NONE_SENTINEL if result is None else result
                 cache.set(cache_key, cache_value, timeout)
-                if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                if logging_enabled and CACHE_LOGGING:
                     logger.info(
-                        "%s cache miss for %s, caching result: %s",
+                        "%s cache miss for %s, caching result: %s with timeout %s",
                         formatted_text_red("@cache_results()"),
                         cache_key,
-                        "None" if result is None else result,
+                        cache_value,
+                        timeout,
                     )
             return result
 
@@ -165,7 +165,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 return
             cache_key = generate_cache_key(func, key_data)
             cache.delete(cache_key)
-            if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+            if logging_enabled and CACHE_LOGGING:
                 logger.info(
                     "%s invalidated cache entry for %s",
                     formatted_text_red("@cache_results()"),
@@ -200,13 +200,13 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             )
             cache_key = f"{func.__name__}_{url}_{user_identifier}"
             result = cache.get(cache_key)
-            if result and logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+            if result and logging_enabled and CACHE_LOGGING:
                 logger.info("%s cache hit for %s", logger_prefix, cache_key)
             else:
                 result = func(request, *args, **kwargs)
                 cache.set(cache_key, result, timeout)
-                if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                    logger.info("%s caching %s", formatted_text("cache_results()"), cache_key)
+                if logging_enabled and CACHE_LOGGING:
+                    logger.info("%s caching %s with timeout %s", formatted_text("cache_results()"), cache_key, timeout)
             return result
 
         return wrapper
