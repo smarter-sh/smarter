@@ -122,16 +122,18 @@
                     </div>
                     <!--end::Symbol-->
                     <!--begin::Connections-->
-                    <div class="m-0">
-                      <!--begin::Number-->
-                      <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_connections }}</span>
-                      <!--end::Number-->
-                      <!--begin::Desc-->
-                      <span class="text-gray-500 fw-semibold fs-6">Connections</span>
-                      <!--end::Desc-->
+                    <a class="menu-link" href="{% url 'plugin:connection_listview' %}" target="_self">
+                      <div class="m-0">
+                        <!--begin::Number-->
+                        <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_connections }}</span>
+                        <!--end::Number-->
+                        <!--begin::Desc-->
+                        <span class="text-gray-500 fw-semibold fs-6">Connections</span>
+                        <!--end::Desc-->
+                      </div>
+                      <!--end::Connections-->
                     </div>
-                    <!--end::Connections-->
-                  </div>
+                  </a>
                   <!--end::Items-->
                 </div>
                 <!--end::Col-->
