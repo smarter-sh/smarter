@@ -1,3 +1,11 @@
+## [0.13.40](https://github.com/smarter-sh/smarter/compare/v0.13.39...v0.13.40) (2025-12-11)
+
+
+### Bug Fixes
+
+* add link to Dashboard Connection card ([3ff65cc](https://github.com/smarter-sh/smarter/commit/3ff65cc08ac9a6ede82f66f708914f91c9bf549f))
+* add waffle should_log() ([5390f33](https://github.com/smarter-sh/smarter/commit/5390f33acaea14ee0e7cca478a2f232ee4417c2c))
+
 ## [0.13.39](https://github.com/smarter-sh/smarter/compare/v0.13.38...v0.13.39) (2025-12-11)
 
 
