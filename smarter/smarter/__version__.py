@@ -1,5 +1,5 @@
 # DO NOT EDIT.
 # Managed via automated CI/CD in .github/workflows/semanticVersionBump.yml.
-__version__ = "0.13.38"
+__version__ = "0.13.39"
 
 __all__ = ["__version__"]
