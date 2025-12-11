@@ -153,7 +153,7 @@ def get_plugin(request, plugin_id):
     try:
         user_profile = get_cached_user_profile(user=request.user)
     except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=404)
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
 
     try:
         plugin_controller = PluginController(

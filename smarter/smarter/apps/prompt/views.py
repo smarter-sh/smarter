@@ -12,7 +12,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
@@ -677,8 +677,15 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         --------
         ChatConfigView : The endpoint that provides configuration data to the React app.
         """
+        if (
+            not hasattr(request, "user")
+            or not hasattr(request.user, "is_authenticated")
+            or not request.user.is_authenticated
+        ):
+            return redirect("/login/")
+
         retval = super().dispatch(request, *args, **kwargs)
-        if retval.status_code >= 400:
+        if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
 
         name = kwargs.pop("name", None)
