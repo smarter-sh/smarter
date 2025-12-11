@@ -167,7 +167,7 @@ runs:
       id: set-docker-image
       shell: bash
       run: |-
-        echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:latest" >> $GITHUB_ENV
+        echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:2025-12-11T17-22-32" >> $GITHUB_ENV
 
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
