@@ -3,6 +3,7 @@ Middleware to block clients that trigger excessive 404 responses.
 """
 
 import logging
+from http import HTTPStatus
 
 from django.core.cache import cache
 from django.core.handlers.wsgi import WSGIRequest
@@ -78,7 +79,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         :returns: The original response, or a 403 Forbidden response if the client has exceeded the allowed number of 404 responses.
         :rtype: django.http.HttpResponse
         """
-        if response.status_code == 404:
+        if response.status_code == HTTPStatus.NOT_FOUND:
             # skip this for authenticated users
             if is_authenticated_request(request):
                 return response

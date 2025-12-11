@@ -2,6 +2,7 @@
 
 import logging
 import re
+from http import HTTPStatus
 from typing import Optional
 
 from django import template
@@ -137,7 +138,7 @@ class SmarterView(View, SmarterRequestMixin):
                 e,
                 exc_info=True,
             )
-            return HttpResponse(status=500)
+            return HttpResponse(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         html = response.content.decode(response.charset)
         html_no_comments = self.remove_comments(html=html)

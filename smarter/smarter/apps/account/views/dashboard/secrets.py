@@ -132,7 +132,7 @@ class SecretView(SmarterAdminWebView):
             return self._handle_multipart_form(request)
         if request.content_type == "application/json":
             return self._handle_json(request)
-        return http.JsonResponse({"error": "Invalid content type"}, status=400)
+        return http.JsonResponse({"error": "Invalid content type"}, status=HTTPStatus.BAD_REQUEST)
 
     def setup(self, request: WSGIRequest, *args, **kwargs):
         super().setup(request, *args, **kwargs)
