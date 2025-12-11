@@ -57,7 +57,7 @@
                         </span>
                       </div>
                       <!--end::Symbol-->
-                      <!--begin::Stats-->
+                      <!--begin::Workbench-->
                       <div class="m-0">
                         <!--begin::Number-->
                         <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_chatbots }}</span>
@@ -66,7 +66,7 @@
                         <span class="text-gray-500 fw-semibold fs-6">Workbench</span>
                         <!--end::Desc-->
                       </div>
-                      <!--end::Stats-->
+                      <!--end::Workbench-->
                     </div>
                     </a>
                   <!--end::Items-->
@@ -87,16 +87,20 @@
                       </span>
                     </div>
                     <!--end::Symbol-->
-                    <!--begin::Stats-->
-                    <div class="m-0">
-                      <!--begin::Number-->
-                      <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_plugins }}</span>
-                      <!--end::Number-->
-                      <!--begin::Desc-->
-                      <span class="text-gray-500 fw-semibold fs-6">Plugins</span>
-                      <!--end::Desc-->
-                    </div>
-                    <!--end::Stats-->
+
+                    <!--begin::Plugins-->
+                    <a href="{% url 'plugin:plugin_listview' %}">
+                      <div class="m-0">
+                        <!--begin::Number-->
+                        <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_plugins }}</span>
+                        <!--end::Number-->
+                        <!--begin::Desc-->
+                        <span class="text-gray-500 fw-semibold fs-6">Plugins</span>
+                        <!--end::Desc-->
+                      </div>
+                    </a>
+                    <!--end::Plugins-->
+
                   </div>
                   <!--end::Items-->
                   </a>
@@ -117,16 +121,16 @@
                       </span>
                     </div>
                     <!--end::Symbol-->
-                    <!--begin::Stats-->
+                    <!--begin::Connections-->
                     <div class="m-0">
                       <!--begin::Number-->
-                      <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_api_keys }}</span>
+                      <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_connections }}</span>
                       <!--end::Number-->
                       <!--begin::Desc-->
-                      <span class="text-gray-500 fw-semibold fs-6">Api Keys</span>
+                      <span class="text-gray-500 fw-semibold fs-6">Connections</span>
                       <!--end::Desc-->
                     </div>
-                    <!--end::Stats-->
+                    <!--end::Connections-->
                   </div>
                   <!--end::Items-->
                 </div>
@@ -146,16 +150,18 @@
                       </span>
                     </div>
                     <!--end::Symbol-->
-                    <!--begin::Stats-->
-                    <div class="m-0">
-                      <!--begin::Number-->
-                      <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_custom_domains }}</span>
-                      <!--end::Number-->
-                      <!--begin::Desc-->
-                      <span class="text-gray-500 fw-semibold fs-6">Custom Domains</span>
-                      <!--end::Desc-->
-                    </div>
-                    <!--end::Stats-->
+                    <!--begin::Secrets-->
+                    <a class="menu-link" href="{% url 'account:dashboard_account_secrets' %}" target="_self">
+                      <div class="m-0">
+                        <!--begin::Number-->
+                        <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_secrets }}</span>
+                        <!--end::Number-->
+                        <!--begin::Desc-->
+                        <span class="text-gray-500 fw-semibold fs-6">Secrets</span>
+                        <!--end::Desc-->
+                      </div>
+                    </a>
+                    <!--end::Secrets-->
                   </div>
                   <!--end::Items-->
                 </div>
@@ -350,8 +356,8 @@
                     <!--end::Wrapper-->
                     <!--begin::Action-->
                     <div class="m-0">
-                      <a href="https://smarter.sh/prompt-engineering-certificate/" class="btn btn-sm btn-light me-2 mb-2">Details</a>
-                      <a href="https://smarter.sh/contact/" class="btn btn-sm btn-success mb-2">Apply</a>
+                      <a href="https://smarter.sh/" class="btn btn-sm btn-light me-2 mb-2">Details</a>
+                      <a href="https://smarter.sh/" class="btn btn-sm btn-success mb-2">Apply</a>
                     </div>
                     <!--end::Action-->
                   </div>
@@ -421,8 +427,8 @@
                     <!--end::Wrapper-->
                     <!--begin::Action-->
                     <div class="m-0">
-                      <a href="https://smarter.sh/developer-certificate/" class="btn btn-sm btn-light me-2 mb-2">Details</a>
-                      <a href="https://smarter.sh/contact/" class="btn btn-sm btn-success mb-2">Apply</a>
+                      <a href="https://smarter.sh" class="btn btn-sm btn-light me-2 mb-2">Details</a>
+                      <a href="https://smarter.sh" class="btn btn-sm btn-success mb-2">Apply</a>
                     </div>
                     <!--end::Action-->
                   </div>
@@ -492,8 +498,8 @@
                     <!--end::Wrapper-->
                     <!--begin::Action-->
                     <div class="m-0">
-                      <a href="https://smarter.sh/administration-certificate/" class="btn btn-sm btn-light me-2 mb-2">Details</a>
-                      <a href="https://smarter.sh/contact/" class="btn btn-sm btn-success mb-2">Apply</a>
+                      <a href="https://smarter.sh" class="btn btn-sm btn-light me-2 mb-2">Details</a>
+                      <a href="https://smarter.sh" class="btn btn-sm btn-success mb-2">Apply</a>
                     </div>
                     <!--end::Action-->
                   </div>
