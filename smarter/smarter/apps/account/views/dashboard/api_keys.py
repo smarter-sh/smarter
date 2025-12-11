@@ -124,7 +124,7 @@ class APIKeyView(APIKeyBase):
             }
             event_func = events.get(action)
             if event_func is None:
-                return http.JsonResponse({"error": f"Unrecognized action: {event_func}"}, status=400)
+                return http.JsonResponse({"error": f"Unrecognized action: {event_func}"}, status=HTTPStatus.BAD_REQUEST)
             event_func()
         else:
             apikey_form = APIKeyForm(data, instance=api_key)
@@ -140,7 +140,7 @@ class APIKeyView(APIKeyBase):
             return self._handle_multipart_form(request, key_id)
         if request.content_type == "application/json":
             return self._handle_json(request, key_id)
-        return http.JsonResponse({"error": "Invalid content type"}, status=400)
+        return http.JsonResponse({"error": "Invalid content type"}, status=HTTPStatus.BAD_REQUEST)
 
     def is_valid_uuid(self, uuid_to_test, version=4):
         """Check if uuid_to_test is a valid UUID."""
