@@ -587,7 +587,6 @@ MIDDLEWARE = [
     # -------------------------------
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
     "django.middleware.common.CommonMiddleware",
     # this replaces django.middleware.csrf.SmarterCsrfViewMiddleware
     # to add chatbot-specific CSRF handling
@@ -596,6 +595,7 @@ MIDDLEWARE = [
     #
     # -------------------------------
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
     # to manage ALLOWED_HOSTS
     # -------------------------------
     "smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware",
