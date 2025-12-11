@@ -58,8 +58,7 @@ except ImportError:
         logger.warning("Django is not installed. validate_ipv4_address will not function properly.")
 
 
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SmarterEnvironments
+from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 
@@ -1065,7 +1064,7 @@ class SmarterValidator:
             # checks for /api/ in the full url: example.com/api/v1/
             return True
 
-        if smarter_settings.api_subdomain in str(SmarterValidator.base_url(url)):
+        if SMARTER_API_SUBDOMAIN in str(SmarterValidator.base_url(url)):
             # checks for api subdomain in base url: api.example.com
             return True
 
