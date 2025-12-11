@@ -5,6 +5,7 @@ import logging
 from typing import Any, Optional, Union
 
 import yaml
+from django.core.exceptions import AppRegistryNotReady
 from django.http import HttpRequest
 from django.utils.deprecation import MiddlewareMixin
 
@@ -18,9 +19,27 @@ from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
 from smarter.lib import json
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-logger = logging.getLogger(__name__)
+try:
+    # this resolves an import issue in collect static assets where Django apps are not yet importable
+    from smarter.lib.django import waffle
+    from smarter.lib.django.waffle import SmarterWaffleSwitches
+
+    mixin_logging_is_active: bool = waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
+# pylint: disable=broad-except
+except AppRegistryNotReady as e:
+    mixin_logging_is_active: bool = False
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return mixin_logging_is_active and level >= smarter_settings.log_level
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class Singleton(type):
