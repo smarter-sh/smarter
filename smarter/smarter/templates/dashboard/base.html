@@ -301,14 +301,6 @@
 								<div class="here menu-item pt-5">
 									<!--begin:Menu content-->
 									<div class="menu-content">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-category fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-												<span class="path4"></span>
-											</i>
-										</span>
 										<span class="menu-heading here fw-bold text-uppercase fs-7">Workbench</span>
 									</div>
 									<!--end:Menu content-->
@@ -320,7 +312,7 @@
 									<!--begin:Menu link-->
 									<a class="menu-link" href="{% url 'dashboard:dashboard' %}" target="_self">
 										<span class="menu-icon">
-											<i class="ki-duotone ki-message-programming fs-2">
+											<i class="ki-duotone ki-category fs-2">
 												<span class="path1"></span>
 												<span class="path2"></span>
 												<span class="path3"></span>
@@ -332,12 +324,12 @@
 								</div>
 								<!--end:Menu item-->
 
-                <!--begin:Menu item Workbench -->
+                                <!--begin:Menu item Workbench -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link" href="{% url 'prompt_workbench:listview' %}" target="_self">
 										<span class="menu-icon">
-											<i class="ki-duotone ki-message-text-2 fs-2">
+											<i class="ki-duotone ki-message-programming fs-2">
 												<span class="path1"></span>
 												<span class="path2"></span>
 												<span class="path3"></span>
@@ -374,18 +366,69 @@
 								<!--end:Menu item-->
 
 
-                <!--begin:Menu item Connections -->
+                                <!--begin:Menu item Connections -->
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link" href="{% url 'plugin:connection_listview' %}" target="_self">
 										<span class="menu-icon">
-											<i class="ki-duotone ki-message-text-2 fs-2">
+											<i class="ki-duotone ki-password-check fs-2">
 												<span class="path1"></span>
 												<span class="path2"></span>
 												<span class="path3"></span>
 											</i>
 										</span>
 										<span class="menu-title">Connections</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+                                <!--begin:Menu item Secrets -->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'account:dashboard_account_secrets' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-lock fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Secrets</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+                                <!--begin:Menu item Api Keys -->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'account:api_keys_list' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-key fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Api Keys</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+                                <!--begin:Menu item Custom Domains -->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="{% url 'plugin:connection_listview' %}" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-arrow-circle-right fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Custom Domains</span>
 									</a>
 									<!--end:Menu link-->
 								</div>
@@ -407,14 +450,27 @@
 								</div>
 								<!--end:Menu item-->
 
+								<!--begin:Menu item:Read the Docs-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="https://docs.smarter.sh/en/latest/" target="_blank">
+                                      <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                      </span>
+                                      <span class="menu-title">Read the Docs</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item:Read the Docs-->
+
 								<!--begin:Menu item-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link" href="/docs/learn/" target="_self">
-                    <span class="menu-bullet">
-                      <span class="bullet bullet-dot"></span>
-                    </span>
-										<span class="menu-title">Getting Started</span>
+                                      <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                      </span>
+                                      <span class="menu-title">Getting Started</span>
 									</a>
 									<!--end:Menu link-->
 								</div>
@@ -446,28 +502,32 @@
 								</div>
 								<!--end:Menu item-->
 
-                <!--begin:Menu item-->
+                                <!--begin:Menu item-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link" href="/docs/developers/" target="_self">
-                    <span class="menu-bullet">
-                      <span class="bullet bullet-dot"></span>
-                    </span>
+                                        <span class="menu-bullet">
+                                          <span class="bullet bullet-dot"></span>
+                                        </span>
 										<span class="menu-title">Developers</span>
 									</a>
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
 
-								<!--begin:Menu item Settings-->
-								<div class="menu-item pt-5">
-									<!--begin:Menu content-->
-									<div class="menu-content">
-										<span class="menu-heading fw-bold text-uppercase fs-7">Settings</span>
-									</div>
-									<!--end:Menu content-->
-								</div>
+                <!--begin:Menu item Settings-->
+                {% if user.is_superuser %}
+                <div class="menu-item pt-5">
+                    <!--begin:Menu content-->
+                    <div class="menu-content">
+                        <span class="menu-heading fw-bold text-uppercase fs-7">Settings</span>
+                    </div>
+                    <!--end:Menu content-->
+                </div>
+                {% endif %}
+
                 <!--begin:Menu item Account -->
+                {% if user.is_superuser %}
                 <div class="menu-item">
                   <!--begin:Menu link-->
                   <a class="menu-link" href="/dashboard/account/dashboard/overview/">
@@ -478,6 +538,7 @@
                   </a>
                   <!--end:Menu link-->
                 </div>
+                {% endif %}
                 <!--end:Menu item-->
 
                 <!--begin:Menu item Django admin-->
@@ -527,124 +588,6 @@
                 {% endif %}
                 <!--end:Menu item-->
 
-								<!--begin:Menu item Corporate-->
-								<div class="menu-item pt-5">
-									<!--begin:Menu content-->
-									<div class="menu-content">
-										<span class="menu-heading fw-bold text-uppercase fs-7">Corporate</span>
-									</div>
-									<!--end:Menu content-->
-								</div>
-								<!--end:Menu item-->
-
-								<!--begin:Menu item Support-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/docs/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-rocket fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-											</i>
-										</span>
-										<span class="menu-title">Support Center</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-
-								<!--begin:Menu item Legal-->
-								<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-									<!--begin:Menu link-->
-									<span class="menu-link">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-bank fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-											</i>
-										</span>
-										<span class="menu-title">Legal</span>
-										<span class="menu-arrow"></span>
-									</span>
-									<!--end:Menu link-->
-									<!--begin:Menu sub-->
-									<div class="menu-sub menu-sub-accordion menu-active-bg">
-										<!--begin:Menu item-->
-										<div class="menu-item">
-											<!--begin:Menu link-->
-											<a class="menu-link" href="https://smarter.sh/terms-of-service/">
-												<span class="menu-bullet">
-													<span class="bullet bullet-dot"></span>
-												</span>
-												<span class="menu-title">Terms of Service</span>
-											</a>
-											<!--end:Menu link-->
-										</div>
-										<!--end:Menu item-->
-										<!--begin:Menu item-->
-										<div class="menu-item">
-											<!--begin:Menu link-->
-											<a class="menu-link" href="https://smarter.sh/service-level-agreement/">
-												<span class="menu-bullet">
-													<span class="bullet bullet-dot"></span>
-												</span>
-												<span class="menu-title">Service Level Agreement</span>
-											</a>
-											<!--end:Menu link-->
-										</div>
-										<!--end:Menu item-->
-										<!--begin:Menu item-->
-										<div class="menu-item">
-											<!--begin:Menu link-->
-											<a class="menu-link" href="https://smarter.sh/acceptable-use-policy/">
-												<span class="menu-bullet">
-													<span class="bullet bullet-dot"></span>
-												</span>
-												<span class="menu-title">Acceptable Use Policy</span>
-											</a>
-											<!--end:Menu link-->
-										</div>
-										<!--end:Menu item-->
-										<!--begin:Menu item-->
-										<div class="menu-item">
-											<!--begin:Menu link-->
-											<a class="menu-link" href="https://smarter.sh/privacy-policy/">
-												<span class="menu-bullet">
-													<span class="bullet bullet-dot"></span>
-												</span>
-												<span class="menu-title">Privacy Policy</span>
-											</a>
-											<!--end:Menu link-->
-										</div>
-										<!--end:Menu item-->
-										<!--begin:Menu item-->
-										<div class="menu-item">
-											<!--begin:Menu link-->
-											<a class="menu-link" href="https://smarter.sh/cookie-policy/">
-												<span class="menu-bullet">
-													<span class="bullet bullet-dot"></span>
-												</span>
-												<span class="menu-title">Cookie Policy</span>
-											</a>
-											<!--end:Menu link-->
-										</div>
-										<!--end:Menu item-->
-										<!--begin:Menu item-->
-										<div class="menu-item">
-											<!--begin:Menu link-->
-											<a class="menu-link" href="https://smarter.sh/pci-compliance/">
-												<span class="menu-bullet">
-													<span class="bullet bullet-dot"></span>
-												</span>
-												<span class="menu-title">PCI Compliance</span>
-											</a>
-											<!--end:Menu link-->
-										</div>
-										<!--end:Menu item-->
-									</div>
-									<!--end:Menu sub-->
-								</div>
-								<!--end:Menu item-->
 
 							</div>
 							{% endblock %}
