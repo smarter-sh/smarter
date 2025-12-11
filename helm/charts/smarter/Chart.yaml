@@ -66,7 +66,7 @@ keywords:
   - remote-data
   - smarter
 annotations:
-  helm.sh/chart: smarter-0.9.8
+  helm.sh/chart: smarter-0.9.9
   artifacthub.io/changes: |
     - kind: changed
       description: bump to app version 0.13.37. Publish sphinx docs to dedicated Read the Docs site.
@@ -74,7 +74,7 @@ annotations:
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
     - name: smarter
-      image: mcdaniel0073/smarter:v0.13.37
+      image: mcdaniel0073/smarter:2025-12-11T17-22-32
       platforms:
         - linux/amd64
         - linux/arm64
