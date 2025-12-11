@@ -71,7 +71,7 @@
             }
           }
         ],
-        "model": "gpt-4-turbo",
+        "model": "gpt-4o-mini",
         "temperature": 0.5,
         "max_completion_tokens": 1024,
         "input_text": "Do you offer any courses on AI?"

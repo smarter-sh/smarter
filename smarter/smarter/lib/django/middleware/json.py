@@ -3,6 +3,8 @@ Middleware to ensure that all requests for 'application/JSON' return responses
 that are also in JSON format.
 """
 
+from http import HTTPStatus
+
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 
@@ -52,7 +54,7 @@ class SmarterJsonErrorMiddleware(MiddlewareMixin):
     """
 
     def process_response(self, request, response):
-        if request.headers.get("Accept") == "application/json" and response.status_code >= 400:
+        if request.headers.get("Accept") == "application/json" and response.status_code >= HTTPStatus.BAD_REQUEST:
             if not isinstance(response, JsonResponse):
                 data = {
                     "error": {
