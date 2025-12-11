@@ -15,11 +15,39 @@ from .views.authentication import (
     LoginView,
     LogoutView,
 )
+from .views.dashboard.api_keys import APIKeyListView
 from .views.password_management import (
     PasswordConfirmView,
     PasswordResetRequestView,
     PasswordResetView,
 )
+
+
+class AccountNamedUrls:
+    """
+    Class to hold named URL patterns for the account app.
+    This class provides constants for all named URL patterns used in the account dashboard views.
+    The names follow the convention: 'account_<view_name>'.
+    These are referenced in Django templates as 'reverse' or 'url' tags.
+
+    .. usage-example::
+
+      .. html::
+
+      <a href="{% url 'dashboard_account_dashboard_overview' %}">Go to Dashboard Overview</a>
+
+    """
+
+    API_KEYS_LIST = "api_keys_list"
+    ACCOUNT_LOGIN = "account_login"
+    ACCOUNT_LOGOUT = "account_logout"
+    ACCOUNT_REGISTER = "account_register"
+    ACCOUNT_ACTIVATION = "account_activation"
+    ACCOUNT_ACTIVATE = "account_activate"
+    ACCOUNT_DEACTIVATE = "account_deactivate"
+    ACCOUNT_PASSWORD_RESET_REQUEST = "account_password_reset_request"
+    ACCOUNT_PASSWORD_CONFIRM = "account_password_confirm"
+    PASSWORD_RESET_LINK = "password_reset_link"
 
 
 app_name = namespace
@@ -30,18 +58,25 @@ urlpatterns = [
         name="dashboard_account_dashboard",
     ),
     path("api/", include("smarter.apps.account.api.urls", namespace=namespace)),
-    path("login/", LoginView.as_view(), name="account_login"),
-    path("logout/", LogoutView.as_view(), name="account_logout"),
+    path("api-keys/", APIKeyListView.as_view(), name=AccountNamedUrls.API_KEYS_LIST),
+    path("login/", LoginView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGIN),
+    path("logout/", LogoutView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGOUT),
     path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),
     # account lifecycle
-    path("register/", AccountRegisterView.as_view(), name="account_register"),
-    path("activation/", AccountActivationEmailView.as_view(), name="account_activation"),
-    path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name="account_activate"),
-    path("deactivate/", AccountDeactivateView.as_view(), name="account_deactivate"),
+    path("register/", AccountRegisterView.as_view(), name=AccountNamedUrls.ACCOUNT_REGISTER),
+    path("activation/", AccountActivationEmailView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATION),
+    path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name=AccountNamedUrls.ACCOUNT_ACTIVATE),
+    path("deactivate/", AccountDeactivateView.as_view(), name=AccountNamedUrls.ACCOUNT_DEACTIVATE),
     # password management
-    path("password-reset-request/", PasswordResetRequestView.as_view(), name="account_password_reset_request"),
-    path("password-confirm/", PasswordConfirmView.as_view(), name="account_password_confirm"),
-    path("password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name="password_reset_link"),
+    path(
+        "password-reset-request/",
+        PasswordResetRequestView.as_view(),
+        name=AccountNamedUrls.ACCOUNT_PASSWORD_RESET_REQUEST,
+    ),
+    path("password-confirm/", PasswordConfirmView.as_view(), name=AccountNamedUrls.ACCOUNT_PASSWORD_CONFIRM),
+    path(
+        "password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name=AccountNamedUrls.PASSWORD_RESET_LINK
+    ),
 ]
 
 if smarter_settings.environment == SmarterEnvironments.LOCAL:
