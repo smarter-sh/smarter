@@ -1,3 +1,13 @@
+## [0.13.39](https://github.com/smarter-sh/smarter/compare/v0.13.38...v0.13.39) (2025-12-11)
+
+
+### Bug Fixes
+
+* add APIKeyListView ([3c74ab1](https://github.com/smarter-sh/smarter/commit/3c74ab1955d75cea5e53c580250365106454f731))
+* add Secrets, Custom Domains, Api Keys to left side bar ([a055d06](https://github.com/smarter-sh/smarter/commit/a055d064508b676549084ddb39b7378eb81f0165))
+* exit gracefully if smarter_request_mixin.is_smarter_api == False ([f63d01b](https://github.com/smarter-sh/smarter/commit/f63d01beee1e325e52aca98ab519a3b1706ca9e0))
+* remove django login_required and staff decorators. replace with our own logic ([8ba09bb](https://github.com/smarter-sh/smarter/commit/8ba09bb52db7d7d6bc49eb319ee837d9bd56b55f))
+
 ## [0.13.38](https://github.com/smarter-sh/smarter/compare/v0.13.37...v0.13.38) (2025-12-06)
 
 
