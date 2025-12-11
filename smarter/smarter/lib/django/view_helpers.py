@@ -6,8 +6,6 @@ from typing import Optional
 
 from django import template
 from django.conf import settings
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
@@ -252,8 +250,6 @@ class SmarterNeverCachedWebView(SmarterWebHtmlView):
     """
 
 
-@method_decorator(login_required, name="dispatch")
-# @method_decorator(ensure_csrf_cookie, name="dispatch")
 class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     """
     An optimized view that requires authentication.
@@ -270,6 +266,19 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
 
     By enforcing authentication at the dispatch level, this view provides a robust foundation for building
     secure, user-specific pages in the Smarter platform.
+
+    This combination makes the view ideal for admin pages that display sensitive or frequently changing data, ensuring
+    both strict access control and cache prevention.
+
+    Bug Fix:
+
+        Fixed a bug where Django method decorators were raising exceptions for unauthenticated
+        users instead of redirecting them to the login page. Replaced the decorators
+        with explicit checks in the `dispatch` method.
+
+    .. changelog::
+
+        :versionadded: v0.13.39
     """
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
@@ -281,12 +290,12 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         :return: An HttpResponse object.
         :rtype: HttpResponse
         """
-        if request.user.is_anonymous:
-            return redirect_and_expire_cache(path="/login/")
+        if hasattr(request, "user") and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
+            response = super().dispatch(request, *args, **kwargs)
+            patch_vary_headers(response, ["Cookie"])
+            return response
 
-        response = super().dispatch(request, *args, **kwargs)
-        patch_vary_headers(response, ["Cookie"])
-        return response
+        return redirect_and_expire_cache(path="/login/")
 
 
 @method_decorator(cache_control(max_age=settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
@@ -346,7 +355,6 @@ class SmarterAuthenticatedNeverCachedWebView(SmarterAuthenticatedWebView):
     """
 
 
-@method_decorator(staff_member_required, name="dispatch")
 class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
     """
     An admin-only optimized web view that is never cached.
@@ -362,4 +370,29 @@ class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
 
     This combination makes the view ideal for admin pages that display sensitive or frequently changing data, ensuring
     both strict access control and cache prevention.
+
+    Bug Fix:
+
+        Fixed a bug where Django method decorators were raising exceptions for unauthenticated
+        users instead of redirecting them to the login page. Replaced the decorators
+        with explicit checks in the `dispatch` method.
+
+    .. changelog::
+
+        :versionadded: v0.13.39
     """
+
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
+        # Enforce login_required
+        user = getattr(request, "user", None)
+        if not (user and getattr(user, "is_authenticated", False)):
+            return redirect_and_expire_cache(path="/login/")
+
+        # Enforce staff_member_required
+        if not getattr(user, "is_staff", False):
+            # Redirect to admin login page for non-staff users
+            return redirect_and_expire_cache(path="/admin/login/?next=" + request.path)
+
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ["Cookie"])
+        return response
