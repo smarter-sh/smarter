@@ -215,49 +215,49 @@ class LazyCache:
         """
         return self.waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
 
-    def get(self, key: Any, default: Optional[Any] = None):
+    def get(self, key: Any, default: Optional[Any] = None) -> Any:
         """
         Fetch a given key from the cache. If the key does not exist, return default, which itself defaults to None.
         """
         return self.cache.get(key, default)  # type: ignore[return-value]
 
-    def set(self, key: Any, value: Any, timeout: Optional[float] = None, version: Optional[int] = None):
+    def set(self, key: Any, value: Any, timeout: Optional[float] = None, version: Optional[int] = None) -> None:
         """
         Set a value in the cache. If timeout is given, use that timeout for the key; otherwise use the default cache timeout.
         """
         return self.cache.set(key, value, timeout=timeout)  # type: ignore[return-value]
 
-    def delete(self, key: Any):
+    def delete(self, key: Any) -> bool:
         """
         Delete a value from the cache.
         """
         return self.cache.delete(key)  # type: ignore[return-value]
 
-    def incr(self, key: Any, delta: int = 1):
+    def incr(self, key: Any, delta: int = 1) -> int:
         """
         Increment a value in the cache.
         """
         return self.cache.incr(key, delta)  # type: ignore[return-value]
 
-    def decr(self, key: Any, delta: int = 1):
+    def decr(self, key: Any, delta: int = 1) -> int:
         """
         Decrement a value in the cache.
         """
         return self.cache.decr(key, delta)  # type: ignore[return-value]
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Clear the entire cache.
         """
         return self.cache.clear()  # type: ignore[return-value]
 
-    def add(self, key: Any, value: Any, timeout: Optional[float] = None, version: Optional[int] = None):
+    def add(self, key: Any, value: Any, timeout: Optional[float] = None, version: Optional[int] = None) -> bool:
         """
         Add a value to the cache if the key does not already exist.
         """
         return self.cache.add(key, value, timeout=timeout)  # type: ignore[return-value]
 
-    def touch(self, key: Any, timeout: Optional[float] = None, version: Optional[int] = None):
+    def touch(self, key: Any, timeout: Optional[float] = None, version: Optional[int] = None) -> bool:
         """
         Update the timeout for a given key in the cache.
         """
@@ -275,31 +275,31 @@ class LazyCache:
         """
         return self.cache.get_many(keys)  # type: ignore[return-value]
 
-    def set_many(self, data: dict, timeout: Optional[float] = None, version: Optional[int] = None):
+    def set_many(self, data: dict, timeout: Optional[float] = None, version: Optional[int] = None) -> list[Any]:
         """
         Set multiple values in the cache.
         """
         return self.cache.set_many(data, timeout=timeout)  # type: ignore[return-value]
 
-    def delete_many(self, keys: list, version: Optional[int] = None):
+    def delete_many(self, keys: list, version: Optional[int] = None) -> None:
         """
         Delete multiple keys from the cache.
         """
         return self.cache.delete_many(keys)  # type: ignore[return-value]
 
-    def incr_version(self, key: Any, delta: int = 1, version: Optional[int] = None):
+    def incr_version(self, key: Any, delta: int = 1, version: Optional[int] = None) -> int:
         """
         Increment the version of a key in the cache.
         """
         return self.cache.incr_version(key, delta)  # type: ignore[return-value]
 
-    def decr_version(self, key: Any, delta: int = 1, version: Optional[int] = None):
+    def decr_version(self, key: Any, delta: int = 1, version: Optional[int] = None) -> int:
         """
         Decrement the version of a key in the cache.
         """
         return self.cache.decr_version(key, delta)  # type: ignore[return-value]
 
-    def close(self, **kwargs):
+    def close(self, **kwargs) -> None:
         """
         Close the cache connection.
         """
