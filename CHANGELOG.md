@@ -1,3 +1,10 @@
+## [0.13.44](https://github.com/smarter-sh/smarter/compare/v0.13.43...v0.13.44) (2025-12-12)
+
+
+### Bug Fixes
+
+* refactor and document new caching strategy ([4272461](https://github.com/smarter-sh/smarter/commit/42724619b762347885f1f382578a0e9cef77a59c))
+
 ## [0.13.43](https://github.com/smarter-sh/smarter/compare/v0.13.42...v0.13.43) (2025-12-12)
 
 
