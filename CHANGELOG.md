@@ -1,3 +1,11 @@
+## [0.13.42](https://github.com/smarter-sh/smarter/compare/v0.13.41...v0.13.42) (2025-12-12)
+
+
+### Bug Fixes
+
+* create a LazyCache class for importing from django.core.cache only after Django is fully initialized. ([c67b60e](https://github.com/smarter-sh/smarter/commit/c67b60e2528bea5e084b12aaffa5334ead3e93ea))
+* remove waffle from cache.py ([49381ba](https://github.com/smarter-sh/smarter/commit/49381ba707dca4f83b2b83e2c8d2f708d736069f))
+
 ## [0.13.41](https://github.com/smarter-sh/smarter/compare/v0.13.40...v0.13.41) (2025-12-11)
 
 
