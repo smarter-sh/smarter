@@ -60,7 +60,6 @@ from smarter.common.helpers.console_helpers import formatted_text_green
 
 
 logger = logging.getLogger(__name__)
-CACHE_EXPIRATION = 60  # seconds
 prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")
 logger.info(formatted_text_green("smarter.lib.django.waffle module loaded"))
 
@@ -82,7 +81,7 @@ class SmarterSwitchAdmin(SwitchAdmin):
     ordering = ("name",)
 
     def has_module_permission(self, request):
-        return request.user.is_superuser  # type: ignore[return-value]
+        return hasattr(request, "user") and hasattr(request.user, "is_superuser") and request.user.is_superuser  # type: ignore[return-value]
 
 
 class SmarterWaffleSwitches:
@@ -250,8 +249,6 @@ def switch_is_active(switch_name: str) -> bool:
     ) or (Exception,)
     try:
         switch = waffle_orig.get_waffle_switch_model().get(switch_name)
-        if switch.is_active():
-            logger.info("%s: %s is active and will be cached for %s seconds.", prefix, switch_name, CACHE_EXPIRATION)
         return switch.is_active()
     except db_exceptions as e:
         logger.error("%s Database not ready or switch does not exist: %s", prefix, e, exc_info=True)
