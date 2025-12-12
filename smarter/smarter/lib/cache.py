@@ -233,6 +233,78 @@ class LazyCache:
         """
         return self.cache.delete(key)  # type: ignore[return-value]
 
+    def incr(self, key: Any, delta: int = 1):
+        """
+        Increment a value in the cache.
+        """
+        return self.cache.incr(key, delta)  # type: ignore[return-value]
+
+    def decr(self, key: Any, delta: int = 1):
+        """
+        Decrement a value in the cache.
+        """
+        return self.cache.decr(key, delta)  # type: ignore[return-value]
+
+    def clear(self):
+        """
+        Clear the entire cache.
+        """
+        return self.cache.clear()  # type: ignore[return-value]
+
+    def add(self, key: Any, value: Any, timeout: Optional[float] = None, version: Optional[int] = None):
+        """
+        Add a value to the cache if the key does not already exist.
+        """
+        return self.cache.add(key, value, timeout=timeout)  # type: ignore[return-value]
+
+    def touch(self, key: Any, timeout: Optional[float] = None, version: Optional[int] = None):
+        """
+        Update the timeout for a given key in the cache.
+        """
+        return self.cache.touch(key, timeout=timeout)  # type: ignore[return-value]
+
+    def has_key(self, key: Any, version: Optional[int] = None) -> bool:
+        """
+        Check if a key exists in the cache.
+        """
+        return self.cache.has_key(key)  # type: ignore[return-value]
+
+    def get_many(self, keys: list, version: Optional[int] = None) -> dict:
+        """
+        Fetch multiple keys from the cache.
+        """
+        return self.cache.get_many(keys)  # type: ignore[return-value]
+
+    def set_many(self, data: dict, timeout: Optional[float] = None, version: Optional[int] = None):
+        """
+        Set multiple values in the cache.
+        """
+        return self.cache.set_many(data, timeout=timeout)  # type: ignore[return-value]
+
+    def delete_many(self, keys: list, version: Optional[int] = None):
+        """
+        Delete multiple keys from the cache.
+        """
+        return self.cache.delete_many(keys)  # type: ignore[return-value]
+
+    def incr_version(self, key: Any, delta: int = 1, version: Optional[int] = None):
+        """
+        Increment the version of a key in the cache.
+        """
+        return self.cache.incr_version(key, delta)  # type: ignore[return-value]
+
+    def decr_version(self, key: Any, delta: int = 1, version: Optional[int] = None):
+        """
+        Decrement the version of a key in the cache.
+        """
+        return self.cache.decr_version(key, delta)  # type: ignore[return-value]
+
+    def close(self, **kwargs):
+        """
+        Close the cache connection.
+        """
+        return self.cache.close(**kwargs)  # type: ignore[return-value]
+
 
 lazy_cache = LazyCache()
 """
