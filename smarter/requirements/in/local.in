@@ -5,7 +5,7 @@
 # usage: developer support packages for code syntax and type checking, testing,
 #        formatting, security, quality, vanity, debugging, build & packaging
 #
-#      pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
+#       pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
 # -----------------------------------------------------------------------------
 
 -r constraints.in

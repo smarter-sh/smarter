@@ -12,11 +12,11 @@ notes:
 
 import glob
 import hashlib
+import json
 import logging
 import logging.config
 import math
 import os
-import re
 import secrets
 import subprocess
 import sys
@@ -26,10 +26,6 @@ from pathlib import Path
 
 from corsheaders.defaults import default_headers
 from django import get_version
-from django.core.cache import cache
-from django.db import connections
-from django.db.utils import OperationalError
-from social_core.backends.linkedin import LinkedinOAuth2
 
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import settings as smarter_settings
@@ -474,6 +470,7 @@ CACHES = {
         },
     }
 }
+
 """
 The Django cache configuration for Smarter, using Redis as the cache backend.
 
@@ -1131,6 +1128,11 @@ LOGGING = {
         "level": "INFO",
     },
     "loggers": {
+        "django": {
+            "handlers": ["default"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
         "django.security.DisallowedHost": {
             "handlers": ["default"],
             "level": "ERROR",
@@ -1300,10 +1302,11 @@ WAGTAILTRANSFER_SECRET_KEY = "8egf3jj8ib64j00gomz270wgzqwrfyed"
 WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = 30
 
 ###############################################################################
-# System information logging for all environments
+# Settings diagnostics information for all environments
 ###############################################################################
 if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
     logger.info("=" * 80)
+    logger.info("smarter.settings.base.py")
 
     try:
         with open("/proc/uptime", encoding="utf-8") as f:
@@ -1375,18 +1378,10 @@ if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
     logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)
     logger.info("Storages backend: %s", STORAGES["default"]["BACKEND"])
 
-    logger.info("Cache backend: %s", CACHES["default"]["BACKEND"])
-
-    try:
-        cache.set("test_key", "test_value", timeout=5)
-        value = cache.get("test_key")
-        if value == "test_value":
-            logger.info("Redis is up and reachable.")
-        else:
-            logger.error("Redis is not working as expected.")
-    # pylint: disable=broad-except
-    except Exception as e:
-        logger.error("Redis is NOT reachable: %s", e)
+    cache_backend = CACHES.get("default", {}).get("BACKEND", "not configured")
+    logger.info("Cache backend: %s", json.dumps(CACHES))
+    if cache_backend != "django_redis.cache.RedisCache":
+        logger.warning("Recommended cache backend is django_redis.cache.RedisCache")
 
     if smarter_settings.smtp_is_configured:
         logger.info("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)

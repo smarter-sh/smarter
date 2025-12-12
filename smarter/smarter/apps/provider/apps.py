@@ -1,6 +1,11 @@
 """Django app for the Provider app."""
 
+import logging
+
 from django.apps import AppConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 class ProviderConfig(AppConfig):
@@ -15,3 +20,5 @@ class ProviderConfig(AppConfig):
         """Handle signals."""
         from . import receivers  # noqa
         from . import signals  # noqa
+
+        logger.info("Provider app ready: signals and receivers imported")

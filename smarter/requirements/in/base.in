@@ -4,7 +4,7 @@
 #
 # usage:      The common platform requirements.
 #
-# pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
+#             pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
 # -----------------------------------------------------------------------------
 
 -r constraints.in

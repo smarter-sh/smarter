@@ -6,7 +6,6 @@ from functools import cached_property
 from typing import Any, List, Optional, Type
 from urllib.parse import ParseResult, urljoin, urlparse
 
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.http import HttpRequest
@@ -33,6 +32,7 @@ from smarter.common.helpers.url_helpers import clean_url
 from smarter.common.utils import rfc1034_compliant_str, smarter_build_absolute_uri
 from smarter.lib import json
 from smarter.lib.cache import cache_results
+from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin

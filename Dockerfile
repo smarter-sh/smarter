@@ -72,7 +72,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   git \
   curl \
   unzip \
-  procps && \
+  procps \
+  redis-tools && \
   rm -rf /var/lib/apt/lists/*
 
 # Install kubectl, required for smarter/common/helpers/k8s_helpers.py used for ChatBot/Agent

@@ -5,7 +5,6 @@ import logging
 from typing import Any, Optional, Union
 
 from django.conf import settings
-from django.core.cache import cache
 from django.db import models
 from django.db.utils import IntegrityError
 from django.http import HttpRequest
@@ -17,6 +16,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin

@@ -1,6 +1,11 @@
 """Django app for the OpenAI Function Calling app."""
 
+import logging
+
 from django.apps import AppConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 class PromptConfig(AppConfig):
@@ -15,3 +20,5 @@ class PromptConfig(AppConfig):
         """Handle signals."""
         from . import receivers  # noqa
         from . import signals  # noqa
+
+        logger.info("Prompt app ready: signals and receivers imported")
