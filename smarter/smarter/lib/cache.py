@@ -1,9 +1,39 @@
-"""chatbot utils"""
+"""
+The Smarter Framework implements its own, proprietary caching technology,
+designed as a one-size-fits-all easy-to-implement solution for caching
+function outputs based on their input parameters.
+
+This module consists of two main components:
+
+- a general-purpose caching decorator, ``@cache_results()``, for caching function results, and
+- a lazy singleton cache wrapper, ``lazy_cache``, around Django's cache framework.
+
+Usage examples::
+
+    # work directly with the cache
+    from smarter.lib.cache import lazy_cache as cache
+
+    cache.set("my_key", "my_value", timeout=300)
+    value = cache.get("my_key")
+    print(value)  # Outputs: "my_value"
+
+    # use the caching decorator
+    @cache_results(timeout=600)
+    def expensive_function(x, y, *args, **kwargs):
+        # Perform expensive computation ...
+        result = "some very expensive computational result"
+        return result
+
+    result = expensive_function(1, 2)
+    expensive_function.invalidate(1, 2)
+
+"""
 
 import hashlib
 import logging
 import pickle
 from functools import wraps
+from typing import Any, Callable, Optional
 
 from django.http import HttpRequest
 
@@ -14,16 +44,44 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_red,
 )
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text("@cache_results()")
-logger.info("%s cache module loaded", logger_prefix)
 
 
 class CacheSentinel:
     """
-    A sentinel object to represent a cache entry that is None or a cache miss.
+    Sentinel object for cache state representation.
+
+    This class is used to distinguish between different cache states, specifically to represent
+    cases where a cache entry is explicitly set to ``None`` or when a cache lookup results in a miss.
+    By using a unique sentinel object, the cache logic can reliably differentiate between a value
+    that is intentionally ``None`` and a value that is absent from the cache.
+
+    **Usage scenarios:**
+
+    - When a cached function or value may legitimately return ``None``, this sentinel ensures that
+      a cached ``None`` is not mistaken for a cache miss.
+    - Used internally by caching decorators and cache wrappers to provide robust cache semantics.
+
+    **Example:**
+
+    .. code-block:: python
+
+        sentinel = CacheSentinel("CACHE_MISS")
+        cache_value = cache.get(key, sentinel)
+        if cache_value is sentinel:
+            # Handle cache miss
+            ...
+        elif cache_value is None:
+            # Handle cached None
+            ...
+
+    The string representation of the sentinel is the name provided at construction, while the
+    ``repr`` includes a hash for uniqueness. This makes it suitable for use as a default value
+    in cache lookups and for debugging purposes.
     """
 
     def __init__(self, name):
@@ -40,16 +98,20 @@ CACHE_NONE_SENTINEL = 'CacheSentinel("CACHE_NONE")'
 CACHE_MISS_SENTINEL = CacheSentinel("CACHE_MISS")
 
 
+# pylint: disable=C2801,E1102,W0613
 class LazyCache:
     """
     A lazy wrapper around Django's cache framework that defers importing the cache
-    until an attribute is accessed. This helps avoid premature initialization issues.
+    until just before it is used for the first time.
+    This helps avoid premature initialization issues. See https://docs.djangoproject.com/en/5.2/topics/cache/
 
     Usage example::
 
         from smarter.lib.cache import lazy_cache as cache
-        value = lazy_cache.get("my_key")
-        lazy_cache.set("my_key", "my_value", timeout=60)
+
+        cache.set("my_key", "my_value", timeout=300)
+        value = cache.get("my_key")
+        print(value)  # Outputs: "my_value"
 
     This class performs diagnostics on first access to verify that the Django cache
     has been initialized correctly, logging relevant information about the cache backend.
@@ -59,38 +121,47 @@ class LazyCache:
 
     """
 
-    is_ready = False
-    cache_logging = False
+    _cache = None
+    _waffle = None
 
-    def __getattr__(self, name):
-        # pylint: disable=import-outside-toplevel
-        from django.core.cache import cache
+    # pylint: disable=C0415
+    @property
+    def cache(self):
+        """
+        Lazily import and return Django's cache framework.
+        Performs diagnostics on first access to verify that the cache
+        has initialized correctly (eg as expected, as per the Django settings).
 
-        # Import waffle here to avoid triggering Django cache initialization too early.
-        from smarter.lib.django import waffle
-        from smarter.lib.django.waffle import SmarterWaffleSwitches
+        .. important::
 
-        self.cache_logging = waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
+            This is reason #1 for using ``lazy_cache`` instead of importing Django's cache.
+            This delays importing django.core.cache until first access, preventing premature
+            initialization issues where Django falls back to a default cache backend unexpectedly.
+            When this happens, the fallback cache may not persist data as expected, leading to
+            buggy cache misses such as browser session values not being stored.
 
-        if not self.is_ready:
-            # First access, perform diagnostics to verify how Django initialized the cache
-            self.is_ready = True
-
-            # This log entry marks the exact moment when django.core.cache is first imported,
-            # and ostensibly initialized. We aspire to have this happy ONLY AFTER the Django
-            # settings have been fully loaded and the Django apps have all achieved a ready state.
-            logger.info("%s django.core.cache imported.", logger_prefix)
-
-            from django.core.cache import caches
-            from django.utils.connection import ConnectionProxy
+        :return: The Django cache instance.
+        :rtype: django.core.cache.Cache
+        """
+        if self._cache is None:
+            from django.core.cache import cache, caches
             from django_redis.cache import RedisCache
 
-            cache.set("test_key", "test_value", timeout=5)
-            value = cache.get("test_key")
-            if value == "test_value":
-                logger.info("Django cache is up and reachable.")
-            else:
-                logger.error("Django cache is not working as expected.")
+            logger.info("%s django.core.cache imported.", logger_prefix)
+
+            self._cache = cache
+
+            try:
+                # perform diagnostics on first access
+                cache.set("test_key", "test_value", timeout=5)
+                value = cache.get("test_key")
+                if value == "test_value":
+                    logger.info("Django cache is up and reachable.")
+                else:
+                    logger.error("Django cache is not working as expected.")
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Error accessing Django cache: %s", e)
 
             if not isinstance(caches["default"], RedisCache):
                 logger.warning(
@@ -98,18 +169,69 @@ class LazyCache:
                     caches["default"].__class__,
                 )
 
-                if isinstance(cache, ConnectionProxy):
-                    # diagnostics for misconfigured Django Redis cache
-                    logger.error(
-                        "Django has silently fallen back to a ConnectionProxy cache. The actual backend is: %s",
-                        caches["default"].__class__,
-                    )
-                else:
-                    logger.warning("Was expecting a Redis cache, but found: %s instead.", cache.__class__)
-            else:
-                logger.info("Cache is a direct instance of: %s", caches["default"].__class__)
+        return self._cache
 
-        return getattr(cache, name)
+    @property
+    def waffle(self):
+        """
+        Lazily import and return the Waffle module. Lookalike function api such as switch_is_active() with identical signatures.
+
+        Provides enhanced, managed Django-waffle wrapper with short-lived Redis-based
+        caching and database readiness checks. Used for feature flagging.
+
+
+        Features:
+
+            - **Caching**: Integrates short-lived Redis-based caching to optimize feature flag (switch) checks.
+            - **Database** Readiness Handling: Implements safeguards to prevent errors when the database is not ready.
+            - **Feature Flag Management**: Centralized mechanism to check if a feature flag (switch) is active.
+            - **Custom Django Admin**: Customized Django Admin class for managing waffle switches.
+            - **Fixed Set of Switches**: Defines a fixed set of waffle switches for the Smarter API.
+
+        .. important::
+
+            This is reason #2 for using ``lazy_cache`` instead of importing Waffle directly.
+            This delays importing Waffle until first access. Waffle aggressively
+            caches its state which can also lead to premature initialization issues
+            if imported too early in the Django startup process.
+
+        :return: The Waffle module.
+        :rtype: module
+        """
+        if self._waffle is None:
+            from smarter.lib.django import waffle
+
+            self._waffle = waffle
+
+        return self._waffle
+
+    @property
+    def cache_logging(self) -> bool:
+        """
+        Check if cache activity logging (here, inside this module) is enabled via Waffle switch.
+
+        :return: True if cache logging is enabled, False otherwise.
+        :rtype: bool
+        """
+        return self.waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
+
+    def get(self, key: Any, default: Optional[Any] = None):
+        """
+        Fetch a given key from the cache. If the key does not exist, return default, which itself defaults to None.
+        """
+        return self.cache.get(key, default)  # type: ignore[return-value]
+
+    def set(self, key: Any, value: Any, timeout: Optional[float] = None, version: Optional[int] = None):
+        """
+        Set a value in the cache. If timeout is given, use that timeout for the key; otherwise use the default cache timeout.
+        """
+        return self.cache.set(key, value, timeout=timeout)  # type: ignore[return-value]
+
+    def delete(self, key: Any):
+        """
+        Delete a value from the cache.
+        """
+        return self.cache.delete(key)  # type: ignore[return-value]
 
 
 lazy_cache = LazyCache()
@@ -120,27 +242,53 @@ where Django falls back to a default cache backend unexpectedly.
 When this happens, the fallback cache may not persist data as expected,
 leading to buggy cache misses such as browser session values not being stored.
 
-.. usage::
+.. code-block:: python
 
+    # suggest importing like this, in order to clarify
+    # that you're importing lazy_cache, which has an api
+    # that is identical to that of django.core.cache
     from smarter.lib.cache import lazy_cache as cache
 
-    value = lazy_cache.get("my_key")
-    lazy_cache.set("my_key", "my_value", timeout=60)
+    cache.set("my_key", "my_value", timeout=300)
+    value = cache.get("my_key")
+    print(value)  # Outputs: "my_value"
 """
 
 
 def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     """
-    Decorator that caches the result of a function based on its arguments.
+    A decorator that caches the result of a function based on the arguments
+    passed to it. When
+    the decorated function is called, the decorator first checks if a cached
+    result exists for the given arguments. If a cached result is found, it is
+    returned immediately. If not, the original function is called, its result
+    is cached, and then returned. Smarter's cache infrastructure is based on
+    Redis and runs as a remote service that services application restarts,
+    deployments, and, it natively services multiple application server instances.
 
-    The cache key is generated from the function name, positional arguments, and sorted keyword arguments.
-    If the result is already cached, it is returned directly. Otherwise, the function is called and its
-    result is cached. The cache key is created by serializing the function name, its positional arguments,
-    and its sorted keyword arguments using pickle. This serialized data is then hashed with SHA-256,
-    and the first 32 characters of the hash are used as part of the cache key, prefixed by the function’s
-    module and name. This ensures that each unique set of arguments generates a unique cache key.
-    There is a non-zero probability of hash collisions, but it is *EXTREMELY* low for practical purposes.
-    Smarter's cache entries are short-lived, further reducing the risk of collisions impacting functionality.
+    .. note::
+
+        *One of the challenges with implementing a caching decorator based on Django cache
+        regards working around Django's application startup sequence.
+        Decorators are imported and applied at module load time,
+        which often results in Django's cache
+        framework being prematurely imported and initialized while Django itself is still
+        running its own application startup process.*
+
+        *This often leads to situations where Django falls back to an
+        alternative 'default' memory-based cache backend unexpectedly
+        (and silently). When this happens, the fallback cache most likely
+        will not persist data as expected, leading to buggy cache misses
+        such as users' browser session values not being stored, and cached
+        results of this decorator enduring less than specified.*
+
+    **How It works:**
+
+    A cache key is created by building a string of the module name + the function name,
+    and then appending a 32-character hash of its serialized positional arguments and sorted keyword pairs.
+    This ensures that each unique set of arguments maps to a unique but repeatable cache key.
+    Technically speaking, there is a statistical non-zero probability of hash collisions, but,
+    the risk of this happening is *EXTREMELY* low.
 
     :param timeout: The cache timeout in seconds. Defaults to ``SMARTER_DEFAULT_CACHE_TIMEOUT``.
     :type timeout: int
@@ -155,9 +303,11 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
 
     Usage example::
 
-        @cache_results(timeout=60)
-        def expensive_function(x, y):
-            return x + y
+        @cache_results(timeout=600)
+        def expensive_function(x, y, *args, **kwargs):
+            # Perform expensive computation ...
+            result = "some very expensive computational result"
+            return result
 
     The decorator also adds an ``invalidate`` method to the wrapped function, which can be used to
     manually remove the cached result for specific arguments::
@@ -165,34 +315,60 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
         expensive_function.invalidate(1, 2)
     """
 
-    def decorator(func):
+    def decorator(func: Callable) -> Callable:
 
-        def generate_sorted_kwargs(kwargs):
+        def generate_sorted_kwargs(kwargs: dict) -> tuple:
             """
-            Sorts the keyword arguments to ensure consistent cache keys.
+            Sorts the keyword arguments for consistent generation of sha256 cache key,
+            which is created, in part, on the results of this function.
+
+
+            :param kwargs: The keyword arguments to sort.
+            :return: A tuple of sorted keyword argument items.
+            :rtype: tuple
+
             """
             return tuple(sorted(kwargs.items()))
 
-        def generate_key_data(func, args, kwargs):
+        def generate_key_data(func: Callable, args: tuple, kwargs: dict) -> Optional[bytes]:
             """
-            Generates a raw cache key based on the function name, arguments, and sorted keyword arguments.
+            Generates a raw cache key based on the function name, arguments,
+            and sorted keyword arguments.
+
+            :param func: The function for which to generate the key.
+            :param args: The positional arguments passed to the function.
+            :param kwargs: The keyword arguments passed to the function.
+            :return: The raw key data as bytes.
+            :rtype: Optional[bytes]
             """
             sorted_kwargs = generate_sorted_kwargs(kwargs)
             try:
                 key_data = pickle.dumps((func.__name__, args, sorted_kwargs))
             except pickle.PickleError as e:
-                logger.warning("%s Failed to pickle key data: %s", logger_prefix, e)
+                logger.error("%s Failed to pickle key data: %s", logger_prefix, e)
                 return None
 
             return key_data
 
-        def generate_cache_key(func, key_data):
+        def generate_cache_key(func: Callable, key_data: bytes) -> str:
             """
-            Generates a fixed-length cache key based on a hash of key data.
+            Generates a deterministic cache key str based on
+            the module name, function name and a 32-character hash of
+            the complete set of key data.
+
+            Example::
+
+                'smarter.apps.account.utils._get_account_for_user_by_id()_cc3ce8b352a65ac8018943debd10ec9c'
+
+            :param func: The function for which to generate the key.
+            :param key_data: The raw key data as bytes.
+            :return: The generated cache key as a string.
+            :rtype: str
             """
             return f"{func.__module__}.{func.__name__}()_" + hashlib.sha256(key_data).hexdigest()[:32]
 
-        def unpickle_key_data(key_data):
+        # pylint: disable=unused-variable
+        def unpickle_key_data(key_data: bytes) -> Optional[tuple]:
             """
             Unpickles the key data to retrieve the original function name, arguments, and sorted keyword arguments.
             """
@@ -206,11 +382,68 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
         @wraps(func)
         def wrapper(*args, **kwargs):
             """
-            Wrapper function that caches the result of the decorated function.
-            If the result is already cached, it returns the cached result.
-            If the result is not cached, it calls the function and caches the result.
+            Caches the result of the decorated function based on its arguments.
+
+            This function is the core of the :func:`cache_results` decorator. When you decorate a function with
+            :func:`cache_results`, calls to that function are intercepted by this wrapper, which manages
+            caching transparently. The wrapper first attempts to retrieve a cached result using a key
+            derived from the function's name and arguments. If a cached value is found, it is returned
+            immediately, avoiding redundant computation. If not, the original function is called, its result
+            is cached, and then returned.
+
+            **How it works:**
+
+            1. **Cache Key Generation:**
+                The wrapper serializes the function's name, positional arguments, and sorted keyword arguments
+                to create a unique and repeatable cache key. This ensures that each unique set of arguments,
+                including combinations and permutations of keyword arguments, maps to a unique cache entry.
+
+            2. **Cache Lookup:**
+                The wrapper checks if a result for this key is already stored in the cache. If so, it returns
+                the cached value. This is called a *cache hit*.
+
+            3. **Cache Miss Handling:**
+                If no cached value is found (a *cache miss*), the original function is called with the provided
+                arguments. The result is then stored in the cache for future calls.
+
+            4. **Handling None Results:**
+                If the function returns ``None``, a special sentinel value is cached to distinguish between a
+                cached ``None`` and a true cache miss.
+
+            5. **Logging (Optional):**
+                If logging is enabled, the wrapper logs cache hits, misses, and cache invalidations for
+                debugging and transparency.
+
+            **Decorator Usage Example:**
+
+            .. code-block:: python
+
+                    @cache_results(timeout=60)
+                    def expensive_function(x, y):
+                        # Perform expensive computation
+                        return x + y
+
+                    # First call: result is computed and cached
+                    result1 = expensive_function(1, 2)
+
+                    # Second call with same arguments: result is returned from cache
+                    result2 = expensive_function(1, 2)
+
+            **Why use this pattern?**
+
+            - *Performance*: Avoids repeating expensive computations for the same inputs.
+            - *Transparency*: The original function's interface is preserved; users call it as usual.
+            - *Extensibility*: The decorator adds an ``invalidate`` method to the wrapped function, allowing
+                manual cache clearing for specific arguments.
+
+            :param args: Positional arguments passed to the decorated function.
+            :type args: tuple
+            :param kwargs: Keyword arguments passed to the decorated function.
+            :type kwargs: dict
+            :return: The result of the decorated function, either from cache or freshly computed.
+            :rtype: Any
             """
-            key_data = generate_key_data(func, args, kwargs)
+            key_data: Optional[bytes] = generate_key_data(func, args, kwargs)
             # If key_data is None, we cannot generate a cache key, so we call the function directly
             # and return the result without caching.
             # This is a fallback to avoid breaking the application in case of pickling errors.
@@ -220,9 +453,10 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             cache_key = generate_cache_key(func, key_data)
             # unpickled_cache_key = unpickle_key_data(key_data)
 
+            # look for a cached result ...
             cached_result = lazy_cache.get(cache_key, CACHE_MISS_SENTINEL)
             if cached_result is not CACHE_MISS_SENTINEL:
-                # We have a cache hit
+                # cache hit, hooray!
                 result = (
                     None if isinstance(cached_result, str) and cached_result == CACHE_NONE_SENTINEL else cached_result
                 )
@@ -234,7 +468,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                         "None" if result is None else result,
                     )
             else:
-                # Cache miss - call the function
+                # Cache miss, boo! Call the function ...
                 result = func(*args, **kwargs)
                 cache_value = CACHE_NONE_SENTINEL if result is None else result
                 lazy_cache.set(cache_key, cache_value, timeout)
@@ -249,10 +483,10 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             return result
 
         def invalidate(*args, **kwargs):
-            key_data = generate_key_data(func, args, kwargs)
+            key_data: Optional[bytes] = generate_key_data(func, args, kwargs)
             if key_data is None:
                 return
-            cache_key = generate_cache_key(func, key_data)
+            cache_key: str = generate_cache_key(func, key_data)
             lazy_cache.delete(cache_key)
             if logging_enabled and lazy_cache.cache_logging:
                 logger.info(
@@ -269,6 +503,11 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
 
 def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     """
+    .. deprecated:: v0.10.0
+
+        Use lib.django.view_helpers or another caching decorator instead.
+        This decorator will be removed in a future release.
+
     Caches the result of a function based on the request URI and user identifier.
     Associates a Smarter user account number with the cache key if the user is authenticated.
     """
@@ -278,7 +517,7 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
         @wraps(func)
         def wrapper(request: HttpRequest, *args, **kwargs):
             if request is None or not isinstance(request, HttpRequest):
-                logger.warning(
+                logger.error(
                     "%s.cache_request() received an invalid request object: %s",
                     logger_prefix,
                     type(request).__name__,
