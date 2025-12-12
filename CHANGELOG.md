@@ -1,3 +1,10 @@
+## [0.13.43](https://github.com/smarter-sh/smarter/compare/v0.13.42...v0.13.43) (2025-12-12)
+
+
+### Bug Fixes
+
+* re-enable waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING) ([7876844](https://github.com/smarter-sh/smarter/commit/78768443a0fb805b0002dbc4eb233f2a12380772))
+
 ## [0.13.42](https://github.com/smarter-sh/smarter/compare/v0.13.41...v0.13.42) (2025-12-12)
 
 
