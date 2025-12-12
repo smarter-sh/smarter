@@ -44,6 +44,19 @@ class LazyCache:
     """
     A lazy wrapper around Django's cache framework that defers importing the cache
     until an attribute is accessed. This helps avoid premature initialization issues.
+
+    Usage example::
+
+        from smarter.lib.cache import lazy_cache as cache
+        value = lazy_cache.get("my_key")
+        lazy_cache.set("my_key", "my_value", timeout=60)
+
+    This class performs diagnostics on first access to verify that the Django cache
+    has been initialized correctly, logging relevant information about the cache backend.
+    It is intended to be used as a singleton instance named `lazy_cache` (see below).
+
+    It also checks for a Waffle switch to enable or disable cache logging.
+
     """
 
     is_ready = False
@@ -62,6 +75,10 @@ class LazyCache:
         if not self.is_ready:
             # First access, perform diagnostics to verify how Django initialized the cache
             self.is_ready = True
+
+            # This log entry marks the exact moment when django.core.cache is first imported,
+            # and ostensibly initialized. We aspire to have this happy ONLY AFTER the Django
+            # settings have been fully loaded and the Django apps have all achieved a ready state.
             logger.info("%s django.core.cache imported.", logger_prefix)
 
             from django.core.cache import caches
@@ -96,6 +113,20 @@ class LazyCache:
 
 
 lazy_cache = LazyCache()
+"""
+A singleton instance of LazyCache for accessing Django's cache framework
+without risking premature initialization, which can lead to issues
+where Django falls back to a default cache backend unexpectedly.
+When this happens, the fallback cache may not persist data as expected,
+leading to buggy cache misses such as browser session values not being stored.
+
+.. usage::
+
+    from smarter.lib.cache import lazy_cache as cache
+
+    value = lazy_cache.get("my_key")
+    lazy_cache.set("my_key", "my_value", timeout=60)
+"""
 
 
 def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
