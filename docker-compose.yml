@@ -29,6 +29,8 @@ services:
     cpus: 0.25
     image: redis:latest
     command: redis-server --requirepass smarter
+    ports:
+      - 6379:6379
 
   smarter-app:
     container_name: smarter-app

@@ -5,7 +5,6 @@ import logging
 import pickle
 from functools import wraps
 
-from django.core.cache import cache
 from django.http import HttpRequest
 
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
@@ -19,6 +18,7 @@ from smarter.common.utils import is_authenticated_request, smarter_build_absolut
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text("@cache_results()")
+logger.info("%s cache module loaded", logger_prefix)
 
 
 class CacheSentinel:
@@ -39,6 +39,57 @@ class CacheSentinel:
 CACHE_NONE_SENTINEL = 'CacheSentinel("CACHE_NONE")'
 CACHE_MISS_SENTINEL = CacheSentinel("CACHE_MISS")
 CACHE_LOGGING = True
+
+
+class LazyCache:
+    """
+    A lazy wrapper around Django's cache framework that defers importing the cache
+    until an attribute is accessed. This helps avoid premature initialization issues.
+    """
+
+    is_ready = False
+
+    def __getattr__(self, name):
+        # pylint: disable=import-outside-toplevel
+        from django.core.cache import cache
+
+        if not self.is_ready:
+            # First access, perform diagnostics to verify how Django initialized the cache
+            self.is_ready = True
+            logger.info("%s django.core.cache imported.", logger_prefix)
+
+            from django.core.cache import caches
+            from django.utils.connection import ConnectionProxy
+            from django_redis.cache import RedisCache
+
+            cache.set("test_key", "test_value", timeout=5)
+            value = cache.get("test_key")
+            if value == "test_value":
+                logger.info("Django cache is up and reachable.")
+            else:
+                logger.error("Django cache is not working as expected.")
+
+            if not isinstance(caches["default"], RedisCache):
+                logger.warning(
+                    "django.core.cache.caches['default'] was expecting django_redis.cache.RedisCache but found: %s",
+                    caches["default"].__class__,
+                )
+
+                if isinstance(cache, ConnectionProxy):
+                    # diagnostics for misconfigured Django Redis cache
+                    logger.error(
+                        "Django has silently fallen back to a ConnectionProxy cache. The actual backend is: %s",
+                        cache.__class__,
+                    )
+                else:
+                    logger.warning("Was expecting a Redis cache, but found: %s instead.", cache.__class__)
+            else:
+                logger.info("Cache is a direct instance of: %s", caches["default"].__class__)
+
+        return getattr(cache, name)
+
+
+lazy_cache = LazyCache()
 
 
 def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
@@ -78,6 +129,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     """
 
     def decorator(func):
+
         def generate_sorted_kwargs(kwargs):
             """
             Sorts the keyword arguments to ensure consistent cache keys.
@@ -131,7 +183,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             cache_key = generate_cache_key(func, key_data)
             # unpickled_cache_key = unpickle_key_data(key_data)
 
-            cached_result = cache.get(cache_key, CACHE_MISS_SENTINEL)
+            cached_result = lazy_cache.get(cache_key, CACHE_MISS_SENTINEL)
             if cached_result is not CACHE_MISS_SENTINEL:
                 # We have a cache hit
                 result = (
@@ -148,7 +200,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 # Cache miss - call the function
                 result = func(*args, **kwargs)
                 cache_value = CACHE_NONE_SENTINEL if result is None else result
-                cache.set(cache_key, cache_value, timeout)
+                lazy_cache.set(cache_key, cache_value, timeout)
                 if logging_enabled and CACHE_LOGGING:
                     logger.info(
                         "%s cache miss for %s, caching result: %s with timeout %s",
@@ -164,7 +216,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             if key_data is None:
                 return
             cache_key = generate_cache_key(func, key_data)
-            cache.delete(cache_key)
+            lazy_cache.delete(cache_key)
             if logging_enabled and CACHE_LOGGING:
                 logger.info(
                     "%s invalidated cache entry for %s",
@@ -185,6 +237,7 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     """
 
     def decorator(func):
+
         @wraps(func)
         def wrapper(request: HttpRequest, *args, **kwargs):
             if request is None or not isinstance(request, HttpRequest):
@@ -199,12 +252,12 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 request.user.username if is_authenticated_request(request) else "anonymous"  # type: ignore[union-attr,attr-defined]
             )
             cache_key = f"{func.__name__}_{url}_{user_identifier}"
-            result = cache.get(cache_key)
+            result = lazy_cache.get(cache_key)
             if result and logging_enabled and CACHE_LOGGING:
                 logger.info("%s cache hit for %s", logger_prefix, cache_key)
             else:
                 result = func(request, *args, **kwargs)
-                cache.set(cache_key, result, timeout)
+                lazy_cache.set(cache_key, result, timeout)
                 if logging_enabled and CACHE_LOGGING:
                     logger.info("%s caching %s with timeout %s", formatted_text("cache_results()"), cache_key, timeout)
             return result

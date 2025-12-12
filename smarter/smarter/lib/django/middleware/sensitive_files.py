@@ -5,11 +5,11 @@ import logging
 import re
 
 from django.conf import settings
-from django.core.cache import cache
 from django.http import HttpResponseForbidden
 
 from smarter.common.classes import SmarterMiddlewareMixin
 from smarter.common.conf import settings as smarter_settings
+from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
