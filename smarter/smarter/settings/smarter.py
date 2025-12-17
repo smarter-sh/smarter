@@ -64,7 +64,7 @@ Description of the Smarter API. Not currently used.
 
 # Marketing and branding settings
 # -----------------------------------------------------------------------------
-SMARTER_BRANDING_CORPORATE_NAME = "Smarter"
+SMARTER_BRANDING_CORPORATE_NAME = "Lawrence P. McDaniel, The Smarter Project"
 """
 Smarter Branding. Provided to the Smarter web console dashboard
 context processor for use in the common footer of html templates.
@@ -72,7 +72,7 @@ context processor for use in the common footer of html templates.
 SMARTER_BRANDING_SUPPORT_PHONE_NUMBER = "+1 (617) 834-6172"
 SMARTER_BRANDING_SUPPORT_EMAIL = "support@smarter.sh"
 SMARTER_BRANDING_ADDRESS = "851 Burlway Road, Suite 101, Burlingame, CA 94010"
-SMARTER_BRANDING_CONTACT = "https://lawrencemcdaniel.com/contact/"
+SMARTER_BRANDING_CONTACT_URL = "https://lawrencemcdaniel.com/contact/"
 SMARTER_BRANDING_SUPPORT_HOURS = "MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)"
 SMARTER_BRANDING_URL_FACEBOOK = "#"
 SMARTER_BRANDING_URL_TWITTER = "#"
