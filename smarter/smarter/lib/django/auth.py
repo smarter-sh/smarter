@@ -16,25 +16,24 @@ Returns HTTP 200 if the subscription is active. 40x otherwise.
 import logging
 from http import HTTPStatus
 
-import requests_cache
+import requests
 from django.contrib import messages
 from django.contrib.auth.backends import ModelBackend
 from requests.exceptions import HTTPError, RequestException, Timeout, TooManyRedirects
-from retry_requests import retry
 from social_core.backends.github import GithubOAuth2
 from social_core.backends.google import GoogleOAuth2
 
 from smarter.common.conf import settings as smarter_settings
+from smarter.lib.cache import cache_results
 
 
 logger = logging.getLogger(__name__)
 
 USERNAME = "username"
 SUBSCRIPTION_STATUS_API_URL = f"https://api.am.{smarter_settings.root_domain}/accounts/subscription-status/"
-request_cache = requests_cache.CachedSession("/tmp/.subscription_status_cache", expire_after=600)  # nosec
-retriable_request = retry(request_cache, retries=5, backoff_factor=0.2)
 
 
+@cache_results()
 def verify_payment_status(username) -> bool:
     """
     Verify the payment status of a user by making an API call
@@ -57,7 +56,7 @@ def verify_payment_status(username) -> bool:
         "X-Client-Username": username,
     }
     try:
-        response = retriable_request.get(SUBSCRIPTION_STATUS_API_URL, headers=headers, timeout=5)
+        response = requests.get(SUBSCRIPTION_STATUS_API_URL, headers=headers, timeout=5)
         logger.info("Subscription status API response for user %s: %s", username, response.status_code)
         return response.status_code == HTTPStatus.OK
     except Timeout as timeout_err:
