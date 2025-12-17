@@ -721,11 +721,15 @@ See:
 # https://python-social-auth.readthedocs.io/en/latest/configuration/django.html
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
+AUTHENTICATION_BACKENDS = os.environ.get("AUTHENTICATION_BACKENDS")
 AUTHENTICATION_BACKENDS = (
-    "social_core.backends.google.GoogleOAuth2",
-    "social_core.backends.github.GithubOAuth2",
-    "smarter.lib.social_core.backends.linkedin.LinkedinOAuth2",
-    "django.contrib.auth.backends.ModelBackend",
+    AUTHENTICATION_BACKENDS.split(",")
+    if AUTHENTICATION_BACKENDS
+    else [
+        "social_core.backends.google.GoogleOAuth2",
+        "social_core.backends.github.GithubOAuth2",
+        "django.contrib.auth.backends.ModelBackend",
+    ]
 )
 """
 The authentication backends for Smarter, including social authentication
