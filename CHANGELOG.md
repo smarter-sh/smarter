@@ -1,3 +1,10 @@
+## [0.13.46](https://github.com/smarter-sh/smarter/compare/v0.13.45...v0.13.46) (2025-12-17)
+
+
+### Bug Fixes
+
+* add custom authentication backends for hosted platforms ([727506d](https://github.com/smarter-sh/smarter/commit/727506d45698920c475a428aa9932cbf795a6b60))
+
 ## [0.13.45](https://github.com/smarter-sh/smarter/compare/v0.13.44...v0.13.45) (2025-12-17)
 
 
