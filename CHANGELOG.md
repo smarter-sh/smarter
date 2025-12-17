@@ -1,3 +1,10 @@
+## [0.13.48](https://github.com/smarter-sh/smarter/compare/v0.13.47...v0.13.48) (2025-12-17)
+
+
+### Bug Fixes
+
+* install Oracle mysql client ([52083b2](https://github.com/smarter-sh/smarter/commit/52083b2577a03f37bdc156ae08a7195f3a776382))
+
 ## [0.13.47](https://github.com/smarter-sh/smarter/compare/v0.13.46...v0.13.47) (2025-12-17)
 
 
