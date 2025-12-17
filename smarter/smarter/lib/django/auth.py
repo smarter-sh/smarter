@@ -91,7 +91,7 @@ class GoogleOAuth2Hosted(GoogleOAuth2):
     def get_user_details(self, response):
         details = super().get_user_details(response)
         if details is None:
-            # authentication failed, so not point in checking payment status
+            # authentication failed, so no point in checking payment status
             return None
         if not isinstance(details, dict):
             # this should never happen, but log just in case
@@ -101,7 +101,6 @@ class GoogleOAuth2Hosted(GoogleOAuth2):
             return details
         if verify_payment_status(details.get(USERNAME)):
             return details
-        # Optionally, attach a message to the request if available
         request = getattr(self, "strategy", None)
         if request and hasattr(request, "request"):
             messages.error(request.request, "Your subscription is not active. Please check your payment status.")
