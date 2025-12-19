@@ -1,3 +1,10 @@
+## [0.13.49](https://github.com/smarter-sh/smarter/compare/v0.13.48...v0.13.49) (2025-12-19)
+
+
+### Bug Fixes
+
+* make all Django and Smarter settings overridable via .env ([923cd6f](https://github.com/smarter-sh/smarter/commit/923cd6f31d791e05cd19344114ade6b60f5b2b7e))
+
 ## [0.13.48](https://github.com/smarter-sh/smarter/compare/v0.13.47...v0.13.48) (2025-12-17)
 
 
