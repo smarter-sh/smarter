@@ -42,6 +42,7 @@ from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_va
 from pydantic_settings import BaseSettings
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.const import SmarterEnvironments
 from smarter.lib import json
 
 from ..lib.django.validators import SmarterValidator
@@ -52,7 +53,6 @@ from .const import (
     SMARTER_API_SUBDOMAIN,
     SMARTER_DEFAULT_APP_LOADER_PATH,
     SMARTER_PLATFORM_SUBDOMAIN,
-    TFVARS,
     VERSION,
     SmarterEnvironments,
 )
@@ -61,13 +61,7 @@ from .exceptions import SmarterConfigurationError, SmarterValueError
 
 logger = logging.getLogger(__name__)
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
-TFVARS = TFVARS or {}
 DOT_ENV_LOADED = load_dotenv()
-
-
-def recursive_sort_dict(d):
-    """Recursively sort a dictionary by key."""
-    return {k: recursive_sort_dict(v) if isinstance(v, dict) else v for k, v in sorted(d.items())}
 
 
 def bool_environment_variable(var_name: str, default: bool) -> bool:
@@ -76,6 +70,80 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
     if value is None:
         return default
     return value.lower() in ["true", "1", "t", "y", "yes"]
+
+
+def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, prefixed=True) -> Any:
+    """Get environment variable with SMARTER_ prefix fallback."""
+    SMARTER_ENVIRONMENT_VARIABLE_PREFIX = "SMARTER_"
+
+    if prefixed:
+        retval = os.environ.get(f"{SMARTER_ENVIRONMENT_VARIABLE_PREFIX}{var_name}", default)
+    else:
+        retval = os.environ.get(var_name, default)
+    if isinstance(default, str):
+        return retval.strip()
+    if isinstance(default, bool):
+        return str(retval).lower() in ["true", "1", "t", "y", "yes"]
+    if isinstance(default, int):
+        try:
+            return int(retval)
+        except (ValueError, TypeError):
+            logger.error(
+                "Environment variable %s value '%s' cannot be converted to int. Using default %s.",
+                var_name,
+                retval,
+                default,
+            )
+            return default
+    if isinstance(default, float):
+        try:
+            return float(retval)
+        except (ValueError, TypeError):
+            logger.error(
+                "Environment variable %s value '%s' cannot be converted to float. Using default %s.",
+                var_name,
+                retval,
+                default,
+            )
+            return default
+    if isinstance(default, list):
+        if isinstance(retval, str):
+            return [item.strip() for item in retval.split(",") if item.strip()]
+        elif isinstance(retval, list):
+            return retval
+        else:
+            logger.error(
+                "Environment variable %s value '%s' cannot be converted to list. Using default %s.",
+                var_name,
+                retval,
+                default,
+            )
+            return default
+    if isinstance(default, dict):
+        try:
+            if isinstance(retval, str):
+                return json.loads(retval)
+            elif isinstance(retval, dict):
+                return retval
+            else:
+                logger.error(
+                    "Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
+                    var_name,
+                    retval,
+                    default,
+                )
+                return default
+        except json.JSONDecodeError:
+            logger.error(
+                "Environment variable %s value '%s' is not valid JSON. Using default %s.", var_name, retval, default
+            )
+            return default
+    return retval
+
+
+def recursive_sort_dict(d):
+    """Recursively sort a dictionary by key."""
+    return {k: recursive_sort_dict(v) if isinstance(v, dict) else v for k, v in sorted(d.items())}
 
 
 def get_semantic_version() -> str:
@@ -125,15 +193,15 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
+    ROOT_DOMAIN = get_env("ROOT_DOMAIN", "example.com")
 
-    ANTHROPIC_API_KEY: SecretStr = SecretStr(os.environ.get("ANTHROPIC_API_KEY", DEFAULT_MISSING_VALUE))
+    ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY"))
 
     # aws auth
-    AWS_PROFILE = os.environ.get("AWS_PROFILE", TFVARS.get("aws_profile", None))
-    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", DEFAULT_MISSING_VALUE))
-    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(os.environ.get("AWS_SECRET_ACCESS_KEY", DEFAULT_MISSING_VALUE))
-    AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+    AWS_PROFILE = get_env("AWS_PROFILE")
+    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(get_env("AWS_ACCESS_KEY_ID"))
+    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(get_env("AWS_SECRET_ACCESS_KEY"))
+    AWS_REGION = get_env("AWS_REGION", "us-east-1")
     AWS_IS_CONFIGURED = bool(
         AWS_PROFILE
         or (
@@ -142,31 +210,27 @@ class SettingsDefaults:
         )
     )
 
-    AWS_EKS_CLUSTER_NAME = os.environ.get(
-        "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
-    )
-    AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
-    DEBUG_MODE: bool = bool(os.environ.get("DEBUG_MODE", TFVARS.get("debug_mode", False)))
-    DEVELOPER_MODE: bool = bool(os.environ.get("DEVELOPER_MODE", TFVARS.get("developer_mode", False)))
+    AWS_EKS_CLUSTER_NAME = get_env("AWS_EKS_CLUSTER_NAME")
+    AWS_RDS_DB_INSTANCE_IDENTIFIER = get_env("AWS_RDS_DB_INSTANCE_IDENTIFIER")
+    DEBUG_MODE: bool = bool(get_env("DEBUG_MODE", False))
+    DEVELOPER_MODE: bool = bool(get_env("DEVELOPER_MODE", False))
 
-    DJANGO_DEFAULT_FILE_STORAGE = os.environ.get("DJANGO_DEFAULT_FILE_STORAGE", DjangoPermittedStorages.AWS_S3)
+    DJANGO_DEFAULT_FILE_STORAGE = get_env("DJANGO_DEFAULT_FILE_STORAGE", DjangoPermittedStorages.AWS_S3)
     if DJANGO_DEFAULT_FILE_STORAGE == DjangoPermittedStorages.AWS_S3 and not AWS_IS_CONFIGURED:
         DJANGO_DEFAULT_FILE_STORAGE = DjangoPermittedStorages.FILE_SYSTEM
         logger.warning(
             "AWS is not configured properly. Falling back to FileSystemStorage for Django default file storage."
         )
 
-    DUMP_DEFAULTS: bool = bool(os.environ.get("DUMP_DEFAULTS", TFVARS.get("dump_defaults", False)))
-    ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
+    DUMP_DEFAULTS: bool = bool(get_env("DUMP_DEFAULTS", False))
+    ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
-    FERNET_ENCRYPTION_KEY: str = os.environ.get("FERNET_ENCRYPTION_KEY", DEFAULT_MISSING_VALUE)
+    FERNET_ENCRYPTION_KEY: str = get_env("FERNET_ENCRYPTION_KEY")
 
-    GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(
-        os.environ.get("GOOGLE_MAPS_API_KEY", os.environ.get("google_maps_api_key", DEFAULT_MISSING_VALUE))
-    )
+    GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY"))
 
     try:
-        GOOGLE_SERVICE_ACCOUNT_B64 = os.environ.get("GOOGLE_SERVICE_ACCOUNT_B64", "")
+        GOOGLE_SERVICE_ACCOUNT_B64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "")
         GOOGLE_SERVICE_ACCOUNT = json.loads(base64.b64decode(GOOGLE_SERVICE_ACCOUNT_B64).decode("utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         logger.error("Failed to load Google service account: %s", e)
@@ -175,10 +239,10 @@ class SettingsDefaults:
         )
         GOOGLE_SERVICE_ACCOUNT = {}
 
-    GEMINI_API_KEY: SecretStr = SecretStr(os.environ.get("GEMINI_API_KEY", DEFAULT_MISSING_VALUE))
-    LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
+    GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY"))
+    LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "chat_history")
 
-    LLAMA_API_KEY: SecretStr = SecretStr(os.environ.get("LLAMA_API_KEY", DEFAULT_MISSING_VALUE))
+    LLAMA_API_KEY: SecretStr = SecretStr(get_env("LLAMA_API_KEY"))
 
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4o-mini"
@@ -199,73 +263,58 @@ class SettingsDefaults:
 
     LOG_LEVEL: int = logging.DEBUG if DEBUG_MODE else logging.INFO
 
-    LOGO: str = os.environ.get(
-        "OPENAI_API_ORGANIZATION", "https://cdn.platform.smarter.sh/images/logo/smarter-crop.png"
-    )
-    MAILCHIMP_API_KEY: SecretStr = SecretStr(os.environ.get("MAILCHIMP_API_KEY", DEFAULT_MISSING_VALUE))
-    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", DEFAULT_MISSING_VALUE)
+    LOGO: str = get_env("OPENAI_API_ORGANIZATION", "https://cdn.platform.smarter.sh/images/logo/smarter-crop.png")
+    MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY"))
+    MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 
-    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", f"https://{ROOT_DOMAIN}")
+    MARKETING_SITE_URL: str = get_env("OPENAI_API_ORGANIZATION", f"https://{ROOT_DOMAIN}")
 
-    OPENAI_API_ORGANIZATION = os.environ.get("OPENAI_API_ORGANIZATION", DEFAULT_MISSING_VALUE)
-    OPENAI_API_KEY: SecretStr = SecretStr(os.environ.get("OPENAI_API_KEY", DEFAULT_MISSING_VALUE))
+    OPENAI_API_ORGANIZATION = get_env("OPENAI_API_ORGANIZATION")
+    OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY"))
     OPENAI_ENDPOINT_IMAGE_N = 4
     OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
-    PINECONE_API_KEY: SecretStr = SecretStr(os.environ.get("PINECONE_API_KEY", DEFAULT_MISSING_VALUE))
+    PINECONE_API_KEY: SecretStr = SecretStr(get_env("PINECONE_API_KEY"))
 
-    SHARED_RESOURCE_IDENTIFIER = os.environ.get(
-        "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
-    )
+    SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
 
-    SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = os.environ.get(
+    SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = get_env(
         "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME",
         "smarter_test_db",
     )
-    SMARTER_MYSQL_TEST_DATABASE_PASSWORD = os.environ.get(
-        "SMARTER_MYSQL_TEST_DATABASE_PASSWORD",
-        DEFAULT_MISSING_VALUE,
-    )
-    SMARTER_REACTJS_APP_LOADER_PATH = os.environ.get("SMARTER_REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
+    SMARTER_MYSQL_TEST_DATABASE_PASSWORD = get_env("SMARTER_MYSQL_TEST_DATABASE_PASSWORD")
+    SMARTER_REACTJS_APP_LOADER_PATH = get_env("SMARTER_REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: SecretStr = SecretStr(
-        os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", DEFAULT_MISSING_VALUE)
-    )
-    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: SecretStr = SecretStr(
-        os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", DEFAULT_MISSING_VALUE)
-    )
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"))
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"))
     # -------------------------------------------------------------------------
     # see: https://github.com/settings/applications/2620957
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GITHUB_KEY: SecretStr = SecretStr(os.environ.get("SOCIAL_AUTH_GITHUB_KEY", DEFAULT_MISSING_VALUE))
-    SOCIAL_AUTH_GITHUB_SECRET: SecretStr = SecretStr(os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", DEFAULT_MISSING_VALUE))
+    SOCIAL_AUTH_GITHUB_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GITHUB_KEY"))
+    SOCIAL_AUTH_GITHUB_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GITHUB_SECRET"))
     # -------------------------------------------------------------------------
     # see:  https://www.linkedin.com/developers/apps/221422881/settings
     #       https://www.linkedin.com/developers/apps/221422881/products?refreshKey=1734980684455
     # verification url: https://www.linkedin.com/developers/apps/verification/3ac34414-09a4-433b-983a-0d529fa486f1
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(
-        os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", DEFAULT_MISSING_VALUE)
-    )
-    SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(
-        os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", DEFAULT_MISSING_VALUE)
-    )
+    SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY"))
+    SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET"))
 
-    SECRET_KEY = os.getenv("SECRET_KEY", DEFAULT_MISSING_VALUE)
+    SECRET_KEY = get_env("SECRET_KEY")
 
-    SMTP_SENDER = os.environ.get("SMTP_SENDER", DEFAULT_MISSING_VALUE)
-    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
-    SMTP_HOST = os.environ.get("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
-    SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
-    SMTP_USE_SSL = bool(os.environ.get("SMTP_USE_SSL", False))
-    SMTP_USE_TLS = bool(os.environ.get("SMTP_USE_TLS", True))
-    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", DEFAULT_MISSING_VALUE)
-    SMTP_USERNAME = os.environ.get("SMTP_USERNAME", DEFAULT_MISSING_VALUE)
+    SMTP_SENDER = get_env("SMTP_SENDER")
+    SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
+    SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
+    SMTP_PORT = int(get_env("SMTP_PORT", "587"))
+    SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
+    SMTP_USE_TLS = bool(get_env("SMTP_USE_TLS", True))
+    SMTP_PASSWORD = get_env("SMTP_PASSWORD")
+    SMTP_USERNAME = get_env("SMTP_USERNAME")
 
-    STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", DEFAULT_MISSING_VALUE)
-    STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", DEFAULT_MISSING_VALUE)
+    STRIPE_LIVE_SECRET_KEY = get_env("STRIPE_LIVE_SECRET_KEY")
+    STRIPE_TEST_SECRET_KEY = get_env("STRIPE_TEST_SECRET_KEY")
 
     @classmethod
     def to_dict(cls):
@@ -381,7 +430,7 @@ class Settings(BaseSettings):
     contains superseding, validated, and derived settings values for the platform.
 
     This class implements a consistent set of rules for initializing configuration
-    values from multiple sources, including environment variables, `.env` file, TFVARS,
+    values from multiple sources, including environment variables, `.env` file,
     and default values defined in this class. It additionally ensures that all
     configuration values are strongly typed and validated.
 

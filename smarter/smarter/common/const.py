@@ -55,7 +55,6 @@ TERRAFORM_TFVARS = os.path.join(TERRAFORM_ROOT, "terraform.tfvars")
 if not os.path.exists(TERRAFORM_TFVARS):
     TERRAFORM_TFVARS = os.path.join(PROJECT_ROOT, "terraform.tfvars")
 
-TFVARS = {}
 IS_USING_TFVARS = False
 
 try:
