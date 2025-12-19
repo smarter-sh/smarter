@@ -134,3 +134,13 @@ def dumps(
         sort_keys=sort_keys,
         **kw,
     )
+
+
+__all__ = [
+    "JSONDecodeError",
+    "JSONDecoder",
+    "JSONEncoder",
+    "dumps",
+    "load",
+    "loads",
+]

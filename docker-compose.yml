@@ -58,6 +58,8 @@ services:
       - smarter-redis
     env_file:
       - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
 
   smarter-worker:
     container_name: smarter-worker
@@ -79,6 +81,8 @@ services:
       - smarter-app
     env_file:
       - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
     volumes:
       - type: bind
         source: ./smarter
@@ -111,6 +115,8 @@ services:
       - smarter-app
     env_file:
       - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
     volumes:
       - type: bind
         source: ./smarter

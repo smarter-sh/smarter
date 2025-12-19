@@ -1,4 +1,4 @@
-# pylint: disable=unused-wildcard-import, wildcard-import, unused-import, wrong-import-position
+# pylint: disable=unused-wildcard-import,wildcard-import,unused-import,wrong-import-position,C0302
 """
 Smarter base settings module, shared by all environments. See smarter_settings
 for strongly-typed, project-specific settings overrides.
@@ -10,7 +10,7 @@ notes:
 - For the full list of settings and their values, see https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-import glob
+import ast
 import hashlib
 import json
 import logging
@@ -28,16 +28,17 @@ from corsheaders.defaults import default_headers
 from django import get_version
 
 from smarter.__version__ import __version__ as smarter_version
+from smarter.common.conf import get_env
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.common.helpers.console_helpers import formatted_text_red
 
 # Add proprietary settings for the project
 from .smarter import *  # noqa: E402, F401, W0401
 
 
 logger = logging.getLogger(__name__)
-
 
 ALLOWED_HOSTS = ["*"]
 """
@@ -1073,11 +1074,6 @@ This is the recommended static files storage backend for production deployments
 of Django applications.
 """
 
-# ReactJS integration with Django. Add all reactapp/dist directories in Django apps
-django_apps_dir = BASE_DIR / "apps"
-reactapp_dirs = [Path(p) for p in glob.glob(os.path.join(django_apps_dir, "*", "reactapp", "dist"))]
-STATICFILES_DIRS.extend(reactapp_dirs)
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -1304,6 +1300,66 @@ WAGTAILTRANSFER_SOURCES = {
 
 WAGTAILTRANSFER_SECRET_KEY = "8egf3jj8ib64j00gomz270wgzqwrfyed"
 WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = 30
+
+###############################################################################
+# Process environment variables to override settings values
+#
+# This allows for 12-factor style configuration via environment variables.
+# Environment variable values are cast to the same data type as the
+# existing Django and/or Smarter setting value.
+###############################################################################
+
+
+# pylint: disable=W0621
+def smart_cast(value, default_value):
+    """
+    Cast string value to the same data type as the type
+    of the default_value.
+    """
+    if isinstance(default_value, bool):
+        return str(value).lower() in ("1", "true", "yes", "on")
+    if isinstance(default_value, int):
+        try:
+            return int(value)
+        except ValueError:
+            return default_value
+    if isinstance(default_value, float):
+        try:
+            return float(value)
+        except ValueError:
+            return default_value
+    if isinstance(default_value, list):
+        # Try JSON, fallback to comma-separated
+        try:
+            parsed = ast.literal_eval(value)
+            if isinstance(parsed, list):
+                return parsed
+        # pylint: disable=broad-except
+        except Exception:
+            pass
+        return [item.strip() for item in value.split(",") if item.strip()]
+    if isinstance(default_value, dict):
+        try:
+            parsed = ast.literal_eval(value)
+            if isinstance(parsed, dict):
+                return parsed
+        # pylint: disable=broad-except
+        except Exception:
+            pass
+        return default_value
+    return value  # str or fallback
+
+
+ASCII_CONTROL_CHAR_REGEX = re.compile(r"[\x00-\x1F\x7F]")
+for key, value in os.environ.items():
+    value = ASCII_CONTROL_CHAR_REGEX.sub("", str(value).strip())
+    if key in globals():
+        default_value = globals()[key]
+        cast_value = get_env(var_name=value, default=default_value, prefixed=False)
+        cast_value = smart_cast(value, default_value)
+        globals()[key] = cast_value
+        logger.info(formatted_text_red("Overriding setting from environment variable: %s=%s"), key, repr(cast_value))
+
 
 ###############################################################################
 # Settings diagnostics information for all environments

@@ -20,6 +20,7 @@ from .base import *
 if smarter_settings.developer_mode:
     # dev only:
     # Bootstrap theme source files and static assets.
+    django_apps_dir = BASE_DIR / "apps"
     keen_source = [Path(p) for p in glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))]
     STATICFILES_DIRS.extend(keen_source)
     STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
