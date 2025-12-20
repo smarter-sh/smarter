@@ -98,7 +98,11 @@ def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
             "update_secret",
             name=smarter_settings.smarter_mysql_test_database_secret_name,
             username=username,
-            value=smarter_settings.smarter_mysql_test_database_password,
+            value=(
+                smarter_settings.smarter_mysql_test_database_password.get_secret_value()
+                if smarter_settings.smarter_mysql_test_database_password
+                else None
+            ),
             stdout=output,
             stderr=error_output,
         )

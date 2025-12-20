@@ -162,7 +162,9 @@ class EmailHelper(metaclass=Singleton):
             with smtplib.SMTP(smarter_settings.smtp_host, smarter_settings.smtp_port) as server:
                 if smarter_settings.smtp_use_tls:
                     server.starttls()
-                server.login(smarter_settings.smtp_username, smarter_settings.smtp_password)
+                server.login(
+                    smarter_settings.smtp_username.get_secret_value(), smarter_settings.smtp_password.get_secret_value()
+                )
                 server.sendmail(msg["From"], [msg["To"]], msg.as_string())
                 logger.info("smtp email sent to %s: %s", to, subject)
         except (

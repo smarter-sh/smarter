@@ -436,7 +436,7 @@ See:
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-SECRET_KEY = smarter_settings.secret_key
+SECRET_KEY = smarter_settings.secret_key.get_secret_value() if smarter_settings.secret_key else None
 """
 The secret key for this Django installation. This is retrieved and validated
 from smarter_settings. If not set, a random key is generated and logged as a warning.
@@ -1143,8 +1143,12 @@ LOGGING = {
 logging.config.dictConfig(LOGGING)
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
-STRIPE_LIVE_SECRET_KEY = smarter_settings.stripe_live_secret_key
-STRIPE_TEST_SECRET_KEY = smarter_settings.stripe_test_secret_key
+STRIPE_LIVE_SECRET_KEY = (
+    smarter_settings.stripe_live_secret_key.get_secret_value() if smarter_settings.stripe_live_secret_key else ""
+)
+STRIPE_TEST_SECRET_KEY = (
+    smarter_settings.stripe_test_secret_key.get_secret_value() if smarter_settings.stripe_test_secret_key else ""
+)
 STRIPE_LIVE_MODE = False  # Change to True in production
 DJSTRIPE_WEBHOOK_SECRET = (
     "whsec_xxx"  # Get it from the section in the Stripe dashboard where you added the webhook endpoint
@@ -1175,7 +1179,7 @@ The SMTP host for outgoing emails from Smarter. This is derived from smarter_set
 See: https://docs.djangoproject.com/en/5.0/topics/email/
 """
 
-SMTP_PASSWORD = smarter_settings.smtp_password
+SMTP_PASSWORD = smarter_settings.smtp_password.get_secret_value() if smarter_settings.smtp_password else None
 """
 The SMTP password for outgoing emails from Smarter. This is derived from smarter_settings.
 When using AWS SES as the SMTP service, this is the SMTP password generated from the AWS SES console.
@@ -1215,7 +1219,7 @@ A boolean that specifies whether to use TLS for SMTP connections in Smarter. Thi
 See: https://docs.djangoproject.com/en/5.0/topics/email/
 """
 
-SMTP_USERNAME = smarter_settings.smtp_username
+SMTP_USERNAME = smarter_settings.smtp_username.get_secret_value() if smarter_settings.smtp_username else None
 """
 The SMTP username for outgoing emails from Smarter. This is derived from smarter_settings.
 When using AWS SES as the SMTP service, this is the SMTP password generated from the AWS SES console.

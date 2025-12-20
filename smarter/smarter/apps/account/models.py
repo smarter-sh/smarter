@@ -1195,7 +1195,7 @@ class Secret(TimestampedModel):
             :meth:`encrypt` -- Uses the Fernet object to encrypt values.
 
         """
-        encryption_key = smarter_settings.fernet_encryption_key
+        encryption_key = smarter_settings.fernet_encryption_key.get_secret_value()
         if not encryption_key:
             raise SmarterConfigurationError(
                 "Encryption key not found in settings. Please set smarter.common.conf.settings.fernet_encryption_key"
