@@ -1,3 +1,10 @@
+## [0.13.50](https://github.com/smarter-sh/smarter/compare/v0.13.49...v0.13.50) (2025-12-20)
+
+
+### Bug Fixes
+
+* ensure that all sensitive data is typed to SecretStr ([13760d4](https://github.com/smarter-sh/smarter/commit/13760d4736a7e17f26968bec36a318d11fa5c145))
+
 ## [0.13.49](https://github.com/smarter-sh/smarter/compare/v0.13.48...v0.13.49) (2025-12-19)
 
 
