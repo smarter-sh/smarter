@@ -28,7 +28,6 @@ from corsheaders.defaults import default_headers
 from django import get_version
 
 from smarter.__version__ import __version__ as smarter_version
-from smarter.common.conf import get_env
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
 from smarter.common.helpers.aws_helpers import aws_helper
@@ -1359,7 +1358,6 @@ for key, value in os.environ.items():
     value = ASCII_CONTROL_CHAR_REGEX.sub("", str(value).strip())
     if key in globals():
         default_value = globals()[key]
-        cast_value = get_env(var_name=value, default=default_value, prefixed=False)
         cast_value = smart_cast(value, default_value)
         globals()[key] = cast_value
         logger.info(formatted_text_red("Overriding setting from environment variable: %s=%s"), key, repr(cast_value))
