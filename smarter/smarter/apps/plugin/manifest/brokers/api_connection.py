@@ -75,10 +75,10 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
     .. seealso::
 
-        :class:`SAMApiConnection`
-        :class:`ApiConnection`
-        :class:`ApiConnectionSerializer`
-        :class:`SAMConnectionBrokerError`
+        :class:`smarter.apps.plugin.manifest.models.api_connection.model.SAMApiConnection`
+        :class:`smarter.apps.plugin.models.ApiConnection`
+        :class:`smarter.apps.plugin.serializers.ApiConnectionSerializer`
+        :class:`smarter.apps.plugin.manifest.brokers.SAMConnectionBrokerError`
 
     **Example usage**::
 

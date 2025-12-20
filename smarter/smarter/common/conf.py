@@ -38,7 +38,15 @@ from urllib.parse import urljoin
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from dotenv import load_dotenv
-from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
+from pydantic import (
+    EmailStr,
+    Field,
+    HttpUrl,
+    SecretStr,
+    ValidationError,
+    ValidationInfo,
+    field_validator,
+)
 from pydantic_settings import BaseSettings
 
 from smarter.common.api import SmarterApiVersions
@@ -189,8 +197,7 @@ class SettingsDefaults:
     Default values for Settings. This takes care of most of what we're interested in.
     It initializes from the following prioritization sequence:
       1. environment variables
-      2. tfvars
-      3. defaults.
+      2. defaults.
     """
 
     ROOT_DOMAIN = get_env("ROOT_DOMAIN", "example.com")
@@ -225,19 +232,21 @@ class SettingsDefaults:
     DUMP_DEFAULTS: bool = bool(get_env("DUMP_DEFAULTS", False))
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
-    FERNET_ENCRYPTION_KEY: str = get_env("FERNET_ENCRYPTION_KEY")
+    FERNET_ENCRYPTION_KEY: SecretStr = SecretStr(get_env("FERNET_ENCRYPTION_KEY"))
 
     GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY"))
 
     try:
         GOOGLE_SERVICE_ACCOUNT_B64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "")
-        GOOGLE_SERVICE_ACCOUNT = json.loads(base64.b64decode(GOOGLE_SERVICE_ACCOUNT_B64).decode("utf-8"))
+        GOOGLE_SERVICE_ACCOUNT: SecretStr = SecretStr(
+            json.loads(base64.b64decode(GOOGLE_SERVICE_ACCOUNT_B64).decode("utf-8"))
+        )
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         logger.error("Failed to load Google service account: %s", e)
         logger.error(
             "See https://console.cloud.google.com/projectselector2/iam-admin/serviceaccounts?supportedpurview=project"
         )
-        GOOGLE_SERVICE_ACCOUNT = {}
+        GOOGLE_SERVICE_ACCOUNT = SecretStr(json.dumps({}))
 
     GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY"))
     LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "chat_history")
@@ -263,11 +272,11 @@ class SettingsDefaults:
 
     LOG_LEVEL: int = logging.DEBUG if DEBUG_MODE else logging.INFO
 
-    LOGO: str = get_env("OPENAI_API_ORGANIZATION", "https://cdn.platform.smarter.sh/images/logo/smarter-crop.png")
+    LOGO: HttpUrl = get_env("OPENAI_API_ORGANIZATION", "https://cdn.platform.smarter.sh/images/logo/smarter-crop.png")
     MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY"))
     MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 
-    MARKETING_SITE_URL: str = get_env("OPENAI_API_ORGANIZATION", f"https://{ROOT_DOMAIN}")
+    MARKETING_SITE_URL: HttpUrl = get_env("OPENAI_API_ORGANIZATION", f"https://{ROOT_DOMAIN}")
 
     OPENAI_API_ORGANIZATION = get_env("OPENAI_API_ORGANIZATION")
     OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY"))
@@ -281,7 +290,7 @@ class SettingsDefaults:
         "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME",
         "smarter_test_db",
     )
-    SMARTER_MYSQL_TEST_DATABASE_PASSWORD = get_env("SMARTER_MYSQL_TEST_DATABASE_PASSWORD")
+    SMARTER_MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(get_env("SMARTER_MYSQL_TEST_DATABASE_PASSWORD"))
     SMARTER_REACTJS_APP_LOADER_PATH = get_env("SMARTER_REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
 
     # -------------------------------------------------------------------------
@@ -302,19 +311,19 @@ class SettingsDefaults:
     SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY"))
     SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET"))
 
-    SECRET_KEY = get_env("SECRET_KEY")
+    SECRET_KEY: SecretStr = SecretStr(get_env("SECRET_KEY"))
 
-    SMTP_SENDER = get_env("SMTP_SENDER")
+    SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}")
     SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
     SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(get_env("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
     SMTP_USE_TLS = bool(get_env("SMTP_USE_TLS", True))
-    SMTP_PASSWORD = get_env("SMTP_PASSWORD")
-    SMTP_USERNAME = get_env("SMTP_USERNAME")
+    SMTP_PASSWORD: SecretStr = SecretStr(get_env("SMTP_PASSWORD"))
+    SMTP_USERNAME: SecretStr = SecretStr(get_env("SMTP_USERNAME"))
 
-    STRIPE_LIVE_SECRET_KEY = get_env("STRIPE_LIVE_SECRET_KEY")
-    STRIPE_TEST_SECRET_KEY = get_env("STRIPE_TEST_SECRET_KEY")
+    STRIPE_LIVE_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_LIVE_SECRET_KEY"))
+    STRIPE_TEST_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_TEST_SECRET_KEY"))
 
     @classmethod
     def to_dict(cls):
@@ -421,8 +430,7 @@ def empty_str_to_int_default(v: str, default: int) -> int:
         return default
 
 
-# pylint: disable=too-many-public-methods
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes,too-many-public-methods
 class Settings(BaseSettings):
     """
     Smarter derived settings. This is intended to be instantiated as
@@ -476,15 +484,56 @@ class Settings(BaseSettings):
         description="Smarter 1-word identifier to be used when naming any shared resource.",
         examples=["smarter", "mycompany", "myproject"],
     )
+    """
+    A single, lowercase word used as a unique identifier for all shared resources across the Smarter platform.
+
+    This value is used as a prefix or namespace when naming resources that are shared between services, environments, or deployments—such as S3 buckets, Kubernetes namespaces, or other cloud resources. It ensures that resource names are consistent, easily identifiable, and do not conflict with those from other projects or organizations.
+
+    **Typical usage:**
+        - As a prefix for cloud resource names (e.g., ``smarter-platform-alpha``)
+        - To distinguish resources in multi-tenant or multi-environment deployments
+        - For automated naming conventions in infrastructure-as-code and deployment scripts
+
+    **Examples:**
+        - ``smarter``
+        - ``mycompany``
+        - ``myproject``
+
+    :type: str
+    :default: Value from ``SettingsDefaults.SHARED_RESOURCE_IDENTIFIER``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
     debug_mode: bool = Field(
         SettingsDefaults.DEBUG_MODE,
         description="True if debug mode is enabled. This enables verbose logging and other debug features.",
     )
+    """
+    True if debug mode is enabled. This enables verbose logging and other debug features.
+
+    When debug mode is enabled, the platform will log additional information useful for
+    troubleshooting and development. This may include detailed error messages, stack traces, and
+    other diagnostic data that can help identify issues during development or testing.
+
+    :type: bool
+    :default: Value from ``SettingsDefaults.DEBUG_MODE``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
     default_missing_value: str = Field(
         DEFAULT_MISSING_VALUE,
         description="Default missing value placeholder string. Used for consistency across settings.",
         examples=["SET-ME-PLEASE"],
     )
+    """
+    Default missing value placeholder string. Used for consistency across settings.
+    This string is used as a placeholder for configuration values that have not been set.
+    It indicates that the value is missing and should be provided by the user or administrator.
+    Using a consistent placeholder helps identify unset values during debugging and configuration reviews.
+
+    :type: str
+    :default: Value from ``DEFAULT_MISSING_VALUE``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
 
     # new in 0.13.26
     # True if developer mode is enabled. Used as a means to configure a production
@@ -493,11 +542,33 @@ class Settings(BaseSettings):
         SettingsDefaults.DEVELOPER_MODE,
         description="True if developer mode is enabled. Used as a means to configure a production Docker container to run locally for student use.",
     )
+    """
+    True if developer mode is enabled. Used as a means to configure a production Docker container to run locally for student use.
+    When developer mode is enabled, certain restrictions or configurations that are typical
+    of a production environment may be relaxed or altered to facilitate local development
+    and testing. This allows developers to work with a production-like setup without the
+    constraints that would normally apply in a live environment.
+
+    :type: bool
+    :default: Value from ``SettingsDefaults.DEVELOPER_MODE``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
     django_default_file_storage: str = Field(
         SettingsDefaults.DJANGO_DEFAULT_FILE_STORAGE,
         description="The default Django file storage backend.",
         examples=["storages.backends.s3boto3.S3Boto3Storage", "django.core.files.storage.FileSystemStorage"],
     )
+    """
+    The default Django file storage backend.
+    This setting determines where Django will store uploaded files by default.
+    It can be configured to use different storage backends, such as Amazon S3 or the local file system,
+    depending on the needs of the application and its deployment environment.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.DJANGO_DEFAULT_FILE_STORAGE``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
     log_level: int = Field(
         SettingsDefaults.LOG_LEVEL,
         description="The logging level for the platform based on Python logging levels: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL",
@@ -506,250 +577,804 @@ class Settings(BaseSettings):
     dump_defaults: bool = Field(
         SettingsDefaults.DUMP_DEFAULTS, description="True if default values should be dumped for debugging purposes."
     )
+    """
+    True if default values should be dumped for debugging purposes.
+    When enabled, the platform will log or output the default configuration values
+    used during initialization. This can help developers and administrators
+    understand the effective configuration of the system, especially when
+    troubleshooting issues related to settings.
+
+    :type: bool
+    :default: Value from ``SettingsDefaults.DUMP_DEFAULTS``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
     aws_profile: Optional[str] = Field(
         SettingsDefaults.AWS_PROFILE,
         description="The AWS profile to use for authentication. If present, this will take precedence over AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.",
         examples=["default", "smarter-profile"],
     )
+    """
+    The AWS profile to use for authentication. If present, this will take precedence over AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+    This setting specifies which AWS credentials profile to use when connecting to AWS services.
+    Profiles are defined in the AWS credentials file (typically located at ~/.aws/credentials)
+    and allow for managing multiple sets of credentials for different environments or accounts.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.AWS_PROFILE``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
     aws_access_key_id: SecretStr = Field(
         SettingsDefaults.AWS_ACCESS_KEY_ID,
         description="The AWS access key ID for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.",
         examples=["^AKIA[0-9A-Z]{16}$"],
     )
+    """
+    The AWS access key ID for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.
+    This setting provides the access key ID used to authenticate with AWS services.
+    It is used in conjunction with the AWS secret access key to sign requests to AWS APIs.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.AWS_ACCESS_KEY_ID``
+    :raises SmarterConfigurationError: If the value is not a valid AWS access key ID
+    """
     aws_secret_access_key: SecretStr = Field(
         SettingsDefaults.AWS_SECRET_ACCESS_KEY,
         description="The AWS secret access key for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.",
         examples=["^[0-9a-zA-Z/+]{40}$"],
     )
+    """
+    The AWS secret access key for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.
+    This setting provides the secret access key used to authenticate with AWS services.
+    It is used in conjunction with the AWS access key ID to sign requests to AWS APIs.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.AWS_SECRET_ACCESS_KEY``
+    :raises SmarterConfigurationError: If the value is not a valid AWS secret access key
+    """
     aws_regions: List[str] = Field(
         AWS_REGIONS,
         description="A list of AWS regions considered valid for this platform.",
         examples=["us-east-1", "us-west-2", "eu-west-1"],
     )
+    """
+    A list of AWS regions considered valid for this platform.
+    This setting defines the AWS regions that the platform is configured to operate in.
+    It can be used to restrict operations to specific regions, ensuring that resources
+    are created and managed only in approved locations.
+
+    :type: List[str]
+    :default: Value from ``AWS_REGIONS``
+    :raises SmarterConfigurationError: If the value is not a list of valid AWS region names.
+    """
     aws_region: str = Field(
         SettingsDefaults.AWS_REGION,
         description="The single AWS region in which all AWS service clients will operate.",
         examples=["us-east-1", "us-west-2", "eu-west-1"],
     )
+    """
+    The single AWS region in which all AWS service clients will operate.
+    This setting specifies the default AWS region for the platform.
+    All AWS service clients will be configured to use this region unless
+    overridden on a per-client basis.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.AWS_REGION``
+    :raises SmarterConfigurationError: If the value is not a valid AWS region name.
+    """
     aws_is_configured: bool = Field(
         SettingsDefaults.AWS_IS_CONFIGURED,
         description="True if AWS is configured. This is determined by the presence of either AWS_PROFILE or both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.",
     )
+    """
+    True if AWS is configured. This is determined by the presence of either AWS_PROFILE or both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+    This setting indicates whether the platform has sufficient AWS credentials
+    configured to connect to AWS services. If AWS is not configured, attempts
+    to use AWS services will fail.
+
+    :type: bool
+    :default: Value from ``SettingsDefaults.AWS_IS_CONFIGURED``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
     aws_eks_cluster_name: str = Field(
         SettingsDefaults.AWS_EKS_CLUSTER_NAME,
         description="The name of the AWS EKS cluster used for hosting applications.",
         examples=["apps-hosting-service"],
     )
+    """
+    The name of the AWS EKS cluster used for hosting applications.
+    This setting specifies the Amazon EKS cluster that the platform will use
+    for deploying and managing containerized applications. The cluster name
+    should correspond to an existing EKS cluster in the configured AWS account.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.AWS_EKS_CLUSTER_NAME``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
     aws_db_instance_identifier: str = Field(
         SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
         description="The RDS database instance identifier used for the platform's primary database.",
         examples=["apps-hosting-service"],
     )
+    """
+    The RDS database instance identifier used for the platform's primary database.
+    This setting specifies the Amazon RDS database instance that the platform
+    will connect to for data storage and retrieval. The instance identifier should
+    correspond to an existing RDS instance in the configured AWS account.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
     anthropic_api_key: SecretStr = Field(
         SettingsDefaults.ANTHROPIC_API_KEY,
         description="The API key for Anthropic services. Masked by pydantic SecretStr.",
         examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
     )
+    """
+    The API key for Anthropic services. Masked by pydantic SecretStr.
+    This setting provides the API key used to authenticate with Anthropic services.
+    It is required for accessing Anthropic's APIs and services.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.ANTHROPIC_API_KEY``
+    :raises SmarterConfigurationError: If the value is not a valid API key.
+    """
+
     environment: str = Field(
         SettingsDefaults.ENVIRONMENT,
         description="The deployment environment for the platform.",
         examples=SmarterEnvironments.all,
     )
-    fernet_encryption_key: str = Field(
+    """
+    The deployment environment for the platform.
+    This setting indicates the environment in which the platform is running,
+    such as development, staging, or production. It can be used to adjust
+    behavior and configurations based on the environment.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.ENVIRONMENT``
+    :raises SmarterConfigurationError: If the value is not a valid environment name from SmarterEnvironments.all
+    """
+
+    fernet_encryption_key: SecretStr = Field(
         SettingsDefaults.FERNET_ENCRYPTION_KEY,
         description="The Fernet encryption key used for encrypting Smarter Secrets data.",
         examples=["gAAAAABh..."],
     )
+    """
+    The Fernet encryption key used for encrypting Smarter Secrets data.
+    This setting provides the key used for symmetric encryption and decryption
+    of sensitive data within the platform. The key should be a URL-safe base64-encoded
+    32-byte key.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.FERNET_ENCRYPTION_KEY``
+    :raises SmarterConfigurationError: If the value is not a valid Fernet key.
+    """
+
     local_hosts: List[str] = Field(
         SettingsDefaults.LOCAL_HOSTS,
         description="A list of hostnames considered local for development and testing purposes.",
         examples=SettingsDefaults.LOCAL_HOSTS,
     )
+    """
+    A list of hostnames considered local for development and testing purposes.
+    This setting defines hostnames that are treated as local addresses by the platform.
+    It is useful for distinguishing between local and remote requests, especially
+    during development and testing.
+
+    :type: List[str]
+    :default: Value from ``SettingsDefaults.LOCAL_HOSTS``
+    :raises SmarterConfigurationError: If the value is not a list of strings matching SettingsDefaults.LOCAL_HOSTS
+    """
+
     root_domain: str = Field(
         SettingsDefaults.ROOT_DOMAIN,
         description="The root domain for the platform.",
         examples=["example.com"],
     )
+    """
+    The root domain for the platform.
+    This setting specifies the primary domain name used by the platform.
+    It is used for constructing URLs, email addresses, and other domain-related
+    configurations.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.ROOT_DOMAIN``
+    :raises SmarterConfigurationError: If the value is not a valid domain name.
+    """
+
     init_info: Optional[str] = Field(
         None,
     )
+
     google_maps_api_key: SecretStr = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
         description="The API key for Google Maps services. Masked by pydantic SecretStr. Used for geocoding, maps, and places APIs, for the OpenAI get_weather() example function.",
         examples=["AIzaSy..."],
     )
-    google_service_account: dict = Field(
+    """
+    The API key for Google Maps services. Masked by pydantic SecretStr. Used for geocoding, maps, and places APIs, for the OpenAI get_weather() example function.
+    This setting provides the API key used to authenticate with Google Maps services.
+    It is required for accessing Google Maps APIs such as geocoding, maps rendering,
+    and places information.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.GOOGLE_MAPS_API_KEY``
+    :raises SmarterConfigurationError: If the value is not a valid API key.
+    """
+
+    google_service_account: SecretStr = Field(
         SettingsDefaults.GOOGLE_SERVICE_ACCOUNT,
         description="The Google service account credentials as a dictionary. Used for Google Cloud services integration.",
         examples=[{"type": "service_account", "project_id": "my-project", "...": "..."}],
     )
+    """
+    The Google service account credentials as a dictionary. Used for Google Cloud services integration.
+    This setting contains the credentials for a Google service account in JSON format.
+    It is used to authenticate and authorize access to Google Cloud services on behalf
+    of the platform.
+
+    :type: dict
+    :default: Value from ``SettingsDefaults.GOOGLE_SERVICE_ACCOUNT``
+    :raises SmarterConfigurationError: If the value is not a valid service account JSON.
+    """
+
     gemini_api_key: SecretStr = Field(
         SettingsDefaults.GEMINI_API_KEY,
         description="The API key for Google Gemini services. Masked by pydantic SecretStr.",
         examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
     )
+    """
+    The API key for Google Gemini services. Masked by pydantic SecretStr.
+    This setting provides the API key used to authenticate with Google Gemini services.
+    It is required for accessing Gemini's APIs and services.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.GEMINI_API_KEY``
+    :raises SmarterConfigurationError: If the value is not a valid API key.
+    """
     llama_api_key: SecretStr = Field(
         SettingsDefaults.LLAMA_API_KEY,
         description="The API key for LLaMA services. Masked by pydantic SecretStr.",
         examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
     )
+    """
+    The API key for LLaMA services. Masked by pydantic SecretStr.
+    This setting provides the API key used to authenticate with LLaMA services.
+    It is required for accessing LLaMA's APIs and services.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.LLAMA_API_KEY``
+    :raises SmarterConfigurationError: If the value is not a valid API key.
+    """
+
     smarter_mysql_test_database_secret_name: Optional[str] = Field(
         SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME,
         description="The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["smarter-mysql-test-db-secret"],
     )
-    smarter_mysql_test_database_password: Optional[str] = Field(
+    """
+    The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.
+    This setting specifies the name of the secret in AWS Secrets Manager
+    that contains the credentials for the Smarter MySQL test database.
+    It is used by example Smarter Plugins that require access to a test database.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME`
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    smarter_mysql_test_database_password: Optional[SecretStr] = Field(
         SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_PASSWORD,
         description="The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["your_password_here"],
     )
+    """
+    The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.
+    This setting provides the password used to connect to the Smarter MySQL test database.
+    It is used by example Smarter Plugins that require access to a test database.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_PASSWORD``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
     smarter_reactjs_app_loader_path: str = Field(
         SettingsDefaults.SMARTER_REACTJS_APP_LOADER_PATH,
         description="The path to the ReactJS app loader script.",
         examples=["/ui-chat/app-loader.js"],
     )
+    """
+    The path to the ReactJS app loader script.
+    This setting specifies the URL path where the ReactJS application loader script is located.
+    It is used to load the ReactJS frontend for the platform.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.SMARTER_REACTJS_APP_LOADER_PATH``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
     social_auth_google_oauth2_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
         description="The OAuth2 key for Google social authentication. Masked by pydantic SecretStr.",
         examples=["your-google-oauth2-key"],
     )
+    """
+    The OAuth2 key for Google social authentication. Masked by pydantic SecretStr.
+    This setting provides the OAuth2 client ID used for Google social authentication.
+    It is required for enabling users to log in using their Google accounts.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+    :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID.
+    """
     social_auth_google_oauth2_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
         description="The OAuth2 secret for Google social authentication. Masked by pydantic SecretStr.",
         examples=["your-google-oauth2-secret"],
     )
+    """
+    The OAuth2 secret for Google social authentication. Masked by pydantic SecretStr.
+    This setting provides the OAuth2 client secret used for Google social authentication.
+    It is required for enabling users to log in using their Google accounts.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+    :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
+    """
+
     social_auth_github_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY,
         description="The OAuth2 key for GitHub social authentication. Masked by pydantic SecretStr.",
         examples=["your-github-oauth2-key"],
     )
+    """
+    The OAuth2 key for GitHub social authentication. Masked by pydantic SecretStr.
+    This setting provides the OAuth2 client ID used for GitHub social authentication.
+    It is required for enabling users to log in using their GitHub accounts.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY
+    :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID
+    """
     social_auth_github_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET,
         description="The OAuth2 secret for GitHub social authentication. Masked by pydantic SecretStr.",
         examples=["your-github-oauth2-secret"],
     )
+    """
+    The OAuth2 secret for GitHub social authentication. Masked by pydantic SecretStr.
+    This setting provides the OAuth2 client secret used for GitHub social authentication.
+    It is required for enabling users to log in using their GitHub accounts.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET
+    :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
+    """
+
     social_auth_linkedin_oauth2_key: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY,
         description="The OAuth2 key for LinkedIn social authentication. Masked by pydantic SecretStr.",
         examples=["your-linkedin-oauth2-key"],
     )
+    """
+    .. deprecated:: 0.13.35
+        This setting is deprecated and will be removed in a future release. LinkedIn social authentication is no longer supported or recommended for new deployments.
+
+    The OAuth2 key for LinkedIn social authentication. Masked by pydantic SecretStr.
+    This setting provides the OAuth2 client ID used for LinkedIn social authentication.
+    It was required for enabling users to log in using their LinkedIn accounts.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2``
+    :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID
+    """
+
     social_auth_linkedin_oauth2_secret: SecretStr = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET,
         description="The OAuth2 secret for LinkedIn social authentication. Masked by pydantic SecretStr.",
         examples=["your-linkedin-oauth2-secret"],
     )
+    """
+    .. deprecated:: 0.13.35
+        This setting is deprecated and will be removed in a future release. LinkedIn social authentication is no longer supported or recommended for new deployments.
+
+    The OAuth2 secret for LinkedIn social authentication. Masked by pydantic SecretStr.
+    This setting provides the OAuth2 client secret used for LinkedIn social authentication.
+    It was required for enabling users to log in using their LinkedIn accounts.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2
+    :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
+    """
+
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY)
-    logo: Optional[str] = Field(SettingsDefaults.LOGO)
+    """
+    The key used for LangChain memory storage.
+    This setting specifies the key under which LangChain memory data is stored.
+    It is used to manage and retrieve memory data within LangChain applications.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.LANGCHAIN_MEMORY_KEY``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    logo: Optional[HttpUrl] = Field(SettingsDefaults.LOGO)
+    """
+    The URL to the platform's logo image.
+    This setting specifies the web address of the logo image used in the platform's user interface.
+    It should be a valid URL pointing to an external image resource accessible by the frontend.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.LOGO``
+    :raises SmarterConfigurationError: If the value is not a valid URL string.
+    """
+
     mailchimp_api_key: Optional[SecretStr] = Field(SettingsDefaults.MAILCHIMP_API_KEY)
+    """
+    The API key for Mailchimp services. Masked by pydantic SecretStr.
+    This setting provides the API key used to authenticate with Mailchimp services.
+    It is required for accessing Mailchimp's APIs and services.
+
+    :type: Optional[SecretStr]
+    :default: Value from ``SettingsDefaults.MAILCHIMP_API_KEY``
+    :raises SmarterConfigurationError: If the value is not a valid API key.
+    """
+
     mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID)
-    marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL)
+    """
+    The Mailchimp list ID for managing email subscribers.
+    This setting specifies the unique identifier of the Mailchimp list
+    used for managing email subscribers. It is required for adding, removing,
+    and managing subscribers within Mailchimp.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.MAILCHIMP_LIST_ID``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    marketing_site_url: Optional[HttpUrl] = Field(SettingsDefaults.MARKETING_SITE_URL)
+    """
+    The URL to the platform's marketing site.
+    This setting specifies the web address of the marketing site associated
+    with the platform. It should be a valid URL pointing to an external website.
+
+    :type: Optional[httpHttpUrl]
+    :default: Value from ``SettingsDefaults.MARKETING_SITE_URL``
+    :raises SmarterConfigurationError: If the value is not a valid URL string.
+    """
+
     openai_api_organization: Optional[str] = Field(
         SettingsDefaults.OPENAI_API_ORGANIZATION,
         description="The OpenAI API organization ID.",
         examples=["org-xxxxxxxxxxxxxxxx"],
     )
+    """
+    The OpenAI API organization ID.
+    This setting specifies the organization ID used when making requests to the OpenAI API.
+    It is used to associate API requests with a specific organization account.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.OPENAI_API_ORGANIZATION``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
     openai_api_key: SecretStr = Field(
         SettingsDefaults.OPENAI_API_KEY,
         description="The API key for OpenAI services. Masked by pydantic SecretStr.",
         examples=["sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
     )
+    """
+    The API key for OpenAI services. Masked by pydantic SecretStr.
+    This setting provides the API key used to authenticate with OpenAI services.
+    It is required for accessing OpenAI's APIs and services.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.OPENAI_API_KEY``
+    :raises SmarterConfigurationError: If the value is not a valid API key.
+    """
+
     openai_endpoint_image_n: Optional[int] = Field(
         SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N,
         description="The number of images to generate per request to the OpenAI image endpoint.",
         examples=[1, 2, 4],
     )
+    """
+    The number of images to generate per request to the OpenAI image endpoint.
+    This setting specifies how many images should be generated in response to
+    a single request to the OpenAI image generation API.
+
+    :type: Optional[int]
+    :default: Value from ``SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N``
+    :raises SmarterConfigurationError: If the value is not a positive integer.
+    """
+
     openai_endpoint_image_size: Optional[str] = Field(
         SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE,
         description="The size of images to generate from the OpenAI image endpoint.",
         examples=["256x256", "512x512", "1024x768"],
     )
+    """
+    The size of images to generate from the OpenAI image endpoint.
+    This setting specifies the dimensions of the images to be generated
+    by the OpenAI image generation API.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE``
+    :raises SmarterConfigurationError: If the value is not a valid image size string.
+    """
+
     llm_default_provider: str = Field(
         SettingsDefaults.LLM_DEFAULT_PROVIDER,
         description="The default LLM provider to use for language model interactions.",
         examples=["openai", "anthropic", "gemini", "llama"],
     )
+    """
+    The default LLM provider to use for language model interactions.
+    This setting specifies which language model provider should be used by default
+    for processing natural language tasks. It determines the backend service that
+    will handle requests for language generation, understanding, and other related functions.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.LLM_DEFAULT_PROVIDER``
+    :raises SmarterConfigurationError: If the value is not a valid LLM provider name
+    """
+
     llm_default_model: str = Field(
         SettingsDefaults.LLM_DEFAULT_MODEL,
         description="The default LLM model to use for language model interactions.",
         examples=["gpt-4o-mini", "claude-2", "gemini"],
     )
+    """
+    The default LLM model to use for language model interactions.
+    This setting specifies which specific language model should be used by default
+    for processing natural language tasks. It determines the model variant that
+    will handle requests for language generation, understanding, and other related functions.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.LLM_DEFAULT_MODEL``
+    :raises SmarterConfigurationError: If the value is not a valid LLM model name
+    """
+
     llm_default_system_role: str = Field(
         SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE,
         description="The default system role prompt to use for language model interactions.",
         examples=["You are a helpful chatbot..."],
     )
+    """
+    The default system role prompt to use for language model interactions.
+    This setting provides the default system role prompt that guides the behavior
+    of the language model during interactions. It helps define the context and
+    tone of the responses generated by the model.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
     llm_default_temperature: float = Field(
         SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
         description="The default temperature to use for language model interactions.",
         examples=[0.0, 0.5, 1.0],
     )
+    """
+    The default temperature to use for language model interactions.
+    This setting controls the randomness of the language model's output.
+    A lower temperature (e.g., 0.0) results in more deterministic and focused
+    responses, while a higher temperature (e.g., 1.0) produces more diverse
+    and creative outputs.
+
+    :type: float
+    :default: Value from ``SettingsDefaults.LLM_DEFAULT_TEMPERATURE``
+    :raises SmarterConfigurationError: If the value is not a float between 0.
+    """
+
     llm_default_max_tokens: int = Field(
         SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
         description="The default maximum number of tokens to generate for language model interactions.",
         examples=[256, 512, 1024, 2048],
     )
+    """
+    The default maximum number of tokens to generate for language model interactions.
+    This setting specifies the upper limit on the number of tokens that the language
+    model can generate in response to a single request. It helps control the length
+    of the output and manage resource usage.
+
+    :type: int
+    :default: Value from ``SettingsDefaults.LLM_DEFAULT_MAX_TOKENS``
+    :raises SmarterConfigurationError: If the value is not a positive integer.
+    """
+
     pinecone_api_key: SecretStr = Field(
         SettingsDefaults.PINECONE_API_KEY,
         description="The API key for Pinecone services. Masked by pydantic SecretStr.",
         examples=["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
     )
-    stripe_live_secret_key: Optional[str] = Field(
+    """
+    The API key for Pinecone services. Masked by pydantic SecretStr.
+    This setting provides the API key used to authenticate with Pinecone services.
+    It is required for accessing Pinecone's APIs and services.
+
+    :type: SecretStr
+    :default: Value from ``SettingsDefaults.PINECONE_API_KEY``
+    :raises SmarterConfigurationError: If the value is not a valid API key.
+    """
+
+    stripe_live_secret_key: Optional[SecretStr] = Field(
         SettingsDefaults.STRIPE_LIVE_SECRET_KEY,
         description="DEPRECATED: The secret key for Stripe live environment.",
         examples=["sk_live_xxxxxxxxxxxxxxxxxxxxxxxx"],
     )
-    stripe_test_secret_key: Optional[str] = Field(
+    """
+    .. deprecated:: 0.13.0
+        This setting is deprecated and will be removed in a future release. Please use the new payment processing configuration settings.
+
+    The secret key for Stripe live environment.
+    This setting provides the secret key used to authenticate with Stripe's live environment.
+    It is used for processing real transactions and payments.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.STRIPE_LIVE_SECRET_KEY``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    stripe_test_secret_key: Optional[SecretStr] = Field(
         SettingsDefaults.STRIPE_TEST_SECRET_KEY,
         description="DEPRECATED: The secret key for Stripe test environment.",
         examples=["sk_test_xxxxxxxxxxxxxxxxxxxxxxxx"],
     )
+    """
+    .. deprecated:: 0.13.0
+        This setting is deprecated and will be removed in a future release. Please use the new payment processing configuration settings.
 
-    secret_key: Optional[str] = Field(
+    The secret key for Stripe test environment.
+    This setting provides the secret key used to authenticate with Stripe's test environment.
+    It is used for processing test transactions and payments.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.STRIPE_TEST_SECRET_KEY``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    secret_key: Optional[SecretStr] = Field(
         SettingsDefaults.SECRET_KEY,
         description="The Django secret key for cryptographic signing.",
         examples=["your-django-secret-key"],
     )
+    """
+    The Django secret key for cryptographic signing.
+    This setting provides the secret key used by Django for cryptographic signing.
+    It is essential for maintaining the security of sessions, cookies, and other
+    cryptographic operations within the Django framework.
 
-    smtp_sender: Optional[str] = Field(
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.SECRET_KEY``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    smtp_sender: Optional[EmailStr] = Field(
         SettingsDefaults.SMTP_SENDER,
         description="The sender email address for SMTP emails.",
         examples=["sender@example.com"],
     )
-    smtp_from_email: Optional[str] = Field(
+    """
+    The sender email address for SMTP emails.
+    This setting specifies the email address that will appear as the sender
+    in outgoing SMTP emails sent by the platform.
+
+    :type: Optional[EmailStr]
+    :default: Value from ``SettingsDefaults.SMTP_SENDER``
+    :raises SmarterConfigurationError: If the value is not a valid email address.
+    """
+
+    smtp_from_email: Optional[EmailStr] = Field(
         SettingsDefaults.SMTP_FROM_EMAIL,
         description="The from email address for SMTP emails.",
         examples=["from@example.com"],
     )
+    """
+    The from email address for SMTP emails.
+    This setting specifies the email address that will appear in the "From"
+    field of outgoing SMTP emails sent by the platform.
+
+    :type: Optional[EmailStr]
+    :default: Value from ``SettingsDefaults.SMTP_FROM_EMAIL``
+    :raises SmarterConfigurationError: If the value is not a valid email address.
+    """
+
     smtp_host: Optional[str] = Field(
         SettingsDefaults.SMTP_HOST,
         description="The SMTP host address for sending emails.",
         examples=["smtp.example.com"],
     )
-    smtp_password: Optional[str] = Field(
+    """
+    The SMTP host address for sending emails.
+    This setting specifies the hostname or IP address of the SMTP server
+    used for sending outgoing emails from the platform.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.SMTP_HOST``
+    :raises SmarterConfigurationError: If the value is not a valid hostname or IP address
+    """
+
+    smtp_password: Optional[SecretStr] = Field(
         SettingsDefaults.SMTP_PASSWORD,
         description="The SMTP password for authentication.",
         examples=["your-smtp-password"],
     )
+    """
+    The SMTP password for authentication.
+    This setting provides the password used to authenticate with the SMTP server.
+    It is required for sending emails through the SMTP server.
+
+    :type: Optional[SecretStr]
+    :default: Value from ``SettingsDefaults.SMTP_PASSWORD``
+    :raises SmarterConfigurationError: If the value is not a valid password.
+    """
+
     smtp_port: Optional[int] = Field(
         SettingsDefaults.SMTP_PORT,
         description="The SMTP port for sending emails.",
         examples=[25, 465, 587],
     )
+    """
+    The SMTP port for sending emails.
+    This setting specifies the port number used to connect to the SMTP server
+    for sending outgoing emails.
+
+    :type: Optional[int]
+    :default: Value from ``SettingsDefaults.SMTP_PORT``
+    :raises SmarterConfigurationError: If the value is not a valid port number.
+    """
+
     smtp_use_ssl: Optional[bool] = Field(
         SettingsDefaults.SMTP_USE_SSL,
         description="Whether to use SSL for SMTP connections.",
         examples=[True, False],
     )
+    """
+    Whether to use SSL for SMTP connections.
+    This setting indicates whether SSL (Secure Sockets Layer) should be used
+    when connecting to the SMTP server for sending emails.
+
+    :type: Optional[bool]
+    :default: Value from ``SettingsDefaults.SMTP_USE_SSL``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
     smtp_use_tls: Optional[bool] = Field(
         SettingsDefaults.SMTP_USE_TLS,
         description="Whether to use TLS for SMTP connections.",
         examples=[True, False],
     )
-    smtp_username: Optional[str] = Field(
+    """
+    Whether to use TLS for SMTP connections.
+    This setting indicates whether TLS (Transport Layer Security) should be used
+    when connecting to the SMTP server for sending emails.
+
+    :type: Optional[bool]
+    :default: Value from ``SettingsDefaults.SMTP_USE_TLS``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
+    smtp_username: Optional[SecretStr] = Field(
         SettingsDefaults.SMTP_USERNAME,
         description="The SMTP username for authentication.",
         examples=["your-smtp-username"],
     )
+    """
+    The SMTP username for authentication.
+    This setting provides the username used to authenticate with the SMTP server.
+    It is required for sending emails through the SMTP server.
+
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.SMTP_USERNAME``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
 
     @property
     def smtp_is_configured(self) -> bool:
@@ -1568,12 +2193,11 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("fernet_encryption_key")
-    def validate_fernet_encryption_key(cls, v: Optional[str]) -> str:
+    def validate_fernet_encryption_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `fernet_encryption_key` field.
 
         Args:
-            v (Optional[str]): The Fernet encryption key value to validate.
-
+            v (Optional[SecretStr]): The Fernet encryption key value to validate.
         Raises:
             ValueError: If the Fernet encryption key is invalid.
             SmarterValueError: If the Fernet encryption key is not found.
@@ -1586,22 +2210,21 @@ class Settings(BaseSettings):
             return SettingsDefaults.FERNET_ENCRYPTION_KEY
 
         if v == DEFAULT_MISSING_VALUE:
-            return v
+            return None
 
-        if not isinstance(v, str):
-            raise SmarterConfigurationError("fernet_encryption_key is not a str.")
-
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("fernet_encryption_key is not a SecretStr.")
         try:
             # Decode the key using URL-safe base64
-            decoded_key = base64.urlsafe_b64decode(v)
+            decoded_key = base64.urlsafe_b64decode(v.get_secret_value())
             # Ensure the decoded key is exactly 32 bytes
             if len(decoded_key) != 32:
                 raise ValueError("Fernet key must be exactly 32 bytes when decoded.")
         except (TypeError, ValueError, base64.binascii.Error) as e:  # type: ignore[catch-base-exception]
             raise SmarterValueError(f"Invalid Fernet encryption key: {v}. Error: {e}") from e
 
-        if not isinstance(v, str):
-            raise SmarterConfigurationError("fernet_encryption_key is not a str.")
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("fernet_encryption_key is not a SecretStr.")
         return v
 
     @field_validator("local_hosts")
@@ -1751,20 +2374,19 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("google_service_account")
-    def check_google_service_account(cls, v: Optional[dict[str, Any]]) -> dict[str, Any]:
+    def check_google_service_account(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `google_service_account` field.
 
         Args:
-            v (Optional[dict[str, Any]]): The Google service account value to validate.
+            v (Optional[SecretStr]): The Google service account value to validate.
         Returns:
-            dict[str, str]: The validated Google service account.
+            SecretStr: The validated Google service account.
         """
-        if v in [None, {}]:
+        if v is None:
             return SettingsDefaults.GOOGLE_SERVICE_ACCOUNT
 
-        if not isinstance(v, dict):
-            raise SmarterConfigurationError("google_service_account is not a dict.")
-
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("google_service_account is not a SecretStr.")
         return v
 
     @field_validator("gemini_api_key")
@@ -1957,19 +2579,19 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("marketing_site_url")
-    def check_marketing_site_url(cls, v: Optional[str]) -> str:
+    def check_marketing_site_url(cls, v: Optional[HttpUrl]) -> HttpUrl:
         """Validates the `marketing_site_url` field.
 
         Args:
-            v (Optional[str]): The marketing site URL value to validate.
+            v (Optional[HttpUrl]): The marketing site URL value to validate.
         Returns:
-            str: The validated marketing site URL.
+            HttpUrl: The validated marketing site URL.
         """
         if str(v) in [None, ""] and SettingsDefaults.MARKETING_SITE_URL is not None:
             return SettingsDefaults.MARKETING_SITE_URL
-        if not isinstance(v, str):
-            raise SmarterConfigurationError("marketing_site_url is not a str.")
-        SmarterValidator.validate_url(v)
+        if not isinstance(v, HttpUrl):
+            raise SmarterConfigurationError("marketing_site_url is not a HttpUrl.")
+        SmarterValidator.validate_url(str(v))
         return v
 
     @field_validator("openai_api_organization")
@@ -2152,16 +2774,15 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("stripe_live_secret_key")
-    def check_stripe_live_secret_key(cls, v: Optional[str]) -> str:
+    def check_stripe_live_secret_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `stripe_live_secret_key` field.
 
         Args:
-            v (Optional[str]): The Stripe live secret key to validate.
-
+            v (Optional[SecretStr]): The Stripe live secret key to validate.
         Returns:
-            str: The validated Stripe live secret key.
+            SecretStr: The validated Stripe live secret key.
         """
-        if v in [None, ""]:
+        if v is None:
             warnings.warn(
                 "The 'stripe_live_secret_key' field is deprecated and will be removed in a future release.",
                 DeprecationWarning,
@@ -2169,20 +2790,20 @@ class Settings(BaseSettings):
             )
             return SettingsDefaults.STRIPE_LIVE_SECRET_KEY
 
-        if not isinstance(v, str):
-            raise SmarterConfigurationError("stripe_live_secret_key is not a str.")
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("stripe_live_secret_key is not a SecretStr.")
         return v
 
     @field_validator("stripe_test_secret_key")
-    def check_stripe_test_secret_key(cls, v: Optional[str]) -> str:
+    def check_stripe_test_secret_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `stripe_test_secret_key` field.
 
         Args:
-            v (Optional[str]): The Stripe test secret key to validate.
+            v (Optional[SecretStr]): The Stripe test secret key to validate.
         Returns:
-            str: The validated Stripe test secret key.
+            SecretStr: The validated Stripe test secret key.
         """
-        if v in [None, ""]:
+        if v is None:
             warnings.warn(
                 "The 'stripe_test_secret_key' field is deprecated and will be removed in a future release.",
                 DeprecationWarning,
@@ -2190,24 +2811,24 @@ class Settings(BaseSettings):
             )
             return SettingsDefaults.STRIPE_TEST_SECRET_KEY
 
-        if not isinstance(v, str):
-            raise SmarterConfigurationError("stripe_test_secret_key is not a str.")
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError("stripe_test_secret_key is not a SecretStr.")
         return v
 
     @field_validator("secret_key")
-    def check_secret_key(cls, v: Optional[str]) -> str:
+    def check_secret_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `secret_key` field.
 
         Args:
-            v (Optional[str]): The secret key value to validate.
+            v (Optional[SecretStr]): The secret key value to validate.
         Returns:
-            str: The validated secret key.
+            SecretStr: The validated secret key.
         """
-        if v in [None, ""] and SettingsDefaults.SECRET_KEY is not None:
+        if v is None:
             return SettingsDefaults.SECRET_KEY
 
-        if not isinstance(v, str):
-            raise SmarterConfigurationError(f"secret_key {type(v)} is not a str.")
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError(f"secret_key {type(v)} is not a SecretStr.")
         return v
 
     @field_validator("smarter_reactjs_app_loader_path")
@@ -2235,7 +2856,7 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("smtp_sender")
-    def check_smtp_sender(cls, v: Optional[str]) -> Optional[str]:
+    def check_smtp_sender(cls, v: Optional[str]) -> str:
         """Validates the `smtp_sender` field.
 
         Args:
@@ -2290,19 +2911,18 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("smtp_password")
-    def check_smtp_password(cls, v: Optional[str]) -> Optional[str]:
+    def check_smtp_password(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `smtp_password` field.
 
         Args:
-            v (Optional[str]): The SMTP password to validate.
-
+            v (Optional[SecretStr]): The SMTP password to validate.
         Returns:
-            Optional[str]: The validated SMTP password.
+            Optional[SecretStr]: The validated SMTP password.
         """
         if v in [None, ""]:
             return SettingsDefaults.SMTP_PASSWORD
 
-        if not isinstance(v, str):
+        if not isinstance(v, SecretStr):
             raise SmarterConfigurationError("smtp_password is not a str.")
         return v
 
@@ -2360,7 +2980,7 @@ class Settings(BaseSettings):
         return str(v).lower() in ["true", "1", "yes", "on"]
 
     @field_validator("smtp_username")
-    def check_smtp_username(cls, v: Optional[str]) -> Optional[str]:
+    def check_smtp_username(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `smtp_username` field.
 
         Args:
@@ -2369,7 +2989,7 @@ class Settings(BaseSettings):
         Returns:
             Optional[str]: The validated SMTP username.
         """
-        if v in [None, ""]:
+        if v is None:
             return SettingsDefaults.SMTP_USERNAME
         return v
 
