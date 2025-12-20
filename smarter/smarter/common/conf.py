@@ -80,14 +80,36 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
     return value.lower() in ["true", "1", "t", "y", "yes"]
 
 
-def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, prefixed=True) -> Any:
-    """Get environment variable with SMARTER_ prefix fallback."""
-    SMARTER_ENVIRONMENT_VARIABLE_PREFIX = "SMARTER_"
+def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE) -> Any:
+    """
+    Retrieve a configuration value from the environment, with SMARTER_ prefix fallback and type conversion.
 
-    if prefixed:
-        retval = os.environ.get(f"{SMARTER_ENVIRONMENT_VARIABLE_PREFIX}{var_name}", default)
-    else:
-        retval = os.environ.get(var_name, default)
+    This function attempts to obtain a configuration value from the environment using the key ``SMARTER_<var_name>``. If the environment variable is not set, it returns the provided ``default`` value. The function also performs type conversion and validation based on the type of the default value, supporting strings, booleans, integers, floats, lists (comma-separated), and dictionaries (JSON-encoded).
+
+    **Behavior:**
+
+    - Checks for the presence of the environment variable ``SMARTER_<var_name>``.
+    - If found, attempts to convert the value to the type of ``default``.
+    - If not found, returns the ``default`` value.
+    - Logs a message if the environment variable is missing or if type conversion fails.
+
+    This utility is used throughout the Smarter platform to provide a consistent and robust mechanism for loading configuration values from the environment, with sensible type handling and error reporting.
+
+    :param var_name: The base name of the environment variable (without the SMARTER_ prefix).
+    :type var_name: str
+    :param default: The default value to return if the environment variable is not set. The type of this value determines the expected type and conversion logic.
+    :type default: Any
+    :return: The value from the environment (converted to the appropriate type), or the default if not set or conversion fails.
+    :rtype: Any
+    """
+
+    key = f"SMARTER_{var_name}"
+    retval = os.environ.get(key, default)
+
+    if retval == default:
+        logger.info("Environment variable %s not found, using default value %s.", key, default)
+        print(f"Environment variable {key} not found, using default value {default}.")
+
     if isinstance(default, str):
         return retval.strip()
     if isinstance(default, bool):
@@ -194,10 +216,22 @@ class DjangoPermittedStorages:
 # pylint: disable=too-few-public-methods
 class SettingsDefaults:
     """
-    Default values for Settings. This takes care of most of what we're interested in.
-    It initializes from the following prioritization sequence:
-      1. environment variables
-      2. defaults.
+    Default values for Smarter platform settings.
+
+    This class provides the baseline configuration for all Smarter platform settings, supplying sensible defaults for every supported option. These defaults are used unless overridden by environment variables prefixed with ``SMARTER_``. The class is designed to ensure that all configuration values are available and type-consistent, supporting robust initialization and validation of platform settings.
+
+    **How defaults are determined:**
+
+    - If a corresponding environment variable with the ``SMARTER_`` prefix exists, its value is used (with type conversion and validation as appropriate).
+    - If no such environment variable is set, the value defined in this class is used as the default.
+
+    This approach allows for flexible configuration via environment variables, while maintaining a clear and centralized set of fallback values for all settings. The defaults defined here are intended to be safe and reasonable for most development and production scenarios, but can be customized as needed for specific deployments.
+
+    .. note::
+        This class is not intended to be instantiated directly. Instead, it serves as a source of default values for the main ``Settings`` class, which handles validation, environment variable loading, and integration with the rest of the platform.
+
+    .. warning::
+        Do not add application logic or side effects to this class. It should only define static default values and simple logic for fallback selection.
     """
 
     ROOT_DOMAIN = get_env("ROOT_DOMAIN", "example.com")
@@ -233,6 +267,11 @@ class SettingsDefaults:
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
     FERNET_ENCRYPTION_KEY: SecretStr = SecretStr(get_env("FERNET_ENCRYPTION_KEY"))
+    if FERNET_ENCRYPTION_KEY.get_secret_value() == DEFAULT_MISSING_VALUE:
+        # pylint: disable=C0415
+        from smarter.common.utils import generate_fernet_encryption_key
+
+        FERNET_ENCRYPTION_KEY = SecretStr(generate_fernet_encryption_key())
 
     GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY"))
 
@@ -272,16 +311,16 @@ class SettingsDefaults:
 
     LOG_LEVEL: int = logging.DEBUG if DEBUG_MODE else logging.INFO
 
-    LOGO: HttpUrl = get_env("OPENAI_API_ORGANIZATION", "https://cdn.platform.smarter.sh/images/logo/smarter-crop.png")
+    LOGO: HttpUrl = get_env("LOGO", "https://cdn.platform.smarter.sh/images/logo/smarter-crop.png")
     MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY"))
     MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 
-    MARKETING_SITE_URL: HttpUrl = get_env("OPENAI_API_ORGANIZATION", f"https://{ROOT_DOMAIN}")
+    MARKETING_SITE_URL: HttpUrl = get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}")
 
     OPENAI_API_ORGANIZATION = get_env("OPENAI_API_ORGANIZATION")
     OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY"))
-    OPENAI_ENDPOINT_IMAGE_N = 4
-    OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
+    OPENAI_ENDPOINT_IMAGE_N = get_env("OPENAI_ENDPOINT_IMAGE_N", 4)
+    OPENAI_ENDPOINT_IMAGE_SIZE = get_env("OPENAI_ENDPOINT_IMAGE_SIZE", "1024x768")
     PINECONE_API_KEY: SecretStr = SecretStr(get_env("PINECONE_API_KEY"))
 
     SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
@@ -2206,25 +2245,22 @@ class Settings(BaseSettings):
             Optional[str]: The validated Fernet encryption key.
         """
 
-        if v in [None, ""]:
+        if v is None:
             return SettingsDefaults.FERNET_ENCRYPTION_KEY
-
-        if v == DEFAULT_MISSING_VALUE:
-            return None
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError("fernet_encryption_key is not a SecretStr.")
         try:
             # Decode the key using URL-safe base64
-            decoded_key = base64.urlsafe_b64decode(v.get_secret_value())
+            encryption_key = v.get_secret_value()
+            decoded_key = base64.urlsafe_b64decode(encryption_key)
             # Ensure the decoded key is exactly 32 bytes
             if len(decoded_key) != 32:
                 raise ValueError("Fernet key must be exactly 32 bytes when decoded.")
         except (TypeError, ValueError, base64.binascii.Error) as e:  # type: ignore[catch-base-exception]
-            raise SmarterValueError(f"Invalid Fernet encryption key: {v}. Error: {e}") from e
 
-        if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("fernet_encryption_key is not a SecretStr.")
+            raise SmarterValueError(f"Invalid Fernet encryption key: {encryption_key}. Error: {e}") from e
+
         return v
 
     @field_validator("local_hosts")
