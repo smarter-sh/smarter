@@ -1,3 +1,10 @@
+## [0.13.51](https://github.com/smarter-sh/smarter/compare/v0.13.50...v0.13.51) (2025-12-20)
+
+
+### Bug Fixes
+
+* work on Settings defaults ([13d02fb](https://github.com/smarter-sh/smarter/commit/13d02fb72ce17028cda6766fe5abb015e4065f66))
+
 ## [0.13.50](https://github.com/smarter-sh/smarter/compare/v0.13.49...v0.13.50) (2025-12-20)
 
 
