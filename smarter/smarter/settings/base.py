@@ -1237,6 +1237,12 @@ See:
 - https://github.com/smarter-sh/smarter-infrastructure
 """
 
+WAFFLE_CREATE_MISSING_SWITCHES = True
+"""
+If True, enables automatic creation of missing waffle switches in the database during deployment
+jobs. This is intended to simplify management of waffle switches in Smarter deployments.
+"""
+
 # Wagtail settings
 # This is the human-readable name of your Wagtail install
 # which welcomes users upon login to the Wagtail admin.

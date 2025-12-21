@@ -15,15 +15,22 @@ This will generate a multi-line header in new terminal windows launched from
 Kubernetes pods running Smarter services.
 """
 
+# SMARTER platform settings
+# -----------------------------------------------------------------------------
+SMARTER_ROOT_DOMAIN = smarter_settings.root_domain
+"""
+Smarter root domain. This is not currently used.
+"""
+
 # Supplements to Django settings
 # -----------------------------------------------------------------------------
-SMARTER_ALLOWED_HOSTS = []
+SMARTER_ALLOWED_HOSTS = smarter_settings.allowed_hosts
 """
 Supplemental list of allowed host/domain names for Smarter ChatBots/Agents.
 This is specicific to Smarter and not officially part of Django settings.
 """
 
-SMARTER_INTERNAL_IP_PREFIXES = ["192.168."]
+SMARTER_INTERNAL_IP_PREFIXES = smarter_settings.internal_ip_prefixes
 """
 Supplemental list of internal IP prefixes used in smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware
 and smarter.lib.django.middleware security features.
@@ -33,55 +40,48 @@ by default unless otherwise configured.
 """
 
 
-# SMARTER platform settings
-# -----------------------------------------------------------------------------
-SMARTER_ROOT_DOMAIN = smarter_settings.root_domain
-"""
-Smarter root domain. This is not currently used.
-"""
-
-SMARTER_CACHE_EXPIRATION = 60 * 1  # 1 minute
+SMARTER_CACHE_EXPIRATION = smarter_settings.cache_expiration
 """
 Default cache expiration time for Django views that use page caching.
 
 See: django.views.decorators.cache.cache_control and django.views.decorators.cache.cache_page
 """
 
-SMARTER_API_SCHEMA = "http"
+SMARTER_API_SCHEMA = smarter_settings.api_schema
 """
 Smarter API schema (http or https).
 """
 
-SMARTER_API_NAME = "Smarter API"
+SMARTER_API_NAME = smarter_settings.api_name
 """
 Name of the Smarter API. Not currently used.
 """
 
-SMARTER_API_DESCRIPTION = "An enterprise class plugin-based AI chatbot platform"
+SMARTER_API_DESCRIPTION = smarter_settings.api_description
 """
 Description of the Smarter API. Not currently used.
 """
 
 # Marketing and branding settings
 # -----------------------------------------------------------------------------
-SMARTER_BRANDING_CORPORATE_NAME = "Lawrence P. McDaniel, The Smarter Project"
+SMARTER_BRANDING_CORPORATE_NAME = smarter_settings.branding_corporate_name
 """
 Smarter Branding. Provided to the Smarter web console dashboard
 context processor for use in the common footer of html templates.
 """
-SMARTER_BRANDING_SUPPORT_PHONE_NUMBER = "+1 (617) 834-6172"
-SMARTER_BRANDING_SUPPORT_EMAIL = "support@smarter.sh"
-SMARTER_BRANDING_ADDRESS = "851 Burlway Road, Suite 101, Burlingame, CA 94010"
-SMARTER_BRANDING_CONTACT_URL = "https://lawrencemcdaniel.com/contact/"
-SMARTER_BRANDING_SUPPORT_HOURS = "MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)"
-SMARTER_BRANDING_URL_FACEBOOK = "#"
-SMARTER_BRANDING_URL_TWITTER = "#"
-SMARTER_BRANDING_URL_LINKEDIN = "#"
-SMARTER_EMAIL_ADMIN = "lpm0073@gmail.com"
+SMARTER_BRANDING_SUPPORT_PHONE_NUMBER = smarter_settings.branding_support_phone_number
+SMARTER_BRANDING_SUPPORT_EMAIL = smarter_settings.branding_support_email
+SMARTER_BRANDING_ADDRESS = smarter_settings.branding_address
+SMARTER_BRANDING_CONTACT_URL = smarter_settings.branding_contact_url
+SMARTER_BRANDING_SUPPORT_HOURS = smarter_settings.branding_support_hours
+SMARTER_BRANDING_URL_FACEBOOK = smarter_settings.branding_url_facebook
+SMARTER_BRANDING_URL_TWITTER = smarter_settings.branding_url_twitter
+SMARTER_BRANDING_URL_LINKEDIN = smarter_settings.branding_url_linkedin
+SMARTER_EMAIL_ADMIN = smarter_settings.email_admin
 
 # Chat settings
 # -----------------------------------------------------------------------------
-SMARTER_CHAT_CACHE_EXPIRATION = 5  # 5 seconds. just enough to fend off a DDOS attack.
+SMARTER_CHAT_CACHE_EXPIRATION = smarter_settings.chat_cache_expiration
 """
 Default cache expiration time for chat message related views. Intended to
 act as a mild deterrent against DDOS attacks.
@@ -91,33 +91,33 @@ see: :class:`smarter.apps.prompt.models.ChatHelper`
 
 # ChatBot settings
 # -----------------------------------------------------------------------------
-SMARTER_CHATBOT_CACHE_EXPIRATION = 60 * 5  # 5 minutes
+SMARTER_CHATBOT_CACHE_EXPIRATION = smarter_settings.chatbot_cache_expiration
 """
 Default cache expiration time for ChatBot related views. Not currently used.
 """
 
-SMARTER_CHATBOT_MAX_RETURNED_HISTORY = 25
+SMARTER_CHATBOT_MAX_RETURNED_HISTORY = smarter_settings.chatbot_max_returned_history
 """
 Maximum number of chat history messages to return in API responses. Not currently used.
 """
 
 # Set these to true if we *DO NOT* place a wildcard A record in the customer API domain
 # requiring that every chatbot have its own A record. This is the default behavior.
-SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD = True
+SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD = smarter_settings.chatbot_tasks_create_dns_record
 """
 For programmatically creating DNS records in AWS Route53 during ChatBot deployment.
 """
 
 # set this to true if we intend to create an ingress manifest for the customer API domain
 # so that we can issue a certificate for it.
-SMARTER_CHATBOT_TASKS_CREATE_INGRESS_MANIFEST = True
+SMARTER_CHATBOT_TASKS_CREATE_INGRESS_MANIFEST = smarter_settings.chatbot_tasks_create_ingress_manifest
 """
 For programmatically creating Kubernetes ingress manifests and TLS certificates for ChatBots during deployment.
 """
 
 # For programmatically creating DNS records in AWS Route53.
 # set the TTL for the DNS record.
-SMARTER_CHATBOT_TASKS_DEFAULT_TTL = 600
+SMARTER_CHATBOT_TASKS_DEFAULT_TTL = smarter_settings.chatbot_tasks_default_ttl
 """
 Default TTL (time to live) for DNS records created in AWS Route53 during ChatBot deployment.
 """
@@ -162,10 +162,4 @@ Sensitive file amnesty patterns used by smarter.lib.django.middleware.sensitive_
 Requests matching these patterns will be allowed even if they match sensitive file names.
 
 Do not modify this setting unless you fully understand the implications of doing so.
-"""
-
-WAFFLE_CREATE_MISSING_SWITCHES = True
-"""
-If True, enables automatic creation of missing waffle switches in the database during deployment
-jobs. This is intended to simplify management of waffle switches in Smarter deployments.
 """
