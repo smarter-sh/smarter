@@ -55,7 +55,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     - Integrates with Django's cache for tracking request counts and with application logging.
 
     .. note::
-        - Amnesty patterns can be configured via the ``SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS`` Django setting.
+        - Amnesty patterns can be configured via the ``smarter_settings.sensitive_files_amnesty_patterns`` Django setting.
         - Logging is controlled via a waffle switch and the application's log level.
         - The client IP is determined using the :meth:`get_client_ip` method.
 
@@ -84,9 +84,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         self.get_response = get_response
 
         # grant amnesty for specific patterns
-        self.allowed_patterns = [
-            re.compile(pattern) for pattern in getattr(settings, "SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS", [])
-        ]
+        self.allowed_patterns = [re.compile(pattern) for pattern in smarter_settings.sensitive_files_amnesty_patterns]
         self.sensitive_files = {
             ".env",
             "config.php",
@@ -173,7 +171,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         for pattern in self.allowed_patterns:
             if pattern.match(request_path):
                 logger.info(
-                    "%s amnesty granted to: %s because it matches an allowed pattern in settings.SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS",
+                    "%s amnesty granted to: %s because it matches an allowed pattern in settings.smarter_settings.sensitive_files_amnesty_patterns",
                     self.formatted_class_name,
                     request.path,
                 )

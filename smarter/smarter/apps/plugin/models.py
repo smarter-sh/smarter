@@ -80,8 +80,6 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
-
 
 class PluginDataValueError(SmarterValueError):
     """Custom exception for PluginData SQL errors."""
@@ -870,7 +868,7 @@ class PluginDataStatic(PluginDataBase):
         This method returns the value of ``self.static_data`` in a sanitized form:
 
         - If ``static_data`` is a dictionary, it is returned as-is.
-        - If ``static_data`` is a list, it is truncated to ``SMARTER_PLUGIN_MAX_DATA_RESULTS`` items (if necessary)
+        - If ``static_data`` is a list, it is truncated to ``smarter_settings.plugin_max_data_results`` items (if necessary)
           and converted to a dictionary using :func:`list_of_dicts_to_dict`.
         - If ``static_data`` is neither a dictionary nor a list, a :class:`SmarterValueError` is raised.
 
@@ -886,13 +884,13 @@ class PluginDataStatic(PluginDataBase):
         if isinstance(self.static_data, list):
             retval = self.static_data
             if isinstance(retval, list) and len(retval) > 0:
-                if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
+                if len(retval) > smarter_settings.plugin_max_data_results:
                     logger.warning(
                         "%s.sanitized_return_data: Truncating static_data to %s items.",
                         self.formatted_class_name,
-                        {SMARTER_PLUGIN_MAX_DATA_RESULTS},
+                        {smarter_settings.plugin_max_data_results},
                     )
-                retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+                retval = retval[: smarter_settings.plugin_max_data_results]  # pylint: disable=E1136
                 retval = list_of_dicts_to_dict(data=retval)
         else:
             raise SmarterValueError("static_data must be a dict or a list or None")
@@ -908,7 +906,7 @@ class PluginDataStatic(PluginDataBase):
         This property extracts, caches and returns a list of all keys found in the ``static_data`` field, supporting both dictionary and list formats:
 
         - If ``static_data`` is a dictionary, all nested keys are recursively collected and returned as a flat list.
-        - If ``static_data`` is a list of dictionaries, the keys are extracted from each dictionary and returned as a list, truncated to ``SMARTER_PLUGIN_MAX_DATA_RESULTS`` items if necessary.
+        - If ``static_data`` is a list of dictionaries, the keys are extracted from each dictionary and returned as a list, truncated to ``smarter_settings.plugin_max_data_results`` items if necessary.
         - If ``static_data`` is neither a dictionary nor a list, a :class:`SmarterValueError` is raised.
 
         :return: A list of all keys in the static data, or None if not applicable.
@@ -935,18 +933,18 @@ class PluginDataStatic(PluginDataBase):
         elif isinstance(self.static_data, list):
             retval = self.static_data
             if isinstance(retval, list) and len(retval) > 0:
-                if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
+                if len(retval) > smarter_settings.plugin_max_data_results:
                     logger.warning(
                         "%s.return_data_keys: Truncating static_data to %s items.",
                         self.formatted_class_name,
-                        {SMARTER_PLUGIN_MAX_DATA_RESULTS},
+                        {smarter_settings.plugin_max_data_results},
                     )
-                retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+                retval = retval[: smarter_settings.plugin_max_data_results]  # pylint: disable=E1136
                 retval = list_of_dicts_to_list(data=retval)
         else:
             raise SmarterValueError("static_data must be a dict or a list or None")
 
-        return retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS] if isinstance(retval, list) else retval
+        return retval[: smarter_settings.plugin_max_data_results] if isinstance(retval, list) else retval
 
     def data(self, params: Optional[dict] = None) -> Optional[dict]:
         """

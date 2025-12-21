@@ -483,7 +483,7 @@ class ChatHelper(SmarterRequestMixin):
             except IntegrityError as e:
                 raise SmarterConfigurationError(f"{self.formatted_class_name} - IntegrityError: {str(e)}") from e
 
-        cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
+        cache.set(key=self.session_key, value=chat, timeout=smarter_settings.chat_cache_expiration or 300)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
             logger.info(
                 "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key

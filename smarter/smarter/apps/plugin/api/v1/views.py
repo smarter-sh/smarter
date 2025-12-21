@@ -23,6 +23,7 @@ from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 from smarter.lib.drf.views.token_authentication_helpers import (
@@ -217,7 +218,7 @@ def create_plugin(request, data: Optional[dict] = None):
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    base_url = f"{settings.SMARTER_API_SCHEMA}://{request.get_host()}/"
+    base_url = f"{smarter_settings.api_schema}://{request.get_host()}/"
     plugins_api_url = urljoin(base_url, "/api/v1/plugins/")
 
     return HttpResponseRedirect(plugins_api_url + str(plugin.id) + "/")

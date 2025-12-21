@@ -59,9 +59,6 @@ DJSTRIPE_WEBHOOK_SECRET = (
 DJSTRIPE_USE_NATIVE_JSONFIELD = True  # We recommend setting to True for new installations
 DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
-# SMARTER settings
-SMARTER_API_SCHEMA = "https"
-
 # Common security settings
 # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_PROXY_SSL_HEADER = None
@@ -81,7 +78,6 @@ SESSION_COOKIE_HTTPONLY = True
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
-SMARTER_ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, ENVIRONMENT_API_DOMAIN, f"*.{ENVIRONMENT_API_DOMAIN}"]
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
 
@@ -95,4 +91,4 @@ CORS_ALLOWED_ORIGINS += [
 
 # (4_0.E001) As of Django 4.0, the values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme
 # (usually http:// or https://) but found platform.smarter.sh. See the release notes for details.
-CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in SMARTER_ALLOWED_HOSTS]
+CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in smarter_settings.allowed_hosts]

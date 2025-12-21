@@ -49,6 +49,7 @@ from smarter.apps.account.models import (
 from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.plugin.models import ApiConnection, PluginMeta, SqlConnection
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.cache import cache_results
 
 
@@ -282,16 +283,16 @@ def branding(request: HttpRequest) -> dict:
     context = {
         "branding": {
             "root_url": root_url,
-            "support_phone_number": settings.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER,
-            "corporate_name": settings.SMARTER_BRANDING_CORPORATE_NAME,
-            "support_email": settings.SMARTER_BRANDING_SUPPORT_EMAIL,
-            "corp_address": settings.SMARTER_BRANDING_ADDRESS,
-            "contact_url": settings.SMARTER_BRANDING_CONTACT_URL,
-            "support_hours": settings.SMARTER_BRANDING_SUPPORT_HOURS,
-            "copyright": f"© {current_year} {settings.SMARTER_BRANDING_CORPORATE_NAME}. All rights reserved.",
-            "url_facebook": settings.SMARTER_BRANDING_URL_FACEBOOK,
-            "url_twitter": settings.SMARTER_BRANDING_URL_TWITTER,
-            "url_linkedin": settings.SMARTER_BRANDING_URL_LINKEDIN,
+            "support_phone_number": smarter_settings.branding_support_phone_number,
+            "corporate_name": smarter_settings.branding_corporate_name,
+            "support_email": smarter_settings.branding_support_email,
+            "corp_address": smarter_settings.branding_address,
+            "contact_url": smarter_settings.branding_contact_url,
+            "support_hours": smarter_settings.branding_support_hours,
+            "copyright": f"© {current_year} {smarter_settings.branding_corporate_name}. All rights reserved.",
+            "url_facebook": smarter_settings.branding_url_facebook,
+            "url_twitter": smarter_settings.branding_url_twitter,
+            "url_linkedin": smarter_settings.branding_url_linkedin,
         }
     }
     return context
