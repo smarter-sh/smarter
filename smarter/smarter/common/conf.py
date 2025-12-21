@@ -8,7 +8,7 @@ The configuration values are initialized according to the following
 prioritization sequence:
 
     1. constructor
-    2. environment variables and `.env` file. Loads any variable with SMARTER_ prefix.
+    2. environment variables and `.env` file. Loads any variable with  prefix.
     3. SettingsDefaults
 
 The Settings class also provides a dump property that returns a dictionary of all
@@ -79,7 +79,6 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
     return value.lower() in ["true", "1", "t", "y", "yes"]
 
 
-@lru_cache(maxsize=128)
 def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE) -> Any:
     """
     .. deprecated:: 2025.12
@@ -87,16 +86,16 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE) -> Any:
         This function is deprecated and will be removed in a future release. Use the Settings class
         built-in environment variable handling instead.
 
-    Retrieve a configuration value from the environment, with SMARTER_ prefix fallback and type conversion.
+    Retrieve a configuration value from the environment, with  prefix fallback and type conversion.
 
-    This function attempts to obtain a configuration value from the environment using the key ``SMARTER_<var_name>``.
+    This function attempts to obtain a configuration value from the environment using the key ``<var_name>``.
     If the environment variable is not set, it returns the provided ``default`` value. The function also performs
     type conversion and validation based on the type of the default value, supporting strings,
     booleans, integers, floats, lists (comma-separated), and dictionaries (JSON-encoded).
 
     **Behavior:**
 
-    - Checks for the presence of the environment variable ``SMARTER_<var_name>``.
+    - Checks for the presence of the environment variable ``<var_name>``.
     - If found, attempts to convert the value to the type of ``default``.
     - If not found, returns the ``default`` value.
     - Logs a message if the environment variable is missing or if type conversion fails.
@@ -104,7 +103,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE) -> Any:
     This utility is used throughout the Smarter platform to provide a consistent and robust
     mechanism for loading configuration values from the environment, with sensible type handling and error reporting.
 
-    :param var_name: The base name of the environment variable (without the SMARTER_ prefix).
+    :param var_name: The base name of the environment variable (without the  prefix).
     :type var_name: str
     :param default: The default value to return if the environment variable is not set. The type of this value determines the expected type and conversion logic.
     :type default: Any
@@ -113,7 +112,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE) -> Any:
     """
 
     key = f"SMARTER_{var_name}"
-    retval = os.environ.get(key, default)
+    retval = os.environ.get(key) or os.environ.get(var_name) or default
 
     if retval == default:
         logger.info("Environment variable %s not found, using default value %s.", key, default)
@@ -233,11 +232,11 @@ class SettingsDefaults:
 
     Default values for Smarter platform settings.
 
-    This class provides the baseline configuration for all Smarter platform settings, supplying sensible defaults for every supported option. These defaults are used unless overridden by environment variables prefixed with ``SMARTER_``. The class is designed to ensure that all configuration values are available and type-consistent, supporting robust initialization and validation of platform settings.
+    This class provides the baseline configuration for all Smarter platform settings, supplying sensible defaults for every supported option. These defaults are used unless overridden by environment variables prefixed with ````. The class is designed to ensure that all configuration values are available and type-consistent, supporting robust initialization and validation of platform settings.
 
     **How defaults are determined:**
 
-    - If a corresponding environment variable with the ``SMARTER_`` prefix exists, its value is used (with type conversion and validation as appropriate).
+    - If a corresponding environment variable with the ```` prefix exists, its value is used (with type conversion and validation as appropriate).
     - If no such environment variable is set, the value defined in this class is used as the default.
 
     This approach allows for flexible configuration via environment variables, while maintaining a clear and centralized set of fallback values for all settings. The defaults defined here are intended to be safe and reasonable for most development and production scenarios, but can be customized as needed for specific deployments.
@@ -250,8 +249,14 @@ class SettingsDefaults:
     """
 
     ROOT_DOMAIN = get_env("ROOT_DOMAIN", "example.com")
-
+    ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", [])
     ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY"))
+
+    API_DESCRIPTION = get_env(
+        "API_DESCRIPTION", "A declarative AI resource management platform and developer framework"
+    )
+    API_NAME = get_env("API_NAME", "Smarter API")
+    API_SCHEMA = get_env("API_SCHEMA", "http")
 
     # aws auth
     AWS_PROFILE = get_env("AWS_PROFILE")
@@ -268,8 +273,29 @@ class SettingsDefaults:
 
     AWS_EKS_CLUSTER_NAME = get_env("AWS_EKS_CLUSTER_NAME")
     AWS_RDS_DB_INSTANCE_IDENTIFIER = get_env("AWS_RDS_DB_INSTANCE_IDENTIFIER")
-    DEBUG_MODE: bool = bool(get_env("DEBUG_MODE", False))
-    DEVELOPER_MODE: bool = bool(get_env("DEVELOPER_MODE", False))
+
+    BRANDING_CORPORATE_NAME: str = get_env("BRANDING_CORPORATE_NAME", "The Smarter Project")
+    BRANDING_SUPPORT_PHONE_NUMBER: str = get_env("BRANDING_SUPPORT_PHONE_NUMBER", "(###) 555-1212")
+    BRANDING_SUPPORT_EMAIL: EmailStr = get_env("BRANDING_SUPPORT_EMAIL", "support@example.com")
+    BRANDING_ADDRESS: str = get_env("BRANDING_ADDRESS", "123 Main St, Anytown, USA")
+    BRANDING_CONTACT_URL: Optional[HttpUrl] = get_env("BRANDING_CONTACT_URL", "https://example.com/contact/")
+    BRANDING_SUPPORT_HOURS: str = get_env("BRANDING_SUPPORT_HOURS", "MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)")
+    BRANDING_URL_FACEBOOK: Optional[HttpUrl] = get_env("BRANDING_URL_FACEBOOK", "https://facebook.com/example")
+    BRANDING_URL_TWITTER: Optional[HttpUrl] = get_env("BRANDING_URL_TWITTER", "https://twitter.com/example")
+    BRANDING_URL_LINKEDIN: Optional[HttpUrl] = get_env("BRANDING_URL_LINKEDIN", "https://linkedin.com/company/example")
+
+    CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
+    CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
+    CHATBOT_CACHE_EXPIRATION: int = int(get_env("CHATBOT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
+    CHATBOT_MAX_RETURNED_HISTORY: int = int(get_env("CHATBOT_MAX_RETURNED_HISTORY", 25))
+    CHATBOT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("CHATBOT_TASKS_CREATE_DNS_RECORD", True)
+    CHATBOT_TASKS_CREATE_INGRESS_MANIFEST: bool = bool_environment_variable(
+        "CHATBOT_TASKS_CREATE_INGRESS_MANIFEST", True
+    )
+    CHATBOT_TASKS_DEFAULT_TTL: int = get_env("CHATBOT_TASKS_DEFAULT_TTL", 600)
+
+    DEBUG_MODE: bool = bool_environment_variable("DEBUG_MODE", False)
+    DEVELOPER_MODE: bool = bool_environment_variable("DEVELOPER_MODE", False)
 
     DJANGO_DEFAULT_FILE_STORAGE = get_env("DJANGO_DEFAULT_FILE_STORAGE", DjangoPermittedStorages.AWS_S3)
     if DJANGO_DEFAULT_FILE_STORAGE == DjangoPermittedStorages.AWS_S3 and not AWS_IS_CONFIGURED:
@@ -279,6 +305,7 @@ class SettingsDefaults:
         )
 
     DUMP_DEFAULTS: bool = bool(get_env("DUMP_DEFAULTS", False))
+    EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com")
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
     FERNET_ENCRYPTION_KEY: SecretStr = SecretStr(get_env("FERNET_ENCRYPTION_KEY"))
@@ -303,6 +330,7 @@ class SettingsDefaults:
         GOOGLE_SERVICE_ACCOUNT = SecretStr(json.dumps({}))
 
     GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY"))
+    INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
     LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "chat_history")
 
     LLAMA_API_KEY: SecretStr = SecretStr(get_env("LLAMA_API_KEY"))
@@ -332,20 +360,32 @@ class SettingsDefaults:
 
     MARKETING_SITE_URL: HttpUrl = get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}")
 
+    MYSQL_TEST_DATABASE_SECRET_NAME = get_env(
+        "MYSQL_TEST_DATABASE_SECRET_NAME",
+        "smarter_test_db",
+    )
+    MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(get_env("MYSQL_TEST_DATABASE_PASSWORD"))
+
     OPENAI_API_ORGANIZATION = get_env("OPENAI_API_ORGANIZATION")
     OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY"))
     OPENAI_ENDPOINT_IMAGE_N = get_env("OPENAI_ENDPOINT_IMAGE_N", 4)
     OPENAI_ENDPOINT_IMAGE_SIZE = get_env("OPENAI_ENDPOINT_IMAGE_SIZE", "1024x768")
     PINECONE_API_KEY: SecretStr = SecretStr(get_env("PINECONE_API_KEY"))
 
+    REACTJS_APP_LOADER_PATH = get_env("REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
+
+    SECRET_KEY: SecretStr = SecretStr(get_env("SECRET_KEY"))
+
     SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
 
-    SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = get_env(
-        "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME",
-        "smarter_test_db",
-    )
-    SMARTER_MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(get_env("SMARTER_MYSQL_TEST_DATABASE_PASSWORD"))
-    SMARTER_REACTJS_APP_LOADER_PATH = get_env("SMARTER_REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
+    SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}")
+    SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
+    SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
+    SMTP_PORT = int(get_env("SMTP_PORT", "587"))
+    SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
+    SMTP_USE_TLS = bool(get_env("SMTP_USE_TLS", True))
+    SMTP_PASSWORD: SecretStr = SecretStr(get_env("SMTP_PASSWORD"))
+    SMTP_USERNAME: SecretStr = SecretStr(get_env("SMTP_USERNAME"))
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
@@ -364,17 +404,6 @@ class SettingsDefaults:
     # -------------------------------------------------------------------------
     SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY"))
     SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET"))
-
-    SECRET_KEY: SecretStr = SecretStr(get_env("SECRET_KEY"))
-
-    SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}")
-    SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
-    SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
-    SMTP_PORT = int(get_env("SMTP_PORT", "587"))
-    SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
-    SMTP_USE_TLS = bool(get_env("SMTP_USE_TLS", True))
-    SMTP_PASSWORD: SecretStr = SecretStr(get_env("SMTP_PASSWORD"))
-    SMTP_USERNAME: SecretStr = SecretStr(get_env("SMTP_USERNAME"))
 
     STRIPE_LIVE_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_LIVE_SECRET_KEY"))
     STRIPE_TEST_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_TEST_SECRET_KEY"))
@@ -521,8 +550,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         strict=True,
         frozen=True,
-        env_file=".env",
-        env_prefix="SMARTER_",
+        # env_file=".env",
+        # env_prefix="SMARTER_",
         extra="forbid",
         validate_default=True,
     )
@@ -530,6 +559,13 @@ class Settings(BaseSettings):
     Pydantic v2 Configuration class for the Settings model. This configuration enforces strict type checking,
     immutability, and environment variable loading behavior for the Settings class.
     see https://docs.pydantic.dev/latest/concepts/pydantic_settings/
+
+    .. note::
+
+        We're not currently using env_file and env_prefix here because we're
+        handling that in SettingsDefaults for backward compatibility. There
+        are type conversions and defaulting behavior in the legacy code
+        that is slightly more robust than in Pydantic v2.
 
     :param strict: Enforce strict type checking for all fields.
     :param frozen: Make the settings instance immutable after instantiation.
@@ -552,6 +588,38 @@ class Settings(BaseSettings):
     init_info: Optional[str] = Field(
         None,
     )
+
+    allowed_hosts: List[str] = Field(
+        SettingsDefaults.ALLOWED_HOSTS,
+        description="List of allowed host/domain names for this Django site.",
+        examples=["example.com", "www.example.com"],
+        title="Allowed Hosts",
+    )
+    """
+    List of allowed host/domain names for this Django site.
+    This setting specifies which hostnames the Django application is allowed to serve.
+    It is a security measure to prevent HTTP Host header attacks.
+    :type: List[str]
+    :default: Value from ``SettingsDefaults.ALLOWED_HOSTS``
+    :raises SmarterConfigurationError: If the value is not a list of strings.
+    """
+
+    @field_validator("allowed_hosts")
+    def validate_allowed_hosts(cls, v: List[str]) -> List[str]:
+        """Validates the `allowed_hosts` field.
+
+        Args:
+            v (List[str]): The allowed hosts value to validate.
+
+        Returns:
+            List[str]: The validated allowed hosts.
+        """
+        if not isinstance(v, list):
+            raise SmarterConfigurationError("allowed_hosts is not a list.")
+        for host in v:
+            if not isinstance(host, str):
+                raise SmarterConfigurationError(f"allowed_hosts contains non-string value: {host}")
+        return v
 
     anthropic_api_key: SecretStr = Field(
         SettingsDefaults.ANTHROPIC_API_KEY,
@@ -585,6 +653,94 @@ class Settings(BaseSettings):
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError("anthropic_api_key is not a SecretStr.")
 
+        return v
+
+    api_description: str = Field(
+        SettingsDefaults.API_DESCRIPTION,
+        description="The description of the API.",
+        examples=["A declarative AI resource management platform and developer framework"],
+        title="API Description",
+    )
+    """
+    The description of the API.
+    This setting provides a brief description of the API's purpose and functionality.
+    It is used in various contexts, such as Swagger Api documentation site, logging, and user interfaces.
+    :type: str
+    :default: Value from ``SettingsDefaults.API_DESCRIPTION``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @field_validator("api_description")
+    def validate_api_description(cls, v: str) -> str:
+        """Validates the `api_description` field.
+
+        Args:
+            v (str): The API description value to validate.
+
+        Returns:
+            str: The validated API description.
+        """
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("api_description is not a string.")
+        return v
+
+    api_name: str = Field(
+        SettingsDefaults.API_NAME,
+        description="The name of the API.",
+        examples=["Smarter API", "My Custom API"],
+        title="API Name",
+    )
+    """
+    The name of the API.
+    This setting specifies the name of the API used in various contexts,
+    such as Swagger Api documentation site, logging, and user interfaces.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.API_NAME``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @field_validator("api_name")
+    def validate_api_name(cls, v: str) -> str:
+        """Validates the `api_name` field.
+
+        Args:
+            v (str): The API name value to validate.
+
+        Returns:
+            str: The validated API name.
+        """
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("api_name is not a string.")
+        return v
+
+    api_schema: str = Field(
+        SettingsDefaults.API_SCHEMA,
+        description="The schema to use for API URLs (http or https).",
+        examples=["http", "https"],
+        title="API Schema",
+    )
+    """
+    The schema to use for API URLs (http or https).
+    This setting specifies the URL schema to be used when constructing API endpoints.
+    It determines whether the API URLs will use HTTP or HTTPS.
+    :type: str
+    :default: Value from ``SettingsDefaults.API_SCHEMA``
+    :raises SmarterConfigurationError: If the value is not 'http' or 'https'.
+    """
+
+    @field_validator("api_schema")
+    def validate_api_schema(cls, v: str) -> str:
+        """Validates the `api_schema` field.
+
+        Args:
+            v (str): The API schema value to validate.
+
+        Returns:
+            str: The validated API schema.
+        """
+        if v not in ["http", "https"]:
+            raise SmarterConfigurationError("api_schema must be 'http' or 'https'.")
         return v
 
     aws_profile: Optional[str] = Field(
@@ -842,6 +998,548 @@ class Settings(BaseSettings):
 
         return v
 
+    branding_corporate_name: str = Field(
+        SettingsDefaults.BRANDING_CORPORATE_NAME,
+        description="The corporate name used for branding purposes throughout the platform.",
+        examples=["Acme Corporation"],
+        title="Branding Corporate Name",
+    )
+    """
+    The corporate name used for branding purposes throughout the platform.
+    This setting specifies the name of the organization or company that owns
+    or operates the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_CORPORATE_NAME``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @field_validator("branding_corporate_name")
+    def validate_branding_corporate_name(cls, v: Optional[str]) -> str:
+        """Validates the `branding_corporate_name` field.
+
+        Args:
+            v (Optional[str]): The branding corporate name value to validate.
+
+        Returns:
+            str: The validated branding corporate name.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_CORPORATE_NAME
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("branding_corporate_name is not a str.")
+
+        return v
+
+    branding_support_phone_number: str = Field(
+        SettingsDefaults.BRANDING_SUPPORT_PHONE_NUMBER,
+        description="The support phone number used for branding purposes throughout the platform.",
+        examples=["+1-800-555-1234"],
+        title="Branding Support Phone Number",
+    )
+    """
+    The support phone number used for branding purposes throughout the platform.
+    This setting specifies the phone number that users can call for support
+    or assistance related to the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_SUPPORT_PHONE_NUMBER``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @field_validator("branding_support_phone_number")
+    def validate_branding_support_phone_number(cls, v: Optional[str]) -> str:
+        """Validates the `branding_support_phone_number` field.
+
+        Args:
+            v (Optional[str]): The branding support phone number value to validate.
+
+        Returns:
+            str: The validated branding support phone number.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_SUPPORT_PHONE_NUMBER
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("branding_support_phone_number is not a str.")
+
+        return v
+
+    branding_support_email: str = Field(
+        SettingsDefaults.BRANDING_SUPPORT_EMAIL,
+        description="The support email address used for branding purposes throughout the platform.",
+        title="Branding Support Email",
+    )
+    """
+    The support email address used for branding purposes throughout the platform.
+    This setting specifies the email address that users can contact for support
+    or assistance related to the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_SUPPORT_EMAIL``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @field_validator("branding_support_email")
+    def validate_branding_support_email(cls, v: Optional[str]) -> str:
+        """Validates the `branding_support_email` field.
+
+        Args:
+            v (Optional[str]): The branding support email value to validate.
+
+        Returns:
+            str: The validated branding support email.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_SUPPORT_EMAIL
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("branding_support_email is not a str.")
+
+        return v
+
+    branding_address: str = Field(
+        SettingsDefaults.BRANDING_ADDRESS,
+        description="The corporate address used for branding purposes throughout the platform.",
+        examples=["123 Main St, Anytown, USA"],
+        title="Branding Address",
+    )
+    """
+    The corporate address used for branding purposes throughout the platform.
+    This setting specifies the physical address of the organization or company that owns
+    or operates the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_ADDRESS``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @field_validator("branding_address")
+    def validate_branding_address(cls, v: Optional[str]) -> str:
+        """Validates the `branding_address` field.
+
+        Args:
+            v (Optional[str]): The branding address value to validate.
+
+        Returns:
+            str: The validated branding address.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_ADDRESS
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("branding_address is not a str.")
+
+        return v
+
+    branding_contact_url: Optional[HttpUrl] = Field(
+        SettingsDefaults.BRANDING_CONTACT_URL,
+        description="The contact URL used for branding purposes throughout the platform.",
+        title="Branding Contact URL",
+    )
+    """
+    The contact URL used for branding purposes throughout the platform.
+    This setting specifies the URL that users can visit to contact
+    the organization or company that owns or operates the platform.
+    It is used in various branding contexts, such as email templates,
+    user interfaces, and documentation.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_CONTACT_URL``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @field_validator("branding_contact_url")
+    def validate_branding_contact_url(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
+        """Validates the `branding_contact_url` field.
+
+        Args:
+            v (Optional[HttpUrl]): The branding contact URL value to validate.
+
+        Returns:
+            Optional[HttpUrl]: The validated branding contact URL.
+        """
+        if v is None or v == "":
+            return SettingsDefaults.BRANDING_CONTACT_URL
+
+        if not isinstance(v, HttpUrl):
+            raise SmarterConfigurationError("branding_contact_url is not a HttpUrl.")
+
+        return v
+
+    branding_support_hours: str = Field(
+        SettingsDefaults.BRANDING_SUPPORT_HOURS,
+        description="The support hours used for branding purposes throughout the platform.",
+        examples=["Mon-Fri 9am-5pm EST"],
+        title="Branding Support Hours",
+    )
+    """
+    The support hours used for branding purposes throughout the platform.
+    This setting specifies the hours during which support is available
+    for users of the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: str
+    :default: Value from ``SettingsDefaults.BRANDING_SUPPORT_HOURS``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @field_validator("branding_support_hours")
+    def validate_branding_support_hours(cls, v: Optional[str]) -> str:
+        """Validates the `branding_support_hours` field.
+
+        Args:
+            v (Optional[str]): The branding support hours value to validate.
+
+        Returns:
+            str: The validated branding support hours.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.BRANDING_SUPPORT_HOURS
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("branding_support_hours is not a str.")
+
+        return v
+
+    branding_url_facebook: Optional[HttpUrl] = Field(
+        SettingsDefaults.BRANDING_URL_FACEBOOK,
+        description="The Facebook URL used for branding purposes throughout the platform.",
+        title="Branding URL Facebook",
+    )
+    """
+    The Facebook URL used for branding purposes throughout the platform.
+    This setting specifies the Facebook page URL of the organization or company that owns
+    or operates the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: Optional[HttpUrl]
+    :default: Value from ``SettingsDefaults.BRANDING_URL_FACEBOOK``
+    :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
+    """
+
+    @field_validator("branding_url_facebook")
+    def validate_branding_url_facebook(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
+        """Validates the `branding_url_facebook` field.
+        Args:
+            v (Optional[HttpUrl]): The branding URL Facebook value to validate.
+        Returns:
+            Optional[HttpUrl]: The validated branding URL Facebook.
+        """
+        if v is None or v == "":
+            return SettingsDefaults.BRANDING_URL_FACEBOOK
+
+        if not isinstance(v, HttpUrl):
+            raise SmarterConfigurationError("branding_url_facebook is not a HttpUrl.")
+
+        return v
+
+    branding_url_twitter: Optional[HttpUrl] = Field(
+        SettingsDefaults.BRANDING_URL_TWITTER,
+        description="The Twitter URL used for branding purposes throughout the platform.",
+        title="Branding URL Twitter",
+    )
+    """
+    The Twitter URL used for branding purposes throughout the platform.
+    This setting specifies the Twitter profile URL of the organization or company that owns
+    or operates the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: Optional[HttpUrl]
+    :default: Value from ``SettingsDefaults.BRANDING_URL_TWITTER``
+    :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
+    """
+
+    @field_validator("branding_url_twitter")
+    def validate_branding_url_twitter(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
+        """Validates the `branding_url_twitter` field.
+        Args:
+            v (Optional[HttpUrl]): The branding URL Twitter value to validate.
+        Returns:
+            Optional[HttpUrl]: The validated branding URL Twitter.
+        """
+        if v is None or v == "":
+            return SettingsDefaults.BRANDING_URL_TWITTER
+
+        if not isinstance(v, HttpUrl):
+            raise SmarterConfigurationError("branding_url_twitter is not a HttpUrl.")
+
+        return v
+
+    branding_url_linkedin: Optional[HttpUrl] = Field(
+        SettingsDefaults.BRANDING_URL_LINKEDIN,
+        description="The LinkedIn URL used for branding purposes throughout the platform.",
+        title="Branding URL LinkedIn",
+    )
+    """
+    The LinkedIn URL used for branding purposes throughout the platform.
+    This setting specifies the LinkedIn profile URL of the organization or company that owns
+    or operates the platform. It is used in various branding contexts,
+    such as email templates, user interfaces, and documentation.
+    :type: Optional[HttpUrl]
+    :default: Value from ``SettingsDefaults.BRANDING_URL_LINKEDIN``
+    :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
+    """
+
+    @field_validator("branding_url_linkedin")
+    def validate_branding_url_linkedin(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
+        """Validates the `branding_url_linkedin` field.
+        Args:
+            v (Optional[HttpUrl]): The branding URL LinkedIn value to validate.
+        Returns:
+            Optional[HttpUrl]: The validated branding URL LinkedIn.
+        """
+        if v is None or v == "":
+            return SettingsDefaults.BRANDING_URL_LINKEDIN
+
+        if not isinstance(v, HttpUrl):
+            raise SmarterConfigurationError("branding_url_linkedin is not a HttpUrl.")
+
+        return v
+
+    cache_expiration: int = Field(
+        SettingsDefaults.CACHE_EXPIRATION,
+        gt=0,
+        description="The cache expiration time in seconds for cached data.",
+        title="Cache Expiration",
+    )
+    """
+    The cache expiration time in seconds for cached data.
+    This setting defines how long cached data should be considered valid before it is
+    refreshed or invalidated. A shorter expiration time may lead to more frequent
+    cache refreshes, while a longer expiration time can improve performance by reducing
+    the number of cache lookups.
+    :type: int
+    :default: Value from ``SettingsDefaults.CACHE_EXPIRATION``
+    :raises SmarterConfigurationError: If the value is not a positive integer.
+    """
+
+    @field_validator("cache_expiration")
+    def parse_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'cache_expiration' field.
+        Args:
+            v (Optional[Union[int, str]]): the cache_expiration value to validate
+        Returns:
+            int: The validated cache_expiration.
+        """
+        if isinstance(v, int):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CACHE_EXPIRATION
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 0:
+                raise SmarterConfigurationError("cache_expiration must be a positive integer.")
+            return int_value
+        except ValueError as e:
+            raise SmarterConfigurationError("could not validate cache_expiration") from e
+
+    chat_cache_expiration: int = Field(
+        SettingsDefaults.CHAT_CACHE_EXPIRATION,
+        gt=0,
+        description="The chat cache expiration time in seconds for cached chat data.",
+        title="Chat Cache Expiration",
+    )
+    """
+    The chat cache expiration time in seconds for cached chat data.
+    This setting defines how long cached chat data should be considered valid before it is
+    refreshed or invalidated. A shorter expiration time may lead to more frequent
+    cache refreshes, while a longer expiration time can improve performance by reducing
+    the number of cache lookups.
+
+    :type: int
+    :default: Value from ``SettingsDefaults.CHAT_CACHE_EXPIRATION``
+    :raises SmarterConfigurationError: If the value is not a positive integer.
+    """
+
+    @field_validator("chat_cache_expiration")
+    def parse_chat_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'chat_cache_expiration' field.
+        Args:
+            v (Optional[Union[int, str]]): the chat_cache_expiration value to validate
+        Returns:
+            int: The validated chat_cache_expiration.
+        """
+        if isinstance(v, int):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CHAT_CACHE_EXPIRATION
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 0:
+                raise SmarterConfigurationError("chat_cache_expiration must be a positive integer.")
+            return int_value
+        except ValueError as e:
+            raise SmarterConfigurationError("could not validate chat_cache_expiration") from e
+
+    chatbot_cache_expiration: int = Field(
+        SettingsDefaults.CHATBOT_CACHE_EXPIRATION,
+        gt=0,
+        description="The chatbot cache expiration time in seconds for cached chatbot data.",
+        title="Chatbot Cache Expiration",
+    )
+    """
+    The chatbot cache expiration time in seconds for cached chatbot data.
+    This setting defines how long cached chatbot data should be considered valid before it is
+    refreshed or invalidated. A shorter expiration time may lead to more frequent
+    cache refreshes, while a longer expiration time can improve performance by reducing
+    the number of cache lookups.
+
+    :type: int
+    :default: Value from ``SettingsDefaults.CHATBOT_CACHE_EXPIRATION``
+    :raises SmarterConfigurationError: If the value is not a positive integer.
+    """
+
+    @field_validator("chatbot_cache_expiration")
+    def parse_chatbot_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'chatbot_cache_expiration' field.
+        Args:
+            v (Optional[Union[int, str]]): the chatbot_cache_expiration value to validate
+        Returns:
+            int: The validated chatbot_cache_expiration.
+        """
+        if isinstance(v, int):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CHATBOT_CACHE_EXPIRATION
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 0:
+                raise SmarterConfigurationError("chatbot_cache_expiration must be a positive integer.")
+            return int_value
+        except ValueError as e:
+            raise SmarterConfigurationError("could not validate chatbot_cache_expiration") from e
+
+    chatbot_max_returned_history: int = Field(
+        SettingsDefaults.CHATBOT_MAX_RETURNED_HISTORY,
+        gt=0,
+        description="The maximum number of chat history messages to return from the chatbot.",
+        title="Chatbot Max Returned History",
+    )
+    """
+    The maximum number of chat history messages to return from the chatbot.
+    This setting defines the maximum number of previous chat messages that the chatbot
+    will include in its responses. Limiting the number of returned messages can help
+    improve performance and reduce response times.
+    :type: int
+    :default: Value from ``SettingsDefaults.CHATBOT_MAX_RETURNED_HISTORY``
+    :raises SmarterConfigurationError: If the value is not a positive integer.
+    """
+
+    @field_validator("chatbot_max_returned_history")
+    def parse_chatbot_max_returned_history(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'chatbot_max_returned_history' field.
+        Args:
+            v (Optional[Union[int, str]]): the chatbot_max_returned_history value to validate
+        Returns:
+            int: The validated chatbot_max_returned_history.
+        """
+        if isinstance(v, int):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CHATBOT_MAX_RETURNED_HISTORY
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 0:
+                raise SmarterConfigurationError("chatbot_max_returned_history must be a positive integer.")
+            return int_value
+        except ValueError as e:
+            raise SmarterConfigurationError("could not validate chatbot_max_returned_history") from e
+
+    chatbot_tasks_create_dns_record: bool = Field(
+        SettingsDefaults.CHATBOT_TASKS_CREATE_DNS_RECORD,
+        description="True if DNS records should be created for chatbot tasks.",
+        title="Chatbot Tasks Create DNS Record",
+    )
+    """
+    Set these to true if we *DO NOT* place a wildcard A record in the customer API domain
+    requiring that every chatbot have its own A record. This is the default behavior.
+    For programmatically creating DNS records in AWS Route53 during ChatBot deployment.
+
+    :type: bool
+    :default: Value from ``SettingsDefaults.CHATBOT_TASKS_CREATE_DNS_RECORD``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
+    @field_validator("chatbot_tasks_create_dns_record", mode="before")
+    def parse_chatbot_tasks_create_dns_record(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'chatbot_tasks_create_dns_record' field.
+
+        Args:
+            v (Optional[Union[bool, str]]): the chatbot_tasks_create_dns_record value to validate
+
+        Returns:
+            bool: The validated chatbot_tasks_create_dns_record.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CHATBOT_TASKS_CREATE_DNS_RECORD
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError("could not validate chatbot_tasks_create_dns_record")
+
+    chatbot_tasks_create_ingress_manifest: bool = Field(
+        SettingsDefaults.CHATBOT_TASKS_CREATE_INGRESS_MANIFEST,
+        description="True if ingress manifests should be created for chatbot tasks.",
+        title="Chatbot Tasks Create Ingress Manifest",
+    )
+    """
+    True if ingress manifests should be created for chatbot tasks.
+    For programmatically creating ingress manifests during ChatBot deployment.
+    :type: bool
+    :default: Value from ``SettingsDefaults.CHATBOT_TASKS_CREATE_INGRESS_MANIFEST``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
+    @field_validator("chatbot_tasks_create_ingress_manifest", mode="before")
+    def parse_chatbot_tasks_create_ingress_manifest(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'chatbot_tasks_create_ingress_manifest' field.
+        Args:
+            v (Optional[Union[bool, str]]): the chatbot_tasks_create_ingress_manifest value to validate
+        Returns:
+            bool: The validated chatbot_tasks_create_ingress_manifest.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CHATBOT_TASKS_CREATE_INGRESS_MANIFEST
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError("could not validate chatbot_tasks_create_ingress_manifest")
+
+    chatbot_tasks_default_ttl: int = Field(
+        SettingsDefaults.CHATBOT_TASKS_DEFAULT_TTL,
+        description="Default TTL (time to live) for DNS records created in AWS Route53 during ChatBot deployment.",
+        title="Chatbot Tasks Default TTL",
+        ge=0,
+    )
+    """
+    Default TTL (time to live) for DNS records created in AWS Route53 during ChatBot deployment.
+    :type: int
+    :default: Value from ``SettingsDefaults.CHATBOT_TASKS_DEFAULT_TTL``
+    :raises SmarterConfigurationError: If the value is not a non-negative integer.
+    """
+
+    @field_validator("chatbot_tasks_default_ttl")
+    def parse_chatbot_tasks_default_ttl(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'chatbot_tasks_default_ttl' field.
+        Args:
+            v (Optional[Union[int, str]]): the chatbot_tasks_default_ttl value to validate
+        Returns:
+            int: The validated chatbot_tasks_default_ttl.
+        """
+        if isinstance(v, int):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CHATBOT_TASKS_DEFAULT_TTL
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 0:
+                raise SmarterConfigurationError("chatbot_tasks_default_ttl must be a non-negative integer.")
+            return int_value
+        except ValueError as e:
+            raise SmarterConfigurationError("could not validate chatbot_tasks_default_ttl") from e
+
     debug_mode: bool = Field(
         SettingsDefaults.DEBUG_MODE,
         description="True if debug mode is enabled. This enables verbose logging and other debug features.",
@@ -859,7 +1557,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("debug_mode")
+    @field_validator("debug_mode", mode="before")
     def parse_debug_mode(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'debug_mode' field.
 
@@ -895,7 +1593,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("dump_defaults")
+    @field_validator("dump_defaults", mode="before")
     def parse_dump_defaults(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'dump_defaults' field.
 
@@ -950,6 +1648,24 @@ class Settings(BaseSettings):
     :default: Value from ``SettingsDefaults.DEVELOPER_MODE``
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
+
+    @field_validator("developer_mode", mode="before")
+    def parse_developer_mode(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'developer_mode' field.
+        Args:
+            v (Optional[Union[bool, str]]): the developer_mode value to validate
+        Returns:
+            bool: The validated developer_mode.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.DEVELOPER_MODE
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError("could not validate developer_mode")
+
     django_default_file_storage: str = Field(
         SettingsDefaults.DJANGO_DEFAULT_FILE_STORAGE,
         description="The default Django file storage backend.",
@@ -966,6 +1682,38 @@ class Settings(BaseSettings):
     :default: Value from ``SettingsDefaults.DJANGO_DEFAULT_FILE_STORAGE``
     :raises SmarterConfigurationError: If the value is not a string.
     """
+
+    email_admin: EmailStr = Field(
+        SettingsDefaults.EMAIL_ADMIN,
+        description="The administrator email address used for system notifications and alerts.",
+        examples=["admin@example.com"],
+        title="Administrator Email Address",
+    )
+    """
+    The administrator email address used for system notifications and alerts.
+    This email address is used as the primary contact for system notifications,
+    alerts, and other administrative communications related to the platform.
+
+    :type: str
+    :default: Value from ``SettingsDefaults.EMAIL_ADMIN``
+    :raises SmarterConfigurationError: If the value is not a valid email address.
+    """
+
+    @field_validator("email_admin")
+    def validate_email_admin(cls, v: Optional[EmailStr]) -> EmailStr:
+        """Validates the `email_admin` field.
+
+        Args:
+            v (Optional[EmailStr]): The administrator email address value to validate.
+
+        Returns:
+            EmailStr: The validated administrator email address.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.EMAIL_ADMIN
+        if not isinstance(v, str):
+            raise SmarterConfigurationError("email_admin is not a valid EmailStr.")
+        return v
 
     environment: str = Field(
         SettingsDefaults.ENVIRONMENT,
@@ -1146,6 +1894,39 @@ class Settings(BaseSettings):
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError("google_service_account is not a SecretStr.")
+        return v
+
+    internal_ip_prefixes: List[str] = Field(
+        SettingsDefaults.INTERNAL_IP_PREFIXES,
+        description="A list of internal IP prefixes used for security and middleware features.",
+        examples=SettingsDefaults.INTERNAL_IP_PREFIXES,
+        title="Internal IP Prefixes",
+    )
+    """
+    A list of internal IP prefixes used for security and middleware features.
+    This setting defines IP address prefixes that are considered internal to the platform.
+    It is used to identify requests originating from trusted internal sources,
+    enabling specific security measures and middleware behaviors.
+    :type: List[str]
+    :default: Value from ``SettingsDefaults.INTERNAL_IP_PREFIXES``
+    :raises SmarterConfigurationError: If the value is not a list of strings matching SettingsDefaults.INTERNAL_IP_PREFIXES
+    """
+
+    @field_validator("internal_ip_prefixes")
+    def validate_internal_ip_prefixes(cls, v: Optional[List[str]]) -> List[str]:
+        """Validates the `internal_ip_prefixes` field.
+
+        Args:
+            v (Optional[List[str]]): The internal IP prefixes value to validate.
+
+        Returns:
+            List[str]: The validated internal IP prefixes.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.INTERNAL_IP_PREFIXES
+
+        if not isinstance(v, list):
+            raise SmarterConfigurationError("internal_ip_prefixes is not a list")
         return v
 
     log_level: int = Field(
@@ -1853,7 +2634,7 @@ class Settings(BaseSettings):
         return v
 
     smarter_mysql_test_database_secret_name: Optional[str] = Field(
-        SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME,
+        SettingsDefaults.MYSQL_TEST_DATABASE_SECRET_NAME,
         description="The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["smarter-mysql-test-db-secret"],
         title="Smarter MySQL Test Database Secret Name",
@@ -1865,12 +2646,12 @@ class Settings(BaseSettings):
     It is used by example Smarter Plugins that require access to a test database.
 
     :type: Optional[str]
-    :default: Value from ``SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME`
+    :default: Value from ``SettingsDefaults.MYSQL_TEST_DATABASE_SECRET_NAME`
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
     smarter_mysql_test_database_password: Optional[SecretStr] = Field(
-        SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_PASSWORD,
+        SettingsDefaults.MYSQL_TEST_DATABASE_PASSWORD,
         description="The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
         examples=["your_password_here"],
         title="Smarter MySQL Test Database Password",
@@ -1881,12 +2662,12 @@ class Settings(BaseSettings):
     It is used by example Smarter Plugins that require access to a test database.
 
     :type: Optional[str]
-    :default: Value from ``SettingsDefaults.SMARTER_MYSQL_TEST_DATABASE_PASSWORD``
+    :default: Value from ``SettingsDefaults.MYSQL_TEST_DATABASE_PASSWORD``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
     smarter_reactjs_app_loader_path: str = Field(
-        SettingsDefaults.SMARTER_REACTJS_APP_LOADER_PATH,
+        SettingsDefaults.REACTJS_APP_LOADER_PATH,
         description="The path to the ReactJS app loader script.",
         examples=["/ui-chat/app-loader.js"],
         title="Smarter ReactJS App Loader Path",
@@ -1897,7 +2678,7 @@ class Settings(BaseSettings):
     It is used to load the ReactJS frontend for the platform.
 
     :type: str
-    :default: Value from ``SettingsDefaults.SMARTER_REACTJS_APP_LOADER_PATH``
+    :default: Value from ``SettingsDefaults.REACTJS_APP_LOADER_PATH``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
@@ -1914,7 +2695,7 @@ class Settings(BaseSettings):
             str: The validated Smarter ReactJS app loader path.
         """
         if v in [None, ""]:
-            return SettingsDefaults.SMARTER_REACTJS_APP_LOADER_PATH
+            return SettingsDefaults.REACTJS_APP_LOADER_PATH
 
         if not isinstance(v, str):
             raise SmarterConfigurationError("smarter_reactjs_app_loader_path is not a str.")
@@ -2313,7 +3094,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("smtp_use_ssl")
+    @field_validator("smtp_use_ssl", mode="before")
     def validate_smtp_use_ssl(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the `smtp_use_ssl` field.
 
@@ -2345,7 +3126,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("smtp_use_tls")
+    @field_validator("smtp_use_tls", mode="before")
     def validate_smtp_use_tls(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the `smtp_use_tls` field.
 
@@ -2961,11 +3742,10 @@ class Settings(BaseSettings):
                 'PAT',
                 'SECRET_KEY',
                 'FERNET_ENCRYPTION_KEY',
-                'SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME',
-                'SMARTER_MYSQL_TEST_DATABASE_PASSWORD',
+                'MYSQL_TEST_DATABASE_SECRET_NAME',
+                'MYSQL_TEST_DATABASE_PASSWORD',
                 'ENVIRONMENT',
                 'PYTHONPATH',
-                'NODE_MAJOR',
                 'DEVELOPER_MODE',
                 'GEMINI_API_KEY',
                 'ANTHROPIC_API_KEY',
@@ -2991,15 +3771,15 @@ class Settings(BaseSettings):
                 'NAMESPACE',
                 'MYSQL_HOST',
                 'MYSQL_PORT',
-                'SMARTER_MYSQL_DATABASE',
-                'SMARTER_MYSQL_PASSWORD',
-                'SMARTER_MYSQL_USERNAME',
+                'MYSQL_DATABASE',
+                'MYSQL_PASSWORD',
+                'MYSQL_USERNAME',
                 'MYSQL_ROOT_USERNAME',
                 'MYSQL_ROOT_PASSWORD',
-                'SMARTER_LOGIN_URL',
-                'SMARTER_ADMIN_PASSWORD',
-                'SMARTER_ADMIN_USERNAME',
-                'SMARTER_DOCKER_IMAGE'
+                'LOGIN_URL',
+                'ADMIN_PASSWORD',
+                'ADMIN_USERNAME',
+                'DOCKER_IMAGE'
             ]
 
         Note:
