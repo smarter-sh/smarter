@@ -82,15 +82,15 @@ def welcome_email_context(first_name: str) -> dict:
     return {
         "base_url": smarter_settings.environment_url,
         "first_name": first_name,
-        "corporate_name": settings.SMARTER_BRANDING_CORPORATE_NAME,
-        "support_phone": settings.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER,
-        "support_email": settings.SMARTER_BRANDING_SUPPORT_EMAIL,
-        "contact_address": settings.SMARTER_BRANDING_ADDRESS,
-        "contact_url": settings.SMARTER_BRANDING_CONTACT,
-        "office_hours": settings.SMARTER_BRANDING_SUPPORT_HOURS,
-        "facebook_url": settings.SMARTER_BRANDING_URL_FACEBOOK,
-        "twitter_url": settings.SMARTER_BRANDING_URL_TWITTER,
-        "linkedin_url": settings.SMARTER_BRANDING_URL_LINKEDIN,
+        "corporate_name": smarter_settings.branding_corporate_name,
+        "support_phone": smarter_settings.branding_support_phone_number,
+        "support_email": smarter_settings.branding_support_email,
+        "contact_address": smarter_settings.branding_address,
+        "contact_url": smarter_settings.branding_contact_url,
+        "office_hours": smarter_settings.branding_support_hours,
+        "facebook_url": smarter_settings.branding_url_facebook,
+        "twitter_url": smarter_settings.branding_url_twitter,
+        "linkedin_url": smarter_settings.branding_url_linkedin,
     }
 
 

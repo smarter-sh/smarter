@@ -126,9 +126,9 @@ def aggregate_chatbot_history():
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def verify_certificate(certificate_arn: str):
     """Verify an AWS ACM certificate."""
@@ -150,9 +150,9 @@ def verify_certificate(certificate_arn: str):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def create_chatbot_request(chatbot_id: int, request_data: dict):
     """Create a ChatBot request record."""
@@ -167,9 +167,9 @@ def create_chatbot_request(chatbot_id: int, request_data: dict):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def register_custom_domain(account_id: int, domain_name: str):
     """
@@ -237,9 +237,9 @@ def register_custom_domain(account_id: int, domain_name: str):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def create_custom_domain_dns_record(
     chatbot_custom_domain_id: int, record_name: str, record_type: str, record_value: str, record_ttl: int = 600
@@ -324,9 +324,9 @@ def create_custom_domain_dns_record(
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def verify_custom_domain(
     hosted_zone_id: str,
@@ -433,9 +433,9 @@ def verify_custom_domain(
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def verify_domain(
     domain_name: str,
@@ -556,7 +556,7 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
 
     print(f"{fn_name} a_record: ", a_record)
     record_type = a_record.get("Type", "A")
-    record_ttl = a_record.get("TTL", settings.SMARTER_CHATBOT_TASKS_DEFAULT_TTL)
+    record_ttl = a_record.get("TTL", smarter_settings.chatbot_tasks_default_ttl)
     alias_target = a_record.get("AliasTarget")
     record_resource_records = a_record.get("ResourceRecords")
     aws_helper.route53.destroy_dns_record(
@@ -574,9 +574,9 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     """Create a customer API default domain A record for a chatbot."""
@@ -613,12 +613,12 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     )
 
     domain_name = chatbot.default_host
-    if settings.SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD:
+    if smarter_settings.chatbot_tasks_create_dns_record:
         aws_helper.route53.create_domain_a_record(
             hostname=domain_name, api_host_domain=smarter_settings.environment_api_domain
         )
 
-    if settings.SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD and with_domain_verification:
+    if smarter_settings.chatbot_tasks_create_dns_record and with_domain_verification:
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
         chatbot.save()
         activate = verify_domain(domain_name, record_type="A", chatbot=chatbot, activate_chatbot=True)
@@ -654,7 +654,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     # if we're running in Kubernetes then we should create an ingress manifest
     # for the customer API domain so that we can issue a certificate for it.
     if (
-        settings.SMARTER_CHATBOT_TASKS_CREATE_INGRESS_MANIFEST
+        smarter_settings.chatbot_tasks_create_ingress_manifest
         and smarter_settings.environment != SmarterEnvironments.LOCAL
     ):
         logger.info("%s creating ingress manifest for %s", fn_name, domain_name)
@@ -708,9 +708,9 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def undeploy_default_api(chatbot_id: int):
     """Reverse a Chatbot deployment by destroying the customer API default domain A record for a chatbot."""
@@ -736,9 +736,9 @@ def undeploy_default_api(chatbot_id: int):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def delete_default_api(url: str, account_number: str, name: str):
     """
@@ -774,9 +774,9 @@ def delete_default_api(url: str, account_number: str, name: str):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def deploy_custom_api(chatbot_id: int):
     """Create a customer API custom domain A record for a chatbot."""

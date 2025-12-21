@@ -277,9 +277,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         users instead of redirecting them to the login page. Replaced the decorators
         with explicit checks in the `dispatch` method.
 
-    .. changelog::
-
-        :versionadded: v0.13.39
+    .. versionadded:: v0.13.39
     """
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
@@ -299,8 +297,8 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         return redirect_and_expire_cache(path="/login/")
 
 
-@method_decorator(cache_control(max_age=settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
-@method_decorator(cache_page(settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
+@method_decorator(cache_control(max_age=smarter_settings.cache_expiration), name="dispatch")
+@method_decorator(cache_page(smarter_settings.cache_expiration), name="dispatch")
 class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
     """
     An optimized and cached web view that requires authentication.

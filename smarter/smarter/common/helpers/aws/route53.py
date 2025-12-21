@@ -8,8 +8,8 @@ from typing import Optional, Tuple
 import botocore
 import botocore.exceptions
 import dns.resolver
-from django.conf import settings
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 
 from .aws import AWSBase, SmarterAWSException
@@ -689,7 +689,7 @@ class AWSRoute53(AWSBase):
                 record_type="A",
                 record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
                 record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-                record_ttl=settings.SMARTER_CHATBOT_TASKS_DEFAULT_TTL,
+                record_ttl=smarter_settings.chatbot_tasks_default_ttl,
             )
             verb = "Created" if created else "Verified"
             logger.info(

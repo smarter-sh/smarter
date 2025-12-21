@@ -17,6 +17,7 @@ import logging
 import logging.config
 import math
 import os
+import re
 import secrets
 import subprocess
 import sys
@@ -39,7 +40,7 @@ from .smarter import *  # noqa: E402, F401, W0401
 
 logger = logging.getLogger(__name__)
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = smarter_settings.allowed_hosts
 """
 A list of strings representing the host/domain names that this Django site can serve.
 Smarter implements its own middleware to validate host names.
@@ -1372,7 +1373,7 @@ for key, value in os.environ.items():
 ###############################################################################
 # Settings diagnostics information for all environments
 ###############################################################################
-if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
+if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.info("=" * 80)
     logger.info("smarter.settings.base.py")
 

@@ -21,6 +21,12 @@ prioritization sequence:
     You can also set any Django settings value from environment variables
     and/or `.env` file variables. For example, to set the Django
     ``SECRET_KEY`` setting, you can set the environment variable ``SECRET_KEY=MYSECRET``.
+
+.. warning::
+
+    DO NOT import Django or any Django modules in this module. This module
+    sits upstream of Django and is intended to be used independently of Django.
+
 """
 
 # -------------------- WARNING --------------------
@@ -259,15 +265,15 @@ class SettingsDefaults:
         Do not add application logic or side effects to this class. It should only define static default values and simple logic for fallback selection.
     """
 
-    ROOT_DOMAIN = get_env("ROOT_DOMAIN", "example.com")
+    ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", "example.com")
     ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", [])
     ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY"))
 
-    API_DESCRIPTION = get_env(
+    API_DESCRIPTION: str = get_env(
         "API_DESCRIPTION", "A declarative AI resource management platform and developer framework"
     )
-    API_NAME = get_env("API_NAME", "Smarter API")
-    API_SCHEMA = get_env("API_SCHEMA", "http")
+    API_NAME: str = get_env("API_NAME", "Smarter API")
+    API_SCHEMA: str = get_env("API_SCHEMA", "http")
 
     # aws auth
     AWS_PROFILE = get_env("AWS_PROFILE")
@@ -405,6 +411,7 @@ class SettingsDefaults:
     REACTJS_APP_LOADER_PATH = get_env("REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
 
     SECRET_KEY: SecretStr = SecretStr(get_env("SECRET_KEY"))
+    SETTINGS_OUTPUT: bool = bool_environment_variable("SETTINGS_OUTPUT", False)
 
     SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
 
@@ -619,37 +626,47 @@ class Settings(BaseSettings):
         None,
     )
 
-    allowed_hosts: List[str] = Field(
-        SettingsDefaults.ALLOWED_HOSTS,
-        description="List of allowed host/domain names for this Django site.",
-        examples=["example.com", "www.example.com"],
-        title="Allowed Hosts",
-    )
-    """
-    List of allowed host/domain names for this Django site.
-    This setting specifies which hostnames the Django application is allowed to serve.
-    It is a security measure to prevent HTTP Host header attacks.
-    :type: List[str]
-    :default: Value from ``SettingsDefaults.ALLOWED_HOSTS``
-    :raises SmarterConfigurationError: If the value is not a list of strings.
-    """
-
-    @before_field_validator("allowed_hosts")
-    def validate_allowed_hosts(cls, v: List[str]) -> List[str]:
-        """Validates the `allowed_hosts` field.
-
-        Args:
-            v (List[str]): The allowed hosts value to validate.
-
-        Returns:
-            List[str]: The validated allowed hosts.
+    @cached_property
+    def allowed_hosts(self) -> List[str]:
         """
-        if not isinstance(v, list):
-            raise SmarterConfigurationError("allowed_hosts is not a list.")
-        for host in v:
-            if not isinstance(host, str):
-                raise SmarterConfigurationError(f"allowed_hosts contains non-string value: {host}")
-        return v
+        Supplemental list of allowed host/domain names for Smarter ChatBots/Agents.
+        This is specicific to Smarter and not officially part of Django settings.
+
+        List of allowed host/domain names for this Django site.
+        This setting specifies which hostnames the Django application is allowed to serve.
+        It is a security measure to prevent HTTP Host header attacks.
+
+        :type: List[str]
+        :default: Value from ``SettingsDefaults.ALLOWED_HOSTS``
+        :raises SmarterConfigurationError: If the value is not a list of strings.
+        :examples: ["example.com", "www.example.com"]
+        """
+        default_allowed_hosts = SettingsDefaults.ALLOWED_HOSTS.copy() or []
+        if not isinstance(default_allowed_hosts, list):
+            raise SmarterConfigurationError(f"allowed_hosts of type {type(default_allowed_hosts)} is not a list.")
+        if not all(isinstance(host, str) for host in default_allowed_hosts):
+            raise SmarterConfigurationError("allowed_hosts must be a list of strings.")
+        if not isinstance(self.environment_platform_domain, str):
+            raise SmarterConfigurationError(
+                f"environment_platform_domain of type {type(self.environment_platform_domain)} is not a string."
+            )
+        if not isinstance(self.environment_api_domain, str):
+            raise SmarterConfigurationError(
+                f"environment_api_domain of type {type(self.environment_api_domain)} is not a string."
+            )
+        if self.environment_platform_domain is None:
+            raise SmarterConfigurationError("environment_platform_domain is None.")
+        if self.environment_api_domain is None:
+            raise SmarterConfigurationError("environment_api_domain is None.")
+
+        retval = [
+            self.environment_platform_domain,
+            self.environment_api_domain,
+            f"*.{self.environment_api_domain}",
+        ] + default_allowed_hosts
+        for host in retval:
+            SmarterValidator.validate_hostname(host)
+        return retval
 
     anthropic_api_key: SecretStr = Field(
         SettingsDefaults.ANTHROPIC_API_KEY,
@@ -744,34 +761,21 @@ class Settings(BaseSettings):
             raise SmarterConfigurationError(f"api_name of type {type(v)} is not a string.")
         return v
 
-    api_schema: str = Field(
-        SettingsDefaults.API_SCHEMA,
-        description="The schema to use for API URLs (http or https).",
-        examples=["http", "https"],
-        title="API Schema",
-    )
-    """
-    The schema to use for API URLs (http or https).
-    This setting specifies the URL schema to be used when constructing API endpoints.
-    It determines whether the API URLs will use HTTP or HTTPS.
-    :type: str
-    :default: Value from ``SettingsDefaults.API_SCHEMA``
-    :raises SmarterConfigurationError: If the value is not 'http' or 'https'.
-    """
-
-    @before_field_validator("api_schema")
-    def validate_api_schema(cls, v: str) -> str:
-        """Validates the `api_schema` field.
-
-        Args:
-            v (str): The API schema value to validate.
-
-        Returns:
-            str: The validated API schema.
+    @cached_property
+    def api_schema(self) -> str:
         """
-        if v.lower() not in ["http", "https"]:
-            raise SmarterConfigurationError(f"api_schema {v} must be 'http' or 'https'.")
-        return v.lower()
+        The schema to use for API URLs (http or https).
+        This setting specifies the URL schema to be used when constructing API endpoints.
+        It determines whether the API URLs will use HTTP or HTTPS.
+        :type: str
+        :default: Value from ``SettingsDefaults.API_SCHEMA``
+        :raises SmarterConfigurationError: If the value is not 'http' or 'https'.
+        :examples: ["http", "https"],
+        """
+        if self.environment == SmarterEnvironments.LOCAL:
+            return "http"
+        else:
+            return SettingsDefaults.API_SCHEMA
 
     aws_profile: Optional[str] = Field(
         SettingsDefaults.AWS_PROFILE,
@@ -1376,6 +1380,10 @@ class Settings(BaseSettings):
         title="Cache Expiration",
     )
     """
+    Default cache expiration time for Django views that use page caching.
+
+    See: django.views.decorators.cache.cache_control and django.views.decorators.cache.cache_page
+
     The cache expiration time in seconds for cached data.
     This setting defines how long cached data should be considered valid before it is
     refreshed or invalidated. A shorter expiration time may lead to more frequent
@@ -1422,6 +1430,7 @@ class Settings(BaseSettings):
     :type: int
     :default: Value from ``SettingsDefaults.CHAT_CACHE_EXPIRATION``
     :raises SmarterConfigurationError: If the value is not a positive integer.
+    see: :class:`smarter.apps.prompt.models.ChatHelper`
     """
 
     @before_field_validator("chat_cache_expiration")
@@ -1752,10 +1761,18 @@ class Settings(BaseSettings):
         ],
     )
     """
+    Sensitive file amnesty patterns used by smarter.lib.django.middleware.sensitive_files.SensitiveFileAccessMiddleware.
+    Requests matching these patterns will be allowed even if they match sensitive file names.
+
+    .. note::
+
+        Do not modify this setting unless you fully understand the implications of doing so.
+
     List of regex patterns for sensitive file amnesty.
     This setting defines a list of regular expression patterns that identify files
     considered sensitive. Files matching these patterns may be subject to special handling,
     such as exclusion from certain operations or additional security measures.
+
     :type: List[Pattern]
     :default: Value from ``SettingsDefaults.SENSITIVE_FILES_AMNESTY_PATTERNS``
     :raises SmarterConfigurationError: If the value is not a list of valid regex patterns.
@@ -2160,10 +2177,17 @@ class Settings(BaseSettings):
         title="Internal IP Prefixes",
     )
     """
+    Supplemental list of internal IP prefixes used in smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware
+    and smarter.lib.django.middleware security features.
+
+    The default value is based on the default internal IP range used by Kubernetes clusters
+    by default unless otherwise configured.
+
     A list of internal IP prefixes used for security and middleware features.
     This setting defines IP address prefixes that are considered internal to the platform.
     It is used to identify requests originating from trusted internal sources,
     enabling specific security measures and middleware behaviors.
+
     :type: List[str]
     :default: Value from ``SettingsDefaults.INTERNAL_IP_PREFIXES``
     :raises SmarterConfigurationError: If the value is not a list of strings matching SettingsDefaults.INTERNAL_IP_PREFIXES
@@ -2860,6 +2884,39 @@ class Settings(BaseSettings):
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"secret_key {type(v)} is not a SecretStr.")
+        return v
+
+    settings_output: bool = Field(
+        SettingsDefaults.SETTINGS_OUTPUT,
+        description="Flag to enable or disable output of settings for debugging purposes.",
+        examples=[True, False],
+        title="Settings Output",
+    )
+    """
+    If True, enables verbose output of Smarter run-time settings during Django startup.
+    This will generate a multi-line header in new terminal windows launched from
+    Kubernetes pods running Smarter services.
+
+    :type: bool
+    :default: Value from ``SettingsDefaults.SETTINGS_OUTPUT``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
+    @before_field_validator("settings_output")
+    def validate_settings_output(cls, v: Optional[bool]) -> bool:
+        """Validates the `settings_output` field.
+
+        Args:
+            v (Optional[bool]): The settings output value to validate.
+
+        Returns:
+            bool: The validated settings output.
+        """
+        if v is None:
+            return SettingsDefaults.SETTINGS_OUTPUT
+
+        if not isinstance(v, bool):
+            raise SmarterConfigurationError(f"settings_output of type {type(v)} is not a bool: {v}")
         return v
 
     shared_resource_identifier: str = Field(

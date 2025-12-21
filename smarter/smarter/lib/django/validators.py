@@ -653,8 +653,14 @@ class SmarterValidator:
             raise SmarterValueError(f"Invalid hostname {hostname}")
         if hostname[-1] == ".":
             hostname = hostname[:-1]  # strip exactly one dot from the right, if present
+        labels = hostname.split(".")
+        if labels[0] == "*":
+            # Wildcard only allowed as the leftmost label
+            labels = labels[1:]
+            if not labels:
+                raise SmarterValueError(f"Invalid hostname {hostname}")
         allowed = re.compile(SmarterValidator.VALID_HOSTNAME_PATTERN, re.IGNORECASE)
-        if all(allowed.match(x) for x in hostname.split(".")):
+        if all(allowed.match(x) for x in labels):
             return hostname
         raise SmarterValueError(f"Invalid hostname {hostname}")
 

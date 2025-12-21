@@ -17,6 +17,7 @@ from smarter.common.conf import settings as smarter_settings
 from .base import *
 
 
+ALLOWED_HOSTS = smarter_settings.local_hosts
 if smarter_settings.developer_mode:
     # dev only:
     # Bootstrap theme source files and static assets.
@@ -38,8 +39,6 @@ if smarter_settings.developer_mode:
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
-
-SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS
 
 MIDDLEWARE += [
     "smarter.lib.django.middleware.cors.SmarterCorsMiddleware",
@@ -89,7 +88,7 @@ SESSION_COOKIE_SAMESITE = "lax"
 
 environment_name = os.path.basename(__file__).replace(".py", "")
 logger.info("Loading smarter.settings.%s", environment_name)
-if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
+if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
 
     logger.info("*" * 80)
     logger.info("CORS_ALLOW_HEADERS: %s", CORS_ALLOW_HEADERS)
@@ -98,8 +97,8 @@ if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
     logger.info("ENVIRONMENT_API_DOMAIN: %s", ENVIRONMENT_API_DOMAIN)
     logger.info("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
     logger.info("SECURE_PROXY_SSL_HEADER: %s", SECURE_PROXY_SSL_HEADER)
-    logger.info("SMARTER_API_SCHEMA: %s", SMARTER_API_SCHEMA)
-    logger.info("SMARTER_ALLOWED_HOSTS: %s", SMARTER_ALLOWED_HOSTS)
+    logger.info("API_SCHEMA: %s", smarter_settings.api_schema)
+    logger.info("ALLOWED_HOSTS: %s", smarter_settings.local_hosts)
     logger.info("SMTP_SENDER: %s", SMTP_SENDER)
     logger.info("SMTP_FROM_EMAIL: %s", SMTP_FROM_EMAIL)
     logger.info("-" * 80)

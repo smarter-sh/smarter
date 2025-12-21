@@ -50,9 +50,9 @@ module_prefix = "smarter.apps.account.tasks."
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def create_charge(*args, **kwargs):
     """
@@ -141,9 +141,9 @@ def create_charge(*args, **kwargs):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def aggregate_charges():
     """
@@ -169,9 +169,9 @@ def aggregate_charges():
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def aggregate_daily_billing_records():
     """
