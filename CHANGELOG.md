@@ -1,3 +1,10 @@
+## [0.13.52](https://github.com/smarter-sh/smarter/compare/v0.13.51...v0.13.52) (2025-12-21)
+
+
+### Bug Fixes
+
+* define __all__ in each settings module ([56dab9e](https://github.com/smarter-sh/smarter/commit/56dab9e14fced0690525de2606b915fd61e24fb3))
+
 ## [0.13.51](https://github.com/smarter-sh/smarter/compare/v0.13.50...v0.13.51) (2025-12-20)
 
 
