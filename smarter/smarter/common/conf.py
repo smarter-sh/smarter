@@ -67,6 +67,7 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.helpers.console_helpers import formatted_text_green
 from smarter.lib import json
 
 from ..lib.django.validators import SmarterValidator
@@ -128,71 +129,79 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE) -> Any:
     :rtype: Any
     """
 
-    key = f"SMARTER_{var_name}"
-    retval = os.environ.get(key) or os.environ.get(var_name) or default
-
-    if retval == default:
-        logger.info("Environment variable %s not found, using default value %s.", key, default)
-        print(f"Environment variable {key} not found, using default value {default}.")
-
-    if isinstance(default, str):
-        return retval.strip()
-    if isinstance(default, bool):
-        return str(retval).lower() in ["true", "1", "t", "y", "yes"]
-    if isinstance(default, int):
-        try:
-            return int(retval)
-        except (ValueError, TypeError):
-            logger.error(
-                "Environment variable %s value '%s' cannot be converted to int. Using default %s.",
-                var_name,
-                retval,
-                default,
-            )
-            return default
-    if isinstance(default, float):
-        try:
-            return float(retval)
-        except (ValueError, TypeError):
-            logger.error(
-                "Environment variable %s value '%s' cannot be converted to float. Using default %s.",
-                var_name,
-                retval,
-                default,
-            )
-            return default
-    if isinstance(default, list):
-        if isinstance(retval, str):
-            return [item.strip() for item in retval.split(",") if item.strip()]
-        elif isinstance(retval, list):
-            return retval
-        else:
-            logger.error(
-                "Environment variable %s value '%s' cannot be converted to list. Using default %s.",
-                var_name,
-                retval,
-                default,
-            )
-            return default
-    if isinstance(default, dict):
-        try:
-            if isinstance(retval, str):
-                return json.loads(retval)
-            elif isinstance(retval, dict):
-                return retval
-            else:
+    def cast_value(val: str, default: Any) -> Any:
+        if isinstance(default, str):
+            return val.strip()
+        if isinstance(default, bool):
+            return str(val).lower() in ["true", "1", "t", "y", "yes"]
+        if isinstance(default, int):
+            try:
+                return int(val)
+            except (ValueError, TypeError):
                 logger.error(
-                    "Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
+                    "Environment variable %s value '%s' cannot be converted to int. Using default %s.",
                     var_name,
-                    retval,
+                    val,
                     default,
                 )
                 return default
-        except json.JSONDecodeError:
-            logger.error(
-                "Environment variable %s value '%s' is not valid JSON. Using default %s.", var_name, retval, default
-            )
-            return default
+        if isinstance(default, float):
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                logger.error(
+                    "Environment variable %s value '%s' cannot be converted to float. Using default %s.",
+                    var_name,
+                    val,
+                    default,
+                )
+                return default
+        if isinstance(default, list):
+            if isinstance(val, str):
+                return [item.strip() for item in val.split(",") if item.strip()]
+            elif isinstance(val, list):
+                return val
+            else:
+                logger.error(
+                    "Environment variable %s value '%s' cannot be converted to list. Using default %s.",
+                    var_name,
+                    val,
+                    default,
+                )
+                return default
+        if isinstance(default, dict):
+            try:
+                if isinstance(val, str):
+                    return json.loads(val)
+                elif isinstance(val, dict):
+                    return val
+                else:
+                    logger.error(
+                        "Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
+                        var_name,
+                        val,
+                        default,
+                    )
+                    return default
+            except json.JSONDecodeError:
+                logger.error(
+                    "Environment variable %s value '%s' is not valid JSON. Using default %s.", var_name, val, default
+                )
+                return default
+        return val
+
+    key = f"SMARTER_{var_name}"
+    retval = os.environ.get(key) or os.environ.get(var_name)
+    if retval is None:
+        retval = default
+    else:
+        cast_value = cast_value(retval, default)
+        logger.info(
+            formatted_text_green("Overriding Smarter setting from environment variable: %s=%s"), key, repr(cast_value)
+        )
+        print(formatted_text_green(f"Overriding Smarter setting from environment variable: {key}={repr(cast_value)}"))
+        return cast_value
+
     return retval
 
 
@@ -629,6 +638,12 @@ class Settings(BaseSettings):
     @cached_property
     def allowed_hosts(self) -> List[str]:
         """
+        A list of strings representing the host/domain names that this Django site can serve.
+        Smarter implements its own middleware to validate host names.
+        See smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware.
+
+        See: https://docs.djangoproject.com/en/stable/ref/settings/#allowed-hosts
+
         Supplemental list of allowed host/domain names for Smarter ChatBots/Agents.
         This is specicific to Smarter and not officially part of Django settings.
 
