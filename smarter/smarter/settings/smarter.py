@@ -123,40 +123,31 @@ Default TTL (time to live) for DNS records created in AWS Route53 during ChatBot
 """
 
 # Celery worker task configuration
-SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES = 3
+SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES = smarter_settings.chatbot_tasks_celery_max_retries
 """
 Maximum number of retries for Celery tasks related to ChatBot deployment and management.
 """
 
-SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF = True
+SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF = smarter_settings.chatbot_tasks_celery_retry_backoff
 """
 If True, enables exponential backoff for Celery task retries related to ChatBot deployment and management
 """
 
-SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE = "default_celery_task_queue"
+SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE = smarter_settings.chatbot_tasks_celery_task_queue
 """
 Name of the Celery task queue for ChatBot deployment and management tasks.
 The default value should be sufficient for most deployments.
 """
 
 # Plugin settings
-SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
+SMARTER_PLUGIN_MAX_DATA_RESULTS = smarter_settings.plugin_max_data_results
 """
 A global maximum number of data row results that can be returned by any
 Smarter plugin. This is intended to act as a safeguard against
 runaway queries that return massive result sets.
 """
 
-SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS = [
-    re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
-    re.compile(r"^/api(/.*)?$"),
-    re.compile(r"^/admin(/.*)?$"),
-    re.compile(r"^/plugin(/.*)?$"),
-    re.compile(r"^/docs/manifest(/.*)?$"),
-    re.compile(r"^/docs/json-schema(/.*)?$"),
-    re.compile(r".*stackademy.*"),
-    re.compile(r"^/\.well-known/acme-challenge(/.*)?$"),
-]
+SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS = smarter_settings.sensitive_files_amnesty_patterns
 """
 Sensitive file amnesty patterns used by smarter.lib.django.middleware.sensitive_files.SensitiveFileAccessMiddleware.
 Requests matching these patterns will be allowed even if they match sensitive file names.

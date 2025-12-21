@@ -2,17 +2,25 @@
 """
 Smarter platform configuration settings.
 
-This module is used to generate strongly typed settings values for the platform.
-It uses the pydantic_settings library to validate the configuration values.
-The configuration values are initialized according to the following
+This module is used to generate strongly typed and validated settings values
+from environment variables, `.env` file, and default values. for all
+Pydantic settings fields, custom field validations are performed prior
+to Pydantic's built-in validation.
+
+It uses the pydantic_settings v2 library to strongly type, and to validate
+the configuration values. The configuration values are initialized according to the following
 prioritization sequence:
 
-    1. constructor
-    2. environment variables and `.env` file. Loads any variable with  prefix.
-    3. SettingsDefaults
+    1. Settings constructor
+    2. `.env` file. Loads any variable with ``SMARTER_`` prefix.
+    3. environment variables. Loads any variable with ``SMARTER_`` prefix.
+    4. default values defined in SettingsDefaults.
 
-The Settings class also provides a dump property that returns a dictionary of all
-configuration values. This is useful for debugging and logging.
+.. note::
+
+    You can also set any Django settings value from environment variables
+    and/or `.env` file variables. For example, to set the Django
+    ``SECRET_KEY`` setting, you can set the environment variable ``SECRET_KEY=MYSECRET``.
 """
 
 # -------------------- WARNING --------------------
@@ -22,16 +30,20 @@ configuration values. This is useful for debugging and logging.
 # ------------------------------------------------
 
 # python stuff
-import base64
-import logging
+import base64  # library for base64 encoding and decoding
+import logging  # library for logging messages
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
-import re
-import warnings
-from functools import cache, cached_property, lru_cache
-from importlib.metadata import distributions
-from typing import Any, List, Optional, Tuple, Union
-from urllib.parse import urljoin
+import re  # library for regular expressions
+import warnings  # library for issuing warning messages
+from functools import (  # utilities for caching function/method results
+    cache,
+    cached_property,
+    lru_cache,
+)
+from importlib.metadata import distributions  # library for accessing package metadata
+from typing import Any, List, Optional, Pattern, Tuple, Union  # type hint utilities
+from urllib.parse import urljoin  # library for URL manipulation
 
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
@@ -49,7 +61,6 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from smarter.common.api import SmarterApiVersions
-from smarter.common.const import SmarterEnvironments
 from smarter.lib import json
 
 from ..lib.django.validators import SmarterValidator
@@ -71,6 +82,11 @@ DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
 DOT_ENV_LOADED = load_dotenv()
 
 
+def before_field_validator(*args, **kwargs):
+    kwargs["mode"] = "before"
+    return field_validator(*args, **kwargs)
+
+
 def bool_environment_variable(var_name: str, default: bool) -> bool:
     """Get a boolean environment variable"""
     value = os.environ.get(var_name)
@@ -81,11 +97,6 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
 
 def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE) -> Any:
     """
-    .. deprecated:: 2025.12
-
-        This function is deprecated and will be removed in a future release. Use the Settings class
-        built-in environment variable handling instead.
-
     Retrieve a configuration value from the environment, with  prefix fallback and type conversion.
 
     This function attempts to obtain a configuration value from the environment using the key ``<var_name>``.
@@ -293,6 +304,25 @@ class SettingsDefaults:
         "CHATBOT_TASKS_CREATE_INGRESS_MANIFEST", True
     )
     CHATBOT_TASKS_DEFAULT_TTL: int = get_env("CHATBOT_TASKS_DEFAULT_TTL", 600)
+
+    CHATBOT_TASKS_CELERY_MAX_RETRIES: int = int(get_env("CHATBOT_TASKS_CELERY_MAX_RETRIES", 3))
+    CHATBOT_TASKS_CELERY_RETRY_BACKOFF: bool = bool_environment_variable("CHATBOT_TASKS_CELERY_RETRY_BACKOFF", True)
+    CHATBOT_TASKS_CELERY_TASK_QUEUE: str = get_env("CHATBOT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue")
+    PLUGIN_MAX_DATA_RESULTS: int = int(get_env("PLUGIN_MAX_DATA_RESULTS", 50))
+
+    SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = get_env(
+        "SENSITIVE_FILES_AMNESTY_PATTERNS",
+        [
+            re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
+            re.compile(r"^/api(/.*)?$"),
+            re.compile(r"^/admin(/.*)?$"),
+            re.compile(r"^/plugin(/.*)?$"),
+            re.compile(r"^/docs/manifest(/.*)?$"),
+            re.compile(r"^/docs/json-schema(/.*)?$"),
+            re.compile(r".*stackademy.*"),
+            re.compile(r"^/\.well-known/acme-challenge(/.*)?$"),
+        ],
+    )
 
     DEBUG_MODE: bool = bool_environment_variable("DEBUG_MODE", False)
     DEVELOPER_MODE: bool = bool_environment_variable("DEVELOPER_MODE", False)
@@ -604,7 +634,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a list of strings.
     """
 
-    @field_validator("allowed_hosts")
+    @before_field_validator("allowed_hosts")
     def validate_allowed_hosts(cls, v: List[str]) -> List[str]:
         """Validates the `allowed_hosts` field.
 
@@ -637,7 +667,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid API key.
     """
 
-    @field_validator("anthropic_api_key")
+    @before_field_validator("anthropic_api_key")
     def validate_anthropic_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `anthropic_api_key` field.
 
@@ -651,7 +681,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.ANTHROPIC_API_KEY
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("anthropic_api_key is not a SecretStr.")
+            raise SmarterConfigurationError(f"anthropic_api_key of type {type(v)} is not a SecretStr.")
 
         return v
 
@@ -670,7 +700,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("api_description")
+    @before_field_validator("api_description")
     def validate_api_description(cls, v: str) -> str:
         """Validates the `api_description` field.
 
@@ -681,7 +711,7 @@ class Settings(BaseSettings):
             str: The validated API description.
         """
         if not isinstance(v, str):
-            raise SmarterConfigurationError("api_description is not a string.")
+            raise SmarterConfigurationError(f"api_description of type {type(v)} is not a string.")
         return v
 
     api_name: str = Field(
@@ -700,7 +730,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("api_name")
+    @before_field_validator("api_name")
     def validate_api_name(cls, v: str) -> str:
         """Validates the `api_name` field.
 
@@ -711,7 +741,7 @@ class Settings(BaseSettings):
             str: The validated API name.
         """
         if not isinstance(v, str):
-            raise SmarterConfigurationError("api_name is not a string.")
+            raise SmarterConfigurationError(f"api_name of type {type(v)} is not a string.")
         return v
 
     api_schema: str = Field(
@@ -729,7 +759,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not 'http' or 'https'.
     """
 
-    @field_validator("api_schema")
+    @before_field_validator("api_schema")
     def validate_api_schema(cls, v: str) -> str:
         """Validates the `api_schema` field.
 
@@ -739,9 +769,9 @@ class Settings(BaseSettings):
         Returns:
             str: The validated API schema.
         """
-        if v not in ["http", "https"]:
-            raise SmarterConfigurationError("api_schema must be 'http' or 'https'.")
-        return v
+        if v.lower() not in ["http", "https"]:
+            raise SmarterConfigurationError(f"api_schema {v} must be 'http' or 'https'.")
+        return v.lower()
 
     aws_profile: Optional[str] = Field(
         SettingsDefaults.AWS_PROFILE,
@@ -760,7 +790,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("aws_profile")
+    @before_field_validator("aws_profile")
     def validate_aws_profile(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `aws_profile` field.
         Uses SettingsDefaults if no value is received.
@@ -791,7 +821,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid AWS access key ID
     """
 
-    @field_validator("aws_access_key_id")
+    @before_field_validator("aws_access_key_id")
     def validate_aws_access_key_id(cls, v: Optional[SecretStr], values: ValidationInfo) -> SecretStr:
         """Validates the `aws_access_key_id` field.
         Uses SettingsDefaults if no value is received.
@@ -813,9 +843,17 @@ class Settings(BaseSettings):
             return SettingsDefaults.AWS_ACCESS_KEY_ID
         aws_profile = values.data.get("aws_profile", None)
         if aws_profile and len(aws_profile) > 0 and aws_profile != SettingsDefaults.AWS_PROFILE:
-            # pylint: disable=logging-fstring-interpolation
-            logger.warning(f"aws_access_key_id is being ignored. using aws_profile {aws_profile}.")
+            logger.warning("aws_access_key_id is being ignored. using aws_profile %s.", aws_profile)
             return SettingsDefaults.AWS_ACCESS_KEY_ID
+
+        if v.get_secret_value() == DEFAULT_MISSING_VALUE:
+            return v
+
+        # validate the pattern of the access key id
+        pattern = r"^AKIA[0-9A-Z]{16}$"
+        if not re.match(pattern, v.get_secret_value()):
+            raise SmarterConfigurationError("aws_access_key_id is not a valid AWS access key ID format.")
+
         return v
 
     aws_secret_access_key: SecretStr = Field(
@@ -834,7 +872,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid AWS secret access key
     """
 
-    @field_validator("aws_secret_access_key")
+    @before_field_validator("aws_secret_access_key")
     def validate_aws_secret_access_key(cls, v: Optional[SecretStr], values: ValidationInfo) -> SecretStr:
         """Validates the `aws_secret_access_key` field.
         Uses SettingsDefaults if no value is received.
@@ -850,13 +888,22 @@ class Settings(BaseSettings):
             v = SecretStr(v)
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError("could not convert aws_secret_access_key value to SecretStr")
+
         if v.get_secret_value() in [None, ""]:
             return SettingsDefaults.AWS_SECRET_ACCESS_KEY
         aws_profile = values.data.get("aws_profile", None)
         if aws_profile and len(aws_profile) > 0 and aws_profile != SettingsDefaults.AWS_PROFILE:
-            # pylint: disable=logging-fstring-interpolation
-            logger.warning(f"aws_secret_access_key is being ignored. using aws_profile {aws_profile}.")
+            logger.warning("aws_secret_access_key is being ignored. using aws_profile %s.", aws_profile)
             return SettingsDefaults.AWS_SECRET_ACCESS_KEY
+
+        if v.get_secret_value() == DEFAULT_MISSING_VALUE:
+            return v
+
+        # validate the pattern of the secret access key
+        pattern = r"^[0-9a-zA-Z/+]{40}$"
+        if not re.match(pattern, v.get_secret_value()):
+            raise SmarterConfigurationError("aws_secret_access_key is not a valid AWS secret access key format.")
+
         return v
 
     aws_regions: List[str] = Field(
@@ -892,7 +939,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid AWS region name.
     """
 
-    @field_validator("aws_region")
+    @before_field_validator("aws_region")
     def validate_aws_region(cls, v: Optional[str], values: ValidationInfo, **kwargs) -> Optional[str]:
         """Validates the `aws_region` field.
         Uses SettingsDefaults if no value is received.
@@ -945,7 +992,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("aws_eks_cluster_name")
+    @before_field_validator("aws_eks_cluster_name")
     def validate_aws_eks_cluster_name(cls, v: Optional[str]) -> str:
         """Validates the `aws_eks_cluster_name` field.
 
@@ -959,7 +1006,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.AWS_EKS_CLUSTER_NAME
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("aws_eks_cluster_name is not a str.")
+            raise SmarterConfigurationError(f"aws_eks_cluster_name of type {type(v)} is not a str.")
 
         return v
 
@@ -980,7 +1027,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("aws_db_instance_identifier")
+    @before_field_validator("aws_db_instance_identifier")
     def validate_aws_db_instance_identifier(cls, v: Optional[str]) -> str:
         """Validates the `aws_db_instance_identifier` field.
 
@@ -994,7 +1041,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("aws_db_instance_identifier is not a str.")
+            raise SmarterConfigurationError(f"aws_db_instance_identifier of type {type(v)} is not a str.")
 
         return v
 
@@ -1014,7 +1061,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("branding_corporate_name")
+    @before_field_validator("branding_corporate_name")
     def validate_branding_corporate_name(cls, v: Optional[str]) -> str:
         """Validates the `branding_corporate_name` field.
 
@@ -1028,7 +1075,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.BRANDING_CORPORATE_NAME
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("branding_corporate_name is not a str.")
+            raise SmarterConfigurationError(f"branding_corporate_name of type {type(v)} is not a str.")
 
         return v
 
@@ -1048,7 +1095,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("branding_support_phone_number")
+    @before_field_validator("branding_support_phone_number")
     def validate_branding_support_phone_number(cls, v: Optional[str]) -> str:
         """Validates the `branding_support_phone_number` field.
 
@@ -1062,11 +1109,11 @@ class Settings(BaseSettings):
             return SettingsDefaults.BRANDING_SUPPORT_PHONE_NUMBER
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("branding_support_phone_number is not a str.")
+            raise SmarterConfigurationError(f"branding_support_phone_number of type {type(v)} is not a str.")
 
         return v
 
-    branding_support_email: str = Field(
+    branding_support_email: EmailStr = Field(
         SettingsDefaults.BRANDING_SUPPORT_EMAIL,
         description="The support email address used for branding purposes throughout the platform.",
         title="Branding Support Email",
@@ -1076,26 +1123,26 @@ class Settings(BaseSettings):
     This setting specifies the email address that users can contact for support
     or assistance related to the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
-    :type: str
+    :type: EmailStr
     :default: Value from ``SettingsDefaults.BRANDING_SUPPORT_EMAIL``
-    :raises SmarterConfigurationError: If the value is not a string.
+    :raises SmarterConfigurationError: If the value is not a EmailStr.
     """
 
-    @field_validator("branding_support_email")
-    def validate_branding_support_email(cls, v: Optional[str]) -> str:
+    @before_field_validator("branding_support_email")
+    def validate_branding_support_email(cls, v: Optional[EmailStr]) -> EmailStr:
         """Validates the `branding_support_email` field.
 
         Args:
-            v (Optional[str]): The branding support email value to validate.
-
+            v (Optional[EmailStr]): The branding support email value to validate.
         Returns:
-            str: The validated branding support email.
+            EmailStr: The validated branding support email.
         """
         if v in [None, ""]:
             return SettingsDefaults.BRANDING_SUPPORT_EMAIL
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("branding_support_email is not a str.")
+            raise SmarterConfigurationError(f"branding_support_email of type {type(v)} is not a EmailStr.")
+        SmarterValidator.validate_email(v)
 
         return v
 
@@ -1115,7 +1162,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("branding_address")
+    @before_field_validator("branding_address")
     def validate_branding_address(cls, v: Optional[str]) -> str:
         """Validates the `branding_address` field.
 
@@ -1129,13 +1176,14 @@ class Settings(BaseSettings):
             return SettingsDefaults.BRANDING_ADDRESS
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("branding_address is not a str.")
+            raise SmarterConfigurationError(f"branding_address of type {type(v)} is not a str.")
 
         return v
 
     branding_contact_url: Optional[HttpUrl] = Field(
         SettingsDefaults.BRANDING_CONTACT_URL,
         description="The contact URL used for branding purposes throughout the platform.",
+        examples=["https://www.example.com/contact"],
         title="Branding Contact URL",
     )
     """
@@ -1149,7 +1197,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("branding_contact_url")
+    @before_field_validator("branding_contact_url")
     def validate_branding_contact_url(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_contact_url` field.
 
@@ -1162,8 +1210,14 @@ class Settings(BaseSettings):
         if v is None or v == "":
             return SettingsDefaults.BRANDING_CONTACT_URL
 
+        if isinstance(v, str):
+            try:
+                v = HttpUrl(v)
+            except Exception as e:
+                raise SmarterConfigurationError(f"branding_contact_url {v} is not a valid HttpUrl.") from e
+
         if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError("branding_contact_url is not a HttpUrl.")
+            raise SmarterConfigurationError(f"branding_contact_url {v} is not a HttpUrl.")
 
         return v
 
@@ -1183,7 +1237,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("branding_support_hours")
+    @before_field_validator("branding_support_hours")
     def validate_branding_support_hours(cls, v: Optional[str]) -> str:
         """Validates the `branding_support_hours` field.
 
@@ -1197,13 +1251,14 @@ class Settings(BaseSettings):
             return SettingsDefaults.BRANDING_SUPPORT_HOURS
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("branding_support_hours is not a str.")
+            raise SmarterConfigurationError(f"branding_support_hours of type {type(v)} is not a str.")
 
         return v
 
     branding_url_facebook: Optional[HttpUrl] = Field(
         SettingsDefaults.BRANDING_URL_FACEBOOK,
         description="The Facebook URL used for branding purposes throughout the platform.",
+        examples=["https://www.facebook.com/example"],
         title="Branding URL Facebook",
     )
     """
@@ -1216,7 +1271,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
     """
 
-    @field_validator("branding_url_facebook")
+    @before_field_validator("branding_url_facebook")
     def validate_branding_url_facebook(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_url_facebook` field.
         Args:
@@ -1227,14 +1282,21 @@ class Settings(BaseSettings):
         if v is None or v == "":
             return SettingsDefaults.BRANDING_URL_FACEBOOK
 
+        if isinstance(v, str):
+            try:
+                v = HttpUrl(v)
+            except Exception as e:
+                raise SmarterConfigurationError(f"branding_url_facebook {v} is not a valid HttpUrl.") from e
+
         if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError("branding_url_facebook is not a HttpUrl.")
+            raise SmarterConfigurationError(f"branding_url_facebook {v} is not a HttpUrl.")
 
         return v
 
     branding_url_twitter: Optional[HttpUrl] = Field(
         SettingsDefaults.BRANDING_URL_TWITTER,
         description="The Twitter URL used for branding purposes throughout the platform.",
+        examples=["https://www.twitter.com/example"],
         title="Branding URL Twitter",
     )
     """
@@ -1247,7 +1309,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
     """
 
-    @field_validator("branding_url_twitter")
+    @before_field_validator("branding_url_twitter")
     def validate_branding_url_twitter(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_url_twitter` field.
         Args:
@@ -1258,14 +1320,21 @@ class Settings(BaseSettings):
         if v is None or v == "":
             return SettingsDefaults.BRANDING_URL_TWITTER
 
+        if isinstance(v, str):
+            try:
+                v = HttpUrl(v)
+            except Exception as e:
+                raise SmarterConfigurationError(f"branding_url_twitter {v} is not a valid HttpUrl.") from e
+
         if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError("branding_url_twitter is not a HttpUrl.")
+            raise SmarterConfigurationError(f"branding_url_twitter {v} is not a HttpUrl.")
 
         return v
 
     branding_url_linkedin: Optional[HttpUrl] = Field(
         SettingsDefaults.BRANDING_URL_LINKEDIN,
         description="The LinkedIn URL used for branding purposes throughout the platform.",
+        examples=["https://www.linkedin.com/company/example"],
         title="Branding URL LinkedIn",
     )
     """
@@ -1278,7 +1347,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
     """
 
-    @field_validator("branding_url_linkedin")
+    @before_field_validator("branding_url_linkedin")
     def validate_branding_url_linkedin(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_url_linkedin` field.
         Args:
@@ -1289,8 +1358,14 @@ class Settings(BaseSettings):
         if v is None or v == "":
             return SettingsDefaults.BRANDING_URL_LINKEDIN
 
+        if isinstance(v, str):
+            try:
+                v = HttpUrl(v)
+            except Exception as e:
+                raise SmarterConfigurationError(f"branding_url_linkedin {v} is not a valid HttpUrl.") from e
+
         if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError("branding_url_linkedin is not a HttpUrl.")
+            raise SmarterConfigurationError(f"branding_url_linkedin {v} is not a HttpUrl.")
 
         return v
 
@@ -1311,7 +1386,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @field_validator("cache_expiration")
+    @before_field_validator("cache_expiration")
     def parse_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'cache_expiration' field.
         Args:
@@ -1326,7 +1401,7 @@ class Settings(BaseSettings):
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
             if int_value < 0:
-                raise SmarterConfigurationError("cache_expiration must be a positive integer.")
+                raise SmarterConfigurationError(f"cache_expiration {int_value} must be a positive integer.")
             return int_value
         except ValueError as e:
             raise SmarterConfigurationError("could not validate cache_expiration") from e
@@ -1349,7 +1424,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @field_validator("chat_cache_expiration")
+    @before_field_validator("chat_cache_expiration")
     def parse_chat_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'chat_cache_expiration' field.
         Args:
@@ -1364,7 +1439,7 @@ class Settings(BaseSettings):
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
             if int_value < 0:
-                raise SmarterConfigurationError("chat_cache_expiration must be a positive integer.")
+                raise SmarterConfigurationError(f"chat_cache_expiration {int_value} must be a positive integer.")
             return int_value
         except ValueError as e:
             raise SmarterConfigurationError("could not validate chat_cache_expiration") from e
@@ -1387,7 +1462,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @field_validator("chatbot_cache_expiration")
+    @before_field_validator("chatbot_cache_expiration")
     def parse_chatbot_cache_expiration(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'chatbot_cache_expiration' field.
         Args:
@@ -1402,7 +1477,7 @@ class Settings(BaseSettings):
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
             if int_value < 0:
-                raise SmarterConfigurationError("chatbot_cache_expiration must be a positive integer.")
+                raise SmarterConfigurationError(f"chatbot_cache_expiration {int_value} must be a positive integer.")
             return int_value
         except ValueError as e:
             raise SmarterConfigurationError("could not validate chatbot_cache_expiration") from e
@@ -1423,7 +1498,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @field_validator("chatbot_max_returned_history")
+    @before_field_validator("chatbot_max_returned_history")
     def parse_chatbot_max_returned_history(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'chatbot_max_returned_history' field.
         Args:
@@ -1438,7 +1513,7 @@ class Settings(BaseSettings):
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
             if int_value < 0:
-                raise SmarterConfigurationError("chatbot_max_returned_history must be a positive integer.")
+                raise SmarterConfigurationError(f"chatbot_max_returned_history {int_value} must be a positive integer.")
             return int_value
         except ValueError as e:
             raise SmarterConfigurationError("could not validate chatbot_max_returned_history") from e
@@ -1458,7 +1533,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("chatbot_tasks_create_dns_record", mode="before")
+    @before_field_validator("chatbot_tasks_create_dns_record")
     def parse_chatbot_tasks_create_dns_record(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'chatbot_tasks_create_dns_record' field.
 
@@ -1475,7 +1550,7 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError("could not validate chatbot_tasks_create_dns_record")
+        raise SmarterConfigurationError(f"could not validate chatbot_tasks_create_dns_record: {v}")
 
     chatbot_tasks_create_ingress_manifest: bool = Field(
         SettingsDefaults.CHATBOT_TASKS_CREATE_INGRESS_MANIFEST,
@@ -1490,7 +1565,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("chatbot_tasks_create_ingress_manifest", mode="before")
+    @before_field_validator("chatbot_tasks_create_ingress_manifest")
     def parse_chatbot_tasks_create_ingress_manifest(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'chatbot_tasks_create_ingress_manifest' field.
         Args:
@@ -1505,7 +1580,7 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError("could not validate chatbot_tasks_create_ingress_manifest")
+        raise SmarterConfigurationError(f"could not validate chatbot_tasks_create_ingress_manifest: {v}")
 
     chatbot_tasks_default_ttl: int = Field(
         SettingsDefaults.CHATBOT_TASKS_DEFAULT_TTL,
@@ -1520,7 +1595,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a non-negative integer.
     """
 
-    @field_validator("chatbot_tasks_default_ttl")
+    @before_field_validator("chatbot_tasks_default_ttl")
     def parse_chatbot_tasks_default_ttl(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'chatbot_tasks_default_ttl' field.
         Args:
@@ -1535,10 +1610,192 @@ class Settings(BaseSettings):
         try:
             int_value = int(v)  # type: ignore[reportArgumentType]
             if int_value < 0:
-                raise SmarterConfigurationError("chatbot_tasks_default_ttl must be a non-negative integer.")
+                raise SmarterConfigurationError(
+                    f"chatbot_tasks_default_ttl {int_value} must be a non-negative integer."
+                )
             return int_value
         except ValueError as e:
-            raise SmarterConfigurationError("could not validate chatbot_tasks_default_ttl") from e
+            raise SmarterConfigurationError(f"could not validate chatbot_tasks_default_ttl: {v}") from e
+
+    chatbot_tasks_celery_max_retries: int = Field(
+        SettingsDefaults.CHATBOT_TASKS_CELERY_MAX_RETRIES,
+        gt=0,
+        description="Maximum number of retries for chatbot tasks in Celery.",
+        title="Chatbot Tasks Celery Max Retries",
+    )
+    """
+    Maximum number of retries for chatbot tasks in Celery.
+    :type: int
+    :default: Value from ``SettingsDefaults.CHATBOT_TASKS_CELERY_MAX_RETRIES``
+    :raises SmarterConfigurationError: If the value is not a non-negative integer.
+    """
+
+    @before_field_validator("chatbot_tasks_celery_max_retries")
+    def parse_chatbot_tasks_celery_max_retries(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'chatbot_tasks_celery_max_retries' field.
+        Args:
+            v (Optional[Union[int, str]]): the chatbot_tasks_celery_max_retries value to validate
+        Returns:
+            int: The validated chatbot_tasks_celery_max_retries.
+        """
+        if isinstance(v, int):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CHATBOT_TASKS_CELERY_MAX_RETRIES
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            return int_value
+        except ValueError as e:
+            raise SmarterConfigurationError(f"could not validate chatbot_tasks_celery_max_retries: {v}") from e
+
+    chatbot_tasks_celery_retry_backoff: bool = Field(
+        SettingsDefaults.CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+        description="If True, enables exponential backoff for Celery task retries related to ChatBot deployment and management",
+        title="Chatbot Tasks Celery Retry Backoff",
+    )
+    """
+    If True, enables exponential backoff for Celery task retries related to ChatBot deployment and management.
+    :type: bool
+    :default: Value from ``SettingsDefaults.CHATBOT_TASKS_CELERY_RETRY_BACKOFF``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
+    @before_field_validator("chatbot_tasks_celery_retry_backoff")
+    def parse_chatbot_tasks_celery_retry_backoff(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'chatbot_tasks_celery_retry_backoff' field.
+        Args:
+            v (Optional[Union[bool, str]]): the chatbot_tasks_celery_retry_backoff value to validate
+        Returns:
+            bool: The validated chatbot_tasks_celery_retry_backoff.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CHATBOT_TASKS_CELERY_RETRY_BACKOFF
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate chatbot_tasks_celery_retry_backoff: {v}")
+
+    chatbot_tasks_celery_task_queue: str = Field(
+        SettingsDefaults.CHATBOT_TASKS_CELERY_TASK_QUEUE,
+        description="The Celery task queue name for chatbot tasks.",
+        title="Chatbot Tasks Celery Task Queue",
+    )
+    """
+    The Celery task queue name for chatbot tasks.
+    :type: str
+    :default: Value from ``SettingsDefaults.CHATBOT_TASKS_CELERY_TASK_QUEUE``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("chatbot_tasks_celery_task_queue")
+    def validate_chatbot_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
+        """Validates the `chatbot_tasks_celery_task_queue` field.
+        Args:
+            v (Optional[str]): The chatbot tasks celery task queue value to validate.
+        Returns:
+            str: The validated chatbot tasks celery task queue.
+        """
+        if v in [None, ""]:
+            return SettingsDefaults.CHATBOT_TASKS_CELERY_TASK_QUEUE
+
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"chatbot_tasks_celery_task_queue of type {type(v)} is not a str: {v}")
+
+        return v
+
+    plugin_max_data_results: int = Field(
+        SettingsDefaults.PLUGIN_MAX_DATA_RESULTS,
+        gt=0,
+        description="A global maximum number of data row results that can be returned by any Smarter plugin.",
+        title="Plugin Max Data Results",
+    )
+    """
+    A global maximum number of data row results that can be returned by any Smarter plugin.
+    This setting helps to prevent excessive data retrieval that could impact performance
+    or lead to resource exhaustion. Plugins should respect this limit when querying
+    data sources and returning results to ensure efficient operation of the platform.
+    :type: int
+    :default: Value from ``SettingsDefaults.PLUGIN_MAX_DATA_RESULTS``
+    :raises SmarterConfigurationError: If the value is not a positive integer.
+    """
+
+    @before_field_validator("plugin_max_data_results")
+    def parse_plugin_max_data_results(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'plugin_max_data_results' field.
+        Args:
+            v (Optional[Union[int, str]]): the plugin_max_data_results value to validate
+        Returns:
+            int: The validated plugin_max_data_results.
+        """
+        if isinstance(v, int):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.PLUGIN_MAX_DATA_RESULTS
+        try:
+            int_value = int(v)  # type: ignore[reportArgumentType]
+            if int_value < 0:
+                raise SmarterConfigurationError(f"plugin_max_data_results {int_value} must be a positive integer.")
+            return int_value
+        except ValueError as e:
+            raise SmarterConfigurationError(f"could not validate plugin_max_data_results: {v}") from e
+
+    sensitive_files_amnesty_patterns: List[Pattern] = Field(
+        SettingsDefaults.SENSITIVE_FILES_AMNESTY_PATTERNS,
+        description="List of regex patterns for sensitive file amnesty.",
+        title="Sensitive Files Amnesty Patterns",
+        examples=[
+            re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
+            re.compile(r"^/api(/.*)?$"),
+            re.compile(r"^/admin(/.*)?$"),
+        ],
+    )
+    """
+    List of regex patterns for sensitive file amnesty.
+    This setting defines a list of regular expression patterns that identify files
+    considered sensitive. Files matching these patterns may be subject to special handling,
+    such as exclusion from certain operations or additional security measures.
+    :type: List[Pattern]
+    :default: Value from ``SettingsDefaults.SENSITIVE_FILES_AMNESTY_PATTERNS``
+    :raises SmarterConfigurationError: If the value is not a list of valid regex patterns.
+    """
+
+    @before_field_validator("sensitive_files_amnesty_patterns")
+    def parse_sensitive_files_amnesty_patterns(cls, v: Optional[Union[List[str], str]]) -> List[Pattern]:
+        """Validates the 'sensitive_files_amnesty_patterns' field.
+        Args:
+            v (Optional[Union[List[str], str]]): the sensitive_files_amnesty_patterns value to validate
+        Returns:
+            List[Pattern]: The validated sensitive_files_amnesty_patterns.
+        Examples:
+            >>> parse_sensitive_files_amnesty_patterns([r"^/api(/.*)?$", r"^/admin(/.*)?$"])
+            [re.compile('^/api(/.*)?$'), re.compile('^/admin(/.*)?$')]
+        """
+        if isinstance(v, list):
+            patterns = []
+            for item in v:
+                if isinstance(item, str):
+                    try:
+                        patterns.append(re.compile(item))
+                    except re.error as e:
+                        raise SmarterConfigurationError(f"Invalid regex pattern: {item}") from e
+                elif hasattr(item, "pattern") and hasattr(item, "match"):
+                    patterns.append(item)
+                else:
+                    raise SmarterConfigurationError(
+                        "sensitive_files_amnesty_patterns must be a list of strings or compiled regex patterns."
+                    )
+            return patterns
+        if v in [None, ""]:
+            return SettingsDefaults.SENSITIVE_FILES_AMNESTY_PATTERNS
+        if isinstance(v, str):
+            try:
+                return [re.compile(v)]
+            except re.error as e:
+                raise SmarterConfigurationError(f"Invalid regex pattern: {v}") from e
+
+        raise SmarterConfigurationError(f"could not validate sensitive_files_amnesty_patterns: {v}")
 
     debug_mode: bool = Field(
         SettingsDefaults.DEBUG_MODE,
@@ -1557,7 +1814,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("debug_mode", mode="before")
+    @before_field_validator("debug_mode")
     def parse_debug_mode(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'debug_mode' field.
 
@@ -1574,7 +1831,7 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError("could not validate debug_mode")
+        raise SmarterConfigurationError(f"could not validate debug_mode: {v}")
 
     dump_defaults: bool = Field(
         SettingsDefaults.DUMP_DEFAULTS,
@@ -1593,7 +1850,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("dump_defaults", mode="before")
+    @before_field_validator("dump_defaults")
     def parse_dump_defaults(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'dump_defaults' field.
 
@@ -1610,7 +1867,7 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError("could not validate dump_defaults")
+        raise SmarterConfigurationError(f"could not validate dump_defaults: {v}")
 
     default_missing_value: str = Field(
         DEFAULT_MISSING_VALUE,
@@ -1649,7 +1906,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("developer_mode", mode="before")
+    @before_field_validator("developer_mode")
     def parse_developer_mode(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'developer_mode' field.
         Args:
@@ -1664,7 +1921,7 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError("could not validate developer_mode")
+        raise SmarterConfigurationError(f"could not validate developer_mode: {v}")
 
     django_default_file_storage: str = Field(
         SettingsDefaults.DJANGO_DEFAULT_FILE_STORAGE,
@@ -1699,7 +1956,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid email address.
     """
 
-    @field_validator("email_admin")
+    @before_field_validator("email_admin")
     def validate_email_admin(cls, v: Optional[EmailStr]) -> EmailStr:
         """Validates the `email_admin` field.
 
@@ -1712,7 +1969,7 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             return SettingsDefaults.EMAIL_ADMIN
         if not isinstance(v, str):
-            raise SmarterConfigurationError("email_admin is not a valid EmailStr.")
+            raise SmarterConfigurationError(f"email_admin is not a valid EmailStr: {v}")
         return v
 
     environment: str = Field(
@@ -1732,7 +1989,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid environment name from SmarterEnvironments.all
     """
 
-    @field_validator("environment")
+    @before_field_validator("environment")
     def validate_environment(cls, v: Optional[str]) -> str:
         """Validates the `environment` field.
 
@@ -1745,7 +2002,7 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             return SettingsDefaults.ENVIRONMENT
         if not isinstance(v, str):
-            raise SmarterConfigurationError("environment is not a str.")
+            raise SmarterConfigurationError(f"environment of type {type(v)} is not a str: {v}")
         return v
 
     fernet_encryption_key: SecretStr = Field(
@@ -1765,7 +2022,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid Fernet key.
     """
 
-    @field_validator("fernet_encryption_key")
+    @before_field_validator("fernet_encryption_key")
     def validate_fernet_encryption_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `fernet_encryption_key` field.
 
@@ -1783,7 +2040,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.FERNET_ENCRYPTION_KEY
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("fernet_encryption_key is not a SecretStr.")
+            raise SmarterConfigurationError(f"fernet_encryption_key of type {type(v)} is not a SecretStr: {v}")
         try:
             # Decode the key using URL-safe base64
             encryption_key = v.get_secret_value()
@@ -1813,7 +2070,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid API key.
     """
 
-    @field_validator("gemini_api_key")
+    @before_field_validator("gemini_api_key")
     def validate_gemini_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `gemini_api_key` field.
 
@@ -1826,7 +2083,7 @@ class Settings(BaseSettings):
         if str(v) in [None, ""]:
             return SettingsDefaults.GEMINI_API_KEY
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("gemini_api_key is not a SecretStr.")
+            raise SmarterConfigurationError(f"gemini_api_key of type {type(v)} is not a SecretStr.")
 
         return v
 
@@ -1847,7 +2104,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid API key.
     """
 
-    @field_validator("google_maps_api_key")
+    @before_field_validator("google_maps_api_key")
     def validate_google_maps_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `google_maps_api_key` field.
 
@@ -1860,7 +2117,7 @@ class Settings(BaseSettings):
         if str(v) in [None, ""]:
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("google_maps_api_key is not a SecretStr.")
+            raise SmarterConfigurationError(f"google_maps_api_key of type {type(v)} is not a SecretStr.")
         return v
 
     google_service_account: SecretStr = Field(
@@ -1880,7 +2137,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid service account JSON.
     """
 
-    @field_validator("google_service_account")
+    @before_field_validator("google_service_account")
     def validate_google_service_account(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `google_service_account` field.
 
@@ -1893,7 +2150,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.GOOGLE_SERVICE_ACCOUNT
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("google_service_account is not a SecretStr.")
+            raise SmarterConfigurationError(f"google_service_account of type {type(v)} is not a SecretStr.")
         return v
 
     internal_ip_prefixes: List[str] = Field(
@@ -1912,7 +2169,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a list of strings matching SettingsDefaults.INTERNAL_IP_PREFIXES
     """
 
-    @field_validator("internal_ip_prefixes")
+    @before_field_validator("internal_ip_prefixes")
     def validate_internal_ip_prefixes(cls, v: Optional[List[str]]) -> List[str]:
         """Validates the `internal_ip_prefixes` field.
 
@@ -1926,11 +2183,13 @@ class Settings(BaseSettings):
             return SettingsDefaults.INTERNAL_IP_PREFIXES
 
         if not isinstance(v, list):
-            raise SmarterConfigurationError("internal_ip_prefixes is not a list")
+            raise SmarterConfigurationError(f"internal_ip_prefixes of type {type(v)} is not a list: {v}")
         return v
 
     log_level: int = Field(
         SettingsDefaults.LOG_LEVEL,
+        ge=0,
+        le=50,
         description="The logging level for the platform based on Python logging levels: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL",
         examples=[logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL],
         title="Logging Level",
@@ -1952,7 +2211,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid API key.
     """
 
-    @field_validator("llama_api_key")
+    @before_field_validator("llama_api_key")
     def validate_llama_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `llama_api_key` field.
 
@@ -1966,7 +2225,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.LLAMA_API_KEY
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("llama_api_key is not a SecretStr.")
+            raise SmarterConfigurationError(f"llama_api_key of type {type(v)} is not a SecretStr")
         return v
 
     local_hosts: List[str] = Field(
@@ -1986,7 +2245,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a list of strings matching SettingsDefaults.LOCAL_HOSTS
     """
 
-    @field_validator("local_hosts")
+    @before_field_validator("local_hosts")
     def validate_local_hosts(cls, v: Optional[List[str]]) -> List[str]:
         """Validates the `local_hosts` field.
 
@@ -2000,7 +2259,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.LOCAL_HOSTS
 
         if not isinstance(v, list):
-            raise SmarterConfigurationError("local_hosts is not a list")
+            raise SmarterConfigurationError(f"local_hosts of type {type(v)} is not a list: {v}")
         return v
 
     langchain_memory_key: Optional[str] = Field(
@@ -2024,7 +2283,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("langchain_memory_key")
+    @before_field_validator("langchain_memory_key")
     def validate_langchain_memory_key(cls, v: Optional[str]) -> str:
         """Validates the `langchain_memory_key` field.
 
@@ -2054,7 +2313,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid LLM provider name
     """
 
-    @field_validator("llm_default_provider")
+    @before_field_validator("llm_default_provider")
     def validate_llm_default_provider(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `llm_default_provider` field.
 
@@ -2068,7 +2327,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.LLM_DEFAULT_PROVIDER
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("llm_default_provider is not a str.")
+            raise SmarterConfigurationError(f"llm_default_provider of type {type(v)} is not a str: {v}")
         return v
 
     llm_default_model: str = Field(
@@ -2088,7 +2347,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid LLM model name
     """
 
-    @field_validator("llm_default_model")
+    @before_field_validator("llm_default_model")
     def validate_llm_default_model(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `llm_default_model` field.
 
@@ -2102,7 +2361,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.LLM_DEFAULT_MODEL
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("llm_default_model is not a str.")
+            raise SmarterConfigurationError(f"llm_default_model of type {type(v)} is not a str: {v}")
         return v
 
     llm_default_system_role: str = Field(
@@ -2122,7 +2381,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("llm_default_system_role")
+    @before_field_validator("llm_default_system_role")
     def validate_llm_default_system_role(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `llm_default_system_role` field.
 
@@ -2136,7 +2395,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("llm_default_system_role is not a str.")
+            raise SmarterConfigurationError(f"llm_default_system_role of type {type(v)} is not a str: {v}")
         return v
 
     llm_default_temperature: float = Field(
@@ -2157,7 +2416,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a float between 0.
     """
 
-    @field_validator("llm_default_temperature")
+    @before_field_validator("llm_default_temperature")
     def validate_openai_default_temperature(cls, v: Optional[float]) -> float:
         """Validates the `llm_default_temperature` field.
 
@@ -2174,10 +2433,11 @@ class Settings(BaseSettings):
             retval = float(v)  # type: ignore
             return retval
         except (TypeError, ValueError) as e:
-            raise SmarterConfigurationError("llm_default_temperature is not a float.") from e
+            raise SmarterConfigurationError(f"llm_default_temperature of type {type(v)} is not a float: {v}") from e
 
     llm_default_max_tokens: int = Field(
         SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+        ge=1,
         description="The default maximum number of tokens to generate for language model interactions.",
         examples=[256, 512, 1024, 2048],
         title="Default LLM Max Tokens",
@@ -2193,7 +2453,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @field_validator("llm_default_max_tokens")
+    @before_field_validator("llm_default_max_tokens")
     def validate_openai_default_max_completion_tokens(cls, v: Optional[int]) -> int:
         """Validates the `llm_default_max_tokens` field.
 
@@ -2212,7 +2472,7 @@ class Settings(BaseSettings):
             retval = int(v)  # type: ignore
             return retval
         except (TypeError, ValueError) as e:
-            raise SmarterConfigurationError("llm_default_max_tokens is not an int.") from e
+            raise SmarterConfigurationError(f"llm_default_max_tokens of type {type(v)} is not an int: {v}") from e
 
     logo: Optional[HttpUrl] = Field(
         SettingsDefaults.LOGO,
@@ -2230,7 +2490,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid URL string.
     """
 
-    @field_validator("logo")
+    @before_field_validator("logo")
     def validate_logo(cls, v: Optional[HttpUrl]) -> HttpUrl:
         """Validates the `logo` field.
 
@@ -2242,6 +2502,16 @@ class Settings(BaseSettings):
         """
         if v is None:
             return SettingsDefaults.LOGO
+
+        if isinstance(v, str):
+            try:
+                v = HttpUrl(v)
+            except ValidationError as e:
+                raise SmarterConfigurationError(f"logo {v} is not a valid HttpUrl.") from e
+
+        if not isinstance(v, HttpUrl):
+            raise SmarterConfigurationError(f"logo {v} is not a HttpUrl.")
+        SmarterValidator.validate_url(str(v))
         return v
 
     mailchimp_api_key: Optional[SecretStr] = Field(
@@ -2260,7 +2530,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid API key.
     """
 
-    @field_validator("mailchimp_api_key")
+    @before_field_validator("mailchimp_api_key")
     def validate_mailchimp_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `mailchimp_api_key` field.
 
@@ -2274,7 +2544,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.MAILCHIMP_API_KEY
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("mailchimp_api_key is not a SecretStr")
+            raise SmarterConfigurationError(f"mailchimp_api_key of type {type(v)} is not a SecretStr")
         return v
 
     mailchimp_list_id: Optional[str] = Field(
@@ -2294,7 +2564,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("mailchimp_list_id")
+    @before_field_validator("mailchimp_list_id")
     def validate_mailchimp_list_id(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `mailchimp_list_id` field.
 
@@ -2324,7 +2594,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid URL string.
     """
 
-    @field_validator("marketing_site_url")
+    @before_field_validator("marketing_site_url")
     def validate_marketing_site_url(cls, v: Optional[HttpUrl]) -> HttpUrl:
         """Validates the `marketing_site_url` field.
 
@@ -2335,8 +2605,15 @@ class Settings(BaseSettings):
         """
         if str(v) in [None, ""] and SettingsDefaults.MARKETING_SITE_URL is not None:
             return SettingsDefaults.MARKETING_SITE_URL
+
+        if isinstance(v, str):
+            try:
+                v = HttpUrl(v)
+            except ValidationError as e:
+                raise SmarterConfigurationError(f"marketing_site_url {v} is not a valid HttpUrl.") from e
+
         if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError("marketing_site_url is not a HttpUrl.")
+            raise SmarterConfigurationError(f"marketing_site_url {v} is not a HttpUrl.")
         SmarterValidator.validate_url(str(v))
         return v
 
@@ -2356,7 +2633,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("openai_api_organization")
+    @before_field_validator("openai_api_organization")
     def validate_openai_api_organization(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `openai_api_organization` field.
 
@@ -2370,7 +2647,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.OPENAI_API_ORGANIZATION
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("openai_api_organization is not a str.")
+            raise SmarterConfigurationError(f"openai_api_organization of type {type(v)} is not a str: {v}")
         return v
 
     openai_api_key: SecretStr = Field(
@@ -2389,7 +2666,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid API key.
     """
 
-    @field_validator("openai_api_key")
+    @before_field_validator("openai_api_key")
     def validate_openai_api_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `openai_api_key` field.
 
@@ -2402,7 +2679,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.OPENAI_API_KEY
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("openai_api_key is not a SecretStr")
+            raise SmarterConfigurationError(f"openai_api_key of type {type(v)} is not a SecretStr")
 
         return v
 
@@ -2422,7 +2699,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @field_validator("openai_endpoint_image_n")
+    @before_field_validator("openai_endpoint_image_n")
     def validate_openai_endpoint_image_n(cls, v: Optional[int]) -> int:
         """Validates the `openai_endpoint_image_n` field.
 
@@ -2436,7 +2713,7 @@ class Settings(BaseSettings):
         if str(v) in [None, ""] and SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N is not None:
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N
         if not isinstance(v, int):
-            raise SmarterConfigurationError("openai_endpoint_image_n is not an int.")
+            raise SmarterConfigurationError(f"openai_endpoint_image_n of type {type(v)} is not an int: {v}")
 
         return int(v)
 
@@ -2456,7 +2733,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid image size string.
     """
 
-    @field_validator("openai_endpoint_image_size")
+    @before_field_validator("openai_endpoint_image_size")
     def validate_openai_endpoint_image_size(cls, v: Optional[str]) -> str:
         """Validates the `openai_endpoint_image_size` field.
 
@@ -2470,7 +2747,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("openai_endpoint_image_size is not a str.")
+            raise SmarterConfigurationError(f"openai_endpoint_image_size of type {type(v)} is not a str: {v}")
 
         return v
 
@@ -2490,7 +2767,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid API key.
     """
 
-    @field_validator("pinecone_api_key")
+    @before_field_validator("pinecone_api_key")
     def validate_pinecone_api_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `pinecone_api_key` field.
 
@@ -2504,7 +2781,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.PINECONE_API_KEY
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("pinecone_api_key is not a SecretStr")
+            raise SmarterConfigurationError(f"pinecone_api_key of type {type(v)} is not a SecretStr")
 
         return v
 
@@ -2525,7 +2802,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid domain name.
     """
 
-    @field_validator("root_domain")
+    @before_field_validator("root_domain")
     def validate_root_domain(cls, v: Optional[str]) -> str:
         """
         Validates the `root_domain` field.
@@ -2542,7 +2819,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.ROOT_DOMAIN
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("root_domain is not a str.")
+            raise SmarterConfigurationError(f"root_domain of type {type(v)} is not a str: {v}")
 
         return v
 
@@ -2563,7 +2840,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("secret_key")
+    @before_field_validator("secret_key")
     def validate_secret_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `secret_key` field.
 
@@ -2574,6 +2851,12 @@ class Settings(BaseSettings):
         """
         if v is None:
             return SettingsDefaults.SECRET_KEY
+
+        if isinstance(v, str):
+            try:
+                v = SecretStr(v)
+            except ValidationError as e:
+                raise SmarterConfigurationError(f"secret_key {v} is not a valid SecretStr.") from e
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"secret_key {type(v)} is not a SecretStr.")
@@ -2614,7 +2897,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("shared_resource_identifier")
+    @before_field_validator("shared_resource_identifier")
     def validate_shared_resource_identifier(cls, v: Optional[str]) -> str:
         """Validates the `shared_resource_identifier` field.
         Uses SettingsDefaults if no value is received.
@@ -2629,7 +2912,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.SHARED_RESOURCE_IDENTIFIER
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("shared_resource_identifier is not a str.")
+            raise SmarterConfigurationError(f"shared_resource_identifier of type {type(v)} is not a str: {v}")
 
         return v
 
@@ -2682,7 +2965,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("smarter_reactjs_app_loader_path")
+    @before_field_validator("smarter_reactjs_app_loader_path")
     def validate_smarter_reactjs_app_loader_path(cls, v: Optional[str]) -> str:
         """Validates the `smarter_reactjs_app_loader_path` field. Needs
         to start with a slash (/) and end with '.js'. The final string value
@@ -2698,12 +2981,12 @@ class Settings(BaseSettings):
             return SettingsDefaults.REACTJS_APP_LOADER_PATH
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("smarter_reactjs_app_loader_path is not a str.")
+            raise SmarterConfigurationError(f"smarter_reactjs_app_loader_path of type {type(v)} is not a str: {v}")
 
         if not v.startswith("/"):
-            raise SmarterConfigurationError("smarter_reactjs_app_loader_path must start with '/'")
+            raise SmarterConfigurationError(f"smarter_reactjs_app_loader_path must start with '/': {v}")
         if not v.endswith(".js"):
-            raise SmarterConfigurationError("smarter_reactjs_app_loader_path must end with '.js'")
+            raise SmarterConfigurationError(f"smarter_reactjs_app_loader_path must end with '.js': {v}")
         return v
 
     social_auth_google_oauth2_key: SecretStr = Field(
@@ -2722,7 +3005,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID.
     """
 
-    @field_validator("social_auth_google_oauth2_key")
+    @before_field_validator("social_auth_google_oauth2_key")
     def validate_social_auth_google_oauth2_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `social_auth_google_oauth2_key` field.
 
@@ -2735,7 +3018,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("social_auth_google_oauth2_key is not a SecretStr.")
+            raise SmarterConfigurationError(f"social_auth_google_oauth2_key of type {type(v)} is not a SecretStr")
         return v
 
     social_auth_google_oauth2_secret: SecretStr = Field(
@@ -2754,7 +3037,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
-    @field_validator("social_auth_google_oauth2_secret")
+    @before_field_validator("social_auth_google_oauth2_secret")
     def validate_social_auth_google_oauth2_secret(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `social_auth_google_oauth2_secret` field.
 
@@ -2768,7 +3051,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("social_auth_google_oauth2_secret is not a SecretStr.")
+            raise SmarterConfigurationError(f"social_auth_google_oauth2_secret of type {type(v)} is not a SecretStr.")
         return v
 
     social_auth_github_key: SecretStr = Field(
@@ -2787,7 +3070,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID
     """
 
-    @field_validator("social_auth_github_key")
+    @before_field_validator("social_auth_github_key")
     def validate_social_auth_github_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `social_auth_github_key` field.
 
@@ -2800,7 +3083,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("social_auth_github_key is not a SecretStr")
+            raise SmarterConfigurationError(f"social_auth_github_key of type {type(v)} is not a SecretStr")
 
         return v
 
@@ -2820,7 +3103,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
-    @field_validator("social_auth_github_secret")
+    @before_field_validator("social_auth_github_secret")
     def validate_social_auth_github_secret(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `social_auth_github_secret` field.
 
@@ -2833,7 +3116,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("social_auth_github_secret is not a SecretStr.")
+            raise SmarterConfigurationError(f"social_auth_github_secret of type {type(v)} is not a SecretStr.")
         return v
 
     social_auth_linkedin_oauth2_key: SecretStr = Field(
@@ -2855,7 +3138,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID
     """
 
-    @field_validator("social_auth_linkedin_oauth2_key")
+    @before_field_validator("social_auth_linkedin_oauth2_key")
     def validate_social_auth_linkedin_oauth2_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `social_auth_linkedin_oauth2_key` field.
 
@@ -2867,7 +3150,7 @@ class Settings(BaseSettings):
         if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY is not None:
             return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("social_auth_linkedin_oauth2_key is not a SecretStr.")
+            raise SmarterConfigurationError(f"social_auth_linkedin_oauth2_key of type {type(v)} is not a SecretStr.")
         return v
 
     social_auth_linkedin_oauth2_secret: SecretStr = Field(
@@ -2889,7 +3172,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
-    @field_validator("social_auth_linkedin_oauth2_secret")
+    @before_field_validator("social_auth_linkedin_oauth2_secret")
     def validate_social_auth_linkedin_oauth2_secret(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `social_auth_linkedin_oauth2_secret` field.
 
@@ -2902,7 +3185,7 @@ class Settings(BaseSettings):
         if str(v) in [None, ""] and SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET is not None:
             return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("social_auth_linkedin_oauth2_secret is not a SecretStr.")
+            raise SmarterConfigurationError(f"social_auth_linkedin_oauth2_secret of type {type(v)} is not a SecretStr.")
         return v
 
     smtp_sender: Optional[EmailStr] = Field(
@@ -2921,7 +3204,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid email address.
     """
 
-    @field_validator("smtp_sender")
+    @before_field_validator("smtp_sender")
     def validate_smtp_sender(cls, v: Optional[str]) -> str:
         """Validates the `smtp_sender` field.
 
@@ -2936,7 +3219,7 @@ class Settings(BaseSettings):
             SmarterValidator.validate_domain(v)
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("smtp_sender is not a str.")
+            raise SmarterConfigurationError(f"smtp_sender of type {type(v)} is not a str: {v}")
         return v
 
     smtp_from_email: Optional[EmailStr] = Field(
@@ -2955,15 +3238,15 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid email address.
     """
 
-    @field_validator("smtp_from_email")
-    def validate_smtp_from_email(cls, v: Optional[str]) -> Optional[str]:
+    @before_field_validator("smtp_from_email")
+    def validate_smtp_from_email(cls, v: Optional[EmailStr]) -> Optional[EmailStr]:
         """Validates the `smtp_from_email` field.
 
         Args:
-            v (Optional[str]): The SMTP from email address to validate.
+            v (Optional[EmailStr]): The SMTP from email address to validate.
 
         Returns:
-            Optional[str]: The validated SMTP from email address.
+            Optional[EmailStr]: The validated SMTP from email address.
         """
         if v in [None, ""]:
             return SettingsDefaults.SMTP_FROM_EMAIL
@@ -2972,7 +3255,7 @@ class Settings(BaseSettings):
             SmarterValidator.validate_email(v)
             return v
 
-        raise SmarterConfigurationError("could not validate smtp_from_email.")
+        raise SmarterConfigurationError(f"could not validate smtp_from_email: {v}")
 
     smtp_host: Optional[str] = Field(
         SettingsDefaults.SMTP_HOST,
@@ -2990,7 +3273,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid hostname or IP address
     """
 
-    @field_validator("smtp_host")
+    @before_field_validator("smtp_host")
     def validate_smtp_host(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `smtp_host` field.
 
@@ -3005,7 +3288,7 @@ class Settings(BaseSettings):
             SmarterValidator.validate_domain(v)
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError("smtp_host is not a str.")
+            raise SmarterConfigurationError(f"smtp_host of type {type(v)} is not a str: {v}")
         return v
 
     smtp_password: Optional[SecretStr] = Field(
@@ -3024,7 +3307,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid password.
     """
 
-    @field_validator("smtp_password")
+    @before_field_validator("smtp_password")
     def validate_smtp_password(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `smtp_password` field.
 
@@ -3037,7 +3320,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.SMTP_PASSWORD
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("smtp_password is not a str.")
+            raise SmarterConfigurationError(f"smtp_password of type {type(v)} is not a SecretStr")
         return v
 
     smtp_port: Optional[int] = Field(
@@ -3056,7 +3339,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid port number.
     """
 
-    @field_validator("smtp_port")
+    @before_field_validator("smtp_port")
     def validate_smtp_port(cls, v: Optional[int]) -> Optional[int]:
         """Validates the `smtp_port` field.
 
@@ -3094,7 +3377,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("smtp_use_ssl", mode="before")
+    @before_field_validator("smtp_use_ssl")
     def validate_smtp_use_ssl(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the `smtp_use_ssl` field.
 
@@ -3126,7 +3409,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @field_validator("smtp_use_tls", mode="before")
+    @before_field_validator("smtp_use_tls")
     def validate_smtp_use_tls(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the `smtp_use_tls` field.
 
@@ -3157,7 +3440,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("smtp_username")
+    @before_field_validator("smtp_username")
     def validate_smtp_username(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `smtp_username` field.
 
@@ -3190,7 +3473,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("stripe_live_secret_key")
+    @before_field_validator("stripe_live_secret_key")
     def validate_stripe_live_secret_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `stripe_live_secret_key` field.
 
@@ -3208,7 +3491,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.STRIPE_LIVE_SECRET_KEY
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("stripe_live_secret_key is not a SecretStr.")
+            raise SmarterConfigurationError(f"stripe_live_secret_key of type {type(v)} is not a SecretStr.")
         return v
 
     stripe_test_secret_key: Optional[SecretStr] = Field(
@@ -3230,7 +3513,7 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @field_validator("stripe_test_secret_key")
+    @before_field_validator("stripe_test_secret_key")
     def validate_stripe_test_secret_key(cls, v: Optional[SecretStr]) -> SecretStr:
         """Validates the `stripe_test_secret_key` field.
 
@@ -3248,7 +3531,7 @@ class Settings(BaseSettings):
             return SettingsDefaults.STRIPE_TEST_SECRET_KEY
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError("stripe_test_secret_key is not a SecretStr.")
+            raise SmarterConfigurationError(f"stripe_test_secret_key of type {type(v)} is not a SecretStr.")
         return v
 
     ###########################################################################
