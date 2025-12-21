@@ -32,13 +32,53 @@ from dotenv import load_dotenv
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
-from smarter.common.helpers.console_helpers import formatted_text_red
-
-
-load_dotenv()
+from smarter.common.helpers.console_helpers import formatted_text_green
 
 
 logger = logging.getLogger(__name__)
+
+
+# pylint: disable=W0621
+def smart_cast(value, default_value):
+    """
+    Cast string value to the same data type as the type
+    of the default_value. This is used for casting
+    environment variable strings to the
+    appropriate settings type.
+    """
+    if isinstance(default_value, bool):
+        return str(value).lower() in ("1", "true", "yes", "on")
+    if isinstance(default_value, int):
+        try:
+            return int(value)
+        except ValueError:
+            return default_value
+    if isinstance(default_value, float):
+        try:
+            return float(value)
+        except ValueError:
+            return default_value
+    if isinstance(default_value, list):
+        # Try JSON, fallback to comma-separated
+        try:
+            parsed = ast.literal_eval(value)
+            if isinstance(parsed, list):
+                return parsed
+        # pylint: disable=broad-except
+        except Exception:
+            pass
+        return [item.strip() for item in value.split(",") if item.strip()]
+    if isinstance(default_value, dict):
+        try:
+            parsed = ast.literal_eval(value)
+            if isinstance(parsed, dict):
+                return parsed
+        # pylint: disable=broad-except
+        except Exception:
+            pass
+        return default_value
+    return value  # str or fallback
+
 
 ALLOWED_HOSTS = smarter_settings.allowed_hosts
 """
@@ -46,15 +86,18 @@ A list of strings representing the host/domain names that this Django site can s
 Smarter implements its own middleware to validate host names.
 See smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware.
 
-Default: ["*"]
+See:
 
-See: https://docs.djangoproject.com/en/stable/ref/settings/#allowed-hosts
+    - https://docs.djangoproject.com/en/stable/ref/settings/#allowed-hosts
+    - smarter_settings.allowed_hosts
 """
 
 LOCAL_HOSTS = smarter_settings.local_hosts
 """
 Supplemental list of local host/domain names that this Django site can serve.
 This is specicific to Smarter and not officially part of Django settings.
+
+See: smarter_settings.local_hosts
 """
 
 # to disable redis/celery in collectstatic
@@ -182,6 +225,7 @@ See:
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-domain
 - `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- smarter_settings.environment_platform_domain
 """
 
 CSRF_COOKIE_PATH = "/"
@@ -233,6 +277,8 @@ See:
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-trusted-origins
 - `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- smarter_settings.environment_platform_domain
+- smarter_settings.environment_api_domain
 """
 
 CSRF_USE_SESSIONS = False
@@ -305,6 +351,7 @@ from smarter_settings.
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#session-cookie-domain
+- smarter_settings.environment_platform_domain
 """
 
 SESSION_COOKIE_PATH = "/"
@@ -385,7 +432,10 @@ otherwise uses local filesystem storage. smarter_settings determines the appropr
 value based on whether or not it detects AWS authentication configuration in
 the running environment.
 
-See: https://docs.djangoproject.com/en/5.0/ref/settings/#default-file-storage
+See:
+
+    - https://docs.djangoproject.com/en/5.0/ref/settings/#default-file-storage
+    - smarter_settings.django_default_file_storage
 """
 
 AWS_ACCESS_KEY_ID = smarter_settings.aws_access_key_id.get_secret_value()
@@ -397,6 +447,8 @@ For production deployments the chain of custody should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django AWS_ACCESS_KEY_ID.
 
+See: smarter_settings.aws_access_key_id
+
 """
 
 AWS_SECRET_ACCESS_KEY = smarter_settings.aws_secret_access_key.get_secret_value()
@@ -407,18 +459,28 @@ is retrieved and validated in smarter_settings.
 For production deployments the chain of custody should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django AWS_SECRET_ACCESS_KEY.
+
+See: smarter_settings.aws_secret_access_key
 """
 
 AWS_STORAGE_BUCKET_NAME = smarter_settings.aws_s3_bucket_name
 """
 Supplemental setting for configuring AWS S3 storage support. The S3 bucket name
 is derived in smarter_settings.
+
+See:
+
+    - smarter_settings.aws_s3_bucket_name
 """
 
 AWS_S3_REGION_NAME = smarter_settings.aws_region
 """
 Supplemental setting for configuring AWS support. The AWS region is
 retrieved and validated in smarter_settings.
+
+See:
+
+    - smarter_settings.aws_region
 """
 
 AWS_QUERYSTRING_AUTH = False  # disable querystring auth for public files
@@ -445,7 +507,10 @@ For production deployments the chain of custody should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SECRET_KEY.
 
-See: https://docs.djangoproject.com/en/5.0/ref/settings/#secret-key
+See:
+
+    - https://docs.djangoproject.com/en/5.0/ref/settings/#secret-key
+    - smarter_settings.secret_key
 """
 
 if SECRET_KEY == smarter_settings.default_missing_value:
@@ -461,6 +526,15 @@ logger.debug("SECRET_KEY: %s", SECRET_KEY)
 
 
 DEBUG = smarter_settings.debug_mode
+"""
+A boolean that turns on/off debug mode for Django. This is retrieved
+from smarter_settings.debug_mode.
+
+See:
+
+    - https://docs.djangoproject.com/en/5.0/ref/settings/#debug
+    - smarter_settings.debug_mode
+"""
 
 CACHES = {
     "default": {
@@ -804,7 +878,10 @@ The chain of custody for this secret should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_GOOGLE_OAUTH2_KEY.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+    - smarter_settings.social_auth_google_oauth2_key
 """
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_secret.get_secret_value()
@@ -815,7 +892,10 @@ The chain of custody for this secret should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+    - smarter_settings.social_auth_google_oauth2_secret
 """
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(
@@ -825,7 +905,10 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(
 The redirect URI for Google OAuth2 social authentication in Smarter.
 Do not change this value unless you know what you are doing.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+    - smarter_settings.environment_url
 """
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["openid", "email", "profile"]
@@ -842,7 +925,10 @@ The chain of custody for this secret should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_GITHUB_KEY.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/github.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/github.html
+    - smarter_settings.social_auth_github_key
 """
 
 SOCIAL_AUTH_GITHUB_SECRET = smarter_settings.social_auth_github_secret.get_secret_value()
@@ -853,7 +939,10 @@ The chain of custody for this secret should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_GITHUB_SECRET.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/github.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/github.html
+    - smarter_settings.social_auth_github_secret
 """
 
 SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = smarter_settings.social_auth_linkedin_oauth2_key.get_secret_value()
@@ -864,7 +953,10 @@ The chain of custody for this secret should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+    - smarter_settings.social_auth_linkedin_oauth2_key
 """
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = smarter_settings.social_auth_linkedin_oauth2_secret.get_secret_value()
 """
@@ -877,7 +969,10 @@ here for backward compatibility with existing Smarter deployments that may still
 The chain of custody for this secret should be:
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+    - smarter_settings.social_auth_linkedin_oauth2_secret
 """
 
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = ["openid", "profile", "email"]
@@ -915,7 +1010,10 @@ here for backward compatibility with existing Smarter deployments that may still
 
 Do not change this value unless you know what you are doing.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+    - smarter_settings.environment_url
 """
 
 SOCIAL_AUTH_LINKEDIN_OAUTH2_EXTRA_DATA = [
@@ -1176,7 +1274,10 @@ SMTP_SENDER = smarter_settings.smtp_sender
 The default sender email address for outgoing emails from Smarter.
 This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_sender
 """
 
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email
@@ -1184,14 +1285,19 @@ SMTP_FROM_EMAIL = smarter_settings.smtp_from_email
 The default "from" email address for outgoing emails from Smarter.
 This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_from_email
 """
 
 SMTP_HOST = smarter_settings.smtp_host
 """
 The SMTP host for outgoing emails from Smarter. This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_host
 """
 
 SMTP_PASSWORD = smarter_settings.smtp_password.get_secret_value() if smarter_settings.smtp_password else None
@@ -1209,29 +1315,37 @@ Kubernetes Secret -> environment variable -> smarter_settings -> Django SMTP_PAS
 
 See:
 
-- https://docs.djangoproject.com/en/5.0/topics/email/
-- https://github.com/smarter-sh/smarter-infrastructure
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - https://github.com/smarter-sh/smarter-infrastructure
+    - smarter_settings.smtp_password
 """
 
 SMTP_PORT = smarter_settings.smtp_port
 """
 The SMTP port for outgoing emails from Smarter. This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_port
 """
 
 SMTP_USE_SSL = smarter_settings.smtp_use_ssl
 """
 A boolean that specifies whether to use SSL for SMTP connections in Smarter. This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_use_ssl
 """
 
 SMTP_USE_TLS = smarter_settings.smtp_use_tls
 """
 A boolean that specifies whether to use TLS for SMTP connections in Smarter. This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_use_tls
 """
 
 SMTP_USERNAME = smarter_settings.smtp_username.get_secret_value() if smarter_settings.smtp_username else None
@@ -1249,8 +1363,9 @@ Kubernetes Secret -> environment variable -> smarter_settings -> Django SMTP_PAS
 
 See:
 
-- https://docs.djangoproject.com/en/5.0/topics/email/
-- https://github.com/smarter-sh/smarter-infrastructure
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - https://github.com/smarter-sh/smarter-infrastructure
+    - smarter_settings.smtp_username
 """
 
 WAFFLE_CREATE_MISSING_SWITCHES = True
@@ -1332,49 +1447,20 @@ WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = 30
 # This allows for 12-factor style configuration via environment variables.
 # Environment variable values are cast to the same data type as the
 # existing Django and/or Smarter setting value.
+#
+# The basic process is:
+# ----------------------
+# 1. set default settings values, above.
+# 2. load environment variables from .env file (if present) and os.environ
+# 3. for each environment variable that matches a setting name,
+#    cast the value to the same type as the existing setting value
+#    and override the default setting value.
 ###############################################################################
 
+# step 2: load environment variables from .env file (if present)
+load_dotenv()
 
-# pylint: disable=W0621
-def smart_cast(value, default_value):
-    """
-    Cast string value to the same data type as the type
-    of the default_value.
-    """
-    if isinstance(default_value, bool):
-        return str(value).lower() in ("1", "true", "yes", "on")
-    if isinstance(default_value, int):
-        try:
-            return int(value)
-        except ValueError:
-            return default_value
-    if isinstance(default_value, float):
-        try:
-            return float(value)
-        except ValueError:
-            return default_value
-    if isinstance(default_value, list):
-        # Try JSON, fallback to comma-separated
-        try:
-            parsed = ast.literal_eval(value)
-            if isinstance(parsed, list):
-                return parsed
-        # pylint: disable=broad-except
-        except Exception:
-            pass
-        return [item.strip() for item in value.split(",") if item.strip()]
-    if isinstance(default_value, dict):
-        try:
-            parsed = ast.literal_eval(value)
-            if isinstance(parsed, dict):
-                return parsed
-        # pylint: disable=broad-except
-        except Exception:
-            pass
-        return default_value
-    return value  # str or fallback
-
-
+# step 3: override settings from environment variables
 ASCII_CONTROL_CHAR_REGEX = re.compile(r"[\x00-\x1F\x7F]")
 for key, value in os.environ.items():
     value = ASCII_CONTROL_CHAR_REGEX.sub("", str(value).strip())
@@ -1382,7 +1468,9 @@ for key, value in os.environ.items():
         default_value = globals()[key]
         cast_value = smart_cast(value, default_value)
         globals()[key] = cast_value
-        logger.info(formatted_text_red("Overriding setting from environment variable: %s=%s"), key, repr(cast_value))
+        logger.info(
+            formatted_text_green("Overriding Django setting from environment variable: %s=%s"), key, repr(cast_value)
+        )
 
 
 ###############################################################################
