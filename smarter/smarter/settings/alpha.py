@@ -1,8 +1,17 @@
 # pylint: disable=E0402,E0602,unused-wildcard-import,wildcard-import
 """Django settings for alpha.platform.smarter.sh"""
+import logging
 import os
+import sys
+
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterEnvironments
+from smarter.common.exceptions import SmarterConfigurationError
 
 from .base_aws import *
+
+
+logger = logging.getLogger(__name__)
 
 
 environment_name = os.path.basename(__file__).replace(".py", "")
@@ -53,3 +62,13 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
             "WARNING: SESSION_COOKIE_SECURE should be set to True. The current setting makes the cookie vulnerable to man-in-the-middle attacks."
         )
         logger.info("*" * 80)
+
+__all__ = [
+    name
+    for name, value in globals().items()
+    if name.isupper()
+    and not name.startswith("_")
+    and not hasattr(value, "__file__")
+    and not callable(value)
+    and value is not sys.modules[__name__]
+]  # type: ignore[reportUnsupportedDunderAll]

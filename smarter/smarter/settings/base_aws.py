@@ -1,13 +1,16 @@
 # pylint: disable=E0402,unused-wildcard-import,wildcard-import
 """Django base settings for environments deployed to AWS."""
 
+import logging
 import os
+import sys
 
 from smarter.common.conf import settings as smarter_settings
 
 from .base import *
 
 
+logger = logging.getLogger(__name__)
 logger.info("Loading smarter.settings.base_aws")
 
 CACHES = {
@@ -92,3 +95,13 @@ CORS_ALLOWED_ORIGINS += [
 # (4_0.E001) As of Django 4.0, the values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme
 # (usually http:// or https://) but found platform.smarter.sh. See the release notes for details.
 CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in smarter_settings.allowed_hosts]
+
+__all__ = [
+    name
+    for name, value in globals().items()
+    if name.isupper()
+    and not name.startswith("_")
+    and not hasattr(value, "__file__")
+    and not callable(value)
+    and value is not sys.modules[__name__]
+]  # type: ignore[reportUnsupportedDunderAll]
