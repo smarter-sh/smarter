@@ -10,12 +10,16 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import glob
+import logging
 import os
+import sys
 
 from smarter.common.conf import settings as smarter_settings
 
 from .base import *
 
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_HOSTS = smarter_settings.local_hosts
 if smarter_settings.developer_mode:
@@ -113,3 +117,13 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.info("SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI)
     logger.info("SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI)
     logger.info("*" * 80)
+
+__all__ = [
+    name
+    for name, value in globals().items()
+    if name.isupper()
+    and not name.startswith("_")
+    and not hasattr(value, "__file__")
+    and not callable(value)
+    and value is not sys.modules[__name__]
+]  # type: ignore[reportUnsupportedDunderAll]

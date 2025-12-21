@@ -27,15 +27,15 @@ from pathlib import Path
 
 from corsheaders.defaults import default_headers
 from django import get_version
+from dotenv import load_dotenv
 
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
-from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import formatted_text_red
 
-# Add proprietary settings for the project
-from .smarter import *  # noqa: E402, F401, W0401
+
+load_dotenv()
 
 
 logger = logging.getLogger(__name__)
@@ -1138,6 +1138,21 @@ LOGGING = {
             "level": "ERROR",
             "propagate": False,
         },
+        "celery": {
+            "handlers": ["default"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "celery.task": {
+            "handlers": ["default"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "celery.beat": {
+            "handlers": ["default"],
+            "level": "INFO",
+            "propagate": True,
+        },
     },
 }
 logging.config.dictConfig(LOGGING)
@@ -1461,3 +1476,13 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     else:
         logger.warning("AWS credentials not found.")
     logger.info("=" * 80)
+
+__all__ = [
+    name
+    for name, value in globals().items()
+    if name.isupper()
+    and not name.startswith("_")
+    and not hasattr(value, "__file__")
+    and not callable(value)
+    and value is not sys.modules[__name__]
+]  # type: ignore[reportUnsupportedDunderAll]
