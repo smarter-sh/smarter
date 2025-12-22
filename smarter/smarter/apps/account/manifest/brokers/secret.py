@@ -501,7 +501,7 @@ class SAMSecretBroker(AbstractBroker):
         See also::
 
             :class:`Secret`
-            :class:`SecretSerializer`
+            :class:`smarter.apps.account.serializers.SecretSerializer`
             :class:`SAMKeys`
             :class:`SCLIResponseGet`
             :class:`SCLIResponseGetData`

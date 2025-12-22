@@ -102,7 +102,7 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
     return value.lower() in ["true", "1", "t", "y", "yes"]
 
 
-def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE) -> Any:
+def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = False) -> Any:
     """
     Retrieve a configuration value from the environment, with  prefix fallback and type conversion.
 
@@ -130,6 +130,13 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE) -> Any:
     """
 
     def cast_value(val: str, default: Any) -> Any:
+        """
+        Cast the environment variable value to the type of the default value.
+
+        :param val: The environment variable value as a string.
+        :param default: The default value to determine the target type.
+        :return: The casted value.
+        """
         if isinstance(default, str):
             return val.strip()
         if isinstance(default, bool):
@@ -193,16 +200,15 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE) -> Any:
     key = f"SMARTER_{var_name}"
     retval = os.environ.get(key) or os.environ.get(var_name)
     if retval is None:
-        retval = default
-    else:
-        cast_value = cast_value(retval, default)
-        logger.info(
-            formatted_text_green("Overriding Smarter setting from environment variable: %s=%s"), key, repr(cast_value)
-        )
-        print(formatted_text_green(f"Overriding Smarter setting from environment variable: {key}={repr(cast_value)}"))
-        return cast_value
+        return default
 
-    return retval
+    cast_val = cast_value(retval, default)
+    log_value = cast_val if not is_secret else "****"
+    logger.info(
+        formatted_text_green("Overriding Smarter setting from environment variable: %s=%s"), key, repr(log_value)
+    )
+    print(formatted_text_green(f"Overriding Smarter setting from environment variable: {key}={repr(log_value)}"))
+    return cast_val
 
 
 def recursive_sort_dict(d):
@@ -276,7 +282,7 @@ class SettingsDefaults:
 
     ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", "example.com")
     ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", [])
-    ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY"))
+    ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY", is_secret=True))
 
     API_DESCRIPTION: str = get_env(
         "API_DESCRIPTION", "A declarative AI resource management platform and developer framework"
@@ -286,8 +292,8 @@ class SettingsDefaults:
 
     # aws auth
     AWS_PROFILE = get_env("AWS_PROFILE")
-    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(get_env("AWS_ACCESS_KEY_ID"))
-    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(get_env("AWS_SECRET_ACCESS_KEY"))
+    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(get_env("AWS_ACCESS_KEY_ID", is_secret=True))
+    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(get_env("AWS_SECRET_ACCESS_KEY", is_secret=True))
     AWS_REGION = get_env("AWS_REGION", "us-east-1")
     AWS_IS_CONFIGURED = bool(
         AWS_PROFILE
@@ -353,17 +359,17 @@ class SettingsDefaults:
     EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com")
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
-    FERNET_ENCRYPTION_KEY: SecretStr = SecretStr(get_env("FERNET_ENCRYPTION_KEY"))
+    FERNET_ENCRYPTION_KEY: SecretStr = SecretStr(get_env("FERNET_ENCRYPTION_KEY", is_secret=True))
     if FERNET_ENCRYPTION_KEY.get_secret_value() == DEFAULT_MISSING_VALUE:
         # pylint: disable=C0415
         from smarter.common.utils import generate_fernet_encryption_key
 
         FERNET_ENCRYPTION_KEY = SecretStr(generate_fernet_encryption_key())
 
-    GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY"))
+    GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY", is_secret=True))
 
     try:
-        GOOGLE_SERVICE_ACCOUNT_B64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "")
+        GOOGLE_SERVICE_ACCOUNT_B64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True)
         GOOGLE_SERVICE_ACCOUNT: SecretStr = SecretStr(
             json.loads(base64.b64decode(GOOGLE_SERVICE_ACCOUNT_B64).decode("utf-8"))
         )
@@ -374,12 +380,11 @@ class SettingsDefaults:
         )
         GOOGLE_SERVICE_ACCOUNT = SecretStr(json.dumps({}))
 
-    GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY"))
+    GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY", is_secret=True))
     INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
     LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "chat_history")
 
-    LLAMA_API_KEY: SecretStr = SecretStr(get_env("LLAMA_API_KEY"))
-
+    LLAMA_API_KEY: SecretStr = SecretStr(get_env("LLAMA_API_KEY", is_secret=True))
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4o-mini"
     LLM_DEFAULT_SYSTEM_ROLE = (
@@ -400,7 +405,7 @@ class SettingsDefaults:
     LOG_LEVEL: int = logging.DEBUG if DEBUG_MODE else logging.INFO
 
     LOGO: HttpUrl = get_env("LOGO", "https://cdn.example.com/images/logo/logo.png")
-    MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY"))
+    MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY", is_secret=True))
     MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 
     MARKETING_SITE_URL: HttpUrl = get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}")
@@ -409,17 +414,17 @@ class SettingsDefaults:
         "MYSQL_TEST_DATABASE_SECRET_NAME",
         "smarter_test_db",
     )
-    MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(get_env("MYSQL_TEST_DATABASE_PASSWORD"))
+    MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(get_env("MYSQL_TEST_DATABASE_PASSWORD", is_secret=True))
 
     OPENAI_API_ORGANIZATION = get_env("OPENAI_API_ORGANIZATION")
-    OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY"))
+    OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY", is_secret=True))
     OPENAI_ENDPOINT_IMAGE_N = get_env("OPENAI_ENDPOINT_IMAGE_N", 4)
     OPENAI_ENDPOINT_IMAGE_SIZE = get_env("OPENAI_ENDPOINT_IMAGE_SIZE", "1024x768")
-    PINECONE_API_KEY: SecretStr = SecretStr(get_env("PINECONE_API_KEY"))
+    PINECONE_API_KEY: SecretStr = SecretStr(get_env("PINECONE_API_KEY", is_secret=True))
 
     REACTJS_APP_LOADER_PATH = get_env("REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
 
-    SECRET_KEY: SecretStr = SecretStr(get_env("SECRET_KEY"))
+    SECRET_KEY: SecretStr = SecretStr(get_env("SECRET_KEY", is_secret=True))
     SETTINGS_OUTPUT: bool = bool_environment_variable("SETTINGS_OUTPUT", False)
 
     SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
@@ -430,29 +435,31 @@ class SettingsDefaults:
     SMTP_PORT = int(get_env("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
     SMTP_USE_TLS = bool(get_env("SMTP_USE_TLS", True))
-    SMTP_PASSWORD: SecretStr = SecretStr(get_env("SMTP_PASSWORD"))
-    SMTP_USERNAME: SecretStr = SecretStr(get_env("SMTP_USERNAME"))
+    SMTP_PASSWORD: SecretStr = SecretStr(get_env("SMTP_PASSWORD", is_secret=True))
+    SMTP_USERNAME: SecretStr = SecretStr(get_env("SMTP_USERNAME", is_secret=True))
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"))
-    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"))
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", is_secret=True))
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", is_secret=True))
     # -------------------------------------------------------------------------
     # see: https://github.com/settings/applications/2620957
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GITHUB_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GITHUB_KEY"))
-    SOCIAL_AUTH_GITHUB_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GITHUB_SECRET"))
+    SOCIAL_AUTH_GITHUB_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GITHUB_KEY", is_secret=True))
+    SOCIAL_AUTH_GITHUB_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GITHUB_SECRET", is_secret=True))
     # -------------------------------------------------------------------------
     # see:  https://www.linkedin.com/developers/apps/221422881/settings
     #       https://www.linkedin.com/developers/apps/221422881/products?refreshKey=1734980684455
     # verification url: https://www.linkedin.com/developers/apps/verification/3ac34414-09a4-433b-983a-0d529fa486f1
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY"))
-    SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET"))
+    SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", is_secret=True))
+    SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(
+        get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", is_secret=True)
+    )
 
-    STRIPE_LIVE_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_LIVE_SECRET_KEY"))
-    STRIPE_TEST_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_TEST_SECRET_KEY"))
+    STRIPE_LIVE_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_LIVE_SECRET_KEY", is_secret=True))
+    STRIPE_TEST_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_TEST_SECRET_KEY", is_secret=True))
 
     @classmethod
     def to_dict(cls):
@@ -4314,3 +4321,5 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+__all__ = ["settings", "SettingsDefaults"]

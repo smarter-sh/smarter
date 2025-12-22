@@ -1000,9 +1000,9 @@ class ConnectionBase(TimestampedModel, SmarterHelperMixin):
 
     See also:
 
-    - :class:`SqlConnection`
-    - :class:`ApiConnection`
-    - :class:`PluginMeta`
+    - :class:`smarter.apps.plugin.models.SqlConnection`
+    - :class:`smarter.apps.plugin.models.ApiConnection`
+    - :class:`smarter.apps.plugin.models.PluginMeta`
     """
 
     class Meta:
