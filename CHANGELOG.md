@@ -1,3 +1,10 @@
+## [0.13.53](https://github.com/smarter-sh/smarter/compare/v0.13.52...v0.13.53) (2025-12-22)
+
+
+### Bug Fixes
+
+* do not expose sensitive values when logging ([7b58495](https://github.com/smarter-sh/smarter/commit/7b5849509e0bbdd85c0a4f13e62e9aadd06e9ff7))
+
 ## [0.13.52](https://github.com/smarter-sh/smarter/compare/v0.13.51...v0.13.52) (2025-12-21)
 
 
