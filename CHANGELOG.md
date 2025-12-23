@@ -1,3 +1,10 @@
+## [0.13.54](https://github.com/smarter-sh/smarter/compare/v0.13.53...v0.13.54) (2025-12-23)
+
+
+### Bug Fixes
+
+* add object caching ([1787cc9](https://github.com/smarter-sh/smarter/commit/1787cc9967f797ea16d868c419c210ac56069d65))
+
 ## [0.13.53](https://github.com/smarter-sh/smarter/compare/v0.13.52...v0.13.53) (2025-12-22)
 
 
