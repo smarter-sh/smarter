@@ -4,7 +4,11 @@
 from typing import Optional
 
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import (
+    get_cached_account,
+    get_cached_user_for_username,
+    get_cached_user_profile,
+)
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.common.api import SmarterApiVersions
@@ -35,7 +39,9 @@ class Command(SmarterCommand):
         user_profile: Optional[UserProfile] = None
 
         try:
-            user = User.objects.get(username=username)  # type: ignore
+            user = get_cached_user_for_username(username=username)
+            if user is None:
+                raise User.DoesNotExist(f"User with username {username} does not exist.")
         except User.DoesNotExist as e:
             self.handle_completed_failure(
                 e,
@@ -44,7 +50,9 @@ class Command(SmarterCommand):
             raise
 
         try:
-            account = Account.objects.get(account_number=account_number)
+            account = get_cached_account(account_number=account_number)
+            if account is None:
+                raise Account.DoesNotExist(f"Account with account number {account_number} does not exist.")
         except Account.DoesNotExist as e:
             self.handle_completed_failure(
                 e,

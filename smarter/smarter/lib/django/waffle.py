@@ -43,6 +43,8 @@ Dependencies:
 import logging
 
 import waffle as waffle_orig
+from django.apps import apps
+from django.core.exceptions import AppRegistryNotReady
 from django.db import connections
 from django.db.utils import OperationalError, ProgrammingError
 from waffle.admin import SwitchAdmin
@@ -235,6 +237,10 @@ def switch_is_active(switch_name: str) -> bool:
     :return: True if the switch is active, False otherwise.
     :rtype: bool
     """
+    # Prevent model access before Django app registry is ready
+    if not apps.ready:
+        logger.warning("%s App registry not ready, assuming switch %s is inactive.", prefix, switch_name)
+        return False
     if not is_database_ready():
         logger.warning("%s Database not ready, assuming switch %s is inactive.", prefix, switch_name)
         return False
@@ -250,8 +256,10 @@ def switch_is_active(switch_name: str) -> bool:
     try:
         switch = waffle_orig.get_waffle_switch_model().get(switch_name)
         return switch.is_active()
-    except db_exceptions as e:
-        logger.error("%s Database not ready or switch does not exist: %s", prefix, e, exc_info=True)
+    except (*db_exceptions, AppRegistryNotReady) as e:
+        logger.error(
+            "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True
+        )
         return False
     # pylint: disable=broad-except
     except Exception as e:

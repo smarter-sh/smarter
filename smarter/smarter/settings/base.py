@@ -396,8 +396,22 @@ if smarter_settings.aws_is_configured:
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {
-                "access_key": smarter_settings.aws_access_key_id.get_secret_value(),
-                "secret_key": smarter_settings.aws_secret_access_key.get_secret_value(),
+                "access_key": (
+                    smarter_settings.aws_access_key_id.get_secret_value()
+                    if (
+                        smarter_settings.aws_access_key_id
+                        and getattr(smarter_settings.aws_access_key_id, "_secret_value", None) is not None
+                    )
+                    else None
+                ),
+                "secret_key": (
+                    smarter_settings.aws_secret_access_key.get_secret_value()
+                    if (
+                        smarter_settings.aws_secret_access_key
+                        and getattr(smarter_settings.aws_secret_access_key, "_secret_value", None) is not None
+                    )
+                    else None
+                ),
                 "bucket_name": smarter_settings.aws_s3_bucket_name,
                 "region_name": smarter_settings.aws_region,
                 "default_acl": "public-read",
@@ -438,7 +452,14 @@ See:
     - smarter_settings.django_default_file_storage
 """
 
-AWS_ACCESS_KEY_ID = smarter_settings.aws_access_key_id.get_secret_value()
+AWS_ACCESS_KEY_ID = (
+    smarter_settings.aws_access_key_id.get_secret_value()
+    if (
+        smarter_settings.aws_access_key_id
+        and getattr(smarter_settings.aws_access_key_id, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Supplemental setting for configuring AWS support. The AWS access key ID
 is retrieved and validated in smarter_settings.
@@ -451,7 +472,14 @@ See: smarter_settings.aws_access_key_id
 
 """
 
-AWS_SECRET_ACCESS_KEY = smarter_settings.aws_secret_access_key.get_secret_value()
+AWS_SECRET_ACCESS_KEY = (
+    smarter_settings.aws_secret_access_key.get_secret_value()
+    if (
+        smarter_settings.aws_secret_access_key
+        and getattr(smarter_settings.aws_secret_access_key, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Supplemental setting for configuring AWS support. The AWS secret access key
 is retrieved and validated in smarter_settings.
@@ -498,7 +526,11 @@ See:
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-SECRET_KEY = smarter_settings.secret_key.get_secret_value() if smarter_settings.secret_key else None
+SECRET_KEY = (
+    smarter_settings.secret_key.get_secret_value()
+    if (smarter_settings.secret_key and getattr(smarter_settings.secret_key, "_secret_value", None) is not None)
+    else None
+)
 """
 The secret key for this Django installation. This is retrieved and validated
 from smarter_settings. If not set, a random key is generated and logged as a warning.
@@ -870,7 +902,14 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.user.user_details",
 )
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = smarter_settings.social_auth_google_oauth2_key.get_secret_value()
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = (
+    smarter_settings.social_auth_google_oauth2_key.get_secret_value()
+    if (
+        smarter_settings.social_auth_google_oauth2_key
+        and getattr(smarter_settings.social_auth_google_oauth2_key, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth Google OAuth2 client ID for Smarter.
 
@@ -884,7 +923,14 @@ See:
     - smarter_settings.social_auth_google_oauth2_key
 """
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_secret.get_secret_value()
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = (
+    smarter_settings.social_auth_google_oauth2_secret.get_secret_value()
+    if (
+        smarter_settings.social_auth_google_oauth2_secret
+        and getattr(smarter_settings.social_auth_google_oauth2_secret, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth Google OAuth2 client secret for Smarter.
 
@@ -917,7 +963,14 @@ The OAuth2 scopes for Google social authentication in Smarter.
 See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
 """
 
-SOCIAL_AUTH_GITHUB_KEY = smarter_settings.social_auth_github_key.get_secret_value()
+SOCIAL_AUTH_GITHUB_KEY = (
+    smarter_settings.social_auth_github_key.get_secret_value()
+    if (
+        smarter_settings.social_auth_github_key
+        and getattr(smarter_settings.social_auth_github_key, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth GitHub OAuth2 client ID for Smarter.
 
@@ -931,7 +984,14 @@ See:
     - smarter_settings.social_auth_github_key
 """
 
-SOCIAL_AUTH_GITHUB_SECRET = smarter_settings.social_auth_github_secret.get_secret_value()
+SOCIAL_AUTH_GITHUB_SECRET = (
+    smarter_settings.social_auth_github_secret.get_secret_value()
+    if (
+        smarter_settings.social_auth_github_secret
+        and getattr(smarter_settings.social_auth_github_secret, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth GitHub OAuth2 client secret for Smarter.
 
@@ -945,7 +1005,14 @@ See:
     - smarter_settings.social_auth_github_secret
 """
 
-SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = smarter_settings.social_auth_linkedin_oauth2_key.get_secret_value()
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = (
+    smarter_settings.social_auth_linkedin_oauth2_key.get_secret_value()
+    if (
+        smarter_settings.social_auth_linkedin_oauth2_key
+        and getattr(smarter_settings.social_auth_linkedin_oauth2_key, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth LinkedIn OAuth2 client ID for Smarter.
 
@@ -958,7 +1025,14 @@ See:
     - https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
     - smarter_settings.social_auth_linkedin_oauth2_key
 """
-SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = smarter_settings.social_auth_linkedin_oauth2_secret.get_secret_value()
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = (
+    smarter_settings.social_auth_linkedin_oauth2_secret.get_secret_value()
+    if (
+        smarter_settings.social_auth_linkedin_oauth2_secret
+        and getattr(smarter_settings.social_auth_linkedin_oauth2_secret, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth LinkedIn OAuth2 client secret for Smarter.
 
@@ -1257,10 +1331,20 @@ logging.config.dictConfig(LOGGING)
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
 STRIPE_LIVE_SECRET_KEY = (
-    smarter_settings.stripe_live_secret_key.get_secret_value() if smarter_settings.stripe_live_secret_key else ""
+    smarter_settings.stripe_live_secret_key.get_secret_value()
+    if (
+        smarter_settings.stripe_live_secret_key
+        and getattr(smarter_settings.stripe_live_secret_key, "_secret_value", None) is not None
+    )
+    else ""
 )
 STRIPE_TEST_SECRET_KEY = (
-    smarter_settings.stripe_test_secret_key.get_secret_value() if smarter_settings.stripe_test_secret_key else ""
+    smarter_settings.stripe_test_secret_key.get_secret_value()
+    if (
+        smarter_settings.stripe_test_secret_key
+        and getattr(smarter_settings.stripe_test_secret_key, "_secret_value", None) is not None
+    )
+    else ""
 )
 STRIPE_LIVE_MODE = False  # Change to True in production
 DJSTRIPE_WEBHOOK_SECRET = (
@@ -1300,7 +1384,11 @@ See:
     - smarter_settings.smtp_host
 """
 
-SMTP_PASSWORD = smarter_settings.smtp_password.get_secret_value() if smarter_settings.smtp_password else None
+SMTP_PASSWORD = (
+    smarter_settings.smtp_password.get_secret_value()
+    if (smarter_settings.smtp_password and getattr(smarter_settings.smtp_password, "_secret_value", None) is not None)
+    else None
+)
 """
 The SMTP password for outgoing emails from Smarter. This is derived from smarter_settings.
 When using AWS SES as the SMTP service, this is the SMTP password generated from the AWS SES console.
@@ -1348,7 +1436,11 @@ See:
     - smarter_settings.smtp_use_tls
 """
 
-SMTP_USERNAME = smarter_settings.smtp_username.get_secret_value() if smarter_settings.smtp_username else None
+SMTP_USERNAME = (
+    smarter_settings.smtp_username.get_secret_value()
+    if (smarter_settings.smtp_username and getattr(smarter_settings.smtp_username, "_secret_value", None) is not None)
+    else None
+)
 """
 The SMTP username for outgoing emails from Smarter. This is derived from smarter_settings.
 When using AWS SES as the SMTP service, this is the SMTP password generated from the AWS SES console.
@@ -1468,10 +1560,14 @@ for key, value in os.environ.items():
         default_value = globals()[key]
         cast_value = smart_cast(value, default_value)
         globals()[key] = cast_value
-        logger.info(
-            formatted_text_green("Overriding Django setting from environment variable: %s=%s"), key, repr(cast_value)
-        )
-
+        if key not in ["SECRET_KEY", "SMTP_PASSWORD", "SMTP_USERNAME", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]:
+            logger.info(
+                formatted_text_green("Overriding Django setting from environment variable: %s=%s"),
+                key,
+                repr(cast_value),
+            )
+        else:
+            logger.info(formatted_text_green("Overriding Django setting from environment variable: %s=******"), key)
 
 ###############################################################################
 # Settings diagnostics information for all environments

@@ -24,6 +24,7 @@ from social_core.backends.github import GithubOAuth2
 from social_core.backends.google import GoogleOAuth2
 
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterEnvironments
 from smarter.lib.cache import cache_results
 
 
@@ -101,6 +102,9 @@ class GoogleOAuth2Hosted(GoogleOAuth2):
             return details
         if verify_payment_status(details.get(USERNAME)):
             return details
+        if smarter_settings.environment == SmarterEnvironments.LOCAL:
+            logger.warning("Skipping payment status check for user %s in local environment.", details.get(USERNAME))
+            return details
         request = getattr(self, "strategy", None)
         if request and hasattr(request, "request"):
             messages.error(request.request, "Your subscription is not active. Please check your payment status.")
@@ -116,7 +120,7 @@ class GithubOAuth2Hosted(GithubOAuth2):
     def get_user_details(self, response):
         details = super().get_user_details(response)
         if details is None:
-            # authentication failed, so not point in checking payment status
+            # authentication failed, so no point in checking payment status
             return None
         if not isinstance(details, dict):
             # this should never happen, but log just in case
@@ -125,6 +129,9 @@ class GithubOAuth2Hosted(GithubOAuth2):
             )
             return details
         if verify_payment_status(details.get(USERNAME)):
+            return details
+        if smarter_settings.environment == SmarterEnvironments.LOCAL:
+            logger.warning("Skipping payment status check for user %s in local environment.", details.get(USERNAME))
             return details
         request = getattr(self, "strategy", None)
         if request and hasattr(request, "request"):
@@ -142,6 +149,9 @@ class DjangoModelBackendHosted(ModelBackend):
         user = super().authenticate(request, username, password, **kwargs)
         username = username or kwargs.get(USERNAME)
         if user and username:
+            if smarter_settings.environment == SmarterEnvironments.LOCAL:
+                logger.warning("Skipping payment status check for user %s in local environment.", username)
+                return user
             if not verify_payment_status(username):
                 if request is not None:
                     messages.error(request, "Your subscription is not active. Please check your payment status.")

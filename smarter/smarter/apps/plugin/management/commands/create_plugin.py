@@ -4,7 +4,11 @@
 from typing import Optional
 
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import (
+    get_cached_account,
+    get_cached_user_for_username,
+    get_cached_user_profile,
+)
 from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.api import SmarterApiVersions
@@ -33,18 +37,23 @@ class Command(SmarterCommand):
         file_path: Optional[str] = options["file_path"]
         username: Optional[str] = options["username"]
 
-        account: Account
-        user: User
+        account: Optional[Account]
+        user: Optional[User]
 
         self.stdout.write(f"manage.py create_plugin: account_number: {account_number} file_path: {file_path}")
 
-        try:
-            user = User.objects.get(username=username)  # type: ignore
-        except User.DoesNotExist as e:
-            self.handle_completed_failure(e, f"User {username} does not exist.")
+        if username:
+            try:
+                user = get_cached_user_for_username(username=username)
+                if user is None:
+                    raise User.DoesNotExist(f"User with username {username} does not exist.")
+            except User.DoesNotExist as e:
+                self.handle_completed_failure(e, f"User {username} does not exist.")
 
         try:
-            account = Account.objects.get(account_number=account_number)
+            account = get_cached_account(account_number=account_number)
+            if account is None:
+                raise Account.DoesNotExist(f"Account with account number {account_number} does not exist.")
         except Account.DoesNotExist as e:
             self.handle_completed_failure(e, f"Account {account_number} does not exist.")
 

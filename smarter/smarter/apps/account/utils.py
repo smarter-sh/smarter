@@ -368,6 +368,49 @@ def get_cached_user_for_user_id(user_id: int, invalidate: bool = False) -> Optio
     return user
 
 
+def get_cached_user_for_username(username: str, invalidate: bool = False) -> Optional[User]:
+    """
+    Retrieve a User instance by its username, using caching for performance.
+
+    :param username: String. The username of the user to retrieve.
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :returns: User instance if found, otherwise None.
+
+    .. warning::
+
+           If no user exists for the given username, None is returned and an error is logged.
+
+    .. tip::
+
+           Use ``invalidate=True`` after updating user data to ensure cache consistency.
+
+    **Example usage**::
+
+        # Retrieve user by username
+        user = get_cached_user_for_username("johndoe")
+
+        # Invalidate cache before fetching
+        user = get_cached_user_for_username("johndoe", invalidate=True)
+    """
+
+    @cache_results()
+    def _in_memory_user_by_username(username) -> Optional[User]:
+        """
+        In-memory cache for user objects by username.
+        """
+        try:
+            user = User.objects.get(username=username)
+            logger.info("_in_memory_user_by_username() retrieving and caching user %s", user)
+            return user  # type: ignore[return-value]
+        except User.DoesNotExist:
+            logger.error("get_cached_user_for_username() user with username %s does not exist", username)
+
+    user = _in_memory_user_by_username(username) if not invalidate else _in_memory_user_by_username.invalidate(username)
+    if user:
+        logger.info("get_cached_user_for_username() retrieving and caching user %s", user)
+    return user
+
+
 def get_cached_admin_user_for_account(account: Account, invalidate: bool = False) -> User:
     """
     Retrieve the admin user for a given account, creating one if necessary.
