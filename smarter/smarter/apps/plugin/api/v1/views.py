@@ -6,7 +6,6 @@ from typing import Optional
 from urllib.parse import urljoin
 
 import yaml
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseRedirect, JsonResponse
@@ -26,6 +25,7 @@ from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
+from smarter.lib.cache import cache_results
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
@@ -55,6 +55,15 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
     """Plugin clone view for smarter api."""
 
     def post(self, request: WSGIRequest, plugin_id, new_name):
+
+        @cache_results()
+        def cached_plugin_by_id(plugin_id: int) -> Optional[PluginMeta]:
+            """Retrieve PluginMeta by ID with caching."""
+            try:
+                return PluginMeta.objects.get(id=plugin_id)
+            except PluginMeta.DoesNotExist:
+                return None
+
         user = get_resolved_user(request.user)
         if not user:
             return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
@@ -63,7 +72,7 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
             user_profile=user_profile,
             account=user_profile.account,  # type: ignore[arg-type]
             user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=PluginMeta.objects.get(id=plugin_id),
+            plugin_meta=cached_plugin_by_id(plugin_id),
         )
         if not plugin_controller or not plugin_controller.plugin:
             return JsonResponse(
@@ -91,8 +100,16 @@ class AddPluginExamplesView(SmarterAuthenticatedAPIView):
     """Add example plugins to a user profile."""
 
     def post(self, request: WSGIRequest, user_id=None):
+        @cache_results()
+        def cached_user_by_id(user_id: int) -> Optional[User]:
+            """Retrieve User by ID with caching."""
+            try:
+                return User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return None
+
         try:
-            user = User.objects.get(id=user_id) if user_id else request.user
+            user = cached_user_by_id(user_id) if user_id else request.user
             user_profile = get_cached_user_profile(user=user)  # type: ignore
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
@@ -149,6 +166,15 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 # -----------------------------------------------------------------------
 def get_plugin(request, plugin_id):
     """Get a plugin json representation by id."""
+
+    @cache_results()
+    def cached_plugin_by_id(plugin_id: int) -> Optional[PluginMeta]:
+        """Retrieve PluginMeta by ID with caching."""
+        try:
+            return PluginMeta.objects.get(id=plugin_id)
+        except PluginMeta.DoesNotExist:
+            return None
+
     plugin: Optional[PluginBase] = None
 
     try:
@@ -161,7 +187,7 @@ def get_plugin(request, plugin_id):
             user_profile=user_profile,
             account=user_profile.account,  # type: ignore[arg-type]
             user=user_profile.user,  # type: ignore[arg-type]
-            plugin_meta=PluginMeta.objects.get(id=plugin_id),
+            plugin_meta=cached_plugin_by_id(plugin_id),
         )
         if not plugin_controller or not plugin_controller.plugin:
             raise PluginDataValueError(

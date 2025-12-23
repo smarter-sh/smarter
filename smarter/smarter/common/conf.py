@@ -197,8 +197,11 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 return default
         return val
 
-    key = f"SMARTER_{var_name}"
-    retval = os.environ.get(key) or os.environ.get(var_name)
+    key = var_name
+    retval = os.environ.get(key)
+    if retval is None:
+        key = f"SMARTER_{var_name}"
+        retval = os.environ.get(key)
     if retval is None:
         return default
 
@@ -254,6 +257,77 @@ class DjangoPermittedStorages:
     FILE_SYSTEM = "django.core.files.storage.FileSystemStorage"
 
 
+class Services:
+    """Services enabled for this solution. This is intended to be permanently read-only"""
+
+    # enabled
+    AWS_CLI = ("aws-cli", True)
+    AWS_ROUTE53 = ("route53", True)
+    AWS_S3 = ("s3", True)
+    AWS_EC2 = ("ec2", True)
+    AWS_IAM = ("iam", True)
+    AWS_CLOUDWATCH = ("cloudwatch", True)
+    AWS_SES = ("ses", True)
+    AWS_RDS = ("rds", True)
+    AWS_EKS = ("eks", True)
+
+    # disabled
+    AWS_LAMBDA = ("lambda", False)
+    AWS_APIGATEWAY = ("apigateway", False)
+    AWS_SNS = ("sns", False)
+    AWS_SQS = ("sqs", False)
+    AWS_REKOGNITION = ("rekognition", False)
+    AWS_DYNAMODB = ("dynamodb", False)
+
+    @classmethod
+    def is_connected_to_aws(cls):
+        retval = bool(boto3.Session().get_credentials())
+        if not retval:
+            logger.warning("AWS is not configured properly. Credentials are invalid, or no credentials were found.")
+        return retval
+
+    @classmethod
+    def enabled(cls, service: Union[str, Tuple[str, bool]]) -> bool:
+        """Is the service enabled?"""
+        if not cls.is_connected_to_aws():
+            return False
+        if isinstance(service, tuple):
+            service = service[0]
+        return service in cls.enabled_services()
+
+    @classmethod
+    def raise_error_on_disabled(cls, service: Union[str, Tuple[str, bool]]) -> None:
+        """Raise an error if the service is disabled"""
+        if not cls.enabled(service):
+            if Services.is_connected_to_aws():
+                raise SmarterConfigurationError(f"{service} is not enabled. See conf.Services")
+            else:
+                logger.warning("AWS is not configured. %s is not enabled.", service)
+
+    @classmethod
+    def to_dict(cls):
+        """Convert Services to dict"""
+        return {
+            key: value
+            for key, value in Services.__dict__.items()
+            if not key.startswith("__")
+            and not callable(key)
+            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
+        }
+
+    @classmethod
+    def enabled_services(cls) -> List[str]:
+        """Return a list of enabled services"""
+        return [
+            getattr(cls, key)[0]
+            for key in dir(cls)
+            if not key.startswith("__")
+            and not callable(getattr(cls, key))
+            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
+            and getattr(cls, key)[1] is True
+        ]
+
+
 # pylint: disable=too-few-public-methods
 class SettingsDefaults:
     """
@@ -291,17 +365,10 @@ class SettingsDefaults:
     API_SCHEMA: str = get_env("API_SCHEMA", "http")
 
     # aws auth
-    AWS_PROFILE = get_env("AWS_PROFILE")
-    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(get_env("AWS_ACCESS_KEY_ID", is_secret=True))
-    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(get_env("AWS_SECRET_ACCESS_KEY", is_secret=True))
-    AWS_REGION = get_env("AWS_REGION", "us-east-1")
-    AWS_IS_CONFIGURED = bool(
-        AWS_PROFILE
-        or (
-            AWS_ACCESS_KEY_ID.get_secret_value() != DEFAULT_MISSING_VALUE
-            and AWS_SECRET_ACCESS_KEY.get_secret_value() != DEFAULT_MISSING_VALUE
-        )
-    )
+    AWS_PROFILE = get_env("AWS_PROFILE", default=None)
+    AWS_ACCESS_KEY_ID: SecretStr = SecretStr(get_env("AWS_ACCESS_KEY_ID", default=None, is_secret=True))
+    AWS_SECRET_ACCESS_KEY: SecretStr = SecretStr(get_env("AWS_SECRET_ACCESS_KEY", default=None, is_secret=True))
+    AWS_REGION = get_env("AWS_REGION", default=None)
 
     AWS_EKS_CLUSTER_NAME = get_env("AWS_EKS_CLUSTER_NAME")
     AWS_RDS_DB_INSTANCE_IDENTIFIER = get_env("AWS_RDS_DB_INSTANCE_IDENTIFIER")
@@ -349,7 +416,7 @@ class SettingsDefaults:
     DEVELOPER_MODE: bool = bool_environment_variable("DEVELOPER_MODE", False)
 
     DJANGO_DEFAULT_FILE_STORAGE = get_env("DJANGO_DEFAULT_FILE_STORAGE", DjangoPermittedStorages.AWS_S3)
-    if DJANGO_DEFAULT_FILE_STORAGE == DjangoPermittedStorages.AWS_S3 and not AWS_IS_CONFIGURED:
+    if DJANGO_DEFAULT_FILE_STORAGE == DjangoPermittedStorages.AWS_S3 and not Services.is_connected_to_aws():
         DJANGO_DEFAULT_FILE_STORAGE = DjangoPermittedStorages.FILE_SYSTEM
         logger.warning(
             "AWS is not configured properly. Falling back to FileSystemStorage for Django default file storage."
@@ -469,74 +536,6 @@ class SettingsDefaults:
             for key, value in SettingsDefaults.__dict__.items()
             if not key.startswith("__") and not callable(key) and key != "to_dict"
         }
-
-
-class Services:
-    """Services enabled for this solution. This is intended to be permanently read-only"""
-
-    # enabled
-    AWS_CLI = ("aws-cli", True)
-    AWS_ROUTE53 = ("route53", True)
-    AWS_S3 = ("s3", True)
-    AWS_EC2 = ("ec2", True)
-    AWS_IAM = ("iam", True)
-    AWS_CLOUDWATCH = ("cloudwatch", True)
-    AWS_SES = ("ses", True)
-    AWS_RDS = ("rds", True)
-    AWS_EKS = ("eks", True)
-
-    # disabled
-    AWS_LAMBDA = ("lambda", False)
-    AWS_APIGATEWAY = ("apigateway", False)
-    AWS_SNS = ("sns", False)
-    AWS_SQS = ("sqs", False)
-    AWS_REKOGNITION = ("rekognition", False)
-    AWS_DYNAMODB = ("dynamodb", False)
-
-    @classmethod
-    def is_connected_to_aws(cls):
-        return bool(boto3.Session().get_credentials())
-
-    @classmethod
-    def enabled(cls, service: Union[str, Tuple[str, bool]]) -> bool:
-        """Is the service enabled?"""
-        if not cls.is_connected_to_aws():
-            return False
-        if isinstance(service, tuple):
-            service = service[0]
-        return service in cls.enabled_services()
-
-    @classmethod
-    def raise_error_on_disabled(cls, service: Union[str, Tuple[str, bool]]) -> None:
-        """Raise an error if the service is disabled"""
-        if not cls.enabled(service):
-            if SettingsDefaults.AWS_IS_CONFIGURED:
-                raise SmarterConfigurationError(f"{service} is not enabled. See conf.Services")
-            else:
-                logger.warning("AWS is not configured. %s is not enabled.", service)
-
-    @classmethod
-    def to_dict(cls):
-        """Convert Services to dict"""
-        return {
-            key: value
-            for key, value in Services.__dict__.items()
-            if not key.startswith("__")
-            and not callable(key)
-            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
-        }
-
-    @classmethod
-    def enabled_services(cls) -> List[str]:
-        """Return a list of enabled services"""
-        return [
-            getattr(cls, key)[0]
-            for key in dir(cls)
-            if not key.startswith("__")
-            and not callable(getattr(cls, key))
-            and key not in ["enabled", "raise_error_on_disabled", "to_dict", "enabled_services"]
-            and getattr(cls, key)[1] is True
-        ]
 
 
 AWS_REGIONS = ["us-east-1"]
@@ -828,10 +827,12 @@ class Settings(BaseSettings):
             Optional[str]: The validated AWS profile.
         """
         if v in [None, ""]:
+            if SettingsDefaults.AWS_PROFILE == DEFAULT_MISSING_VALUE:
+                return None
             return SettingsDefaults.AWS_PROFILE
         return v
 
-    aws_access_key_id: SecretStr = Field(
+    aws_access_key_id: Optional[SecretStr] = Field(
         SettingsDefaults.AWS_ACCESS_KEY_ID,
         description="The AWS access key ID for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.",
         examples=["^AKIA[0-9A-Z]{16}$"],
@@ -848,7 +849,7 @@ class Settings(BaseSettings):
     """
 
     @before_field_validator("aws_access_key_id")
-    def validate_aws_access_key_id(cls, v: Optional[SecretStr], values: ValidationInfo) -> SecretStr:
+    def validate_aws_access_key_id(cls, v: Optional[SecretStr], values: ValidationInfo) -> Optional[SecretStr]:
         """Validates the `aws_access_key_id` field.
         Uses SettingsDefaults if no value is received.
 
@@ -860,20 +861,19 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated AWS access key ID.
         """
+        if v is None:
+            return None
         if isinstance(v, str):
             v = SecretStr(v)
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError("could not convert aws_access_key_id value to SecretStr")
 
-        if v.get_secret_value() in [None, ""]:
-            return SettingsDefaults.AWS_ACCESS_KEY_ID
+        if v.get_secret_value() in [None, "", DEFAULT_MISSING_VALUE]:
+            return None
         aws_profile = values.data.get("aws_profile", None)
-        if aws_profile and len(aws_profile) > 0 and aws_profile != SettingsDefaults.AWS_PROFILE:
+        if aws_profile and len(aws_profile) > 0 and aws_profile != DEFAULT_MISSING_VALUE:
             logger.warning("aws_access_key_id is being ignored. using aws_profile %s.", aws_profile)
-            return SettingsDefaults.AWS_ACCESS_KEY_ID
-
-        if v.get_secret_value() == DEFAULT_MISSING_VALUE:
-            return v
+            return None
 
         # validate the pattern of the access key id
         pattern = r"^AKIA[0-9A-Z]{16}$"
@@ -882,7 +882,7 @@ class Settings(BaseSettings):
 
         return v
 
-    aws_secret_access_key: SecretStr = Field(
+    aws_secret_access_key: Optional[SecretStr] = Field(
         SettingsDefaults.AWS_SECRET_ACCESS_KEY,
         description="The AWS secret access key for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.",
         examples=["^[0-9a-zA-Z/+]{40}$"],
@@ -899,7 +899,7 @@ class Settings(BaseSettings):
     """
 
     @before_field_validator("aws_secret_access_key")
-    def validate_aws_secret_access_key(cls, v: Optional[SecretStr], values: ValidationInfo) -> SecretStr:
+    def validate_aws_secret_access_key(cls, v: Optional[SecretStr], values: ValidationInfo) -> Optional[SecretStr]:
         """Validates the `aws_secret_access_key` field.
         Uses SettingsDefaults if no value is received.
 
@@ -910,20 +910,19 @@ class Settings(BaseSettings):
         Returns:
             SecretStr: The validated AWS secret access key.
         """
+        if v is None:
+            return None
         if isinstance(v, str):
             v = SecretStr(v)
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError("could not convert aws_secret_access_key value to SecretStr")
 
-        if v.get_secret_value() in [None, ""]:
-            return SettingsDefaults.AWS_SECRET_ACCESS_KEY
+        if v.get_secret_value() in [None, "", DEFAULT_MISSING_VALUE]:
+            return None
         aws_profile = values.data.get("aws_profile", None)
-        if aws_profile and len(aws_profile) > 0 and aws_profile != SettingsDefaults.AWS_PROFILE:
+        if aws_profile and len(aws_profile) > 0 and aws_profile != DEFAULT_MISSING_VALUE:
             logger.warning("aws_secret_access_key is being ignored. using aws_profile %s.", aws_profile)
-            return SettingsDefaults.AWS_SECRET_ACCESS_KEY
-
-        if v.get_secret_value() == DEFAULT_MISSING_VALUE:
-            return v
+            return None
 
         # validate the pattern of the secret access key
         pattern = r"^[0-9a-zA-Z/+]{40}$"
@@ -948,7 +947,7 @@ class Settings(BaseSettings):
     :default: Value from ``AWS_REGIONS``
     :raises SmarterConfigurationError: If the value is not a list of valid AWS region names.
     """
-    aws_region: str = Field(
+    aws_region: Optional[str] = Field(
         SettingsDefaults.AWS_REGION,
         description="The single AWS region in which all AWS service clients will operate.",
         examples=["us-east-1", "us-west-2", "eu-west-1"],
@@ -980,26 +979,24 @@ class Settings(BaseSettings):
 
         valid_regions = values.data.get("aws_regions", ["us-east-1"])
         if v in [None, ""]:
+            if SettingsDefaults.AWS_REGION == DEFAULT_MISSING_VALUE:
+                return None
             return SettingsDefaults.AWS_REGION
         if v not in valid_regions:
             raise SmarterValueError(f"aws_region {v} not in aws_regions: {valid_regions}")
         return v
 
-    aws_is_configured: bool = Field(
-        SettingsDefaults.AWS_IS_CONFIGURED,
-        description="True if AWS is configured. This is determined by the presence of either AWS_PROFILE or both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.",
-        title="AWS Is Configured",
-    )
-    """
-    True if AWS is configured. This is determined by the presence of either AWS_PROFILE or both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
-    This setting indicates whether the platform has sufficient AWS credentials
-    configured to connect to AWS services. If AWS is not configured, attempts
-    to use AWS services will fail.
+    @property
+    def aws_is_configured(self) -> bool:
+        """
+        True if AWS is configured. This is determined by the presence of either AWS_PROFILE or both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+        This setting indicates whether the platform has sufficient AWS credentials
+        configured to connect to AWS services. If AWS is not configured, attempts
+        to use AWS services will fail.
 
-    :type: bool
-    :default: Value from ``SettingsDefaults.AWS_IS_CONFIGURED``
-    :raises SmarterConfigurationError: If the value is not a boolean.
-    """
+        :type: bool
+        """
+        return Services.is_connected_to_aws()
 
     aws_eks_cluster_name: str = Field(
         SettingsDefaults.AWS_EKS_CLUSTER_NAME,

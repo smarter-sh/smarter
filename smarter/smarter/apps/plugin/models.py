@@ -492,10 +492,16 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
 
         - :func:`smarter.lib.cache.cache_results`
         """
+
+        @cache_results()
+        def cached_plugins_by_account_id(account_id: int) -> list["PluginMeta"]:
+            plugins = cls.objects.filter(account_id=account_id).order_by("name")
+            return list(plugins) or []
+
         account = get_cached_account_for_user(user)
         if not account:
             return []
-        plugins = cls.objects.filter(account=account).order_by("name")
+        plugins = cached_plugins_by_account_id(account.id)
         return list(plugins) or []
 
     @classmethod
@@ -511,11 +517,19 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
         :return: A PluginMeta instance if found, otherwise None.
         :rtype: Union[PluginMeta, None]
         """
+
+        @cache_results()
+        def cls_by_account_id_and_name(account_id: int, name: str) -> Union["PluginMeta", None]:
+            try:
+                return cls.objects.get(account_id=account_id, name=name)
+            except cls.DoesNotExist:
+                return None
+
         account = get_cached_account_for_user(user)
         if not account:
             return None
         try:
-            return cls.objects.get(account=account, name=name)
+            return cls_by_account_id_and_name(account.id, name)
         except cls.DoesNotExist:
             logger.warning(
                 "%s.get_cached_plugin_by_name: Plugin not found for name: %s", cls.formatted_class_name, name
@@ -1121,18 +1135,33 @@ class ConnectionBase(TimestampedModel, SmarterHelperMixin):
         - :func:`smarter.lib.cache.cache_results`
         - :func:`smarter.apps.account.utils.get_cached_account_for_user`
         """
+
+        @cache_results()
+        def cached_sqlconnection_by_id_and_name(account_id: int, name: str) -> Union["SqlConnection", None]:
+            try:
+                return SqlConnection.objects.get(account_id=account_id, name=name)
+            except SqlConnection.DoesNotExist:
+                return None
+
+        @cache_results()
+        def cached_apiconnection_by_id_and_name(account_id: int, name: str) -> Union["ApiConnection", None]:
+            try:
+                return ApiConnection.objects.get(account_id=account_id, name=name)
+            except ApiConnection.DoesNotExist:
+                return None
+
         account = get_cached_account_for_user(user)
         if not kind or not kind in [SAMKinds.SQL_CONNECTION, SAMKinds.API_CONNECTION]:
             raise SmarterValueError(f"Unsupported connection kind: {kind}")
         if kind == SAMKinds.SQL_CONNECTION:
             try:
-                return SqlConnection.objects.get(account=account, name=name)
+                return cached_sqlconnection_by_id_and_name(account.id, name)
             except SqlConnection.DoesNotExist:
                 pass
 
         elif kind == SAMKinds.API_CONNECTION:
             try:
-                return ApiConnection.objects.get(account=account, name=name)
+                return cached_apiconnection_by_id_and_name(account.id, name)
             except ApiConnection.DoesNotExist:
                 pass
 

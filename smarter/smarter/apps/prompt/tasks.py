@@ -8,9 +8,8 @@ future high-traffic scenarios.
 """
 import logging
 
-from django.conf import settings
-
 from smarter.apps.account.models import Account
+from smarter.apps.account.utils import get_cached_account
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import settings as smarter_settings
@@ -96,7 +95,7 @@ def update_chat(*args, **kwargs):
         try:
             account_id = kwargs.get("account_id", chat.account.id if chat.account else None)
             if account_id is not None:
-                chat.account = Account.objects.get(id=account_id)
+                chat.account = get_cached_account(account_id=account_id)
         except Account.DoesNotExist:
             chat.account = None
 

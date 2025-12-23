@@ -9,9 +9,11 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
+from dotenv import Optional
 from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import get_cached_account
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -51,12 +53,12 @@ class AccountView(AccountViewBase):
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info + str(self.account.id) + "/")
 
-    def patch(self, request: WSGIRequest, account_id: int = None):
-        data: dict = None
+    def patch(self, request: WSGIRequest, account_id: Optional[int] = None):
+        data: dict
 
         try:
             if account_id and self.is_superuser_or_unauthorized():
-                self.account = Account.objects.get(id=account_id)
+                self.account = get_cached_account(account_id=account_id)
         except UserProfile.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 

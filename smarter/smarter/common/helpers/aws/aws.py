@@ -122,8 +122,16 @@ class AWSBase(SmarterHelperMixin):
             self._initialized = True
 
         # initialize creentials from smarter_settings unless any of these were passed as parameters
-        self._aws_access_key_id = aws_access_key_id or smarter_settings.aws_access_key_id.get_secret_value()
-        self._aws_secret_access_key = aws_secret_access_key or smarter_settings.aws_secret_access_key.get_secret_value()
+        self._aws_access_key_id = (
+            aws_access_key_id or smarter_settings.aws_access_key_id.get_secret_value()
+            if smarter_settings.aws_access_key_id
+            else None
+        )
+        self._aws_secret_access_key = (
+            aws_secret_access_key or smarter_settings.aws_secret_access_key.get_secret_value()
+            if smarter_settings.aws_secret_access_key
+            else None
+        )
         self._aws_region = aws_region or smarter_settings.aws_region
         self._aws_profile = aws_profile or smarter_settings.aws_profile
 
@@ -497,11 +505,13 @@ class AWSBase(SmarterHelperMixin):
         if self._connected:
             return True
         if not self.initialized:
-            logger.warning("connected() Failure - AWSBase is not initialized")
+            logger.warning("smarter.common.helpers.aws.aws.AWSBase.connected() Failure - AWSBase is not initialized")
             return False
 
         if not self.aws_session:
-            logger.warning("connected() Failure - aws_session is not initialized")
+            logger.warning(
+                "smarter.common.helpers.aws.aws.AWSBase.connected() Failure - aws_session is not initialized"
+            )
             return False
         try:
             self._connected = isinstance(self.identity, dict)

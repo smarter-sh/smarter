@@ -210,7 +210,10 @@ class Command(SmarterCommand):
 
         try:
             svc_account = smarter_settings.google_service_account.get_secret_value()
-            svc_account_dict = json.loads(svc_account)
+            if isinstance(svc_account, str):
+                svc_account_dict = json.loads(svc_account)
+            else:
+                svc_account_dict = svc_account
             credentials = service_account.Credentials.from_service_account_info(svc_account_dict, scopes=SCOPES)
             auth_req = google.auth.transport.requests.Request()
         except json.JSONDecodeError as e:
