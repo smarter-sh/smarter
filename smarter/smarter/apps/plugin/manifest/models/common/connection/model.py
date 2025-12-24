@@ -25,7 +25,7 @@ class SAMConnectionCommon(AbstractSAMBase):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    metadata: Optional[SAMConnectionCommonMetadata] = Field(
+    metadata: SAMConnectionCommonMetadata = Field(
         ...,
         description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {MANIFEST_KIND} metadata.",
     )
