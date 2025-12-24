@@ -7,6 +7,7 @@ import datetime
 import logging
 import re
 from abc import ABC, abstractmethod
+from functools import cached_property
 from typing import Any, Optional, Type, Union
 
 # 3rd party stuff
@@ -148,6 +149,9 @@ class PluginBase(ABC, SmarterHelperMixin):
     _plugin_selector_serializer: Optional[PluginSelectorSerializer] = None
     _plugin_meta_serializer: Optional[PluginMetaSerializer] = None
     _plugin_data_serializer: Optional[serializers.Serializer] = None
+    _plugin_meta_django_model: Optional[dict[str, Any]] = None
+    _plugin_selector_django_model: Optional[dict[str, Any]] = None
+    _plugin_prompt_django_model: Optional[dict[str, Any]] = None
 
     _selected: bool = False
     _params: Optional[dict[str, Any]] = None
@@ -237,6 +241,9 @@ class PluginBase(ABC, SmarterHelperMixin):
         self._params = None
         self._plugin_data = None
         self._plugin_data_serializer = None
+        self._plugin_meta_django_model = None
+        self._plugin_selector_django_model = None
+        self._plugin_prompt_django_model = None
 
         #######################################################################
         # identifiers for existing plugins
@@ -412,7 +419,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         """
         raise NotImplementedError()
 
-    @property
+    @cached_property
     def custom_tool(self) -> dict[str, Any]:
         """
         Return the plugin tool definition for OpenAI function calling.
@@ -684,22 +691,24 @@ class PluginBase(ABC, SmarterHelperMixin):
         :return: The plugin meta definition as a json object.
         :rtype: Optional[dict[str, Any]]
         """
-        if self.user_profile and self._manifest:
-            return {
-                "id": self.id,
-                "account": self.user_profile.account,
-                "name": self.manifest.metadata.name,
-                "description": self.manifest.metadata.description,
-                "plugin_class": self.manifest.metadata.pluginClass,
-                "version": self.manifest.metadata.version,
-                "author": self.user_profile,
-                "tags": self.manifest.metadata.tags,
-            }
-        else:
-            logger.warning(
-                "%s.plugin_meta_django_model() UserProfile or manifest is not set. Cannot construct plugin meta Django model dictionary.",
-                self.formatted_class_name,
-            )
+        if not self._plugin_meta_django_model:
+            if self.user_profile and self._manifest:
+                self._plugin_meta_django_model = {
+                    "id": self.id,
+                    "account": self.user_profile.account,
+                    "name": self.manifest.metadata.name,
+                    "description": self.manifest.metadata.description,
+                    "plugin_class": self.manifest.metadata.pluginClass,
+                    "version": self.manifest.metadata.version,
+                    "author": self.user_profile,
+                    "tags": self.manifest.metadata.tags,
+                }
+            else:
+                logger.warning(
+                    "%s.plugin_meta_django_model() UserProfile or manifest is not set. Cannot construct plugin meta Django model dictionary.",
+                    self.formatted_class_name,
+                )
+        return self._plugin_meta_django_model
 
     @property
     def plugin_selector_history(self) -> Optional[QuerySet]:
@@ -758,14 +767,18 @@ class PluginBase(ABC, SmarterHelperMixin):
         :return: The plugin selector definition as a dictionary.
         :rtype: Optional[dict[str, Any]]
         """
-        if self._manifest:
-            return {
-                PLUGIN_KEY: self.plugin_meta,
-                "directive": self.manifest.spec.selector.directive if self.manifest and self.manifest.spec else None,
-                SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value: (
-                    self.manifest.spec.selector.searchTerms if self.manifest and self.manifest.spec else None
-                ),
-            }
+        if not self._plugin_selector_django_model:
+            if self._manifest:
+                self._plugin_selector_django_model = {
+                    PLUGIN_KEY: self.plugin_meta,
+                    "directive": (
+                        self.manifest.spec.selector.directive if self.manifest and self.manifest.spec else None
+                    ),
+                    SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value: (
+                        self.manifest.spec.selector.searchTerms if self.manifest and self.manifest.spec else None
+                    ),
+                }
+        return self._plugin_selector_django_model
 
     @property
     def plugin_prompt(self) -> PluginPrompt:
@@ -810,16 +823,22 @@ class PluginBase(ABC, SmarterHelperMixin):
         :rtype: Optional[dict[str, Any]]
 
         """
-        if self._manifest:
-            return {
-                PLUGIN_KEY: self.plugin_meta,
-                "system_role": self.manifest.spec.prompt.systemRole if self.manifest and self.manifest.spec else None,
-                "model": self.manifest.spec.prompt.model if self.manifest and self.manifest.spec else None,
-                "temperature": self.manifest.spec.prompt.temperature if self.manifest and self.manifest.spec else None,
-                "max_completion_tokens": (
-                    self.manifest.spec.prompt.maxTokens if self.manifest and self.manifest.spec else None
-                ),
-            }
+        if not self._plugin_prompt_django_model:
+            if self._manifest:
+                self._plugin_prompt_django_model = {
+                    PLUGIN_KEY: self.plugin_meta,
+                    "system_role": (
+                        self.manifest.spec.prompt.systemRole if self.manifest and self.manifest.spec else None
+                    ),
+                    "model": self.manifest.spec.prompt.model if self.manifest and self.manifest.spec else None,
+                    "temperature": (
+                        self.manifest.spec.prompt.temperature if self.manifest and self.manifest.spec else None
+                    ),
+                    "max_completion_tokens": (
+                        self.manifest.spec.prompt.maxTokens if self.manifest and self.manifest.spec else None
+                    ),
+                }
+        return self._plugin_prompt_django_model
 
     @property
     def user_profile(self) -> Optional[UserProfile]:
@@ -859,7 +878,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             return self.plugin_meta.name  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
         return None
 
-    @property
+    @cached_property
     # pylint: disable=too-many-return-statements
     def ready(self) -> bool:
         """
