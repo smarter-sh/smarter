@@ -688,7 +688,7 @@ class SqlPlugin(PluginBase):
         )
 
         @cache_results()
-        def execute_query_cached(sql: str) -> Any:
+        def get_cached_query_result(sql: str) -> Any:
             if not self.plugin_data:
                 raise SmarterSqlPluginError(
                     f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
@@ -702,7 +702,7 @@ class SqlPlugin(PluginBase):
                 ),
             )
 
-        retval = execute_query_cached(sql)
+        retval = get_cached_query_result(sql)
 
         if not retval:
             logger.warning(
