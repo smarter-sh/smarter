@@ -686,6 +686,11 @@ class PluginBase(ABC, SmarterHelperMixin):
         if not self._plugin_meta_serializer:
 
             self._plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
+            if not self._plugin_meta_serializer:
+                logger.warning(
+                    "%s.plugin_meta_serializer() PluginMetaSerializer could not be created.",
+                    self.formatted_class_name,
+                )
         return self._plugin_meta_serializer
 
     @property
@@ -707,6 +712,11 @@ class PluginBase(ABC, SmarterHelperMixin):
                 "author": self.user_profile,
                 "tags": self.manifest.metadata.tags,
             }
+        else:
+            logger.warning(
+                "%s.plugin_meta_django_model() UserProfile or manifest is not set. Cannot construct plugin meta Django model dictionary.",
+                self.formatted_class_name,
+            )
 
     @property
     def plugin_selector_history(self) -> Optional[QuerySet]:
@@ -1178,25 +1188,25 @@ class PluginBase(ABC, SmarterHelperMixin):
                 plugin_meta.id if isinstance(plugin_meta, PluginMeta) else "Unknown",  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             )
 
-        meta_data = self.plugin_meta_django_model
-        selector = self.plugin_selector_django_model
-        prompt = self.plugin_prompt_django_model
-        plugin_data = self.plugin_data_django_model
-
         if self.plugin_meta:
             self.id = self.plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             logger.info(
                 "%s.create() Plugin %s already exists. Updating plugin %s.",
-                meta_data["name"] if meta_data else "Unknown",
+                self.plugin_meta.name,
                 self.formatted_class_name,
-                self.plugin_meta.id if self._plugin_meta else "Unknown",  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                self.plugin_meta.id,  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             )
             return self.update()
 
         with transaction.atomic():
+            meta_data = self.plugin_meta_django_model
             if meta_data:
                 plugin_meta = PluginMeta.objects.create(**meta_data)
                 logger.info("%s.create() created PluginMeta: %s", self.formatted_class_name, plugin_meta)
+
+                selector = self.plugin_selector_django_model
+                prompt = self.plugin_prompt_django_model
+                plugin_data = self.plugin_data_django_model
 
                 if selector is not None:
                     selector[PLUGIN_KEY] = plugin_meta
