@@ -49,7 +49,7 @@ from functools import (  # utilities for caching function/method results
 )
 from importlib.metadata import distributions  # library for accessing package metadata
 from typing import Any, List, Optional, Pattern, Tuple, Union  # type hint utilities
-from urllib.parse import urljoin  # library for URL manipulation
+from urllib.parse import urljoin, urlparse  # library for URL manipulation
 
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
@@ -82,24 +82,21 @@ from .const import (
     SmarterEnvironments,
 )
 from .exceptions import SmarterConfigurationError, SmarterValueError
+from .utils import bool_environment_variable
 
 
 logger = logging.getLogger(__name__)
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
 DOT_ENV_LOADED = load_dotenv()
+VERBOSE_CONSOLE_OUTPUT = bool_environment_variable("SMARTER_SETTINGS_OUTPUT", False)
 
 
 def before_field_validator(*args, **kwargs):
+    """
+    Wrapper for pydantic field_validator with mode='before'.
+    """
     kwargs["mode"] = "before"
     return field_validator(*args, **kwargs)
-
-
-def bool_environment_variable(var_name: str, default: bool) -> bool:
-    """Get a boolean environment variable"""
-    value = os.environ.get(var_name)
-    if value is None:
-        return default
-    return value.lower() in ["true", "1", "t", "y", "yes"]
 
 
 def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = False) -> Any:
@@ -207,10 +204,11 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
 
     cast_val = cast_value(retval, default)
     log_value = cast_val if not is_secret else "****"
-    logger.info(
-        formatted_text_green("Overriding Smarter setting from environment variable: %s=%s"), key, repr(log_value)
-    )
-    print(formatted_text_green(f"Overriding Smarter setting from environment variable: {key}={repr(log_value)}"))
+    if VERBOSE_CONSOLE_OUTPUT:
+        logger.info(
+            formatted_text_green("Overriding Smarter setting from environment variable: %s=%s"), key, repr(log_value)
+        )
+        print(formatted_text_green(f"Overriding Smarter setting from environment variable: {key}={repr(log_value)}"))
     return cast_val
 
 
@@ -683,11 +681,16 @@ class Settings(BaseSettings):
         retval = [
             self.environment_platform_domain,
             self.environment_api_domain,
-            f"*.{self.environment_api_domain}",
+            f".{self.environment_api_domain}",
         ] + default_allowed_hosts
+        # For each host, append the hostname (without port) if not already present
+        for host in retval:
+            parsed = urlparse(f"//{host}")
+            if parsed.hostname and parsed.hostname not in retval:
+                retval.append(parsed.hostname)
         for host in retval:
             SmarterValidator.validate_hostname(host)
-        return retval
+        return list(set(retval))
 
     anthropic_api_key: SecretStr = Field(
         SettingsDefaults.ANTHROPIC_API_KEY,

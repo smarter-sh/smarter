@@ -1560,14 +1560,21 @@ for key, value in os.environ.items():
         default_value = globals()[key]
         cast_value = smart_cast(value, default_value)
         globals()[key] = cast_value
-        if key not in ["SECRET_KEY", "SMTP_PASSWORD", "SMTP_USERNAME", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]:
-            logger.info(
-                formatted_text_green("Overriding Django setting from environment variable: %s=%s"),
-                key,
-                repr(cast_value),
-            )
-        else:
-            logger.info(formatted_text_green("Overriding Django setting from environment variable: %s=******"), key)
+        if smarter_settings.settings_output:
+            if key not in [
+                "SECRET_KEY",
+                "SMTP_PASSWORD",
+                "SMTP_USERNAME",
+                "AWS_ACCESS_KEY_ID",
+                "AWS_SECRET_ACCESS_KEY",
+            ]:
+                logger.info(
+                    formatted_text_green("Overriding Django setting from environment variable: %s=%s"),
+                    key,
+                    repr(cast_value),
+                )
+            else:
+                logger.info(formatted_text_green("Overriding Django setting from environment variable: %s=******"), key)
 
 ###############################################################################
 # Settings diagnostics information for all environments

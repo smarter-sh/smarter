@@ -645,13 +645,19 @@ class SmarterValidator:
             SmarterValidator.validate_hostname("invalid_hostname!")  # raises SmarterValueError
 
         """
+        # Accept Django wildcard hostnames starting with a dot (e.g., .api.localhost)
+        if hostname.startswith("."):
+            # Allow leading dot for ALLOWED_HOSTS wildcard, validate the rest
+            hostname = hostname[1:]
+            if not hostname:
+                raise SmarterValueError("Invalid hostname . (dot only)")
         if ":" in hostname:
             hostname, port = hostname.split(":")
             if not port.isdigit() or not 0 <= int(port) <= 65535:
                 raise SmarterValueError(f"Invalid port {port}")
         if len(hostname) > 255:
             raise SmarterValueError(f"Invalid hostname {hostname}")
-        if hostname[-1] == ".":
+        if hostname and hostname[-1] == ".":
             hostname = hostname[:-1]  # strip exactly one dot from the right, if present
         labels = hostname.split(".")
         if labels[0] == "*":

@@ -21,7 +21,6 @@ from .base import *
 
 logger = logging.getLogger(__name__)
 
-ALLOWED_HOSTS = smarter_settings.local_hosts
 if smarter_settings.developer_mode:
     # dev only:
     # Bootstrap theme source files and static assets.
@@ -49,11 +48,9 @@ MIDDLEWARE += [
 ]
 CORS_ALLOWED_ORIGINS += [
     "http://127.0.0.1:5173",  # Django
-    "http://127.0.0.1:3000",  # React
     "http://127.0.0.1:8000",  # Django
     "http://localhost:5173",
     "http://localhost:8000",
-    "http://localhost:3000",
 ]
 CORS_ALLOWED_ORIGINS.append(f"http://{smarter_settings.environment_cdn_domain}")
 CORS_ALLOWED_ORIGINS.append(f"https://{smarter_settings.environment_cdn_domain}")
