@@ -50,6 +50,7 @@ from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
@@ -503,7 +504,7 @@ class SqlPlugin(PluginBase):
                     SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
                         "smarter",
                         "users",
-                        "admin",
+                        SMARTER_ADMIN_USERNAME,
                     ],
                 },
                 SAMPluginSpecKeys.PROMPT.value: {
@@ -523,7 +524,7 @@ class SqlPlugin(PluginBase):
                             data_type="string",
                             description="The username to query.",
                             required=True,
-                            default="admin",
+                            default=SMARTER_ADMIN_USERNAME,
                         ),
                         cls.parameter_factory(
                             name="unit",
@@ -536,7 +537,7 @@ class SqlPlugin(PluginBase):
                     SAMSqlPluginSpecSqlData.TEST_VALUES.value: [
                         {
                             SAMPluginCommonSpecTestValues.NAME.value: "username",
-                            SAMPluginCommonSpecTestValues.VALUE.value: "admin",
+                            SAMPluginCommonSpecTestValues.VALUE.value: SMARTER_ADMIN_USERNAME,
                         },
                         {
                             SAMPluginCommonSpecTestValues.NAME.value: "unit",

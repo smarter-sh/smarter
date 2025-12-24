@@ -1298,7 +1298,7 @@ class ChatBotHelper(SmarterRequestMixin):
         "_err",
     )
 
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
         """
         Get the formatted class name for this instance of ChatBotHelper.
@@ -1407,7 +1407,7 @@ class ChatBotHelper(SmarterRequestMixin):
     def __str__(self):
         return str(self.chatbot) if self._chatbot else "undefined"
 
-    @property
+    @cached_property
     def account(self) -> Optional[Account]:
         """
         Return the associated :class:`Account` for this ChatBotHelper instance,
@@ -1588,7 +1588,7 @@ class ChatBotHelper(SmarterRequestMixin):
             **super().to_json(),
         }
 
-    @property
+    @cached_property
     def api_host(self) -> Optional[str]:
         """
         Returns the API host for a ChatBot API URL.
@@ -1711,7 +1711,7 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         return self._chatbot_custom_domain is not None
 
-    @property
+    @cached_property
     def chatbot_custom_domain(self) -> Optional[ChatBotCustomDomain]:
         """
         Returns a lazy instance of the ChatBotCustomDomain.
