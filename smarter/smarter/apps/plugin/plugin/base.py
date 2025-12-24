@@ -246,16 +246,10 @@ class PluginBase(ABC, SmarterHelperMixin):
         elif plugin_meta:
             self.id = plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
         elif name and self.user_profile:
-            try:
-                self._plugin_meta = PluginMeta.objects.get(account=self.user_profile.account, name=name)
-                self.id = self._plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
-            except PluginMeta.DoesNotExist:
-                logger.warning(
-                    "%s.__init__() PluginMeta with name %s does not exist for account %s.",
-                    self.formatted_class_name,
-                    name,
-                    self.user_profile.account if self.user_profile else "unknown",
-                )
+            self._plugin_meta = PluginMeta.get_cached_plugin_by_account_and_name(
+                account=self.user_profile.account,
+                name=name,
+            )
 
         #######################################################################
         # Smarter API Manifest based initialization
@@ -638,10 +632,7 @@ class PluginBase(ABC, SmarterHelperMixin):
                 "Configuration error: UserProfile must be set before initializing a plugin instance by its ORM model id."
             )
         self.reinitialize_plugin()
-        try:
-            self._plugin_meta = PluginMeta.objects.get(pk=value)
-        except PluginMeta.DoesNotExist as e:
-            raise SmarterPluginError("PluginMeta.DoesNotExist") from e
+        self._plugin_meta = PluginMeta.get_cached_plugin_by_pk(pk=value)
 
     @property
     def plugin_meta(self) -> Optional[PluginMeta]:
@@ -661,17 +652,9 @@ class PluginBase(ABC, SmarterHelperMixin):
         if self._plugin_meta:
             return self._plugin_meta
         if self.user_profile and self._manifest:
-            try:
-                self._plugin_meta = PluginMeta.objects.get(
-                    account=self.user_profile.account, name=self.manifest.metadata.name
-                )
-            except PluginMeta.DoesNotExist:
-                logger.warning(
-                    "%s.plugin_meta() PluginMeta for %s does not exist. "
-                    "This is expected if the plugin has not been created yet or if this is a delete() operation, but otherwise would indicate a configuration error.",
-                    self.formatted_class_name,
-                    self.manifest.metadata.name,
-                )
+            self._plugin_meta = PluginMeta.get_cached_plugin_by_account_and_name(
+                account=self.user_profile.account, name=self.manifest.metadata.name
+            )
 
         return self._plugin_meta
 
