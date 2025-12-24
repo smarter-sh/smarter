@@ -87,7 +87,7 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
             request (HttpRequest): The incoming HTTP request.
         """
         # drf setup logic
-        super().setup(self.request, *args, **kwargs)
+        super().setup(request, *args, **kwargs)
 
         # go through our own request and account mixin setup logic
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
@@ -101,14 +101,14 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
             )
             self.smarter_request = request
         self.request = self.smarter_request
-        api_request_initiated.send(sender=self.__class__, instance=self, request=self.request)
+        api_request_initiated.send(sender=self.__class__, instance=self, request=request)
         logger.info(
             "%s.setup() - finished for request: %s, user: %s, self.user: %s is_authenticated: %s",
             self.formatted_class_name,
-            smarter_build_absolute_uri(self.request),
-            self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
+            smarter_build_absolute_uri(request),
+            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
-            is_authenticated_request(self.request),
+            is_authenticated_request(request),
         )
 
 
@@ -180,15 +180,15 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
-        api_request_initiated.send(sender=self.__class__, instance=self, request=self.request)
+        api_request_initiated.send(sender=self.__class__, instance=self, request=request)
         logger.info(
             "CliBaseApiView().setup() - request: %s, user: %s, self.user: %s is_authenticated: %s",
-            smarter_build_absolute_uri(self.request),
-            self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
+            smarter_build_absolute_uri(request),
+            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
-            is_authenticated_request(self.request),
+            is_authenticated_request(request),
         )
-        super().setup(self.request, *args, **kwargs)
+        super().setup(request, *args, **kwargs)
 
     def dispatch(self, request, *args, **kwargs):
         """Extend DRF dispatch() to add authentication check.
@@ -267,10 +267,10 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
         logger.info(
             "%s.setup() - request: %s, user: %s, user_profile: %s is_authenticated: %s",
             self.formatted_class_name,
-            smarter_build_absolute_uri(self.request),
-            self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
+            smarter_build_absolute_uri(request),
+            request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
-            is_authenticated_request(self.request),
+            is_authenticated_request(request),
         )
 
     def initial(self, request, *args, **kwargs):
