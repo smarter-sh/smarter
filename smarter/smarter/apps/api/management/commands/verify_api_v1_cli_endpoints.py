@@ -15,7 +15,11 @@ from smarter.apps.account.utils import (
 )
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
+from smarter.common.const import (
+    SMARTER_ACCOUNT_NUMBER,
+    SMARTER_ADMIN_USERNAME,
+    SmarterEnvironments,
+)
 from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
@@ -77,7 +81,11 @@ class Command(SmarterCommand):
             "account_number", type=str, nargs="?", default=f"{SMARTER_ACCOUNT_NUMBER}", help="a Smarter account number."
         )
         parser.add_argument(
-            "username", type=str, nargs="?", default="admin", help="A user associated with the Smarter account."
+            "username",
+            type=str,
+            nargs="?",
+            default=SMARTER_ADMIN_USERNAME,
+            help="A user associated with the Smarter account.",
         )
 
     def handle(self, *args, **options):

@@ -40,6 +40,7 @@ from smarter.apps.plugin.manifest.models.common import Parameter
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
@@ -340,7 +341,7 @@ class ApiPlugin(PluginBase):
                 SAMPluginSpecKeys.SELECTOR.value: {
                     SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
                     SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
-                        "admin",
+                        SMARTER_ADMIN_USERNAME,
                         "Smarter",
                         "account",
                     ],
@@ -398,7 +399,7 @@ class ApiPlugin(PluginBase):
                     SAMApiPluginSpecApiData.TEST_VALUES.value: [
                         {
                             SAMPluginCommonSpecTestValues.NAME.value: "username",
-                            SAMPluginCommonSpecTestValues.VALUE.value: "admin",
+                            SAMPluginCommonSpecTestValues.VALUE.value: SMARTER_ADMIN_USERNAME,
                         },
                         {
                             SAMPluginCommonSpecTestValues.NAME.value: "limit",

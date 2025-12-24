@@ -16,6 +16,7 @@ from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
@@ -102,7 +103,7 @@ class Command(SmarterCommand):
         manifest = SAMLoader(file_path=filespec)
         output = io.StringIO()
         try:
-            call_command("apply_manifest", manifest=manifest.yaml_data, username="admin", stdout=output)
+            call_command("apply_manifest", manifest=manifest.yaml_data, username=SMARTER_ADMIN_USERNAME, stdout=output)
             return True
         except CommandError as e:
             self.stderr.write(self.style.ERROR(f"apply_manifest raised CommandError: {e}"))
@@ -128,7 +129,7 @@ class Command(SmarterCommand):
         manifest = SAMLoader(file_path=filespec)
         output = io.StringIO()
         try:
-            call_command("apply_manifest", manifest=manifest.yaml_data, username="admin", stdout=output)
+            call_command("apply_manifest", manifest=manifest.yaml_data, username=SMARTER_ADMIN_USERNAME, stdout=output)
         except CommandError as e:
             self.stderr.write(self.style.ERROR(f"apply_manifest raised CommandError: {e}"))
             return False

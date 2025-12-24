@@ -22,6 +22,7 @@ from django.utils.functional import SimpleLazyObject
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
@@ -732,7 +733,7 @@ class UserProfile(TimestampedModel):
             return user
 
         logger.error("No user for account %s", account)
-        admin_user = cls.objects.get_or_create(username="admin")
+        admin_user = cls.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
         user_profile = cls.objects.create(user=admin_user, account=account)
         logger.warning("Created admin user for account %s. Use manage.py to set the password", account)
         return user_profile.user

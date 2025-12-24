@@ -27,7 +27,7 @@ from django.contrib.auth.models import AnonymousUser
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
@@ -104,7 +104,7 @@ class SmarterCachedObjects:
     def admin_user(self) -> User:
         if not self._admin_user:
             try:
-                self._admin_user = User.objects.get(username="admin", is_superuser=True)
+                self._admin_user = User.objects.get(username=SMARTER_ADMIN_USERNAME, is_superuser=True)
             except User.DoesNotExist as e:
                 raise SmarterConfigurationError("No staff user found for smarter account") from e
         return self._admin_user
@@ -251,7 +251,7 @@ def _get_account_for_user(user, invalidate: bool = False) -> Optional[Account]:
         return None
 
     username = getattr(user, "username")
-    if username == "admin":
+    if username == SMARTER_ADMIN_USERNAME:
         return smarter_cached_objects.smarter_account
 
     user_id = getattr(user, "id", None)
@@ -470,6 +470,9 @@ def get_cached_user_for_username(username: str, invalidate: bool = False) -> Opt
             return user  # type: ignore[return-value]
         except User.DoesNotExist:
             logger.error("get_cached_user_for_username() user with username %s does not exist", username)
+
+    if username == SMARTER_ADMIN_USERNAME:
+        return smarter_cached_objects.admin_user
 
     user = _in_memory_user_by_username(username) if not invalidate else _in_memory_user_by_username.invalidate(username)
     if user:
