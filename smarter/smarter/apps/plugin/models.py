@@ -505,7 +505,25 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
         return list(plugins) or []
 
     @classmethod
-    def get_cached_plugin_by_name(cls, user: User, name: str) -> Union["PluginMeta", None]:
+    def get_cached_plugin_by_account_id_and_name(cls, account_id: int, name: str) -> Union["PluginMeta", None]:
+
+        @cache_results()
+        def plugin_by_account_id_and_name(account_id: int, name: str) -> Union["PluginMeta", None]:
+            try:
+                return cls.objects.get(account_id=account_id, name=name)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_plugin_by_account_id_and_name: Plugin not found for account_id: %s, name: %s",
+                    cls.formatted_class_name,
+                    account_id,
+                    name,
+                )
+                return None
+
+        return plugin_by_account_id_and_name(account_id, name)
+
+    @classmethod
+    def get_cached_plugin_by_user_and_name(cls, user: User, name: str) -> Union["PluginMeta", None]:
         """
         Return a single instance of PluginMeta by name for the given user.
         This method caches the results to improve performance.
@@ -518,23 +536,49 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
         :rtype: Union[PluginMeta, None]
         """
 
-        @cache_results()
-        def cls_by_account_id_and_name(account_id: int, name: str) -> Union["PluginMeta", None]:
-            try:
-                return cls.objects.get(account_id=account_id, name=name)
-            except cls.DoesNotExist:
-                return None
-
         account = get_cached_account_for_user(user)
         if not account:
             return None
-        try:
-            return cls_by_account_id_and_name(account.id, name)
-        except cls.DoesNotExist:
-            logger.warning(
-                "%s.get_cached_plugin_by_name: Plugin not found for name: %s", cls.formatted_class_name, name
-            )
-            return None
+        return cls.get_cached_plugin_by_account_id_and_name(account.id, name)
+
+    @classmethod
+    def get_cached_plugin_by_account_and_name(cls, account: Account, name: str) -> Union["PluginMeta", None]:
+        """
+        Return a single instance of PluginMeta by name for the given account.
+        This method caches the results to improve performance.
+
+        :param account: The account whose plugin should be retrieved.
+        :type account: Account
+        :param name: The name of the plugin to retrieve.
+        :type name: str
+        :return: A PluginMeta instance if found, otherwise None.
+        :rtype: Union[PluginMeta, None]
+        """
+
+        return cls.get_cached_plugin_by_account_id_and_name(account.id, name)
+
+    @classmethod
+    def get_cached_plugin_by_pk(cls, pk: int) -> Union["PluginMeta", None]:
+        """
+        Return a single instance of PluginMeta by primary key.
+
+        This method caches the results to improve performance.
+
+        :param pk: The primary key of the plugin to retrieve.
+        :type pk: int
+        :return: A PluginMeta instance if found, otherwise None.
+        :rtype: Union[PluginMeta, None]
+        """
+
+        @cache_results()
+        def plugin_by_pk(pk: int) -> Union["PluginMeta", None]:
+            try:
+                return cls.objects.get(pk=pk)
+            except cls.DoesNotExist:
+                logger.warning("%s.get_cached_plugin_by_pk: Plugin not found for pk: %s", cls.formatted_class_name, pk)
+                return None
+
+        return plugin_by_pk(pk)
 
 
 class PluginSelector(TimestampedModel, SmarterHelperMixin):
