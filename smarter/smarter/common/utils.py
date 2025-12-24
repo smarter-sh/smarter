@@ -15,6 +15,7 @@ import csv
 import hashlib
 import json  # library for interacting with JSON data https://www.json.org/json-en.html
 import logging
+import os
 import random
 import re
 import warnings
@@ -956,3 +957,11 @@ def generate_fernet_encryption_key() -> str:
         )
     )
     return Fernet.generate_key().decode("utf-8")
+
+
+def bool_environment_variable(var_name: str, default: bool) -> bool:
+    """Get a boolean environment variable"""
+    value = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
+    if value is None:
+        return default
+    return value.lower() in ["true", "1", "t", "y", "yes"]
