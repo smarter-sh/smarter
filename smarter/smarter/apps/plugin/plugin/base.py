@@ -729,8 +729,11 @@ class PluginBase(ABC, SmarterHelperMixin):
             return self._plugin_selector
 
         try:
-            self._plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
-            return self._plugin_selector
+            if self.plugin_meta:
+                self._plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
+                if self._plugin_selector:
+                    return self._plugin_selector
+            raise SmarterPluginError("PluginMeta is not set or PluginSelector does not exist.")
         except PluginSelector.DoesNotExist as e:
             raise SmarterPluginError("PluginSelector.DoesNotExist") from e
 
@@ -777,8 +780,11 @@ class PluginBase(ABC, SmarterHelperMixin):
         if self._plugin_prompt:
             return self._plugin_prompt
         try:
-            self._plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
-            return self._plugin_prompt
+            if self.plugin_meta:
+                self._plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
+                if self._plugin_prompt:
+                    return self._plugin_prompt
+            raise SmarterPluginError("PluginMeta is not set or PluginPrompt does not exist.")
         except PluginPrompt.DoesNotExist as e:
             raise SmarterPluginError("PluginPrompt.DoesNotExist") from e
 

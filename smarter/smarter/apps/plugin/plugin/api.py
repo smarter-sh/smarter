@@ -165,7 +165,7 @@ class ApiPlugin(PluginBase):
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
-            self._plugin_data = PluginDataApi.objects.get(
+            self._plugin_data = PluginDataApi.get_cached_data_by_plugin(
                 plugin=self.plugin_meta,
             )
         # new Plugin scenario. there's nothing in the database yet.

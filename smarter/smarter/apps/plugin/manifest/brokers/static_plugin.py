@@ -299,7 +299,13 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             return None
 
         try:
-            self._plugin_data = PluginDataStatic.objects.get(plugin=self.plugin_meta)
+            data = PluginDataStatic.get_cached_data_by_plugin(plugin=self.plugin_meta)
+            if not data:
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name} plugin_data() failed to get cached data for {self.kind} {self.plugin_meta.name}",
+                    thing=self.kind,
+                )
+            self._plugin_data = data
         except PluginDataStatic.DoesNotExist:
             logger.warning(
                 "%s.plugin_data() PluginDataStatic object does not exist for %s %s",
@@ -462,7 +468,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         # PluginSelector
         try:
-            plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
+            plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
             plugin_selector = model_to_dict(plugin_selector)  # type: ignore[no-any-return]
             plugin_selector = self.snake_to_camel(plugin_selector)
             if not isinstance(plugin_selector, dict):
@@ -486,7 +492,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         # PluginPrompt
         try:
-            plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
+            plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
             plugin_prompt = model_to_dict(plugin_prompt)  # type: ignore[no-any-return]
             plugin_prompt = self.snake_to_camel(plugin_prompt)
             if not isinstance(plugin_prompt, dict):

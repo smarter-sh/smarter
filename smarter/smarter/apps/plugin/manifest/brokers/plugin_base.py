@@ -414,7 +414,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 command=command,
             )
         try:
-            plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
+            plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
             plugin_prompt = model_to_dict(plugin_prompt)  # type: ignore[no-any-return]
             plugin_prompt = self.snake_to_camel(plugin_prompt)
             if not isinstance(plugin_prompt, dict):
@@ -482,7 +482,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 command=command,
             )
         try:
-            plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
+            plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
             plugin_selector = model_to_dict(plugin_selector)  # type: ignore[no-any-return]
             plugin_selector = self.snake_to_camel(plugin_selector)
             if not isinstance(plugin_selector, dict):
