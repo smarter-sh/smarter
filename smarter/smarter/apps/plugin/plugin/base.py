@@ -223,10 +223,19 @@ class PluginBase(ABC, SmarterHelperMixin):
         :param kwargs: Additional keyword arguments.
         """
         super().__init__(*args, **kwargs)
-        msg = (
-            f"{self.formatted_class_name}__init__() Received: data {bool(data)}, manifest {bool(manifest)}, "
-            f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}, name {bool(name)}."
-        )
+        sources = [
+            key
+            for key, present in [
+                ("data", bool(data)),
+                ("manifest", bool(manifest)),
+                ("plugin_id", bool(plugin_id)),
+                ("plugin_meta", bool(plugin_meta)),
+                ("name", bool(name)),
+            ]
+            if present
+        ]
+        comma_separated = ", ".join(sorted(set(sources)))
+        msg = f"{self.formatted_class_name}.__init__() initializing from {comma_separated}."
         logger.info(msg)
         self._api_version = api_version or self.api_version
         self._selected = selected
