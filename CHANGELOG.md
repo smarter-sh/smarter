@@ -1,3 +1,10 @@
+## [0.13.56](https://github.com/smarter-sh/smarter/compare/v0.13.55...v0.13.56) (2025-12-24)
+
+
+### Bug Fixes
+
+* defer initializing selector, prompt, plugin_data django ORM dicts until we know that  we're going to create. ([bb5af38](https://github.com/smarter-sh/smarter/commit/bb5af38590fe1a4595448d68f836b91ea28ba5ec))
+
 ## [0.13.55](https://github.com/smarter-sh/smarter/compare/v0.13.54...v0.13.55) (2025-12-24)
 
 
