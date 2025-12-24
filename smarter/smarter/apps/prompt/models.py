@@ -276,7 +276,7 @@ class ChatHelper(SmarterRequestMixin):
     def __str__(self):
         return self.session_key
 
-    @cached_property
+    @property
     def ready(self) -> bool:
         """
         Check if the ChatHelper is ready to use.

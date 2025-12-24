@@ -54,6 +54,7 @@ from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -686,14 +687,22 @@ class SqlPlugin(PluginBase):
             "%s.tool_call_fetch_plugin_response() executing remote SQL query: %s", self.formatted_class_name, sql
         )
 
-        retval = sql_connection.execute_query(
-            sql=sql,
-            limit=(
-                self.plugin_data.limit
-                if self.plugin_data.limit and self.plugin_data.limit < MAX_SQL_QUERY_LENGTH
-                else MAX_SQL_QUERY_LENGTH
-            ),
-        )
+        @cache_results()
+        def execute_query_cached(sql: str) -> Any:
+            if not self.plugin_data:
+                raise SmarterSqlPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
+                )
+            return sql_connection.execute_query(
+                sql=sql,
+                limit=(
+                    self.plugin_data.limit
+                    if self.plugin_data.limit and self.plugin_data.limit < MAX_SQL_QUERY_LENGTH
+                    else MAX_SQL_QUERY_LENGTH
+                ),
+            )
+
+        retval = execute_query_cached(sql)
 
         if not retval:
             logger.warning(
