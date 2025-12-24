@@ -121,6 +121,8 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
         If the request is for a ChatBot, then we'll exempt it from CSRF checks.
         """
         host = request.get_host()
+        url = self.smarter_build_absolute_uri(request)
+
         if not host:
             return SmarterHttpResponseServerError(
                 request=request,
@@ -140,8 +142,6 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
                 self.smarter_build_absolute_uri(request),
             )
             return None
-
-        url = self.smarter_build_absolute_uri(request)
 
         # this is a workaround to not being able to inherit from
         # SmarterRequestMixin inside of middleware.
