@@ -51,6 +51,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 LRU_CACHE_MAX_SIZE = 128
+SMARTER_ACCOUNT_NUMBER_PATTERN = re.compile(SmarterValidator.SMARTER_ACCOUNT_NUMBER_REGEX)
 
 
 # commonly fetched objects
@@ -64,17 +65,24 @@ class SmarterCachedObjects:
         self._smarter_account = None
         self._smarter_admin = None
         self._smarter_admin_user_profile = None
+        self._admin_user = None
 
     @property
     def smarter_account(self) -> Account:
         if not self._smarter_account:
-            self._smarter_account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
+            try:
+                self._smarter_account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
+            except Account.DoesNotExist as e:
+                raise SmarterConfigurationError("Smarter account does not exist") from e
         return self._smarter_account
 
     @property
     def smarter_admin(self) -> User:
         if not self._smarter_admin:
-            user = User.objects.filter(userprofile__account=self.smarter_account, is_superuser=True).first()
+            try:
+                user = User.objects.filter(userprofile__account=self.smarter_account, is_superuser=True).first()
+            except User.DoesNotExist as e:
+                raise SmarterConfigurationError("No superuser found for smarter account") from e
             if not user:
                 raise SmarterConfigurationError("No superuser found for smarter account")
             self._smarter_admin = user
@@ -83,11 +91,23 @@ class SmarterCachedObjects:
     @property
     def smarter_admin_user_profile(self) -> UserProfile:
         if not self._smarter_admin_user_profile:
-            user_profile = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first()
+            try:
+                user_profile = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first()
+            except UserProfile.DoesNotExist as e:
+                raise SmarterConfigurationError("No superuser user profile found for smarter account") from e
             if not user_profile:
                 raise SmarterConfigurationError("No superuser user profile found for smarter account")
             self._smarter_admin_user_profile = user_profile
         return self._smarter_admin_user_profile
+
+    @property
+    def admin_user(self) -> User:
+        if not self._admin_user:
+            try:
+                self._admin_user = User.objects.get(username="admin", is_superuser=True)
+            except User.DoesNotExist as e:
+                raise SmarterConfigurationError("No staff user found for smarter account") from e
+        return self._admin_user
 
 
 smarter_cached_objects = SmarterCachedObjects()
@@ -230,6 +250,10 @@ def _get_account_for_user(user, invalidate: bool = False) -> Optional[Account]:
     if not user:
         return None
 
+    username = getattr(user, "username")
+    if username == "admin":
+        return smarter_cached_objects.smarter_account
+
     user_id = getattr(user, "id", None)
     if not user_id:
         logger.warning("get_cached_account_for_user() user has no ID: %s", user)
@@ -301,6 +325,9 @@ def get_cached_account_for_user(user: Any, invalidate: bool = False) -> Optional
 def _get_cached_user_profile(
     resolved_user: User, account: Optional[Account], invalidate: bool = False
 ) -> Optional[UserProfile]:
+
+    if resolved_user == smarter_cached_objects.admin_user and account == smarter_cached_objects.smarter_account:
+        return smarter_cached_objects.smarter_admin_user_profile
 
     @cache_results()
     def _in_memory_user_profile(user_id, account_id):
@@ -404,8 +431,6 @@ def get_cached_user_for_user_id(user_id: int, invalidate: bool = False) -> Optio
             logger.error("get_cached_user_for_user_id() user with ID %s does not exist", user_id)
 
     user = _in_memory_user(user_id) if not invalidate else _in_memory_user.invalidate(user_id)
-    if user:
-        logger.info("get_cached_user_for_user_id() retrieving and caching user %s", user)
     return user
 
 
@@ -581,10 +606,9 @@ def account_number_from_url(url: str, invalidate: bool = False) -> Optional[str]
 
     @cache_results()
     def _account_number_from_url(url: str) -> Optional[str]:
-        SmarterValidator.validate_url(url)
-        match = re.search(SmarterValidator.SMARTER_ACCOUNT_NUMBER_REGEX, url)
+        match = SMARTER_ACCOUNT_NUMBER_PATTERN.search(url)
         retval = match.group(0) if match else None
-        if retval is not None and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+        if retval is not None:
             logger.info("account_number_from_url() extracted and cached account number %s from URL %s", retval, url)
         return retval
 
