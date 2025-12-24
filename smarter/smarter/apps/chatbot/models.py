@@ -962,8 +962,22 @@ class ChatBotPlugin(TimestampedModel):
         if admin_user is None:
             raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
         user_profile = get_cached_user_profile(admin_user)
-        plugin_controller = PluginController(
-            account=self.chatbot.account, user=admin_user, plugin_meta=self.plugin_meta, user_profile=user_profile
+
+        @cache_results()
+        def get_cached_plugin_controller(account_id: int, user_id: int, plugin_meta_id: int, user_profile_id: int):
+
+            return PluginController(
+                account=self.chatbot.account,
+                user=admin_user,
+                plugin_meta=self.plugin_meta,
+                user_profile=user_profile,
+            )
+
+        plugin_controller = get_cached_plugin_controller(
+            account_id=self.chatbot.account.id,
+            user_id=admin_user.id,
+            plugin_meta_id=self.plugin_meta.id,
+            user_profile_id=user_profile.id,
         )
         this_plugin = plugin_controller.plugin
         return this_plugin
