@@ -1,3 +1,10 @@
+## [0.13.55](https://github.com/smarter-sh/smarter/compare/v0.13.54...v0.13.55) (2025-12-24)
+
+
+### Bug Fixes
+
+* do not reference self.request in setup() since it does not yet exist ([e065933](https://github.com/smarter-sh/smarter/commit/e065933e4ae354b2aacf54d87af6204fe5fb3a35))
+
 ## [0.13.54](https://github.com/smarter-sh/smarter/compare/v0.13.53...v0.13.54) (2025-12-23)
 
 
