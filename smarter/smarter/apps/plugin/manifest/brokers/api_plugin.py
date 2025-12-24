@@ -216,7 +216,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             return None
 
         try:
-            self._plugin_data = PluginDataApi.objects.get(plugin=self.plugin_meta)
+            self._plugin_data = PluginDataApi.get_cached_data_by_plugin(plugin=self.plugin_meta)
         except PluginDataApi.DoesNotExist:
             logger.warning(
                 "%s.plugin_data() PluginDataApi object does not exist for %s %s",
