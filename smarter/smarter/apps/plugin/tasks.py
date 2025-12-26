@@ -6,8 +6,6 @@ Celery tasks for the plugin app.
 import logging
 from typing import Optional
 
-from django.conf import settings
-
 from smarter.apps.account.utils import (
     get_cached_user_for_user_id,
     get_cached_user_profile,
@@ -18,6 +16,7 @@ from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -42,9 +41,9 @@ module_prefix = "smarter.apps.plugin.tasks."
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def create_plugin_selector_history(*args, **kwargs):
     """
@@ -98,6 +97,14 @@ def create_plugin_selector_history(*args, **kwargs):
 
     """
 
+    @cache_results()
+    def cached_plugin_by_id(plugin_id: int) -> Optional[PluginMeta]:
+        """Retrieve PluginMeta by ID with caching."""
+        try:
+            return PluginMeta.objects.get(id=plugin_id)
+        except PluginMeta.DoesNotExist:
+            return None
+
     user = None
     user_profile = None
     user_id = kwargs.get("user_id")
@@ -106,7 +113,7 @@ def create_plugin_selector_history(*args, **kwargs):
         user_profile = get_cached_user_profile(user) if user else None
 
     plugin_id = kwargs.get("plugin_id")
-    plugin_meta = PluginMeta.objects.get(id=plugin_id) if plugin_id else None
+    plugin_meta = cached_plugin_by_id(plugin_id) if plugin_id else None
     try:
         # to catch a race situation in unit tests.
         plugin_controller = PluginController(

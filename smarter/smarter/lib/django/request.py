@@ -241,7 +241,7 @@ class SmarterRequestMixin(AccountMixin):
             )
 
         if self._parse_result and self.is_chatbot_named_url:
-            account_number = account_number_from_url(self.url)
+            account_number = self.url_account_number
             if account_number:
                 self._url_account_number = account_number
                 if self.account and self.account.account_number != account_number:
@@ -1540,7 +1540,7 @@ class SmarterRequestMixin(AccountMixin):
         if self.is_chatbot_named_url:
             # http://example.3141-5926-5359.api.localhost:8000/
             if not self.account:
-                account_number = account_number_from_url(self.url)
+                account_number = self.url_account_number
                 if account_number:
                     self.account = get_cached_account(account_number=account_number)  # type: ignore
             if self.account and not self.user:

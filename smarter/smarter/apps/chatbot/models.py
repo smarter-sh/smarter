@@ -6,7 +6,6 @@ from functools import cached_property
 from typing import Any, List, Optional, Type
 from urllib.parse import ParseResult, urljoin, urlparse
 
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.http import HttpRequest
@@ -33,6 +32,7 @@ from smarter.common.helpers.url_helpers import clean_url
 from smarter.common.utils import rfc1034_compliant_str, smarter_build_absolute_uri
 from smarter.lib import json
 from smarter.lib.cache import cache_results
+from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
@@ -962,8 +962,22 @@ class ChatBotPlugin(TimestampedModel):
         if admin_user is None:
             raise SmarterValueError("ChatBotPlugin.plugin() failed to find admin user for chatbot account")
         user_profile = get_cached_user_profile(admin_user)
-        plugin_controller = PluginController(
-            account=self.chatbot.account, user=admin_user, plugin_meta=self.plugin_meta, user_profile=user_profile
+
+        @cache_results()
+        def get_cached_plugin_controller(account_id: int, user_id: int, plugin_meta_id: int, user_profile_id: int):
+
+            return PluginController(
+                account=self.chatbot.account,
+                user=admin_user,
+                plugin_meta=self.plugin_meta,
+                user_profile=user_profile,
+            )
+
+        plugin_controller = get_cached_plugin_controller(
+            account_id=self.chatbot.account.id,
+            user_id=admin_user.id,
+            plugin_meta_id=self.plugin_meta.id,
+            user_profile_id=user_profile.id,
         )
         this_plugin = plugin_controller.plugin
         return this_plugin
@@ -1298,7 +1312,7 @@ class ChatBotHelper(SmarterRequestMixin):
         "_err",
     )
 
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
         """
         Get the formatted class name for this instance of ChatBotHelper.
@@ -1407,7 +1421,7 @@ class ChatBotHelper(SmarterRequestMixin):
     def __str__(self):
         return str(self.chatbot) if self._chatbot else "undefined"
 
-    @property
+    @cached_property
     def account(self) -> Optional[Account]:
         """
         Return the associated :class:`Account` for this ChatBotHelper instance,
@@ -1588,7 +1602,7 @@ class ChatBotHelper(SmarterRequestMixin):
             **super().to_json(),
         }
 
-    @property
+    @cached_property
     def api_host(self) -> Optional[str]:
         """
         Returns the API host for a ChatBot API URL.
@@ -1711,7 +1725,7 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         return self._chatbot_custom_domain is not None
 
-    @property
+    @cached_property
     def chatbot_custom_domain(self) -> Optional[ChatBotCustomDomain]:
         """
         Returns a lazy instance of the ChatBotCustomDomain.

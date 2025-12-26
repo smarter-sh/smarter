@@ -279,7 +279,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             return None
 
         try:
-            self._plugin_data = PluginDataSql.objects.get(plugin=self.plugin_meta)
+            self._plugin_data = PluginDataSql.get_cached_data_by_plugin(plugin=self.plugin_meta)
         except PluginDataSql.DoesNotExist:
             logger.warning(
                 "%s.plugin_data() PluginDataSql object does not exist for %s %s",

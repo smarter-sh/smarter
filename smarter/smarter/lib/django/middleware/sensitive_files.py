@@ -4,12 +4,12 @@ import fnmatch
 import logging
 import re
 
-from django.conf import settings
-from django.core.cache import cache
 from django.http import HttpResponseForbidden
 
 from smarter.common.classes import SmarterMiddlewareMixin
 from smarter.common.conf import settings as smarter_settings
+from smarter.lib.cache import cache_results
+from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -22,6 +22,86 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+ALLOWED_PATTERNS = [re.compile(pattern) for pattern in smarter_settings.sensitive_files_amnesty_patterns]
+SENSITIVE_FILES = list(
+    {
+        ".env",
+        "config.php",
+        "wp-config.php",
+        "settings.py",
+        ".bak",
+        ".tmp",
+        ".swp",
+        ".git",
+        ".svn",
+        "id_rsa",
+        "id_dsa",
+        ".DS_Store",
+        "login.action",
+        ".vscode",
+        "info.php",
+        "phpinfo.php",
+        "php.ini",
+        "phpmyadmin",
+        "pma",
+        "mysql",
+        "db",
+        "database",
+        "backup",
+        "dump",
+        "sql",
+        "sqlite",
+        "mssql",
+        "oracle",
+        "postgres",
+        "postgresql",
+        "db.sqlite",
+        "db.sqlite3",
+        "db.mssql",
+        "db.oracle",
+        "db.postgres",
+        "db.postgresql",
+        "db.mysql",
+        "db.sql",
+        "composer.json",
+        "composer.lock",
+        "package.json",
+        "package-lock.json",
+        "yarn.lock",
+        "Gemfile",
+        "Gemfile.lock",
+        "Pipfile",
+        "Pipfile.lock",
+        "requirements.txt",
+        "credentials.json",
+        "secrets.json",
+        "*.pem",
+        "*.key",
+        "*.crt",
+        "*.cer",
+        "*.p12",
+        "*.pfx",
+        "*.jks",
+        "*.keystore",
+        "*.env.local",
+        "*.env.development",
+        "*.env.production",
+        "*.env.test",
+        "*.env.qa",
+        "*.env.staging",
+        "*.env.*",
+        "*.bak",
+        "*.tmp",
+        "*.swp",
+        "*.log",
+        "*.pid",
+        "*.sock",
+        "*.pid.lock",
+        "*.pidfile",
+        "ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application",
+    }
+)
 
 
 class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
@@ -55,7 +135,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     - Integrates with Django's cache for tracking request counts and with application logging.
 
     .. note::
-        - Amnesty patterns can be configured via the ``SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS`` Django setting.
+        - Amnesty patterns can be configured via the ``smarter_settings.sensitive_files_amnesty_patterns`` Django setting.
         - Logging is controlled via a waffle switch and the application's log level.
         - The client IP is determined using the :meth:`get_client_ip` method.
 
@@ -84,85 +164,8 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         self.get_response = get_response
 
         # grant amnesty for specific patterns
-        self.allowed_patterns = [
-            re.compile(pattern) for pattern in getattr(settings, "SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS", [])
-        ]
-        self.sensitive_files = {
-            ".env",
-            "config.php",
-            "wp-config.php",
-            "settings.py",
-            ".bak",
-            ".tmp",
-            ".swp",
-            ".git",
-            ".svn",
-            "id_rsa",
-            "id_dsa",
-            ".DS_Store",
-            "login.action",
-            ".vscode",
-            "info.php",
-            "phpinfo.php",
-            "php.ini",
-            "phpmyadmin",
-            "pma",
-            "mysql",
-            "db",
-            "database",
-            "backup",
-            "dump",
-            "sql",
-            "sqlite",
-            "mssql",
-            "oracle",
-            "postgres",
-            "postgresql",
-            "db.sqlite",
-            "db.sqlite3",
-            "db.mssql",
-            "db.oracle",
-            "db.postgres",
-            "db.postgresql",
-            "db.mysql",
-            "db.sql",
-            "composer.json",
-            "composer.lock",
-            "package.json",
-            "package-lock.json",
-            "yarn.lock",
-            "Gemfile",
-            "Gemfile.lock",
-            "Pipfile",
-            "Pipfile.lock",
-            "requirements.txt",
-            "credentials.json",
-            "secrets.json",
-            "*.pem",
-            "*.key",
-            "*.crt",
-            "*.cer",
-            "*.p12",
-            "*.pfx",
-            "*.jks",
-            "*.keystore",
-            "*.env.local",
-            "*.env.development",
-            "*.env.production",
-            "*.env.test",
-            "*.env.qa",
-            "*.env.staging",
-            "*.env.*",
-            "*.bak",
-            "*.tmp",
-            "*.swp",
-            "*.log",
-            "*.pid",
-            "*.sock",
-            "*.pid.lock",
-            "*.pidfile",
-            "ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application",
-        }
+        self.allowed_patterns = ALLOWED_PATTERNS
+        self.sensitive_files = SENSITIVE_FILES
 
     def __call__(self, request):
         request_path = request.path.lower()
@@ -173,7 +176,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         for pattern in self.allowed_patterns:
             if pattern.match(request_path):
                 logger.info(
-                    "%s amnesty granted to: %s because it matches an allowed pattern in settings.SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS",
+                    "%s amnesty granted to: %s because it matches an allowed pattern in settings.smarter_settings.sensitive_files_amnesty_patterns",
                     self.formatted_class_name,
                     request.path,
                 )
@@ -195,6 +198,18 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
             )
 
         path_basename = request_path.rsplit("/", 1)[-1]
+
+        @cache_results()
+        def cached_amnesty_check(path) -> bool:
+            for sensitive_file in self.sensitive_files:
+                sensitive_file = sensitive_file.lower()
+                if fnmatch.fnmatch(path, sensitive_file):
+                    return False
+            return True
+
+        if cached_amnesty_check(path_basename):
+            return self.get_response(request)
+
         for sensitive_file in self.sensitive_files:
             sensitive_file = sensitive_file.lower()
             if (

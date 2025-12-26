@@ -4,6 +4,7 @@ Base class for chat providers.
 
 import logging
 import traceback
+from functools import cached_property
 from http import HTTPStatus
 from typing import Any, Dict, List, Optional, Union
 
@@ -334,7 +335,7 @@ class ChatProviderBase(ProviderDbMixin):
         if not self.account:
             self.account = self.chat.account
 
-    @property
+    @cached_property
     def ready(self) -> bool:
         return bool(self.chat) and bool(self.data) and bool(self.account)
 
@@ -346,7 +347,7 @@ class ChatProviderBase(ProviderDbMixin):
     def messages(self, value: List[Dict[str, str]]) -> None:
         self._messages = value
 
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
         """
         Returns the class name in a formatted string
@@ -472,7 +473,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     fully compatible with OpenAI's text completion API.
     """
 
-    @property
+    @cached_property
     def openai_messages(self) -> list[dict[str, Any]]:
         """
         Return a sanitized list of messages compatible with OpenAI's chat completion API.
@@ -551,7 +552,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             retval.append(message_copy)
         return retval
 
-    @property
+    @cached_property
     def new_messages(self) -> list[dict[str, Any]]:
         if self.messages is None:
             return []
@@ -1050,6 +1051,12 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 )
             tool_calls: Optional[list[ChatCompletionMessageToolCall]] = response_message.tool_calls
             if tool_calls:
+                logger.info(
+                    "%s %s - %s tool calls detected, preparing second request",
+                    self.formatted_class_name,
+                    formatted_text("handler()"),
+                    len(tool_calls),
+                )
                 self.iteration = 2
                 self.serialized_tool_calls = []
 

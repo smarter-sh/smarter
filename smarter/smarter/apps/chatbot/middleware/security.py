@@ -44,7 +44,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
     **Key Features:**
 
     - **Custom Host Validation:**
-      Instead of relying solely on Django’s ``ALLOWED_HOSTS``, this middleware introduces ``SMARTER_ALLOWED_HOSTS``. It checks incoming requests against both the traditional allowed hosts and a dynamic list of domains associated with deployed ChatBots.
+      Instead of relying solely on Django’s ``ALLOWED_HOSTS``, this middleware introduces ``smarter_settings.allowed_hosts``. It checks incoming requests against both the traditional allowed hosts and a dynamic list of domains associated with deployed ChatBots.
 
     - **ChatBot Domain Support:**
       If the request’s host matches a domain for a deployed ChatBot, the request is allowed to pass through. This enables flexible multi-tenant deployments where each ChatBot can have its own domain.
@@ -70,7 +70,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
        Requests to health or readiness endpoints are allowed.
 
     4. **Allowed Hosts:**
-       Requests matching any pattern in ``SMARTER_ALLOWED_HOSTS`` are allowed.
+       Requests matching any pattern in ``smarter_settings.allowed_hosts`` are allowed.
 
     5. **ChatBot Domains:**
        Requests where the host matches a deployed ChatBot’s domain are allowed.
@@ -120,7 +120,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
         # Short-circuit for any requests born from internal IP address hosts
         # This is unlikely, but not impossible.
-        if any(host.startswith(prefix) for prefix in settings.SMARTER_INTERNAL_IP_PREFIXES):
+        if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
@@ -182,10 +182,10 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # 5.) If the host is in the list of allowed hosts for
         #     our environment then allow it to pass through
         # ---------------------------------------------------------------------
-        for allowed_host in settings.SMARTER_ALLOWED_HOSTS:
+        for allowed_host in smarter_settings.allowed_hosts:
             if fnmatch.fnmatch(host, allowed_host):
                 logger.info(
-                    "%s %s matched with settings.SMARTER_ALLOWED_HOSTS: %s",
+                    "%s %s matched with smarter_settings.allowed_hosts: %s",
                     self.formatted_class_name,
                     host,
                     allowed_host,

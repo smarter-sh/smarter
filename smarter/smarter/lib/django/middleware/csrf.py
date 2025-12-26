@@ -121,6 +121,8 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
         If the request is for a ChatBot, then we'll exempt it from CSRF checks.
         """
         host = request.get_host()
+        url = self.smarter_build_absolute_uri(request)
+
         if not host:
             return SmarterHttpResponseServerError(
                 request=request,
@@ -133,15 +135,13 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
 
         # Short-circuit for any requests born from internal IP address hosts.
         # This is unlikely, but not impossible.
-        if any(host.startswith(prefix) for prefix in settings.SMARTER_INTERNAL_IP_PREFIXES):
+        if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
                 self.smarter_build_absolute_uri(request),
             )
             return None
-
-        url = self.smarter_build_absolute_uri(request)
 
         # this is a workaround to not being able to inherit from
         # SmarterRequestMixin inside of middleware.

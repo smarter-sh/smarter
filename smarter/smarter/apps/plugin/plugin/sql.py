@@ -50,9 +50,11 @@ from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -232,7 +234,7 @@ class SqlPlugin(PluginBase):
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
-            self._plugin_data = PluginDataSql.objects.get(
+            self._plugin_data = PluginDataSql.get_cached_data_by_plugin(
                 plugin=self.plugin_meta,
             )
         # new Plugin scenario. there's nothing in the database yet.
@@ -503,7 +505,7 @@ class SqlPlugin(PluginBase):
                     SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
                         "smarter",
                         "users",
-                        "admin",
+                        SMARTER_ADMIN_USERNAME,
                     ],
                 },
                 SAMPluginSpecKeys.PROMPT.value: {
@@ -523,7 +525,7 @@ class SqlPlugin(PluginBase):
                             data_type="string",
                             description="The username to query.",
                             required=True,
-                            default="admin",
+                            default=SMARTER_ADMIN_USERNAME,
                         ),
                         cls.parameter_factory(
                             name="unit",
@@ -536,7 +538,7 @@ class SqlPlugin(PluginBase):
                     SAMSqlPluginSpecSqlData.TEST_VALUES.value: [
                         {
                             SAMPluginCommonSpecTestValues.NAME.value: "username",
-                            SAMPluginCommonSpecTestValues.VALUE.value: "admin",
+                            SAMPluginCommonSpecTestValues.VALUE.value: SMARTER_ADMIN_USERNAME,
                         },
                         {
                             SAMPluginCommonSpecTestValues.NAME.value: "unit",
@@ -685,14 +687,22 @@ class SqlPlugin(PluginBase):
             "%s.tool_call_fetch_plugin_response() executing remote SQL query: %s", self.formatted_class_name, sql
         )
 
-        retval = sql_connection.execute_query(
-            sql=sql,
-            limit=(
-                self.plugin_data.limit
-                if self.plugin_data.limit and self.plugin_data.limit < MAX_SQL_QUERY_LENGTH
-                else MAX_SQL_QUERY_LENGTH
-            ),
-        )
+        @cache_results()
+        def get_cached_query_result(sql: str) -> Any:
+            if not self.plugin_data:
+                raise SmarterSqlPluginError(
+                    f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} plugin data is not available."
+                )
+            return sql_connection.execute_query(
+                sql=sql,
+                limit=(
+                    self.plugin_data.limit
+                    if self.plugin_data.limit and self.plugin_data.limit < MAX_SQL_QUERY_LENGTH
+                    else MAX_SQL_QUERY_LENGTH
+                ),
+            )
+
+        retval = get_cached_query_result(sql)
 
         if not retval:
             logger.warning(

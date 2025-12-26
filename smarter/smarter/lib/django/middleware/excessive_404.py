@@ -5,13 +5,13 @@ Middleware to block clients that trigger excessive 404 responses.
 import logging
 from http import HTTPStatus
 
-from django.core.cache import cache
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseForbidden
 
 from smarter.common.classes import SmarterMiddlewareMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import is_authenticated_request
+from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

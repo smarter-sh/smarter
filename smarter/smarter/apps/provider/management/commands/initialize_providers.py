@@ -15,6 +15,7 @@ from google.oauth2 import service_account
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
+from smarter.common.classes import json
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.lib.django.management.base import SmarterCommand
@@ -208,10 +209,16 @@ class Command(SmarterCommand):
         ]
 
         try:
-            credentials = service_account.Credentials.from_service_account_info(
-                smarter_settings.google_service_account, scopes=SCOPES
-            )
+            svc_account = smarter_settings.google_service_account.get_secret_value()
+            if isinstance(svc_account, str):
+                svc_account_dict = json.loads(svc_account)
+            else:
+                svc_account_dict = svc_account
+            credentials = service_account.Credentials.from_service_account_info(svc_account_dict, scopes=SCOPES)
             auth_req = google.auth.transport.requests.Request()
+        except json.JSONDecodeError as e:
+            self.stdout.write(self.style.ERROR(f"initialize_googleai: Error decoding Google service account JSON: {e}"))
+            return
         except GoogleAuthError as e:
             self.stdout.write(self.style.ERROR(f"initialize_googleai: Error loading Google credentials: {e}"))
             return

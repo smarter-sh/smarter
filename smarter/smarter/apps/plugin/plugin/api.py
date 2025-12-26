@@ -40,6 +40,7 @@ from smarter.apps.plugin.manifest.models.common import Parameter
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
@@ -164,7 +165,7 @@ class ApiPlugin(PluginBase):
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
-            self._plugin_data = PluginDataApi.objects.get(
+            self._plugin_data = PluginDataApi.get_cached_data_by_plugin(
                 plugin=self.plugin_meta,
             )
         # new Plugin scenario. there's nothing in the database yet.
@@ -340,7 +341,7 @@ class ApiPlugin(PluginBase):
                 SAMPluginSpecKeys.SELECTOR.value: {
                     SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
                     SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
-                        "admin",
+                        SMARTER_ADMIN_USERNAME,
                         "Smarter",
                         "account",
                     ],
@@ -398,7 +399,7 @@ class ApiPlugin(PluginBase):
                     SAMApiPluginSpecApiData.TEST_VALUES.value: [
                         {
                             SAMPluginCommonSpecTestValues.NAME.value: "username",
-                            SAMPluginCommonSpecTestValues.VALUE.value: "admin",
+                            SAMPluginCommonSpecTestValues.VALUE.value: SMARTER_ADMIN_USERNAME,
                         },
                         {
                             SAMPluginCommonSpecTestValues.NAME.value: "limit",

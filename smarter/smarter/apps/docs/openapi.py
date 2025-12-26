@@ -11,9 +11,9 @@ from smarter.common.conf import settings as smarter_settings
 
 
 api_info = openapi.Info(
-    title=settings.SMARTER_API_NAME,
+    title=smarter_settings.api_name,
     default_version="v1",
-    description=settings.SMARTER_API_DESCRIPTION,
+    description=smarter_settings.api_description,
     terms_of_service="https:/smarter.sh/tos/",
     contact=openapi.Contact(
         name="Smarter Support",

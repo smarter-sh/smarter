@@ -11,6 +11,7 @@ import hcl2
 
 logger = logging.getLogger(__name__)
 
+SMARTER_ADMIN_USERNAME = "admin"
 SMARTER_ACCOUNT_NUMBER = "3141-5926-5359"
 SMARTER_BETA_ACCOUNT_NUMBER = "4386-2072-3294"
 SMARTER_UBC_ACCOUNT_NUMBER = "5680-6558-6577"
@@ -55,7 +56,6 @@ TERRAFORM_TFVARS = os.path.join(TERRAFORM_ROOT, "terraform.tfvars")
 if not os.path.exists(TERRAFORM_TFVARS):
     TERRAFORM_TFVARS = os.path.join(PROJECT_ROOT, "terraform.tfvars")
 
-TFVARS = {}
 IS_USING_TFVARS = False
 
 try:

@@ -58,7 +58,7 @@ class DocsBaseView(SmarterWebHtmlView):
                 "Anonymous requests may have limited access to certain manifests."
             )
 
-        logger.info(
+        logger.debug(
             "Getting brokered JSON response for reverse_name=%s, kind=%s, request.user=%s",
             reverse_name,
             self.kind,
@@ -81,7 +81,7 @@ class DocsBaseView(SmarterWebHtmlView):
         else:
             setattr(cli_request, SMARTER_IS_INTERNAL_API_REQUEST, False)
 
-        logger.info(
+        logger.debug(
             "Creating brokered request for reverse_name=%s, kind=%s, request.user=%s",
             reverse_name,
             self.kind,
@@ -97,7 +97,7 @@ class DocsBaseView(SmarterWebHtmlView):
             # unpack the smarter.sh/api error response payload
             json_response = json_response[SmarterJournalApiResponseKeys.ERROR]
 
-        logger.info(
+        logger.debug(
             "Brokered JSON response for reverse_name=%s, kind=%s, request.user=%s: %s",
             reverse_name,
             self.kind,

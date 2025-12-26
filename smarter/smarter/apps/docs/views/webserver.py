@@ -8,7 +8,6 @@ from datetime import datetime
 from django.http import FileResponse, HttpResponse
 from django.views import View
 
-from smarter.apps.chatbot.models import ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.view_helpers import SmarterWebTxtView, SmarterWebXmlView
 

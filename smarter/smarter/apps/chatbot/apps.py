@@ -1,8 +1,13 @@
 """Django Config for the ChatBot app."""
 
+import logging
+
 from django.apps import AppConfig
 
 from .const import namespace as app_name
+
+
+logger = logging.getLogger(__name__)
 
 
 class ChatbotConfig(AppConfig):
@@ -17,3 +22,5 @@ class ChatbotConfig(AppConfig):
         """Handle signals."""
         from . import receivers  # noqa
         from . import signals  # noqa
+
+        logger.info("ChatBot app ready: signals and receivers imported")

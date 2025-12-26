@@ -75,10 +75,10 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
     .. seealso::
 
-        :class:`SAMApiConnection`
-        :class:`ApiConnection`
-        :class:`ApiConnectionSerializer`
-        :class:`SAMConnectionBrokerError`
+        :class:`smarter.apps.plugin.manifest.models.api_connection.model.SAMApiConnection`
+        :class:`smarter.apps.plugin.models.ApiConnection`
+        :class:`smarter.apps.plugin.serializers.ApiConnectionSerializer`
+        :class:`smarter.apps.plugin.manifest.brokers.SAMConnectionBrokerError`
 
     **Example usage**::
 
@@ -199,26 +199,29 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :return: The manifest as a ``SAMApiConnection`` Pydantic model, or ``None`` if not initialized.
         :rtype: Optional[SAMApiConnection]
         """
-        if not self._manifest and self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata) if self.loader else None,
-                spec=SAMApiConnectionSpec(**self.loader.manifest_spec) if self.loader else None,
-                status=(
-                    SAMConnectionCommonStatus(**self.loader.manifest_status)
-                    if self.loader and self.loader.manifest_status
-                    else None
-                ),
-            )
-            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
+        if self._manifest:
+            return self._manifest
         else:
-            logger.warning(
-                "%s.manifest() could not initialize manifest. Expected %s but got %s",
-                self.formatted_class_name,
-                self.kind,
-                self.loader.manifest_kind if self.loader else None,
-            )
+            if self.loader and self.loader.manifest_kind == self.kind:
+                self._manifest = SAMApiConnection(
+                    apiVersion=self.loader.manifest_api_version,
+                    kind=self.loader.manifest_kind,
+                    metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                    spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
+                    status=(
+                        SAMConnectionCommonStatus(**self.loader.manifest_status)
+                        if self.loader and self.loader.manifest_status
+                        else None
+                    ),
+                )
+                logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
+            else:
+                logger.warning(
+                    "%s.manifest() could not initialize manifest. Expected %s but got %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.loader.manifest_kind if self.loader else None,
+                )
         return self._manifest
 
     def manifest_to_django_orm(self) -> dict:

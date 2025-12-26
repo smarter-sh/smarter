@@ -1,34 +1,131 @@
-## [0.13.40](https://github.com/smarter-sh/smarter/compare/v0.13.39...v0.13.40) (2025-12-11)
+# <<<<<<< HEAD
 
+## [0.13.56](https://github.com/smarter-sh/smarter/compare/v0.13.55...v0.13.56) (2025-12-24)
 
 ### Bug Fixes
 
-* add link to Dashboard Connection card ([3ff65cc](https://github.com/smarter-sh/smarter/commit/3ff65cc08ac9a6ede82f66f708914f91c9bf549f))
-* add waffle should_log() ([5390f33](https://github.com/smarter-sh/smarter/commit/5390f33acaea14ee0e7cca478a2f232ee4417c2c))
+- defer initializing selector, prompt, plugin_data django ORM dicts until we know that we're going to create. ([bb5af38](https://github.com/smarter-sh/smarter/commit/bb5af38590fe1a4595448d68f836b91ea28ba5ec))
+
+## [0.13.55](https://github.com/smarter-sh/smarter/compare/v0.13.54...v0.13.55) (2025-12-24)
+
+### Bug Fixes
+
+- do not reference self.request in setup() since it does not yet exist ([e065933](https://github.com/smarter-sh/smarter/commit/e065933e4ae354b2aacf54d87af6204fe5fb3a35))
+
+## [0.13.54](https://github.com/smarter-sh/smarter/compare/v0.13.53...v0.13.54) (2025-12-23)
+
+### Bug Fixes
+
+- add object caching ([1787cc9](https://github.com/smarter-sh/smarter/commit/1787cc9967f797ea16d868c419c210ac56069d65))
+
+## [0.13.53](https://github.com/smarter-sh/smarter/compare/v0.13.52...v0.13.53) (2025-12-22)
+
+### Bug Fixes
+
+- do not expose sensitive values when logging ([7b58495](https://github.com/smarter-sh/smarter/commit/7b5849509e0bbdd85c0a4f13e62e9aadd06e9ff7))
+
+## [0.13.52](https://github.com/smarter-sh/smarter/compare/v0.13.51...v0.13.52) (2025-12-21)
+
+### Bug Fixes
+
+- define **all** in each settings module ([56dab9e](https://github.com/smarter-sh/smarter/commit/56dab9e14fced0690525de2606b915fd61e24fb3))
+
+## [0.13.51](https://github.com/smarter-sh/smarter/compare/v0.13.50...v0.13.51) (2025-12-20)
+
+### Bug Fixes
+
+- work on Settings defaults ([13d02fb](https://github.com/smarter-sh/smarter/commit/13d02fb72ce17028cda6766fe5abb015e4065f66))
+
+## [0.13.50](https://github.com/smarter-sh/smarter/compare/v0.13.49...v0.13.50) (2025-12-20)
+
+### Bug Fixes
+
+- ensure that all sensitive data is typed to SecretStr ([13760d4](https://github.com/smarter-sh/smarter/commit/13760d4736a7e17f26968bec36a318d11fa5c145))
+
+## [0.13.49](https://github.com/smarter-sh/smarter/compare/v0.13.48...v0.13.49) (2025-12-19)
+
+### Bug Fixes
+
+- make all Django and Smarter settings overridable via .env ([923cd6f](https://github.com/smarter-sh/smarter/commit/923cd6f31d791e05cd19344114ade6b60f5b2b7e))
+
+## [0.13.48](https://github.com/smarter-sh/smarter/compare/v0.13.47...v0.13.48) (2025-12-17)
+
+### Bug Fixes
+
+- install Oracle mysql client ([52083b2](https://github.com/smarter-sh/smarter/commit/52083b2577a03f37bdc156ae08a7195f3a776382))
+
+## [0.13.47](https://github.com/smarter-sh/smarter/compare/v0.13.46...v0.13.47) (2025-12-17)
+
+### Bug Fixes
+
+- add custom authentication backends for hosted platforms ([dde5431](https://github.com/smarter-sh/smarter/commit/dde54314ff7abb69d0a2bfed8a193063f6d85b0c))
+
+## [0.13.46](https://github.com/smarter-sh/smarter/compare/v0.13.45...v0.13.46) (2025-12-17)
+
+### Bug Fixes
+
+- add custom authentication backends for hosted platforms ([727506d](https://github.com/smarter-sh/smarter/commit/727506d45698920c475a428aa9932cbf795a6b60))
+
+## [0.13.45](https://github.com/smarter-sh/smarter/compare/v0.13.44...v0.13.45) (2025-12-17)
+
+### Bug Fixes
+
+- add custom authentication backends for hosted platforms ([7a35816](https://github.com/smarter-sh/smarter/commit/7a358165c5ce3c45e43f43f5802a9a03c45f9766))
+
+## [0.13.44](https://github.com/smarter-sh/smarter/compare/v0.13.43...v0.13.44) (2025-12-12)
+
+### Bug Fixes
+
+- refactor and document new caching strategy ([4272461](https://github.com/smarter-sh/smarter/commit/42724619b762347885f1f382578a0e9cef77a59c))
+
+## [0.13.43](https://github.com/smarter-sh/smarter/compare/v0.13.42...v0.13.43) (2025-12-12)
+
+### Bug Fixes
+
+- re-enable waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING) ([7876844](https://github.com/smarter-sh/smarter/commit/78768443a0fb805b0002dbc4eb233f2a12380772))
+
+## [0.13.42](https://github.com/smarter-sh/smarter/compare/v0.13.41...v0.13.42) (2025-12-12)
+
+### Bug Fixes
+
+- create a LazyCache class for importing from django.core.cache only after Django is fully initialized. ([c67b60e](https://github.com/smarter-sh/smarter/commit/c67b60e2528bea5e084b12aaffa5334ead3e93ea))
+- remove waffle from cache.py ([49381ba](https://github.com/smarter-sh/smarter/commit/49381ba707dca4f83b2b83e2c8d2f708d736069f))
+
+## [0.13.41](https://github.com/smarter-sh/smarter/compare/v0.13.40...v0.13.41) (2025-12-11)
+
+### Bug Fixes
+
+- create SmarterValidator.is_api_endpoint and use this to evaluate request path in SmarterTokenAuthenticationMiddleware ([8a157fc](https://github.com/smarter-sh/smarter/commit/8a157fc04a0deb03c2631f660a19245b11c28412))
+
+> > > > > > > main
+
+## [0.13.40](https://github.com/smarter-sh/smarter/compare/v0.13.39...v0.13.40) (2025-12-11)
+
+### Bug Fixes
+
+- add link to Dashboard Connection card ([3ff65cc](https://github.com/smarter-sh/smarter/commit/3ff65cc08ac9a6ede82f66f708914f91c9bf549f))
+- add waffle should_log() ([5390f33](https://github.com/smarter-sh/smarter/commit/5390f33acaea14ee0e7cca478a2f232ee4417c2c))
 
 ## [0.13.39](https://github.com/smarter-sh/smarter/compare/v0.13.38...v0.13.39) (2025-12-11)
 
-
 ### Bug Fixes
 
-* add APIKeyListView ([3c74ab1](https://github.com/smarter-sh/smarter/commit/3c74ab1955d75cea5e53c580250365106454f731))
-* add Secrets, Custom Domains, Api Keys to left side bar ([a055d06](https://github.com/smarter-sh/smarter/commit/a055d064508b676549084ddb39b7378eb81f0165))
-* exit gracefully if smarter_request_mixin.is_smarter_api == False ([f63d01b](https://github.com/smarter-sh/smarter/commit/f63d01beee1e325e52aca98ab519a3b1706ca9e0))
-* remove django login_required and staff decorators. replace with our own logic ([8ba09bb](https://github.com/smarter-sh/smarter/commit/8ba09bb52db7d7d6bc49eb319ee837d9bd56b55f))
+- add APIKeyListView ([3c74ab1](https://github.com/smarter-sh/smarter/commit/3c74ab1955d75cea5e53c580250365106454f731))
+- add Secrets, Custom Domains, Api Keys to left side bar ([a055d06](https://github.com/smarter-sh/smarter/commit/a055d064508b676549084ddb39b7378eb81f0165))
+- exit gracefully if smarter_request_mixin.is_smarter_api == False ([f63d01b](https://github.com/smarter-sh/smarter/commit/f63d01beee1e325e52aca98ab519a3b1706ca9e0))
+- remove django login_required and staff decorators. replace with our own logic ([8ba09bb](https://github.com/smarter-sh/smarter/commit/8ba09bb52db7d7d6bc49eb319ee837d9bd56b55f))
 
 ## [0.13.38](https://github.com/smarter-sh/smarter/compare/v0.13.37...v0.13.38) (2025-12-06)
 
-
 ### Bug Fixes
 
-* SmarterSecurityMiddleware should allow .well-known/acme-challenge requests ([b10f91c](https://github.com/smarter-sh/smarter/commit/b10f91c213409756d8a10402839ef5a49c57210a))
+- SmarterSecurityMiddleware should allow .well-known/acme-challenge requests ([b10f91c](https://github.com/smarter-sh/smarter/commit/b10f91c213409756d8a10402839ef5a49c57210a))
 
 ## [0.13.37](https://github.com/smarter-sh/smarter/compare/v0.13.36...v0.13.37) (2025-12-06)
 
-
 ### Bug Fixes
 
-* release sphinx Read the Docs ([1ee9cb0](https://github.com/smarter-sh/smarter/commit/1ee9cb07fadd70073795464f1ddb227cd8ee7093))
+- release sphinx Read the Docs ([1ee9cb0](https://github.com/smarter-sh/smarter/commit/1ee9cb07fadd70073795464f1ddb227cd8ee7093))
 
 # Change Log
 

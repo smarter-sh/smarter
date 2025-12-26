@@ -23,7 +23,7 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
   license="GNU AGPL v3" \
   vcs-url="https://github.com/smarter-sh/smarter" \
   org.opencontainers.image.title="Smarter API" \
-  org.opencontainers.image.version="0.13.40" \
+  org.opencontainers.image.version="0.13.56" \
   org.opencontainers.image.authors="Lawrence McDaniel <lpm0073@gmail.com>" \
   org.opencontainers.image.url="https://smarter-sh.github.io/smarter/" \
   org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
@@ -67,13 +67,29 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   pkg-config \
   ca-certificates \
   python-dev-is-python3 \
-  default-mysql-client \
-  libmariadb-dev \
+  wget \
   git \
   curl \
   unzip \
-  procps && \
+  procps \
+  redis-tools \
+  libmariadb-dev \
+  libncurses6 && \
   rm -rf /var/lib/apt/lists/*
+
+# Install Oracle MySQL 8.x client binary for correct architecture
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
+      MYSQL_TARBALL="mysql-8.0.36-linux-glibc2.28-aarch64.tar.xz"; \
+      MYSQL_DIR="mysql-8.0.36-linux-glibc2.28-aarch64"; \
+    else \
+      MYSQL_TARBALL="mysql-8.0.36-linux-glibc2.28-x86_64.tar.xz"; \
+      MYSQL_DIR="mysql-8.0.36-linux-glibc2.28-x86_64"; \
+    fi && \
+    wget "https://dev.mysql.com/get/Downloads/MySQL-8.0/${MYSQL_TARBALL}" && \
+    tar -xf "$MYSQL_TARBALL" && \
+    cp "$MYSQL_DIR/bin/mysql" /usr/local/bin/ && \
+    chmod +x /usr/local/bin/mysql && \
+    rm -rf "$MYSQL_TARBALL" "$MYSQL_DIR"
 
 # Install kubectl, required for smarter/common/helpers/k8s_helpers.py used for ChatBot/Agent
 # deployments in which dedicated Kubernetes ingress and TLS certificates are created. There

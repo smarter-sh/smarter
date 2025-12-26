@@ -67,7 +67,11 @@ class Command(SmarterCommand):
             return
         password = options.get("db_password")
         if not password:
-            password = smarter_settings.smarter_mysql_test_database_password
+            password = (
+                smarter_settings.smarter_mysql_test_database_password.get_secret_value()
+                if smarter_settings.smarter_mysql_test_database_password
+                else None
+            )
             if not password:
                 password = getpass.getpass("SQL database password: ")
         password = Secret.encrypt(password)

@@ -20,6 +20,7 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake as util_camel_to_snake
 from smarter.common.utils import snake_to_camel as util_snake_to_camel
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
@@ -659,9 +660,17 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The created or retrieved Secret object.
         :rtype: Secret
         """
+
+        @cache_results()
+        def cached_secret_by_name_and_profile_id(name: str, profile_id: int) -> Optional[Secret]:
+            try:
+                return Secret.objects.get(name=name, user_profile__id=profile_id)
+            except Secret.DoesNotExist:
+                return None
+
         secret: Optional[Secret] = None
         try:
-            secret = Secret.objects.get(name=name, user_profile=user_profile)
+            secret = cached_secret_by_name_and_profile_id(name=name, profile_id=user_profile.id)
         except Secret.DoesNotExist as e:
             logger.info(
                 "%s.get_or_create_secret() Secret %s not found for user %s",

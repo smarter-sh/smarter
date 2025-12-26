@@ -1,4 +1,4 @@
-# pylint: disable=unused-wildcard-import, wildcard-import, unused-import, wrong-import-position
+# pylint: disable=unused-wildcard-import,wildcard-import,unused-import,wrong-import-position,C0302
 """
 Smarter base settings module, shared by all environments. See smarter_settings
 for strongly-typed, project-specific settings overrides.
@@ -10,8 +10,9 @@ notes:
 - For the full list of settings and their values, see https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-import glob
+import ast
 import hashlib
+import json
 import logging
 import logging.config
 import math
@@ -26,38 +27,77 @@ from pathlib import Path
 
 from corsheaders.defaults import default_headers
 from django import get_version
-from django.core.cache import cache
-from django.db import connections
-from django.db.utils import OperationalError
-from social_core.backends.linkedin import LinkedinOAuth2
+from dotenv import load_dotenv
 
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
-from smarter.common.helpers.aws_helpers import aws_helper
-
-# Add proprietary settings for the project
-from .smarter import *  # noqa: E402, F401, W0401
+from smarter.common.helpers.console_helpers import formatted_text_green
 
 
 logger = logging.getLogger(__name__)
 
 
-ALLOWED_HOSTS = ["*"]
+# pylint: disable=W0621
+def smart_cast(value, default_value):
+    """
+    Cast string value to the same data type as the type
+    of the default_value. This is used for casting
+    environment variable strings to the
+    appropriate settings type.
+    """
+    if isinstance(default_value, bool):
+        return str(value).lower() in ("1", "true", "yes", "on")
+    if isinstance(default_value, int):
+        try:
+            return int(value)
+        except ValueError:
+            return default_value
+    if isinstance(default_value, float):
+        try:
+            return float(value)
+        except ValueError:
+            return default_value
+    if isinstance(default_value, list):
+        # Try JSON, fallback to comma-separated
+        try:
+            parsed = ast.literal_eval(value)
+            if isinstance(parsed, list):
+                return parsed
+        # pylint: disable=broad-except
+        except Exception:
+            pass
+        return [item.strip() for item in value.split(",") if item.strip()]
+    if isinstance(default_value, dict):
+        try:
+            parsed = ast.literal_eval(value)
+            if isinstance(parsed, dict):
+                return parsed
+        # pylint: disable=broad-except
+        except Exception:
+            pass
+        return default_value
+    return value  # str or fallback
+
+
+ALLOWED_HOSTS = smarter_settings.allowed_hosts
 """
 A list of strings representing the host/domain names that this Django site can serve.
 Smarter implements its own middleware to validate host names.
 See smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware.
 
-Default: ["*"]
+See:
 
-See: https://docs.djangoproject.com/en/stable/ref/settings/#allowed-hosts
+    - https://docs.djangoproject.com/en/stable/ref/settings/#allowed-hosts
+    - smarter_settings.allowed_hosts
 """
 
 LOCAL_HOSTS = smarter_settings.local_hosts
 """
 Supplemental list of local host/domain names that this Django site can serve.
 This is specicific to Smarter and not officially part of Django settings.
+
+See: smarter_settings.local_hosts
 """
 
 # to disable redis/celery in collectstatic
@@ -185,6 +225,7 @@ See:
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-cookie-domain
 - `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- smarter_settings.environment_platform_domain
 """
 
 CSRF_COOKIE_PATH = "/"
@@ -236,6 +277,8 @@ See:
 - https://docs.djangoproject.com/en/5.0/ref/settings/#csrf-trusted-origins
 - `Smarter Chat: <https://github.com/smarter-sh/smarter-chat/README.md>`__
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
+- smarter_settings.environment_platform_domain
+- smarter_settings.environment_api_domain
 """
 
 CSRF_USE_SESSIONS = False
@@ -308,6 +351,7 @@ from smarter_settings.
 See:
 
 - https://docs.djangoproject.com/en/5.0/ref/settings/#session-cookie-domain
+- smarter_settings.environment_platform_domain
 """
 
 SESSION_COOKIE_PATH = "/"
@@ -352,8 +396,22 @@ if smarter_settings.aws_is_configured:
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {
-                "access_key": smarter_settings.aws_access_key_id.get_secret_value(),
-                "secret_key": smarter_settings.aws_secret_access_key.get_secret_value(),
+                "access_key": (
+                    smarter_settings.aws_access_key_id.get_secret_value()
+                    if (
+                        smarter_settings.aws_access_key_id
+                        and getattr(smarter_settings.aws_access_key_id, "_secret_value", None) is not None
+                    )
+                    else None
+                ),
+                "secret_key": (
+                    smarter_settings.aws_secret_access_key.get_secret_value()
+                    if (
+                        smarter_settings.aws_secret_access_key
+                        and getattr(smarter_settings.aws_secret_access_key, "_secret_value", None) is not None
+                    )
+                    else None
+                ),
                 "bucket_name": smarter_settings.aws_s3_bucket_name,
                 "region_name": smarter_settings.aws_region,
                 "default_acl": "public-read",
@@ -388,10 +446,20 @@ otherwise uses local filesystem storage. smarter_settings determines the appropr
 value based on whether or not it detects AWS authentication configuration in
 the running environment.
 
-See: https://docs.djangoproject.com/en/5.0/ref/settings/#default-file-storage
+See:
+
+    - https://docs.djangoproject.com/en/5.0/ref/settings/#default-file-storage
+    - smarter_settings.django_default_file_storage
 """
 
-AWS_ACCESS_KEY_ID = smarter_settings.aws_access_key_id.get_secret_value()
+AWS_ACCESS_KEY_ID = (
+    smarter_settings.aws_access_key_id.get_secret_value()
+    if (
+        smarter_settings.aws_access_key_id
+        and getattr(smarter_settings.aws_access_key_id, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Supplemental setting for configuring AWS support. The AWS access key ID
 is retrieved and validated in smarter_settings.
@@ -400,9 +468,18 @@ For production deployments the chain of custody should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django AWS_ACCESS_KEY_ID.
 
+See: smarter_settings.aws_access_key_id
+
 """
 
-AWS_SECRET_ACCESS_KEY = smarter_settings.aws_secret_access_key.get_secret_value()
+AWS_SECRET_ACCESS_KEY = (
+    smarter_settings.aws_secret_access_key.get_secret_value()
+    if (
+        smarter_settings.aws_secret_access_key
+        and getattr(smarter_settings.aws_secret_access_key, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Supplemental setting for configuring AWS support. The AWS secret access key
 is retrieved and validated in smarter_settings.
@@ -410,18 +487,28 @@ is retrieved and validated in smarter_settings.
 For production deployments the chain of custody should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django AWS_SECRET_ACCESS_KEY.
+
+See: smarter_settings.aws_secret_access_key
 """
 
 AWS_STORAGE_BUCKET_NAME = smarter_settings.aws_s3_bucket_name
 """
 Supplemental setting for configuring AWS S3 storage support. The S3 bucket name
 is derived in smarter_settings.
+
+See:
+
+    - smarter_settings.aws_s3_bucket_name
 """
 
 AWS_S3_REGION_NAME = smarter_settings.aws_region
 """
 Supplemental setting for configuring AWS support. The AWS region is
 retrieved and validated in smarter_settings.
+
+See:
+
+    - smarter_settings.aws_region
 """
 
 AWS_QUERYSTRING_AUTH = False  # disable querystring auth for public files
@@ -439,7 +526,11 @@ See:
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-SECRET_KEY = smarter_settings.secret_key
+SECRET_KEY = (
+    smarter_settings.secret_key.get_secret_value()
+    if (smarter_settings.secret_key and getattr(smarter_settings.secret_key, "_secret_value", None) is not None)
+    else None
+)
 """
 The secret key for this Django installation. This is retrieved and validated
 from smarter_settings. If not set, a random key is generated and logged as a warning.
@@ -448,7 +539,10 @@ For production deployments the chain of custody should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SECRET_KEY.
 
-See: https://docs.djangoproject.com/en/5.0/ref/settings/#secret-key
+See:
+
+    - https://docs.djangoproject.com/en/5.0/ref/settings/#secret-key
+    - smarter_settings.secret_key
 """
 
 if SECRET_KEY == smarter_settings.default_missing_value:
@@ -464,6 +558,15 @@ logger.debug("SECRET_KEY: %s", SECRET_KEY)
 
 
 DEBUG = smarter_settings.debug_mode
+"""
+A boolean that turns on/off debug mode for Django. This is retrieved
+from smarter_settings.debug_mode.
+
+See:
+
+    - https://docs.djangoproject.com/en/5.0/ref/settings/#debug
+    - smarter_settings.debug_mode
+"""
 
 CACHES = {
     "default": {
@@ -474,6 +577,7 @@ CACHES = {
         },
     }
 }
+
 """
 The Django cache configuration for Smarter, using Redis as the cache backend.
 
@@ -723,12 +827,17 @@ See:
 
 # https://python-social-auth.readthedocs.io/en/latest/configuration/django.html
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
-default_auth_backends = [
-    "social_core.backends.google.GoogleOAuth2",
-    "social_core.backends.github.GithubOAuth2",
-    "smarter.lib.social_core.backends.linkedin.LinkedinOAuth2",
-    "django.contrib.auth.backends.ModelBackend",
-]
+
+AUTHENTICATION_BACKENDS = os.environ.get("AUTHENTICATION_BACKENDS")
+AUTHENTICATION_BACKENDS = (
+    AUTHENTICATION_BACKENDS.split(",")
+    if AUTHENTICATION_BACKENDS
+    else [
+        "social_core.backends.google.GoogleOAuth2",
+        "social_core.backends.github.GithubOAuth2",
+        "django.contrib.auth.backends.ModelBackend",
+    ]
+)
 """
 The authentication backends for Smarter, including social authentication
 backends for Google, GitHub, and LinkedIn, as well as the default Django
@@ -793,7 +902,14 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.user.user_details",
 )
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = smarter_settings.social_auth_google_oauth2_key.get_secret_value()
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = (
+    smarter_settings.social_auth_google_oauth2_key.get_secret_value()
+    if (
+        smarter_settings.social_auth_google_oauth2_key
+        and getattr(smarter_settings.social_auth_google_oauth2_key, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth Google OAuth2 client ID for Smarter.
 
@@ -801,10 +917,20 @@ The chain of custody for this secret should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_GOOGLE_OAUTH2_KEY.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+    - smarter_settings.social_auth_google_oauth2_key
 """
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_secret.get_secret_value()
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = (
+    smarter_settings.social_auth_google_oauth2_secret.get_secret_value()
+    if (
+        smarter_settings.social_auth_google_oauth2_secret
+        and getattr(smarter_settings.social_auth_google_oauth2_secret, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth Google OAuth2 client secret for Smarter.
 
@@ -812,7 +938,10 @@ The chain of custody for this secret should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+    - smarter_settings.social_auth_google_oauth2_secret
 """
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(
@@ -822,7 +951,10 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(
 The redirect URI for Google OAuth2 social authentication in Smarter.
 Do not change this value unless you know what you are doing.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/google.html
+    - smarter_settings.environment_url
 """
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["openid", "email", "profile"]
@@ -831,7 +963,14 @@ The OAuth2 scopes for Google social authentication in Smarter.
 See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
 """
 
-SOCIAL_AUTH_GITHUB_KEY = smarter_settings.social_auth_github_key.get_secret_value()
+SOCIAL_AUTH_GITHUB_KEY = (
+    smarter_settings.social_auth_github_key.get_secret_value()
+    if (
+        smarter_settings.social_auth_github_key
+        and getattr(smarter_settings.social_auth_github_key, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth GitHub OAuth2 client ID for Smarter.
 
@@ -839,10 +978,20 @@ The chain of custody for this secret should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_GITHUB_KEY.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/github.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/github.html
+    - smarter_settings.social_auth_github_key
 """
 
-SOCIAL_AUTH_GITHUB_SECRET = smarter_settings.social_auth_github_secret.get_secret_value()
+SOCIAL_AUTH_GITHUB_SECRET = (
+    smarter_settings.social_auth_github_secret.get_secret_value()
+    if (
+        smarter_settings.social_auth_github_secret
+        and getattr(smarter_settings.social_auth_github_secret, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth GitHub OAuth2 client secret for Smarter.
 
@@ -850,10 +999,20 @@ The chain of custody for this secret should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_GITHUB_SECRET.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/github.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/github.html
+    - smarter_settings.social_auth_github_secret
 """
 
-SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = smarter_settings.social_auth_linkedin_oauth2_key.get_secret_value()
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = (
+    smarter_settings.social_auth_linkedin_oauth2_key.get_secret_value()
+    if (
+        smarter_settings.social_auth_linkedin_oauth2_key
+        and getattr(smarter_settings.social_auth_linkedin_oauth2_key, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth LinkedIn OAuth2 client ID for Smarter.
 
@@ -861,9 +1020,19 @@ The chain of custody for this secret should be:
 
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+    - smarter_settings.social_auth_linkedin_oauth2_key
 """
-SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = smarter_settings.social_auth_linkedin_oauth2_secret.get_secret_value()
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = (
+    smarter_settings.social_auth_linkedin_oauth2_secret.get_secret_value()
+    if (
+        smarter_settings.social_auth_linkedin_oauth2_secret
+        and getattr(smarter_settings.social_auth_linkedin_oauth2_secret, "_secret_value", None) is not None
+    )
+    else None
+)
 """
 Python Social Auth LinkedIn OAuth2 client secret for Smarter.
 
@@ -874,7 +1043,10 @@ here for backward compatibility with existing Smarter deployments that may still
 The chain of custody for this secret should be:
 GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> Django SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+    - smarter_settings.social_auth_linkedin_oauth2_secret
 """
 
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = ["openid", "profile", "email"]
@@ -912,7 +1084,10 @@ here for backward compatibility with existing Smarter deployments that may still
 
 Do not change this value unless you know what you are doing.
 
-See: https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+See:
+
+    - https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
+    - smarter_settings.environment_url
 """
 
 SOCIAL_AUTH_LINKEDIN_OAUTH2_EXTRA_DATA = [
@@ -1071,11 +1246,6 @@ This is the recommended static files storage backend for production deployments
 of Django applications.
 """
 
-# ReactJS integration with Django. Add all reactapp/dist directories in Django apps
-django_apps_dir = BASE_DIR / "apps"
-reactapp_dirs = [Path(p) for p in glob.glob(os.path.join(django_apps_dir, "*", "reactapp", "dist"))]
-STATICFILES_DIRS.extend(reactapp_dirs)
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -1130,18 +1300,52 @@ LOGGING = {
         "level": "INFO",
     },
     "loggers": {
+        "django": {
+            "handlers": ["default"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
         "django.security.DisallowedHost": {
             "handlers": ["default"],
             "level": "ERROR",
             "propagate": False,
+        },
+        "celery": {
+            "handlers": ["default"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "celery.task": {
+            "handlers": ["default"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "celery.beat": {
+            "handlers": ["default"],
+            "level": "INFO",
+            "propagate": True,
         },
     },
 }
 logging.config.dictConfig(LOGGING)
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
-STRIPE_LIVE_SECRET_KEY = smarter_settings.stripe_live_secret_key
-STRIPE_TEST_SECRET_KEY = smarter_settings.stripe_test_secret_key
+STRIPE_LIVE_SECRET_KEY = (
+    smarter_settings.stripe_live_secret_key.get_secret_value()
+    if (
+        smarter_settings.stripe_live_secret_key
+        and getattr(smarter_settings.stripe_live_secret_key, "_secret_value", None) is not None
+    )
+    else ""
+)
+STRIPE_TEST_SECRET_KEY = (
+    smarter_settings.stripe_test_secret_key.get_secret_value()
+    if (
+        smarter_settings.stripe_test_secret_key
+        and getattr(smarter_settings.stripe_test_secret_key, "_secret_value", None) is not None
+    )
+    else ""
+)
 STRIPE_LIVE_MODE = False  # Change to True in production
 DJSTRIPE_WEBHOOK_SECRET = (
     "whsec_xxx"  # Get it from the section in the Stripe dashboard where you added the webhook endpoint
@@ -1154,7 +1358,10 @@ SMTP_SENDER = smarter_settings.smtp_sender
 The default sender email address for outgoing emails from Smarter.
 This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_sender
 """
 
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email
@@ -1162,17 +1369,26 @@ SMTP_FROM_EMAIL = smarter_settings.smtp_from_email
 The default "from" email address for outgoing emails from Smarter.
 This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_from_email
 """
 
 SMTP_HOST = smarter_settings.smtp_host
 """
 The SMTP host for outgoing emails from Smarter. This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_host
 """
 
-SMTP_PASSWORD = smarter_settings.smtp_password
+SMTP_PASSWORD = (
+    smarter_settings.smtp_password.get_secret_value()
+    if (smarter_settings.smtp_password and getattr(smarter_settings.smtp_password, "_secret_value", None) is not None)
+    else None
+)
 """
 The SMTP password for outgoing emails from Smarter. This is derived from smarter_settings.
 When using AWS SES as the SMTP service, this is the SMTP password generated from the AWS SES console.
@@ -1187,32 +1403,44 @@ Kubernetes Secret -> environment variable -> smarter_settings -> Django SMTP_PAS
 
 See:
 
-- https://docs.djangoproject.com/en/5.0/topics/email/
-- https://github.com/smarter-sh/smarter-infrastructure
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - https://github.com/smarter-sh/smarter-infrastructure
+    - smarter_settings.smtp_password
 """
 
 SMTP_PORT = smarter_settings.smtp_port
 """
 The SMTP port for outgoing emails from Smarter. This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_port
 """
 
 SMTP_USE_SSL = smarter_settings.smtp_use_ssl
 """
 A boolean that specifies whether to use SSL for SMTP connections in Smarter. This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_use_ssl
 """
 
 SMTP_USE_TLS = smarter_settings.smtp_use_tls
 """
 A boolean that specifies whether to use TLS for SMTP connections in Smarter. This is derived from smarter_settings.
 
-See: https://docs.djangoproject.com/en/5.0/topics/email/
+See:
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - smarter_settings.smtp_use_tls
 """
 
-SMTP_USERNAME = smarter_settings.smtp_username
+SMTP_USERNAME = (
+    smarter_settings.smtp_username.get_secret_value()
+    if (smarter_settings.smtp_username and getattr(smarter_settings.smtp_username, "_secret_value", None) is not None)
+    else None
+)
 """
 The SMTP username for outgoing emails from Smarter. This is derived from smarter_settings.
 When using AWS SES as the SMTP service, this is the SMTP password generated from the AWS SES console.
@@ -1227,8 +1455,15 @@ Kubernetes Secret -> environment variable -> smarter_settings -> Django SMTP_PAS
 
 See:
 
-- https://docs.djangoproject.com/en/5.0/topics/email/
-- https://github.com/smarter-sh/smarter-infrastructure
+    - https://docs.djangoproject.com/en/5.0/topics/email/
+    - https://github.com/smarter-sh/smarter-infrastructure
+    - smarter_settings.smtp_username
+"""
+
+WAFFLE_CREATE_MISSING_SWITCHES = True
+"""
+If True, enables automatic creation of missing waffle switches in the database during deployment
+jobs. This is intended to simplify management of waffle switches in Smarter deployments.
 """
 
 # Wagtail settings
@@ -1304,10 +1539,54 @@ WAGTAILTRANSFER_SECRET_KEY = os.environ.get("WAGTAILTRANSFER_SECRET_KEY", "8egf3
 WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = int(os.environ.get("WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT", "30"))
 
 ###############################################################################
-# System information logging for all environments
+# Process environment variables to override settings values
+#
+# This allows for 12-factor style configuration via environment variables.
+# Environment variable values are cast to the same data type as the
+# existing Django and/or Smarter setting value.
+#
+# The basic process is:
+# ----------------------
+# 1. set default settings values, above.
+# 2. load environment variables from .env file (if present) and os.environ
+# 3. for each environment variable that matches a setting name,
+#    cast the value to the same type as the existing setting value
+#    and override the default setting value.
 ###############################################################################
-if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
+
+# step 2: load environment variables from .env file (if present)
+load_dotenv()
+
+# step 3: override settings from environment variables
+ASCII_CONTROL_CHAR_REGEX = re.compile(r"[\x00-\x1F\x7F]")
+for key, value in os.environ.items():
+    value = ASCII_CONTROL_CHAR_REGEX.sub("", str(value).strip())
+    if key in globals():
+        default_value = globals()[key]
+        cast_value = smart_cast(value, default_value)
+        globals()[key] = cast_value
+        if smarter_settings.settings_output:
+            if key not in [
+                "SECRET_KEY",
+                "SMTP_PASSWORD",
+                "SMTP_USERNAME",
+                "AWS_ACCESS_KEY_ID",
+                "AWS_SECRET_ACCESS_KEY",
+            ]:
+                logger.info(
+                    formatted_text_green("Overriding Django setting from environment variable: %s=%s"),
+                    key,
+                    repr(cast_value),
+                )
+            else:
+                logger.info(formatted_text_green("Overriding Django setting from environment variable: %s=******"), key)
+
+###############################################################################
+# Settings diagnostics information for all environments
+###############################################################################
+if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.info("=" * 80)
+    logger.info("smarter.settings.base.py")
 
     try:
         with open("/proc/uptime", encoding="utf-8") as f:
@@ -1379,18 +1658,10 @@ if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
     logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)
     logger.info("Storages backend: %s", STORAGES["default"]["BACKEND"])
 
-    logger.info("Cache backend: %s", CACHES["default"]["BACKEND"])
-
-    try:
-        cache.set("test_key", "test_value", timeout=5)
-        value = cache.get("test_key")
-        if value == "test_value":
-            logger.info("Redis is up and reachable.")
-        else:
-            logger.error("Redis is not working as expected.")
-    # pylint: disable=broad-except
-    except Exception as e:
-        logger.error("Redis is NOT reachable: %s", e)
+    cache_backend = CACHES.get("default", {}).get("BACKEND", "not configured")
+    logger.info("Cache backend: %s", json.dumps(CACHES))
+    if cache_backend != "django_redis.cache.RedisCache":
+        logger.warning("Recommended cache backend is django_redis.cache.RedisCache")
 
     if smarter_settings.smtp_is_configured:
         logger.info("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)
@@ -1401,3 +1672,13 @@ if SMARTER_SETTINGS_OUTPUT or "manage.py" not in sys.argv[0]:
     else:
         logger.warning("AWS credentials not found.")
     logger.info("=" * 80)
+
+__all__ = [
+    name
+    for name, value in globals().items()
+    if name.isupper()
+    and not name.startswith("_")
+    and not hasattr(value, "__file__")
+    and not callable(value)
+    and value is not sys.modules[__name__]
+]  # type: ignore[reportUnsupportedDunderAll]

@@ -6,12 +6,12 @@ It adds chatbot urls to the CORS_ALLOWED_ORIGINS list at run-time.
 import logging
 import re
 from collections.abc import Awaitable
+from functools import cached_property, lru_cache
 from typing import Optional, Pattern, Sequence
 from urllib.parse import SplitResult, urlsplit
 
 from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware
-from django.conf import settings
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
 
@@ -101,7 +101,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
 
         # Short-circuit for any requests born from internal IP address hosts
         # This is unlikely, but not impossible.
-        if any(host.startswith(prefix) for prefix in settings.SMARTER_INTERNAL_IP_PREFIXES):
+        if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
             logger.info(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
@@ -158,7 +158,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             "%s.url() set url: %s", self.formatted_class_name, self._url.geturl() if self._url else "(Missing URL)"
         )
 
-    @property
+    @cached_property
     def CORS_ALLOWED_ORIGINS(self) -> list[str] | tuple[str]:
         """
         Returns the list of allowed origins for the application. If the request
@@ -176,11 +176,12 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             logger.info("%s.CORS_ALLOWED_ORIGINS() added origin: %s", self.formatted_class_name, url)
         return retval
 
-    @property
+    @cached_property
     def CORS_ALLOWED_ORIGIN_REGEXES(self) -> Sequence[str | Pattern[str]]:
         # TODO: ADD CHATBOT URL
         return conf.CORS_ALLOWED_ORIGIN_REGEXES
 
+    @lru_cache(maxsize=128)
     def origin_found_in_white_lists(self, origin: str, url: SplitResult) -> bool:
         self.url = url
         if self.chatbot is not None:
@@ -192,12 +193,14 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             or self.regex_domain_match(origin)
         )
 
+    @lru_cache(maxsize=128)
     def regex_domain_match(self, origin: str) -> bool:
         if self.chatbot is not None:
             logger.info("%s.regex_domain_match() returning True: %s", self.formatted_class_name, self.url)
             return True
         return any(re.match(domain_pattern, origin) for domain_pattern in self.CORS_ALLOWED_ORIGIN_REGEXES)
 
+    @lru_cache(maxsize=128)
     def _url_in_whitelist(self, url: SplitResult) -> bool:
         self.url = url
         if self.chatbot is not None:

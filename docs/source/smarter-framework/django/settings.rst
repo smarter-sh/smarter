@@ -13,4 +13,3 @@ platform at `docs.djangoproject.com <https://docs.djangoproject.com/en/5.2/ref/s
     :maxdepth: 1
 
     settings/base
-    settings/smarter

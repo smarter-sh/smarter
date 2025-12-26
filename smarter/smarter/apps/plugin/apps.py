@@ -1,8 +1,13 @@
 """Plugin app configuration."""
 
+import logging
+
 from django.apps import AppConfig
 
 from .const import namespace as app_name
+
+
+logger = logging.getLogger(__name__)
 
 
 class PluginConfig(AppConfig):
@@ -17,3 +22,5 @@ class PluginConfig(AppConfig):
         """Import signals."""
         from . import receivers  # noqa
         from . import signals  # noqa
+
+        logger.info("Plugin app ready: signals and receivers imported")
