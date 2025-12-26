@@ -4,9 +4,10 @@ import logging
 import os
 from typing import ClassVar, Optional
 
-from pydantic import EmailStr, Field, field_validator
+from pydantic import EmailStr, Field, computed_field, field_validator
 
 from smarter.apps.provider.manifest.models.provider.const import MANIFEST_KIND
+from smarter.apps.provider.models import ProviderStatus
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
@@ -32,7 +33,7 @@ filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
-class Provider(SmarterBasePydanticModel):
+class SAMProviderSpecProvider(SmarterBasePydanticModel):
     """Smarter API - generic API Connection class."""
 
     name: str = Field(
@@ -100,15 +101,13 @@ class Provider(SmarterBasePydanticModel):
 
     @field_validator("api_key")
     def validate_api_key(cls, v):
-        if v is None or SmarterValidator.is_valid_cleanstring(v):
-            return v
-        raise SAMValidationError(f"Invalid API key: {v}. Must be a valid clean string.")
+        return v
 
     @field_validator("connectivity_test_path")
     def validate_connectivity_test_path(cls, v):
-        if v is None or SmarterValidator.is_valid_cleanstring(v):
+        if v is None or SmarterValidator.is_valid_url_path(v):
             return v
-        raise SAMValidationError(f"Invalid connectivity test path: {v}. Must be a valid clean string.")
+        raise SAMValidationError(f"Invalid connectivity test path: {v}. Must be a valid URL path.")
 
     @field_validator("logo")
     def validate_logo(cls, v):
@@ -158,4 +157,6 @@ class SAMProviderSpec(AbstractSAMSpecBase):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    provider: Provider = Field(..., description=f"{class_identifier}.selector[obj]: the spec for the {MANIFEST_KIND}")
+    provider: SAMProviderSpecProvider = Field(
+        ..., description=f"{class_identifier}.selector[obj]: the spec for the {MANIFEST_KIND}"
+    )

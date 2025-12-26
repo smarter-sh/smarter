@@ -1,0 +1,76 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Plugins{% endblock %}
+
+{% block body_class %}
+<style>
+  .provider-card > .card-header {
+    border-bottom: 1px solid #E5E5E5;
+  }
+  .smarter-provider-card {
+    background-color: #D9D9D9;
+  }
+  .user-provider-card {
+    background-color: #FFE5B4;
+  }
+  .card-body > p {
+    margin-bottom: 2px !important;
+  }
+</style>
+{% endblock %}
+
+
+{% block dashboard_content %}
+<div id="kt_app_content" class="app-content flex-column-fluid">
+  <!--begin::Content container-->
+  <div id="kt_app_content_container" class="app-container container-xxl">
+    <!--begin::Row-->
+    <div class="row g-5 g-xl-10">
+      <!--begin::Col-->
+      <div class="col-xl-8 mb-5 mb-xl-10">
+        <!--begin::Row-->
+        <div class="row g-5 g-xl-10 mb-l-10">
+
+          {% for provider in plugins %}
+          <!--begin::Col Smarter provider Card-->
+          <div class="col-lg-6 mb-4 p-5">
+            <!--begin::provider card-->
+            <a href="{% url 'provider:provider_by_name' provider.rfc1034_compliant_name %}">
+              <div id="plugin_id_{{ provider.id }}" class="card card-flush h-xl-100 provider-card {% if provider.user_profile == smarter_admin %}smarter-provider-card{% else %}user-provider-card{% endif %}">
+                <!--begin::Header-->
+                <div class="p-5">
+                  <!--begin::Title-->
+                  <h4 class="card-title card-label fw-bold text-gray-800 pb-2 text-center" style="border-bottom: 1px solid red;">{{ provider.name }}{% if provider.version %} v{{ provider.version }}{% endif %}</h4>
+                  <!--end::Title-->
+                </div>
+                <!--end::Header-->
+                <!--begin::Body-->
+                <div class="card-body py-6">
+                  <p>name: {{ provider.app_name }}</p>
+                  <p>created: {{ provider.created_at }}</p>
+                  <p>last updated: {{ provider.updated_at }}</p>
+                  {% if provider.description %}
+                  <p>description: {{ provider.description }}</p>
+                  {% endif %}
+                </div>
+                <!--end::Body-->
+              </div>
+            </a>
+            <!--end::provider card-->
+          </div>
+          <!--end::Col Smarter provider Card-->
+          {% endfor %}
+
+        </div>
+        <!--end::Row-->
+
+      </div>
+      <!--end::Col-->
+    </div>
+    <!--end::Row-->
+
+  </div>
+  <!--end::Content container-->
+</div>
+{% endblock %}
