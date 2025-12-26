@@ -1,3 +1,18 @@
+## [0.13.57](https://github.com/smarter-sh/smarter/compare/v0.13.56...v0.13.57) (2025-12-26)
+
+
+### Bug Fixes
+
+* add APIKeyListView ([698a07a](https://github.com/smarter-sh/smarter/commit/698a07a96c8d209c79b67aefba821d710b139b5f))
+* add link to Dashboard Connection card ([178405a](https://github.com/smarter-sh/smarter/commit/178405a4baac612591220df0d18105d24d79ae95))
+* add Secrets, Custom Domains, Api Keys to left side bar ([4ef17f4](https://github.com/smarter-sh/smarter/commit/4ef17f4082128ac447c9e55b4587be5122a88819))
+* add waffle should_log() ([96354d7](https://github.com/smarter-sh/smarter/commit/96354d78ff1df0ff31e1decdf30411a186990648))
+* exit gracefully if smarter_request_mixin.is_smarter_api == False ([6c8a5eb](https://github.com/smarter-sh/smarter/commit/6c8a5eb003a7e5fc70216b3cba15b9ca1a6a8fe7))
+* implement Provider broker ([94bace6](https://github.com/smarter-sh/smarter/commit/94bace6dad2276178203febb0379a078eed35dd2))
+* look for environment variable overrides ([4a00a67](https://github.com/smarter-sh/smarter/commit/4a00a67318b6e53bb6a1e7e2ecd375814dd71b3e))
+* remove django login_required and staff decorators. replace with our own logic ([cc4c262](https://github.com/smarter-sh/smarter/commit/cc4c262de357fe9db6c13ccdc103f641e34a93e0))
+* SmarterSecurityMiddleware should allow .well-known/acme-challenge requests ([2a97e86](https://github.com/smarter-sh/smarter/commit/2a97e862a53e49310473ac019065c1c783cf383d))
+
 # <<<<<<< HEAD
 
 ## [0.13.56](https://github.com/smarter-sh/smarter/compare/v0.13.55...v0.13.56) (2025-12-24)
