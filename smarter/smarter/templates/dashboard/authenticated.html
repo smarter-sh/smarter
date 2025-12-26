@@ -63,7 +63,7 @@
                         <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_chatbots }}</span>
                         <!--end::Number-->
                         <!--begin::Desc-->
-                        <span class="text-gray-500 fw-semibold fs-6">Workbench</span>
+                        <span class="text-gray-500 fw-semibold fs-6">Agents</span>
                         <!--end::Desc-->
                       </div>
                       <!--end::Workbench-->
@@ -153,13 +153,13 @@
                     </div>
                     <!--end::Symbol-->
                     <!--begin::Secrets-->
-                    <a class="menu-link" href="{% url 'account:dashboard_account_secrets' %}" target="_self">
+                    <a class="menu-link" href="{% url 'provider:provider_listview' %}" target="_self">
                       <div class="m-0">
                         <!--begin::Number-->
-                        <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_secrets }}</span>
+                        <span class="text-gray-700 fw-bolder d-block fs-2qx lh-1 ls-n1 mb-1">{{ dashboard.my_resources_providers }}</span>
                         <!--end::Number-->
                         <!--begin::Desc-->
-                        <span class="text-gray-500 fw-semibold fs-6">Secrets</span>
+                        <span class="text-gray-500 fw-semibold fs-6">Providers</span>
                         <!--end::Desc-->
                       </div>
                     </a>

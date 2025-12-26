@@ -218,7 +218,7 @@ class SAMProviderBroker(AbstractBroker):
             base_url=self.provider.base_url,
             api_key="*****" if self.provider.api_key else None,
             connectivity_test_path=self.provider.connectivity_test_path,
-            logo="https://example.com/logo.png",
+            logo=self.provider.logo.url if self.provider.logo else None,
             website_url=self.provider.website_url,
             contact_email=self.provider.contact_email,
             support_email=self.provider.support_email,

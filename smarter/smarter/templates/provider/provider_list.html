@@ -28,7 +28,7 @@
     <!--begin::Row-->
     <div class="row g-5 g-xl-10">
       <!--begin::Col-->
-      <div class="col-xl-8 mb-5 mb-xl-10">
+      <div class="mb-5 mb-xl-10">
         <!--begin::Row-->
         <div class="row g-5 g-xl-10 mb-l-10">
 
@@ -41,18 +41,100 @@
                 <!--begin::Header-->
                 <div class="p-5">
                   <!--begin::Title-->
-                  <h4 class="card-title card-label fw-bold text-gray-800 pb-2 text-center" style="border-bottom: 1px solid red;">{{ provider.name }}{% if provider.version %} v{{ provider.version }}{% endif %}</h4>
+                  <h4 class="card-title card-label fw-bold text-gray-800 pb-2 text-center d-flex justify-content-between align-items-center" style="border-bottom: 1px solid red;">
+                    <span class="text-start">{{ provider.name }}{% if provider.version %} v{{ provider.version }}{% endif %}</span>
+                    {% if provider.logo %}
+                      <img src="{{ provider.logo.url }}" alt="{{ provider.name }} logo" style="max-height: 40px; max-width: 80px; object-fit: contain; margin-left: 10px;" class="float-end ms-2">
+                    {% endif %}
+                  </h4>
+                  <h5>
+                  {% if provider.is_active %}
+                    <span class="badge badge-light-success">Active</span>
+                  {% else %}
+                    <span class="badge badge-light-danger">Inactive</span>
+                  {% endif %}
+                  {% if provider.is_verified %}
+                    <span class="badge badge-light-primary">Verified</span>
+                  {% else %}
+                    <span class="badge badge-light-warning">Unverified</span>
+                  {% endif %}
+                  {% if provider.is_featured %}
+                    <span class="badge badge-light-info">Featured</span>
+                  {% endif %}
+                  {% if provider.is_official_provider %}
+                    <span class="badge badge-light-dark">Smarter Official</span>
+                  {% else %}
+                    <span class="badge badge-light-dark">User Submitted</span>
+                  {% endif %}
+                  {% if provider.is_deprecated %}
+                    <span class="badge badge-light-danger">Deprecated</span>
+                  {% endif %}
+                  {% if provider.is_flagged %}
+                    <span class="badge badge-light-danger">Flagged</span>
+                  {% endif %}
+                  {% if provider.is_suspended %}
+                    <span class="badge badge-light-danger">Suspended</span>
+                  {% endif %}
+                  </h5>
                   <!--end::Title-->
                 </div>
                 <!--end::Header-->
                 <!--begin::Body-->
                 <div class="card-body py-6">
-                  <p>name: {{ provider.app_name }}</p>
-                  <p>created: {{ provider.created_at }}</p>
-                  <p>last updated: {{ provider.updated_at }}</p>
-                  {% if provider.description %}
-                  <p>description: {{ provider.description }}</p>
-                  {% endif %}
+                  <table class="table table-borderless table-sm mb-0">
+                    <tbody>
+                      <tr>
+                        <th class="text-end">Created:</th>
+                        <td>{{ provider.created_at }}</td>
+                      </tr>
+                      <tr>
+                        <th class="text-end">Last updated:</th>
+                        <td>{{ provider.updated_at }}</td>
+                      </tr>
+                      {% if provider.description %}
+                      <tr>
+                        <th class="text-end">Description:</th>
+                        <td>{{ provider.description }}</td>
+                      </tr>
+                      {% endif %}
+                      {% if provider.website_url %}
+                      <tr>
+                        <th class="text-end">Website:</th>
+                        <td><a href="{{ provider.website_url }}" target="_blank">{{ provider.website_url }}</a></td>
+                      </tr>
+                      {% endif %}
+                      {% if provider.support_email %}
+                      <tr>
+                        <th class="text-end">Support email:</th>
+                        <td><a href="mailto:{{ provider.support_email }}">{{ provider.support_email }}</a></td>
+                      </tr>
+                      {% endif %}
+                      {% if provider.docs_url %}
+                      <tr>
+                        <th class="text-end">Docs:</th>
+                        <td><a href="{{ provider.docs_url }}" target="_blank">{{ provider.docs_url }}</a></td>
+                      </tr>
+                      {% endif %}
+                      {% if provider.terms_of_service_url %}
+                      <tr>
+                        <th class="text-end">Terms of service:</th>
+                        <td><a href="{{ provider.terms_of_service_url }}" target="_blank">{{ provider.terms_of_service_url }}</a></td>
+                      </tr>
+                      {% endif %}
+                      {% if provider.privacy_policy_url %}
+                      <tr>
+                        <th class="text-end">Privacy policy:</th>
+                        <td><a href="{{ provider.privacy_policy_url }}" target="_blank">{{ provider.privacy_policy_url }}</a></td>
+                      </tr>
+                      {% endif %}
+                      {% if provider.tos_accepted_by %}
+                      <tr>
+                        <th class="text-end">Terms accepted by:</th>
+                        <td>{{ provider.tos_accepted_by.get_full_name }} ({{ provider.tos_accepted_by.email }})</td>
+                      </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
                 </div>
                 <!--end::Body-->
               </div>

@@ -35,7 +35,6 @@ import time
 from datetime import datetime
 from typing import Optional
 
-from django.conf import settings
 from django.http import HttpRequest
 
 from smarter.__version__ import __version__
@@ -46,9 +45,13 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
-from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.account.utils import (
+    get_cached_account_for_user,
+    get_cached_smarter_admin_user_profile,
+)
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.plugin.models import ApiConnection, PluginMeta, SqlConnection
+from smarter.apps.provider.models import Provider
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.cache import cache_results
 
@@ -177,6 +180,27 @@ def get_secrets(user_profile: UserProfile) -> int:
     return Secret.objects.filter(user_profile=user_profile).count() if user_profile else 0
 
 
+@cache_results(timeout=CACHE_TIMEOUT)
+def get_providers(user_profile: UserProfile) -> int:
+    """
+    Returns the total number of providers associated with the specified user's profile.
+
+    This function queries the database for all provider records linked to the user's profile. The resulting count is used to display the user's available providers on the dashboard.
+
+    The result is cached for a short duration to reduce database queries and improve dashboard performance.
+
+    :param user_profile: The user profile whose providers are to be counted.
+    :type user_profile: UserProfile
+    :return: The number of providers belonging to the user profile.
+    :rtype: int
+    """
+    smarter_admin = get_cached_smarter_admin_user_profile().user
+    user_owned = Provider.objects.filter(owner=user_profile.user).count() if user_profile else 0
+    official = Provider.objects.filter(owner=smarter_admin).count()
+
+    return user_owned + official
+
+
 def base(request: HttpRequest) -> dict:
     """
     Provides the base context for all templates inheriting from ``base.html`` in the Smarter dashboard.
@@ -245,6 +269,7 @@ def base(request: HttpRequest) -> dict:
                 "my_resources_custom_domains": get_custom_domains(account=account) if account else 0,
                 "my_resources_connections": get_connections(account=account) if account else 0,
                 "my_resources_secrets": get_secrets(user_profile=user_profile) if user_profile else 0,
+                "my_resources_providers": get_providers(user_profile=user_profile) if user_profile else 0,
             }
         }
         return cached_context
