@@ -7,6 +7,7 @@ from typing import Any, Optional
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
+from smarter.apps.account.models import User
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
@@ -112,6 +113,12 @@ class SAMPluginBaseBroker(AbstractBroker):
         if not self.account:
             raise SAMBrokerError(
                 message="No account set for the broker",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.CHAT,
+            )
+        if not isinstance(self.user, User):
+            raise SAMBrokerError(
+                message=f"Invalid user type for the broker. Expected User instance but got {type(self.user)}",
                 thing=self.thing,
                 command=SmarterJournalCliCommands.CHAT,
             )
