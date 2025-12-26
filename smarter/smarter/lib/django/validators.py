@@ -579,6 +579,30 @@ class SmarterValidator:
         return port
 
     @staticmethod
+    def validate_url_path(path: str) -> str:
+        """Validate URL path format
+
+        Checks if the provided string is a valid URL path.
+
+        :param path: The URL path to validate.
+        :type path: str
+        :raises SmarterValueError: If the URL path is not valid.
+        :returns: The validated URL path.
+        :rtype: str
+
+        Example::
+
+            SmarterValidator.validate_url_path("/api/v1/resource/")  # returns "/api/v1/resource/"
+            SmarterValidator.validate_url_path("invalid_path")       # raises SmarterValueError
+
+        """
+        if not path.startswith("/"):
+            raise SmarterValueError(f"Invalid URL path {path}. Must start with '/'")
+        if not bool(re.fullmatch(r"/[A-Za-z0-9._~!$&'()*+,;=:@/-]*", path)):
+            raise SmarterValueError(f"Invalid URL path {path}")
+        return path
+
+    @staticmethod
     def validate_url(url: str) -> str:
         """Validate URL format
 
@@ -954,6 +978,29 @@ class SmarterValidator:
         """
         try:
             SmarterValidator.validate_url(url)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_url_path(url_path: str) -> bool:
+        """Check if URL path is valid
+
+        Checks whether the provided URL path is valid.
+
+        :param url_path: The URL path to check.
+        :type url_path: str
+        :returns: True if the URL path is valid, otherwise False.
+        :rtype: bool
+
+        Example::
+
+            SmarterValidator.is_valid_url_path("/api/v1/tests/unauthenticated/list/")  # returns True
+            SmarterValidator.is_valid_url_path("invalid_url_path")                     # returns False
+
+        """
+        try:
+            SmarterValidator.validate_url_path(url_path)
             return True
         except SmarterValueError:
             return False

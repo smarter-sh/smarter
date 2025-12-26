@@ -1494,7 +1494,12 @@ See: https://docs.wagtail.org/en/stable/reference/settings.html#wagtail-site-nam
 WAGTAILADMIN_NOTIFICATION_FROM_EMAIL = SMTP_FROM_EMAIL
 
 # Wagtail email notification format
-WAGTAILADMIN_NOTIFICATION_USE_HTML = True
+WAGTAILADMIN_NOTIFICATION_USE_HTML = os.environ.get("WAGTAILADMIN_NOTIFICATION_USE_HTML", "True").lower() in (
+    "true",
+    "1",
+    "t",
+    "yes",
+)
 
 # Allowed file extensions for documents in the document library.
 # This can be omitted to allow all files, but note that this may present a security risk
@@ -1503,9 +1508,9 @@ WAGTAILADMIN_NOTIFICATION_USE_HTML = True
 WAGTAILDOCS_EXTENSIONS = ["csv", "docx", "key", "odt", "pdf", "pptx", "rtf", "txt", "xlsx", "zip"]
 
 # Reverse the default case-sensitive handling of tags
-TAGGIT_CASE_INSENSITIVE = True
+TAGGIT_CASE_INSENSITIVE = os.environ.get("TAGGIT_CASE_INSENSITIVE", "True").lower() in ("true", "1", "t", "yes")
 
-WAGTAILADMIN_BASE_URL = "/cms/admin/"
+WAGTAILADMIN_BASE_URL = os.environ.get("WAGTAILADMIN_BASE_URL", "/cms/admin/")
 
 WAGTAILTRANSFER_SOURCES = {
     "localhost": {
@@ -1530,8 +1535,8 @@ WAGTAILTRANSFER_SOURCES = {
     },
 }
 
-WAGTAILTRANSFER_SECRET_KEY = "8egf3jj8ib64j00gomz270wgzqwrfyed"
-WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = 30
+WAGTAILTRANSFER_SECRET_KEY = os.environ.get("WAGTAILTRANSFER_SECRET_KEY", "8egf3jj8ib64j00gomz270wgzqwrfyed")
+WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = int(os.environ.get("WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT", "30"))
 
 ###############################################################################
 # Process environment variables to override settings values

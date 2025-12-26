@@ -1,9 +1,3 @@
-# pylint: disable=W0613
-"""
-smarter.apps.plugin.views.plugin
-This module contains views to implement the card-style list view
-in the Smarter Dashboard.
-"""
 import logging
 from typing import Optional
 
@@ -16,7 +10,7 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.provider.models import Provider
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.utils import rfc1034_compliant_to_snake
@@ -36,7 +30,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class PluginDetailView(DocsBaseView):
+class ProviderDetailView(DocsBaseView):
     """
     Renders the detail view for a Smarter dashboard plugin.
 
@@ -67,42 +61,33 @@ class PluginDetailView(DocsBaseView):
 
     """
 
-    template_path = "plugin/manifest_detail.html"
+    template_path = "provider/manifest_detail.html"
     name: Optional[str] = None
     kwargs: Optional[dict] = None
-    plugin: Optional[PluginMeta] = None
+    provider: Optional[Provider] = None
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
         if not isinstance(self.user, User):
-            logger.error("Request user is None. This should not happen.")
+            logger.error("Request user instance of type %s is not a User. This should not happen.", type(self.user))
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         name = kwargs.pop("name", None)
         self.name = rfc1034_compliant_to_snake(name) if name else None
-        self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
-        if self.kind is None:
-            logger.error("Plugin kind is required but not provided.")
-            return SmarterHttpResponseNotFound(request=request, error_message="Plugin kind is required")
-        if self.kind not in SAMKinds.all_plugins():
-            logger.error("Plugin kind %s is not supported.", self.kind)
-            return SmarterHttpResponseNotFound(
-                request=request, error_message=f"Plugin kind {self.kind} is not supported"
-            )
-        if not self.name:
-            logger.error("Plugin name is required but not provided.")
-            return SmarterHttpResponseNotFound(request=request, error_message="Plugin name is required")
-        self.plugin = PluginMeta.get_cached_plugin_by_user_and_name(user=self.user, name=self.name)
+        if not isinstance(self.name, str):
+            logger.error("Provider name should be type str but received %s. This is a bug.", type(self.name))
+            return SmarterHttpResponseNotFound(request=request, error_message="Provider name is required")
+        self.provider = Provider.get_cached_provider_by_user_and_name(user=self.user, name=self.name)
 
     def get(self, request, *args, **kwargs):
-        if not self.plugin:
-            logger.error("Plugin %s not found for user %s.", self.name, self.user.username)  # type: ignore[union-attr]
-            return SmarterHttpResponseNotFound(request=request, error_message="Plugin not found")
+        if not self.provider:
+            logger.error("Provider %s not found for user %s.", self.name, self.user.username)  # type: ignore[union-attr]
+            return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
 
         logger.info("Rendering connection detail view for %s of kind %s, kwargs=%s.", self.name, self.kind, kwargs)
         # get_brokered_json_response() adds self.kind to kwargs, so we remove it here.
         # TypeError: smarter.apps.api.v1.cli.views.describe.View.as_view.<locals>.view() got multiple values for keyword argument 'kind'
-        kwargs.pop("kind", None)
         kwargs["name"] = self.name
+        self.kind = SAMKinds.PROVIDER
         setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, True)
         view = ApiV1CliDescribeApiView.as_view()
         json_response = self.get_brokered_json_response(
@@ -124,11 +109,11 @@ class PluginDetailView(DocsBaseView):
         return render(request, self.template_path, context=context)
 
 
-class PluginListView(SmarterAuthenticatedNeverCachedWebView):
+class ProviderListView(SmarterAuthenticatedNeverCachedWebView):
     """
-    Render the plugin list view for the Smarter Workbench web console.
+    Render the provider list view for the Smarter Workbench web console.
 
-    This view displays all plugins available to the authenticated user as cards, providing a quick overview and access to plugin details.
+    This view displays all providers available to the authenticated user as cards, providing a quick overview and access to provider details.
 
     :param request: Django HTTP request object.
     :type request: WSGIRequest
@@ -137,20 +122,20 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
     :param kwargs: Additional keyword arguments.
     :type kwargs: dict
 
-    :returns: Rendered HTML page with a card for each plugin, or a 404 error page if the user is not authenticated.
+    :returns: Rendered HTML page with a card for each provider, or a 404 error page if the user is not authenticated.
     :rtype: HttpResponse
 
 
     """
 
-    template_path = "plugin/plugin_list.html"
-    plugins: list[PluginMeta]
+    template_path = "provider/provider_list.html"
+    providers: list[Provider]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
-        if self.user is None:
-            logger.error("Request user is None. This should not happen.")
+        if not isinstance(self.user, User):
+            logger.error("Request user is not an instance of User. This is a bug.")
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.plugins = PluginMeta.get_cached_plugins_for_user(self.user)
+        self.plugins = Provider.get_cached_providers_for_user(self.user)
         context = {
             "plugins": self.plugins,
         }

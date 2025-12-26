@@ -20,5 +20,11 @@
     "**/keen_v3.0.6": true,
     "**/staticfiles": true
   },
-  "python.analysis.exclude": ["**/migrations/**"]
+  "python.analysis": {
+    "exclude": ["**/migrations/**"],
+    "diagnosticSeverityOverrides": {
+      "reportAttributeAccessIssue": "none",
+      "reportOptionalMemberAccess": "none"
+    }
+  }
 }

@@ -157,7 +157,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ``deploy``, ``example_manifest``, ``get``, ``logs``, and ``undeploy``.
     """
 
-    _api_version: Optional[str] = None
+    _api_version: str
     _loader: Optional[SAMLoader] = None
     _manifest: Optional[Union[AbstractSAMBase, dict]] = None
     _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
@@ -363,7 +363,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return self._name
 
     @property
-    def api_version(self) -> Optional[str]:
+    def api_version(self) -> str:
         """
         The API version of the manifest.
 
