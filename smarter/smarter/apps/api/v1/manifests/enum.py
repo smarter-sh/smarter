@@ -42,6 +42,9 @@ from smarter.apps.prompt.manifest.models.chat_plugin_usage.const import (
 from smarter.apps.prompt.manifest.models.chat_tool_call.const import (
     MANIFEST_KIND as CHAT_TOOL_CALL_MANIFEST_KIND,
 )
+from smarter.apps.provider.manifest.models.provider.const import (
+    MANIFEST_KIND as PROVIDER_MANIFEST_KIND,
+)
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
@@ -65,20 +68,30 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 class SAMKinds(SmarterEnumAbstract):
     """Smarter manifest kinds enumeration."""
 
+    # plugins
     STATIC_PLUGIN = STATICPLUGIN_MANIFEST_KIND
     API_PLUGIN = APIPLUGIN_MANIFEST_KIND
     SQL_PLUGIN = SQLPLUGIN_MANIFEST_KIND
+
+    # connections
     API_CONNECTION = APICONNECTION_MANIFEST_KIND
     SQL_CONNECTION = SQLCONNECTION_MANIFEST_KIND
+
+    # account resources
     ACCOUNT = ACCOUNT_MANIFEST_KIND
     AUTH_TOKEN = AUTH_TOKEN_MANIFEST_KIND
     USER = USER_MANIFEST_KIND
+    SECRET = SECRET_MANIFEST_KIND
+
+    # chat resources
     CHAT = CHAT_MANIFEST_KIND
     CHAT_HISTORY = CHAT_HISTORY_MANIFEST_KIND
     CHAT_PLUGIN_USAGE = CHAT_PLUGIN_USAGE_MANIFEST_KIND
     CHAT_TOOL_CALL = CHAT_TOOL_CALL_MANIFEST_KIND
     CHATBOT = CHATBOT_MANIFEST_KIND
-    SECRET = SECRET_MANIFEST_KIND
+
+    # provider resources
+    PROVIDER = PROVIDER_MANIFEST_KIND
 
     @classmethod
     def str_to_kind(cls, kind_str: str) -> "SAMKinds":

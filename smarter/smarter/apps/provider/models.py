@@ -11,7 +11,8 @@ import requests
 from django.conf import settings
 from django.db import models
 
-from smarter.apps.account.models import Account, Secret
+from smarter.apps.account.models import Account, Secret, User
+from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import (
@@ -19,6 +20,7 @@ from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterValueError,
 )
+from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -263,6 +265,27 @@ class Provider(TimestampedModel, SmarterHelperMixin):
             and self.tos_accepted_by is not None
         )
 
+    @property
+    def rfc1034_compliant_name(self) -> Optional[str]:
+        """
+        Returns a URL-friendly name for the chatbot.
+
+        This property returns an RFC 1034-compliant name for the chatbot, suitable for use in URLs and DNS labels.
+
+        **Example:**
+
+        .. code-block:: python
+
+            self.name = 'Example ChatBot 1'
+            self.rfc1034_compliant_name  # 'example-chatbot-1'
+
+        :return: The RFC 1034-compliant name, or None if ``self.name`` is not set.
+        :rtype: Optional[str]
+        """
+        if self.name:
+            return rfc1034_compliant_str(self.name)
+        return None
+
     def test_connectivity(self) -> bool:
         """
         Test connectivity to the provider's API.
@@ -423,6 +446,66 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         self.is_flagged = False
         self.is_suspended = False
         self.save()
+
+    @classmethod
+    def get_cached_provider_by_account_id_and_name(
+        cls, account_id: int, name: str, invalidate: bool = False
+    ) -> Optional["Provider"]:
+        """Get a cached provider by account ID and name."""
+
+        @cache_results()
+        def cached_provider_by_account_id_and_name(account_id: int, name: str) -> Optional["Provider"]:
+            try:
+                provider = cls.objects.get(account_id=account_id, name=name)
+                return provider
+            except cls.DoesNotExist:
+                return None
+
+        if invalidate:
+            cached_provider_by_account_id_and_name.invalidate(account_id, name)
+
+        provider = cached_provider_by_account_id_and_name(account_id, name)
+        return provider
+
+    @classmethod
+    def get_cached_providers_for_user(cls, user: User, invalidate: bool = False) -> list["Provider"]:
+        """Get cached providers for a user."""
+
+        @cache_results()
+        def cached_providers_by_account_id(account_id: int) -> list["Provider"]:
+            providers = cls.objects.filter(account_id=account_id).order_by("name")
+            return list(providers) or []
+
+        account = get_cached_account_for_user(user)
+
+        if invalidate:
+            cached_providers_by_account_id.invalidate(account.id)
+
+        if not account:
+            return []
+        providers = cached_providers_by_account_id(account.id)
+        return list(providers) or []
+
+    @classmethod
+    def get_cached_provider_by_user_and_name(
+        cls, user: User, name: str, invalidate: bool = False
+    ) -> Optional["Provider"]:
+        """
+        Return a single instance of Provider by name for the given user.
+        This method caches the results to improve performance.
+
+        :param user: The user whose provider should be retrieved.
+        :type user: User
+        :param name: The name of the provider to retrieve.
+        :type name: str
+        :return: A Provider instance if found, otherwise None.
+        :rtype: Optional[Provider]
+        """
+
+        account = get_cached_account_for_user(user)
+        if not account:
+            return None
+        return cls.get_cached_provider_by_account_id_and_name(account.id, name)
 
     def __str__(self):
         """String representation of the provider."""
