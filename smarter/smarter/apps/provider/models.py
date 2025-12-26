@@ -12,7 +12,10 @@ from django.conf import settings
 from django.db import models
 
 from smarter.apps.account.models import Account, Secret, User
-from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.account.utils import (
+    get_cached_account_for_user,
+    get_cached_smarter_admin_user_profile,
+)
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import (
@@ -227,6 +230,14 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         related_name="tos_accepted_by",
         help_text="The user who accepted the terms of service.",
     )
+
+    @property
+    def is_official_provider(self) -> bool:
+        """Check if the provider is an official provider."""
+        if not self.owner:
+            return False
+        smarter_admin = get_cached_smarter_admin_user_profile()
+        return self.owner == smarter_admin.user
 
     @property
     def tos_accepted(self) -> bool:
