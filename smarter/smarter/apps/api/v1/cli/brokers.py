@@ -35,6 +35,7 @@ from smarter.apps.prompt.manifest.brokers.chat_plugin_usage import (
     SAMChatPluginUsageBroker,
 )
 from smarter.apps.prompt.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
+from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.django import waffle
@@ -114,6 +115,7 @@ class Brokers:
         SAMKinds.API_CONNECTION.value: SAMApiConnectionBroker,
         SAMKinds.USER.value: SAMUserBroker,
         SAMKinds.SECRET.value: SAMSecretBroker,
+        SAMKinds.PROVIDER.value: SAMProviderBroker,
     }
 
     @classmethod

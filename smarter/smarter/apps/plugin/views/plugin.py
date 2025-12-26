@@ -11,6 +11,7 @@ import yaml
 from django.core.handlers.wsgi import WSGIRequest
 from django.shortcuts import render
 
+from smarter.apps.account.models import User
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -73,7 +74,7 @@ class PluginDetailView(DocsBaseView):
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        if self.user is None:
+        if not isinstance(self.user, User):
             logger.error("Request user is None. This should not happen.")
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         name = kwargs.pop("name", None)
