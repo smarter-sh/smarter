@@ -20,6 +20,7 @@ from smarter.apps.prompt.tasks import (
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -56,6 +57,10 @@ class ProviderDbMixin(AccountMixin):
         Constructor method for the ProviderDbMixin class.
         """
 
+        @cache_results()
+        def cached_chat_by_session_key(session_key: str) -> Chat:
+            return Chat.objects.get(session_key=session_key)
+
         self._chat: Chat = None
         self._chat_tool_call: ChatToolCall = None
         self._chat_plugin_usage: ChatPluginUsage = None
@@ -65,7 +70,7 @@ class ProviderDbMixin(AccountMixin):
         super().__init__(*args, **kwargs)
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
         if session_key:
-            self._chat = Chat.objects.get(session_key=session_key)
+            self._chat = cached_chat_by_session_key(session_key=session_key)
         else:
             self._chat = kwargs.get("chat", None)
 
@@ -126,8 +131,13 @@ class ProviderDbMixin(AccountMixin):
         """
         This method returns the chat tool call instance.
         """
+
+        @cache_results()
+        def cached_chat_tool_call_by_chat_id(chat_id: int) -> ChatToolCall:
+            return ChatToolCall.objects.get(chat_id=chat_id)
+
         if self._chat_tool_call is None and self.chat is not None:
-            self._chat_tool_call = ChatToolCall.objects.get(chat=self.chat)
+            self._chat_tool_call = cached_chat_tool_call_by_chat_id(chat_id=self.chat.id)
         return self._chat_tool_call
 
     @property
@@ -135,8 +145,13 @@ class ProviderDbMixin(AccountMixin):
         """
         This method returns the chat plugin usage instance.
         """
+
+        @cache_results()
+        def cached_chat_plugin_usage_by_chat_id(chat_id: int) -> ChatPluginUsage:
+            return ChatPluginUsage.objects.get(chat_id=chat_id)
+
         if self._chat_plugin_usage is None and self.chat is not None:
-            self._chat_plugin_usage = ChatPluginUsage.objects.get(chat=self.chat)
+            self._chat_plugin_usage = cached_chat_plugin_usage_by_chat_id(chat_id=self.chat.id)
         return self._chat_plugin_usage
 
     @property
@@ -148,8 +163,15 @@ class ProviderDbMixin(AccountMixin):
             total_tokens = models.IntegerField()
 
         """
+
+        @cache_results()
+        def cached_charges_by_account_id_and_session_key(account_id: int, session_key: str) -> Charge:
+            return Charge.objects.get(account_id=account_id, session_key=session_key)
+
         if self._charges is None and self.account is not None and self.chat is not None:
-            self._charges = Charge.objects.get(account=self.account, session_key=self.chat.session_key)
+            self._charges = cached_charges_by_account_id_and_session_key(
+                account_id=self.account.id, session_key=self.chat.session_key
+            )
         return self._charges
 
     @property

@@ -22,6 +22,7 @@ from django.utils.functional import SimpleLazyObject
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
@@ -82,15 +83,15 @@ def welcome_email_context(first_name: str) -> dict:
     return {
         "base_url": smarter_settings.environment_url,
         "first_name": first_name,
-        "corporate_name": settings.SMARTER_BRANDING_CORPORATE_NAME,
-        "support_phone": settings.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER,
-        "support_email": settings.SMARTER_BRANDING_SUPPORT_EMAIL,
-        "contact_address": settings.SMARTER_BRANDING_ADDRESS,
-        "contact_url": settings.SMARTER_BRANDING_CONTACT,
-        "office_hours": settings.SMARTER_BRANDING_SUPPORT_HOURS,
-        "facebook_url": settings.SMARTER_BRANDING_URL_FACEBOOK,
-        "twitter_url": settings.SMARTER_BRANDING_URL_TWITTER,
-        "linkedin_url": settings.SMARTER_BRANDING_URL_LINKEDIN,
+        "corporate_name": smarter_settings.branding_corporate_name,
+        "support_phone": smarter_settings.branding_support_phone_number,
+        "support_email": smarter_settings.branding_support_email,
+        "contact_address": smarter_settings.branding_address,
+        "contact_url": smarter_settings.branding_contact_url,
+        "office_hours": smarter_settings.branding_support_hours,
+        "facebook_url": smarter_settings.branding_url_facebook,
+        "twitter_url": smarter_settings.branding_url_twitter,
+        "linkedin_url": smarter_settings.branding_url_linkedin,
     }
 
 
@@ -732,7 +733,7 @@ class UserProfile(TimestampedModel):
             return user
 
         logger.error("No user for account %s", account)
-        admin_user = cls.objects.get_or_create(username="admin")
+        admin_user = cls.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
         user_profile = cls.objects.create(user=admin_user, account=account)
         logger.warning("Created admin user for account %s. Use manage.py to set the password", account)
         return user_profile.user
@@ -1195,7 +1196,7 @@ class Secret(TimestampedModel):
             :meth:`encrypt` -- Uses the Fernet object to encrypt values.
 
         """
-        encryption_key = smarter_settings.fernet_encryption_key
+        encryption_key = smarter_settings.fernet_encryption_key.get_secret_value()
         if not encryption_key:
             raise SmarterConfigurationError(
                 "Encryption key not found in settings. Please set smarter.common.conf.settings.fernet_encryption_key"

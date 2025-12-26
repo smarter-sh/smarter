@@ -8,9 +8,8 @@ future high-traffic scenarios.
 """
 import logging
 
-from django.conf import settings
-
 from smarter.apps.account.models import Account
+from smarter.apps.account.utils import get_cached_account
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import settings as smarter_settings
@@ -40,9 +39,9 @@ module_prefix = "smarter.apps.prompt.tasks."
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def create_chat_history(chat_id, request, response, messages):
     logger.info("%s chat_id: %s", formatted_text(module_prefix + "create_chat_history()"), chat_id)
@@ -61,9 +60,9 @@ def aggregate_chat_history():
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def create_chat(session_key, chatbot_id):
     """
@@ -76,9 +75,9 @@ def create_chat(session_key, chatbot_id):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def update_chat(*args, **kwargs):
     """
@@ -96,7 +95,7 @@ def update_chat(*args, **kwargs):
         try:
             account_id = kwargs.get("account_id", chat.account.id if chat.account else None)
             if account_id is not None:
-                chat.account = Account.objects.get(id=account_id)
+                chat.account = get_cached_account(account_id=account_id)
         except Account.DoesNotExist:
             chat.account = None
 
@@ -117,9 +116,9 @@ def update_chat(*args, **kwargs):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, function_args, request, response):
     """Create chat tool call history record."""
@@ -150,9 +149,9 @@ def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, functi
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+    retry_backoff=smarter_settings.chatbot_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.chatbot_tasks_celery_max_retries,
+    queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def create_chat_plugin_usage(*args, **kwargs):
     """Create plugin usage record."""

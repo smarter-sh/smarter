@@ -58,7 +58,7 @@ except ImportError:
         logger.warning("Django is not installed. validate_ipv4_address will not function properly.")
 
 
-from smarter.common.const import SmarterEnvironments
+from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 
@@ -645,16 +645,28 @@ class SmarterValidator:
             SmarterValidator.validate_hostname("invalid_hostname!")  # raises SmarterValueError
 
         """
+        # Accept Django wildcard hostnames starting with a dot (e.g., .api.localhost)
+        if hostname.startswith("."):
+            # Allow leading dot for ALLOWED_HOSTS wildcard, validate the rest
+            hostname = hostname[1:]
+            if not hostname:
+                raise SmarterValueError("Invalid hostname . (dot only)")
         if ":" in hostname:
             hostname, port = hostname.split(":")
             if not port.isdigit() or not 0 <= int(port) <= 65535:
                 raise SmarterValueError(f"Invalid port {port}")
         if len(hostname) > 255:
             raise SmarterValueError(f"Invalid hostname {hostname}")
-        if hostname[-1] == ".":
+        if hostname and hostname[-1] == ".":
             hostname = hostname[:-1]  # strip exactly one dot from the right, if present
+        labels = hostname.split(".")
+        if labels[0] == "*":
+            # Wildcard only allowed as the leftmost label
+            labels = labels[1:]
+            if not labels:
+                raise SmarterValueError(f"Invalid hostname {hostname}")
         allowed = re.compile(SmarterValidator.VALID_HOSTNAME_PATTERN, re.IGNORECASE)
-        if all(allowed.match(x) for x in hostname.split(".")):
+        if all(allowed.match(x) for x in labels):
             return hostname
         raise SmarterValueError(f"Invalid hostname {hostname}")
 
@@ -1038,6 +1050,40 @@ class SmarterValidator:
             return True
         except SmarterValueError:
             return False
+
+    @staticmethod
+    def is_api_endpoint(url: str) -> bool:
+        """
+        Check if the URL is an API endpoint.
+
+        Checks whether the provided URL contains '/api/'.
+
+        :param url: The URL to check.
+        :type url: str
+        :returns: True if the URL is an API endpoint, otherwise False.
+        :rtype: bool
+
+        Example::
+
+            SmarterValidator.is_api_endpoint("/api/v1/tests/unauthenticated/list/")  # returns True
+            SmarterValidator.is_api_endpoint("/v1/tests/unauthenticated/list/")      # returns False
+
+        """
+        if not isinstance(url, str):
+            return False
+
+        if "/api/" in url:
+            # checks for /api/ in the full url: example.com/api/v1/
+            return True
+
+        try:
+            if SMARTER_API_SUBDOMAIN in str(SmarterValidator.base_url(url)):
+                # checks for api subdomain in base url: api.example.com
+                return True
+        except SmarterValueError:
+            return False
+
+        return False
 
     # --------------------------------------------------------------------------
     # list helpers

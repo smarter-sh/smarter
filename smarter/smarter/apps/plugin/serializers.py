@@ -495,7 +495,7 @@ class ApiConnectionSerializer(SmarterCamelCaseSerializer):
 
         - :class:`ApiConnection`
         - :class:`AccountMiniSerializer`
-        - :class:`SecretSerializer`
+        - :class:`smarter.apps.account.serializers.SecretSerializer`
 
     **Example usage**:
 

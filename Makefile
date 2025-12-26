@@ -14,7 +14,7 @@ PIP := $(PYTHON) -m pip
 
 ifneq ("$(wildcard .env)","")
 else
-    $(shell cp ./docs/example-dot-env .env)
+    $(shell cp .env.example .env)
 endif
 
 .PHONY: init activate build run test clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test docker-compose-install docker-init docker-build docker-run docker-test python-init python-lint python-clean keen-init keen-build keen-server change-log help
@@ -43,11 +43,6 @@ build:
 # takes around 30 seconds to complete
 run:
 	make docker-run
-
-requirements:
-	pip install --upgrade pip setuptools wheel pip-tools
-	pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
-	pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
 
 test:
 	make docker-test
@@ -138,7 +133,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.plugin"
 
 docker-prune:
 	make docker-check && \
@@ -150,7 +145,7 @@ docker-prune:
 	docker system prune -a --volumes && \
 	docker volume prune -f && \
 	docker network prune -f && \
-	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove" && \
+	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove"
 
 # ---------------------------------------------------------
 # Python
@@ -166,6 +161,7 @@ python-init:
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
 	PIP_CACHE_DIR=.pypi_cache $(PIP) install --upgrade pip && \
+	make python-requirements && \
 	PIP_CACHE_DIR=.pypi_cache $(PIP) install -r smarter/requirements/local.txt
 
 python-lint:
@@ -176,6 +172,12 @@ python-lint:
 python-clean:
 	rm -rf venv
 	find ./smarter/ -name __pycache__ -type d -exec rm -rf {} +
+
+python-requirements:
+	pip install --upgrade pip setuptools wheel pip-tools
+	pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
+	pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
+
 
 # ---------------------------------------------------------
 # Keen

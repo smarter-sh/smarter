@@ -25,7 +25,7 @@ from smarter.apps.account.manifest.models.secret.model import (
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.models import Secret
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -466,7 +466,7 @@ class SAMSecretBroker(AbstractBroker):
                 SAMSecretMetadataKeys.DESCRIPTION.value: "an example secret manifest for the Smarter API Secret",
                 SAMSecretMetadataKeys.VERSION.value: "1.0.0",
                 SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: SMARTER_ACCOUNT_NUMBER,
-                SAMSecretMetadataKeys.USERNAME.value: "admin",
+                SAMSecretMetadataKeys.USERNAME.value: SMARTER_ADMIN_USERNAME,
                 SAMSecretMetadataKeys.TAGS.value: ["example", "secret"],
                 SAMSecretMetadataKeys.ANNOTATIONS.value: [],
             },
@@ -501,7 +501,7 @@ class SAMSecretBroker(AbstractBroker):
         See also::
 
             :class:`Secret`
-            :class:`SecretSerializer`
+            :class:`smarter.apps.account.serializers.SecretSerializer`
             :class:`SAMKeys`
             :class:`SCLIResponseGet`
             :class:`SCLIResponseGetData`

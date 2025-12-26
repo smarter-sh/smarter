@@ -80,8 +80,6 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
-
 
 class PluginDataValueError(SmarterValueError):
     """Custom exception for PluginData SQL errors."""
@@ -427,6 +425,11 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
             self.name = snake_case_name
         self.validate()
         super().save(*args, **kwargs)
+        if not isinstance(self.name, str) or not self.name:
+            raise SmarterValueError("PluginMeta.save(): name is required after save.")
+        self.get_cached_plugin_by_account_and_name(self.account, self.name, invalidate=True)
+        self.get_cached_plugin_by_account_id_and_name(self.account.id, self.name, invalidate=True)
+        self.get_cached_plugin_by_pk(self.pk, invalidate=True)
 
     @property
     def kind(self) -> SAMKinds:
@@ -478,8 +481,7 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
         return None
 
     @classmethod
-    @cache_results()
-    def get_cached_plugins_for_user(cls, user: User) -> list["PluginMeta"]:
+    def get_cached_plugins_for_user(cls, user: User, invalidate: bool = False) -> list["PluginMeta"]:
         """
         Return a list of all instances of PluginMeta for the given user.
 
@@ -494,14 +496,57 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
 
         - :func:`smarter.lib.cache.cache_results`
         """
+
+        @cache_results()
+        def cached_plugins_by_account_id(account_id: int) -> list["PluginMeta"]:
+            plugins = cls.objects.filter(account_id=account_id).order_by("name")
+            return list(plugins) or []
+
+        if invalidate:
+            cached_plugins_by_account_id.invalidate(account.id)
+
         account = get_cached_account_for_user(user)
         if not account:
             return []
-        plugins = cls.objects.filter(account=account).order_by("name")
+        plugins = cached_plugins_by_account_id(account.id)
         return list(plugins) or []
 
     @classmethod
-    def get_cached_plugin_by_name(cls, user: User, name: str) -> Union["PluginMeta", None]:
+    def get_cached_plugin_by_account_id_and_name(
+        cls, account_id: int, name: str, invalidate: bool = False
+    ) -> Union["PluginMeta", None]:
+        """
+        Return a single instance of PluginMeta by name for the given account ID.
+        This method caches the results to improve performance.
+
+        :param account_id: The ID of the account whose plugin should be retrieved.
+        :type account_id: int
+        :param name: The name of the plugin to retrieve.
+        :type name: str
+        :return: A PluginMeta instance if found, otherwise None.
+        :rtype: Union[PluginMeta, None]
+        """
+
+        @cache_results()
+        def plugin_by_account_id_and_name(account_id: int, name: str) -> Union["PluginMeta", None]:
+            try:
+                return cls.objects.get(account_id=account_id, name=name)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_plugin_by_account_id_and_name: Plugin not found for account_id: %s, name: %s",
+                    cls.formatted_class_name,
+                    account_id,
+                    name,
+                )
+                return None
+
+        if invalidate:
+            plugin_by_account_id_and_name.invalidate(account_id, name)
+
+        return plugin_by_account_id_and_name(account_id, name)
+
+    @classmethod
+    def get_cached_plugin_by_user_and_name(cls, user: User, name: str) -> Union["PluginMeta", None]:
         """
         Return a single instance of PluginMeta by name for the given user.
         This method caches the results to improve performance.
@@ -513,16 +558,55 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
         :return: A PluginMeta instance if found, otherwise None.
         :rtype: Union[PluginMeta, None]
         """
+
         account = get_cached_account_for_user(user)
         if not account:
             return None
-        try:
-            return cls.objects.get(account=account, name=name)
-        except cls.DoesNotExist:
-            logger.warning(
-                "%s.get_cached_plugin_by_name: Plugin not found for name: %s", cls.formatted_class_name, name
-            )
-            return None
+        return cls.get_cached_plugin_by_account_id_and_name(account.id, name)
+
+    @classmethod
+    def get_cached_plugin_by_account_and_name(
+        cls, account: Account, name: str, invalidate: bool = False
+    ) -> Union["PluginMeta", None]:
+        """
+        Return a single instance of PluginMeta by name for the given account.
+        This method caches the results to improve performance.
+
+        :param account: The account whose plugin should be retrieved.
+        :type account: Account
+        :param name: The name of the plugin to retrieve.
+        :type name: str
+        :return: A PluginMeta instance if found, otherwise None.
+        :rtype: Union[PluginMeta, None]
+        """
+
+        return cls.get_cached_plugin_by_account_id_and_name(account.id, name, invalidate=invalidate)
+
+    @classmethod
+    def get_cached_plugin_by_pk(cls, pk: int, invalidate: bool = False) -> Union["PluginMeta", None]:
+        """
+        Return a single instance of PluginMeta by primary key.
+
+        This method caches the results to improve performance.
+
+        :param pk: The primary key of the plugin to retrieve.
+        :type pk: int
+        :return: A PluginMeta instance if found, otherwise None.
+        :rtype: Union[PluginMeta, None]
+        """
+
+        @cache_results()
+        def plugin_by_pk(pk: int) -> Union["PluginMeta", None]:
+            try:
+                return cls.objects.get(pk=pk)
+            except cls.DoesNotExist:
+                logger.warning("%s.get_cached_plugin_by_pk: Plugin not found for pk: %s", cls.formatted_class_name, pk)
+                return None
+
+        if invalidate:
+            plugin_by_pk.invalidate(pk)
+
+        return plugin_by_pk(pk)
 
 
 class PluginSelector(TimestampedModel, SmarterHelperMixin):
@@ -579,6 +663,38 @@ class PluginSelector(TimestampedModel, SmarterHelperMixin):
     def __str__(self) -> str:
         search_terms = json.dumps(self.search_terms)[:50]
         return f"{str(self.directive)} - {search_terms}"
+
+    @classmethod
+    def get_cached_selector_by_plugin(
+        cls, plugin: PluginMeta, invalidate: bool = False
+    ) -> Union["PluginSelector", None]:
+        """
+        Return a single instance of PluginSelector by plugin.
+
+        This method caches the results to improve performance.
+
+        :param plugin: The plugin whose selector should be retrieved.
+        :type plugin: PluginMeta
+        :return: A PluginSelector instance if found, otherwise None.
+        :rtype: Union[PluginSelector, None]
+        """
+
+        @cache_results()
+        def selector_by_plugin_id(plugin_id: int) -> Union["PluginSelector", None]:
+            try:
+                return cls.objects.get(plugin_id=plugin_id)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_selector_by_plugin: Selector not found for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return None
+
+        if invalidate:
+            selector_by_plugin_id.invalidate(plugin.id)
+
+        return selector_by_plugin_id(plugin.id)
 
 
 class PluginSelectorSerializer(serializers.ModelSerializer):
@@ -692,6 +808,36 @@ class PluginPrompt(TimestampedModel, SmarterHelperMixin):
 
     def __str__(self) -> str:
         return str(self.plugin.name)
+
+    @classmethod
+    def get_cached_prompt_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginPrompt", None]:
+        """
+        Return a single instance of PluginPrompt by plugin.
+
+        This method caches the results to improve performance.
+
+        :param plugin: The plugin whose prompt should be retrieved.
+        :type plugin: PluginMeta
+        :return: A PluginPrompt instance if found, otherwise None.
+        :rtype: Union[PluginPrompt, None]
+        """
+
+        @cache_results()
+        def prompt_by_plugin_id(plugin_id: int) -> Union["PluginPrompt", None]:
+            try:
+                return cls.objects.get(plugin_id=plugin_id)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_prompt_by_plugin: Prompt not found for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return None
+
+        if invalidate:
+            prompt_by_plugin_id.invalidate(plugin.id)
+
+        return prompt_by_plugin_id(plugin.id)
 
 
 class PluginDataBase(TimestampedModel, SmarterHelperMixin):
@@ -828,6 +974,17 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
                         "Ensure all parameters have corresponding test values."
                     )
 
+    @classmethod
+    def get_cached_data_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginDataBase", None]:
+
+        raise NotImplementedError("Subclasses must implement get_cached_data_by_plugin method.")
+
+    def save(self, *args, **kwargs):
+        """Override the save method to validate the field dicts."""
+        self.validate()
+        super().save(*args, **kwargs)
+        self.get_cached_data_by_plugin(self.plugin, invalidate=True)
+
 
 class PluginDataStatic(PluginDataBase):
     """
@@ -870,7 +1027,7 @@ class PluginDataStatic(PluginDataBase):
         This method returns the value of ``self.static_data`` in a sanitized form:
 
         - If ``static_data`` is a dictionary, it is returned as-is.
-        - If ``static_data`` is a list, it is truncated to ``SMARTER_PLUGIN_MAX_DATA_RESULTS`` items (if necessary)
+        - If ``static_data`` is a list, it is truncated to ``smarter_settings.plugin_max_data_results`` items (if necessary)
           and converted to a dictionary using :func:`list_of_dicts_to_dict`.
         - If ``static_data`` is neither a dictionary nor a list, a :class:`SmarterValueError` is raised.
 
@@ -886,13 +1043,13 @@ class PluginDataStatic(PluginDataBase):
         if isinstance(self.static_data, list):
             retval = self.static_data
             if isinstance(retval, list) and len(retval) > 0:
-                if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
+                if len(retval) > smarter_settings.plugin_max_data_results:
                     logger.warning(
                         "%s.sanitized_return_data: Truncating static_data to %s items.",
                         self.formatted_class_name,
-                        {SMARTER_PLUGIN_MAX_DATA_RESULTS},
+                        {smarter_settings.plugin_max_data_results},
                     )
-                retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+                retval = retval[: smarter_settings.plugin_max_data_results]  # pylint: disable=E1136
                 retval = list_of_dicts_to_dict(data=retval)
         else:
             raise SmarterValueError("static_data must be a dict or a list or None")
@@ -908,7 +1065,7 @@ class PluginDataStatic(PluginDataBase):
         This property extracts, caches and returns a list of all keys found in the ``static_data`` field, supporting both dictionary and list formats:
 
         - If ``static_data`` is a dictionary, all nested keys are recursively collected and returned as a flat list.
-        - If ``static_data`` is a list of dictionaries, the keys are extracted from each dictionary and returned as a list, truncated to ``SMARTER_PLUGIN_MAX_DATA_RESULTS`` items if necessary.
+        - If ``static_data`` is a list of dictionaries, the keys are extracted from each dictionary and returned as a list, truncated to ``smarter_settings.plugin_max_data_results`` items if necessary.
         - If ``static_data`` is neither a dictionary nor a list, a :class:`SmarterValueError` is raised.
 
         :return: A list of all keys in the static data, or None if not applicable.
@@ -935,18 +1092,18 @@ class PluginDataStatic(PluginDataBase):
         elif isinstance(self.static_data, list):
             retval = self.static_data
             if isinstance(retval, list) and len(retval) > 0:
-                if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
+                if len(retval) > smarter_settings.plugin_max_data_results:
                     logger.warning(
                         "%s.return_data_keys: Truncating static_data to %s items.",
                         self.formatted_class_name,
-                        {SMARTER_PLUGIN_MAX_DATA_RESULTS},
+                        {smarter_settings.plugin_max_data_results},
                     )
-                retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+                retval = retval[: smarter_settings.plugin_max_data_results]  # pylint: disable=E1136
                 retval = list_of_dicts_to_list(data=retval)
         else:
             raise SmarterValueError("static_data must be a dict or a list or None")
 
-        return retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS] if isinstance(retval, list) else retval
+        return retval[: smarter_settings.plugin_max_data_results] if isinstance(retval, list) else retval
 
     def data(self, params: Optional[dict] = None) -> Optional[dict]:
         """
@@ -967,6 +1124,36 @@ class PluginDataStatic(PluginDataBase):
         except (json.JSONDecodeError, TypeError) as e:
             logger.error("%s.data: Failed to decode static_data JSON: %s", self.formatted_class_name, e)
             return None
+
+    @classmethod
+    def get_cached_data_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginDataStatic", None]:
+        """
+        Return a single instance of PluginDataStatic by plugin.
+
+        This method caches the results to improve performance.
+
+        :param plugin: The plugin whose data should be retrieved.
+        :type plugin: PluginMeta
+        :return: A PluginDataStatic instance if found, otherwise None.
+        :rtype: Union[PluginDataStatic, None]
+        """
+
+        @cache_results()
+        def data_by_plugin_id(plugin_id: int) -> Union["PluginDataStatic", None]:
+            try:
+                return cls.objects.get(plugin_id=plugin_id)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return None
+
+        if invalidate:
+            data_by_plugin_id.invalidate(plugin.id)
+
+        return data_by_plugin_id(plugin.id)
 
     def __str__(self) -> str:
         return str(self.plugin.name)
@@ -1002,9 +1189,9 @@ class ConnectionBase(TimestampedModel, SmarterHelperMixin):
 
     See also:
 
-    - :class:`SqlConnection`
-    - :class:`ApiConnection`
-    - :class:`PluginMeta`
+    - :class:`smarter.apps.plugin.models.SqlConnection`
+    - :class:`smarter.apps.plugin.models.ApiConnection`
+    - :class:`smarter.apps.plugin.models.PluginMeta`
     """
 
     class Meta:
@@ -1053,7 +1240,7 @@ class ConnectionBase(TimestampedModel, SmarterHelperMixin):
         raise NotImplementedError
 
     @classmethod
-    def get_cached_connections_for_user(cls, user: User) -> list["ConnectionBase"]:
+    def get_cached_connections_for_user(cls, user: User, invalidate: bool = False) -> list["ConnectionBase"]:
         """
         Return a list of all instances of all concrete subclasses of :class:`ConnectionBase`.
 
@@ -1082,16 +1269,15 @@ class ConnectionBase(TimestampedModel, SmarterHelperMixin):
         if user is None:
             logger.warning("%s.get_cached_connections_for_user: user is None", cls.formatted_class_name)
             return []
-        account = get_cached_account_for_user(user)
+        account = get_cached_account_for_user(user, invalidate=invalidate)
         instances = []
         for subclass in ConnectionBase.__subclasses__():
             instances.extend(subclass.objects.filter(account=account).order_by("name"))
         return instances or []
 
     @classmethod
-    @cache_results()
     def get_cached_connection_by_name_and_kind(
-        cls, user: User, kind: SAMKinds, name: str
+        cls, user: User, kind: SAMKinds, name: str, invalidate: bool = False
     ) -> Union["ConnectionBase", None]:
         """
         Return a single instance of a concrete subclass of :class:`ConnectionBase` by name and kind.
@@ -1123,18 +1309,37 @@ class ConnectionBase(TimestampedModel, SmarterHelperMixin):
         - :func:`smarter.lib.cache.cache_results`
         - :func:`smarter.apps.account.utils.get_cached_account_for_user`
         """
+
+        @cache_results()
+        def cached_sqlconnection_by_id_and_name(account_id: int, name: str) -> Union["SqlConnection", None]:
+            try:
+                return SqlConnection.objects.get(account_id=account_id, name=name)
+            except SqlConnection.DoesNotExist:
+                return None
+
+        @cache_results()
+        def cached_apiconnection_by_id_and_name(account_id: int, name: str) -> Union["ApiConnection", None]:
+            try:
+                return ApiConnection.objects.get(account_id=account_id, name=name)
+            except ApiConnection.DoesNotExist:
+                return None
+
         account = get_cached_account_for_user(user)
         if not kind or not kind in [SAMKinds.SQL_CONNECTION, SAMKinds.API_CONNECTION]:
             raise SmarterValueError(f"Unsupported connection kind: {kind}")
         if kind == SAMKinds.SQL_CONNECTION:
             try:
-                return SqlConnection.objects.get(account=account, name=name)
+                if invalidate:
+                    cached_sqlconnection_by_id_and_name.invalidate(account.id, name)
+                return cached_sqlconnection_by_id_and_name(account.id, name)
             except SqlConnection.DoesNotExist:
                 pass
 
         elif kind == SAMKinds.API_CONNECTION:
             try:
-                return ApiConnection.objects.get(account=account, name=name)
+                if invalidate:
+                    cached_apiconnection_by_id_and_name.invalidate(account.id, name)
+                return cached_apiconnection_by_id_and_name(account.id, name)
             except ApiConnection.DoesNotExist:
                 pass
 
@@ -2076,6 +2281,37 @@ class PluginDataSql(PluginDataBase):
         """Override the save method to validate the field dicts."""
         self.validate()
         super().save(*args, **kwargs)
+        self.get_cached_data_by_plugin(self.plugin, invalidate=True)
+
+    @classmethod
+    def get_cached_data_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginDataSql", None]:
+        """
+        Return a single instance of PluginDataSql by plugin.
+
+        This method caches the results to improve performance.
+
+        :param plugin: The plugin whose data should be retrieved.
+        :type plugin: PluginMeta
+        :return: A PluginDataSql instance if found, otherwise None.
+        :rtype: Union[PluginDataSql, None]
+        """
+
+        @cache_results()
+        def data_by_plugin_id(plugin_id: int) -> Union["PluginDataSql", None]:
+            try:
+                return cls.objects.get(plugin_id=plugin_id)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return None
+
+        if invalidate:
+            data_by_plugin_id.invalidate(plugin.id)
+
+        return data_by_plugin_id(plugin.id)
 
     def __str__(self) -> str:
         account_number: Optional[str] = (
@@ -2513,6 +2749,37 @@ class PluginDataApi(PluginDataBase):
         """Override the save method to validate the field dicts."""
         self.validate()
         super().save(*args, **kwargs)
+        self.get_cached_data_by_plugin(self.plugin, invalidate=True)
+
+    @classmethod
+    def get_cached_data_by_plugin(cls, plugin: PluginMeta, invalidate: bool = False) -> Union["PluginDataApi", None]:
+        """
+        Return a single instance of PluginDataApi by plugin.
+
+        This method caches the results to improve performance.
+
+        :param plugin: The plugin whose data should be retrieved.
+        :type plugin: PluginMeta
+        :return: A PluginDataApi instance if found, otherwise None.
+        :rtype: Union[PluginDataApi, None]
+        """
+
+        @cache_results()
+        def data_by_plugin_id(plugin_id: int) -> Union["PluginDataApi", None]:
+            try:
+                return cls.objects.get(plugin_id=plugin_id)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_data_by_plugin: Data not found for plugin_id: %s",
+                    cls.formatted_class_name,
+                    plugin_id,
+                )
+                return None
+
+        if invalidate:
+            data_by_plugin_id.invalidate(plugin.id)
+
+        return data_by_plugin_id(plugin.id)
 
     def __str__(self) -> str:
         account_number: Optional[str] = (

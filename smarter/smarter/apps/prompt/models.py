@@ -2,10 +2,9 @@
 """All models for the OpenAI Function Calling API app."""
 
 import logging
+from functools import cached_property
 from typing import Any, Optional, Union
 
-from django.conf import settings
-from django.core.cache import cache
 from django.db import models
 from django.db.utils import IntegrityError
 from django.http import HttpRequest
@@ -17,6 +16,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
@@ -228,7 +228,8 @@ class ChatHelper(SmarterRequestMixin):
         :raises SmarterConfigurationError: If there is an error creating a new Chat object.
         """
         logger.info(
-            "ChatHelper().__init__() - received request: %s session_key: %s, chatbot: %s",
+            "%s.__init__() - received request: %s session_key: %s, chatbot: %s",
+            self.formatted_class_name,
             self.smarter_build_absolute_uri(request),
             session_key,
             chatbot,
@@ -265,7 +266,8 @@ class ChatHelper(SmarterRequestMixin):
             self._chat = self.get_cached_chat()
 
         logger.info(
-            "ChatHelper().__init__() - finished %s with session_key: %s, chat: %s",
+            "%s.__init__() - %s with session_key: %s, chat: %s",
+            self.formatted_class_name,
             "is ready" if self.ready else "is not ready",
             self.session_key,
             self._chat,
@@ -309,7 +311,7 @@ class ChatHelper(SmarterRequestMixin):
             "unique_client_string": self.unique_client_string,
         }
 
-    @property
+    @cached_property
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for the ChatHelper.
@@ -361,7 +363,7 @@ class ChatHelper(SmarterRequestMixin):
             return self._chatbot
         self._chatbot = get_cached_chatbot_by_request(request=self.smarter_request)
 
-    @property
+    @cached_property
     def chat_history(self) -> Union[models.QuerySet, list]:
         """
         Get the most recent chat history for the current chat session.
@@ -372,7 +374,7 @@ class ChatHelper(SmarterRequestMixin):
         rec = ChatHistory.objects.filter(chat=self.chat).order_by("-created_at").first()
         return rec.chat_history if rec else []
 
-    @property
+    @cached_property
     def chat_tool_call(self) -> Union[models.QuerySet, list]:
         """
         Get the most recent chat tool call history for the current chat session.
@@ -383,7 +385,7 @@ class ChatHelper(SmarterRequestMixin):
         recs = ChatToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
         return recs
 
-    @property
+    @cached_property
     def chat_plugin_usage(self) -> Union[models.QuerySet, list]:
         """
         Get the most recent chat plugin usage history for the current chat session.
@@ -394,7 +396,7 @@ class ChatHelper(SmarterRequestMixin):
         recs = ChatPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
         return recs
 
-    @property
+    @cached_property
     def history(self) -> dict:
         """
         Serialize the most recent logged history output for the chat session.
@@ -414,7 +416,7 @@ class ChatHelper(SmarterRequestMixin):
             "chatbot_request_history": None,  # ChatBotRequests
         }
 
-    @property
+    @cached_property
     def unique_client_string(self):
         """
         Generate a unique client string for the chat session.
@@ -483,7 +485,7 @@ class ChatHelper(SmarterRequestMixin):
             except IntegrityError as e:
                 raise SmarterConfigurationError(f"{self.formatted_class_name} - IntegrityError: {str(e)}") from e
 
-        cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
+        cache.set(key=self.session_key, value=chat, timeout=smarter_settings.chat_cache_expiration or 300)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
             logger.info(
                 "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key

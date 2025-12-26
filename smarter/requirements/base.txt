@@ -166,12 +166,16 @@ djangorestframework==3.16.1
     #   drf-yasg
     #   wagtail
 dnspython==2.7.0
-    # via -r smarter/requirements/in/base.in
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   email-validator
 docutils==0.22
     # via -r smarter/requirements/in/base.in
 draftjs-exporter==5.1.0
     # via wagtail
 drf-yasg==1.21.10
+    # via -r smarter/requirements/in/base.in
+email-validator==2.3.0
     # via -r smarter/requirements/in/base.in
 et-xmlfile==2.0.0
     # via openpyxl
@@ -235,6 +239,7 @@ idna==3.10
     # via
     #   -r smarter/requirements/in/constraints.in
     #   anyio
+    #   email-validator
     #   httpx
     #   requests
     #   tldextract

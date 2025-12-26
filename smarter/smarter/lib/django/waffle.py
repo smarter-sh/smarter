@@ -41,14 +41,12 @@ Dependencies:
 """
 
 import logging
-from functools import wraps
 
 import waffle as waffle_orig
-from django.core.cache import cache
+from django.apps import apps
+from django.core.exceptions import AppRegistryNotReady
 from django.db import connections
 from django.db.utils import OperationalError, ProgrammingError
-from django_redis.exceptions import ConnectionInterrupted
-from redis.exceptions import ConnectionError as RedisConnectionError
 from waffle.admin import SwitchAdmin
 
 
@@ -60,13 +58,12 @@ try:
 except ImportError:
     MySQLdbOperationalError = None
 
-from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
 from smarter.common.helpers.console_helpers import formatted_text_green
 
 
 logger = logging.getLogger(__name__)
-CACHE_EXPIRATION = 60  # seconds
 prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")
+logger.info(formatted_text_green("smarter.lib.django.waffle module loaded"))
 
 
 # pylint: disable=C0115
@@ -86,7 +83,7 @@ class SmarterSwitchAdmin(SwitchAdmin):
     ordering = ("name",)
 
     def has_module_permission(self, request):
-        return request.user.is_superuser  # type: ignore[return-value]
+        return hasattr(request, "user") and hasattr(request.user, "is_superuser") and request.user.is_superuser  # type: ignore[return-value]
 
 
 class SmarterWaffleSwitches:
@@ -193,77 +190,6 @@ class SmarterWaffleSwitches:
         ]
 
 
-def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
-    """
-    A decorator to cache the results of the switch_is_active() function using Redis.
-    This is a slight modification of Smarter's standard cache_results decorator
-    to mitigate pre-deployment run-time cases where the Redis and/or database connections
-    are not yet in a ready state.
-
-    :param timeout: Cache expiration time in seconds.
-    :return: Decorated function with caching.
-    """
-
-    def is_redis_ready():
-        # try:
-        #     conn = get_redis_connection("default")
-        #     conn.ping()
-        #     return True
-        # # pylint: disable=broad-except
-        # except Exception as e:
-        #     logger.warning("Redis cache is not available. Bypassing cache. Error: %s", e, exc_info=True)
-        #     return False
-        return True
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            cache_key = f"{func.__name__}_{args}_{kwargs}"
-            result = None
-
-            if not is_redis_ready():
-                logger.warning("Redis cache is not available. Bypassing cache for %s.", func.__name__)
-                return func(*args, **kwargs)
-
-            try:
-                try:
-                    result = cache.get(cache_key)
-                except (
-                    RedisConnectionError,
-                    ConnectionInterrupted,
-                ) as e:
-                    logger.error("Redis connection error while accessing cache: %s", e, exc_info=True)
-                # pylint: disable=broad-except
-                except Exception as e:
-                    logger.error("Unexpected error while attempting to access cache: %s", e, exc_info=True)
-
-                if not result:
-                    result = func(*args, **kwargs)
-                    try:
-                        cache.set(cache_key, result, timeout)
-                    except (RedisConnectionError, ConnectionInterrupted) as e:
-                        logger.error("Redis connection error while setting cache: %s", e, exc_info=True)
-                    # pylint: disable=broad-except
-                    except Exception as e:
-                        logger.error("Unexpected error while attempting to access cache: %s", e, exc_info=True)
-                return result
-            except (RedisConnectionError, ConnectionInterrupted) as e:
-                logger.error("Redis connection error in cache_results decorator: %s", e, exc_info=True)
-            # pylint: disable=broad-except
-            except Exception as e:
-                logger.error("An error occurred in cache_results decorator: %s", e, exc_info=True)
-            return result
-
-        def invalidate(*args, **kwargs):
-            cache_key = f"{func.__name__}_{args}_{kwargs}"
-            cache.delete(cache_key)
-
-        wrapper.invalidate = invalidate  # type: ignore[attr-defined]
-        return wrapper
-
-    return decorator
-
-
 def is_database_ready(alias="default"):
     """
     Check if the database is ready by verifying the connection and
@@ -290,7 +216,6 @@ def is_database_ready(alias="default"):
         return False
 
 
-@cache_results(timeout=CACHE_EXPIRATION)
 def switch_is_active(switch_name: str) -> bool:
     """
     Check if a Waffle switch is active, with caching and database readiness checks.
@@ -312,6 +237,10 @@ def switch_is_active(switch_name: str) -> bool:
     :return: True if the switch is active, False otherwise.
     :rtype: bool
     """
+    # Prevent model access before Django app registry is ready
+    if not apps.ready:
+        logger.warning("%s App registry not ready, assuming switch %s is inactive.", prefix, switch_name)
+        return False
     if not is_database_ready():
         logger.warning("%s Database not ready, assuming switch %s is inactive.", prefix, switch_name)
         return False
@@ -326,11 +255,11 @@ def switch_is_active(switch_name: str) -> bool:
     ) or (Exception,)
     try:
         switch = waffle_orig.get_waffle_switch_model().get(switch_name)
-        if switch.is_active():
-            logger.info("%s: %s is active and will be cached for %s seconds.", prefix, switch_name, CACHE_EXPIRATION)
         return switch.is_active()
-    except db_exceptions as e:
-        logger.error("%s Database not ready or switch does not exist: %s", prefix, e, exc_info=True)
+    except (*db_exceptions, AppRegistryNotReady) as e:
+        logger.error(
+            "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True
+        )
         return False
     # pylint: disable=broad-except
     except Exception as e:

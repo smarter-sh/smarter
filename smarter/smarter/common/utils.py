@@ -15,6 +15,7 @@ import csv
 import hashlib
 import json  # library for interacting with JSON data https://www.json.org/json-en.html
 import logging
+import os
 import random
 import re
 import warnings
@@ -28,7 +29,7 @@ from pydantic import SecretStr
 from rest_framework.request import Request
 
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -923,3 +924,44 @@ def rfc1034_compliant_to_snake(val) -> str:
     # Replace hyphens with underscores
     name = val.replace("-", "_")
     return name
+
+
+def generate_fernet_encryption_key() -> str:
+    """
+    Generates a new Fernet encryption key.
+
+    :return: A URL-safe base64-encoded 32-byte key suitable for use with the Fernet symmetric encryption system.
+    :rtype: str
+
+    .. note::
+
+        - This function uses the ``cryptography`` library to generate a secure random key. The key is encoded as a UTF-8 string for easy storage and transmission.
+        - The generated key is random and should be securely stored. It is essential for encrypting and decrypting data using the Fernet protocol.
+
+    **Example usage:**
+
+    .. code-block:: python
+
+        from smarter.common.utils import generate_fernet_encryption_key
+
+        key = generate_fernet_encryption_key()
+        print(key)  # e.g., 'gAAAAABh...'
+
+    """
+    # pylint: disable=C0415
+    from cryptography.fernet import Fernet
+
+    logger.warning(
+        formatted_text_red(
+            "smarter.common.utils.generate_fernet_encryption_key() Generating new Fernet encryption key."
+        )
+    )
+    return Fernet.generate_key().decode("utf-8")
+
+
+def bool_environment_variable(var_name: str, default: bool) -> bool:
+    """Get a boolean environment variable"""
+    value = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
+    if value is None:
+        return default
+    return value.lower() in ["true", "1", "t", "y", "yes"]

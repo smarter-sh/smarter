@@ -7,6 +7,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.admin.exceptions import AlreadyRegistered
+from django.http import JsonResponse
 from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from waffle import get_waffle_switch_model
@@ -41,6 +42,12 @@ from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.apps.provider.const import namespace as provider_namespace
 from smarter.lib.django.waffle import SmarterSwitchAdmin
+
+
+def session_test_view(request):
+    request.session["test_key"] = "test_value"
+    request.session.modified = True  # Ensure session is saved
+    return JsonResponse({"session_key": request.session.session_key, "test_key": request.session.get("test_key")})
 
 
 # -----------------------------------------------------------------------------
@@ -114,6 +121,7 @@ urlpatterns = [
     # routes for 3rd party apps
     # -----------------------------------
     path("social-auth/", include("social_django.urls", namespace="social_auth")),
+    path("session-test/", session_test_view, name="session_test"),
     # -----------------------------------
     # stripe urls
     # see: https://dj-stripe.dev/dj-stripe/

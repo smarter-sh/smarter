@@ -7,6 +7,7 @@ from typing import Any, Optional
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
+from smarter.apps.account.models import User
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
@@ -24,6 +25,7 @@ from smarter.apps.plugin.models import (
 )
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.conf import settings as smarter_settings
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -111,6 +113,12 @@ class SAMPluginBaseBroker(AbstractBroker):
         if not self.account:
             raise SAMBrokerError(
                 message="No account set for the broker",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.CHAT,
+            )
+        if not isinstance(self.user, User):
+            raise SAMBrokerError(
+                message=f"Invalid user type for the broker. Expected User instance but got {type(self.user)}",
                 thing=self.thing,
                 command=SmarterJournalCliCommands.CHAT,
             )
@@ -414,7 +422,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 command=command,
             )
         try:
-            plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
+            plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
             plugin_prompt = model_to_dict(plugin_prompt)  # type: ignore[no-any-return]
             plugin_prompt = self.snake_to_camel(plugin_prompt)
             if not isinstance(plugin_prompt, dict):
@@ -482,7 +490,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 command=command,
             )
         try:
-            plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
+            plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
             plugin_selector = model_to_dict(plugin_selector)  # type: ignore[no-any-return]
             plugin_selector = self.snake_to_camel(plugin_selector)
             if not isinstance(plugin_selector, dict):
