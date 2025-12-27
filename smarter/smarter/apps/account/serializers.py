@@ -272,7 +272,6 @@ class SecretSerializer(MetaDataWithOwnershipModelSerializer):
         read_only_fields = getattr(MetaDataWithOwnershipModelSerializer.Meta, "read_only_fields", []) + [
             "last_accessed",
             "expires_at",
-            "user_profile",
         ]
 
 

@@ -90,12 +90,9 @@ class TimestampedModel(models.Model):
 
         .. attention::
 
-            Currently a stub method; does not perform any validation.
-            This breaks on SmarterAuthToken.objects.create()
+            Intended to be overridden in subclasses to provide custom validation logic.
 
         """
-        # self.full_clean()
-        # logger.warning("TimestampedModel().validate() called but not applied on %s", self.__class__.__name__)
 
     def save(self, *args, **kwargs):
         """
@@ -134,8 +131,8 @@ class TimestampedModel(models.Model):
         """
         try:
             self.validate()
-        except ValidationError as e:
-            raise ValidationError(
+        except (ValidationError, SmarterValueError) as e:
+            raise SmarterValueError(
                 f"TimestampedModel().save() validation error: {e} | args={args} kwargs={kwargs} | model={self.__class__.__name__} | field_values={self.__dict__}"
             ) from e
         super().save(*args, **kwargs)

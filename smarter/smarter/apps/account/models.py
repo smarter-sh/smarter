@@ -312,7 +312,8 @@ class Account(MetaDataModel):
 
 class MetaDataWithOwnershipModel(MetaDataModel):
     """
-    Abstract base that adds Account ownership to a SAM Metadata model.
+    Abstract Django ORM base model that adds Account ownership
+    to a SAM Metadata model.
 
     This model extends `MetaDataModel` to include a foreign key
     relationship to the `Account` model, establishing ownership of resources
@@ -615,7 +616,7 @@ class AccountContact(TimestampedModel):
         return self.first_name + " " + self.last_name
 
 
-class UserProfile(MetaDataModel):
+class UserProfile(MetaDataWithOwnershipModel):
     """
     UserProfile model for associating Django users with Smarter accounts.
 
@@ -650,7 +651,6 @@ class UserProfile(MetaDataModel):
         on_delete=models.CASCADE,
         related_name="user_profile",
     )
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
     is_test = models.BooleanField(
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )
