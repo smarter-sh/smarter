@@ -3,15 +3,29 @@
 from smarter.apps.account.models import (
     Account,
     AccountContact,
+    MetaDataModel,
     PaymentMethod,
     Secret,
     User,
     UserProfile,
 )
+from smarter.lib.django.serializers import MetaDataModelSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 
-class UserSerializer(SmarterCamelCaseSerializer):
+class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
+    """
+    Serializer for models that extend MetaDataWithOwnershipModel, adding an 'account' field.
+    """
+
+    # pylint: disable=missing-class-docstring
+    class Meta(MetaDataModelSerializer.Meta):
+        model = MetaDataModel
+        fields = "__all__"
+        read_only_fields = getattr(MetaDataModelSerializer.Meta, "read_only_fields", [])
+
+
+class UserSerializer(MetaDataModelSerializer):
     """
     Serializer for the `User` model in the Smarter API.
 
@@ -92,7 +106,7 @@ class UserMiniSerializer(SmarterCamelCaseSerializer):
         read_only_fields = fields
 
 
-class AccountSerializer(SmarterCamelCaseSerializer):
+class AccountSerializer(MetaDataModelSerializer):
     """
     Serializer for the `Account` model in the Smarter API.
 
@@ -219,7 +233,7 @@ class PaymentMethodSerializer(SmarterCamelCaseSerializer):
         fields = "__all__"
 
 
-class SecretSerializer(SmarterCamelCaseSerializer):
+class SecretSerializer(MetaDataWithOwnershipModelSerializer):
     """
     Serializer for the `Secret` model in the Smarter API.
 
@@ -252,17 +266,14 @@ class SecretSerializer(SmarterCamelCaseSerializer):
     user_profile = UserProfileSerializer()
 
     # pylint: disable=missing-class-docstring
-    class Meta:
+    class Meta(MetaDataWithOwnershipModelSerializer.Meta):
         model = Secret
-        fields = (
-            "id",
-            "name",
-            "description",
+        fields = "__all__"
+        read_only_fields = getattr(MetaDataWithOwnershipModelSerializer.Meta, "read_only_fields", []) + [
             "last_accessed",
             "expires_at",
             "user_profile",
-        )
-        read_only_fields = fields
+        ]
 
 
 class AccountContactSerializer(SmarterCamelCaseSerializer):
@@ -298,4 +309,9 @@ class AccountContactSerializer(SmarterCamelCaseSerializer):
     class Meta:
         model = AccountContact
         fields = "__all__"
-        read_only_fields = fields
+
+    def get_fields(self):
+        fields = super().get_fields()
+        for field in fields.values():
+            field.read_only = True
+        return fields

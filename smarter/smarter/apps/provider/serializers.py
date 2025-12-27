@@ -5,6 +5,7 @@ Serializer classes for the Provider app.
 
 from smarter.apps.account.serializers import (
     AccountMiniSerializer,
+    MetaDataWithOwnershipModelSerializer,
     SecretSerializer,
     UserMiniSerializer,
 )
@@ -23,7 +24,7 @@ from .models import (
 )
 
 
-class ProviderSerializer(SmarterCamelCaseSerializer):
+class ProviderSerializer(MetaDataWithOwnershipModelSerializer):
     """PluginMeta model serializer."""
 
     owner = UserMiniSerializer(read_only=True)
@@ -51,7 +52,7 @@ class ProviderSerializer(SmarterCamelCaseSerializer):
         return queryset
 
 
-class ProviderModelSerializer(SmarterCamelCaseSerializer):
+class ProviderModelSerializer(MetaDataWithOwnershipModelSerializer):
     """ProviderModel model serializer."""
 
     provider = ProviderSerializer(read_only=True)

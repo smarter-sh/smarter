@@ -10,7 +10,7 @@ from django.db.utils import IntegrityError
 from django.http import HttpRequest
 from rest_framework import serializers
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import MetaDataWithOwnershipModel
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import settings as smarter_settings
@@ -33,7 +33,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-class Chat(TimestampedModel):
+class Chat(MetaDataWithOwnershipModel):
     """Chat model."""
 
     class Meta:
@@ -41,7 +41,6 @@ class Chat(TimestampedModel):
         unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
 
     session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=False, null=False)
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=False, null=False)
     ip_address = models.GenericIPAddressField(blank=False, null=False)
     user_agent = models.CharField(max_length=255, blank=False, null=False)
