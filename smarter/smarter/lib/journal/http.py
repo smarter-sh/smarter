@@ -5,7 +5,6 @@ import logging
 from http import HTTPStatus
 from typing import Optional, Union
 
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
@@ -18,6 +17,7 @@ from smarter.lib.django.http.serializers import (
     HttpAuthenticatedRequestSerializer,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.json import DjangoJSONEncoder
 
 from .enum import (
     SCLIResponseMetadata,

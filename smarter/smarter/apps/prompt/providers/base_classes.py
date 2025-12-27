@@ -1,3 +1,4 @@
+# pylint: disable=C0302
 """
 Base class for chat providers.
 """
@@ -15,6 +16,7 @@ from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
+    ChatCompletionMessageToolCallUnion,
 )
 
 from smarter.apps.account.models import (
@@ -311,7 +313,6 @@ class ChatProviderBase(ProviderDbMixin):
         return _prune(data)
 
     def validate(self):
-
         if not self.chat:
             raise SmarterValueError(f"{self.formatted_class_name}: chat object is required")
         if not self.data:
@@ -741,9 +742,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self._insert_charge_by_type(CHARGE_TYPE_PLUGIN)
         self.db_insert_chat_plugin_usage(chat=self.chat, plugin=plugin, input_text=self.input_text)
 
-    def process_tool_call(self, tool_call: ChatCompletionMessageToolCall):
+    def process_tool_call(self, tool_call: ChatCompletionMessageToolCallUnion):
         """
-        tool_call: List[ChatCompletionMessageToolCall]
+        tool_call: List[ChatCompletionMessageToolCallUnion]
         """
         if not isinstance(tool_call, ChatCompletionMessageToolCall):
             raise SmarterValueError(
@@ -1049,8 +1050,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 raise SmarterValueError(
                     f"{self.formatted_class_name}: response_message must be a ChatCompletionMessage, got {type(response_message)}"
                 )
-            tool_calls: Optional[list[ChatCompletionMessageToolCall]] = response_message.tool_calls
-            if tool_calls:
+
+            if response_message.tool_calls is not None:
+                tool_calls: Optional[list[ChatCompletionMessageToolCallUnion]] = response_message.tool_calls
                 logger.info(
                     "%s %s - %s tool calls detected, preparing second request",
                     self.formatted_class_name,

@@ -1,3 +1,4 @@
+# pylint: disable=C0302
 """Account models."""
 
 # pylint: disable=missing-class-docstring
@@ -26,7 +27,7 @@ from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
-from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.model_helpers import MetaDataModel, TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -160,7 +161,7 @@ def get_resolved_user(
     )
 
 
-class Account(TimestampedModel):
+class Account(MetaDataModel):
     """
     Model representing a Smarter account.
 
@@ -307,6 +308,33 @@ class Account(TimestampedModel):
 
     def __str__(self):
         return str(self.account_number) + " - " + str(self.company_name)
+
+
+class MetaDataWithOwnershipModel(MetaDataModel):
+    """
+    Abstract base that adds Account ownership to a SAM Metadata model.
+
+    This model extends `MetaDataModel` to include a foreign key
+    relationship to the `Account` model, establishing ownership of resources
+    by a specific account. It also enforces uniqueness constraints on
+    the combination of `account` and `name` fields,
+
+    :param account: ForeignKey to :class:`Account`. The account that owns this resource.
+
+    .. note::
+
+        This is an abstract base class and should not be instantiated directly.
+    """
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        abstract = True
+        unique_together = (
+            "account",
+            "name",
+        )
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="%(class)ss")
 
 
 class AccountContact(TimestampedModel):
@@ -587,7 +615,7 @@ class AccountContact(TimestampedModel):
         return self.first_name + " " + self.last_name
 
 
-class UserProfile(TimestampedModel):
+class UserProfile(MetaDataModel):
     """
     UserProfile model for associating Django users with Smarter accounts.
 
@@ -618,7 +646,7 @@ class UserProfile(TimestampedModel):
 
     # Add more fields here as needed
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        User,
         on_delete=models.CASCADE,
         related_name="user_profile",
     )
@@ -938,7 +966,7 @@ class DailyBillingRecord(TimestampedModel):
         )
 
 
-class Secret(TimestampedModel):
+class Secret(MetaDataWithOwnershipModel):
     """
     Secret model for securely storing and managing sensitive account-level information.
 
@@ -984,11 +1012,13 @@ class Secret(TimestampedModel):
         related_name="secrets",
         help_text="Reference to the UserProfile associated with this secret.",
     )
-    name = models.CharField(
-        max_length=255, help_text="Name of the secret in camelCase, e.g., 'apiKey', no special characters."
-    )
-    description = models.TextField(blank=True, null=True, help_text="Optional description of the secret.")
     encrypted_value = models.BinaryField(help_text="Read-only encrypted representation of the secret's value.")
+
+    def validate(self):
+        super().validate()
+        if self.user_profile and self.account:
+            if self.user_profile.account != self.account:
+                raise SmarterValueError("UserProfile's account does not match the Secret's account.")
 
     def save(self, *args, **kwargs):
         """

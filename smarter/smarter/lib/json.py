@@ -70,13 +70,20 @@ def duration_iso_string(duration):
 
 class DjangoJSONEncoder(json.JSONEncoder):
     """
-    JSONEncoder subclass that knows how to encode date/time, decimal types, and
-    UUIDs.
+    JSONEncoder subclass that knows how to encode odd types like
+     - date/time
+     - decimal
+     - UUIDs
+     - TaggableManager
     """
 
     def default(self, o):
+        # TaggableManager support (import inside to avoid startup issues)
+        # most common cases. pass back the super().default(o)
+        if isinstance(o, (str, int, float, type(None), bool)):
+            return super().default(o)
         # See "Date Time String Format" in the ECMA-262 specification.
-        if isinstance(o, datetime.datetime):
+        elif isinstance(o, datetime.datetime):
             r = o.isoformat()
             if o.microsecond:
                 r = r[:23] + r[26:]
@@ -97,6 +104,29 @@ class DjangoJSONEncoder(json.JSONEncoder):
         elif isinstance(o, (decimal.Decimal, uuid.UUID, Promise)):
             return str(o)
         else:
+            # Handle GenericRelatedObjectManager by type name and module (avoids import timing issues)
+            if (
+                type(o).__name__ == "GenericRelatedObjectManager"
+                and getattr(type(o), "__module__", None) == "django.contrib.contenttypes.fields"
+            ):
+                return list(o.all())
+
+            # Handle TaggableManager
+            try:
+                # pylint: disable=C0415
+                from taggit.managers import TaggableManager
+
+                _TaggableManager = getattr(
+                    __import__("taggit.managers", fromlist=["_TaggableManager"]), "_TaggableManager", None
+                )
+                taggable_types = (TaggableManager,)
+                if _TaggableManager:
+                    taggable_types += (_TaggableManager,)
+                if isinstance(o, taggable_types):
+                    return list(o.all().values_list("name", flat=True))
+            except ImportError:
+                pass
+
             return super().default(o)
 
 

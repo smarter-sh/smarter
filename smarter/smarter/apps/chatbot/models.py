@@ -13,7 +13,7 @@ from django.urls import reverse
 from rest_framework import serializers
 
 # our stuff
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, MetaDataWithOwnershipModel, UserProfile
 from smarter.apps.account.serializers import AccountMiniSerializer
 from smarter.apps.account.utils import (
     account_number_from_url,
@@ -34,7 +34,7 @@ from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
-from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.model_helpers import MetaDataModel, TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -76,7 +76,7 @@ chatbot_helper_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_chat
 # -----------------------------------------------------------------------------
 # ChatBot Models. These implement a ChatBot API for a customer account.
 # -----------------------------------------------------------------------------
-class ChatBotCustomDomain(TimestampedModel):
+class ChatBotCustomDomain(MetaDataWithOwnershipModel):
     """
     Represents a DNS host record for a customer account's ChatBot, linked to an AWS Hosted Zone.
 
@@ -139,10 +139,6 @@ class ChatBotCustomDomain(TimestampedModel):
 
     class Meta:
         verbose_name_plural = "ChatBot Custom Domains"
-
-    #: The Smarter Account that owns this ChatBot custom domain.
-    #: Example: Account(id=1, name="Acme Corp.")
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
 
     #: The AWS Hosted Zone ID associated with this custom domain. This ID is used for DNS management via AWS Route 53.
     #: Example: "Z1234567890ABCDEF"
@@ -297,7 +293,7 @@ def validate_provider(value):
         )
 
 
-class ChatBot(TimestampedModel):
+class ChatBot(MetaDataWithOwnershipModel):
     """
     Implements the ChatBot API model for a customer account.
 
@@ -384,24 +380,6 @@ class ChatBot(TimestampedModel):
         REQUESTED = "Requested", "Requested"
         ISSUED = "Issued", "Issued"
         FAILED = "Failed", "Failed"
-
-    #: The Smarter Account that owns this ChatBot.
-    #: Example: Account(id=1, name="Acme Corp.")
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
-
-    #: The name of the ChatBot. This includes, for example, the slug in the
-    #: deployed URL (e.g., 'my-chatbot' in 'my-chatbot.1234-5678-9012.api.example.com').
-    #: The naming conventions follow RFC 1034 for DNS compliance.
-    #: Example: 'my-chatbot'
-    name = models.CharField(max_length=255)
-
-    #: A brief description of the ChatBot. Less is more. Be concise.
-    #: Example: "A helpful assistant for customer support."
-    description = models.TextField(blank=True, null=True)
-
-    #: The version of the ChatBot configuration or model. Use semantic versioning if applicable.
-    #: Example: "1.0.0"
-    version = models.CharField(max_length=255, blank=True, null=True)
 
     #: The subdomain DNS record associated with this ChatBot.
     #: Example: ChatBotCustomDomainDNS(id=1, domain="my-chatbot.example.com")
