@@ -62,6 +62,14 @@ class SAMPluginBaseBroker(AbstractBroker):
     _plugin_prompt: Optional[PluginPrompt] = None
     _plugin_status: Optional[SAMPluginCommonStatus] = None
 
+    def plugin_init(self) -> None:
+        """Initialize the plugin model instance."""
+        self._plugin = None
+        self._plugin_meta = None
+        self._plugin_prompt = None
+        self._plugin_status = None
+        self._manifest = None
+
     @property
     def plugin(self) -> Optional[PluginBase]:
         """

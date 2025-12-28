@@ -120,7 +120,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     _plugin_static_spec_data: Optional[SAMPluginStaticSpecData] = None
     _plugin_static_spec: Optional[SAMPluginStaticSpec] = None
 
-    def init_plugin(self):
+    def plugin_init(self):
         """
         Initialize the SAMStaticPluginBroker instance.
 
@@ -141,6 +141,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             - `SAMPluginBaseBroker.init`
 
         """
+        super().plugin_init()
         self._manifest = None
         self._plugin_data = None
         self._plugin = None
@@ -609,7 +610,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
         for plugin in plugins:
             try:
-                self.init_plugin()
+                self.plugin_init()
                 self.plugin_meta = plugin
 
                 model_dump = json.loads(self.manifest.model_dump_json())

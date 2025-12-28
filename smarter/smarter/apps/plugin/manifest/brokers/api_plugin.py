@@ -122,6 +122,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         :return: None
 
         """
+        super().plugin_init()
         self._plugin = None
         self._plugin_data = None
         self._manifest = None

@@ -128,6 +128,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 connection = broker.connection  # Re-initialized connection
 
         """
+        super().connection_init()
         self._manifest = None
         self._connection = None
         self._password_secret = None
