@@ -4,18 +4,12 @@
 import logging
 from datetime import datetime
 from typing import Optional, Type
-from unicodedata import name
 
-from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.models import Secret
 from smarter.apps.account.utils import get_cached_admin_user_for_account
-from smarter.apps.plugin.manifest.enum import (
-    SAMApiConnectionSpecConnectionKeys,
-    SAMApiConnectionSpecKeys,
-    SAMApiConnectionStatusKeys,
-)
+from smarter.apps.plugin.manifest.enum import SAMApiConnectionSpecConnectionKeys
 from smarter.apps.plugin.manifest.models.api_connection.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.api_connection.enum import AuthMethods
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
@@ -238,13 +232,12 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             return self._manifest
 
         if self.connection:
-            metadata = SAMConnectionCommonMetadata(
-                name=str(self.connection.name),
-                description=self.connection.description,
-                version=self.connection.version,
-                tags=self.connection.tags.names() if self.connection.tags else None,
-                annotations=self.connection.annotations if self.connection.annotations else None,
-            )
+            metadata = self.sam_connection_metadata()
+            if not metadata:
+                raise SAMBrokerErrorNotReady(
+                    f"Metadata could not be built for account {self.account}. Cannot build manifest.",
+                    thing=self.kind,
+                )
             connection = PydanticApiConnection(
                 baseUrl=self.connection.base_url,
                 apiKey=self.connection.api_key.get_secret() if self.connection.api_key else None,
@@ -265,12 +258,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     f"Admin user not found for account {self.account}. Cannot build manifest.",
                     thing=self.kind,
                 )
-            status = SAMConnectionCommonStatus(
-                account_number=self.connection.account.account_number,
-                username=admin.username,
-                created=self.connection.created_at,
-                modified=self.connection.updated_at,
-            )
+            status = self.sam_connection_status()
 
             self._manifest = SAMApiConnection(
                 apiVersion=self.api_version,
