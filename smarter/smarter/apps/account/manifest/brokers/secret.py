@@ -152,8 +152,13 @@ class SAMSecretBroker(AbstractBroker):
                 thing=self.kind,
             )
 
+    def init_secret(self):
+        """Initialize the secret transformer."""
+        self._manifest = None
+        self._secret_transformer = None
+
     @property
-    def secret_transformer(self) -> SecretTransformer:
+    def secret_transformer(self) -> Optional[SecretTransformer]:
         """
         Get the `SecretTransformer` instance associated with this manifest.
 
@@ -176,16 +181,20 @@ class SAMSecretBroker(AbstractBroker):
 
            :class:`SecretTransformer`
         """
-        if self.user_profile is None:
+        if self._secret_transformer:
+            return self._secret_transformer
+        if not self._manifest:
+            logger.warning("%s.secret_transformer called before manifest was set.", self.formatted_class_name)
+            return None
+        if not self.user_profile:
             raise SAMBrokerErrorNotReady(
                 "User profile is not set. Cannot create SecretTransformer.",
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        if not self._secret_transformer:
-            self._secret_transformer = SecretTransformer(
-                name=self.name, api_version=self.api_version, user_profile=self.user_profile, manifest=self.manifest
-            )
+        self._secret_transformer = SecretTransformer(
+            name=self.name, api_version=self.api_version, user_profile=self.user_profile, manifest=self.manifest
+        )
         return self._secret_transformer
 
     @property
@@ -215,6 +224,9 @@ class SAMSecretBroker(AbstractBroker):
            :class:`Secret`
            :meth:`secret_transformer`
         """
+        if not self.secret_transformer:
+            logger.warning("%s.secret called with no secret_transformer", self.formatted_class_name)
+            return None
         return self.secret_transformer.secret
 
     def manifest_to_django_orm(self) -> Optional[dict]:
@@ -241,6 +253,9 @@ class SAMSecretBroker(AbstractBroker):
            :class:`Secret`
            :meth:`django_orm_to_manifest_dict`
         """
+        if not self.manifest:
+            logger.warning("%s.manifest_to_django_orm() called with no manifest", self.formatted_class_name)
+            return None
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
@@ -315,7 +330,7 @@ class SAMSecretBroker(AbstractBroker):
             ),
             status=SAMSecretStatus(
                 accountNumber=self.account.account_number,
-                username=self.user_profile.username,
+                username=self.user_profile.user.username,
                 created=self.secret.created_at,
                 modified=self.secret.updated_at,
                 last_accessed=self.secret.last_accessed,
@@ -394,6 +409,33 @@ class SAMSecretBroker(AbstractBroker):
             :meth:`SAMLoader`
         """
         if self._manifest:
+            return self._manifest
+
+        if self.secret:
+            self._manifest = SAMSecret(
+                apiVersion=self.api_version,
+                kind=self.kind,
+                metadata=SAMSecretMetadata(
+                    name=self.secret.name,
+                    description=self.secret.description,
+                    version=self.secret.version,
+                    tags=self.secret.tags.names(),
+                    annotations=self.secret.annotations,
+                ),
+                spec=SAMSecretSpec(
+                    config=SAMSecretSpecConfig(
+                        value=self.secret.get_secret() or "<- ** missing secret ** ->",
+                        expiration_date=(self.secret.expires_at.isoformat() if self.secret.expires_at else None),
+                    )
+                ),
+                status=SAMSecretStatus(
+                    accountNumber=self.account.account_number,
+                    username=self.user_profile.user.username,
+                    created=self.secret.created_at,
+                    modified=self.secret.updated_at,
+                    last_accessed=self.secret.last_accessed,
+                ),
+            )
             return self._manifest
         if self.loader and self.loader.manifest_metadata and self.loader.manifest_kind == self.kind:
             self._manifest = SAMSecret(
@@ -509,7 +551,9 @@ class SAMSecretBroker(AbstractBroker):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for secret in secrets:
             try:
-                model_dump = SecretSerializer(secret).data
+                self.init_secret()
+                self.secret = secret
+                model_dump = self.manifest.model_dump()
                 if not model_dump:
                     raise SAMSecretBrokerError(
                         f"Model dump failed for {self.kind} {secret}", thing=self.kind, command=command
@@ -652,7 +696,7 @@ class SAMSecretBroker(AbstractBroker):
 
         if self.secret:
             try:
-                data = self.django_orm_to_manifest_dict()
+                data = self.manifest.model_dump()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMSecretBrokerError(

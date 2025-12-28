@@ -332,7 +332,7 @@ class ApiPlugin(PluginBase):
             description="Get additional information about the admin account of the Smarter platform.",
             version="0.1.0",
             tags=["example.com", "api", "rest-api"],
-            annotations=["annotation.1", "annotation.2"],
+            annotations=[{"smarter.sh/created_by": "smarter_api_plugin_broker"}, {"smarter.sh/plugin": "api_example"}],
         )
         selector = SAMPluginCommonSpecSelector(
             directive=SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,

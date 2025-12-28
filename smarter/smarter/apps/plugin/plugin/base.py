@@ -736,24 +736,20 @@ class PluginBase(ABC, SmarterHelperMixin):
             self._plugin_selector_history = None
 
     @property
-    def plugin_selector(self) -> PluginSelector:
+    def plugin_selector(self) -> Optional[PluginSelector]:
         """
         Return the plugin selector.
 
         :return: The plugin selector.
-        :rtype: PluginSelector
+        :rtype: Optional[PluginSelector]
         """
         if self._plugin_selector:
             return self._plugin_selector
+        if not self.plugin_meta:
+            return None
 
-        try:
-            if self.plugin_meta:
-                self._plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
-                if self._plugin_selector:
-                    return self._plugin_selector
-            raise SmarterPluginError("PluginMeta is not set or PluginSelector does not exist.")
-        except PluginSelector.DoesNotExist as e:
-            raise SmarterPluginError("PluginSelector.DoesNotExist") from e
+        self._plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
+        return self._plugin_selector
 
     @property
     def plugin_selector_serializer(self) -> Optional[PluginSelectorSerializer]:
@@ -790,7 +786,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         return self._plugin_selector_django_model
 
     @property
-    def plugin_prompt(self) -> PluginPrompt:
+    def plugin_prompt(self) -> Optional[PluginPrompt]:
         """
         Return the plugin prompt.
 
@@ -801,14 +797,10 @@ class PluginBase(ABC, SmarterHelperMixin):
         """
         if self._plugin_prompt:
             return self._plugin_prompt
-        try:
-            if self.plugin_meta:
-                self._plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
-                if self._plugin_prompt:
-                    return self._plugin_prompt
-            raise SmarterPluginError("PluginMeta is not set or PluginPrompt does not exist.")
-        except PluginPrompt.DoesNotExist as e:
-            raise SmarterPluginError("PluginPrompt.DoesNotExist") from e
+        if not self.plugin_meta:
+            return None
+        self._plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
+        return self._plugin_prompt
 
     @property
     def plugin_prompt_serializer(self) -> Optional[PluginPromptSerializer]:

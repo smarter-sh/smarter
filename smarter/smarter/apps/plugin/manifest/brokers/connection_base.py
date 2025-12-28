@@ -142,10 +142,10 @@ class SAMConnectionBaseBroker(AbstractBroker):
                     command=SmarterJournalCliCommands.GET,
                 )
             self._sam_connection_status = SAMConnectionCommonStatus(
-                account_number=self.connection.account_number,
+                account_number=self.connection.account.account_number,
                 username=admin.username,
-                created=self.connection.created,
-                modified=self.connection.modified,
+                created=self.connection.created_at,
+                modified=self.connection.updated_at,
             )
         return self._sam_connection_status
 

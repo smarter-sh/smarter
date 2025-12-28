@@ -505,7 +505,10 @@ class SqlPlugin(PluginBase):
             description="Get additional information about courses available at Stackademy.",
             version="0.1.0",
             tags=["db", "sql", "database"],
-            annotations=["annotation.1", "annotation.2"],
+            annotations=[
+                {"smarter.sh/created_by": "smarter_sql_plugin_broker"},
+                {"smarter.sh/plugin": "sql_example"},
+            ],
         )
         selector = SAMPluginCommonSpecSelector(
             directive=SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
