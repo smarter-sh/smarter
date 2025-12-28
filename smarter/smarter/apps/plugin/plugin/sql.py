@@ -33,19 +33,33 @@ A PLugin that uses a remote SQL database server to retrieve its return data
 
 import logging
 import re
+from datetime import datetime
 from typing import Any, Optional, Type, Union
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
-    SAMPluginCommonMetadataClassValues,
-    SAMPluginCommonMetadataKeys,
-    SAMPluginCommonSpecPromptKeys,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
-    SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
 )
-from smarter.apps.plugin.manifest.models.common import Parameter
-from smarter.apps.plugin.models import PluginDataSql, SqlConnection
+from smarter.apps.plugin.manifest.models.common import Parameter, ParameterType
+from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
+    SAMPluginCommonMetadata,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.spec import (
+    SAMPluginCommonSpecPrompt,
+    SAMPluginCommonSpecSelector,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.status import (
+    SAMPluginCommonStatus,
+)
+from smarter.apps.plugin.manifest.models.sql_plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
+from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
+    SAMSqlPluginSpec,
+    SqlData,
+    TestValue,
+)
+from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
@@ -58,13 +72,8 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+from smarter.lib.manifest.enum import SAMKeys
 
-from ..manifest.models.common.plugin.enum import SAMPluginCommonSpecTestValues
-from ..manifest.models.sql_plugin.const import MANIFEST_KIND
-from ..manifest.models.sql_plugin.enum import SAMSqlPluginSpecSqlData
-from ..manifest.models.sql_plugin.model import SAMSqlPlugin
-from ..models import PluginMeta
 from .base import PluginBase, SmarterPluginError
 
 
@@ -469,7 +478,7 @@ class SqlPlugin(PluginBase):
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict] = None) -> dict:
         """
-        Generate an example manifest for the SqlPlugin.
+        Use Pydantic models to generate an example manifest for SqlPlugin.
 
         This class method creates a sample manifest dictionary for the SqlPlugin,
         illustrating the required structure and fields. The example manifest includes
@@ -489,69 +498,87 @@ class SqlPlugin(PluginBase):
         - :py:class:`smarter.apps.plugin.manifest.models.common.plugin.enum.SAMPluginCommonSpecSelectorKeyDirectiveValues`
         - :py:class:`smarter.apps.plugin.manifest.models.common.plugin.enum.SAMPluginCommonSpecPromptKeys`
         """
-        sql_plugin = {
-            SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
-            SAMKeys.KIND.value: MANIFEST_KIND,
-            SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "sql_example",
-                SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.SQL.value,
-                SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
-                SAMMetadataKeys.VERSION.value: "0.1.0",
-                SAMMetadataKeys.TAGS.value: ["db", "sql", "database"],
-            },
-            SAMKeys.SPEC.value: {
-                SAMPluginSpecKeys.SELECTOR.value: {
-                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
-                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
-                        "smarter",
-                        "users",
-                        SMARTER_ADMIN_USERNAME,
-                    ],
-                },
-                SAMPluginSpecKeys.PROMPT.value: {
-                    SAMPluginCommonSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
-                    SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value: "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
-                    SAMPluginCommonSpecPromptKeys.MODEL.value: SettingsDefaults.LLM_DEFAULT_MODEL,
-                    SAMPluginCommonSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-                    SAMPluginCommonSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
-                },
-                SAMPluginSpecKeys.CONNECTION.value: "example_connection",
-                SAMPluginSpecKeys.SQL_DATA.value: {
-                    "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMSqlPluginSpecSqlData.SQL_QUERY.value: "SELECT * FROM auth_user WHERE username = '{username}';\n",
-                    SAMSqlPluginSpecSqlData.PARAMETERS.value: [
-                        cls.parameter_factory(
-                            name="username",
-                            data_type="string",
-                            description="The username to query.",
-                            required=True,
-                            default=SMARTER_ADMIN_USERNAME,
-                        ),
-                        cls.parameter_factory(
-                            name="unit",
-                            data_type="string",
-                            enum=["Celsius", "Fahrenheit"],
-                            description="The temperature unit to use. Infer this from the user's location.",
-                            default="Celsius",
-                        ),
-                    ],
-                    SAMSqlPluginSpecSqlData.TEST_VALUES.value: [
-                        {
-                            SAMPluginCommonSpecTestValues.NAME.value: "username",
-                            SAMPluginCommonSpecTestValues.VALUE.value: SMARTER_ADMIN_USERNAME,
-                        },
-                        {
-                            SAMPluginCommonSpecTestValues.NAME.value: "unit",
-                            SAMPluginCommonSpecTestValues.VALUE.value: "Celsius",
-                        },
-                    ],
-                    SAMSqlPluginSpecSqlData.LIMIT.value: 1,
-                },
-            },
-        }
-        # recast the Python dict to the Pydantic model
-        # in order to validate our output
-        pydantic_model = cls.SAMPluginType(**sql_plugin)
+        # build out the sub-models first
+        metadata = SAMPluginCommonMetadata(
+            name="sql_example",
+            pluginClass=SAMPluginCommonMetadataClass.SQL.value,
+            description="Get additional information about courses available at Stackademy.",
+            version="0.1.0",
+            tags=["db", "sql", "database"],
+            annotations=["annotation.1", "annotation.2"],
+        )
+        selector = SAMPluginCommonSpecSelector(
+            directive=SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
+            searchTerms=[
+                "smarter",
+                "users",
+                SMARTER_ADMIN_USERNAME,
+            ],
+        )
+        prompt = SAMPluginCommonSpecPrompt(
+            provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+            systemRole="You are a helpful sales agent for Stackademy. You can provide information about courses available at Stackademy.\n",
+            model=SettingsDefaults.LLM_DEFAULT_MODEL,
+            temperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+            maxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+        )
+        connection = "example_connection"
+        sql_data = SqlData(
+            description="Query the Django User model to retrieve detailed account information about the courses available at Stackademy .",
+            sqlQuery="SELECT c.course_code, c.course_name, c.description, c.cost, prerequisite.course_code AS prerequisite_course_code, prerequisite.course_name AS prerequisite_course_name FROM courses c LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id WHERE ((c.description LIKE CONCAT('%', {description}, '%')) OR ({description} IS NULL)) AND (c.cost <= {max_cost} OR {max_cost} IS NULL) ORDER BY c.prerequisite_id;\n",
+            parameters=[
+                Parameter(
+                    name="max_cost",
+                    type=ParameterType.NUMBER,
+                    description="the maximum cost that a student is willing to pay for a course.",
+                    required=False,
+                    enum=None,
+                    default=None,
+                ),
+                Parameter(
+                    name="description",
+                    type=ParameterType.STRING,
+                    description="areas of specialization for courses in the catalogue.",
+                    required=False,
+                    enum=["AI", "mobile", "web", "database", "network", "neural networks"],
+                    default=None,
+                ),
+            ],
+            testValues=[
+                TestValue(
+                    name="description",
+                    value="AI",
+                ),
+                TestValue(
+                    name="max_cost",
+                    value="500",
+                ),
+            ],
+            limit=10,
+        )
+
+        spec = SAMSqlPluginSpec(
+            selector=selector,
+            prompt=prompt,
+            connection=connection,
+            sqlData=sql_data,
+        )
+        status = SAMPluginCommonStatus(
+            account_number="0123456789",
+            username=SMARTER_ADMIN_USERNAME,
+            created=datetime(2024, 1, 1, 0, 0, 0),
+            modified=datetime(2024, 1, 1, 0, 0, 0),
+        )
+
+        # build the full Pydantic model from the sub-models
+        pydantic_model = SAMSqlPlugin(
+            apiVersion=SmarterApiVersions.V1,
+            kind=MANIFEST_KIND,
+            metadata=metadata,
+            spec=spec,
+            status=status,
+        )
+
         return json.loads(pydantic_model.model_dump_json())
 
     def create(self):

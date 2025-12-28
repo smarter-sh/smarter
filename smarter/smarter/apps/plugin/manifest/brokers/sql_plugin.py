@@ -1,12 +1,12 @@
 # pylint: disable=W0718
 """Smarter API SqlPlugin Manifest handler"""
 
+import json
 import logging
 from typing import Optional, Type
 
 from django.http import HttpRequest
 
-from smarter.apps.plugin.manifest.enum import SAMPluginSpecKeys
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
@@ -16,8 +16,10 @@ from smarter.apps.plugin.manifest.models.common.plugin.status import (
 from smarter.apps.plugin.manifest.models.sql_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
+    Parameter,
     SAMSqlPluginSpec,
     SqlData,
+    TestValue,
 )
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta
 from smarter.apps.plugin.plugin.sql import SqlPlugin
@@ -97,10 +99,40 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     _plugin: Optional[SqlPlugin] = None
     _plugin_meta: Optional[PluginMeta] = None
     _plugin_data: Optional[PluginDataSql] = None
+    _sql_plugin_spec: Optional[SAMSqlPluginSpec] = None
+    _sql_data: Optional[SqlData] = None
 
     def __init__(self, *args, manifest: Optional[SAMSqlPlugin], **kwargs):
         super().__init__(*args, **kwargs)
         self._manifest = manifest
+
+    def init_plugin(self) -> None:
+        """
+        Initialize the SQL plugin for this broker.
+
+        This method creates an instance of the `SqlPlugin` class using the current broker's
+        metadata, user profile, manifest, and name. It assigns the created plugin to the
+        broker's internal `_plugin` attribute for future access.
+
+        :return: None
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMSqlPluginBroker(manifest=my_manifest)
+            broker.init_plugin()
+            plugin = broker.plugin
+            if plugin.ready:
+                plugin.create()
+                plugin.save()
+        """
+        self._manifest = None
+        self._plugin = None
+        self._plugin_meta = None
+        self._plugin_data = None
+        self._sql_plugin_spec = None
+        self._sql_data = None
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -156,7 +188,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> Optional[SAMSqlPlugin]:
+    def manifest(self) -> SAMSqlPlugin:
         """
         Returns the SQL plugin manifest as a validated Pydantic model instance.
 
@@ -190,6 +222,37 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         """
         if self._manifest:
             return self._manifest
+
+        # If the Plugin has previously been persisted then
+        # we can build the manifest components by mapping
+        # Django ORM models to Pydantic models.
+        if self.plugin_meta:
+            metadata = self.plugin_metadata_orm2pydantic()
+            sql_data = self.plugin_data_orm2pydantic()
+            if not sql_data:
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name} manifest() failed to build sql_data for {self.kind} {self.plugin_meta.name}",
+                    thing=self.kind,
+                )
+            spec = self.plugin_sql_spec_orm2pydantic()
+            if not spec:
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name} manifest() failed to build spec for {self.kind} {self.plugin_meta.name}",
+                    thing=self.kind,
+                )
+            status = self.plugin_status_pydantic()
+
+            # build the manifest from the
+            self._manifest = SAMSqlPlugin(
+                apiVersion=self.api_version,
+                kind=self.kind,
+                metadata=metadata,
+                spec=spec,
+                status=status,
+            )
+            return self._manifest
+        # Otherwise, if we received a manifest via the loader,
+        # then use that to build the manifest.
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
@@ -202,7 +265,12 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                     else None
                 ),
             )
-        return self._manifest
+            return self._manifest
+
+        raise SAMPluginBrokerError(
+            f"{self.formatted_class_name} manifest() could not build manifest for {self.kind} {self.plugin_meta.name if self.plugin_meta else 'unknown'}",
+            thing=self.kind,
+        )
 
     @property
     def plugin(self) -> Optional[SqlPlugin]:
@@ -289,6 +357,119 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             )
         return self._plugin_data
 
+    def plugin_sql_spec_orm2pydantic(self) -> Optional[SAMSqlPluginSpec]:
+        """
+        Convert the static plugin specification from the Django ORM model format to the Pydantic manifest format.
+
+        This method constructs a `SAMPluginStaticSpec` Pydantic model using the prompt, selector,
+        and static data associated with the current `plugin_meta`. It retrieves each component
+        using their respective ORM-to-Pydantic conversion methods.
+
+        :return: The static plugin specification as a Pydantic model.
+        :rtype: SAMPluginStaticSpec
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMStaticPluginBroker()
+            static_spec = broker.plugin_static_spec_orm2pydantic()
+            print(static_spec.model_dump_json())
+
+        :raises SAMPluginBrokerError:
+            If there is an error retrieving or converting any component of the plugin specification.
+
+
+        .. seealso::
+
+            - `SAMPluginStaticSpec`
+            - `SAMPluginCommonSpecPrompt`
+            - `SAMPluginCommonSpecSelector`
+            - `SAMPluginStaticSpecData`
+        """
+        if self._sql_plugin_spec:
+            return self._sql_plugin_spec
+        if not self.plugin_meta:
+            return None
+        selector = self.plugin_selector_orm2pydantic()
+        prompt = self.plugin_prompt_orm2pydantic()
+        data = self.plugin_data_orm2pydantic()
+        if not data:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} plugin_static_spec_orm2pydantic() failed to build data for {self.kind} {self.plugin_meta.name}",
+                thing=self.kind,
+            )
+        self._sql_plugin_spec = SAMSqlPluginSpec(
+            selector=selector,
+            prompt=prompt,
+            connection=(
+                self.plugin_data.connection.name
+                if self.plugin_data and self.plugin_data.connection
+                else "missing connection"
+            ),
+            sqlData=data,
+        )
+        return self._sql_plugin_spec
+
+    def plugin_data_orm2pydantic(self) -> Optional[SqlData]:
+        """
+        Overrides the parent method to map SQL plugin data from ORM to Pydantic.
+        Converts the plugin data from the Django ORM model format to the Pydantic manifest format.
+
+        This method constructs a `SqlData` Pydantic model using the data associated with the current
+        `plugin_meta`. It retrieves the data using the ORM-to-Pydantic conversion method.
+
+        :return: The plugin data as a Pydantic model.
+        :rtype: SqlData
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMSqlPluginBroker()
+            sql_data = broker.plugin_data_orm2pydantic()
+            print(sql_data.model_dump_json())
+
+        :raises SAMPluginBrokerError:
+            If there is an error retrieving or converting the plugin data.
+
+
+        .. seealso::
+
+            - `SqlData`
+        """
+        if not self.plugin_meta:
+            return None
+
+        parameters: list[Parameter] = []
+        for parameter in self.plugin_data.parameters.all() if self.plugin_data else []:
+            parameters.append(
+                Parameter(
+                    name=parameter.name,
+                    type=parameter.type,
+                    description=parameter.description,
+                    required=parameter.required,
+                    enum=parameter.enum,
+                    default=parameter.default,
+                )
+            )
+        test_values: list[TestValue] = []
+        for test_value in self.plugin_data.test_values.all() if self.plugin_data else []:
+            test_values.append(
+                TestValue(
+                    name=test_value.name,
+                    value=test_value.value,
+                )
+            )
+        self._sql_data = SqlData(
+            description=self.plugin_data.description if self.plugin_data else "",
+            sqlQuery=self.plugin_data.sql_query if self.plugin_data else "",
+            parameters=parameters,
+            testValues=test_values,
+            limit=self.plugin_data.limit if self.plugin_data else 0,
+        )
+        return self._sql_data
+
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
@@ -369,72 +550,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
-        if not isinstance(self.plugin, SqlPlugin):
-            raise SAMBrokerErrorNotReady(message="No plugin found", thing=self.kind, command=command)
-        if not self.plugin_data:
-            raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} plugin_data not initialized. Cannot describe",
-                thing=self.kind,
-                command=command,
-            )
-        if self.account is None:
-            raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} account not initialized. Cannot describe",
-                thing=self.kind,
-                command=command,
-            )
-        if not isinstance(self.plugin_meta, PluginMeta):
+        if not self.manifest:
             raise SAMPluginBrokerError(
                 f"{self.formatted_class_name} {self.kind} plugin_meta not initialized. Cannot describe",
                 thing=self.kind,
                 command=command,
             )
-
-        # metadata
-        metadata = self.plugin_metadata_orm2pydantic()
-        plugin_selector = self.plugin_selector_orm2pydantic()
-        plugin_prompt = self.plugin_prompt_orm2pydantic()
-
-        try:
-            plugin_data = self.plugin_data_orm2pydantic()
-            plugin_data = SqlData(**plugin_data)
-        except Exception as e:
-            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
-
-        try:
-            retval = {
-                SAMKeys.APIVERSION.value: self.api_version,
-                SAMKeys.KIND.value: self.kind,
-                SAMKeys.METADATA.value: metadata.model_dump(),
-                SAMKeys.SPEC.value: {
-                    SAMPluginSpecKeys.PROMPT.value: plugin_prompt.model_dump(),
-                    SAMPluginSpecKeys.SELECTOR.value: plugin_selector.model_dump(),
-                    SAMPluginSpecKeys.CONNECTION.value: (
-                        self.plugin_data.connection.name if self.plugin_data.connection else ""
-                    ),
-                    SAMPluginSpecKeys.SQL_DATA.value: plugin_data.model_dump(),
-                },
-                SAMKeys.STATUS.value: {
-                    "created": self.plugin_meta.created_at.isoformat(),
-                    "modified": self.plugin_meta.updated_at.isoformat(),
-                },
-            }
-
-            # validate our results by round-tripping the data through the Pydantic model
-            pydantic_model = self.pydantic_model(**retval)
-            pydantic_model.model_dump_json()
-            return self.json_response_ok(command=command, data=retval)
-        except Exception as e:
-            logger.error(
-                "%s.describe() failed to serialize %s %s",
-                self.formatted_class_name,
-                self.kind,
-                self.plugin.name,
-                exc_info=True,
-            )
-            raise SAMPluginBrokerError(
-                f"Failed to serialize {self.kind} {self.plugin.name}", thing=self.kind, command=command
-            ) from e
+        data = json.loads(self.manifest.model_dump_json())
+        return self.json_response_ok(command=command, data=data)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -492,17 +615,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
         for plugin in plugins:
             try:
-                model_dump = PluginSerializer(plugin).data
+                self.init_plugin()
+                self.plugin_meta = plugin
+
+                model_dump = json.loads(self.manifest.model_dump_json())
                 if not model_dump:
                     raise SAMPluginBrokerError(
                         f"Model dump failed for {self.kind} {plugin.name}", thing=self.kind, command=command
                     )
-
-                # round-trip the model dump through the Pydantic model to ensure that
-                # it is valid and to serialize it to JSON
-                pydantic_model = self.pydantic_model(**model_dump)
-                model_dump = pydantic_model.model_dump_json()
-
                 data.append(model_dump)
             except Exception as e:
                 logger.error(

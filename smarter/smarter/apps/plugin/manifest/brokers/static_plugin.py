@@ -235,7 +235,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         """
         if self._manifest:
             return self._manifest
+
+        # If the Plugin has previously been persisted then
+        # we can build the manifest components by mapping
+        # Django ORM models to Pydantic models.
         if self.plugin_meta:
+
             metadata = self.plugin_metadata_orm2pydantic()
             data = self.plugin_data_orm2pydantic()
             if not data:
@@ -250,6 +255,8 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     thing=self.kind,
                 )
             status = self.plugin_status_pydantic()
+
+            # initialize the SAMStaticPlugin manifest with child models
             self._manifest = SAMStaticPlugin(
                 apiVersion=self.api_version,
                 kind=self.kind,
@@ -258,6 +265,8 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 status=status,
             )
             return self._manifest
+        # Otherwise, if we received a manifest via the loader,
+        # then use that to build the manifest.
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMStaticPlugin(
                 apiVersion=self.loader.manifest_api_version,
@@ -600,8 +609,8 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
         for plugin in plugins:
             try:
-                self.plugin_meta = plugin
                 self.init_plugin()
+                self.plugin_meta = plugin
 
                 model_dump = json.loads(self.manifest.model_dump_json())
                 if not model_dump:
