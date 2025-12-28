@@ -6,7 +6,10 @@ from django.test import Client
 from django.urls import reverse
 
 # our stuff
-from ..models import PaymentMethod
+from smarter.apps.account.const import namespace
+from smarter.apps.account.models import PaymentMethod
+from smarter.apps.account.views.dashboard.urls import DashboardNamedUrls
+
 from .mixins import TestAccountMixin
 
 
@@ -17,7 +20,7 @@ class TestPaymentMethods(TestAccountMixin):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        self.base_url = reverse("account:account_billing_payment_methods")
+        self.base_url = reverse(namespace + ":" + DashboardNamedUrls.ACCOUNT_BILLING_PAYMENT_METHODS)
 
         self.username = self.non_admin_user.username
         self.password = "12345"

@@ -241,11 +241,16 @@ class AccountMixin(SmarterHelperMixin):
         Set the account for the current user. Handle
         management of user_profile.
         """
-        if self._user:
+        self._account = account
+        self._user_profile = None
+        if not account:
+            return
+
+        if self.user:
             # If the user is already set, then we need to verify that the user is part of the account
             # by attempting to fetch the user_profile.
             try:
-                self._user_profile = get_cached_user_profile(user=self._user, account=account)
+                self._user_profile = get_cached_user_profile(user=self.user, account=account)  # type: ignore[arg-type]
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {self._account.account_number if isinstance(self._account, Account) else "unknown account"}."
@@ -253,11 +258,6 @@ class AccountMixin(SmarterHelperMixin):
             except TypeError as e:
                 # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x70f8a5377c20>>.
                 logger.error("%s: account not set, user_profile not found: %s", self.formatted_class_name, str(e))
-        self._account = account
-        if not self._account:
-            # unset the user_profile if the account is unset
-            self._user_profile = None
-            return
 
     @property
     def account_number(self) -> AccountNumberType:
@@ -291,13 +291,8 @@ class AccountMixin(SmarterHelperMixin):
         Returns the user for the current user. Handle
         lazy instantiation from user_profile or account.
         """
-        try:
-            if self._user:
-                return self._user
-        # pylint: disable=W0718
-        except Exception as e:
-            logger.warning("error getting user: %s", e)
-            return None
+        if self._user:
+            return self._user
 
         if self._user_profile:
             self._user = self._user_profile.user
@@ -310,11 +305,11 @@ class AccountMixin(SmarterHelperMixin):
         management of user_profile, if the user is unset.
         Otherwise, initialize the account in which the user is contained.
         """
-        if self._user and not user:
+        if not user:
             # unset the user_profile and account if the user is unset
-            self._user_profile = None
-            self.account = None
             self._user = None
+            self.user_profile = None
+            self.account = None
             return
 
         logger.info("%s.user.setter: %s", self.formatted_class_name, user)
@@ -323,7 +318,7 @@ class AccountMixin(SmarterHelperMixin):
             # If the account is already set, then we need to check if the user is part of the account
             # by attempting to fetch the user_profile.
             try:
-                self._user_profile = get_cached_user_profile(user=self._user, account=self._account)
+                self._user_profile = get_cached_user_profile(user=self._user, account=self._account)  # type: ignore[arg-type]
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {self._account.account_number}."
@@ -372,6 +367,8 @@ class AccountMixin(SmarterHelperMixin):
         """
         self._user_profile = user_profile
         if not self._user_profile:
+            self._user = None
+            self._account = None
             return
         self._user = self._user_profile.user
         self._account = self._user_profile.account
@@ -423,8 +420,8 @@ class AccountMixin(SmarterHelperMixin):
         """
         return {
             "ready": self.ready,
-            "account": AccountMiniSerializer(self._account).data if self._account else None,
-            "user": UserMiniSerializer(self._user).data if self._user else None,
-            "user_profile": UserProfileSerializer(self.user_profile).data if self._user_profile else None,
+            "account": AccountMiniSerializer(self.account).data if self.account else None,
+            "user": UserMiniSerializer(self.user).data if self.user else None,
+            "user_profile": UserProfileSerializer(self.user_profile).data if self.user_profile else None,
             **super().to_json(),
         }

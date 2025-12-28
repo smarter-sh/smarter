@@ -2,12 +2,10 @@
 """Smarter API User Manifest handler"""
 
 import logging
-from typing import Optional, Type
+from typing import Any, Optional, Type
 
-from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
-from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.user.metadata import SAMUserMetadata
 from smarter.apps.account.manifest.models.user.model import SAMUser
@@ -15,9 +13,13 @@ from smarter.apps.account.manifest.models.user.spec import (
     SAMUserSpec,
     SAMUserSpecConfig,
 )
+from smarter.apps.account.manifest.models.user.status import SAMUserStatus
 from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import (
+    get_cached_smarter_account,
+    get_cached_user_profile,
+)
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -211,7 +213,7 @@ class SAMUserBroker(AbstractBroker):
         config_dump = self.camel_to_snake(config_dump)
         return config_dump  # type: ignore[return-value]
 
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
         """
         Convert a Django ORM `User` model instance into a dictionary formatted for Pydantic manifest consumption.
 
@@ -241,31 +243,10 @@ class SAMUserBroker(AbstractBroker):
            - :class:`smarter.lib.manifest.enumSAMUserSpecKeys`
 
         """
-        if not self.user:
-            raise SAMUserBrokerError("User is not set", thing=self.kind)
-        sam_user = SAMUser(
-            apiVersion=self.api_version,
-            kind=self.kind,
-            metadata=SAMUserMetadata(
-                name=self.user.username,
-                description=self.user_profile.description,
-                version=self.user_profile.version,
-                username=self.user.username,
-                tags=self.user_profile.tags.names(),
-                annotations=self.user_profile.annotations,
-            ),
-            spec=SAMUserSpec(
-                config=SAMUserSpecConfig(
-                    firstName=self.user.first_name,
-                    lastName=self.user.last_name,
-                    email=self.user.email,
-                    isStaff=self.user.is_staff,
-                    isActive=self.user.is_active,
-                )
-            ),
-        )
+        if not self.manifest:
+            raise SAMUserBrokerError("User manifest is not set", thing=self.kind)
 
-        return sam_user.model_dump()
+        return self.manifest.model_dump()
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -328,13 +309,12 @@ class SAMUserBroker(AbstractBroker):
         """
         if self._manifest:
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMUser(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMUserMetadata(**self.loader.manifest_metadata),
-                spec=SAMUserSpec(**self.loader.manifest_spec),
-            )
+        status = SAMUserStatus(
+            account_number=self.account.account_number,
+            username=self.user_profile.user.username,
+            created=self.user.date_joined,
+            modified=self.user.last_login,
+        )
         if self.user:
             self._manifest = SAMUser(
                 apiVersion=self.api_version,
@@ -356,6 +336,16 @@ class SAMUserBroker(AbstractBroker):
                         isActive=self.user.is_active,
                     )
                 ),
+                status=status,
+            )
+            return self._manifest
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMUser(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMUserMetadata(**self.loader.manifest_metadata),
+                spec=SAMUserSpec(**self.loader.manifest_spec),
+                status=status,
             )
         return self._manifest
 
@@ -384,51 +374,21 @@ class SAMUserBroker(AbstractBroker):
 
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Return the Django model class associated with the Smarter API User manifest.
+        Return the SAM `User` model associated with the Smarter API User manifest.
 
-        :returns: The Django `User` model class.
-
-        **Example usage:**
-
-        .. code-block:: python
-
-           user_cls = broker.model_class
-           user = user_cls.objects.get(username="example_user")
+        :returns: a dict representing the SAM `User` model.
 
         .. seealso::
 
            - :class:`smarter.apps.account.models.User`
-           - :meth:`manifest_to_django_orm`
            - :meth:`django_orm_to_manifest_dict`
-           - :class:`smarter.apps.SamKeys`
-           - :class:`SAMMetadataKeys`
-           - :class:`SAMUserSpecKeys`
 
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        sam_user = SAMUser(
-            apiVersion=self.api_version,
-            kind=self.kind,
-            metadata=SAMUserMetadata(
-                name="example_user",
-                description="an example user manifest for the Smarter API User",
-                version="1.0.0",
-                username="example_user",
-                tags=["example", "user", "smarter_api"],
-                annotations=["annotation.1", "annotation.2"],
-            ),
-            spec=SAMUserSpec(
-                config=SAMUserSpecConfig(
-                    firstName="John",
-                    lastName="Doe",
-                    email="john.doe@example.com",
-                    isStaff=False,
-                    isActive=True,
-                )
-            ),
-        )
-        return self.json_response_ok(command=command, data=sam_user.model_dump())
+        self.user = get_cached_smarter_account()
+        data = self.django_orm_to_manifest_dict()
+        return self.json_response_ok(command=command, data=data)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -479,33 +439,8 @@ class SAMUserBroker(AbstractBroker):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for user in users:
             try:
-                user_profile = get_cached_user_profile(user=user, account=self.account)
-                if not user_profile:
-                    raise SAMUserBrokerError(
-                        f"UserProfile not found for {self.kind} {user.username}", thing=self.kind, command=command
-                    )
-                sam_user = SAMUser(
-                    apiVersion=self.api_version,
-                    kind=self.kind,
-                    metadata=SAMUserMetadata(
-                        name=user.username,
-                        description=user_profile.description,
-                        version=user_profile.version,
-                        username=user.username,
-                        tags=user_profile.tags.names(),
-                        annotations=user_profile.annotations,
-                    ),
-                    spec=SAMUserSpec(
-                        config=SAMUserSpecConfig(
-                            firstName=user.first_name,
-                            lastName=user.last_name,
-                            email=user.email,
-                            isStaff=user.is_staff,
-                            isActive=user.is_active,
-                        )
-                    ),
-                )
-                model_dump = sam_user.model_dump()
+                self.user = user
+                model_dump = self.django_orm_to_manifest_dict()
                 if not model_dump:
                     raise SAMUserBrokerError(
                         f"Model dump failed for {self.kind} {user.username}", thing=self.kind, command=command

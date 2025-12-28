@@ -79,7 +79,7 @@ class APIKeyView(APIKeyBase):
             name="New API Key", user=request.user, description=f"New API key created by {request.user}"
         )
         url = reverse(
-            "account:account_new_api_key",
+            "account:dashboard_account_api_key_new",
             kwargs={
                 "key_id": new_api_key.key_id,
                 "new_api_key": token,

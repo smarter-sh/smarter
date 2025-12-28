@@ -194,30 +194,32 @@ class TestAccountMixin(SmarterTestBase):
         self.assertEqual(instance.account, self.account)
         self.assertEqual(instance.user_profile, self.user_profile)
 
-        # .1) unset the user_profile, but leave the user and account unchanged.
-        # should reinitialize the user_profile based on the user.
+        # 1.) unset the user_profile
+        # should reinitialize the user_profile and unset the user and account.
         instance.user_profile = None
-        self.assertEqual(instance.user, self.mortal_user)
-        self.assertEqual(instance.account, self.account)
-        self.assertEqual(instance.user_profile, self.user_profile)
+        self.assertIsNone(instance.user)
+        self.assertIsNone(instance.account)
+        self.assertIsNone(instance.user_profile)
 
-        # .2) unset the user_profile and user, but leave the account unchanged.
+        # 2.) unset the user_profile and user, but leave the account unchanged.
         instance.user_profile = None
         instance.account = None
 
-        # ensure that user is still set.
-        self.assertEqual(instance.user, self.mortal_user)
+        # ensure that user is also unset
+        self.assertIsNone(instance.user)
 
         # should reinitialize the account and user_profile based on the user.
+        instance.account = self.account
+        instance.user_profile = self.user_profile
         self.assertEqual(instance.account, self.account)
         self.assertEqual(instance.user_profile, self.user_profile)
 
-        # .3) unset the user_profile and account, but leave the user unchanged.
+        # 3.) unset the user_profile and account, but leave the user unchanged.
         instance.user_profile = None
         instance.account = None
 
         # ensure that account is still set.
-        self.assertIsNotNone(instance.account)
+        self.assertIsNone(instance.account)
 
     def test_set_account(self) -> None:
         """
