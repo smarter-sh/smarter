@@ -392,7 +392,10 @@ class StaticPlugin(PluginBase):
             description="Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
             version="0.1.0",
             tags=["candy", "treats", "chocolate", "Gobstoppers", "Willy Wonka"],
-            annotations=["example", "static", "plugin"],
+            annotations=[
+                {"smarter.sh/created_by": "smarter_static_plugin_broker"},
+                {"smarter.sh/plugin": "everlasting_gobstopper"},
+            ],
             pluginClass=SAMPluginCommonMetadataClassValues.STATIC.value,
         )
         selector = SAMPluginCommonSpecSelector(

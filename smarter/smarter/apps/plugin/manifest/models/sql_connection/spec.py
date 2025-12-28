@@ -6,7 +6,7 @@ from typing import ClassVar, Optional
 from pydantic import Field, field_validator
 
 from smarter.apps.plugin.manifest.models.sql_connection.const import MANIFEST_KIND
-from smarter.apps.plugin.models import Connection as SqlConnectionORM
+from smarter.apps.plugin.models import SqlConnection as SqlConnectionORM
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
@@ -35,8 +35,8 @@ class Connection(SmarterBasePydanticModel):
         description="The port of the SQL connection. Default values are assigned based on the dbEngine.",
     )
     database: str = Field(..., description="The name of the database to connect to. Examples: 'sales' or 'mydb'.")
-    username: Optional[str] = Field(False, description="The database username.")
-    password: Optional[str] = Field(False, description="The password.")
+    username: Optional[str] = Field(None, description="The database username.")
+    password: Optional[str] = Field(None, description="The password.")
     timeout: int = Field(
         SqlConnectionORM.DBMS_DEFAULT_TIMEOUT,
         description="The timeout for the database connection in seconds. Default is 30 seconds.",

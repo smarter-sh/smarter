@@ -3,7 +3,7 @@
 import abc
 import re
 from logging import getLogger
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -67,7 +67,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         default_factory=list,
         description="The tags of the manifest. These are fully functional but are not currently used. Example: ['tag1', 'tag2']",
     )
-    annotations: Optional[List[str]] = Field(
+    annotations: Optional[List[dict[str, Any]]] = Field(
         default_factory=list,
         description="The manifest annotations. These are fully functional but are not currently used.",
     )
@@ -170,25 +170,38 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         return v
 
     @field_validator("annotations")
-    def validate_annotations(cls, v) -> Optional[List[str]]:
+    def validate_annotations(cls, v) -> Optional[List[dict[str, Any]]]:
         """
         Validates the ``annotations`` field for a manifest.
-        This method ensures that each annotation in the ``annotations`` list adheres to URL-friendly
-        character rules. If any annotation is invalid, a ``SAMValidationError`` is raised.
+        Ensures each annotation is a dict with URL-friendly keys and values. Raises SAMValidationError if invalid.
 
         :param v: The value of the ``annotations`` field to validate.
-        :type v: Optional[List[str]]
+        :type v: Optional[List[dict[str, Any]]]
         :raises smarter.lib.manifest.exceptions.SAMValidationError: If any annotation is invalid.
         :return: The validated list of annotations.
-        :rtype: Optional[List[str]]
+        :rtype: Optional[List[dict[str, Any]]]
+
+        :example:
+            annotations = [
+                {"smarter.sh/key1": "value1"},
+                {"smarter.sh/key2": "value2 with spaces"},
+            ]
         """
         if v is None:
             return v
-        if isinstance(v, list):
-            for annotation in v:
-                if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, annotation):
+        if not isinstance(v, list):
+            raise SAMValidationError("Annotations must be a list of dictionaries.")
+        for annotation in v:
+            if not isinstance(annotation, dict):
+                raise SAMValidationError(f"Each annotation must be a dictionary, got {type(annotation)}: {annotation}")
+            for key, value in annotation.items():
+                if not re.match(SmarterValidator.VALID_URL_FRIENDLY_STRING, str(key)):
                     raise SAMValidationError(
-                        f"Invalid annotation: {annotation}. Ensure that you do not include characters that are not URL friendly."
+                        f"Invalid annotation key: {key}. Ensure that you do not include characters that are not URL friendly."
+                    )
+                if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, str(value)):
+                    raise SAMValidationError(
+                        f"Invalid annotation value: {value}. Ensure that you do not include characters that are not URL friendly."
                     )
         return v
 

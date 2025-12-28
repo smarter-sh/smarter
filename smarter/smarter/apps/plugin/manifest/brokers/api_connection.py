@@ -517,9 +517,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             name = self.camel_to_snake(self.name)  # type: ignore
             self._connection = ApiConnection.objects.get(account=self.account, name=name)
         except ApiConnection.DoesNotExist as e:
-            if self.manifest:
+            if self._manifest:
                 model_dump = (
-                    self.manifest.spec.connection.model_dump() if self.manifest and self.manifest.spec else None
+                    self._manifest.spec.connection.model_dump() if self._manifest and self._manifest.spec else None
                 )
                 model_dump = self.camel_to_snake(model_dump) if isinstance(model_dump, dict) else model_dump
                 if not isinstance(model_dump, dict):
@@ -597,7 +597,10 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             description=f"Example {self.kind} using any of the following authentication methods: {AuthMethods.all_values()}",
             version="0.1.0",
             tags=["example", "api", "connection"],
-            annotations=["annotation.1", "annotation.2"],
+            annotations=[
+                {"smarter.sh/plugin": "example_plugin"},
+                {"smarter.sh/created_by": "smarter_api_connection_broker"},
+            ],
         )
         connection = PydanticApiConnection(
             baseUrl="http://localhost:8000/",

@@ -210,7 +210,10 @@ class SAMProviderBroker(AbstractBroker):
             description=self.provider.description,
             version="1.0.0",
             tags=["example", "provider", "smarter-api"],
-            annotations=["example-annotation-key", "example-annotation-value"],
+            annotations=[
+                {"smarter.sh/provider": self.provider.name},
+                {"smarter.sh/created_by": "smarter_provider_broker"},
+            ],
         )
         spec_provider = SAMProviderSpecProvider(
             name=self.provider.name,
@@ -378,7 +381,10 @@ class SAMProviderBroker(AbstractBroker):
             description="an example provider manifest for the Smarter API Provider",
             version="1.0.0",
             tags=["example", "provider", "smarter-api"],
-            annotations=["example-annotation-key", "example-annotation-value"],
+            annotations=[
+                {"smarter.sh/provider": "example_provider"},
+                {"smarter.sh/created_by": "smarter_provider_broker"},
+            ],
         )
         spec_provider = SAMProviderSpecProvider(
             name="Acme Corp.",

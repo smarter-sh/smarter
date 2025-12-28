@@ -346,13 +346,14 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if self._name:
             return self._name
         if (
-            not self._name
-            and isinstance(self.manifest, AbstractSAMBase)
-            and self.manifest.metadata
-            and self.manifest.metadata.name
+            isinstance(
+                self._manifest, AbstractSAMBase
+            )  # note: do not access .metadata on initialization to avoid recursion
+            and self._manifest.metadata
+            and self._manifest.metadata.name
         ):
             # assign from the manifest metadata, if we have it
-            self._name = self.manifest.metadata.name
+            self._name = self._manifest.metadata.name
             logger.info("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
@@ -983,8 +984,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         - :func:`smarter.common.utils.camel_to_snake`
         """
-
-        return util_camel_to_snake(data)
+        return util_camel_to_snake(data) if data else None
 
     def snake_to_camel(
         self, data: Union[str, dict, list], convert_values: bool = False

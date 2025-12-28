@@ -786,7 +786,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             return self.json_response_ok(command=command, data={})
         except Exception as e:
             raise SAMBrokerError(
-                f"{self.formatted_class_name} {self.plugin_meta.name} delete failed",
+                f"{self.formatted_class_name} {self.plugin_meta.name} delete failed {e}",
                 thing=self.kind,
                 command=command,
             ) from e

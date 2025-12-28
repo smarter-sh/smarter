@@ -304,7 +304,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     port=self.connection.port,
                     database=self.connection.database,
                     username=self.connection.username,
-                    password=self.connection.password,
+                    password=self.connection.password.get_secret() if self.connection.password else None,
                     timeout=self.connection.timeout,
                     useSsl=self.connection.use_ssl,
                     sslCert=self.connection.ssl_cert,
@@ -313,7 +313,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     proxyHost=self.connection.proxy_host,
                     proxyPort=self.connection.proxy_port,
                     proxyUsername=self.connection.proxy_username,
-                    proxyPassword=self.connection.proxy_password,
+                    proxyPassword=(
+                        self.connection.proxy_password.get_secret() if self.connection.proxy_password else None
+                    ),
                     sshKnownHosts=self.connection.ssh_known_hosts,
                     poolSize=self.connection.pool_size,
                     maxOverflow=self.connection.max_overflow,
@@ -585,13 +587,13 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 self.name or "(name is missing)",
                 self.account or "(account is missing)",
             )
-            if self.manifest is None:
+            if self._manifest is None:
                 logger.error(
                     "%s manifest is not set, cannot create SqlConnection",
                     self.formatted_class_name,
                 )
                 return None
-            model_dump = self.manifest.spec.connection.model_dump()
+            model_dump = self._manifest.spec.connection.model_dump()
             model_dump = self.camel_to_snake(model_dump)
             if not isinstance(model_dump, dict):
                 model_dump = json.loads(json.dumps(model_dump))
@@ -602,6 +604,15 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             model_dump[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.password_secret
             model_dump[SAMKeys.KIND.value] = self.kind
             self._connection = SqlConnection(**model_dump)
+
+            logger.info(
+                "%s creating SqlConnection %s for account %s: %s",
+                self.formatted_class_name,
+                self.name,
+                self.account,
+                model_dump,
+            )
+
             self._connection.save()
             self._created = True
             logger.info(
@@ -690,7 +701,10 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             description="Example database connection",
             version="0.1.0",
             tags=["example", "sql", "connection"],
-            annotations=["annotation.1", "annotation.2"],
+            annotations=[
+                {"smarter.sh/plugin": "example_plugin"},
+                {"smarter.sh/created_by": "smarter_sql_connection_broker"},
+            ],
         )
         connection = PydanticSqlConnection(
             dbEngine=DbEngines.MYSQL.value,
