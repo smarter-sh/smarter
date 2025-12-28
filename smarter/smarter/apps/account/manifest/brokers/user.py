@@ -18,6 +18,7 @@ from smarter.apps.account.manifest.models.user.status import SAMUserStatus
 from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
     get_cached_smarter_account,
     get_cached_user_profile,
 )
@@ -312,6 +313,10 @@ class SAMUserBroker(AbstractBroker):
         """
         if self._manifest:
             return self._manifest
+        if not self.account:
+            logger.warning("%s.manifest called with no account", self.formatted_class_name)
+            return None
+
         status = SAMUserStatus(
             account_number=self.account.account_number,
             username=self.user_profile.user.username,
@@ -324,7 +329,7 @@ class SAMUserBroker(AbstractBroker):
                 kind=self.kind,
                 metadata=SAMUserMetadata(
                     name=self.user.username,
-                    description=self.user_profile.description,
+                    description=self.user_profile.description or "no description",
                     version=self.user_profile.version,
                     username=self.user.username,
                     tags=self.user_profile.tags.names(),
@@ -389,7 +394,8 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        self.user = get_cached_smarter_account()
+        self.account = get_cached_smarter_account()
+        self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
         data = self.django_orm_to_manifest_dict()
         return self.json_response_ok(command=command, data=data)
 

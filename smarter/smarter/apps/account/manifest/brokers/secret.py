@@ -488,29 +488,34 @@ class SAMSecretBroker(AbstractBroker):
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         current_date = datetime.now(timezone.utc)
-        expiration_date = current_date + relativedelta(months=6)
-        expiration_date_string = expiration_date.date().isoformat()
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {
-                SAMSecretMetadataKeys.NAME.value: "example_secret",
-                SAMSecretMetadataKeys.DESCRIPTION.value: "an example secret manifest for the Smarter API Secret",
-                SAMSecretMetadataKeys.VERSION.value: "1.0.0",
-                SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: SMARTER_ACCOUNT_NUMBER,
-                SAMSecretMetadataKeys.USERNAME.value: SMARTER_ADMIN_USERNAME,
-                SAMSecretMetadataKeys.TAGS.value: ["example", "secret"],
-                SAMSecretMetadataKeys.ANNOTATIONS.value: [],
-            },
-            SAMKeys.SPEC.value: {
-                SAMSecretSpecKeys.CONFIG.value: {
-                    SAMSecretSpecKeys.VALUE.value: "<** your unencrypted credential value **>",
-                    SAMSecretSpecKeys.DESCRIPTION.value: "salesforce.com api key",
-                    SAMSecretSpecKeys.EXPIRATION_DATE.value: expiration_date_string,
-                },
-            },
-        }
-        return self.json_response_ok(command=command, data=data)
+        expiration_date = (current_date + relativedelta(months=6)).date()
+        metadata = SAMSecretMetadata(
+            name="example_secret",
+            description="an example secret manifest for the Smarter API Secret",
+            version="1.0.0",
+            tags=["example", "secret"],
+            annotations=[
+                {"smarter.sh/created-by": "smarter-admin"},
+                {"smarter.sh/purpose": "demonstration only"},
+            ],
+        )
+        config = SAMSecretSpecConfig(value="<** your unencrypted credential value **>", expiration_date=expiration_date)
+        spec = SAMSecretSpec(config=config)
+        status = SAMSecretStatus(
+            accountNumber=SMARTER_ACCOUNT_NUMBER,
+            username=SMARTER_ADMIN_USERNAME,
+            created=current_date,
+            modified=current_date,
+            last_accessed=current_date,
+        )
+        pydantic_model = SAMSecret(
+            apiVersion=self.api_version,
+            kind=self.kind,
+            metadata=metadata,
+            spec=spec,
+            status=status,
+        )
+        return self.json_response_ok(command=command, data=pydantic_model.model_dump())
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
