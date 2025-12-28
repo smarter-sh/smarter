@@ -33,10 +33,40 @@ A Plugin that uses a REST API to retrieve its return data
 
 # python stuff
 import logging
+from datetime import datetime
 from typing import Any, Optional, Type
 
 # smarter stuff
-from smarter.apps.plugin.manifest.models.common import Parameter
+from smarter.apps.plugin.manifest.enum import (
+    SAMPluginCommonMetadataClass,
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+    SAMPluginSpecKeys,
+)
+from smarter.apps.plugin.manifest.models.api_plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
+from smarter.apps.plugin.manifest.models.api_plugin.spec import (
+    ApiData,
+    SAMApiPluginSpec,
+)
+from smarter.apps.plugin.manifest.models.common import (
+    Parameter,
+    ParameterType,
+    RequestHeader,
+    TestValue,
+    UrlParam,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
+    SAMPluginCommonMetadata,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.spec import (
+    SAMPluginCommonSpecPrompt,
+    SAMPluginCommonSpecSelector,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.status import (
+    SAMPluginCommonStatus,
+)
+from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
+from smarter.apps.plugin.serializers import PluginApiSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.conf import settings as smarter_settings
@@ -47,25 +77,8 @@ from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
-from smarter.lib.openai.enum import OpenAIToolCall
+from smarter.lib.manifest.enum import SAMKeys
 
-# smarter plugin stuff
-from ..manifest.enum import (
-    SAMPluginCommonMetadataClass,
-    SAMPluginCommonMetadataClassValues,
-    SAMPluginCommonMetadataKeys,
-    SAMPluginCommonSpecPromptKeys,
-    SAMPluginCommonSpecSelectorKeyDirectiveValues,
-    SAMPluginCommonSpecSelectorKeys,
-    SAMPluginSpecKeys,
-)
-from ..manifest.models.api_plugin.const import MANIFEST_KIND
-from ..manifest.models.api_plugin.enum import SAMApiPluginSpecApiData
-from ..manifest.models.api_plugin.model import SAMApiPlugin
-from ..manifest.models.common.plugin.enum import SAMPluginCommonSpecTestValues
-from ..models import ApiConnection, PluginDataApi, PluginMeta
-from ..serializers import PluginApiSerializer
 from .base import PluginBase, SmarterPluginError
 
 
@@ -312,115 +325,101 @@ class ApiPlugin(PluginBase):
         :return: An example manifest for the ApiPlugin.
         :rtype: dict
 
-        .. seealso::
-
-            - :const:`smarter.apps.plugin.manifest.models.api_plugin.const.MANIFEST_KIND`
-            - :class:`smarter.lib.manifest.enum.SAMKeys`
-            - :class:`smarter.lib.manifest.enum.SAMMetadataKeys`
-            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonMetadataKeys`
-            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonMetadataClassValues`
-            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginSpecKeys`
-            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecSelectorKeys`
-            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecSelectorKeyDirectiveValues`
-            - :class:`smarter.apps.plugin.manifest.enum.SAMPluginCommonSpecPromptKeys`
-            - :class:`smarter.apps.plugin.manifest.models.api_plugin.enumSAMApiPluginSpecApiData`
-            - :class:`smarter.apps.plugin.manifest.models.common.plugin.enum.SAMPluginCommonSpecTestValues`
-
         """
-        api_plugin = {
-            SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
-            SAMKeys.KIND.value: MANIFEST_KIND,
-            SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "api_example",
-                SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.API.value,
-                SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
-                SAMMetadataKeys.VERSION.value: "0.1.0",
-                SAMMetadataKeys.TAGS.value: ["example.com", "api", "rest-api"],
-            },
-            SAMKeys.SPEC.value: {
-                SAMPluginSpecKeys.SELECTOR.value: {
-                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
-                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
-                        SMARTER_ADMIN_USERNAME,
-                        "Smarter",
-                        "account",
-                    ],
-                },
-                SAMPluginSpecKeys.PROMPT.value: {
-                    SAMPluginCommonSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
-                    SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value: "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
-                    SAMPluginCommonSpecPromptKeys.MODEL.value: SettingsDefaults.LLM_DEFAULT_MODEL,
-                    SAMPluginCommonSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-                    SAMPluginCommonSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
-                },
-                SAMPluginSpecKeys.CONNECTION.value: "smarter_test_api",
-                SAMPluginSpecKeys.API_DATA.value: {
-                    "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMApiPluginSpecApiData.ENDPOINT.value: "/stackademy/course-catalogue/",
-                    SAMApiPluginSpecApiData.PARAMETERS.value: [
-                        cls.parameter_factory(
-                            name="max_cost",
-                            data_type="string",
-                            description="A ceiling on the maximum cost of the course.",
-                            required=False,
-                            default="500.00",
-                        ),
-                        cls.parameter_factory(
-                            name="description",
-                            data_type="string",
-                            description="A keyword to search for in the course description.",
-                            required=False,
-                            default="Python",
-                        ),
-                    ],
-                    SAMApiPluginSpecApiData.HEADERS.value: [
-                        {"name": "X-Debug-Request", "value": "true"},
-                        {"name": "X-API-Key", "value": "your_api_key_here"},
-                        {"name": "Content-Type", "value": "application/json"},
-                        {"name": "Accept", "value": "application/json"},
-                        {"name": "X-Request-ID", "value": "12345"},
-                    ],
-                    SAMApiPluginSpecApiData.BODY.value: [
-                        {
-                            OpenAIToolCall.NAME.value: "test",
-                            OpenAIToolCall.TYPE.value: "string",
-                            OpenAIToolCall.DESCRIPTION.value: "The test to run.",
-                            OpenAIToolCall.REQUIRED.value: True,
-                            OpenAIToolCall.DEFAULT.value: "test",
-                        },
-                        {
-                            OpenAIToolCall.NAME.value: "test2",
-                            OpenAIToolCall.TYPE.value: "string",
-                            OpenAIToolCall.DESCRIPTION.value: "The second test to run.",
-                            OpenAIToolCall.REQUIRED.value: False,
-                            OpenAIToolCall.DEFAULT.value: "test2",
-                        },
-                    ],
-                    SAMApiPluginSpecApiData.TEST_VALUES.value: [
-                        {
-                            SAMPluginCommonSpecTestValues.NAME.value: "username",
-                            SAMPluginCommonSpecTestValues.VALUE.value: SMARTER_ADMIN_USERNAME,
-                        },
-                        {
-                            SAMPluginCommonSpecTestValues.NAME.value: "limit",
-                            SAMPluginCommonSpecTestValues.VALUE.value: "1",
-                        },
-                    ],
-                    SAMApiPluginSpecApiData.LIMIT.value: 10,
-                },
-            },
-        }
-        # recast the Python dict to the Pydantic model
-        # in order to validate our output
-        try:
-            pydantic_model = cls.SAMPluginType(**api_plugin)
-        except Exception as e:
-            raise SmarterConfigurationError(f"{cls.__name__} example_manifest() error: {e}") from e
-        try:
-            # validate the manifest against the schema
-            return json.loads(pydantic_model.model_dump_json())
-        except json.JSONDecodeError as e:
-            raise SmarterConfigurationError(f"{cls.__name__} example_manifest() error: {e}") from e
+        metadata = SAMPluginCommonMetadata(
+            name="api_example",
+            pluginClass=SAMPluginCommonMetadataClass.API.value,
+            description="Get additional information about the admin account of the Smarter platform.",
+            version="0.1.0",
+            tags=["example.com", "api", "rest-api"],
+            annotations=["annotation.1", "annotation.2"],
+        )
+        selector = SAMPluginCommonSpecSelector(
+            directive=SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
+            searchTerms=[
+                SMARTER_ADMIN_USERNAME,
+                "Smarter",
+                "account",
+            ],
+        )
+        prompt = SAMPluginCommonSpecPrompt(
+            provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+            systemRole="You are a helpful agent for Stackademy. You provide information on available courses by leveraging the Api.\n",
+            model=SettingsDefaults.LLM_DEFAULT_MODEL,
+            temperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+            maxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+        )
+        connection = "smarter_test_api"
+        api_data = ApiData(
+            endpoint="/stackademy/course-catalogue/",
+            method="GET",
+            url_params=[
+                UrlParam(
+                    key="max_cost",
+                    value="500.00",
+                ),
+                UrlParam(
+                    key="description",
+                    value="Python",
+                ),
+            ],
+            headers=[
+                RequestHeader(name="X-Debug-Request", value="true"),
+                RequestHeader(name="X-API-Key", value="your_api_key_here"),
+                RequestHeader(name="Content-Type", value="application/json"),
+                RequestHeader(name="Accept", value="application/json"),
+                RequestHeader(name="X-Request-ID", value="12345"),
+            ],
+            body={},
+            parameters=[
+                Parameter(
+                    name="max_cost",
+                    type=ParameterType.STRING,
+                    description="A ceiling on the maximum cost of the course.",
+                    required=False,
+                    default="500.00",
+                ),
+                Parameter(
+                    name="description",
+                    type=ParameterType.STRING,
+                    description="A keyword to search for in the course description.",
+                    required=False,
+                    default="Python",
+                ),
+            ],
+            test_values=[
+                TestValue(
+                    name="username",
+                    value=SMARTER_ADMIN_USERNAME,
+                ),
+                TestValue(
+                    name="limit",
+                    value="1",
+                ),
+            ],
+            limit=100,
+        )
+
+        spec = SAMApiPluginSpec(
+            selector=selector,
+            prompt=prompt,
+            connection=connection,
+            apiData=api_data,
+        )
+        status = SAMPluginCommonStatus(
+            account_number="0123456789",
+            username=SMARTER_ADMIN_USERNAME,
+            created=datetime(2024, 1, 1, 0, 0, 0),
+            modified=datetime(2024, 1, 1, 0, 0, 0),
+        )
+        pydantic_model = SAMApiPlugin(
+            apiVersion=SmarterApiVersions.V1,
+            kind=MANIFEST_KIND,
+            metadata=metadata,
+            spec=spec,
+            status=status,
+        )
+        return json.loads(pydantic_model.model_dump_json())
 
     def create(self):
         """

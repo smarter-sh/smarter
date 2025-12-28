@@ -13,7 +13,9 @@ from smarter.apps.plugin.manifest.enum import (
     SAMApiConnectionSpecKeys,
     SAMApiConnectionStatusKeys,
 )
+from smarter.apps.plugin.manifest.models.api_connection.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.api_connection.enum import AuthMethods
+from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.api_connection.spec import SAMApiConnectionSpec
 from smarter.apps.plugin.manifest.models.common.connection.metadata import (
     SAMConnectionCommonMetadata,
@@ -42,8 +44,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 
-from ..models.api_connection.const import MANIFEST_KIND
-from ..models.api_connection.model import SAMApiConnection
 from . import SAMConnectionBrokerError
 from .connection_base import SAMConnectionBaseBroker
 
