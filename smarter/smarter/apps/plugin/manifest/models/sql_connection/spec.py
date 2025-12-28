@@ -6,7 +6,7 @@ from typing import ClassVar, Optional
 from pydantic import Field, field_validator
 
 from smarter.apps.plugin.manifest.models.sql_connection.const import MANIFEST_KIND
-from smarter.apps.plugin.models import SqlConnection as SqlConnectionORM
+from smarter.apps.plugin.models import Connection as SqlConnectionORM
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
@@ -19,7 +19,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
-class SqlConnection(SmarterBasePydanticModel):
+class Connection(SmarterBasePydanticModel):
     """Smarter API - generic SQL Connection class."""
 
     dbEngine: str = Field(
@@ -189,10 +189,10 @@ class SqlConnection(SmarterBasePydanticModel):
 
 
 class SAMSqlConnectionSpec(AbstractSAMSpecBase):
-    """Smarter API Sql Connection Manifest SqlConnection.spec"""
+    """Smarter API Sql Connection Manifest Connection.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    connection: SqlConnection = Field(
+    connection: Connection = Field(
         ..., description=f"{class_identifier}.selector[obj]: the selector logic to use for the {MANIFEST_KIND}"
     )

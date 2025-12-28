@@ -263,10 +263,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
-            raise SAMConnectionBrokerError(
-                f"Manifest spec.connection is not a dict: {type(config_dump)}",
-                thing=self.kind,
-            )
+            config_dump = json.loads(json.dumps(config_dump))
         config_dump[SAMMetadataKeys.NAME.value] = (
             self.manifest.metadata.name if self.manifest and self.manifest.metadata else None
         )

@@ -241,9 +241,11 @@ class SAMSecretBroker(AbstractBroker):
            :class:`Secret`
            :meth:`django_orm_to_manifest_dict`
         """
-        config_dump = self.manifest.spec.config.model_dump()  # type: ignore[return-value]
+        config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
-        return config_dump  # type: ignore[return-value]
+        if not isinstance(config_dump, dict):
+            config_dump = json.loads(json.dumps(config_dump))
+        return config_dump
 
     def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
         """
@@ -312,10 +314,10 @@ class SAMSecretBroker(AbstractBroker):
                 )
             ),
             status=SAMSecretStatus(
-                account_number=self.account.account_number,
+                accountNumber=self.account.account_number,
                 username=self.user_profile.username,
                 created=self.secret.created_at,
-                modified=self.secret.modified_at,
+                modified=self.secret.updated_at,
                 last_accessed=self.secret.last_accessed,
             ),
         )

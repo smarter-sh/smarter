@@ -1,6 +1,7 @@
 # pylint: disable=W0718
 """Smarter API User Manifest handler"""
 
+import json
 import logging
 from typing import Any, Optional, Type
 
@@ -209,9 +210,11 @@ class SAMUserBroker(AbstractBroker):
            - :class:`smarter.apps.account.models.User`
 
         """
-        config_dump = self.manifest.spec.config.model_dump()  # type: ignore[return-value]
+        config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
-        return config_dump  # type: ignore[return-value]
+        if not isinstance(config_dump, dict):
+            config_dump = json.loads(json.dumps(config_dump))
+        return config_dump
 
     def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
         """

@@ -2,20 +2,32 @@
 """Smarter Api SqlConnection Manifest handler"""
 
 import logging
+from datetime import datetime
 from typing import Optional, Type
 
-from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
-    SAMSqlConnectionSpecKeys,
-    SAMSqlConnectionStatusKeys,
 )
+from smarter.apps.plugin.manifest.models.common.connection.metadata import (
+    SAMConnectionCommonMetadata,
+)
+from smarter.apps.plugin.manifest.models.common.connection.status import (
+    SAMConnectionCommonStatus,
+)
+from smarter.apps.plugin.manifest.models.sql_connection.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.sql_connection.enum import (
     DbEngines,
     DBMSAuthenticationMethods,
+)
+from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
+from smarter.apps.plugin.manifest.models.sql_connection.spec import (
+    Connection as PydanticSqlConnection,
+)
+from smarter.apps.plugin.manifest.models.sql_connection.spec import (
+    SAMSqlConnectionSpec,
 )
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
@@ -37,10 +49,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 
-from ..models.common.connection.metadata import SAMConnectionCommonMetadata
-from ..models.sql_connection.const import MANIFEST_KIND
-from ..models.sql_connection.model import SAMSqlConnection
-from ..models.sql_connection.spec import SAMSqlConnectionSpec
 from . import SAMConnectionBrokerError
 from .connection_base import SAMConnectionBaseBroker
 
@@ -104,6 +112,26 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     _connection: Optional[SqlConnection] = None
     _password_secret: Optional[Secret] = None
     _proxy_password_secret: Optional[Secret] = None
+
+    def connection_init(self) -> None:
+        """
+        Initialize or reset the connection and related cached properties.
+
+        This method clears the cached `SqlConnection` instance and associated secrets,
+        allowing for re-initialization or reloading of the connection data.
+
+        **Example Usage:**
+
+            .. code-block:: python
+
+                broker.connection_init()
+                connection = broker.connection  # Re-initialized connection
+
+        """
+        self._manifest = None
+        self._connection = None
+        self._password_secret = None
+        self._proxy_password_secret = None
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -250,6 +278,59 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         """
         if self._manifest:
             return self._manifest
+        # If the Connection has previously been persisted then
+        # we can build the manifest components by mapping
+        # Django ORM models to Pydantic models.
+        if self.connection:
+            metadata = self.sam_connection_metadata()
+            if not metadata:
+                raise SAMBrokerErrorNotImplemented(
+                    f"{self.formatted_class_name} manifest cannot be constructed without connection metadata.",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
+            status = self.sam_connection_status()
+            if not status:
+                raise SAMBrokerErrorNotImplemented(
+                    f"{self.formatted_class_name} manifest cannot be constructed without connection status.",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
+            spec = SAMSqlConnectionSpec(
+                connection=PydanticSqlConnection(
+                    dbEngine=self.connection.db_engine,
+                    hostname=self.connection.hostname,
+                    port=self.connection.port,
+                    database=self.connection.database,
+                    username=self.connection.username,
+                    password=self.connection.password,
+                    timeout=self.connection.timeout,
+                    useSsl=self.connection.use_ssl,
+                    sslCert=self.connection.ssl_cert,
+                    sslKey=self.connection.ssl_key,
+                    sslCa=self.connection.ssl_ca,
+                    proxyHost=self.connection.proxy_host,
+                    proxyPort=self.connection.proxy_port,
+                    proxyUsername=self.connection.proxy_username,
+                    proxyPassword=self.connection.proxy_password,
+                    sshKnownHosts=self.connection.ssh_known_hosts,
+                    poolSize=self.connection.pool_size,
+                    maxOverflow=self.connection.max_overflow,
+                    authenticationMethod=self.connection.authentication_method,
+                )
+            )
+
+            self._manifest = SAMSqlConnection(
+                apiVersion=self.api_version,
+                kind=self.kind,
+                metadata=metadata,
+                spec=spec,
+                status=status,
+            )
+            return self._manifest
+
+        # Otherwise, if we received a manifest via the loader,
+        # then use that to build the manifest.
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMSqlConnection(
                 apiVersion=self.loader.manifest_api_version,
@@ -310,11 +391,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         connection = self.manifest.spec.connection.model_dump()  # type: ignore
         connection = self.camel_to_snake(connection)
         if not isinstance(connection, dict):
-            raise SAMConnectionBrokerError(
-                message=f"Invalid connection data: {connection}",
-                thing=self.kind,
-                command=SmarterJournalCliCommands.APPLY,
-            )
+            connection = json.loads(json.dumps(connection))
         connection[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
         connection[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
         connection[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
@@ -500,7 +577,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         try:
             name = self.camel_to_snake(self.name)  # type: ignore
             self._connection = SqlConnection.objects.get(account=self.account, name=name)
-        except SqlConnection.DoesNotExist as e:
+        except SqlConnection.DoesNotExist:
             logger.warning(
                 "%s SqlConnection %s not found for account %s",
                 self.formatted_class_name,
@@ -516,11 +593,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             model_dump = self.manifest.spec.connection.model_dump()
             model_dump = self.camel_to_snake(model_dump)
             if not isinstance(model_dump, dict):
-                raise SAMConnectionBrokerError(
-                    message=f"Invalid connection data: {model_dump}",
-                    thing=self.kind,
-                    command=SmarterJournalCliCommands.APPLY,
-                ) from e
+                model_dump = json.loads(json.dumps(model_dump))
             model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
             model_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
             model_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
@@ -530,6 +603,12 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             self._connection = SqlConnection(**model_dump)
             self._connection.save()
             self._created = True
+            logger.info(
+                "%s created SqlConnection %s for account %s",
+                self.formatted_class_name,
+                self.name or "(name is missing)",
+                self.account or "(account is missing)",
+            )
 
         return self._connection
 
@@ -565,7 +644,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         if self.connection is None:
             return False
         try:
-            return self.connection.validate()
+            if self.connection.validate():
+                return self.manifest is not None
         except Exception as e:
             logger.warning("%s is_valid() failed for %s %s", self.formatted_class_name, self.kind, str(e))
         return False
@@ -592,10 +672,6 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             - :data:`DbEngines`
             - :data:`DBMSAuthenticationMethods`
             - :class:`SmarterJournalCliCommands`
-            - :class:`SAMKeys`
-            - :class:`SAMMetadataKeys`
-            - :class:`SAMSqlConnectionSpecKeys`
-            - :class:`SAMSqlConnectionSpecConnectionKeys`
 
         **Example Usage:**
 
@@ -607,43 +683,50 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        choices = ", ".join(DbEngines.all_values())
 
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "example_connection",
-                SAMMetadataKeys.DESCRIPTION.value: f"Example database connection. db_engines: {choices}. authentication methods: {DBMSAuthenticationMethods.all_values()}",
-                SAMMetadataKeys.VERSION.value: "0.1.0",
-            },
-            SAMKeys.SPEC.value: {
-                SAMSqlConnectionSpecKeys.CONNECTION.value: {
-                    SAMSqlConnectionSpecConnectionKeys.DB_ENGINE.value: DbEngines.MYSQL.value,
-                    SAMSqlConnectionSpecConnectionKeys.AUTHENTICATION_METHOD.value: DBMSAuthenticationMethods.TCPIP.value,
-                    SAMSqlConnectionSpecConnectionKeys.TIMEOUT.value: 30,
-                    SAMSqlConnectionSpecConnectionKeys.DESCRIPTION.value: "example database connection",
-                    SAMSqlConnectionSpecConnectionKeys.USE_SSL.value: False,
-                    SAMSqlConnectionSpecConnectionKeys.SSL_CERT.value: "",
-                    SAMSqlConnectionSpecConnectionKeys.SSL_KEY.value: "",
-                    SAMSqlConnectionSpecConnectionKeys.SSL_CA.value: "",
-                    SAMSqlConnectionSpecConnectionKeys.HOSTNAME.value: "localhost",
-                    SAMSqlConnectionSpecConnectionKeys.PORT.value: 3306,
-                    SAMSqlConnectionSpecConnectionKeys.DATABASE.value: "example_db",
-                    SAMSqlConnectionSpecConnectionKeys.USERNAME.value: "example_user",
-                    SAMSqlConnectionSpecConnectionKeys.PASSWORD.value: "example_password",
-                    SAMSqlConnectionSpecConnectionKeys.POOL_SIZE.value: 5,
-                    SAMSqlConnectionSpecConnectionKeys.MAX_OVERFLOW.value: 10,
-                    SAMSqlConnectionSpecConnectionKeys.PROXY_PROTOCOL.value: "https",
-                    SAMSqlConnectionSpecConnectionKeys.PROXY_HOST.value: "proxy.example.com",
-                    SAMSqlConnectionSpecConnectionKeys.PROXY_PORT.value: 8080,
-                    SAMSqlConnectionSpecConnectionKeys.PROXY_USERNAME.value: "proxy_user",
-                    SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value: "proxy_password",
-                    SAMSqlConnectionSpecConnectionKeys.SSH_KNOWN_HOSTS.value: "",
-                }
-            },
-        }
-        pydantic_model = self.pydantic_model(**data)
+        metadata = SAMConnectionCommonMetadata(
+            name="example_connection",
+            description="Example database connection",
+            version="0.1.0",
+            tags=["example", "sql", "connection"],
+            annotations=["annotation.1", "annotation.2"],
+        )
+        connection = PydanticSqlConnection(
+            dbEngine=DbEngines.MYSQL.value,
+            hostname="localhost",
+            port=3306,
+            database="example_db",
+            username="example_user",
+            password="example_password",
+            timeout=30,
+            useSsl=False,
+            sslCert="",
+            sslKey=None,
+            sslCa=None,
+            proxyHost=None,
+            proxyPort=None,
+            proxyUsername=None,
+            proxyPassword=None,
+            sshKnownHosts=None,
+            poolSize=5,
+            maxOverflow=10,
+            authenticationMethod=DBMSAuthenticationMethods.TCPIP.value,
+        )
+        spec = SAMSqlConnectionSpec(connection=connection)
+        status = SAMConnectionCommonStatus(
+            account_number="123456789012",
+            username="example_user",
+            created=datetime(2024, 1, 1, 0, 0, 0),
+            modified=datetime(2024, 1, 1, 0, 0, 0),
+        )
+        pydantic_model = SAMSqlConnection(
+            apiVersion=self.api_version,
+            kind=self.kind,
+            metadata=metadata,
+            spec=spec,
+            status=status,
+        )
+
         data = json.loads(pydantic_model.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
@@ -699,11 +782,10 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each SqlConnection
         for sql_connection in sql_connections:
             try:
-                model_dump = self.serializer(sql_connection).data
-                if not model_dump:
-                    raise SAMConnectionBrokerError(
-                        f"Model dump failed for {self.kind} {sql_connection.name}", thing=self.kind, command=command
-                    )
+                self.connection_init()
+                self.connection = sql_connection
+
+                model_dump = self.manifest.model_dump()
                 data.append(model_dump)
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
@@ -853,52 +935,15 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 command=command,
             )
 
-        if self.connection is None:
+        if self.manifest is None:
             raise SAMBrokerErrorNotReady(
-                message="No connection found. Cannot describe.",
+                message="Manifest is not set. Cannot describe.",
                 thing=self.kind,
                 command=command,
             )
-        try:
-            data = model_to_dict(self.connection)
-            data = self.snake_to_camel(data)
-            if not isinstance(data, dict):
-                raise SAMConnectionBrokerError(
-                    message=f"Invalid connection data: {data}",
-                    thing=self.kind,
-                    command=command,
-                )
-            data.pop("id")
-            data.pop(SAMMetadataKeys.NAME.value)
-            data[SAMMetadataKeys.ACCOUNT.value] = self.connection.account.account_number
 
-            # swap out the password and proxy password secrets instance references for their str names
-            data[self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)] = (
-                self.password_secret.name if self.password_secret else None
-            )
-            data[self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)] = (
-                self.proxy_password_secret.name if self.proxy_password_secret else None
-            )
-
-            retval = {
-                SAMKeys.APIVERSION.value: self.api_version,
-                SAMKeys.KIND.value: self.kind,
-                SAMKeys.METADATA.value: {
-                    SAMMetadataKeys.NAME.value: self.connection.name,
-                    SAMMetadataKeys.DESCRIPTION.value: self.connection.description,
-                    SAMMetadataKeys.VERSION.value: self.connection.version,
-                },
-                SAMKeys.SPEC.value: {SAMSqlConnectionSpecKeys.CONNECTION.value: data},
-                SAMKeys.STATUS.value: {
-                    SAMSqlConnectionStatusKeys.CONNECTION_STRING.value: self.connection.connection_string,
-                    SAMSqlConnectionStatusKeys.IS_VALID.value: self.is_valid,
-                },
-            }
-            pydantic_model = self.pydantic_model(**retval)
-            data = pydantic_model.model_dump_json()
-            return self.json_response_ok(command=command, data=retval)
-        except Exception as e:
-            raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+        pydantic_model = self.manifest.model_dump()
+        return self.json_response_ok(command=command, data=pydantic_model)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

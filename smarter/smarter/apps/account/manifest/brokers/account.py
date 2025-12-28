@@ -124,7 +124,7 @@ class SAMAccountBroker(AbstractBroker):
         """
         Transform the Smarter API Account manifest into a Django ORM model.
         """
-        config_dump = self.manifest.spec.config.model_dump()  # type: ignore
+        config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
             raise SAMAccountBrokerError(

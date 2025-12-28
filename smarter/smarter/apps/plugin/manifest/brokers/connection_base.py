@@ -6,6 +6,13 @@ from typing import Optional, Type
 
 from django.http import HttpRequest
 
+from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.plugin.manifest.models.common.connection.metadata import (
+    SAMConnectionCommonMetadata,
+)
+from smarter.apps.plugin.manifest.models.common.connection.status import (
+    SAMConnectionCommonStatus,
+)
 from smarter.apps.plugin.models import ConnectionBase
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
@@ -68,6 +75,8 @@ class SAMConnectionBaseBroker(AbstractBroker):
     """
 
     _connection: Optional[ConnectionBase] = None
+    _sam_connection_metadata: Optional[SAMConnectionCommonMetadata] = None
+    _sam_connection_status: Optional[SAMConnectionCommonStatus] = None
 
     @property
     def model_class(self) -> Type[ConnectionBase]:
@@ -77,6 +86,62 @@ class SAMConnectionBaseBroker(AbstractBroker):
     def connection(self) -> Optional[ConnectionBase]:
         """Return the connection model instance."""
         raise NotImplementedError(f"{self.formatted_class_name}.connection must be implemented in the subclass.")
+
+    @connection.setter
+    def connection(self, value: ConnectionBase) -> None:
+        """Set the connection model instance."""
+        self._connection = value
+        self._sam_connection_metadata = None
+        self._sam_connection_status = None
+
+    def sam_connection_metadata(self) -> Optional[SAMConnectionCommonMetadata]:
+        """
+        Return the common connection metadata from the manifest.
+
+        :return: The connection metadata.
+        :rtype: SAMConnectionCommonMetadata
+
+        :raises NotImplementedError:
+            If the manifest does not have connection metadata.
+
+        .. seealso::
+
+            :class:`SAMConnectionCommonMetadata`
+
+        **Example usage**::
+
+            metadata = broker.sam_connection_metadata()
+
+        """
+        if self.connection:
+            self._sam_connection_metadata = SAMConnectionCommonMetadata(
+                name=self.connection.name,
+                description=self.connection.description,
+                version=self.connection.version,
+                tags=self.connection.tags.names() if self.connection.tags else None,
+                annotations=self.connection.annotations,
+            )
+        return self._sam_connection_metadata
+
+    def sam_connection_status(self) -> Optional[SAMConnectionCommonStatus]:
+        """
+        Return the common connection status from the manifest.
+        """
+        if self.connection:
+            admin = get_cached_admin_user_for_account(self.connection.account)
+            if not admin:
+                raise SAMBrokerErrorNotReady(
+                    f"Admin user not found for account {self.connection.account_number}. Cannot retrieve connection status.",
+                    thing=self.thing,
+                    command=SmarterJournalCliCommands.GET,
+                )
+            self._sam_connection_status = SAMConnectionCommonStatus(
+                account_number=self.connection.account_number,
+                username=admin.username,
+                created=self.connection.created,
+                modified=self.connection.modified,
+            )
+        return self._sam_connection_status
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> Optional[SmarterJournaledJsonResponse]:
         """
