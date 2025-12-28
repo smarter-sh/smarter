@@ -260,32 +260,32 @@ class SAMAccountBroker(AbstractBroker):
             modified=self.account.updated_at,
         )
         if self.account:
+            metadata = SAMAccountMetadata(
+                name=self.account.account_number,
+                description=self.account.company_name,
+                version=self.account.version,
+                tags=self.account.tags.names(),
+                accountNumber=self.account.account_number,
+                annotations=self.account.annotations,
+            )
+            config = SAMAccountSpecConfig(
+                companyName=self.account.company_name,
+                phoneNumber=self.account.phone_number,
+                address1=self.account.address1,
+                address2=self.account.address2,
+                city=self.account.city,
+                state=self.account.state,
+                postalCode=self.account.postal_code,
+                country=self.account.country,
+                language=self.account.language,
+                timezone=self.account.timezone,
+                currency=self.account.currency,
+            )
             self._manifest = SAMAccount(
                 apiVersion=self.api_version,
                 kind=self.kind,
-                metadata=SAMAccountMetadata(
-                    name=self.account.account_number,
-                    description=self.account.company_name,
-                    version=self.account.version,
-                    tags=self.account.tags.names(),
-                    accountNumber=self.account.account_number,
-                    annotations=self.account.annotations,
-                ),
-                spec=SAMAccountSpec(
-                    config=SAMAccountSpecConfig(
-                        companyName=self.account.company_name,
-                        phoneNumber=self.account.phone_number,
-                        address1=self.account.address1,
-                        address2=self.account.address2,
-                        city=self.account.city,
-                        state=self.account.state,
-                        postalCode=self.account.postal_code,
-                        country=self.account.country,
-                        language=self.account.language,
-                        timezone=self.account.timezone,
-                        currency=self.account.currency,
-                    )
-                ),
+                metadata=metadata,
+                spec=SAMAccountSpec(config=config),
                 status=status,
             )
             return self._manifest
@@ -452,7 +452,8 @@ class SAMAccountBroker(AbstractBroker):
                 setattr(self.account, key, value)
                 logger.info("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
             logger.info("%s.apply() Saving %s", self.formatted_class_name, self.account)
-            cache_invalidate(user=self.user, account=self.account)
+            cache_invalidate(user=self.user, account=self.account)  # type: ignore[reportArgumentType]
+
             self.account.save()
         except Exception as e:
             raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
