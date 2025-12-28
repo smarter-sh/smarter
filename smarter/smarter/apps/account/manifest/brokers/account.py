@@ -253,6 +253,9 @@ class SAMAccountBroker(AbstractBroker):
         """
         if self._manifest:
             return self._manifest
+        if self.account is None:
+            logger.warning("%s.manifest called with no account", self.formatted_class_name)
+            return None
         account_number = str(self.account.account_number)
         status = SAMAccountStatus(
             adminAccount=account_number,
@@ -340,6 +343,12 @@ class SAMAccountBroker(AbstractBroker):
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         self.account = get_cached_smarter_account()
+        if not self.account:
+            raise SAMBrokerErrorNotReady(
+                f"Account not set for {self.kind} broker. Cannot get example manifest.",
+                thing=self.thing,
+                command=command,
+            )
         return self.json_response_ok(command=command, data=self.manifest.model_dump())
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
