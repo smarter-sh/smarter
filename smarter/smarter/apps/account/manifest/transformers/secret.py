@@ -9,11 +9,17 @@ import yaml
 # 3rd party stuff
 from rest_framework import serializers
 
-from smarter.apps.account.manifest.enum import SAMSecretSpecKeys, SAMSecretStatusKeys
+from smarter.apps.account.manifest.enum import SAMSecretSpecKeys
 from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
+from smarter.apps.account.manifest.models.secret.metadata import SAMSecretMetadata
 
 # smarter stuff
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
+from smarter.apps.account.manifest.models.secret.spec import (
+    SAMSecretSpec,
+    SAMSecretSpecConfig,
+)
+from smarter.apps.account.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.signals import (
     secret_created,
@@ -228,7 +234,31 @@ class SecretTransformer(SmarterHelperMixin):
         if not self._manifest and self.secret:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMSecret(**self.to_json())  # type: ignore[call-arg]
+            metadata = SAMSecretMetadata(
+                name=self.secret.name,
+                description=self.secret.description,
+                version=self.secret.version,
+                tags=self.secret.tags.names() if self.secret.tags else [],
+                annotations=self.secret.annotations if self.secret.annotations else [],
+            )
+            spec_config = SAMSecretSpecConfig(
+                value=self.secret.get_secret(update_last_accessed=False) or "",
+                expiration_date=self.secret.expires_at.date() if self.secret.expires_at else None,
+            )
+            status = SAMSecretStatus(
+                accountNumber=self.secret.account.account_number if self.secret.account else "missing",
+                username=self.secret.user_profile.user.username if self.secret.user_profile else "missing",
+                created=self.secret.created_at,
+                modified=self.secret.updated_at,
+                last_accessed=self.secret.last_accessed,
+            )
+            self._manifest = SAMSecret(
+                apiVersion=self.api_version,
+                kind=self.kind,
+                metadata=metadata,
+                spec=SAMSecretSpec(config=spec_config),
+                status=status,
+            )
         return self._manifest
 
     @property
@@ -590,33 +620,5 @@ class SecretTransformer(SmarterHelperMixin):
             return None
 
         if version == "v1":
-            retval = {
-                SAMKeys.APIVERSION.value: self.api_version,
-                SAMKeys.KIND.value: self.kind,
-                SAMKeys.METADATA.value: {
-                    SAMMetadataKeys.NAME.value: self.name,
-                    SAMMetadataKeys.DESCRIPTION.value: self.description,
-                    SAMMetadataKeys.VERSION.value: self.version,
-                    SAMMetadataKeys.TAGS.value: self.tags,
-                    SAMMetadataKeys.ANNOTATIONS.value: self.annotations,
-                },
-                SAMKeys.SPEC.value: {
-                    SAMSecretSpecKeys.CONFIG.value: {
-                        SAMSecretSpecKeys.VALUE.value: "<-************->" if self.encrypted_value else None,
-                        SAMSecretSpecKeys.EXPIRATION_DATE.value: self.expires_at,
-                    },
-                },
-                SAMKeys.STATUS.value: {
-                    SAMSecretStatusKeys.ACCOUNT_NUMBER.value: (
-                        self.user_profile.account.account_number if self.user_profile else None
-                    ),
-                    SAMSecretStatusKeys.USERNAME.value: (
-                        self.user_profile.user.get_username() if self.user_profile else None
-                    ),
-                    SAMSecretStatusKeys.CREATED.value: self.created_at,
-                    SAMSecretStatusKeys.UPDATED.value: self.updated_at,
-                    SAMSecretStatusKeys.LAST_ACCESSED.value: self.last_accessed,
-                },
-            }
-            return json.loads(json.dumps(retval))
+            return self.manifest.model_dump()
         raise SmarterSecretTransformerError(f"Invalid version: {version}")

@@ -4,7 +4,7 @@
 import logging
 import traceback
 from datetime import datetime, timezone
-from typing import Optional, Type, Union
+from typing import Any, Optional, Type, Union
 
 from dateutil.relativedelta import relativedelta
 from django.forms.models import model_to_dict
@@ -14,14 +14,15 @@ from rest_framework import serializers
 from smarter.apps.account.manifest.enum import (
     SAMSecretMetadataKeys,
     SAMSecretSpecKeys,
-    SAMSecretStatusKeys,
 )
 from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
-from smarter.apps.account.manifest.models.secret.model import (
-    SAMSecret,
-    SAMSecretMetadata,
+from smarter.apps.account.manifest.models.secret.metadata import SAMSecretMetadata
+from smarter.apps.account.manifest.models.secret.model import SAMSecret
+from smarter.apps.account.manifest.models.secret.spec import (
     SAMSecretSpec,
+    SAMSecretSpecConfig,
 )
+from smarter.apps.account.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.models import Secret
 from smarter.common.conf import settings as smarter_settings
@@ -244,7 +245,7 @@ class SAMSecretBroker(AbstractBroker):
         config_dump = self.camel_to_snake(config_dump)
         return config_dump  # type: ignore[return-value]
 
-    def django_orm_to_manifest_dict(self) -> Optional[dict]:
+    def django_orm_to_manifest_dict(self) -> Optional[dict[str, Any]]:
         """
         Convert a Django ORM `Secret` model instance into a Pydantic-compatible manifest dictionary.
 
@@ -294,45 +295,32 @@ class SAMSecretBroker(AbstractBroker):
                 stack_trace=traceback.format_exc(),
             ) from e
 
-        try:
-            data = {
-                SAMKeys.APIVERSION.value: self.api_version,
-                SAMKeys.KIND.value: self.kind,
-                SAMKeys.METADATA.value: {
-                    SAMSecretMetadataKeys.NAME.value: secret_dict.get(SAMSecretMetadataKeys.NAME.value),
-                    SAMSecretMetadataKeys.DESCRIPTION.value: secret_dict.get(SAMSecretMetadataKeys.DESCRIPTION.value),
-                    SAMSecretMetadataKeys.VERSION.value: "1.0.0",
-                    SAMSecretMetadataKeys.USERNAME.value: self.user.username if self.user else None,
-                    SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: self.account.account_number if self.account else None,
-                    SAMSecretMetadataKeys.TAGS.value: secret_dict.get(SAMSecretMetadataKeys.TAGS.value),
-                    SAMSecretMetadataKeys.ANNOTATIONS.value: secret_dict.get(SAMSecretMetadataKeys.ANNOTATIONS.value),
-                },
-                SAMKeys.SPEC.value: {
-                    SAMSecretSpecKeys.CONFIG.value: {
-                        SAMSecretSpecKeys.VALUE.value: self.secret.get_secret(),
-                        SAMSecretSpecKeys.DESCRIPTION.value: secret_dict.get(SAMSecretSpecKeys.DESCRIPTION.value),
-                        SAMSecretSpecKeys.EXPIRATION_DATE.value: (
-                            self.secret.expires_at.isoformat() if self.secret.expires_at else None
-                        ),
-                    }
-                },
-                SAMKeys.STATUS.value: {
-                    SAMSecretStatusKeys.ACCOUNT_NUMBER.value: self.account_number,
-                    SAMSecretStatusKeys.USERNAME.value: self.user.username if self.user else None,
-                    SAMSecretStatusKeys.CREATED.value: self.secret.created_at.isoformat(),
-                    SAMSecretStatusKeys.UPDATED.value: self.secret.updated_at.isoformat(),
-                    SAMSecretStatusKeys.LAST_ACCESSED.value: (
-                        self.secret.last_accessed.isoformat() if self.secret.last_accessed else None
-                    ),
-                },
-            }
-        except Exception as e:
-            raise SAMSecretBrokerError(
-                f"Failed to transform {self.kind} {self.secret} into manifest dict",
-                thing=self.kind,
-                stack_trace=traceback.format_exc(),
-            ) from e
-        return data
+        sam_secret = SAMSecret(
+            apiVersion=self.api_version,
+            kind=self.kind,
+            metadata=SAMSecretMetadata(
+                name=self.secret.name,
+                description=self.secret.description,
+                version=self.secret.version,
+                tags=self.secret.tags.names(),
+                annotations=self.secret.annotations,
+            ),
+            spec=SAMSecretSpec(
+                config=SAMSecretSpecConfig(
+                    value=self.secret.get_secret() or "<- ** missing secret ** ->",
+                    expiration_date=(self.secret.expires_at.isoformat() if self.secret.expires_at else None),
+                )
+            ),
+            status=SAMSecretStatus(
+                account_number=self.account.account_number,
+                username=self.user_profile.username,
+                created=self.secret.created_at,
+                modified=self.secret.modified_at,
+                last_accessed=self.secret.last_accessed,
+            ),
+        )
+
+        return sam_secret.model_dump()
 
     ###########################################################################
     # Smarter abstract property implementations

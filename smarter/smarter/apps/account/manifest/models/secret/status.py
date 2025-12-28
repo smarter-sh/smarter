@@ -15,27 +15,27 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMSecretStatus(AbstractSAMStatusBase):
-    """Smarter API Secret Manifest - Status class."""
+    """Smarter API Secret Manifest - Status class (read-only, like Kubernetes status attributes)."""
+
+    # pylint: disable=missing-class-docstring
+    class Config:
+        frozen = True  # Make all fields read-only after creation, like Kubernetes status
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    account_number: str = Field(
-        None,
+    accountNumber: str = Field(
         description=f"{class_identifier}.account_number: The account owner of this {MANIFEST_KIND}. Read only.",
     )
 
     username: str = Field(
-        None,
         description=f"{class_identifier}.account_number: The Smarter user who created this {MANIFEST_KIND}. Read only.",
     )
 
     created: datetime = Field(
-        None,
         description=f"{class_identifier}.created: The date in which this {MANIFEST_KIND} was created. Read only.",
     )
 
     modified: datetime = Field(
-        None,
         description=f"{class_identifier}.modified: The date in which this {MANIFEST_KIND} was most recently changed. Read only.",
     )
 

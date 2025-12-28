@@ -1016,7 +1016,7 @@ class Secret(MetaDataWithOwnershipModel):
 
     def validate(self):
         super().validate()
-        if self.user_profile and self.account:
+        if hasattr(self, "user_profile") and hasattr(self, "account"):
             if self.user_profile.account != self.account:
                 raise SmarterValueError("UserProfile's account does not match the Secret's account.")
 
@@ -1056,6 +1056,7 @@ class Secret(MetaDataWithOwnershipModel):
             raise SmarterValueError(
                 f"Name and encrypted_value are required fields. Got name: {self.name}, encrypted_value: {self.encrypted_value}"
             )
+        self.account = self.user_profile.account
         super().save(*args, **kwargs)
         if is_new:
             secret_created.send(sender=self.__class__, secret=self)

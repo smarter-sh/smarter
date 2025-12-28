@@ -4,17 +4,19 @@
 import logging
 from typing import Optional, Type
 
-from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
-from smarter.apps.account.manifest.enum import SAMAccountSpecKeys
 from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.account.metadata import SAMAccountMetadata
 from smarter.apps.account.manifest.models.account.model import SAMAccount
-from smarter.apps.account.manifest.models.account.spec import SAMAccountSpec
+from smarter.apps.account.manifest.models.account.spec import (
+    SAMAccountSpec,
+    SAMAccountSpecConfig,
+)
+from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
 from smarter.apps.account.models import Account
-from smarter.apps.account.utils import cache_invalidate
+from smarter.apps.account.utils import cache_invalidate, get_cached_smarter_account
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -185,33 +187,13 @@ class SAMAccountBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.DESCRIBE,
             )
-        account_dict = model_to_dict(self.account)
-        account_dict = self.snake_to_camel(account_dict)
-        if not isinstance(account_dict, dict):
-            raise SAMAccountBrokerError(
-                message=f"Invalid account data: {account_dict}",
-                thing=self.kind,
+        if self.manifest is None:
+            raise SAMBrokerErrorNotReady(
+                f"Manifest not set for {self.kind} broker. Cannot describe.",
+                thing=self.thing,
                 command=SmarterJournalCliCommands.DESCRIBE,
             )
-        account_dict.pop("id")
-
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: self.account.account_number,
-                SAMMetadataKeys.DESCRIPTION.value: self.account.company_name,
-                SAMMetadataKeys.VERSION.value: "1.0.0",
-            },
-            SAMKeys.SPEC.value: {
-                SAMAccountSpecKeys.CONFIG.value: account_dict,
-            },
-            SAMKeys.STATUS.value: {
-                "created": self.account.created_at.isoformat(),
-                "modified": self.account.updated_at.isoformat(),
-            },
-        }
-        return data
+        return self.manifest.model_dump()
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -271,27 +253,57 @@ class SAMAccountBroker(AbstractBroker):
         """
         if self._manifest:
             return self._manifest
-        if self.loader is None or not self.loader.manifest_metadata:
-            return None
-        if self.account is None:
-            raise SAMBrokerErrorNotReady(
-                f"Account not set for {self.kind} broker. Cannot apply.",
-                thing=self.thing,
-                command=SmarterJournalCliCommands.APPLY,
+        account_number = str(self.account.account_number)
+        status = SAMAccountStatus(
+            adminAccount=account_number,
+            created=self.account.created_at,
+            modified=self.account.updated_at,
+        )
+        if self.account:
+            self._manifest = SAMAccount(
+                apiVersion=self.api_version,
+                kind=self.kind,
+                metadata=SAMAccountMetadata(
+                    name=self.account.account_number,
+                    description=self.account.company_name,
+                    version=self.account.version,
+                    tags=self.account.tags.names(),
+                    accountNumber=self.account.account_number,
+                    annotations=self.account.annotations,
+                ),
+                spec=SAMAccountSpec(
+                    config=SAMAccountSpecConfig(
+                        companyName=self.account.company_name,
+                        phoneNumber=self.account.phone_number,
+                        address1=self.account.address1,
+                        address2=self.account.address2,
+                        city=self.account.city,
+                        state=self.account.state,
+                        postalCode=self.account.postal_code,
+                        country=self.account.country,
+                        language=self.account.language,
+                        timezone=self.account.timezone,
+                        currency=self.account.currency,
+                    )
+                ),
+                status=status,
             )
-        metadata = {
-            **self.loader.manifest_metadata,
-            "accountNumber": self.account.account_number,
-        }
-        spec = {
-            "config": self.loader.manifest_spec,
-        }
+            return self._manifest
+
         if self.loader and self.loader.manifest_kind == self.kind:
+            metadata = {
+                **self.loader.manifest_metadata,
+                "accountNumber": self.account.account_number,
+            }
+            spec = {
+                "config": SAMAccountSpecConfig(**self.loader.manifest_spec),
+            }
             self._manifest = SAMAccount(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=SAMAccountMetadata(**metadata),
-                spec=SAMAccountSpec(**spec),  # type: ignore
+                spec=SAMAccountSpec(**spec),
+                status=status,
             )
         return self._manifest
 
@@ -327,32 +339,8 @@ class SAMAccountBroker(AbstractBroker):
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "Example_account",
-                SAMMetadataKeys.DESCRIPTION.value: "an example Account manifest",
-                SAMMetadataKeys.VERSION.value: "1.0.0",
-                "accountNumber": self.account.account_number if self.account else None or "1234-5678-9012",
-            },
-            SAMKeys.SPEC.value: {
-                SAMAccountSpecKeys.CONFIG.value: {
-                    "companyName": self.account.company_name if self.account else None or "Humble Geniuses, Inc.",
-                    "phoneNumber": self.account.phone_number if self.account else None or "617-555-1212",
-                    "address1": self.account.address1 if self.account else None or "1 Main St",
-                    "address2": self.account.address2 if self.account else None or "Suite 100",
-                    "city": self.account.city if self.account else None or "Cambridge",
-                    "state": self.account.state if self.account else None or "MA",
-                    "postalCode": self.account.postal_code if self.account else None or "02139",
-                    "country": self.account.country if self.account else None or "USA",
-                    "language": self.account.language if self.account else None or "en-US",
-                    "timezone": self.account.timezone if self.account else None or "America/New_York",
-                    "currency": self.account.currency if self.account else None or "USD",
-                },
-            },
-        }
-        return self.json_response_ok(command=command, data=data)
+        self.account = get_cached_smarter_account()
+        return self.json_response_ok(command=command, data=self.manifest.model_dump())
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -386,7 +374,8 @@ class SAMAccountBroker(AbstractBroker):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for account in accounts:
             try:
-                model_dump = AccountSerializer(account).data
+                self.account = account
+                model_dump = self.django_orm_to_manifest_dict()
                 if not model_dump:
                     raise SAMAccountBrokerError(
                         message=f"Model dump failed for {self.kind} {account.account_number}",
