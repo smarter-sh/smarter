@@ -4,19 +4,10 @@
 import logging
 from typing import Optional, Type
 
-from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
-from smarter.apps.plugin.manifest.enum import (
-    SAMPluginSpecKeys,
-    SAMStaticPluginSpecDataKeys,
-)
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
-)
-from smarter.apps.plugin.manifest.models.common.plugin.spec import (
-    SAMPluginCommonSpecPrompt,
-    SAMPluginCommonSpecSelector,
 )
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
@@ -27,8 +18,6 @@ from smarter.apps.plugin.manifest.models.static_plugin.spec import (
 from smarter.apps.plugin.models import (
     PluginDataStatic,
     PluginMeta,
-    PluginPrompt,
-    PluginSelector,
 )
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.conf import settings as smarter_settings
@@ -128,6 +117,35 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
     _plugin_data: Optional[PluginDataStatic] = None
     _plugin: Optional[StaticPlugin] = None
+    _plugin_static_spec_data: Optional[SAMPluginStaticSpecData] = None
+    _plugin_static_spec: Optional[SAMPluginStaticSpec] = None
+
+    def init_plugin(self):
+        """
+        Initialize the SAMStaticPluginBroker instance.
+
+        This method initializes the broker by calling the parent class's `init` method.
+        It sets up any necessary state or configurations required for handling StaticPlugin manifests.
+
+        :return: None
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMStaticPluginBroker()
+            broker.init()
+
+        .. seealso::
+
+            - `SAMPluginBaseBroker.init`
+
+        """
+        self._manifest = None
+        self._plugin_data = None
+        self._plugin = None
+        self._plugin_static_spec_data = None
+        self._plugin_static_spec = None
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -216,6 +234,29 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         """
         if self._manifest:
+            return self._manifest
+        if self.plugin_meta:
+            metadata = self.plugin_metadata_orm2pydantic()
+            data = self.plugin_data_orm2pydantic()
+            if not data:
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name} manifest() failed to build data for {self.kind} {self.plugin_meta.name}",
+                    thing=self.kind,
+                )
+            spec = self.plugin_static_spec_orm2pydantic()
+            if not spec:
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name} manifest() failed to build spec for {self.kind} {self.plugin_meta.name}",
+                    thing=self.kind,
+                )
+            status = self.plugin_status_pydantic()
+            self._manifest = SAMStaticPlugin(
+                apiVersion=self.api_version,
+                kind=self.kind,
+                metadata=metadata,
+                spec=spec,
+                status=status,
+            )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMStaticPlugin(
@@ -315,6 +356,93 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             )
         return self._plugin_data
 
+    def plugin_data_orm2pydantic(self) -> Optional[SAMPluginStaticSpecData]:
+        """
+        Convert plugin static data from the Django ORM model format to the Pydantic manifest format.
+
+        This method retrieves the static plugin data associated with the current `plugin_meta` and
+        converts it into a `SAMPluginStaticSpecData` Pydantic model. If no data is found, an empty
+        `SAMPluginStaticSpecData` model is returned.
+
+        :return: The static plugin data as a Pydantic model.
+        :rtype: SAMPluginStaticSpecData
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMStaticPluginBroker()
+            static_data = broker.plugin_data_orm2pydantic()
+            print(static_data.model_dump_json())
+
+        :raises SAMPluginBrokerError:
+            If there is an error retrieving or converting the plugin data.
+
+
+        .. seealso::
+
+            - `PluginDataStatic`
+            - `SAMPluginStaticSpecData`
+        """
+        if not self.plugin_meta:
+            return None
+        if self._plugin_static_spec_data:
+            return self._plugin_static_spec_data
+        self._plugin_static_spec_data = SAMPluginStaticSpecData(
+            description=self.plugin_meta.description,
+            staticData=self.plugin_data.static_data if self.plugin_data else {},
+        )
+        return self._plugin_static_spec_data
+
+    def plugin_static_spec_orm2pydantic(self) -> Optional[SAMPluginStaticSpec]:
+        """
+        Convert the static plugin specification from the Django ORM model format to the Pydantic manifest format.
+
+        This method constructs a `SAMPluginStaticSpec` Pydantic model using the prompt, selector,
+        and static data associated with the current `plugin_meta`. It retrieves each component
+        using their respective ORM-to-Pydantic conversion methods.
+
+        :return: The static plugin specification as a Pydantic model.
+        :rtype: SAMPluginStaticSpec
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMStaticPluginBroker()
+            static_spec = broker.plugin_static_spec_orm2pydantic()
+            print(static_spec.model_dump_json())
+
+        :raises SAMPluginBrokerError:
+            If there is an error retrieving or converting any component of the plugin specification.
+
+
+        .. seealso::
+
+            - `SAMPluginStaticSpec`
+            - `SAMPluginCommonSpecPrompt`
+            - `SAMPluginCommonSpecSelector`
+            - `SAMPluginStaticSpecData`
+        """
+        if self._plugin_static_spec:
+            return self._plugin_static_spec
+        if not self.plugin_meta:
+            return None
+        prompt = self.plugin_prompt_orm2pydantic()
+        selector = self.plugin_selector_orm2pydantic()
+        data = self.plugin_data_orm2pydantic()
+        if not data:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} plugin_static_spec_orm2pydantic() failed to build data for {self.kind} {self.plugin_meta.name}",
+                thing=self.kind,
+            )
+        self._plugin_static_spec = SAMPluginStaticSpec(
+            prompt=prompt,
+            selector=selector,
+            data=data,
+        )
+        return self._plugin_static_spec
+
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
@@ -352,6 +480,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = StaticPlugin.example_manifest(kwargs=kwargs)
+        if not data:
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} example_manifest() failed to generate example for {self.kind}",
+                thing=self.kind,
+                command=command,
+            )
         return self.json_response_ok(command=command, data=data)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -397,170 +531,26 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
            }
 
         Error handling:
-            - If the plugin is not found or not ready, a ``SAMBrokerErrorNotReady`` is raised.
-            - If required plugin metadata, selector, or prompt objects are missing or invalid, a ``SAMPluginBrokerError`` is raised.
-            - Any unexpected errors during manifest serialization will raise a generic ``Exception``.
+            - If manifest is not set, a ``SAMPluginBrokerError`` is raised.
 
         Returns
         -------
         SmarterJournaledJsonResponse
             JSON response containing the plugin manifest or error details.
 
-        .. seealso::
-
-            - `SAMPluginCommonMetadata`
-            - `SAMPluginCommonSpecPrompt`
-            - `SAMPluginCommonSpecSelector`
-            - `SAMPluginStaticSpecData`
-            - `SmarterJournaledJsonResponse`
-            - `SmarterJournalCliCommands`
-            - :class:`SAMKeys`
-            - :class:`SAMPluginSpecKeys`
-            - :class:`SAMStaticPluginSpecDataKeys`
-
-
-
         """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
-        if not isinstance(self.plugin, StaticPlugin):
-            raise SAMBrokerErrorNotReady(
-                message=f"No plugin found. url: {request.build_absolute_uri()}, args={json.dumps(args)}, kwargs={json.dumps(kwargs)}",
-                thing=self.kind,
-                command=command,
-            )
-        if self.account is None:
+        if not self.manifest:
             raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} account not initialized. Cannot describe",
-                thing=self.kind,
-                command=command,
-            )
-        if not isinstance(self.plugin_meta, PluginMeta):
-            raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} plugin_meta not initialized. Cannot describe",
+                f"{self.formatted_class_name} {self.kind} manifest not initialized. Cannot describe",
                 thing=self.kind,
                 command=command,
             )
 
-        # metadata
-        try:
-            metadata = model_to_dict(self.plugin_meta)  # type: ignore[no-any-return]
-            metadata = self.snake_to_camel(metadata)
-            if not isinstance(metadata, dict):
-                raise SAMPluginBrokerError(
-                    f"Model dump failed for {self.kind} {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                )
-            metadata = SAMPluginCommonMetadata(**metadata)
-        except PluginMeta.DoesNotExist:
-            return self.json_response_err(
-                command=command,
-                e=SAMPluginBrokerError(
-                    f"{self.formatted_class_name} {self.kind} PluginMeta does not exist for {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                ),
-            )
-        except Exception as e:
-            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
-
-        # PluginSelector
-        try:
-            plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
-            plugin_selector = model_to_dict(plugin_selector)  # type: ignore[no-any-return]
-            plugin_selector = self.snake_to_camel(plugin_selector)
-            if not isinstance(plugin_selector, dict):
-                raise SAMPluginBrokerError(
-                    f"Model dump failed for {self.kind} {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                )
-            plugin_selector = SAMPluginCommonSpecSelector(**plugin_selector)
-        except PluginSelector.DoesNotExist:
-            return self.json_response_err(
-                command=command,
-                e=SAMPluginBrokerError(
-                    f"{self.formatted_class_name} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
-                    thing=self.kind,
-                    command=command,
-                ),
-            )
-        except Exception as e:
-            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
-
-        # PluginPrompt
-        try:
-            plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
-            plugin_prompt = model_to_dict(plugin_prompt)  # type: ignore[no-any-return]
-            plugin_prompt = self.snake_to_camel(plugin_prompt)
-            if not isinstance(plugin_prompt, dict):
-                raise SAMPluginBrokerError(
-                    f"Model dump failed for {self.kind} {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                )
-            plugin_prompt = SAMPluginCommonSpecPrompt(**plugin_prompt)
-        except PluginPrompt.DoesNotExist:
-            return self.json_response_err(
-                command=command,
-                e=SAMPluginBrokerError(
-                    f"{self.formatted_class_name} {self.kind} PluginPrompt does not exist for {self.plugin_meta.name}",
-                    thing=self.kind,
-                    command=command,
-                ),
-            )
-        except Exception as e:
-            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
-
-        # PluginData
-        try:
-            plugin_data = model_to_dict(self.plugin_data)  # type: ignore[no-any-return]
-            plugin_data = self.snake_to_camel(plugin_data)
-            if not isinstance(plugin_data, dict):
-                raise SAMPluginBrokerError(
-                    f"Model dump failed for {self.kind} {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                )
-            plugin_data = SAMPluginStaticSpecData(**plugin_data)
-        except Exception as e:
-            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
-
-        try:
-            retval = {
-                SAMKeys.APIVERSION.value: self.api_version,
-                SAMKeys.KIND.value: self.kind,
-                SAMKeys.METADATA.value: metadata.model_dump(),
-                SAMKeys.SPEC.value: {
-                    SAMPluginSpecKeys.PROMPT.value: plugin_prompt.model_dump(),
-                    SAMPluginSpecKeys.SELECTOR.value: plugin_selector.model_dump(),
-                    SAMPluginSpecKeys.DATA.value: {
-                        SAMStaticPluginSpecDataKeys.DESCRIPTION.value: self.plugin_meta.description,
-                        SAMStaticPluginSpecDataKeys.STATIC.value: plugin_data.model_dump(),
-                    },
-                },
-                SAMKeys.STATUS.value: {
-                    "created": self.plugin_meta.created_at.isoformat(),
-                    "modified": self.plugin_meta.updated_at.isoformat(),
-                },
-            }
-            # validate our results by round-tripping the data through the Pydantic model
-            pydantic_model = self.pydantic_model(**retval)
-            pydantic_model.model_dump_json()
-            return self.json_response_ok(command=command, data=retval)
-        except Exception as e:
-            logger.error(
-                "%s.describe() failed to serialize %s %s",
-                self.formatted_class_name,
-                self.kind,
-                self.plugin.name,
-                exc_info=True,
-            )
-            raise SAMPluginBrokerError(
-                f"Failed to serialize {self.kind} {self.plugin.name}", thing=self.kind, command=command
-            ) from e
+        data = json.loads(self.manifest.model_dump_json())
+        return self.json_response_ok(command=command, data=data)
 
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -600,33 +590,35 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
-            chatbots = PluginMeta.objects.filter(account=self.account, name=name)
+            plugins = PluginMeta.objects.filter(account=self.account, name=name)
         else:
-            chatbots = PluginMeta.objects.filter(account=self.account)
+            plugins = PluginMeta.objects.filter(account=self.account)
         logger.info(
-            "%s.get() found %s Plugins for account %s", self.formatted_class_name, chatbots.count(), self.account
+            "%s.get() found %s Plugins for account %s", self.formatted_class_name, plugins.count(), self.account
         )
 
         # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
-        for chatbot in chatbots:
+        for plugin in plugins:
             try:
-                model_dump = PluginSerializer(chatbot).data
+                self.plugin_meta = plugin
+                self.init_plugin()
+
+                model_dump = json.loads(self.manifest.model_dump_json())
                 if not model_dump:
                     raise SAMPluginBrokerError(
-                        f"Model dump failed for {self.kind} {chatbot.name}", thing=self.kind, command=command
+                        f"Model dump failed for {self.kind} {plugin.name}", thing=self.kind, command=command
                     )
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
-                data.append(camel_cased_model_dump)
+                data.append(model_dump)
             except Exception as e:
                 logger.error(
                     "%s.get() failed to serialize %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    chatbot.name,
+                    plugin.name,
                     exc_info=True,
                 )
                 raise SAMPluginBrokerError(
-                    f"Failed to serialize {self.kind} {chatbot.name}", thing=self.kind, command=command
+                    f"Failed to serialize {self.kind} {plugin.name}", thing=self.kind, command=command
                 ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,

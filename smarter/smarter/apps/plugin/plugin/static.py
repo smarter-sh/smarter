@@ -22,19 +22,33 @@ A PLugin that returns a static json object stored in the Plugin itself.
 """
 
 import logging
+from datetime import datetime
 from typing import Any, Optional, Type
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
-    SAMPluginCommonMetadataKeys,
-    SAMPluginCommonSpecPromptKeys,
-    SAMPluginCommonSpecSelectorKeys,
-    SAMPluginSpecKeys,
-    SAMStaticPluginSpecDataKeys,
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
+    SAMPluginCommonMetadata,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.spec import (
+    SAMPluginCommonSpecPrompt,
+    SAMPluginCommonSpecSelector,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.status import (
+    SAMPluginCommonStatus,
+)
+from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
+from smarter.apps.plugin.manifest.models.static_plugin.spec import (
+    SAMPluginStaticSpec,
+    SAMPluginStaticSpecData,
 )
 from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginStaticSerializer
+from smarter.apps.plugin.signals import plugin_called, plugin_responded
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.conf import settings as smarter_settings
@@ -42,12 +56,7 @@ from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
-from ..manifest.enum import SAMPluginCommonSpecSelectorKeyDirectiveValues
-from ..manifest.models.static_plugin.const import MANIFEST_KIND
-from ..manifest.models.static_plugin.model import SAMStaticPlugin
-from ..signals import plugin_called, plugin_responded
 from .base import PluginBase, SmarterPluginError
 
 
@@ -353,7 +362,7 @@ class StaticPlugin(PluginBase):
     @classmethod
     def example_manifest(cls, kwargs: Optional[dict[str, Any]] = None) -> Optional[dict[str, Any]]:
         """
-        Return an example manifest for a StaticPlugin.
+        use Pydantic models to generate an example manifest for a StaticPlugin.
 
         :param kwargs: Optional keyword arguments to customize the example manifest.
         :type kwargs: Optional[dict[str, Any]]
@@ -378,72 +387,83 @@ class StaticPlugin(PluginBase):
         - :class:`SAMStaticPluginSpecDataKeys`
 
         """
-        static_plugin = {
-            SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
-            SAMKeys.KIND.value: MANIFEST_KIND,
-            SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "everlasting_gobstopper",
-                SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.STATIC.value,
-                SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
-                SAMMetadataKeys.VERSION.value: "0.1.0",
-                SAMMetadataKeys.TAGS.value: ["candy", "treats", "chocolate", "Gobstoppers", "Willy Wonka"],
-            },
-            SAMKeys.SPEC.value: {
-                SAMPluginSpecKeys.SELECTOR.value: {
-                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
-                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
-                        "Gobstopper",
-                        "Gobstoppers",
-                        "Gobbstopper",
-                        "Gobbstoppers",
-                    ],
-                },
-                SAMPluginSpecKeys.PROMPT.value: {
-                    SAMPluginCommonSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
-                    SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value: "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.",
-                    SAMPluginCommonSpecPromptKeys.MODEL.value: SettingsDefaults.LLM_DEFAULT_MODEL,
-                    SAMPluginCommonSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-                    SAMPluginCommonSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
-                },
-                SAMPluginSpecKeys.DATA.value: {
-                    SAMStaticPluginSpecDataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
-                    SAMStaticPluginSpecDataKeys.STATIC.value: {
-                        "contact": [
-                            {"name": "Willy Wonka"},
-                            {"title": "Founder and CEO"},
-                            {"location": "1234 Chocolate Factory Way, Chocolate City, Chocolate State, USA"},
-                            {"phone": "+1 123-456-7890"},
-                            {"website_url": "https://wwcf.com"},
-                            {"whatsapp": 11234567890},
-                            {"email": "ww@wwcf.com"},
-                        ],
-                        "biographical": "Willy Wonka is a fictional character appearing in British author Roald Dahl's 1964 children's novel Charlie and the Chocolate Factory, its 1972 sequel Charlie and the Great Glass Elevator and several films based on those books. He is the eccentric founder and proprietor of the Wonka Chocolate Factory\n",
-                        "sales_promotions": [
-                            {
-                                "name": "Everlasting Gobstopper",
-                                "description": 'The Everlasting Gobstopper is a candy that, according to Willy Wonka, "Never Gets Smaller Or Ever Gets Eaten". It is the main focus of Charlie and the Chocolate Factory, both the 1971 film and the 2005 film, and Willy Wonka and the Chocolate Factory, the 1971 film adaptation of the novel.\n',
-                                "price": "$1.00",
-                                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Everlasting_Gobstopper.jpg/220px-Everlasting_Gobstopper.jpg",
-                            },
-                            {
-                                "name": "Wonka Bar",
-                                "description": "Wonka Bars are a fictional brand of chocolate made by Willy Wonka, and also a chocolate bar inspired by the Willy Wonka Bar from the novel and the films Willy Wonka & the Chocolate Factory and Charlie and the Chocolate Factory.\n",
-                                "price": "$1.00",
-                                "image": "https://m.media-amazon.com/images/I/81E-734cMzL._AC_UF894,1000_QL80_.jpg",
-                            },
-                        ],
-                        "coupon_codes": [
-                            {"name": "10% off", "code": "10OFF", "description": "10% off your next purchase\n"},
-                            {"name": "20% off", "code": "20OFF", "description": "20% off your next purchase\n"},
-                        ],
+        metadata = SAMPluginCommonMetadata(
+            name="everlasting_gobstopper",
+            description="Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+            version="0.1.0",
+            tags=["candy", "treats", "chocolate", "Gobstoppers", "Willy Wonka"],
+            annotations=["example", "static", "plugin"],
+            pluginClass=SAMPluginCommonMetadataClassValues.STATIC.value,
+        )
+        selector = SAMPluginCommonSpecSelector(
+            directive=SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
+            searchTerms=[
+                "Gobstopper",
+                "Gobstoppers",
+                "Gobbstopper",
+                "Gobbstoppers",
+            ],
+        )
+        prompt = SAMPluginCommonSpecPrompt(
+            provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+            systemRole="You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.",
+            model=SettingsDefaults.LLM_DEFAULT_MODEL,
+            temperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+            maxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+        )
+        data = SAMPluginStaticSpecData(
+            description="Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+            staticData={
+                "contact": [
+                    {"name": "Willy Wonka"},
+                    {"title": "Founder and CEO"},
+                    {"location": "1234 Chocolate Factory Way, Chocolate City, Chocolate State, USA"},
+                    {"phone": "+1 123-456-7890"},
+                    {"website_url": "https://wwcf.com"},
+                    {"whatsapp": 11234567890},
+                    {"email": "ww@wwcf.com"},
+                ],
+                "biographical": "Willy Wonka is a fictional character appearing in British author Roald Dahl's 1964 children's novel Charlie and the Chocolate Factory, its 1972 sequel Charlie and the Great Glass Elevator and several films based on those books. He is the eccentric founder and proprietor of the Wonka Chocolate Factory\n",
+                "sales_promotions": [
+                    {
+                        "name": "Everlasting Gobstopper",
+                        "description": 'The Everlasting Gobstopper is a candy that, according to Willy Wonka, "Never Gets Smaller Or Ever Gets Eaten". It is the main focus of Charlie and the Chocolate Factory, both the 1971 film and the 2005 film, and Willy Wonka and the Chocolate Factory, the 1971 film adaptation of the novel.\n',
+                        "price": "$1.00",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Everlasting_Gobstopper.jpg/220px-Everlasting_Gobstopper.jpg",
                     },
-                },
+                    {
+                        "name": "Wonka Bar",
+                        "description": "Wonka Bars are a fictional brand of chocolate made by Willy Wonka, and also a chocolate bar inspired by the Willy Wonka Bar from the novel and the films Willy Wonka & the Chocolate Factory and Charlie and the Chocolate Factory.\n",
+                        "price": "$1.00",
+                        "image": "https://m.media-amazon.com/images/I/81E-734cMzL._AC_UF894,1000_QL80_.jpg",
+                    },
+                ],
+                "coupon_codes": [
+                    {"name": "10% off", "code": "10OFF", "description": "10% off your next purchase\n"},
+                    {"name": "20% off", "code": "20OFF", "description": "20% off your next purchase\n"},
+                ],
             },
-        }
+        )
+        spec = SAMPluginStaticSpec(
+            selector=selector,
+            prompt=prompt,
+            data=data,
+        )
+        status = SAMPluginCommonStatus(
+            account_number="1234567890",
+            username="example_user",
+            created=datetime(2024, 1, 1, 0, 0, 0),
+            modified=datetime(2024, 1, 1, 0, 0, 0),
+        )
 
-        # recast the Python dict to the Pydantic model
-        # in order to validate our output
-        pydantic_model = cls.SAMPluginType(**static_plugin)
+        pydantic_model = SAMStaticPlugin(
+            apiVersion=SmarterApiVersions.V1,
+            kind=MANIFEST_KIND,
+            metadata=metadata,
+            spec=spec,
+            status=status,
+        )
+
         return json.loads(pydantic_model.model_dump_json())
 
     def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> str:
