@@ -188,7 +188,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMSqlPlugin:
+    def manifest(self) -> Optional[SAMSqlPlugin]:
         """
         Returns the SQL plugin manifest as a validated Pydantic model instance.
 
@@ -265,12 +265,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                     else None
                 ),
             )
-            return self._manifest
-
-        raise SAMPluginBrokerError(
-            f"{self.formatted_class_name} manifest() could not build manifest for {self.kind} {self.plugin_meta.name if self.plugin_meta else 'unknown'}",
-            thing=self.kind,
-        )
+        return self._manifest
 
     @property
     def plugin(self) -> Optional[SqlPlugin]:
