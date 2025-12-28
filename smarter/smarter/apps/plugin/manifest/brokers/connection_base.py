@@ -78,6 +78,12 @@ class SAMConnectionBaseBroker(AbstractBroker):
     _sam_connection_metadata: Optional[SAMConnectionCommonMetadata] = None
     _sam_connection_status: Optional[SAMConnectionCommonStatus] = None
 
+    def connection_init(self) -> None:
+        """Initialize the connection model instance."""
+        self._connection = None
+        self._sam_connection_metadata = None
+        self._sam_connection_status = None
+
     @property
     def model_class(self) -> Type[ConnectionBase]:
         raise NotImplementedError(f"{self.formatted_class_name}.model_class must be implemented in the subclass.")

@@ -106,7 +106,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         super().__init__(*args, **kwargs)
         self._manifest = manifest
 
-    def init_plugin(self) -> None:
+    def plugin_init(self) -> None:
         """
         Initialize the SQL plugin for this broker.
 
@@ -121,12 +121,13 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         .. code-block:: python
 
             broker = SAMSqlPluginBroker(manifest=my_manifest)
-            broker.init_plugin()
+            broker.plugin_init()
             plugin = broker.plugin
             if plugin.ready:
                 plugin.create()
                 plugin.save()
         """
+        super().plugin_init()
         self._manifest = None
         self._plugin = None
         self._plugin_meta = None
@@ -610,7 +611,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
         for plugin in plugins:
             try:
-                self.init_plugin()
+                self.plugin_init()
                 self.plugin_meta = plugin
 
                 model_dump = json.loads(self.manifest.model_dump_json())

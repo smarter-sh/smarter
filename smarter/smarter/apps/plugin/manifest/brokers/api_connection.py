@@ -2,12 +2,15 @@
 """Smarter Api ApiConnection Manifest handler"""
 
 import logging
+from datetime import datetime
 from typing import Optional, Type
+from unicodedata import name
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.models import Secret
+from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.plugin.manifest.enum import (
     SAMApiConnectionSpecConnectionKeys,
     SAMApiConnectionSpecKeys,
@@ -16,7 +19,12 @@ from smarter.apps.plugin.manifest.enum import (
 from smarter.apps.plugin.manifest.models.api_connection.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.api_connection.enum import AuthMethods
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
-from smarter.apps.plugin.manifest.models.api_connection.spec import SAMApiConnectionSpec
+from smarter.apps.plugin.manifest.models.api_connection.spec import (
+    ApiConnection as PydanticApiConnection,
+)
+from smarter.apps.plugin.manifest.models.api_connection.spec import (
+    SAMApiConnectionSpec,
+)
 from smarter.apps.plugin.manifest.models.common.connection.metadata import (
     SAMConnectionCommonMetadata,
 )
@@ -94,6 +102,33 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     _connection: Optional[ApiConnection] = None
     _api_key_secret: Optional[Secret] = None
     _proxy_password_secret: Optional[Secret] = None
+
+    def connection_init(self) -> None:
+        """
+        Initialize the connection-related properties of the broker.
+
+        This method resets the internal state of the broker related to the ApiConnection instance and its associated secrets. It is useful when reloading or refreshing the connection data to ensure that stale references are cleared.
+
+        :return: None
+        :rtype: None
+
+        .. seealso::
+
+            :meth:`SAMApiConnectionBroker.connection`
+            :meth:`SAMApiConnectionBroker.api_key_secret`
+            :meth:`SAMApiConnectionBroker.proxy_password_secret`
+
+        **Example usage**::
+
+            broker.connection_init()
+            connection = broker.connection
+
+        """
+        super().connection_init()
+        self._manifest = None
+        self._connection = None
+        self._api_key_secret = None
+        self._proxy_password_secret = None
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -201,27 +236,71 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         """
         if self._manifest:
             return self._manifest
+
+        if self.connection:
+            metadata = SAMConnectionCommonMetadata(
+                name=str(self.connection.name),
+                description=self.connection.description,
+                version=self.connection.version,
+                tags=self.connection.tags.names() if self.connection.tags else None,
+                annotations=self.connection.annotations if self.connection.annotations else None,
+            )
+            connection = PydanticApiConnection(
+                baseUrl=self.connection.base_url,
+                apiKey=self.connection.api_key.get_secret() if self.connection.api_key else None,
+                authMethod=self.connection.auth_method,
+                timeout=self.connection.timeout,
+                proxyProtocol=self.connection.proxy_protocol,
+                proxyHost=self.connection.proxy_host,
+                proxyPort=self.connection.proxy_port,
+                proxyUsername=self.connection.proxy_username,
+                proxyPassword=self.connection.proxy_password,
+            )
+            spec = SAMApiConnectionSpec(
+                connection=connection,
+            )
+            admin = get_cached_admin_user_for_account(self.account)  # type: ignore
+            if not admin:
+                raise SAMBrokerErrorNotReady(
+                    f"Admin user not found for account {self.account}. Cannot build manifest.",
+                    thing=self.kind,
+                )
+            status = SAMConnectionCommonStatus(
+                account_number=self.connection.account.account_number,
+                username=admin.username,
+                created=self.connection.created_at,
+                modified=self.connection.updated_at,
+            )
+
+            self._manifest = SAMApiConnection(
+                apiVersion=self.api_version,
+                kind=self.kind,
+                metadata=metadata,
+                spec=spec,
+                status=status,
+            )
+            return self._manifest
+
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMApiConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
+                status=(
+                    SAMConnectionCommonStatus(**self.loader.manifest_status)
+                    if self.loader and self.loader.manifest_status
+                    else None
+                ),
+            )
+            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
         else:
-            if self.loader and self.loader.manifest_kind == self.kind:
-                self._manifest = SAMApiConnection(
-                    apiVersion=self.loader.manifest_api_version,
-                    kind=self.loader.manifest_kind,
-                    metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
-                    spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
-                    status=(
-                        SAMConnectionCommonStatus(**self.loader.manifest_status)
-                        if self.loader and self.loader.manifest_status
-                        else None
-                    ),
-                )
-                logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
-            else:
-                logger.warning(
-                    "%s.manifest() could not initialize manifest. Expected %s but got %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    self.loader.manifest_kind if self.loader else None,
-                )
+            logger.warning(
+                "%s.manifest() could not initialize manifest. Expected %s but got %s",
+                self.formatted_class_name,
+                self.kind,
+                self.loader.manifest_kind if self.loader else None,
+            )
         return self._manifest
 
     def manifest_to_django_orm(self) -> dict:
@@ -476,6 +555,12 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 self._connection = ApiConnection(**model_dump)
                 self._connection.save()
                 self._created = True
+                logger.info(
+                    "%s created ApiConnection %s for account %s",
+                    self.formatted_class_name,
+                    self.name or "(name is missing)",
+                    self.account or "(account is missing)",
+                )
             else:
                 logger.error(
                     "%s ApiConnection %s not found for account %s",
@@ -519,30 +604,42 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
 
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "example_connection",
-                SAMMetadataKeys.DESCRIPTION.value: f"Example {self.kind} using any of the following authentication methods: {AuthMethods.all_values()}",
-                SAMMetadataKeys.VERSION.value: "0.1.0",
-            },
-            SAMKeys.SPEC.value: {
-                SAMApiConnectionSpecKeys.CONNECTION.value: {
-                    SAMApiConnectionSpecConnectionKeys.BASE_URL.value: "http://localhost:8000/",
-                    SAMApiConnectionSpecConnectionKeys.API_KEY.value: "12345-abcde-67890-fghij",
-                    SAMApiConnectionSpecConnectionKeys.AUTH_METHOD.value: "token",
-                    SAMApiConnectionSpecConnectionKeys.TIMEOUT.value: 30,
-                    SAMApiConnectionSpecConnectionKeys.PROXY_PROTOCOL.value: "http",
-                    SAMApiConnectionSpecConnectionKeys.PROXY_HOST.value: "proxy.example.com",
-                    SAMApiConnectionSpecConnectionKeys.PROXY_PORT.value: 8080,
-                    SAMApiConnectionSpecConnectionKeys.PROXY_USERNAME.value: "proxyuser",
-                    SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value: "proxypass",
-                }
-            },
-        }
+        metadata = SAMConnectionCommonMetadata(
+            name="example_connection",
+            description=f"Example {self.kind} using any of the following authentication methods: {AuthMethods.all_values()}",
+            version="0.1.0",
+            tags=["example", "api", "connection"],
+            annotations=["annotation.1", "annotation.2"],
+        )
+        connection = PydanticApiConnection(
+            baseUrl="http://localhost:8000/",
+            apiKey="12345-top-secret-67890-fghij",
+            authMethod="token",
+            timeout=30,
+            proxyProtocol="http",
+            proxyHost="proxy.example.com",
+            proxyPort=8080,
+            proxyUsername="proxyuser",
+            proxyPassword="proxypass",
+        )
+
+        spec = SAMApiConnectionSpec(
+            connection=connection,
+        )
+        status = SAMConnectionCommonStatus(
+            account_number="2194-1233-0815",
+            username="admin_user",
+            created=datetime.now(),
+            modified=datetime.now(),
+        )
+        pydantic_model = SAMApiConnection(
+            apiVersion=self.api_version,
+            kind=self.kind,
+            metadata=metadata,
+            spec=spec,
+            status=status,
+        )
         # validate our results by round-tripping the data through the Pydantic model
-        pydantic_model = self.pydantic_model(**data)
         data = json.loads(pydantic_model.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
@@ -595,7 +692,10 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each ApiConnection
         for api_connection in api_connections:
             try:
-                model_dump = self.serializer(api_connection).data
+                self.connection_init()
+                self.connection = api_connection
+
+                model_dump = self.manifest.model_dump()
                 if not model_dump:
                     raise SAMConnectionBrokerError(
                         f"Model dump failed for {self.kind} {api_connection.name}", thing=self.kind, command=command
@@ -782,54 +882,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
-        is_valid = False
-        try:
-            if isinstance(self.connection, SAMApiConnection):
-                is_valid = self.connection.validate()
-        except Exception:
-            pass
 
-        if self.connection is None:
+        if self.manifest is None:
             raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
         try:
-            data = model_to_dict(self.connection)
-            data = self.snake_to_camel(data)
-            if not isinstance(data, dict):
-                raise SAMConnectionBrokerError(
-                    f"Model dump failed for {self.kind} {self.connection.name}",
-                    thing=self.kind,
-                    command=command,
-                )
-            data.pop("id")
-            data.pop(SAMMetadataKeys.NAME.value)
-            data[SAMMetadataKeys.ACCOUNT.value] = self.connection.account.account_number
-            data.pop(SAMMetadataKeys.DESCRIPTION.value)
-            data[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = (
-                self.api_key_secret.name if self.api_key_secret else None
-            )
-            data[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = (
-                self.proxy_password_secret.name if self.proxy_password_secret else None
-            )
-
-            retval = {
-                SAMKeys.APIVERSION.value: self.api_version,
-                SAMKeys.KIND.value: self.kind,
-                SAMKeys.METADATA.value: {
-                    SAMMetadataKeys.NAME.value: self.connection.name,
-                    SAMMetadataKeys.DESCRIPTION.value: self.connection.description,
-                    SAMMetadataKeys.VERSION.value: self.connection.version,
-                },
-                SAMKeys.SPEC.value: {SAMApiConnectionSpecKeys.CONNECTION.value: data},
-                SAMKeys.STATUS.value: {
-                    SAMApiConnectionStatusKeys.CONNECTION_STRING.value: self.connection.connection_string,
-                    SAMApiConnectionStatusKeys.IS_VALID.value: is_valid,
-                },
-            }
-            # validate our results by round-tripping the data through the Pydantic model
-            pydantic_model = self.pydantic_model(**retval)
-            data = pydantic_model.model_dump_json()
-            return self.json_response_ok(command=command, data=retval)
+            data = self.manifest.model_dump()
+            return self.json_response_ok(command=command, data=data)
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
 
