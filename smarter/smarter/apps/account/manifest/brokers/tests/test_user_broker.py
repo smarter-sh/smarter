@@ -10,8 +10,11 @@ from django.http import HttpRequest
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.account.manifest.models.user.model import SAMUser
 from smarter.lib import json
-from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.enum import SAMMetadataKeys
+from smarter.lib.manifest.enum import (
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+)
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
@@ -190,28 +193,119 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         """
         test example_manifest method.
         Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "User",
+                "metadata": {
+                "name": "test_admin_user_c7f0d65632f0faf2",
+                "description": "no description",
+                "version": "1.0.0",
+                "tags": [],
+                "annotations": [],
+                "username": "test_admin_user_c7f0d65632f0faf2"
+                },
+                "spec": {
+                "config": {
+                    "firstName": "TestAdminFirstName_c7f0d65632f0faf2",
+                    "lastName": "TestAdminLastName_c7f0d65632f0faf2",
+                    "email": "test-admin-c7f0d65632f0faf2@mail.com",
+                    "isStaff": true,
+                    "isActive": true
+                }
+                }
+            },
+            "message": "User example manifest successfully generated",
+            "api": "smarter.sh/v1",
+            "thing": "User",
+            "metadata": {
+                "command": "example_manifest"
+            }
+        }
         """
         response = self.broker.example_manifest(self.request)
-        is_valid_response = self.validate_smarter_journaled_json_response(response)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+
+        is_valid_response = self.validate_example_manifest(response)
         self.assertTrue(is_valid_response)
 
     def test_get(self):
-        """Stub: test get method."""
-        kwargs = {
-            SAMMetadataKeys.NAME.value: self.request.user.username,
-        }
-        response = self.broker.get(self.request, **kwargs)
-        self.assertIsInstance(response, SmarterJournaledJsonResponse)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertIsInstance(response.to_json(), dict)
+        """
+        Stub: test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+            {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "User",
+                "metadata": {
+                "count": 1
+                },
+                "kwargs": {},
+                "data": {
+                    "titles": [],
+                    "items": []
+                }
+            },
+            "message": "Users got successfully",
+            "api": "smarter.sh/v1",
+            "thing": "User",
+            "metadata": {
+                "command": "get"
+            }
+            }
+
+        """
+        response = self.broker.get(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+
+        is_valid_response = self.validate_get(response)
+        self.assertTrue(is_valid_response)
 
     def test_apply(self):
-        """Stub: test apply method."""
-        kwargs = {
-            SAMMetadataKeys.NAME.value: self.request.user.username,
-        }
-        response = self.broker.apply(self.request, **kwargs)
-        self.assertIsInstance(response, SmarterJournaledJsonResponse)
+        """
+        Stub: test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+            {
+            "data": {
+                "ready": true,
+                "url": "http://testserver/unknown/",
+                "session_key": "74658c7e8820b4ec985c505c30ababa1b573ffe375d680f2277b369a400a38b1",
+                "data": {
+                    "apiVersion": "smarter.sh/v1",
+                    "kind": "User",
+                    "metadata": {
+                        "description": "an example user manifest for the Smarter API User",
+                        "name": "example_user",
+                        "username": "example_user",
+                        "version": "1.0.0",
+                        "tags": [],
+                        "annotations": []
+                    },
+                    "spec": {
+                        "config": {
+                        "email": "joe@mail.com",
+                        "firstName": "John",
+                        "isActive": true,
+                        "isStaff": false,
+                        "lastName": "Doe"
+                        }
+                    }
+                },
+                "message": "User test_admin_user_f7dc06d61589c9c7 applied successfully",
+                "api": "smarter.sh/v1",
+                "thing": "User",
+                "metadata": {
+                "command": "apply"
+                }
+            }
+            }
+        """
+        response = self.broker.apply(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+
+        is_valid_response = self.validate_apply(response)
+        self.assertTrue(is_valid_response)
 
     def test_describe(self):
         """Stub: test describe method."""
