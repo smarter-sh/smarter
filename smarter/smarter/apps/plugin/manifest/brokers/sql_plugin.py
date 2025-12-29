@@ -266,6 +266,8 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                     else None
                 ),
             )
+        if not self._manifest:
+            logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
     @property

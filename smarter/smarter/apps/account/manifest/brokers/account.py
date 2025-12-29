@@ -264,7 +264,7 @@ class SAMAccountBroker(AbstractBroker):
         )
         if self.account:
             metadata = SAMAccountMetadata(
-                name=self.account.account_number,
+                name=self.account.name,
                 description=self.account.company_name,
                 version=self.account.version,
                 tags=self.account.tags.names(),
@@ -294,10 +294,7 @@ class SAMAccountBroker(AbstractBroker):
             return self._manifest
 
         if self.loader and self.loader.manifest_kind == self.kind:
-            metadata = {
-                **self.loader.manifest_metadata,
-                "accountNumber": self.account.account_number,
-            }
+            metadata = {**self.loader.manifest_metadata}
             spec = {
                 "config": SAMAccountSpecConfig(**self.loader.manifest_spec),
             }

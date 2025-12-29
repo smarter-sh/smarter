@@ -1,8 +1,0 @@
-{
-  "message": "User test_admin_user_ec61fb424a68796a deployed successfully",
-  "api": "smarter.sh/v1",
-  "thing": "User",
-  "metadata": {
-    "command": "deploy"
-  }
-}

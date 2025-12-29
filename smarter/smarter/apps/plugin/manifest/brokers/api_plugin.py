@@ -233,6 +233,8 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                 metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
                 spec=SAMApiPluginSpec(**self.loader.manifest_spec),
             )
+        if not self._manifest:
+            logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
     @property

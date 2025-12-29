@@ -341,6 +341,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
                 spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
             )
+        if not self._manifest:
+            logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
     def manifest_to_django_orm(self) -> dict:

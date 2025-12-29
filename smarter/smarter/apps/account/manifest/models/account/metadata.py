@@ -24,3 +24,7 @@ class SAMAccountMetadata(AbstractSAMMetadataBase):
             f"{class_identifier}.accountNumber[str]. Your preassigned 12-digit account number for your Smarter {MANIFEST_KIND} in the format '####-####-####'. Read only."
         ),
     )
+
+    @property
+    def name(self) -> str:
+        return self.accountNumber.replace("-", "_")

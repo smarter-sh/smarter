@@ -230,8 +230,6 @@ class MetaDataModel(TimestampedModel):
         abstract = True
 
     name = models.CharField(
-        blank=True,
-        default="",
         max_length=255,
         help_text="Name in camelCase, e.g., 'apiKey', no special characters.",
         validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
