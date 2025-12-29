@@ -8,13 +8,17 @@ from pydantic_core import ValidationError
 
 from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
+from smarter.lib.manifest.loader import SAMLoader
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestSmarterAccountPydanticModel(TestAccountMixin):
+    """
+    Test the Smarter Account Pydantic Model.
+    """
+
     def get_data_full_filepath(self, filename: str) -> str:
         return os.path.join(HERE, "data", filename)
 
