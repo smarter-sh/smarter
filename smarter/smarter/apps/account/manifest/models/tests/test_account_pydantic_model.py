@@ -1,5 +1,5 @@
 # pylint: disable=wrong-import-position
-"""Test Account."""
+"""Test SAMAccount."""
 
 import json
 import os
@@ -16,7 +16,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 class TestSmarterAccountPydanticModel(TestAccountMixin):
     """
-    Test the Smarter Account Pydantic Model.
+    Test the Smarter SAMAccount Pydantic Model.
     """
 
     def get_data_full_filepath(self, filename: str) -> str:

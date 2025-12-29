@@ -1,6 +1,6 @@
 """
 Overridden JSON utilities. The effective modifications are
-- Use DjangoJSONEncoder as the default encoder
+- Use SmarterJSONEncoder as the default encoder
 - Standardize indentation to 2 characters
 - Use str as the default for non-serializable objects
 """
@@ -68,7 +68,7 @@ def duration_iso_string(duration):
     return "{}P{}DT{:02d}H{:02d}M{:02d}{}S".format(sign, days, hours, minutes, seconds, ms)
 
 
-class DjangoJSONEncoder(json.JSONEncoder):
+class SmarterJSONEncoder(json.JSONEncoder):
     """
     JSONEncoder subclass that knows how to encode odd types like
      - date/time
@@ -146,7 +146,7 @@ def dumps(
 ):
     """
     JSON dump with
-    - DjangoJSONEncoder as default encoder
+    - SmarterJSONEncoder as default encoder
     - indent of 2
     - default of str
     """
@@ -157,7 +157,7 @@ def dumps(
         ensure_ascii=ensure_ascii,
         check_circular=check_circular,
         allow_nan=allow_nan,
-        cls=cls or DjangoJSONEncoder,
+        cls=cls or SmarterJSONEncoder,
         indent=indent or 2,
         separators=separators,
         default=default or str,

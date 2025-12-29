@@ -327,7 +327,7 @@ class SAMUserBroker(AbstractBroker):
             account_number=self.account.account_number,
             username=self.user_profile.user.username,
             created=self.user.date_joined,
-            modified=self.user.last_login,
+            modified=self.user.last_login or self.user.date_joined,
         )
         if self.user:
             self._manifest = SAMUser(
