@@ -3,10 +3,15 @@
 
 import logging
 import os
+from http import HTTPStatus
 
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
+from smarter.apps.account.manifest.models.user.model import SAMUser
+from smarter.lib import json
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
@@ -28,17 +33,218 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         self._here = os.path.abspath(os.path.dirname(__file__))
         self._manifest_filespec = self.get_data_full_filepath("user.yaml")
 
-        if self.loader is None:
-            raise RuntimeError("SAMLoader not initialized in base class setup.")
-        if self.request is None:
-            raise RuntimeError("HttpRequest not initialized in base class setup.")
+        if not self.ready:
+            raise RuntimeError(f"{self.formatted_class_name}.setUp() not in a ready state")
+
+    @property
+    def ready(self) -> bool:
+        """Return True if the broker is ready."""
+        if not super().ready:
+            return False
+
+        self.assertIsInstance(
+            self.loader, SAMLoader
+        )  # SAM manifest loader utility for loading and validating raw YAML/JSON manifest files
+        self.assertIsInstance(self.loader.json_data, dict)  # YAML manifest filem, converted to json dict
+        self.assertIsInstance(self.loader.yaml_data, str)  # validated YAML string
+        self.assertIsInstance(
+            self.request, HttpRequest
+        )  # authenticated Django HttpRequest object with valid yaml manifest in the body
+
+        return True
+
+    @property
+    def SAMBrokerClass(self) -> type[SAMUserBroker]:
+        """Return the SAMUserBroker class definition for this test."""
+        return SAMUserBroker
+
+    @property
+    def broker(self) -> SAMUserBroker:
+        return super().broker  # type: ignore
 
     def test_setup(self):
         """Verify that setup initialized the broker correctly."""
-        self.assertTrue(self.ready())
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.request, HttpRequest)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
-        self.assertIsInstance(self._broker, SAMUserBroker)
+        self.assertTrue(self.ready)
 
-        logger.info("SAMUserBroker initialized successfully for testing.")
+        self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
+        self.assertIsInstance(
+            self.loader, SAMLoader
+        )  # SAM manifest loader utility for loading and validating raw YAML/JSON manifest files
+        self.assertIsInstance(self.loader.json_data, dict)  # YAML manifest filem, converted to json dict
+        self.assertIsInstance(self.loader.yaml_data, str)  # validated YAML string
+        self.assertIsInstance(
+            self.request, HttpRequest
+        )  # authenticated Django HttpRequest object with valid yaml manifest in the body
+
+        # THIS IS WHAT WE ARE TESTING IN THIS CLASS.
+        # ----------------------------------------------------------
+        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(self.broker, SAMUserBroker)
+
+        # THIS IS WHAT WE ARE TESTING IN THIS CLASS.
+        # ----------------------------------------------------------
+        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(self.broker, SAMUserBroker)
+
+        logger.info("%s.test_setup() SAMUserBroker initialized successfully for testing.", self.formatted_class_name)
+
+    def test_broker_initialization(self):
+        """Test that the broker initializes with required properties."""
+        broker: SAMUserBroker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(broker, SAMUserBroker)
+        self.assertEqual(broker.kind, "User")
+        self.assertIsNotNone(broker.model_class)
+        self.assertEqual(broker.model_class.__name__, "User")
+
+    def test_account_contact_property(self):
+        """Test account_contact property returns correct AccountContact or None."""
+        broker: SAMUserBroker = self.SAMBrokerClass(self.request, self.loader)
+
+        # Should be None if user is not authenticated or not set
+        # pylint: disable=protected-access
+        broker._account_contact = None
+        broker.user = None
+
+        self.assertIsNone(broker.account_contact)
+        self.assertIsNone(broker.account)
+        self.assertIsNone(broker.user_profile)
+
+        broker.user = self.admin_user
+        if hasattr(self.admin_user, "is_authenticated") and self.admin_user.is_authenticated:
+            # If test DB is set up, this may return an AccountContact or None
+            # We just check that it does not raise
+            try:
+                _ = broker.account_contact
+            # pylint: disable=broad-except
+            except Exception as e:
+                self.fail(f"account_contact property raised: {e}")
+
+    def test_initialization_from_class(self):
+        """Test initialization of SAMUserBroker from class."""
+        broker: SAMUserBroker = self.SAMBrokerClass(self.request, self.loader)
+        self.assertIsInstance(broker, SAMUserBroker)
+        self.assertTrue(broker.ready)
+
+    def test_to_json(self):
+        """Test to_json method returns JSON serializable output."""
+        # ensure that the broker to_json() method returns
+        # JSON serializable output.
+        d = json.loads(json.dumps(self.broker.to_json()))
+        self.assertIsInstance(d, dict)
+
+    def test_manifest_initialization(self):
+        """Test that the manifest property can initialize the broker and model."""
+        # ensure that the broker manifest property can correctly
+        # initialize the same broker class.
+        broker = self.SAMBrokerClass(self.request, self.broker.manifest)
+        self.assertIsInstance(broker, SAMUserBroker)
+
+    def test_manifest_model_initialization(self):
+        """Test that the manifest property can initialize a SAMUser model."""
+        # verify that the manifest property
+        # can correctly initialize a SAMUser Pydantic model.
+        sam_user = SAMUser(**self.broker.manifest.model_dump())
+        self.assertIsInstance(sam_user, SAMUser)
+
+    def test_username_property(self):
+        """Test username property returns the correct username or None."""
+
+        self.broker.user = None
+        self.assertIsNone(self.broker.username)
+
+        self.broker.user = self.admin_user
+        self.assertEqual(self.broker.username, getattr(self.admin_user, "username", None))
+
+    def test_formatted_class_name(self):
+        """Test formatted_class_name returns a string containing SAMUserBroker."""
+        name = self.broker.formatted_class_name
+        self.assertIsInstance(name, str)
+        self.assertIn("SAMUserBroker", name)
+
+    def test_kind_property(self):
+        """Test kind property returns 'User'."""
+        self.assertEqual(self.broker.kind, "User")
+
+    def test_manifest_property(self):
+        """Test manifest property returns a SAMUser or None if not ready."""
+        # Should not raise, may return None if not all required fields are set
+        try:
+            _ = self.broker.manifest
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.fail(f"manifest property raised: {e}")
+
+    def test_manifest_to_django_orm(self):
+        """Test manifest_to_django_orm returns a dict."""
+        if self.broker.manifest:
+            orm_dict = self.broker.manifest_to_django_orm()
+            self.assertIsInstance(orm_dict, dict)
+
+    def test_django_orm_to_manifest_dict(self):
+        """Test django_orm_to_manifest_dict returns a dict or raises if manifest is not set."""
+        if self.broker.manifest:
+            manifest_dict = self.broker.django_orm_to_manifest_dict()
+            self.assertIsInstance(manifest_dict, dict)
+
+    def test_example_manifest(self):
+        """
+        test example_manifest method.
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure
+        """
+        response = self.broker.example_manifest(self.request)
+        is_valid_response = self.validate_smarter_journaled_json_response(response)
+        self.assertTrue(is_valid_response)
+
+    def test_get(self):
+        """Stub: test get method."""
+        kwargs = {
+            SAMMetadataKeys.NAME.value: self.request.user.username,
+        }
+        response = self.broker.get(self.request, **kwargs)
+        self.assertIsInstance(response, SmarterJournaledJsonResponse)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertIsInstance(response.to_json(), dict)
+
+    def test_apply(self):
+        """Stub: test apply method."""
+        kwargs = {
+            SAMMetadataKeys.NAME.value: self.request.user.username,
+        }
+        response = self.broker.apply(self.request, **kwargs)
+        self.assertIsInstance(response, SmarterJournaledJsonResponse)
+
+    def test_describe(self):
+        """Stub: test describe method."""
+        pass
+
+    def test_delete(self):
+        """Stub: test delete method."""
+        pass
+
+    def test_deploy(self):
+        """Stub: test deploy method."""
+        pass
+
+    def test_undeploy(self):
+        """Stub: test undeploy method."""
+        pass
+
+    def test_chat_not_implemented(self):
+        """Stub: test chat method raises not implemented."""
+        pass
+
+    def test_delete_user_not_found(self):
+        """Stub: test delete method raises not found for missing user."""
+        pass
+
+    def test_describe_user_not_found(self):
+        """Stub: test describe method raises not found for missing user."""
+        pass
+
+    def test_apply_invalid_user(self):
+        """Stub: test apply method raises error for invalid user."""
+        pass
+
+    def test_logs_returns_ok(self):
+        """Stub: test logs method returns ok response."""
+        pass

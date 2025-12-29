@@ -14,7 +14,6 @@ from smarter.apps.account.tests.factories import (
 )
 from smarter.lib.drf.middleware import SmarterTokenAuthenticationMiddleware
 from smarter.lib.drf.models import SmarterAuthToken
-from smarter.lib.drf.token_authentication import SmarterTokenAuthenticationError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -28,12 +27,12 @@ class TestSmarterTokenAuthenticationMiddleware(SmarterTestBase):
         super().setUp()
 
         self.admin_user, self.account, self.user_profile = admin_user_factory()
-        logger.info("TestSmarterTokenAuthenticationMiddleware() Setting up test class with name: %s", self.name)
+        logger.info("%s Setting up test class with name: %s", self.formatted_class_name, self.name)
 
         self.token_record, self.token_key = SmarterAuthToken.objects.create(
             name=self.name,
             user=self.admin_user,
-            description="TestSmarterTokenAuthenticationMiddleware() test description",
+            description=f"{self.formatted_class_name} test description",
         )  # type: ignore
 
         self.factory = RequestFactory()
