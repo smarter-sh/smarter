@@ -289,6 +289,8 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 self.kind,
                 self.loader.manifest_kind if self.loader else None,
             )
+        if not self._manifest:
+            logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
     def manifest_to_django_orm(self) -> dict:

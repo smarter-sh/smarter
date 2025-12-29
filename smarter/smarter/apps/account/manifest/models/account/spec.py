@@ -1,7 +1,6 @@
 """Smarter API Manifest - Plugin.spec"""
 
 import os
-import re
 import zoneinfo
 from typing import ClassVar, Optional
 
