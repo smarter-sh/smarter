@@ -435,7 +435,7 @@ pillow==11.3.0
     #   wagtail
 pillow-heif==1.1.0
     # via willow
-pip-tools==7.5.0
+pip-tools==7.5.2
     # via -r smarter/requirements/in/local.in
 platformdirs==4.4.0
     # via
@@ -485,6 +485,8 @@ pycodestyle==2.14.0
     # via
     #   -r smarter/requirements/in/constraints.in
     #   flake8
+pycountry==24.6.1
+    # via -r smarter/requirements/in/base.in
 pycparser==2.23
     # via
     #   -r smarter/requirements/in/constraints.in

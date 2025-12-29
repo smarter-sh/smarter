@@ -410,6 +410,12 @@ class SAMSecretBroker(AbstractBroker):
         """
         if self._manifest:
             return self._manifest
+        if not self.account:
+            logger.warning("%s.manifest called with no account", self.formatted_class_name)
+            return None
+        if not self.user_profile:
+            logger.warning("%s.manifest called with no user_profile", self.formatted_class_name)
+            return None
 
         if self.secret:
             self._manifest = SAMSecret(
@@ -444,6 +450,8 @@ class SAMSecretBroker(AbstractBroker):
                 metadata=SAMSecretMetadata(**self.loader.manifest_metadata),
                 spec=SAMSecretSpec(**self.loader.manifest_spec),
             )
+        if not self._manifest:
+            logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
     ###########################################################################

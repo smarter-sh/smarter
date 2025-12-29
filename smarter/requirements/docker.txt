@@ -369,6 +369,8 @@ pyasn1-modules==0.4.2
     #   google-auth
 pycodestyle==2.14.0
     # via -r smarter/requirements/in/constraints.in
+pycountry==24.6.1
+    # via -r smarter/requirements/in/base.in
 pycparser==2.23
     # via
     #   -r smarter/requirements/in/constraints.in
