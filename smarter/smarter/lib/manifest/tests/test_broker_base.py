@@ -4,7 +4,7 @@
 import logging
 import os
 from http import HTTPStatus
-from typing import Type
+from typing import Optional, Type
 
 import yaml
 from django.http import HttpRequest
@@ -53,6 +53,15 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self._loader = None
         self._manifest_filespec = None
         super().tearDown()
+
+    @property
+    def kwargs(self) -> dict:
+        """Return default kwargs for broker methods."""
+        if not self.ready:
+            raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before ready state")
+        return {
+            SAMMetadataKeys.NAME.value: self.request.user.username,
+        }
 
     @property
     def here(self) -> str:
@@ -175,7 +184,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         """
         return os.path.join(self.here, "data", filename)
 
-    def validate_smarter_journaled_json_response(
+    def validate_smarter_journaled_json_response_ok(
         self,
         response: SmarterJournaledJsonResponse,
     ) -> bool:
@@ -183,29 +192,160 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         Validate that the response is a SmarterJournaledJsonResponse.
         Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
+            "data": {
+                "ready": true,
+                "url": "http://testserver/unknown/",
+                "session_key": "c277c2d892843f3459f8d65924efa23932823f86d4b5e56d33ef2276c095c65f",
+                "auth_header": null,
+                "api_token": null,
                 "data": {
-                    "apiVersion": "smarter.sh/v1",
-                    "kind": "User",
-                    "metadata": {"name": "test_admin_user_842dee3fe352486d", "description": "no description", "version": "1.0.0", "tags": [], "annotations": [], "username": "test_admin_user_842dee3fe352486d"},
-                    "spec": {"config": {"firstName": "TestAdminFirstName_842dee3fe352486d", "lastName": "TestAdminLastName_842dee3fe352486d", "email": "test-admin-842dee3fe352486d@mail.com", "isStaff": true, "isActive": true}}}, "message": "User example manifest successfully generated", "api": "smarter.sh/v1", "thing": "User", "metadata": {"command": "example_manifest"
+                "apiVersion": "smarter.sh/v1",
+                "kind": "User",
+                "metadata": {
+                    "description": "an example user manifest for the Smarter API User",
+                    "name": "example_user",
+                    "username": "example_user",
+                    "version": "1.0.0",
+                    "tags": [],
+                    "annotations": []
+                },
+                "spec": {
+                    "config": {
+                    "email": "joe@mail.com",
+                    "firstName": "John",
+                    "isActive": true,
+                    "isStaff": false,
+                    "lastName": "Doe"
+                    }
                 }
+                },
+                "message": "User test_admin_user_90599131136f4e98 applied successfully",
+                "api": "smarter.sh/v1",
+                "thing": "User",
+                "metadata": {
+                "command": "apply"
+                }
+            }
             }
 
         :param response: The response to validate.
         """
 
-        self.assertIsInstance(response, SmarterJournaledJsonResponse)
+        # Validate that the response is a SmarterJournaledJsonResponse
+        self.assertIsInstance(
+            response,
+            SmarterJournaledJsonResponse,
+            msg=f"Response is not a SmarterJournaledJsonResponse. Got: {type(response)}",
+        )
+
+        # Validate that the response has HTTP 200 OK status
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertIsInstance(response.to_json(), dict)
-        logger.info("%s.test_example_manifest() response: %s", self.formatted_class_name, response.content)
+        self.assertIsInstance(response.to_json(), dict, msg="Response to_json() is not a dict")
 
-        d: dict = json.loads(response.content.decode("utf-8"))
-        d = d.get(SCLIResponseGet.DATA.value)  # type: ignore
-        self.assertIsInstance(d, dict)
+        # Validate that the response content can be
+        # properly decoded to a dict
+        response_json: dict = json.loads(response.content.decode("utf-8"))
 
-        self.assertIsNotNone(d.get(SAMKeys.APIVERSION.value))
-        self.assertIsNotNone(d.get(SAMKeys.KIND.value))
-        self.assertIsNotNone(d.get(SAMKeys.METADATA.value))
-        self.assertIsNotNone(d.get(SAMKeys.SPEC.value))
+        # we expect either of two structures:
+        # 1) {"data": { ... manifest dict ... } }
+        # 2) {"data": {"data": { ... manifest dict ... } } }
+        data: Optional[dict] = response_json.get(SCLIResponseGet.DATA.value)
+        self.assertIsInstance(data, dict, msg=f"Response data is not a dict. response_json: {response_json}")
+        data = data.get(SCLIResponseGet.DATA.value, data)
+        self.assertIsInstance(data, dict, msg=f"Response data.data is not a dict. response_json: {response_json}")
+
+        return True
+
+    def validate_example_manifest(
+        self,
+        response: SmarterJournaledJsonResponse,
+    ) -> bool:
+        """
+        Validate that the response is a SmarterJournaledJsonResponse containing
+        a properly structured SAM manifest dict.
+        """
+
+        # Validate that the response is a properly
+        # structured SAM manifest dict
+        response_json: dict = json.loads(response.content.decode("utf-8"))
+        self.assertIsInstance(response_json, dict)
+        data = response_json.get(SCLIResponseGet.DATA.value)
+        self.assertIsInstance(data, dict, msg=f"Response data is not a dict. response_json: {response_json}")
+
+        # Validate that the response is a properly
+        # structured SAM manifest dict
+        self.assertIsNotNone(
+            data.get(SAMKeys.APIVERSION.value),
+            msg=f"apiVersion missing in manifest dict. response_json: {response_json}",
+        )
+        self.assertIsNotNone(
+            data.get(SAMKeys.KIND.value), msg=f"kind missing in manifest dict. response_json: {response_json}"
+        )
+        self.assertIsNotNone(
+            data.get(SAMKeys.METADATA.value), msg=f"metadata missing in manifest dict. response_json: {response_json}"
+        )
+        self.assertIsNotNone(
+            data.get(SAMKeys.SPEC.value), msg=f"spec missing in manifest dict. response_json: {response_json}"
+        )
+
+        return True
+
+    def validate_get(self, response: SmarterJournaledJsonResponse) -> bool:
+        """
+        Validate that the response is a SmarterJournaledJsonResponse
+        containing a properly structured SAM manifest dict.
+        """
+        response_json: dict = json.loads(response.content.decode("utf-8"))
+        self.assertIsInstance(response_json, dict)
+        data = response_json.get(SCLIResponseGet.DATA.value)  # type: ignore
+        self.assertIsInstance(data, dict, msg=f"Response data is not a dict. response_json: {response_json}")
+        data: dict = data.get(SCLIResponseGet.DATA.value)  # type: ignore
+        self.assertIsInstance(data, dict, msg=f"Response data.data is not a dict. response_json: {response_json}")
+
+        self.assertIn("titles", data.keys(), msg=f"'titles' missing in manifest dict. response_json: {response_json}")
+        self.assertIn("items", data.keys(), msg=f"'items' missing in manifest dict. response_json: {response_json}")
+
+        return True
+
+    def validate_apply(
+        self,
+        response: SmarterJournaledJsonResponse,
+    ) -> bool:
+        """
+        Validate that the response is a SmarterJournaledJsonResponse
+        containing a properly structured SAM manifest dict after an apply operation.
+        """
+
+        # Validate that the response is a properly
+        # structured SAM manifest dict
+        response_json: dict = json.loads(response.content.decode("utf-8"))
+        self.assertIsInstance(response_json, dict)
+        data = response_json.get(SCLIResponseGet.DATA.value)
+        self.assertIsInstance(
+            data, dict, msg=f"Response data is not a dict. response_json: {response_json}, data: {data}"
+        )
+        data = data.get(SCLIResponseGet.DATA.value)
+        self.assertIsInstance(
+            data, dict, msg=f"Response data.data is not a dict. response_json: {response_json}, data: {data}"
+        )
+
+        # Validate that the response is a properly
+        # structured SAM manifest dict
+        self.assertIsNotNone(
+            data.get(SAMKeys.APIVERSION.value),
+            msg=f"apiVersion missing in manifest dict. response_json: {response_json}, data: {data}",
+        )
+        self.assertIsNotNone(
+            data.get(SAMKeys.KIND.value),
+            msg=f"kind missing in manifest dict. response_json: {response_json}, data: {data}",
+        )
+        self.assertIsNotNone(
+            data.get(SAMKeys.METADATA.value),
+            msg=f"metadata missing in manifest dict. response_json: {response_json}, data: {data}",
+        )
+        self.assertIsNotNone(
+            data.get(SAMKeys.SPEC.value),
+            msg=f"spec missing in manifest dict. response_json: {response_json}, data: {data}",
+        )
 
         return True
