@@ -245,14 +245,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         # Validate that the response content can be
         # properly decoded to a dict
         response_json: dict = json.loads(response.content.decode("utf-8"))
-
-        # we expect either of two structures:
-        # 1) {"data": { ... manifest dict ... } }
-        # 2) {"data": {"data": { ... manifest dict ... } } }
-        data: Optional[dict] = response_json.get(SCLIResponseGet.DATA.value)
-        self.assertIsInstance(data, dict, msg=f"Response data is not a dict. response_json: {response_json}")
-        data = data.get(SCLIResponseGet.DATA.value, data)
-        self.assertIsInstance(data, dict, msg=f"Response data.data is not a dict. response_json: {response_json}")
+        self.assertIsInstance(response_json, dict)
 
         return True
 

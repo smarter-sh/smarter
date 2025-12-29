@@ -3,17 +3,15 @@
 
 import logging
 import os
-from http import HTTPStatus
 
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.account.manifest.models.user.model import SAMUser
 from smarter.lib import json
-from smarter.lib.manifest.enum import (
-    SAMKeys,
-    SAMMetadataKeys,
-    SCLIResponseGet,
+from smarter.lib.manifest.broker import (
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -232,7 +230,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_get(self):
         """
-        Stub: test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+        test get method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
             "data": {
                 "apiVersion": "smarter.sh/v1",
@@ -264,7 +262,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_apply(self):
         """
-        Stub: test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+        test apply method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
             {
             "data": {
                 "ready": true,
@@ -308,37 +306,110 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         self.assertTrue(is_valid_response)
 
     def test_describe(self):
-        """Stub: test describe method."""
-        pass
+        """
+        Stub: test describe method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+            {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "User",
+                "metadata": {
+                "name": "test_admin_user_ec61fb424a68796a",
+                "description": "no description",
+                "version": "1.0.0",
+                "tags": [],
+                "annotations": [],
+                "username": "test_admin_user_ec61fb424a68796a"
+                },
+                "spec": {
+                "config": {
+                    "firstName": "TestAdminFirstName_ec61fb424a68796a",
+                    "lastName": "TestAdminLastName_ec61fb424a68796a",
+                    "email": "test-admin-ec61fb424a68796a@mail.com",
+                    "isStaff": true,
+                    "isActive": true
+                }
+                }
+            },
+            "message": "User test_admin_user_ec61fb424a68796a described successfully",
+            "api": "smarter.sh/v1",
+            "thing": "User",
+            "metadata": {
+                "command": "describe"
+            }
+            }
+
+        """
+        response = self.broker.describe(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+
+        logger.info("Describe response: %s", response.content.decode())
 
     def test_delete(self):
         """Stub: test delete method."""
         pass
 
     def test_deploy(self):
-        """Stub: test deploy method."""
-        pass
+        """
+        test deploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+            {
+                "message": "User test_admin_user_ec61fb424a68796a deployed successfully",
+                "api": "smarter.sh/v1",
+                "thing": "User",
+                "metadata": {
+                    "command": "deploy"
+                }
+            }
+        """
+        response = self.broker.deploy(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+
+        logger.info("Deploy response: %s", response.content.decode())
 
     def test_undeploy(self):
-        """Stub: test undeploy method."""
-        pass
+        """
+        test undeploy method. Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+            {
+                "message": "User test_admin_user_ec61fb424a68796a undeployed successfully",
+                "api": "smarter.sh/v1",
+                "thing": "User",
+                "metadata": {
+                    "command": "undeploy"
+                }
+            }
+        """
+        response = self.broker.undeploy(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+
+        logger.info("Undeploy response: %s", response.content.decode())
 
     def test_chat_not_implemented(self):
-        """Stub: test chat method raises not implemented."""
-        pass
+        """test chat method raises not implemented."""
+
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            self.broker.chat(self.request, **self.kwargs)
 
     def test_delete_user_not_found(self):
-        """Stub: test delete method raises not found for missing user."""
-        pass
+        """
+        test delete method raises not found for missing user.
+
+        """
+        self.broker.user = None
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            self.broker.delete(self.request, **self.kwargs)
 
     def test_describe_user_not_found(self):
-        """Stub: test describe method raises not found for missing user."""
-        pass
-
-    def test_apply_invalid_user(self):
-        """Stub: test apply method raises error for invalid user."""
-        pass
+        """
+        Test describe method raises not found for missing user.
+        """
+        self.broker.user = None
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            self.broker.describe(self.request, **self.kwargs)
 
     def test_logs_returns_ok(self):
         """Stub: test logs method returns ok response."""
-        pass
+        response = self.broker.logs(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)

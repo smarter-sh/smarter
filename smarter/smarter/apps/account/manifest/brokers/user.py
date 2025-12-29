@@ -18,8 +18,6 @@ from smarter.apps.account.manifest.models.user.status import SAMUserStatus
 from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.account.utils import (
-    get_cached_admin_user_for_account,
-    get_cached_smarter_account,
     get_cached_smarter_admin_user_profile,
     get_cached_user_profile,
 )
@@ -576,6 +574,9 @@ class SAMUserBroker(AbstractBroker):
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
+        if not self.user:
+            raise SAMBrokerErrorNotFound(f"Failed to describe {self.kind}. Not found", thing=self.kind, command=command)
+
         try:
             self._user = User.objects.get(username=self.username)
         except User.DoesNotExist as e:
@@ -620,6 +621,9 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user:
+            raise SAMBrokerErrorNotFound(f"Failed to delete {self.kind}. Not found", thing=self.kind, command=command)
 
         if not isinstance(self.params, dict):
             raise SAMBrokerErrorNotImplemented(message="Params must be a dictionary", thing=self.kind, command=command)
