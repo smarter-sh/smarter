@@ -6,9 +6,8 @@ import os
 from pydantic_core import ValidationError
 
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
-
-from .mixins import TestAccountMixin
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))

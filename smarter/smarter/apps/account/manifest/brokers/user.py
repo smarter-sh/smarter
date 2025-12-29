@@ -313,8 +313,14 @@ class SAMUserBroker(AbstractBroker):
         """
         if self._manifest:
             return self._manifest
+        if not self.user:
+            logger.warning("%s.manifest called with no user", self.formatted_class_name)
+            return None
         if not self.account:
             logger.warning("%s.manifest called with no account", self.formatted_class_name)
+            return None
+        if not self.user_profile:
+            logger.warning("%s.manifest called with no user_profile", self.formatted_class_name)
             return None
 
         status = SAMUserStatus(
@@ -355,6 +361,8 @@ class SAMUserBroker(AbstractBroker):
                 spec=SAMUserSpec(**self.loader.manifest_spec),
                 status=status,
             )
+        if not self._manifest:
+            logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
     ###########################################################################

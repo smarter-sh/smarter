@@ -308,6 +308,8 @@ class SAMAccountBroker(AbstractBroker):
                 spec=SAMAccountSpec(**spec),
                 status=status,
             )
+        if not self._manifest:
+            logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
     ###########################################################################
