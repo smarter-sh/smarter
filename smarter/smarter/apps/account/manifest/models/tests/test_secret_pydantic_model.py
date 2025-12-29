@@ -1,5 +1,5 @@
 # pylint: disable=wrong-import-position
-"""Test Secret."""
+"""Test SAMSecret Pydantic Model."""
 
 import os
 
@@ -14,7 +14,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestSmarterSecretPydanticModel(TestAccountMixin):
-    """Test Secret."""
+    """Test SAMSecret Pydantic Model."""
 
     def get_data_full_filepath(self, filename: str) -> str:
         return os.path.join(HERE, "data", filename)

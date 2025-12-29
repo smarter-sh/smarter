@@ -11,6 +11,7 @@ import yaml
 from django.http import HttpRequest
 from django.test import RequestFactory
 
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib import json
 
@@ -18,7 +19,7 @@ from smarter.lib import json
 logger = logging.getLogger(__name__)
 
 
-class SmarterTestBase(unittest.TestCase):
+class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     """Base class for all unit tests."""
 
     name: str
