@@ -47,3 +47,17 @@ class TestAccountMixin(SmarterTestBase):
         self._loader = None
         self._model = None
         super().tearDown()
+
+    @property
+    def ready(self) -> bool:
+        """Return True if the broker is ready."""
+        if not super().ready:
+            return False
+
+        self.assertIsNotNone(self.account, "Account not initialized in ready() check.")
+        self.assertIsNotNone(self.admin_user, "Admin user not initialized in ready() check.")
+        self.assertIsNotNone(self.user_profile, "Admin user profile not initialized in ready() check.")
+        self.assertIsNotNone(self.non_admin_user, "Non-admin user not initialized in ready() check.")
+        self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in ready() check.")
+
+        return True

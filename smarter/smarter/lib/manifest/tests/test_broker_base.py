@@ -3,6 +3,7 @@
 
 import logging
 import os
+from http import HTTPStatus
 from typing import Type
 
 import yaml
@@ -10,7 +11,13 @@ from django.http import HttpRequest
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib import json
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.enum import (
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+)
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -138,6 +145,27 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
             )
         return self._broker
 
+    @property
+    def ready(self) -> bool:
+        """Return True if the broker is ready."""
+        if not super().ready:
+            return False
+        if self._here is None:
+            raise RuntimeError("Here not initialized in ready() check.")
+        if self._manifest_filespec is None:
+            raise RuntimeError("Manifest filespec not initialized in ready() check.")
+        if self.loader is None:
+            raise RuntimeError("Loader not initialized in ready() check.")
+        if self.request is None:
+            raise RuntimeError("Request not initialized in ready() check.")
+        if self.request.user is None:
+            raise RuntimeError("Request user not initialized in ready() check.")
+        if not self.request.user.is_authenticated:
+            raise RuntimeError("Request user is not authenticated in ready() check.")
+        if self.broker is None:
+            raise RuntimeError("Broker not initialized in ready() check.")
+        return True
+
     def get_data_full_filepath(self, filename: str) -> str:
         """
         Return the full file path for a data file in the 'data' subdirectory.
@@ -147,16 +175,37 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         """
         return os.path.join(self.here, "data", filename)
 
-    def ready(self) -> bool:
-        """Return True if the broker is ready."""
-        if self._here is None:
-            raise RuntimeError("Here not initialized in ready() check.")
-        if self._manifest_filespec is None:
-            raise RuntimeError("Manifest filespec not initialized in ready() check.")
-        if self.loader is None:
-            raise RuntimeError("Loader not initialized in ready() check.")
-        if self.request is None:
-            raise RuntimeError("Request not initialized in ready() check.")
-        if self.broker is None:
-            raise RuntimeError("Broker not initialized in ready() check.")
+    def validate_smarter_journaled_json_response(
+        self,
+        response: SmarterJournaledJsonResponse,
+    ) -> bool:
+        """
+        Validate that the response is a SmarterJournaledJsonResponse.
+        Verify that it returns a SmarterJournaledJsonResponse with expected structure:
+            {
+                "data": {
+                    "apiVersion": "smarter.sh/v1",
+                    "kind": "User",
+                    "metadata": {"name": "test_admin_user_842dee3fe352486d", "description": "no description", "version": "1.0.0", "tags": [], "annotations": [], "username": "test_admin_user_842dee3fe352486d"},
+                    "spec": {"config": {"firstName": "TestAdminFirstName_842dee3fe352486d", "lastName": "TestAdminLastName_842dee3fe352486d", "email": "test-admin-842dee3fe352486d@mail.com", "isStaff": true, "isActive": true}}}, "message": "User example manifest successfully generated", "api": "smarter.sh/v1", "thing": "User", "metadata": {"command": "example_manifest"
+                }
+            }
+
+        :param response: The response to validate.
+        """
+
+        self.assertIsInstance(response, SmarterJournaledJsonResponse)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertIsInstance(response.to_json(), dict)
+        logger.info("%s.test_example_manifest() response: %s", self.formatted_class_name, response.content)
+
+        d: dict = json.loads(response.content.decode("utf-8"))
+        d = d.get(SCLIResponseGet.DATA.value)  # type: ignore
+        self.assertIsInstance(d, dict)
+
+        self.assertIsNotNone(d.get(SAMKeys.APIVERSION.value))
+        self.assertIsNotNone(d.get(SAMKeys.KIND.value))
+        self.assertIsNotNone(d.get(SAMKeys.METADATA.value))
+        self.assertIsNotNone(d.get(SAMKeys.SPEC.value))
+
         return True

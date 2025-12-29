@@ -20,6 +20,7 @@ from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     get_cached_smarter_account,
+    get_cached_smarter_admin_user_profile,
     get_cached_user_profile,
 )
 from smarter.common.conf import settings as smarter_settings
@@ -402,8 +403,7 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        self.account = get_cached_smarter_account()
-        self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
+        self.user = get_cached_smarter_admin_user_profile().user
         data = self.django_orm_to_manifest_dict()
         return self.json_response_ok(command=command, data=data)
 

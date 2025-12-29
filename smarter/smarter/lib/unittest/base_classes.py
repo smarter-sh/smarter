@@ -32,9 +32,9 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         cls.name = camel_to_snake("SmarterTestBase_" + cls.hash_suffix)
         cls.uid = SmarterTestBase.generate_uid()
 
-        logger.info("Setting up test class with hash suffix: %s", cls.hash_suffix)
-        logger.info("Setting up test class with name: %s", cls.name)
-        logger.info("Setting up test class with uid: %s", cls.uid)
+        logger.info("%s.setUpClass() Setting up test class with hash suffix: %s", "SmarterTestBase", cls.hash_suffix)
+        logger.info("%s.setUpClass() Setting up test class with name: %s", "SmarterTestBase", cls.name)
+        logger.info("%s.setUpClass() Setting up test class with uid: %s", "SmarterTestBase", cls.uid)
 
     @classmethod
     def tearDownClass(cls) -> None:

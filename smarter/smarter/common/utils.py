@@ -31,10 +31,27 @@ from rest_framework.request import Request
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
 RequestType = Union[HttpRequest, Request, WSGIRequest]
-logger = logging.getLogger(__name__)
+
+
+def should_log(level):
+    """
+    Check if logging should be done based on the waffle switch.
+
+    .. note::
+
+        we're too far down the call stack to use Django nor smarter_settings.
+        Therefore, we cannot leverage the WaffleSwitch class directly here.
+
+    """
+    return False
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -137,7 +154,7 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         )
     # pylint: disable=W0718
     except Exception as e:
-        logger.warning("is_authenticated_request() failed: %s", formatted_text(str(e)))
+        logger.debug("is_authenticated_request() failed: %s", formatted_text(str(e)))
         return False
 
 
@@ -592,7 +609,7 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
 
     """
     if request is None:
-        logger.warning("smarter_build_absolute_uri() called with None request")
+        logger.debug("smarter_build_absolute_uri() called with None request")
         return "http://testserver/unknown/"
 
     if isinstance(request, Request):
@@ -613,7 +630,7 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
                 return url
         # pylint: disable=W0718
         except Exception as e:
-            logger.warning(
+            logger.debug(
                 "smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
                 formatted_text(str(e)),
             )
@@ -633,13 +650,13 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
             return url
     # pylint: disable=W0718
     except Exception as e:
-        logger.warning(
+        logger.debug(
             "smarter_build_absolute_uri() failed to build URL from request attributes: %s",
             formatted_text(str(e)),
         )
 
     # Fallback: synthesize a generic test URL
-    logger.warning("smarter_build_absolute_uri() could not determine URL, returning fallback test URL")
+    logger.debug("smarter_build_absolute_uri() could not determine URL, returning fallback test URL")
     return "http://testserver/unknown/"
 
 
@@ -951,7 +968,7 @@ def generate_fernet_encryption_key() -> str:
     # pylint: disable=C0415
     from cryptography.fernet import Fernet
 
-    logger.warning(
+    logger.debug(
         formatted_text_red(
             "smarter.common.utils.generate_fernet_encryption_key() Generating new Fernet encryption key."
         )
