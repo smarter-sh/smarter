@@ -213,10 +213,16 @@ class Account(MetaDataModel):
     city = models.CharField(max_length=255, blank=True, null=True)
     state = models.CharField(max_length=255, blank=True, null=True)
     postal_code = models.CharField(max_length=20, blank=True, null=True)
-    country = models.CharField(max_length=255, default="USA", blank=True, null=True)
-    language = models.CharField(max_length=255, default="EN", blank=True, null=True)
-    timezone = models.CharField(max_length=255, blank=True, null=True)
-    currency = models.CharField(max_length=255, default="USD", blank=True, null=True)
+    country = models.CharField(max_length=255, default="USA", blank=True, null=True, help_text="ISO 3166 country code.")
+    language = models.CharField(
+        max_length=255, default="EN", blank=True, null=True, help_text="BCP 47 language tag, e.g., 'en-US'."
+    )
+    timezone = models.CharField(
+        max_length=255, blank=True, null=True, help_text=" IANA timezone name, e.g., 'America/New_York'."
+    )
+    currency = models.CharField(
+        max_length=255, default="USD", blank=True, null=True, help_text="ISO 4217 currency code."
+    )
     is_active = models.BooleanField(
         default=True,
         help_text="Indicates whether the account is active. Inactive accounts cannot be used for billing or resource management, nor hosting Provider apis.",

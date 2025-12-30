@@ -53,35 +53,39 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
     )
     country: str = Field(
         "US",
-        description=(f"{class_identifier}.country[str]. The country for the {MANIFEST_KIND}. Default: USA."),
+        description=(
+            f"{class_identifier}.country[str]. The ISO 3166 country code for the {MANIFEST_KIND}. Default: USA."
+        ),
     )
     language: str = Field(
         "en-US",
         description=(
-            f"{class_identifier}.language[str]. The primary language for the {MANIFEST_KIND}. Default: en-US."
+            f"{class_identifier}.language[str]. The primary BCP 47 language tag for the {MANIFEST_KIND}. Default: en-US."
         ),
     )
     timezone: str = Field(
         "America/New_York",
         description=(
-            f"{class_identifier}.timezone[str]. The primary timezone for the {MANIFEST_KIND}. Default: America/New_York."
+            f"{class_identifier}.timezone[str]. The primary IANA timezone for the {MANIFEST_KIND}. Default: America/New_York."
         ),
     )
     currency: str = Field(
         "USD",
-        description=(f"{class_identifier}.currency[str]. The primary currency for the {MANIFEST_KIND}. Default: USD."),
+        description=(
+            f"{class_identifier}.currency[str]. The primary ISO 4217 currency for the {MANIFEST_KIND}. Default: USD."
+        ),
     )
 
     @field_validator("currency")
     def validate_currency(cls, v):
         if not pycountry.currencies.get(alpha_3=v):
-            raise SmarterValueError("Invalid currency code")
+            raise SmarterValueError("Invalid ISO 4217 currency code")
         return v
 
     @field_validator("country")
     def validate_country(cls, v):
         if not pycountry.countries.get(alpha_2=v) and not pycountry.countries.get(alpha_3=v):
-            raise SmarterValueError("Invalid country code")
+            raise SmarterValueError("Invalid ISO 3166 country code")
         return v
 
     @field_validator("language")
@@ -95,7 +99,7 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
         if len(parts) > 1:
             region_code = parts[1]
             if not pycountry.countries.get(alpha_2=region_code):
-                raise SmarterValueError("Invalid region code in language tag")
+                raise SmarterValueError("Invalid BCP 47 language tag")
         return v
 
     @field_validator("timezone")
@@ -103,7 +107,7 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
         try:
             zoneinfo.ZoneInfo(v)
         except Exception as e:
-            raise SmarterValueError("Invalid timezone") from e
+            raise SmarterValueError("Invalid IANA timezone") from e
         return v
 
 

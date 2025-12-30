@@ -5,6 +5,7 @@ import logging
 import os
 
 from django.http import HttpRequest
+from pydantic_core import ValidationError
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
 from smarter.apps.account.manifest.models.account.metadata import SAMAccountMetadata
@@ -78,6 +79,29 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         self._broker = self.SAMBrokerClass(self.request, self.loader)
         self.assertIsInstance(self.broker, SAMAccountBroker)
         logger.info("%s.test_setup() SAMAccountBroker initialized successfully for testing.", self.formatted_class_name)
+
+    def test_immutability(self):
+        """Test that the broker instance is immutable after initialization."""
+
+        with self.assertRaises(AttributeError):
+            self.broker.kind = "NewKind"
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.metadata.name = "NewManifestName"
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.metadata.annotations = []
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.metadata.tags = []
+
+        # test any field in spec.config
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.companyName = "New Company Name"
+
+        # test any field in status
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.status.adminAccount = None
 
     def test_ready(self):
         """Test that the test setup is ready."""
@@ -191,6 +215,86 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_apply(response)
         self.assertTrue(is_valid_response)
 
+        # self.broker.manifest.metadata.tags is a list of strings.
+        # verify that account.tags (TaggableManager) contains the same tags.
+        manifest_tags = set(self.broker.manifest.metadata.tags or [])
+        django_orm_tags = set(self.broker.account.tags.names()) if self.broker.account.tags else set()
+        self.assertEqual(manifest_tags, django_orm_tags)
+
+        # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
+        # verify that account.annotations (JSONField) contains the same annotations.
+        def sort_annotations(annotations):
+            return sorted(annotations, key=lambda d: sorted(d.items()))
+
+        manifest_annotations = sort_annotations(self.broker.manifest.metadata.annotations or [])
+        account_annotations = sort_annotations(self.broker.account.annotations or [])
+        self.assertEqual(
+            manifest_annotations,
+            account_annotations,
+            f"Account annotations do not match manifest annotations. manifest: {manifest_annotations}, account: {account_annotations}",
+        )
+
+        self.assertEqual(
+            self.broker.manifest.metadata.name,
+            self.broker.account.name,
+            f"Account name does not match manifest name. manifest: {self.broker.manifest.metadata.name}, account: {self.broker.account.name}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.companyName,
+            self.broker.account.company_name,
+            f"Account company_name does not match manifest companyName. manifest: {self.broker.manifest.spec.config.companyName}, account: {self.broker.account.company_name}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.address1 or "",
+            self.broker.account.address1 or "",
+            f"Account address1 does not match manifest address1. manifest: {self.broker.manifest.spec.config.address1}, account: {self.broker.account.address1}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.address2 or "",
+            self.broker.account.address2 or "",
+            f"Account address2 does not match manifest address2. manifest: {self.broker.manifest.spec.config.address2}, account: {self.broker.account.address2}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.city or "",
+            self.broker.account.city or "",
+            f"Account city does not match manifest city. manifest: {self.broker.manifest.spec.config.city}, account: {self.broker.account.city}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.state or "",
+            self.broker.account.state or "",
+            f"Account state does not match manifest state. manifest: {self.broker.manifest.spec.config.state}, account: {self.broker.account.state}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.postalCode or "",
+            self.broker.account.postal_code or "",
+            f"Account postal_code does not match manifest postalCode. manifest: {self.broker.manifest.spec.config.postalCode}, account: {self.broker.account.postal_code}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.country or "",
+            self.broker.account.country or "",
+            f"Account country does not match manifest country. manifest: {self.broker.manifest.spec.config.country}, account: {self.broker.account.country}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.phoneNumber or "",
+            self.broker.account.phone_number or "",
+            f"Account phone_number does not match manifest phoneNumber. manifest: {self.broker.manifest.spec.config.phoneNumber}, account: {self.broker.account.phone_number}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.timezone or "",
+            self.broker.account.timezone or "",
+            f"Account timezone does not match manifest timezone. manifest: {self.broker.manifest.spec.config.timezone}, account: {self.broker.account.timezone}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.currency or "",
+            self.broker.account.currency or "",
+            f"Account currency does not match manifest currency. manifest: {self.broker.manifest.spec.config.currency}, account: {self.broker.account.currency}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.language or "",
+            self.broker.account.language or "",
+            f"Account language does not match manifest language. manifest: {self.broker.manifest.spec.config.language}, account: {self.broker.account.language}",
+        )
+
     def test_describe(self):
         """
         Stub: test describe method. Verify that it returns a SmarterJournaledJsonResponse with expected structure
@@ -248,3 +352,31 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         response = self.broker.logs(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
+
+    def test_invalid_timezone(self):
+        """Test that applying a manifest with an invalid timezone raises an error."""
+        # Modify the manifest to have an invalid timezone
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.timezone = "Invalid/Timezone"
+
+    def test_invalid_currency(self):
+        """Test that applying a manifest with an invalid currency raises an error."""
+        # Modify the manifest to have an invalid currency
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.currency = "INVALID"
+
+    def test_invalid_language(self):
+        """Test that applying a manifest with an invalid language raises an error."""
+        # Modify the manifest to have an invalid language
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.language = "xx-XX"
+
+    def test_invalid_country(self):
+        """Test that applying a manifest with an invalid country raises an error."""
+        # Modify the manifest to have an invalid country
+
+        with self.assertRaises(ValidationError):
+            self.broker.manifest.spec.config.country = "XX"
