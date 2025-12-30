@@ -81,4 +81,4 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
         # Assert that the exception message contains the expected details
         self.assertIn("1 validation error for SAMSecret", str(context.exception))
         self.assertIn("spec.config.expiration_date", str(context.exception))
-        self.assertIn("Input should be a valid date or datetime", str(context.exception))
+        self.assertIn("Input should be a valid datetime or date", str(context.exception))

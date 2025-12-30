@@ -231,10 +231,12 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         """
         response = self.broker.apply(self.request, **self.kwargs)
 
-        response = self.broker.describe(self.request, **self.kwargs)
+        kwargs = {
+            "name": self.broker.manifest.metadata.name,
+        }
+        response = self.broker.describe(self.request, kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
-        logger.info("Describe response: %s", response.content.decode())
 
     def test_delete(self):
         """Stub: test delete method."""

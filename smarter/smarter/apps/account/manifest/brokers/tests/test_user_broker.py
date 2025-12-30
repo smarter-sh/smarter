@@ -5,6 +5,7 @@ import logging
 import os
 
 from django.http import HttpRequest
+from taggit.managers import TaggableManager
 
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.account.manifest.models.user.model import SAMUser
@@ -352,7 +353,14 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         # self.broker.manifest.metadata.tags is a list of strings.
         # verify that user_profile.tags (TaggableManager) contains the same tags.
         manifest_tags = set(self.broker.manifest.metadata.tags or [])
-        django_orm_tags = set(self.broker.user_profile.tags.names()) if self.broker.user_profile.tags else set()
+        django_orm_tags = None
+        if isinstance(self.broker.user_profile.tags, TaggableManager):
+            django_orm_tags = set(self.broker.user_profile.tags.names()) if self.broker.user_profile.tags else set()
+        elif isinstance(self.broker.user_profile.tags, set):
+            django_orm_tags = self.broker.user_profile.tags
+        else:
+            self.fail(f"user_profile.tags is of unexpected type: {type(self.broker.user_profile.tags)}")
+
         self.assertEqual(manifest_tags, django_orm_tags)
 
         # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
