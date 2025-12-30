@@ -285,7 +285,7 @@ def create_user(request: Request):
     try:
         with transaction.atomic():
             user = User.objects.create_user(**data)
-            UserProfile.objects.create(user=request.user, account=account)
+            UserProfile.objects.create(name=user.username, user=user, account=account)
     except Exception as e:
         logger.info("UserListView.get_queryset() - error creating user: %s", e)
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)

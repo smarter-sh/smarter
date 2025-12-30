@@ -531,7 +531,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: bool = False
             if account and isinstance(account.account_number, str):
                 admin_user = User.objects.create_user(username=account.account_number, email=random_email, is_staff=True)  # type: ignore[arg-type]
                 logger.info("%s created new admin User %s for account %s", console_prefix, admin_user, account)
-                user_profile = UserProfile.objects.create(user=admin_user, account=account)
+                user_profile = UserProfile.objects.create(name=admin_user.username, user=admin_user, account=account)
                 logger.info("%s created new admin UserProfile for user %s", console_prefix, user_profile)
         if not user_profile:
             logger.error("%s failed to query nor create admin UserProfile for account %s", console_prefix, account)

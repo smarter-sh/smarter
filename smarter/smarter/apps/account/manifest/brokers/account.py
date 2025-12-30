@@ -1,9 +1,11 @@
 # pylint: disable=W0718
 """Smarter API Account Manifest handler"""
 
+import json
 import logging
 from typing import Optional, Type
 
+from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
@@ -26,6 +28,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -182,13 +185,13 @@ class SAMAccountBroker(AbstractBroker):
 
         """
         if self.account is None:
-            raise SAMBrokerErrorNotReady(
+            raise SAMBrokerErrorNotFound(
                 f"Account not set for {self.kind} broker. Cannot describe.",
                 thing=self.thing,
                 command=SmarterJournalCliCommands.DESCRIBE,
             )
         if self.manifest is None:
-            raise SAMBrokerErrorNotReady(
+            raise SAMBrokerErrorNotFound(
                 f"Manifest not set for {self.kind} broker. Cannot describe.",
                 thing=self.thing,
                 command=SmarterJournalCliCommands.DESCRIBE,
@@ -264,7 +267,7 @@ class SAMAccountBroker(AbstractBroker):
         )
         if self.account:
             metadata = SAMAccountMetadata(
-                name=self.account.name,
+                name=str(self.account.name) or self.account.account_number.replace(" ", "_"),
                 description=self.account.company_name,
                 version=self.account.version,
                 tags=self.account.tags.names(),
@@ -272,17 +275,17 @@ class SAMAccountBroker(AbstractBroker):
                 annotations=self.account.annotations,
             )
             config = SAMAccountSpecConfig(
-                companyName=self.account.company_name,
-                phoneNumber=self.account.phone_number,
-                address1=self.account.address1,
-                address2=self.account.address2,
-                city=self.account.city,
-                state=self.account.state,
-                postalCode=self.account.postal_code,
-                country=self.account.country,
-                language=self.account.language,
-                timezone=self.account.timezone,
-                currency=self.account.currency,
+                companyName=self.account.company_name or "missing company name",
+                phoneNumber=self.account.phone_number or "missing phone number",
+                address1=self.account.address1 or "missing address1",
+                address2=self.account.address2 or "missing address2",
+                city=self.account.city or "missing city",
+                state=self.account.state or "missing state",
+                postalCode=self.account.postal_code or "missing postal code",
+                country=self.account.country or "US",
+                language=self.account.language or "en-US",
+                timezone=self.account.timezone or "America/New_York",
+                currency=self.account.currency or "USD",
             )
             self._manifest = SAMAccount(
                 apiVersion=self.api_version,
@@ -341,6 +344,7 @@ class SAMAccountBroker(AbstractBroker):
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
+        self.user = None
         self.account = get_cached_smarter_account()
         if not self.account:
             raise SAMBrokerErrorNotReady(
@@ -504,10 +508,13 @@ class SAMAccountBroker(AbstractBroker):
         if self.account:
             try:
                 data = self.django_orm_to_manifest_dict()
+                logger.info(
+                    "%s.describe() fuck you and the horse you rode in on. data: %s", self.formatted_class_name, data
+                )
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e
-        raise SAMBrokerErrorNotReady(message="No account found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(message="No account found", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

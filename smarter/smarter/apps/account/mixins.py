@@ -217,23 +217,25 @@ class AccountMixin(SmarterHelperMixin):
         return f"{inherited_class} AccountMixin()"
 
     @property
-    def account(self) -> AccountType:
+    def account(self) -> Optional[Account]:
         """
         Returns the account for the current user. Handle
         lazy instantiation from user or user_profile.
         """
-        try:
-            if self._account:
-                return self._account
-        # pylint: disable=W0718
-        except Exception as e:
-            logger.warning("error getting account: %s", e)
-            return None
+        if self._account:
+            return self._account
         if self._user_profile:
             self._account = self._user_profile.account if self._user_profile else None
         elif self._user:
             self._account = get_cached_account_for_user(self._user)
-        return self._account
+            return self._account
+        logger.warning(
+            "%s.account() could not initialize _account for user: %s, user_profile: %s",
+            self.formatted_class_name,
+            self._user,
+            self._user_profile,
+        )
+        return None
 
     @account.setter
     def account(self, account: AccountType):

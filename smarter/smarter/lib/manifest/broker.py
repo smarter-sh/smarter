@@ -198,7 +198,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             logger.info("%s.__init__() successfully initialized manifest: %s", self.formatted_class_name, self.manifest)
         if isinstance(manifest, dict):
             if not isinstance(loader, SAMLoader):
-                loader = SAMLoader(manifest=manifest)
+                self._loader = SAMLoader(manifest=manifest)
                 logger.info(
                     "%s.__init__() initialized loader from manifest data: %s", self.formatted_class_name, self.manifest
                 )
