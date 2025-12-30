@@ -21,4 +21,4 @@ class ApiConfig(AppConfig):
         from . import receivers  # noqa: F401
         from . import signals  # noqa: F401
 
-        logger.info("CMS app ready: signals and receivers imported")
+        logger.debug("CMS app ready: signals and receivers imported")

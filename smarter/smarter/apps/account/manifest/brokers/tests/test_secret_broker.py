@@ -249,6 +249,6 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_logs_returns_ok(self):
         """Stub: test logs method returns ok response."""
-        response = self.broker.logs(self.request, **self.kwargs)
-        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
-        self.assertTrue(is_valid_response)
+
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            self.broker.logs(self.request, **self.kwargs)

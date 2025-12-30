@@ -21,4 +21,4 @@ class PromptConfig(AppConfig):
         from . import receivers  # noqa
         from . import signals  # noqa
 
-        logger.info("Prompt app ready: signals and receivers imported")
+        logger.debug("Prompt app ready: signals and receivers imported")

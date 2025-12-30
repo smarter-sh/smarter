@@ -29,7 +29,7 @@ from smarter.apps.account.models import User, get_resolved_user
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
@@ -37,6 +37,9 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import Account, UserProfile
+
+
+HERE = formatted_text_red(__name__)
 
 
 def should_log(level):
@@ -150,11 +153,11 @@ def get_cached_account(
         """
         In-memory cache for account objects by ID.
         """
-        logger.info("_in_memory_account_by_id() retrieving and caching account %s", account_id)
+        logger.info("%s._in_memory_account_by_id() retrieving and caching account %s", HERE, account_id)
         try:
             account = Account.objects.get(id=account_id)
         except Account.DoesNotExist:
-            logger.warning("_in_memory_account_by_id() account with ID %s does not exist", account_id)
+            logger.warning("%s._in_memory_account_by_id() account with ID %s does not exist", HERE, account_id)
             return None
         return account
 
@@ -163,11 +166,13 @@ def get_cached_account(
         """
         In-memory cache for account objects by account number.
         """
-        logger.info("_in_memory_account_by_number() retrieving and caching account %s", account_number)
+        logger.info("%s._in_memory_account_by_number() retrieving and caching account %s", HERE, account_number)
         try:
             account = Account.objects.get(account_number=account_number)
         except Account.DoesNotExist:
-            logger.warning("_in_memory_account_by_number() account with number %s does not exist", account_number)
+            logger.warning(
+                "%s._in_memory_account_by_number() account with number %s does not exist", HERE, account_number
+            )
             return None
         return account
 
@@ -240,7 +245,7 @@ def get_cached_default_account(invalidate: bool = False) -> Account:
     @cache_results()
     def _get_default_account():
         account = Account.objects.get(is_default_account=True)
-        logger.info("get_cached_default_account() retrieving and caching default account %s", account)
+        logger.info("%s.get_cached_default_account() retrieving and caching default account %s", HERE, account)
         return account
 
     return _get_default_account() if not invalidate else _get_default_account.invalidate()
@@ -256,7 +261,7 @@ def _get_account_for_user(user, invalidate: bool = False) -> Optional[Account]:
 
     user_id = getattr(user, "id", None)
     if not user_id:
-        logger.warning("get_cached_account_for_user() user has no ID: %s", user)
+        logger.warning("%s.get_cached_account_for_user() user has no ID: %s", HERE, user)
         return None
 
     @cache_results()
@@ -268,7 +273,8 @@ def _get_account_for_user(user, invalidate: bool = False) -> Optional[Account]:
         for user_profile in user_profiles:
             if user_profile.account.is_default_account and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.info(
-                    "get_cached_account_for_user() retrieving and caching default account %s for user %s",
+                    "%s.get_cached_account_for_user() retrieving and caching default account %s for user %s",
+                    HERE,
                     user_profile.account,
                     user,
                 )
@@ -276,11 +282,12 @@ def _get_account_for_user(user, invalidate: bool = False) -> Optional[Account]:
         # If no default account is found, return the first account
         user_profile = user_profiles.first()
         if not user_profile:
-            logger.warning("get_cached_account_for_user_by_id() no UserProfile found for user ID %s", user_id)
+            logger.warning("%s.get_cached_account_for_user_by_id() no UserProfile found for user ID %s", HERE, user_id)
             return None
         account = user_profile.account
         logger.info(
-            "_get_account_for_user_by_id() retrieving and caching default account %s for user ID %s",
+            "%s._get_account_for_user_by_id() retrieving and caching default account %s for user ID %s",
+            HERE,
             account,
             user_id,
         )
@@ -332,11 +339,13 @@ def _get_cached_user_profile(
     @cache_results()
     def _in_memory_user_profile(user_id, account_id):
         user_profile = UserProfile.objects.get(user_id=user_id, account_id=account_id)
-        logger.info("_in_memory_user_profile() retrieving and caching UserProfile %s", user_profile)
+        logger.info("%s._in_memory_user_profile() retrieving and caching UserProfile %s", HERE, user_profile)
         return user_profile
 
     if resolved_user is None or account is None:
-        logger.warning("get_cached_user_profile() cannot initialize with user: %s account: %s", resolved_user, account)
+        logger.warning(
+            "%s.get_cached_user_profile() cannot initialize with user: %s account: %s", HERE, resolved_user, account
+        )
         return None
 
     return (
@@ -382,14 +391,14 @@ def get_cached_user_profile(
     """
     account = account or get_cached_account_for_user(user, invalidate=invalidate)
     if not account:
-        logger.warning("get_cached_user_profile() no account found for user: %s", user)
+        logger.warning("%s.get_cached_user_profile() no account found for user: %s", HERE, user)
         return None
 
     # pylint: disable=W0212
     resolved_user = get_resolved_user(user)
     if isinstance(resolved_user, User):
         return _get_cached_user_profile(resolved_user, account, invalidate=invalidate)
-    logger.warning("get_cached_user_profile() user is not resolvable: %s", user)
+    logger.warning("%s.get_cached_user_profile() user is not resolvable: %s", HERE, user)
     return None
 
 
@@ -425,10 +434,10 @@ def get_cached_user_for_user_id(user_id: int, invalidate: bool = False) -> Optio
         """
         try:
             user = User.objects.get(id=user_id)
-            logger.info("_in_memory_user() retrieving and caching user %s", user)
+            logger.info("%s._in_memory_user() retrieving and caching user %s", HERE, user)
             return user  # type: ignore[return-value]
         except User.DoesNotExist:
-            logger.error("get_cached_user_for_user_id() user with ID %s does not exist", user_id)
+            logger.error("%s.get_cached_user_for_user_id() user with ID %s does not exist", HERE, user_id)
 
     user = _in_memory_user(user_id) if not invalidate else _in_memory_user.invalidate(user_id)
     return user
@@ -466,17 +475,17 @@ def get_cached_user_for_username(username: str, invalidate: bool = False) -> Opt
         """
         try:
             user = User.objects.get(username=username)
-            logger.info("_in_memory_user_by_username() retrieving and caching user %s", user)
+            logger.info("%s._in_memory_user_by_username() retrieving and caching user %s", HERE, user)
             return user  # type: ignore[return-value]
         except User.DoesNotExist:
-            logger.error("get_cached_user_for_username() user with username %s does not exist", username)
+            logger.error("%s.get_cached_user_for_username() user with username %s does not exist", HERE, username)
 
     if username == SMARTER_ADMIN_USERNAME:
         return smarter_cached_objects.admin_user
 
     user = _in_memory_user_by_username(username) if not invalidate else _in_memory_user_by_username.invalidate(username)
     if user:
-        logger.info("get_cached_user_for_username() retrieving and caching user %s", user)
+        logger.info("%s.get_cached_user_for_username() retrieving and caching user %s", HERE, user)
     return user
 
 
@@ -518,7 +527,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: bool = False
             raise SmarterConfigurationError(
                 f"Failed to retrieve account with number {account_number}. Please ensure the account exists and is configured correctly."
             )
-        console_prefix = formatted_text("get_cached_admin_user_for_account()")
+        console_prefix = formatted_text(f"{__name__}.get_cached_admin_user_for_account()")
         user_profile = UserProfile.objects.filter(account=account, user__is_staff=True).order_by("pk").first()
         if user_profile:
             logger.info(
