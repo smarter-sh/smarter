@@ -52,7 +52,7 @@ def user_logged_in_receiver(sender, request, user, **kwargs):
     if not get_cached_user_profile(user=user):
         logger.warning("User profile not found for user: %s", user)
         account = get_cached_default_account()
-        UserProfile.objects.create(user=user, account=account)
+        UserProfile.objects.create(name=user.username, user=user, account=account)
 
 
 @receiver(post_save, sender=User)

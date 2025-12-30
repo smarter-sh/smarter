@@ -35,6 +35,8 @@ class TestAccount(SmarterTestBase):
     def test_create(self):
         """Test that we can create an account."""
         account = Account.objects.create(
+            name=self.hash_suffix + self.company_name.lower().replace(" ", "_").replace("-", "_")
+            or "default_account_name",
             company_name=self.company_name,
             phone_number="1234567890",
             address1="123 Test St",
@@ -49,6 +51,8 @@ class TestAccount(SmarterTestBase):
     def test_update(self):
         """Test that we can update an account."""
         account = Account.objects.create(
+            name=self.hash_suffix + self.company_name.lower().replace(" ", "_").replace("-", "_")
+            or "default_account_name",
             company_name=self.company_name,
             phone_number="1234567890",
             address1="123 Test St",
@@ -72,6 +76,8 @@ class TestAccount(SmarterTestBase):
     def test_account_with_profile(self):
         """Test that we can create an account and associate a user_profile."""
         account = Account.objects.create(
+            name=self.hash_suffix + self.company_name.lower().replace(" ", "_").replace("-", "_")
+            or "default_account_name",
             company_name=self.company_name,
             phone_number="1234567890",
             address1="123 Test St",
@@ -82,6 +88,7 @@ class TestAccount(SmarterTestBase):
         )
 
         profile = UserProfile.objects.create(
+            name=self.user.username,
             user=self.user,
             account=account,
             is_test=True,

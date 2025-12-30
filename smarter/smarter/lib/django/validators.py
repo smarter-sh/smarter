@@ -203,14 +203,10 @@ class SmarterValidator:
             SmarterValidator.validate_snake_case("NotSnakeCase")   # raises SmarterValueError
 
         """
-        if not re.match(SmarterValidator.VALID_SNAKE_CASE, value):
-            raise SmarterValueError(f"Invalid snake case {value}")
         if not value:
             raise SmarterValueError("Value cannot be empty")
-        if not value[0].islower():
-            raise SmarterValueError(f"Value must start with a lowercase letter: {value}")
-        if not value[0].isalpha():
-            raise SmarterValueError(f"Value must start with a letter: {value}")
+        if not re.match(SmarterValidator.VALID_SNAKE_CASE, value):
+            raise SmarterValueError(f"Invalid snake case {value}")
         return
 
     @staticmethod

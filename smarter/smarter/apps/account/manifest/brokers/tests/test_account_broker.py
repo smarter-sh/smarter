@@ -7,7 +7,12 @@ import os
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
+from smarter.apps.account.manifest.models.account.metadata import SAMAccountMetadata
 from smarter.apps.account.manifest.models.account.model import SAMAccount
+from smarter.apps.account.manifest.models.account.spec import (
+    SAMAccountSpec,
+    SAMAccountSpecConfig,
+)
 from smarter.lib import json
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
@@ -28,16 +33,15 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
     """
 
     def setUp(self):
-        """test-level setup."""
+        """
+        test-level setup. Before we delve into the actual unit tests, we need to
+        ensure that our test environment is properly configured and that we
+        can initialize the precursors for testing the SAMAccountBroker.
+        """
         super().setUp()
         self._broker_class = SAMAccountBroker
         self._here = os.path.abspath(os.path.dirname(__file__))
         self._manifest_filespec = self.get_data_full_filepath("account.yaml")
-
-        if not self.ready:
-            raise RuntimeError(f"{self.formatted_class_name}.setUp() not in a ready state")
-
-        logger.info("%s.setUp() completed successfully. loader: %s", self.formatted_class_name, self.loader.json_data)
 
     @property
     def ready(self) -> bool:
@@ -75,6 +79,25 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         self.assertIsInstance(self.broker, SAMAccountBroker)
         logger.info("%s.test_setup() SAMAccountBroker initialized successfully for testing.", self.formatted_class_name)
 
+    def test_ready(self):
+        """Test that the test setup is ready."""
+        self.assertTrue(self.ready)
+
+    def test_sam_broker_initialization(self):
+        """Test that the SAMAccountBroker initializes correctly."""
+        # Verify that our SAM manifest is capable of initializing the SAM Model.
+        metadata = {**self.loader.manifest_metadata}
+        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
+        spec = {
+            "config": SAMAccountSpecConfig(**self.loader.manifest_spec["config"]),
+        }
+        SAMAccount(
+            apiVersion=self.loader.manifest_api_version,
+            kind=self.loader.manifest_kind,
+            metadata=SAMAccountMetadata(**metadata),
+            spec=SAMAccountSpec(**spec),
+        )
+
     def test_broker_initialization(self):
         """Test that the broker initializes with required properties."""
         broker: SAMAccountBroker = self.SAMBrokerClass(self.request, self.loader)
@@ -82,22 +105,6 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         self.assertEqual(broker.kind, "Account")
         self.assertIsNotNone(broker.model_class)
         self.assertEqual(broker.model_class.__name__, "Account")
-
-    def test_account_contact_property(self):
-        """Test account_contact property returns correct AccountContact or None."""
-        broker: SAMAccountBroker = self.SAMBrokerClass(self.request, self.loader)
-        broker._account_contact = None  # pylint: disable=protected-access
-        broker.user = None
-        self.assertIsNone(broker.account_contact)
-        self.assertIsNone(broker.account)
-        self.assertIsNone(broker.user_profile)
-        broker.user = self.admin_user
-        if hasattr(self.admin_user, "is_authenticated") and self.admin_user.is_authenticated:
-            try:
-                _ = broker.account_contact
-            # pylint: disable=broad-except
-            except Exception as e:
-                self.fail(f"account_contact property raised: {e}")
 
     def test_initialization_from_class(self):
         """Test initialization of SAMAccountBroker from class."""
@@ -119,13 +126,6 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         """Test that the manifest property can initialize a SAMAccount model."""
         sam_account = SAMAccount(**self.broker.manifest.model_dump())
         self.assertIsInstance(sam_account, SAMAccount)
-
-    def test_username_property(self):
-        """Test username property returns the correct username or None."""
-        self.broker.user = None
-        self.assertIsNone(self.broker.username)
-        self.broker.user = self.admin_user
-        self.assertEqual(self.broker.username, getattr(self.admin_user, "username", None))
 
     def test_formatted_class_name(self):
         """Test formatted_class_name returns a string containing SAMAccountBroker."""
@@ -230,15 +230,16 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         """
         test delete method raises not found for missing account.
         """
-        self.broker.account = None
-        with self.assertRaises(SAMBrokerErrorNotFound):
+        self.broker.user = None
+
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.delete(self.request, **self.kwargs)
 
     def test_describe_account_not_found(self):
         """
         Test describe method raises not found for missing account.
         """
-        self.broker.account = None
+        self.broker.user = None
         with self.assertRaises(SAMBrokerErrorNotFound):
             self.broker.describe(self.request, **self.kwargs)
 

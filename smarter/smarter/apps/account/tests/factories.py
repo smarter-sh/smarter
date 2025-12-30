@@ -41,7 +41,7 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
         email=email,
         first_name=first_name,
         last_name=last_name,
-        username=username,
+        username=username,  # type: ignore[arg-type]
         password="12345",
         is_active=True,
         is_staff=True,
@@ -49,10 +49,28 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
     )
     logger.info("admin_user_factory() Created admin user: %s", username)
     account = account or Account.objects.create(
-        company_name=f"TestAccount_AdminUser_{hashed_slug}", phone_number="123-456-789"
+        is_default_account=True,
+        is_active=True,
+        company_name=f"TestAccount_AdminUser_{hashed_slug}",
+        phone_number="123-456-789",
+        address1="Smarter Way 4U",
+        address2="Suite 100",
+        city="Smarter",
+        state="WY",
+        postal_code="12345",
+        country="USA",
+        language="EN",
+        timezone="America/New_York",
+        currency="USD",
+        tags=["test", "admin", "account"],
+        annotations=[
+            {"smarter.sh/created_by": "admin_user_factory"},
+            {"smarter.sh/purpose": "testing"},
+            {"smarter.sh/hash": hashed_slug},
+        ],
     )
     logger.info("admin_user_factory() Created account: %s", account.id)  # type: ignore[return-value]
-    user_profile = UserProfile.objects.create(user=user, account=account, is_test=True)
+    user_profile = UserProfile.objects.create(name=user.username, user=user, account=account, is_test=True)
     logger.info("admin_user_factory() Created user profile %s", user_profile)
 
     return user, account, user_profile
@@ -60,7 +78,7 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
 
 def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
-    username = camel_to_snake(f"testAdminUser_{hashed_slug}")
+    username = str(camel_to_snake(f"testAdminUser_{hashed_slug}"))
     email = f"test-mortal-{hashed_slug}@mail.com"
     first_name = f"TestMortalFirstName_{hashed_slug}"
     last_name = f"TestMortalLastName_{hashed_slug}"
@@ -76,10 +94,28 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
     )
     logger.info("mortal_user_factory() Created mortal user: %s", username)
     account = account or Account.objects.create(
-        company_name=f"TestAccount_MortalUser_{hashed_slug}", phone_number="123-456-789"
+        is_default_account=True,
+        is_active=True,
+        company_name=f"TestAccount_MortalUser_{hashed_slug}",
+        phone_number="123-456-789",
+        address1="Smarter Way 4U",
+        address2="Suite 100",
+        city="Smarter",
+        state="WY",
+        postal_code="12345",
+        country="USA",
+        language="EN",
+        timezone="America/New_York",
+        currency="USD",
+        tags=["test", "admin", "account"],
+        annotations=[
+            {"smarter.sh/created_by": "admin_user_factory"},
+            {"smarter.sh/purpose": "testing"},
+            {"smarter.sh/hash": hashed_slug},
+        ],
     )
     logger.info("mortal_user_factory() Created/set account: %s", account.id)  # type: ignore[return-value]
-    user_profile = UserProfile.objects.create(user=user, account=account, is_test=True)
+    user_profile = UserProfile.objects.create(name=user.username, user=user, account=account, is_test=True)
     logger.info("mortal_user_factory() Created user profile %s", user_profile)
 
     return user, account, user_profile

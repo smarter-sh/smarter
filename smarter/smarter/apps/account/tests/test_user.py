@@ -14,6 +14,8 @@ class TestAccount(TestAccountMixin):
         """Test that we can create an account."""
 
         account = Account.objects.create(
+            name=self.hash_suffix + "Test Company".lower().replace(" ", "_").replace("-", "_")
+            or "default_account_name",
             company_name="Test Company",
             phone_number="1234567890",
             address1="123 Test St",
@@ -24,6 +26,7 @@ class TestAccount(TestAccountMixin):
         )
 
         profile = UserProfile.objects.create(
+            name=self.non_admin_user.username,
             user=self.non_admin_user,
             account=account,
             is_test=True,
@@ -39,6 +42,8 @@ class TestAccount(TestAccountMixin):
         """Test that we can update an account."""
 
         account = Account.objects.create(
+            name=self.hash_suffix + "Test Company".lower().replace(" ", "_").replace("-", "_")
+            or "default_account_name",
             company_name="Test Company",
             phone_number="1234567890",
             address1="123 Test St",
