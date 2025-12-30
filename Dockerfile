@@ -34,6 +34,7 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG ENVIRONMENT=local
+ARG COLLECT_STATIC_FILES
 ENV ENVIRONMENT=$ENVIRONMENT
 RUN echo "ENVIRONMENT: $ENVIRONMENT"
 
@@ -184,14 +185,14 @@ FROM application AS permissions
 # .cache:                   rwx------ bc some python packages want to write to .cache, like tldextract
 
 USER root
-RUN chown -R smarter_user:smarter_user /home/smarter_user/ && \
+RUN if [ "$ENVIRONMENT" != "local" ] ; then chown -R smarter_user:smarter_user /home/smarter_user/ && \
   find /home/smarter_user/ -type f -exec chmod 400 {} + && \
   find /home/smarter_user/ -type d -exec chmod 500 {} + && \
   find /home/smarter_user/venv/bin/ -type f -exec chmod 500 {} + && \
   find /home/smarter_user/smarter/smarter/ -type d -name migrations -exec chmod 700 {} + && \
   chmod -R 700 /home/smarter_user/data && \
   chmod -R 700 /home/smarter_user/.cache && \
-  chmod 755 /home/smarter_user/smarter/manage.py
+  chmod 755 /home/smarter_user/smarter/manage.py ; fi
 
 ################################# data #################################
 FROM permissions AS data
@@ -216,8 +217,7 @@ COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compos
 # caching mechanism.
 FROM data AS collect_assets
 WORKDIR /home/smarter_user/smarter
-RUN python manage.py collectstatic --noinput
-
+RUN if [ "$COLLECT_STATIC_FILES" = "true" ]; then python manage.py collectstatic --noinput; else echo "Skipping collectstatic"; fi
 
 ################################# final #######################################
 # This is the final stage that will be used to run the application.

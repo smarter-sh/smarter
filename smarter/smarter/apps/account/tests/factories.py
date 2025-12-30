@@ -41,17 +41,7 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
     email = f"test-admin-{hashed_slug}@mail.com"
     first_name = f"TestAdminFirstName_{hashed_slug}"
     last_name = f"TestAdminLastName_{hashed_slug}"
-    user = User.objects.create_user(
-        email=email,
-        first_name=first_name,
-        last_name=last_name,
-        username=username,  # type: ignore[arg-type]
-        password="12345",
-        is_active=True,
-        is_staff=True,
-        is_superuser=True,
-    )
-    logger.info("%s.admin_user_factory() Created admin user: %s", HERE, username)
+
     account = account or Account.objects.create(
         is_default_account=True,
         is_active=True,
@@ -66,16 +56,35 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
         language="EN",
         timezone="America/New_York",
         currency="USD",
-        tags=["test", "admin", "account"],
         annotations=[
             {"smarter.sh/created_by": "admin_user_factory"},
             {"smarter.sh/purpose": "testing"},
             {"smarter.sh/hash": hashed_slug},
         ],
     )
-    logger.info("%s.admin_user_factory() Created account: %s", HERE, account.id)  # type: ignore[return-value]
-    user_profile = UserProfile.objects.create(name=user.username, user=user, account=account, is_test=True)
-    logger.info("%s.admin_user_factory() Created user profile %s", HERE, user_profile)
+    account.tags.set(["test", "admin", "account"])
+
+    user = User.objects.create_user(
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        username=username,  # type: ignore[arg-type]
+        password="12345",
+        is_active=True,
+        is_staff=True,
+        is_superuser=True,
+    )
+
+    user_profile = UserProfile.objects.create(
+        name=user.username,
+        user=user,
+        account=account,
+        is_test=True,
+        description="Admin user profile for testing purposes",
+        version="1.0.0",
+        annotations=[{"smarter.sh/role": "admin"}, {"smarter.sh/environment": "test"}],
+    )
+    user_profile.tags.set(["admin", "test"])
 
     return user, account, user_profile
 
@@ -86,17 +95,7 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
     email = f"test-mortal-{hashed_slug}@mail.com"
     first_name = f"TestMortalFirstName_{hashed_slug}"
     last_name = f"TestMortalLastName_{hashed_slug}"
-    user = User.objects.create_user(
-        email=email,
-        first_name=first_name,
-        last_name=last_name,
-        username=username,
-        password="12345",
-        is_active=True,
-        is_staff=False,
-        is_superuser=False,
-    )
-    logger.info("%s.mortal_user_factory() Created mortal user: %s", HERE, username)
+
     account = account or Account.objects.create(
         is_default_account=True,
         is_active=True,
@@ -111,16 +110,35 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
         language="EN",
         timezone="America/New_York",
         currency="USD",
-        tags=["test", "admin", "account"],
         annotations=[
-            {"smarter.sh/created_by": "admin_user_factory"},
+            {"smarter.sh/created_by": "mortal_user_factory"},
             {"smarter.sh/purpose": "testing"},
             {"smarter.sh/hash": hashed_slug},
         ],
     )
-    logger.info("%s.mortal_user_factory() Created/set account: %s", HERE, account.id)  # type: ignore[return-value]
-    user_profile = UserProfile.objects.create(name=user.username, user=user, account=account, is_test=True)
-    logger.info("%s.mortal_user_factory() Created user profile %s", HERE, user_profile)
+    account.tags.set(["test", "mortal", "account"])
+
+    user = User.objects.create_user(
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        username=username,
+        password="12345",
+        is_active=True,
+        is_staff=False,
+        is_superuser=False,
+    )
+
+    user_profile = UserProfile.objects.create(
+        name=user.username,
+        user=user,
+        account=account,
+        is_test=True,
+        description="Mortal user profile for testing purposes",
+        version="1.0.0",
+        annotations=[{"smarter.sh/role": "mortal"}, {"smarter.sh/environment": "test"}],
+    )
+    user_profile.tags.set(["mortal", "test"])
 
     return user, account, user_profile
 

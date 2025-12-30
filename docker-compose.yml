@@ -44,6 +44,7 @@ services:
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: ${ENVIRONMENT}
+        COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
     image: smarter
     command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000 --timeout 120
     volumes:

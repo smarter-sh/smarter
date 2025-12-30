@@ -195,7 +195,30 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_apply(response)
         self.assertTrue(is_valid_response)
 
+        # metadata fields
         self.assertEqual(self.broker.manifest.metadata.name, self.broker.secret.name)
+        self.assertEqual(self.broker.manifest.metadata.version, self.broker.secret.version)
+        self.assertEqual(self.broker.manifest.metadata.description, self.broker.secret.description)
+
+        # verify that user_profile.tags (TaggableManager) contains the same tags.
+        manifest_tags = set(self.broker.manifest.metadata.tags or [])
+        django_orm_tags = set(self.broker.secret.tags.names()) if self.broker.secret.tags else set()
+        self.assertEqual(manifest_tags, django_orm_tags)
+
+        # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
+        # verify that user_profile.annotations (JSONField) contains the same annotations.
+        def sort_annotations(annotations):
+            return sorted(annotations, key=lambda d: sorted(d.items()))
+
+        manifest_annotations = sort_annotations(self.broker.manifest.metadata.annotations or [])
+        account_annotations = sort_annotations(self.broker.secret.annotations or [])
+        self.assertEqual(
+            manifest_annotations,
+            account_annotations,
+            f"Account annotations do not match manifest annotations. manifest: {manifest_annotations}, account: {account_annotations}",
+        )
+
+        # spec fields
         self.assertEqual(
             self.broker.manifest.spec.config.value, self.broker.secret.get_secret(update_last_accessed=False)
         )

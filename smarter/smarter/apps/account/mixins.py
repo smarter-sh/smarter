@@ -196,7 +196,7 @@ class AccountMixin(SmarterHelperMixin):
 
         if self.is_accountmixin_ready:
             logger.info(
-                "%s.__init__(): is fully initialized with user: %s",
+                "%s.__init__(): AccountMixin is ready: %s",
                 self.formatted_class_name,
                 self.user_profile,
             )
