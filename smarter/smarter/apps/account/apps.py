@@ -21,4 +21,4 @@ class AccountConfig(AppConfig):
         from . import receivers  # noqa: F401
         from . import signals  # noqa: F401
 
-        logger.info("Account app ready: signals and receivers imported")
+        logger.debug("Account app ready: signals and receivers imported")

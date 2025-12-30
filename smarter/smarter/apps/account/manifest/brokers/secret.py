@@ -689,7 +689,7 @@ class SAMSecretBroker(AbstractBroker):
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         if self.user_profile is None:
-            raise SAMBrokerErrorNotReady(
+            raise SAMBrokerErrorNotFound(
                 "User profile is not set. Cannot describe.",
                 thing=self.kind,
                 command=command,
@@ -718,7 +718,7 @@ class SAMSecretBroker(AbstractBroker):
                     command=command,
                     stack_trace=traceback.format_exc(),
                 ) from e
-        raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotFound(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

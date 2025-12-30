@@ -133,7 +133,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.apps.account"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.account.manifest.brokers.tests.test_secret_broker.TestSmarterSecretBroker.test_describe"
 
 docker-prune:
 	make docker-check && \

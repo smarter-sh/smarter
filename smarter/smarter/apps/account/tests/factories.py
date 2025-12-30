@@ -15,11 +15,15 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text_red
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.unittest.base_classes import SmarterTestBase
+
+
+HERE = formatted_text_red(__name__)
 
 
 def should_log(level):
@@ -47,7 +51,7 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
         is_staff=True,
         is_superuser=True,
     )
-    logger.info("admin_user_factory() Created admin user: %s", username)
+    logger.info("%s.admin_user_factory() Created admin user: %s", HERE, username)
     account = account or Account.objects.create(
         is_default_account=True,
         is_active=True,
@@ -69,9 +73,9 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
             {"smarter.sh/hash": hashed_slug},
         ],
     )
-    logger.info("admin_user_factory() Created account: %s", account.id)  # type: ignore[return-value]
+    logger.info("%s.admin_user_factory() Created account: %s", HERE, account.id)  # type: ignore[return-value]
     user_profile = UserProfile.objects.create(name=user.username, user=user, account=account, is_test=True)
-    logger.info("admin_user_factory() Created user profile %s", user_profile)
+    logger.info("%s.admin_user_factory() Created user profile %s", HERE, user_profile)
 
     return user, account, user_profile
 
@@ -92,7 +96,7 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
         is_staff=False,
         is_superuser=False,
     )
-    logger.info("mortal_user_factory() Created mortal user: %s", username)
+    logger.info("%s.mortal_user_factory() Created mortal user: %s", HERE, username)
     account = account or Account.objects.create(
         is_default_account=True,
         is_active=True,
@@ -114,9 +118,9 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
             {"smarter.sh/hash": hashed_slug},
         ],
     )
-    logger.info("mortal_user_factory() Created/set account: %s", account.id)  # type: ignore[return-value]
+    logger.info("%s.mortal_user_factory() Created/set account: %s", HERE, account.id)  # type: ignore[return-value]
     user_profile = UserProfile.objects.create(name=user.username, user=user, account=account, is_test=True)
-    logger.info("mortal_user_factory() Created user profile %s", user_profile)
+    logger.info("%s.mortal_user_factory() Created user profile %s", HERE, user_profile)
 
     return user, account, user_profile
 
@@ -130,7 +134,7 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         if user_profile:
             lbl = str(user_profile)
             user_profile.delete()
-            logger.info("factory_account_teardown() Deleted user profile for %s", lbl)
+            logger.info("%s.factory_account_teardown() Deleted user profile for %s", HERE, lbl)
 
     except UserProfile.DoesNotExist:
         pass
@@ -138,14 +142,14 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         if user:
             lbl = str(user)
             user.delete()
-            logger.info("factory_account_teardown() Deleted user: %s", lbl)
+            logger.info("%s.factory_account_teardown() Deleted user: %s", HERE, lbl)
     except User.DoesNotExist:
         pass
     try:
         if account:
             lbl = str(account)
             account.delete()
-            logger.info("factory_account_teardown() Deleted account: %s", lbl)
+            logger.info("%s.factory_account_teardown() Deleted account: %s", HERE, lbl)
     except Account.DoesNotExist:
         pass
 
@@ -180,7 +184,7 @@ def payment_method_factory(account: Account):
         card_exp_year=random.randint(datetime.now().year, datetime.now().year + 7),
         is_default=True,
     )
-    logger.info("payment_method_factory() Created payment method: %s", payment_method.name)
+    logger.info("%s.payment_method_factory() Created payment method: %s", HERE, payment_method.name)
     return payment_method
 
 
@@ -189,11 +193,11 @@ def payment_method_factory_teardown(payment_method: PaymentMethod):
         if payment_method:
             lbl = str(payment_method)
             payment_method.delete()
-            logger.info("payment_method_factory_teardown() Deleted payment method: %s", lbl)
+            logger.info("%s.payment_method_factory_teardown() Deleted payment method: %s", HERE, lbl)
     except PaymentMethod.DoesNotExist:
         pass
     except Exception as e:
-        logger.error("payment_method_factory_teardown() Error deleting payment method: %s", e)
+        logger.error("%s.payment_method_factory_teardown() Error deleting payment method: %s", HERE, e)
         raise
 
 
@@ -220,7 +224,7 @@ def secret_factory(
         encrypted_value=encrypted_value,
         expires_at=expiration,
     )
-    logger.info("secret_factory() Created secret: %s", secret)
+    logger.info("%s.secret_factory() Created secret: %s", HERE, secret)
     return secret
 
 
@@ -229,9 +233,9 @@ def factory_secret_teardown(secret: Secret):
         if secret:
             lbl = str(secret)
             secret.delete()
-            logger.info("factory_secret_teardown() Deleted secret: %s", lbl)
+            logger.info("%s.factory_secret_teardown() Deleted secret: %s", HERE, lbl)
     except Secret.DoesNotExist:
         pass
     except Exception as e:
-        logger.error("factory_secret_teardown() Error deleting secret: %s", e)
+        logger.error("%s.factory_secret_teardown() Error deleting secret: %s", HERE, e)
         raise
