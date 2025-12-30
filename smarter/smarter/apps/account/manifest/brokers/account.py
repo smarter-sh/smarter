@@ -147,11 +147,15 @@ class SAMAccountBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.APPLY,
             )
+        # Convert tags (list[str]) to set for TaggableManager compatibility
+        tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
         return {
             "account": self.account,
             "name": self.manifest.metadata.name,
             "description": self.manifest.metadata.description,
             "version": self.manifest.metadata.version,
+            "tags": tags,
+            "annotations": self.manifest.metadata.annotations,
             **config_dump,
         }
 
@@ -256,16 +260,13 @@ class SAMAccountBroker(AbstractBroker):
         """
         if self._manifest:
             return self._manifest
-        if self.account is None:
-            logger.warning("%s.manifest called with no account", self.formatted_class_name)
-            return None
-        account_number = str(self.account.account_number)
-        status = SAMAccountStatus(
-            adminAccount=account_number,
-            created=self.account.created_at,
-            modified=self.account.updated_at,
-        )
         if self.account:
+            account_number = str(self.account.account_number)
+            status = SAMAccountStatus(
+                adminAccount=account_number,
+                created=self.account.created_at,
+                modified=self.account.updated_at,
+            )
             metadata = SAMAccountMetadata(
                 name=str(self.account.name) or self.account.account_number.replace(" ", "_"),
                 description=self.account.company_name,
@@ -306,9 +307,13 @@ class SAMAccountBroker(AbstractBroker):
                 kind=self.loader.manifest_kind,
                 metadata=SAMAccountMetadata(**metadata),
                 spec=SAMAccountSpec(**spec),
-                status=status,
+                status=None,
             )
-        if not self._manifest:
+        if self._manifest:
+            # reset account after manifest is created so that it will be
+            # reinitialized from the manifest data on next access.
+            self.account = None
+        else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
@@ -450,12 +455,15 @@ class SAMAccountBroker(AbstractBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at", "account_number"]
-        if self.account is None:
+
+        if not self.manifest:
             raise SAMBrokerErrorNotReady(
-                f"Account not set for {self.kind} broker. Cannot apply.",
+                f"Manifest not set for {self.kind} broker. Cannot apply.",
                 thing=self.thing,
                 command=command,
             )
+        if self.account is None:
+            self.account = Account()
         try:
             data = self.manifest_to_django_orm()
             for field in readonly_fields:
@@ -467,6 +475,7 @@ class SAMAccountBroker(AbstractBroker):
             cache_invalidate(user=self.user, account=self.account)  # type: ignore[reportArgumentType]
 
             self.account.save()
+            self.account.refresh_from_db()
         except Exception as e:
             raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data=self.to_json())

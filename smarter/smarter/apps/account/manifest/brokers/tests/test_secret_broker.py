@@ -44,7 +44,7 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         self._manifest_filespec = self.get_data_full_filepath("secret.yaml")
 
         logger.info(
-            "%s.setUp() completed test-level setup with manifest %s", self.formatted_class_name, self.loader.yaml_data
+            "%s.setUp() completed test-level setup with manifest\n%s", self.formatted_class_name, self.loader.yaml_data
         )
 
     @property
@@ -194,6 +194,12 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         self.assertTrue(is_valid_response)
         is_valid_response = self.validate_apply(response)
         self.assertTrue(is_valid_response)
+
+        self.assertEqual(self.broker.manifest.metadata.name, self.broker.secret.name)
+        self.assertEqual(
+            self.broker.manifest.spec.config.value, self.broker.secret.get_secret(update_last_accessed=False)
+        )
+        self.assertEqual(self.broker.manifest.spec.config.expiration_date, self.broker.secret.expires_at)
 
     def test_describe(self):
         """

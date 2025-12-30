@@ -5,6 +5,7 @@ import json
 import logging
 from typing import Any, Optional, Type
 
+from django.db import transaction
 from django.http import HttpRequest
 
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
@@ -360,7 +361,11 @@ class SAMUserBroker(AbstractBroker):
                 spec=SAMUserSpec(**self.loader.manifest_spec),
                 status=status,
             )
-        if not self._manifest:
+        if self._manifest:
+            # reset user after manifest is created so that it will be
+            # reinitialized from the manifest data on next access.
+            self.user = None
+        else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
@@ -518,15 +523,36 @@ class SAMUserBroker(AbstractBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "date_joined", "last_login", "username", "is_superuser"]
+
+        if not self.manifest:
+            raise SAMUserBrokerError("User manifest is not set", thing=self.kind, command=command)
+        if not self.user:
+            self.user = User()
+        if not self.user_profile:
+            self.user_profile = UserProfile(account=self.account, user=self.user)
+
         try:
-            data = self.manifest_to_django_orm()
-            for field in readonly_fields:
-                data.pop(field, None)
-            for key, value in data.items():
-                setattr(self.user, key, value)
-            if not isinstance(self.user, User):
-                raise SAMUserBrokerError("User is not set", thing=self.kind, command=command)
-            self.user.save()
+            with transaction.atomic():
+                # User model
+                data = self.manifest_to_django_orm()
+                for field in readonly_fields:
+                    data.pop(field, None)
+                for key, value in data.items():
+                    setattr(self.user, key, value)
+
+                # UserProfile model
+                self.user_profile.description = self.manifest.metadata.description
+                self.user_profile.version = self.manifest.metadata.version
+                # Convert tags to set for TaggableManager compatibility
+                tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
+                self.user_profile.tags = tags
+                self.user_profile.annotations = self.manifest.metadata.annotations
+
+                self.user.save()
+                self.user.refresh_from_db()
+                self.user_profile.save()
+                self.user_profile.refresh_from_db()
+        # pylint: disable=broad-except
         except Exception as e:
             raise SAMUserBrokerError(
                 f"Failed to apply {self.kind} {self.user.email if isinstance(self.user, User) else None}",

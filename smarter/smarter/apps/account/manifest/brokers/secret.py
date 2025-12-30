@@ -627,6 +627,16 @@ class SAMSecretBroker(AbstractBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
+        if not self.manifest:
+            raise SAMBrokerErrorNotReady(
+                f"Manifest not set for {self.kind} broker. Cannot apply.",
+                thing=self.thing,
+                command=command,
+            )
+
+        if not self.secret:
+            self.secret = Secret()
+
         try:
             self.secret_transformer.create()
         except Exception as e:
@@ -635,6 +645,7 @@ class SAMSecretBroker(AbstractBroker):
         if self.secret_transformer.ready:
             try:
                 self.secret_transformer.save()
+                self.secret.refresh_from_db()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
             return self.json_response_ok(command=command, data=self.to_json())
