@@ -4,6 +4,7 @@
 import logging
 
 from django.contrib.auth.signals import user_logged_in
+from django.core import serializers
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
@@ -23,6 +24,8 @@ from .signals import (
     secret_deleted,
     secret_inializing,
     secret_ready,
+    secret_saved,
+    secret_updated,
 )
 from .utils import cache_invalidate, get_cached_default_account, get_cached_user_profile
 
@@ -233,4 +236,46 @@ def secret_inializing_receiver(sender, secret_name: str, user_profile: UserProfi
         sender,
         secret_name,
         user_profile,
+    )
+
+
+@receiver(secret_saved)
+def secret_saved_receiver(sender, secret: SecretTransformer, user_profile: UserProfile, **kwargs):
+    """Signal receiver for secret_saved signal."""
+    if not secret.secret:
+        raise ValueError("secret.secret is None in secret_saved_receiver")
+
+    json_data = serializers.serialize("json", [secret.secret])
+    tags = list(secret.secret.tags.names()) if secret and hasattr(secret.secret, "tags") else []
+
+    logger.info(
+        "%s.%s secret_saved signal received. instance: %s, id: %s, user_profile: %s, dump: %s, tags: %s",
+        formatted_text(f"{module_prefix}.secret_saved()"),
+        sender,
+        str(secret),
+        secret.id,
+        user_profile,
+        json_data,
+        tags,
+    )
+
+
+@receiver(secret_updated)
+def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: UserProfile, **kwargs):
+    """Signal receiver for secret_updated signal."""
+    if not secret.secret:
+        raise ValueError("secret.secret is None in secret_updated_receiver")
+
+    json_data = serializers.serialize("json", [secret.secret])
+    tags = list(secret.secret.tags.names()) if secret and hasattr(secret.secret, "tags") else []
+
+    logger.info(
+        "%s.%s secret_updated signal received. instance: %s, id: %s, user_profile: %s, dump: %s, tags: %s",
+        formatted_text(f"{module_prefix}.secret_updated()"),
+        sender,
+        str(secret),
+        secret.id,
+        user_profile,
+        json_data,
+        tags,
     )

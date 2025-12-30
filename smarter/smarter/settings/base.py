@@ -1460,6 +1460,16 @@ See:
     - smarter_settings.smtp_username
 """
 
+TAGGIT_CASE_INSENSITIVE = True
+"""
+If True, makes taggit tags case insensitive.
+"""
+
+TAGGIT_STRIP_UNICODE_WHEN_SLUGIFYING = True
+"""
+If True, strips unicode characters when slugifying tags.
+"""
+
 WAFFLE_CREATE_MISSING_SWITCHES = True
 """
 If True, enables automatic creation of missing waffle switches in the database during deployment

@@ -25,7 +25,13 @@ from typing import Any, Optional
 
 from django.contrib.auth.models import AnonymousUser
 
-from smarter.apps.account.models import User, get_resolved_user
+from smarter.apps.account.models import (
+    Account,
+    Secret,
+    User,
+    UserProfile,
+    get_resolved_user,
+)
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
@@ -35,8 +41,6 @@ from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-
-from .models import Account, UserProfile
 
 
 HERE = formatted_text_red(__name__)
@@ -114,6 +118,113 @@ class SmarterCachedObjects:
 
 
 smarter_cached_objects = SmarterCachedObjects()
+
+
+def get_cached_secret(name: str, user_profile: UserProfile, invalidate: bool = False) -> Optional[Secret]:
+    """
+    Retrieve a Secret instance by its name and associated UserProfile, using in-memory caching.
+
+    :param name: String. The name of the secret to retrieve.
+    :param user_profile: UserProfile instance. The user profile associated with the secret.
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :returns: Secret instance if found, otherwise None.
+
+    .. warning::
+
+           If no secret exists for the given name and user profile, None is returned and a warning is logged.
+    .. tip::
+           Use ``invalidate=True`` after updating secret data to ensure cache consistency.
+
+    **Example usage**::
+        # Retrieve secret by name and user profile
+        secret = get_cached_secret("my_secret", user_profile)
+
+        # Invalidate cache before fetching
+        secret = get_cached_secret("my_secret", user_profile, invalidate=True)
+    """
+
+    @cache_results()
+    def _in_memory_secret(name: str, user_profile_id: int) -> Optional[Secret]:
+        """
+        In-memory cache for secret objects by name and user profile ID.
+        """
+        logger.info(
+            "%s.get_cached_secret() retrieving and caching secret %s for user_profile %s",
+            HERE,
+            name,
+            user_profile_id,
+        )
+        try:
+            secret = Secret.objects.get(name=name, user_profile_id=user_profile_id)
+        except Secret.DoesNotExist:
+            logger.warning(
+                "%s.get_cached_secret() secret with name %s does not exist for user_profile %s",
+                HERE,
+                name,
+                user_profile_id,
+            )
+            return None
+        return secret
+
+    return (
+        _in_memory_secret(name, user_profile.id)
+        if not invalidate
+        else _in_memory_secret.invalidate(name, user_profile.id)
+    )
+
+
+def get_cached_secret_by_pk(secret_pk: int, user_profile: UserProfile, invalidate: bool = False) -> Optional[Secret]:
+    """
+    Retrieve a Secret instance by its primary key and associated UserProfile, using in-memory caching.
+
+    :param secret_pk: Integer. The primary key of the secret to retrieve.
+    :param user_profile: UserProfile instance. The user profile associated with the secret.
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :returns: Secret instance if found, otherwise None.
+
+    .. warning::
+
+           If no secret exists for the given primary key and user profile, None is returned and a warning is logged.
+    .. tip::
+              Use ``invalidate=True`` after updating secret data to ensure cache consistency.
+
+    **Example usage**::
+        # Retrieve secret by primary key and user profile
+        secret = get_cached_secret_by_pk(123, user_profile)
+
+        # Invalidate cache before fetching
+        secret = get_cached_secret_by_pk(123, user_profile, invalidate=True)
+
+    """
+
+    @cache_results()
+    def _in_memory_secret_by_pk(secret_pk: int, user_profile_id: int) -> Optional[Secret]:
+        """
+        In-memory cache for secret objects by primary key and user profile ID.
+        """
+        logger.info(
+            "%s.get_cached_secret_by_pk() retrieving and caching secret PK %s for user profile ID %s",
+            HERE,
+            secret_pk,
+            user_profile_id,
+        )
+        try:
+            secret = Secret.objects.get(pk=secret_pk, user_profile_id=user_profile_id)
+        except Secret.DoesNotExist:
+            logger.warning(
+                "%s.get_cached_secret_by_pk() secret with PK %s does not exist for user profile ID %s",
+                HERE,
+                secret_pk,
+                user_profile_id,
+            )
+            return None
+        return secret
+
+    return (
+        _in_memory_secret_by_pk(secret_pk, user_profile.id)
+        if not invalidate
+        else _in_memory_secret_by_pk.invalidate(secret_pk, user_profile.id)
+    )
 
 
 def get_cached_account(

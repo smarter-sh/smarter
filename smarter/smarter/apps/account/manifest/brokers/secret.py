@@ -184,8 +184,11 @@ class SAMSecretBroker(AbstractBroker):
         if self._secret_transformer:
             return self._secret_transformer
         if not self._manifest:
-            logger.warning("%s.secret_transformer called before manifest was set.", self.formatted_class_name)
-            return None
+            raise SAMBrokerErrorNotReady(
+                "Manifest is not set. Cannot create SecretTransformer.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         if not self.user_profile:
             raise SAMBrokerErrorNotReady(
                 "User profile is not set. Cannot create SecretTransformer.",
@@ -225,8 +228,11 @@ class SAMSecretBroker(AbstractBroker):
            :meth:`secret_transformer`
         """
         if not self.secret_transformer:
-            logger.warning("%s.secret called with no secret_transformer", self.formatted_class_name)
-            return None
+            raise SAMBrokerErrorNotReady(
+                "SecretTransformer is not set. Cannot retrieve secret.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
         return self.secret_transformer.secret
 
     def manifest_to_django_orm(self) -> Optional[dict]:
@@ -417,7 +423,7 @@ class SAMSecretBroker(AbstractBroker):
             logger.warning("%s.manifest called with no user_profile", self.formatted_class_name)
             return None
 
-        if self.secret:
+        if self._secret_transformer and self.secret:
             self._manifest = SAMSecret(
                 apiVersion=self.api_version,
                 kind=self.kind,
@@ -635,7 +641,7 @@ class SAMSecretBroker(AbstractBroker):
             )
 
         if not self.secret:
-            self.secret = Secret()
+            self.secret_transformer.secret = Secret()
 
         try:
             self.secret_transformer.create()
