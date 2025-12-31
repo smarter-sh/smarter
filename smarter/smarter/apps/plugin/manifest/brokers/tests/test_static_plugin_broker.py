@@ -14,6 +14,8 @@ from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
 )
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.apps.plugin.manifest.models.static_plugin.spec import SAMPluginStaticSpec
+from smarter.apps.plugin.models import PluginDataStatic
+from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.lib import json
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
@@ -271,6 +273,32 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         self.assertEqual(self.broker.manifest.spec.prompt.temperature, self.broker.plugin.plugin_prompt.temperature)
         self.assertEqual(self.broker.manifest.spec.data.description, self.broker.plugin.plugin_data.description)
         self.assertEqual(self.broker.manifest.spec.data.staticData, self.broker.plugin.plugin_data.static_data)
+
+    def test_plugin(self):
+        """
+        Test that the plugin property returns a StaticPlugin instance.
+        """
+
+        plugin = self.broker.plugin
+        self.assertIsInstance(plugin, StaticPlugin)
+        self.assertTrue(plugin.ready)
+
+    def test_plugin_data(self):
+        """
+        Test that the plugin data matches the manifest spec.
+        """
+        plugin_data = self.broker.plugin_data
+        self.assertIsInstance(plugin_data, PluginDataStatic)
+        self.assertEqual(
+            plugin_data.description or "",
+            self.broker.manifest.spec.data.description or "",
+            "Plugin data description does not match manifest spec description.",
+        )
+        self.assertEqual(
+            plugin_data.static_data or {},
+            self.broker.manifest.spec.data.staticData or {},
+            "Plugin data staticData does not match manifest spec staticData.",
+        )
 
     def test_describe(self):
         """

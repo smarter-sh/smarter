@@ -29,7 +29,7 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         """Set up the test class."""
         super().setUpClass()
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
-        cls.name = camel_to_snake("SmarterTestBase_" + cls.hash_suffix)
+        cls.name = camel_to_snake("smarterTestBase_" + cls.hash_suffix)
         cls.uid = SmarterTestBase.generate_uid()
 
         logger.info("%s.setUpClass() Setting up test class with hash suffix: %s", "SmarterTestBase", cls.hash_suffix)

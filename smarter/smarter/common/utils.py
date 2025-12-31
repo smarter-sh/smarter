@@ -619,7 +619,7 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
 
     # If it's a unittest.mock.Mock, synthesize a fake URL for testing
     if hasattr(request, "__class__") and request.__class__.__name__ == "Mock":
-        logger.info("smarter_build_absolute_uri() called with Mock request; returning fake test URL")
+        logger.debug("smarter_build_absolute_uri() called with Mock request; returning fake test URL")
         return "http://testserver/mockpath/"
 
     # Try to use Django's build_absolute_uri if available
