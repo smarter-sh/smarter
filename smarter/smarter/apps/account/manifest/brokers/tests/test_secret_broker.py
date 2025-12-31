@@ -87,6 +87,12 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         """Test that the test setup is ready."""
         self.assertTrue(self.ready)
 
+    def test_is_valid(self):
+        """
+        Test that the is_valid property returns True.
+        """
+        self.assertTrue(self.broker.is_valid)
+
     def test_sam_broker_initialization(self):
         """Test that the SAMSecretBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.

@@ -90,6 +90,12 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
         logger.info("%s.test_setup() SAMUserBroker initialized successfully for testing.", self.formatted_class_name)
 
+    def test_is_valid(self):
+        """
+        Test that the is_valid property returns True.
+        """
+        self.assertTrue(self.broker.is_valid)
+
     def test_broker_initialization(self):
         """Test that the broker initializes with required properties."""
         broker: SAMUserBroker = self.SAMBrokerClass(self.request, self.loader)
