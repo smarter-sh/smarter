@@ -296,7 +296,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             self.create()
 
         if self.ready:
-            plugin_ready.send(sender=self.__class__, plugin=self)
+            return None  # plugin is ready, no further action needed.
 
     def __str__(self) -> str:
         """Return the name of the plugin."""
@@ -710,7 +710,7 @@ class PluginBase(ABC, SmarterHelperMixin):
                     "plugin_class": self.manifest.metadata.pluginClass,
                     "version": self.manifest.metadata.version,
                     "author": self.user_profile,
-                    "tags": self.manifest.metadata.tags,
+                    "annotations": self.manifest.metadata.annotations,
                 }
             else:
                 logger.warning(
@@ -893,12 +893,18 @@ class PluginBase(ABC, SmarterHelperMixin):
         """
 
         if not self.user_profile:
-            raise SmarterPluginError("UserProfile is not set.")
+            logger.warning(
+                "%s.ready() UserProfile is not set.",
+                self.formatted_class_name,
+            )
+            return False
 
         if not isinstance(self.user_profile, UserProfile):
-            raise SmarterPluginError(
-                f"Expected type of {UserProfile} for self.user_profile, but got {type(self.user_profile)}."
+            logger.warning(
+                "%s.ready() UserProfile is not of type UserProfile.",
+                self.formatted_class_name,
             )
+            return False
 
         # ---------------------------------------------------------------------
         # validate the Pydantic model if it exists. This is only set
@@ -911,9 +917,12 @@ class PluginBase(ABC, SmarterHelperMixin):
         # validate the Django ORM models
         # ---------------------------------------------------------------------
         if self._plugin_meta and not isinstance(self.plugin_meta, PluginMeta):
-            raise SmarterPluginError(
-                f"Expected type of {PluginMeta} for self.plugin_meta, but got {type(self.plugin_meta)}."
+            logger.error(
+                "%s.ready() PluginMeta is not of type PluginMeta.",
+                self.formatted_class_name,
             )
+            return False
+
         plugin_meta = self._plugin_meta
         if plugin_meta is not None:
             plugin_meta.validate()
@@ -922,23 +931,34 @@ class PluginBase(ABC, SmarterHelperMixin):
             return True
 
         if self._plugin_selector and not isinstance(self.plugin_selector, PluginSelector):
-            raise SmarterPluginError(
-                f"Expected type of {PluginSelector} for self.plugin_selector, but got {type(self.plugin_selector)}."
+            logger.error(
+                "%s.ready() PluginSelector is not of type PluginSelector.",
+                self.formatted_class_name,
             )
+            return False
+
         self.plugin_selector.validate()
 
         if self._plugin_prompt and not isinstance(self.plugin_prompt, PluginPrompt):
-            raise SmarterPluginError(
-                f"Expected type of {PluginPrompt} for self.plugin_prompt, but got {type(self.plugin_prompt)}."
+            logger.error(
+                "%s.ready() PluginPrompt is not of type PluginPrompt.",
+                self.formatted_class_name,
             )
+            return False
+
         self.plugin_prompt.validate()
 
         if self._plugin_data and not isinstance(self.plugin_data, self.plugin_data_class):
-            raise SmarterPluginError(
-                f"Expected type of {self.plugin_data_class} for self.plugin_data, but got {type(self.plugin_data)}."
+            logger.error(
+                "%s.ready() PluginData is not of type %s.",
+                self.formatted_class_name,
+                self.plugin_data_class,
             )
+            return False
+
         self.plugin_data.validate()
 
+        plugin_ready.send(sender=self.__class__, plugin=self)
         return True
 
     @property
@@ -1198,7 +1218,6 @@ class PluginBase(ABC, SmarterHelperMixin):
             )
 
         if self.plugin_meta:
-            self.id = self.plugin_meta.id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             logger.info(
                 "%s.create() Plugin %s already exists. Updating plugin %s.",
                 self.plugin_meta.name,
@@ -1211,6 +1230,9 @@ class PluginBase(ABC, SmarterHelperMixin):
             meta_data = self.plugin_meta_django_model
             if meta_data:
                 plugin_meta = PluginMeta.objects.create(**meta_data)
+                tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
+                plugin_meta.tags.set(tags)
+
                 logger.info("%s.create() created PluginMeta: %s", self.formatted_class_name, plugin_meta)
 
                 selector = self.plugin_selector_django_model

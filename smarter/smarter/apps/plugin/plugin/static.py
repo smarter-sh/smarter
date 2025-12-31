@@ -127,6 +127,27 @@ class StaticPlugin(PluginBase):
         super().__init__(*args, manifest=manifest, **kwargs)
 
     @property
+    def model_class(self) -> Type[SAMStaticPlugin]:
+        """
+        Return the Pydantic model class for the StaticPlugin manifest.
+
+        This property provides access to the Pydantic model class that defines the structure
+        and validation rules for the StaticPlugin manifest. The returned class is typically
+        :class:`SAMStaticPlugin`, which encapsulates all necessary fields and constraints
+        for a static plugin manifest.
+
+        :return: The Pydantic model class for the StaticPlugin manifest.
+        :rtype: Type[SAMStaticPlugin]
+
+        Notes
+        -----
+        This property is useful for introspection, type checking, and for scenarios where
+        you need to interact with the manifest model class directly (such as creating new
+        instances or performing validation).
+        """
+        return SAMStaticPlugin
+
+    @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
         """
         Return the Pydantic model representation of the plugin manifest.

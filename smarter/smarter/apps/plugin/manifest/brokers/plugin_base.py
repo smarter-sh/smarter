@@ -448,6 +448,7 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         return plugin_data
 
+    @property
     def plugin_prompt_orm(self) -> Optional[PluginPrompt]:
         """
         Retrieve the `PluginPrompt` ORM instance associated with this broker.
@@ -527,7 +528,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             systemRole=self.plugin_prompt_orm.system_role,
             model=self.plugin_prompt_orm.model,
             temperature=self.plugin_prompt_orm.temperature,
-            maxTokens=self.plugin_prompt_orm.max_tokens,
+            maxTokens=self.plugin_prompt_orm.max_completion_tokens,
         )
         return plugin_prompt
 
@@ -633,4 +634,4 @@ class SAMPluginBaseBroker(AbstractBroker):
                 print(response.status, response.data)
         """
         super().apply(request, kwargs)
-        logger.info("SAMPluginBaseBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)
+        logger.info("%s.apply() called %s with args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs)

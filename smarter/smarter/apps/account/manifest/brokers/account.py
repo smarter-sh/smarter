@@ -475,6 +475,8 @@ class SAMAccountBroker(AbstractBroker):
             cache_invalidate(user=self.user, account=self.account)  # type: ignore[reportArgumentType]
 
             self.account.save()
+            tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
+            self.account.tags.set(tags)
             self.account.refresh_from_db()
         except Exception as e:
             raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e

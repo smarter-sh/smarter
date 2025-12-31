@@ -3,7 +3,7 @@
 import os
 from typing import ClassVar, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClassValues,
@@ -11,6 +11,7 @@ from smarter.apps.plugin.manifest.enum import (
 )
 from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
+from smarter.lib.manifest.models import SmarterBasePydanticModel
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -18,7 +19,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 8192  # this is actually the overall max token count for OpenAI chatGPT-4
 
 
-class SAMPluginStaticSpecData(BaseModel):
+class SAMPluginStaticSpecData(SmarterBasePydanticModel):
     """Smarter API Plugin Manifest Plugin.spec.data"""
 
     class_identifier: ClassVar[str] = f"{MODULE_IDENTIFIER}.{SAMPluginSpecKeys.DATA.value}"

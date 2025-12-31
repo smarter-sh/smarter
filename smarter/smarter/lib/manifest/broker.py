@@ -482,7 +482,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         .. todo:: Research why this is not an abstract method.
         """
         logger.info(
-            "AbstractBroker.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
+            "%s.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
+            self.formatted_class_name,
             request,
             args,
             kwargs,
