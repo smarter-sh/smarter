@@ -65,11 +65,11 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     version: str = Field(..., description="The semantic version of the manifest. Example: 0.1.0")
     tags: Optional[List[str]] = Field(
         default_factory=list,
-        description="The tags of the manifest. These are fully functional but are not currently used. Example: ['tag1', 'tag2']",
+        description="The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
     )
     annotations: Optional[List[dict[str, Any]]] = Field(
         default_factory=list,
-        description="The manifest annotations. These are fully functional but are not currently used.",
+        description="The manifest annotations. Used for storing arbitrary metadata as key-value pairs. Example: [{'smarter.sh/key1': 'kubernetes.io/value1'}]",
     )
 
     @field_validator("name")
