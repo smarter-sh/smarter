@@ -6,7 +6,7 @@ kind: Plugin
 # Each of these fields is required.
 # ------------------------------------------------------------
 metadata:
-  name: example_configuration
+  name: test_plugin
   pluginClass: static
   description: A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.
   version: 0.2.0
@@ -14,6 +14,10 @@ metadata:
     - red
     - green
     - blue
+  annotations:
+    - smarter.sh/plugin/author: "Your Name"
+    - smarter.sh/plugin/license: "MIT"
+    - smarter.sh/plugin/repository: "github.com/your-org/example-configuration-plugin"
 spec:
   # ------------------------------------------------------------
   # 2. Required field: prompting

@@ -207,9 +207,38 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         return MANIFEST_KIND
 
     @property
+    def model_class(self) -> Type[PluginDataStatic]:
+        """
+        Returns the Django ORM model class for static plugin data.
+
+        This property provides the Django ORM model class that represents the static plugin data
+        associated with this broker. It is used for database operations related to static plugin data.
+
+        :return: Django ORM model class for static plugin data.
+        :rtype: Type[PluginDataStatic]
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMStaticPluginBroker()
+            model_class = broker.model_class
+            print(model_class.__name__)
+            # Output: "PluginDataStatic"
+        .. seealso::
+            - `PluginDataStatic` Django ORM model.
+            - `SAMStaticPluginBroker.plugin_data`
+        """
+        return PluginDataStatic
+
+    @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
         """
         Returns the manifest for the static plugin as a Pydantic model instance.
+        This can be initialized any of three ways:
+        1. If already from the constructor, return the cached manifest.
+        2. If the plugin metadata exists, build the manifest from the Django ORM models.
+        3. If a manifest loader is provided, build the manifest from the loader data.
 
         This property initializes and returns a `SAMStaticPlugin` object, representing the full manifest for a static plugin.
         The manifest is built using data from the manifest loader, including API version, kind, metadata, and specification.
@@ -243,7 +272,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         if self.plugin_meta:
 
             metadata = self.plugin_metadata_orm2pydantic()
-            data = self.plugin_data_orm2pydantic()
+            data = self.plugin_static_spec_data_orm2pydantic()
             if not data:
                 raise SAMPluginBrokerError(
                     f"{self.formatted_class_name} manifest() failed to build data for {self.kind} {self.plugin_meta.name}",
@@ -368,7 +397,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             )
         return self._plugin_data
 
-    def plugin_data_orm2pydantic(self) -> Optional[SAMPluginStaticSpecData]:
+    def plugin_static_spec_data_orm2pydantic(self) -> Optional[SAMPluginStaticSpecData]:
         """
         Convert plugin static data from the Django ORM model format to the Pydantic manifest format.
 
@@ -384,7 +413,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         .. code-block:: python
 
             broker = SAMStaticPluginBroker()
-            static_data = broker.plugin_data_orm2pydantic()
+            static_data = broker.plugin_static_spec_data_orm2pydantic()
             print(static_data.model_dump_json())
 
         :raises SAMPluginBrokerError:
@@ -442,7 +471,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             return None
         prompt = self.plugin_prompt_orm2pydantic()
         selector = self.plugin_selector_orm2pydantic()
-        data = self.plugin_data_orm2pydantic()
+        data = self.plugin_static_spec_data_orm2pydantic()
         if not data:
             raise SAMPluginBrokerError(
                 f"{self.formatted_class_name} plugin_static_spec_orm2pydantic() failed to build data for {self.kind} {self.plugin_meta.name}",
@@ -683,6 +712,11 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+        if self.plugin.ready:
+            # the Plugin class was initialized with enough data to bring
+            # itself to a ready state, meaning that no create/save is needed.
+            return self.json_response_ok(command=command, data=self.to_json())
+
         if not isinstance(self.plugin, StaticPlugin):
             raise SAMPluginBrokerError(
                 f"{self.formatted_class_name} {self.kind} plugin not initialized. Cannot apply",

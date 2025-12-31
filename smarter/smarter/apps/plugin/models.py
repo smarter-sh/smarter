@@ -350,6 +350,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     class Meta:
         verbose_name = "Plugin"
         verbose_name_plural = "Plugins"
+        unique_together = ("account", "name")
 
     PLUGIN_CLASSES = [
         (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
