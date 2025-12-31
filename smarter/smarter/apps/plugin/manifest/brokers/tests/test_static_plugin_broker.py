@@ -81,6 +81,12 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
             "%s.test_setup() SAMStaticPluginBroker initialized successfully for testing.", self.formatted_class_name
         )
 
+    def test_is_valid(self):
+        """
+        Test that the is_valid property returns True.
+        """
+        self.assertTrue(self.broker.is_valid)
+
     def test_immutability(self):
         """
         Test that any property of any Pydantic broker model are immutable.

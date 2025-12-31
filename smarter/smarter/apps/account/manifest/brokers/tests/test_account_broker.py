@@ -81,6 +81,12 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         self.assertIsInstance(self.broker, SAMAccountBroker)
         logger.info("%s.test_setup() SAMAccountBroker initialized successfully for testing.", self.formatted_class_name)
 
+    def test_is_valid(self):
+        """
+        Test that the is_valid property returns True.
+        """
+        self.assertTrue(self.broker.is_valid)
+
     def test_immutability(self):
         """Test that the broker instance is immutable after initialization."""
 

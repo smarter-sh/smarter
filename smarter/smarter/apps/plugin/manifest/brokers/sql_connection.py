@@ -664,6 +664,10 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             logger.warning("%s is_valid() failed for %s %s", self.formatted_class_name, self.kind, str(e))
         return False
 
+    ###########################################################################
+    # Smarter manifest abstract method implementations
+    ###########################################################################
+
     def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example manifest for the `SqlConnection` model.
@@ -747,9 +751,6 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         data = json.loads(pydantic_model.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
-    ###########################################################################
-    # Smarter manifest abstract method implementations
-    ###########################################################################
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve SqlConnection manifests based on search criteria.
