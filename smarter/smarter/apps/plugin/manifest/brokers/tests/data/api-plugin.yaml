@@ -9,6 +9,13 @@ metadata:
   tags:
     - api
     - test
+    - smarter
+    - tool-call
+  annotations:
+    smarter.sh/api-test/display-name: API Test Plugin
+    smarter.sh/api-test/icon: https://example.com/api-test-icon.png
+    smarter.sh/api-test/documentation-url: https://docs.example.com/api-test
+    smarter.sh/api-test/contact-email: sales@example.com
 spec:
   selector:
     directive: always

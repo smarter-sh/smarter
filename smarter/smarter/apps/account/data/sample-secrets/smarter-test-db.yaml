@@ -1,15 +1,25 @@
 apiVersion: smarter.sh/v1
 kind: Secret
 metadata:
-  accountNumber: 3141-5926-5359
-  description: an example secret manifest for the Smarter Remote SQL Secret
-  name: smarter_test_db
+  description: |
+    An example secret manifest. This is a real credential used for authenticating to
+    the Smarter Remote SQL test database. This is a public-access test database
+    used for development and testing purposes only.  Do not use this credential
+    for production purposes. Password value is the same as the user.
+    See the annotations below for connection details.
+  name: smarter_test_user
+  version: 1.1.0
   tags:
-  - example
-  - secret
-  - smarter
-  username: admin
-  version: 1.0.0
+    - example
+    - test
+    - stackademy
+  annotations:
+    - smarter.sh/test-db/host: sql.lawrencemcdaniel.com
+    - smarter.sh/test-db/port: "3306"
+    - smarter.sh/test-db/db: smarter_test_db
+    - smarter.sh/test-db/user: smarter_test_user
+    - smarter.sh/test-db/pwd: smarter_test_user
+    - smarter.sh/test-db/access: anyone can access this test database
 spec:
   config:
     description: smarter_test_user password. Password value is the same as the user.

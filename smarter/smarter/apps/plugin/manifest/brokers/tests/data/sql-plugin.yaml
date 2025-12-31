@@ -17,6 +17,10 @@ metadata:
     - stackademy.online/courses: ai
     - stackademy.online/micro-certificate: "network engineering"
     - stackademy.online/scholarship: "available"
+    - smarter.sh/sql-test/display-name: SQL Test Plugin
+    - smarter.sh/sql-test/icon: https://example.com/sql-test-icon.png
+    - smarter.sh/sql-test/documentation-url: https://docs.example.com/sql-test
+    - smarter.sh/sql-test/contact-email: no-reply@mail.edu
 spec:
   selector:
     directive: search_terms

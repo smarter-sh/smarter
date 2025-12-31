@@ -133,7 +133,7 @@ docker-run:
 # smarter.apps.account.manifest.brokers.tests.test_secret_broker
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.apps.plugin.manifest.brokers.tests.test_sql_connection_broker"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.plugin.manifest.brokers.tests.test_sql_connection_broker.TestSmarterSqlConnectionBroker.test_is_valid"
 
 docker-prune:
 	make docker-check && \

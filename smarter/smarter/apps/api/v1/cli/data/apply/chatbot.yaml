@@ -4,6 +4,21 @@ metadata:
   name: stackademy_sql
   description: Stackademy University course catalogue inquiries using the Stackademy SQL plugin.
   version: 1.0.0
+  tags:
+    - education
+    - courses
+    - sql
+    - agent
+    - tool-calling
+  annotations:
+    - smarter.sh/stackademy/owner: example-user
+    - smarter.sh/stackademy/host: sql.lawrencemcdaniel.com
+    - smarter.sh/stackademy/purpose: Provide information about Stackademy University courses using SQL queries.
+    - smarter.sh/stackademy/last-updated: 2025-12-31
+    - smarter.sh/stackademy/documentation: https://docs.stackademy.edu/sql-chatbot
+    - smarter.sh/stackademy/connection-info: >
+        This chatbot connects to the Stackademy SQL database hosted at sql.lawrencemcdaniel.com
+        using the Stackademy SQL plugin to retrieve course information.
 spec:
   config:
     deployed: false

@@ -4,6 +4,17 @@ metadata:
   description: "A Smarter Plugin PR Agent"
   name: smarter
   version: 1.0.0
+  tags:
+    - smarter
+    - presales
+    - sales-agent
+  annotations:
+    - smarter.sh/tests/helpfullness: high
+    - smarter.sh/tests/host: none
+    - smarter.sh/tests/purpose: Provide an example configuration for OpenAI API Function Calling.
+    - smarter.sh/tests/last-updated: 2025-12-31
+    - smarter.sh/tests/documentation: https://docs.tests.edu/example-function-calling
+    - smarter.sh/tests/owner: Lawrence McDaniel
 spec:
   apiKey: null
   config:

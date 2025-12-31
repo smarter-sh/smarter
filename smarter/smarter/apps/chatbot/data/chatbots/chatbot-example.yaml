@@ -4,6 +4,16 @@ metadata:
   description: "An example chatbot with tool calling and Smarter Plugins."
   name: example
   version: 0.1.0
+  tags:
+    - gibberish
+    - jabberwocky
+    - talk-talk-talk
+  annotations:
+    - smarter.sh/tests/focus-level: low
+    - smarter.sh/tests/purpose: Provide an example configuration for OpenAI API Function Calling.
+    - smarter.sh/tests/last-updated: 2025-12-31
+    - smarter.sh/tests/documentation: https://docs.tests.edu/example-function-calling
+    - smarter.sh/tests/owner: Lawrence McDaniel
 spec:
   apiKey: null
   config:

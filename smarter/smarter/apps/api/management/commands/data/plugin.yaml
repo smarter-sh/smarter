@@ -9,6 +9,12 @@ metadata:
     - system
     - test
     - verification
+  annotations:
+    - smarter.sh/owner: system-admin
+    - smarter.sh/purpose: plugin verification for API CLI end points
+    - smarter.sh/usage: This plugin is used to verify the functionality of /api/v1/cli/ end points.
+    - smarter.sh/last-updated: 2025-12-31
+    - smarter.sh/documentation: https://docs.smarter.sh/
 spec:
   selector:
     directive: search_terms

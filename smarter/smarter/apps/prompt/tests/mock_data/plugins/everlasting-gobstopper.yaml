@@ -12,6 +12,15 @@ metadata:
     - chocolate
     - Gobstoppers
     - Willy Wonka
+  annotations:
+    smarter.sh/everlasting-gobstopper/display-name: Everlasting Gobstopper Info
+    smarter.sh/everlasting-gobstopper/icon: https://example.com/everlasting-gobstopper-icon.png
+    smarter.sh/everlasting-gobstopper/documentation-url: https://docs.wwcf.com/everlasting-gobstopper
+    smarter.sh/everlasting-gobstopper/contact-email: support@gobbstoppers.edu
+    smarter.sh/everlasting-gobstopper/pricing-plans: |
+        - free
+        - community supported
+        - open source
 spec:
   selector:
     directive: search_terms

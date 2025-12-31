@@ -7,6 +7,19 @@ metadata:
   description: Get additional information about Lawrence McDaniel, full stack web developer and host of YouTube channel FullStackwithLawrence. returns a personal bio, contact information, marketing information, client list, education background, professional certifications, etc.
   version: 0.1.0
   author: Lawrence McDaniel
+  tags:
+    - lawrence
+    - mcdaniel
+    - fullstack
+    - developer
+    - youtube
+    - instructor
+    - ubc
+  annotations:
+    smarter.sh/lawrence-mcdaniel/display-name: Lawrence McDaniel Info Plugin
+    smarter.sh/lawrence-mcdaniel/icon: https://example.com/lawrence-mcdaniel-icon.png
+    smarter.sh/lawrence-mcdaniel/documentation-url: https://docs.lawrencemcdaniel.com/plugin
+    smarter.sh/lawrence-mcdaniel/contact-email: lpm0073@mail.edu
 spec:
   selector:
     directive: search_terms

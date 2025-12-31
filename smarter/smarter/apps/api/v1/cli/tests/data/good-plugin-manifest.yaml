@@ -13,6 +13,15 @@ metadata:
     - up
     - down
     - all-around
+  annotations:
+    - smarter.sh/tests/owner: test bank
+    - smarter.sh/tests/host: sql.lawrencemcdaniel.com
+    - smarter.sh/tests/purpose: Provide information about Stackademy University courses using SQL queries.
+    - smarter.sh/tests/last-updated: 2025-12-31
+    - smarter.sh/tests/documentation: https://docs.tests.edu/sql-chatbot
+    - smarter.sh/tests/connection-info: >
+        This chatbot connects to the Stackademy SQL database hosted at sql.lawrencemcdaniel.com
+        using the Stackademy SQL plugin to retrieve course information.
 spec:
   # ------------------------------------------------------------
   # 2. Required field: prompting
