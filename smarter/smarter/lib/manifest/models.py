@@ -1,9 +1,12 @@
 """Pydantic models for Smarter API Manifests."""
 
 import abc
+import datetime
+import decimal
 import re
+import uuid
 from logging import getLogger
-from typing import Any, List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -15,6 +18,26 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 
 
 logger = getLogger(__name__)
+
+VALID_ANNOTATION_VALUE_TYPES_SET = (
+    str,
+    int,
+    float,
+    bool,
+    datetime.date,
+    datetime.datetime,
+    decimal.Decimal,
+    uuid.UUID,
+    bytes,
+    list,
+    dict,
+)
+"""
+Types allowed for annotation values in manifest metadata.
+"""
+AnnotationValueType = Union[
+    str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict
+]
 
 
 class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
@@ -67,9 +90,14 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         default_factory=list,
         description="The tags of the manifest. Used for generic resource categorization and search. Example: ['tag1', 'tag2']",
     )
-    annotations: Optional[List[dict[str, Any]]] = Field(
+    annotations: Optional[List[dict[str, AnnotationValueType]]] = Field(
         default_factory=list,
-        description="The manifest annotations. Used for storing arbitrary metadata as key-value pairs. Example: [{'smarter.sh/key1': 'kubernetes.io/value1'}]",
+        description="""The manifest annotations. Used for storing arbitrary metadata as
+            key-value pairs. Example: [{'smarter.sh/test-manifest/project-name': 'Scooby dooby do'}]. The
+            key should be a valid url-friendly string. The value accepts
+            multi-line string values (YAML block scalars) and various scalar types including
+            str, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict.
+            """,
     )
 
     @field_validator("name")
@@ -77,19 +105,12 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         """
         Validates the ``name`` field for a manifest.
 
-        This method ensures that the ``name`` attribute is present, adheres to length constraints,
-        and follows URL-friendly character rules. If the name is not in snake_case, it will be
-        converted to snake_case with a warning logged. If the value is missing or invalid,
-        a ``SAMValidationError`` is raised.
-
-        :param v: The value of the ``name`` field to validate.
-        :type v: str
-        :raises smarter.lib.manifest.exceptions.SAMValidationError: If the value is missing or
-            does not meet validation criteria.
-        :return: The validated ``name`` string.
-        :rtype: str
+        Ensures the value is a string, present, and meets all constraints. Raises if not a string.
         """
-        if v in [None, ""]:
+        if not isinstance(v, str):
+            raise SAMValidationError(f"Manifest 'name' must be a string, got {type(v)}.")
+        v = v.strip()
+        if v == "":
             raise SAMValidationError("Missing required key name")
         if len(v) > 50:
             raise SAMValidationError("Name must be less than 50 characters")
@@ -106,6 +127,9 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
                 snake_case_name,
             )
             v = snake_case_name
+        # Final guarantee: always return a string
+        if not isinstance(v, str):
+            raise SAMValidationError(f"Manifest 'name' must be a string after processing, got {type(v)}.")
         return v
 
     @field_validator("description")
@@ -170,22 +194,19 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         return v
 
     @field_validator("annotations")
-    def validate_annotations(cls, v) -> Optional[List[dict[str, Any]]]:
+    def validate_annotations(cls, v) -> Optional[List[dict[str, AnnotationValueType]]]:
         """
         Validates the ``annotations`` field for a manifest.
-        Ensures each annotation is a dict with URL-friendly keys and values. Raises SAMValidationError if invalid.
+        Accepts a list of dicts, where each dict can be a single key-value pair or a flat dict with multiple key-value pairs.
+        Supports multi-line string values (YAML block scalars).
+        Ensures each annotation key is URL-friendly and each value is a string or scalar (including multi-line strings).
+        Raises SAMValidationError if invalid.
 
         :param v: The value of the ``annotations`` field to validate.
         :type v: Optional[List[dict[str, Any]]]
         :raises smarter.lib.manifest.exceptions.SAMValidationError: If any annotation is invalid.
         :return: The validated list of annotations.
         :rtype: Optional[List[dict[str, Any]]]
-
-        :example:
-            annotations = [
-                {"smarter.sh/key1": "value1"},
-                {"smarter.sh/key2": "value2 with spaces"},
-            ]
         """
         if v is None:
             return v
@@ -195,14 +216,22 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
             if not isinstance(annotation, dict):
                 raise SAMValidationError(f"Each annotation must be a dictionary, got {type(annotation)}: {annotation}")
             for key, value in annotation.items():
+                # Key must be URL-friendly
                 if not re.match(SmarterValidator.VALID_URL_FRIENDLY_STRING, str(key)):
                     raise SAMValidationError(
                         f"Invalid annotation key: {key}. Ensure that you do not include characters that are not URL friendly."
                     )
-                if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, str(value)):
+                # Accept string, int, float, bool, datetime.date, datetime.datetime, decimal.Decimal, uuid.UUID, bytes, list, dict, or None as value
+                allowed_types = VALID_ANNOTATION_VALUE_TYPES_SET
+                if not isinstance(value, allowed_types) and value is not None:
                     raise SAMValidationError(
-                        f"Invalid annotation value: {value}. Ensure that you do not include characters that are not URL friendly."
+                        f"Invalid annotation value type for key '{key}': {type(value)}. Must be a string, int, float, bool, date, datetime, Decimal, UUID, bytes, list, dict, or None."
                     )
+                # If string, allow multi-line (YAML block scalar) and comma-separated values
+                if isinstance(value, str):
+                    # Allow any string, but optionally check for length or forbidden characters
+                    if len(value) > 2048:
+                        raise SAMValidationError(f"Annotation value for key '{key}' is too long (max 2048 chars).")
         return v
 
 

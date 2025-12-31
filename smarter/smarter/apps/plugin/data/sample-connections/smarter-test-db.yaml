@@ -8,11 +8,11 @@ metadata:
     - sample
     - smarter
   annotations:
-    smarter.sh/smarter-test-db/owner: smarter-test-user
-    smarter.sh/smarter-test-db/creator: QA Team
-    smarter.sh/smarter-test-db/purpose: unit testing
-    smarter.sh/smarter-test-db/release-date: 2024-06-15
-    smarter.sh/smarter-test-db/backward-compatibility: true
+    - smarter.sh/smarter-test-db/owner: smarter-test-user
+    - smarter.sh/smarter-test-db/creator: QA Team
+    - smarter.sh/smarter-test-db/purpose: unit testing
+    - smarter.sh/smarter-test-db/release-date: 2024-06-15
+    - smarter.sh/smarter-test-db/backward-compatibility: true
   version: 0.1.0
 spec:
   connection:

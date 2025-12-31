@@ -16,10 +16,10 @@ metadata:
     - instructor
     - ubc
   annotations:
-    smarter.sh/lawrence-mcdaniel/display-name: Lawrence McDaniel Info Plugin
-    smarter.sh/lawrence-mcdaniel/icon: https://example.com/lawrence-mcdaniel-icon.png
-    smarter.sh/lawrence-mcdaniel/documentation-url: https://docs.lawrencemcdaniel.com/plugin
-    smarter.sh/lawrence-mcdaniel/contact-email: lpm0073@mail.edu
+    - smarter.sh/lawrence-mcdaniel/display-name: Lawrence McDaniel Info Plugin
+    - smarter.sh/lawrence-mcdaniel/icon: https://example.com/lawrence-mcdaniel-icon.png
+    - smarter.sh/lawrence-mcdaniel/documentation-url: https://docs.lawrencemcdaniel.com/plugin
+    - smarter.sh/lawrence-mcdaniel/contact-email: lpm0073@mail.edu
 spec:
   selector:
     directive: search_terms

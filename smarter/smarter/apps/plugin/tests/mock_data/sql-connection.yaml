@@ -10,10 +10,10 @@ metadata:
     - connection
     - test
   annotations:
-    smarter.sh/test-sql-connection/display-name: Test SQL Connection
-    smarter.sh/test-sql-connection/icon: https://example.com/test-sql-connection-icon.png
-    smarter.sh/test-sql-connection/documentation-url: https://docs.example.com/test-sql-connection
-    smarter.sh/test-sql-connection/contact-email: lawrence@me.ai
+    - smarter.sh/test-sql-connection/display-name: Test SQL Connection
+    - smarter.sh/test-sql-connection/icon: https://example.com/test-sql-connection-icon.png
+    - smarter.sh/test-sql-connection/documentation-url: https://docs.example.com/test-sql-connection
+    - smarter.sh/test-sql-connection/contact-email: lawrence@me.ai
 
 spec:
   connection:

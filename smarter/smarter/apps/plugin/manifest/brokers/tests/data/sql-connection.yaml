@@ -10,10 +10,22 @@ metadata:
     - connection
     - test
   annotations:
-    smarter.sh/test-sql-connection/display-name: Test SQL Connection
-    smarter.sh/test-sql-connection/icon: https://example.com/test-sql-connection-icon.png
-    smarter.sh/test-sql-connection/documentation-url: https://docs.example.com/test-sql-connection
-    smarter.sh/test-sql-connection/contact-email: lawrence@me.com
+    - smarter.sh/test-sql-connection/display-name: Test SQL Connection
+    - smarter.sh/test-sql-connection/icon: https://example.com/test-sql-connection-icon.png
+    - smarter.sh/test-sql-connection/documentation-url: https://docs.example.com/test-sql-connection
+    - smarter.sh/test-sql-connection/contact-email: lawrence@me.com
+    - smarter.sh/test-sql-connection/expires: 2030-12-31
+    - smarter.sh/test-sql-connection/license: MIT
+    - smarter.sh/test-sql-connection/license-url: https://opensource.org/licenses/MIT
+    - smarter.sh/test-sql-connection/minium-smarter-version: 1.5.0
+    - smarter.sh/test-sql-connection/requires-authentication: true
+    - smarter.sh/test-sql-connection/supported-environments: docker, kubernetes
+    - smarter.sh/test-sql-connection/maintainer: Lawrence McDaniel
+    - smarter.sh/test-sql-connection/maintainer-email: support@smarter.sh
+    - smarter.sh/test-sql-connection/usage: |
+        This SQL connection configuration is intended for testing purposes only. It
+        connects to a local Docker MySQL development database with default credentials.
+        Do not use this configuration in production environments.
 spec:
   connection:
     dbEngine: django.db.backends.mysql

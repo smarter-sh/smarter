@@ -12,16 +12,16 @@ metadata:
     - information
     - sales
   annotations:
-    smarter.sh/about-smarter/plugin-display-name: About Smarter Plugin
-    smarter.sh/about-smarter/plugin-category: Information Plugins
-    smarter.sh/about-smarter/usefulness: provides detailed information about the Smarter platform for managing AI resources
-    smarter.sh/about-smarter/plugin-purpose: |
-      useful for all inquiries about the Smarter platform, including technical capabilities,
-      installation options, pricing information, training and onboarding,
-      technical documentation, and more.
-    smarter.sh/about-smarter/target-audience: |
-      developers, system administrators, prompt engineers, sales teams, and potential customers
-      interested in learning more about the Smarter platform.
+    - smarter.sh/about-smarter/plugin-display-name: About Smarter Plugin
+    - smarter.sh/about-smarter/plugin-category: Information Plugins
+    - smarter.sh/about-smarter/usefulness: provides detailed information about the Smarter platform for managing AI resources
+    - smarter.sh/about-smarter/plugin-purpose: |
+        useful for all inquiries about the Smarter platform, including technical capabilities,
+        installation options, pricing information, training and onboarding,
+        technical documentation, and more.
+    - smarter.sh/about-smarter/target-audience: |
+        developers, system administrators, prompt engineers, sales teams, and potential customers
+        interested in learning more about the Smarter platform.
 spec:
   data:
     description: This tool provides detailed information about the Smarter platform. Use this for all inquiries about Smarter.
