@@ -9,9 +9,9 @@ metadata:
     - auth
     - token
   annotations:
-    smarter.sh/test-auth-token/display-name: Test Auth Token
-    smarter.sh/test-auth-token/icon: https://example.com/test-auth-token-icon.png
-    smarter.sh/test-auth-token/documentation-url: https://docs.example.com/test-auth-token
+    - smarter.sh/test-auth-token/display-name: Test Auth Token
+    - smarter.sh/test-auth-token/icon: https://example.com/test-auth-token-icon.png
+    - smarter.sh/test-auth-token/documentation-url: https://docs.example.com/test-auth-token
 spec:
   config:
     isActive: true

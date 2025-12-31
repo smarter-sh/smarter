@@ -9,10 +9,10 @@ metadata:
     - api
     - chatbot
   annotations:
-    smarter.sh/chatbot/stackademy-api/creator: QA Team
-    smarter.sh/chatbot/stackademy-api/purpose: chatbot for Stackademy course1 catalogue inquiries
-    smarter.sh/chatbot/stackademy-api/release-date: 2024-06-15
-    smarter.sh/chatbot/stackademy-api/backward-compatibility: true
+    - smarter.sh/chatbot/stackademy-api/creator: QA Team
+    - smarter.sh/chatbot/stackademy-api/purpose: chatbot for Stackademy course1 catalogue inquiries
+    - smarter.sh/chatbot/stackademy-api/release-date: 2024-06-15
+    - smarter.sh/chatbot/stackademy-api/backward-compatibility: true
 spec:
   config:
     deployed: true

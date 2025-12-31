@@ -14,9 +14,9 @@ metadata:
     - down
     - all-around
   annotations:
-    smarter.sh/cli-test-plugin/display-name: Cli Test Plugin
-    smarter.sh/cli-test-plugin/icon: https://example.com/cli-test-plugin-icon.png
-    smarter.sh/cli-test-plugin/documentation-url: https://docs.example.com/cli-test
+    - smarter.sh/cli-test-plugin/display-name: Cli Test Plugin
+    - smarter.sh/cli-test-plugin/icon: https://example.com/cli-test-plugin-icon.png
+    - smarter.sh/cli-test-plugin/documentation-url: https://docs.example.com/cli-test
 spec:
   # ------------------------------------------------------------
   # 2. Required field: prompting

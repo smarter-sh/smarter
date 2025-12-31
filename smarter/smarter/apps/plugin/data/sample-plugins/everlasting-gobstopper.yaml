@@ -13,16 +13,16 @@ metadata:
     - Gobstoppers
     - Willy Wonka
   annotations:
-    smarter.sh/everlasting-gobstopper/plugin-display-name: Everlasting Gobstopper Plugin
-    smarter.sh/everlasting-gobstopper/plugin-category: Candy Plugins
-    smarter.sh/everlasting-gobstopper/usefulness: provides information about a fictional candy
-    smarter.sh/everlasting-gobstopper/plugin-purpose: |
+    - smarter.sh/everlasting-gobstopper/plugin-display-name: Everlasting Gobstopper Plugin
+    - smarter.sh/everlasting-gobstopper/plugin-category: Candy Plugins
+    - smarter.sh/everlasting-gobstopper/usefulness: provides information about a fictional candy
+    - smarter.sh/everlasting-gobstopper/plugin-purpose: |
         This plugin provides additional information about the Everlasting Gobstopper
         candy created by Willy Wonka Chocolate Factory. It includes details on
         sales promotions, coupon codes, company contact information, and
         biographical background on the company founder, Willy Wonka.
-    smarter.sh/everlasting-gobstopper/release-date: 2024-06-15
-    smarter.sh/everlasting-gobstopper/environments: production, staging, development
+    - smarter.sh/everlasting-gobstopper/release-date: 2024-06-15
+    - smarter.sh/everlasting-gobstopper/environments: production, staging, development
 spec:
   selector:
     directive: search_terms

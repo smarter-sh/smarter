@@ -9,10 +9,10 @@ metadata:
     - api
     - test
   annotations:
-    smarter.sh/api-test/display-name: API Test Plugin
-    smarter.sh/api-test/icon: https://example.com/api-test-icon.png
-    smarter.sh/api-test/documentation-url: https://docs.example.com/api-test
-    smarter.sh/api-test/contact-email: support@pound-sand.com
+    - smarter.sh/api-test/display-name: API Test Plugin
+    - smarter.sh/api-test/icon: https://example.com/api-test-icon.png
+    - smarter.sh/api-test/documentation-url: https://docs.example.com/api-test
+    - smarter.sh/api-test/contact-email: support@pound-sand.com
 spec:
   selector:
     directive: always

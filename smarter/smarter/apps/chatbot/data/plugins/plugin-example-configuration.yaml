@@ -12,9 +12,9 @@ metadata:
     - function-calling
     - configuration
   annotations:
-    smarter.sh/example-configuration/plugin-display-name: Example Configuration Plugin
-    smarter.sh/example-configuration/plugin-category: Example Plugins
-    smarter.sh/example-configuration/usefulness: not of much practical use, just an example
+    - smarter.sh/example-configuration/plugin-display-name: Example Configuration Plugin
+    - smarter.sh/example-configuration/plugin-category: Example Plugins
+    - smarter.sh/example-configuration/usefulness: not of much practical use, just an example
 spec:
   data:
     description: an example plugin to integrate with OpenAI API Function Calling additional

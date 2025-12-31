@@ -10,10 +10,10 @@ metadata:
     - sql
     - database
   annotations:
-    smarter.sh/stackademy-sql/display-name: Stackademy SQL
-    smarter.sh/stackademy-sql/icon: https://example.com/stackademy-sql-icon.png
-    smarter.sh/stackademy-sql/documentation-url: https://docs.stackademy.com/sql
-    smarter.sh/stackademy-sql/contact-email: no-reply@example.com
+    - smarter.sh/stackademy-sql/display-name: Stackademy SQL
+    - smarter.sh/stackademy-sql/icon: https://example.com/stackademy-sql-icon.png
+    - smarter.sh/stackademy-sql/documentation-url: https://docs.stackademy.com/sql
+    - smarter.sh/stackademy-sql/contact-email: no-reply@example.com
 spec:
   selector:
     directive: always
