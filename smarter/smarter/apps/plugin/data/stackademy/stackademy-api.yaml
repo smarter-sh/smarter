@@ -4,11 +4,18 @@ metadata:
   description: Online course catalogue inquiries for fictional Stackademy University that only offers computer science degrees programs.
   name: stackademy_api
   pluginClass: api
-  tags:
-  - api
-  - courses
-  - stackademy
   version: 0.1.0
+  tags:
+    - api
+    - courses
+    - stackademy
+  annotations:
+    smarter.sh/stackademy-api/display-name: Stackademy API
+    smarter.sh/stackademy-api/icon: https://example.com/stackademy-icon.png
+    smarter.sh/stackademy-api/supports-authentication: "true"
+    smarter.sh/stackademy-api/supports-rate-limiting: "true"
+    smarter.sh/stackademy-api/documentation-url: https://docs.stackademy.com/api
+    smarter.sh/stackademy-api/contact-email: no-reply@example.com
 spec:
   apiData:
     body:

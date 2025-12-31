@@ -5,7 +5,6 @@ metadata:
   description: Example ApiConnection using any of the following authentication methods:
     [none, basic, token, oauth]
   name: example_connection
-  tags: []
   version: 0.1.0
 spec:
   connection:

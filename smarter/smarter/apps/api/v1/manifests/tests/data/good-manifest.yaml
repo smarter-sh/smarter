@@ -14,6 +14,12 @@ metadata:
     - red
     - green
     - blue
+  annotations:
+    - smarter.sh/tests/owner: test bank
+    - smarter.sh/tests/host: none
+    - smarter.sh/tests/purpose: Provide an example configuration for OpenAI API Function Calling.
+    - smarter.sh/tests/last-updated: 2025-12-31
+    - smarter.sh/tests/documentation: https://docs.tests.edu/example-function-calling
 spec:
   # ------------------------------------------------------------
   # 2. Required field: prompting

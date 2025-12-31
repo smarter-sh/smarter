@@ -14,6 +14,15 @@ metadata:
     - red
     - green
     - blue
+  annotations:
+    smarter.sh/example-configuration/plugin-display-name: Example Configuration Plugin
+    smarter.sh/example-configuration/plugin-category: Example Plugins
+    smarter.sh/example-configuration/usefulness: not of much practical use, just an example
+    smarter.sh/example-configuration/plugin-purpose: |
+        This is an example plugin to demonstrate how to configure a plugin
+        that integrates with OpenAI API Function Calling for providing
+        additional information via plugin_data.
+    smarter.sh/example-configuration/release-date: 2024-06-15
 spec:
   # ------------------------------------------------------------
   # 2. Required field: prompting

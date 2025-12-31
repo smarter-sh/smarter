@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timedelta
 
 from smarter.apps.account.models import Secret
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 
@@ -25,10 +26,16 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
         which is needed so that the django Secret model can be queried.
         """
         super().setUpClass()
-        cls.test_secret_name = "smarter"
-        cls.test_secret_value = "top-secret-test-password-value"
+        expires_at = datetime.now() + timedelta(days=180)  # 6 months from now.
+        # far enough into the future that we can
+        # ignore expiry in these tests.
 
-        expires_at = datetime.now() + timedelta(days=180)  # 6 months from now
+        # this should match spec.connection.password in ../data/sql-connection.yaml
+        cls.test_secret_name = "smarter"
+
+        # note: this is SMARTER_MYSQL_TEST_DATABASE_PASSWORD from .env
+        cls.test_secret_value = smarter_settings.smarter_mysql_test_database_password.get_secret_value()
+
         cls.secret = Secret.objects.create(
             user_profile=cls.user_profile,
             name=cls.test_secret_name,
@@ -37,8 +44,13 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
             expires_at=expires_at,
         )
 
+        # this should match spec.connection.proxyPassword
+        # in ../data/sql-connection.yaml. if the parameter
+        # is not set in the manifest then proxy connection will not be tested.
         cls.test_proxy_secret_name = "smarter-proxy"
-        cls.test_proxy_secret_value = "top-secret-proxy-password-value"
+
+        # note: this is SMARTER_MYSQL_TEST_DATABASE_PASSWORD from .env
+        cls.test_proxy_secret_value = smarter_settings.smarter_mysql_test_database_password.get_secret_value()
         cls.proxy_secret = Secret.objects.create(
             user_profile=cls.user_profile,
             name=cls.test_proxy_secret_name,

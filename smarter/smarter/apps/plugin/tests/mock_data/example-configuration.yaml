@@ -10,6 +10,14 @@ metadata:
     - red
     - green
     - blue
+  annotations:
+    smarter.sh/example-configuration/display-name: Example Configuration Plugin
+    smarter.sh/example-configuration/icon: https://example.com/example-configuration-icon.png
+    smarter.sh/example-configuration/documentation-url: https://docs.example.com/example-configuration
+    smarter.sh/example-configuration/usage: |
+        This is an example plugin to demonstrate how to set up a plugin for OpenAI API Function Calling additional information plugin_data.
+        It provides static data about the OpenAI API Function Calling feature, including links to documentation and related resources.
+    smarter.sh/example-configuration/contact-email: support@mail.io
 spec:
   selector:
     directive: search_terms

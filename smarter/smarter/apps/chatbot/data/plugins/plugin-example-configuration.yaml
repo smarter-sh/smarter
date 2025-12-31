@@ -6,8 +6,15 @@ metadata:
     plugin_data, in this module.
   name: example_configuration
   pluginClass: static
-  tags: []
   version: 0.2.0
+  tags:
+    - example
+    - function-calling
+    - configuration
+  annotations:
+    smarter.sh/example-configuration/plugin-display-name: Example Configuration Plugin
+    smarter.sh/example-configuration/plugin-category: Example Plugins
+    smarter.sh/example-configuration/usefulness: not of much practical use, just an example
 spec:
   data:
     description: an example plugin to integrate with OpenAI API Function Calling additional

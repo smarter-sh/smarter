@@ -494,6 +494,14 @@ class SettingsDefaults:
 
     SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
 
+    SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = get_env(
+        "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME",
+        "smarter_test_db",
+    )
+    SMARTER_MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(
+        get_env("SMARTER_MYSQL_TEST_DATABASE_PASSWORD", is_secret=True)
+    )
+
     SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}")
     SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
     SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
@@ -3283,6 +3291,37 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid email address.
     """
 
+    smarter_mysql_test_database_secret_name: Optional[str] = Field(
+        SettingsDefaults.MYSQL_TEST_DATABASE_SECRET_NAME,
+        description="The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        examples=["smarter_test_db"],
+        title="Smarter MySQL Test Database Secret Name",
+    )
+    """
+    The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.
+    This setting specifies the name of the secret in AWS Secrets Manager
+    that contains the credentials for the Smarter MySQL test database.
+    It is used by example Smarter Plugins that require access to a test database.
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.MYSQL_TEST_DATABASE_SECRET_NAME``
+    :raises SmarterConfigurationError: If the value is not a string. SMARTER_MYSQL_TEST_DATABASE_PASSWORD
+    """
+
+    smarter_mysql_test_database_password: Optional[SecretStr] = Field(
+        SettingsDefaults.MYSQL_TEST_DATABASE_PASSWORD,
+        description="The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        examples=["smarter_test_user"],
+        title="Smarter MySQL Test Database Password",
+    )
+    """
+    The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.
+    This setting provides the password used to connect to the Smarter MySQL test database.
+    It is used by example Smarter Plugins that require access to a test database.
+    :type: Optional[SecretStr]
+    :default: Value from ``SettingsDefaults.MYSQL_TEST_DATABASE_PASSWORD``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
     @before_field_validator("smtp_sender")
     def validate_smtp_sender(cls, v: Optional[str]) -> str:
         """Validates the `smtp_sender` field.
@@ -4322,4 +4361,4 @@ def get_settings() -> Settings:
 
 settings = get_settings()
 
-__all__ = ["settings", "SettingsDefaults"]
+__all__ = ["settings"]
