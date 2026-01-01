@@ -17,7 +17,6 @@ from smarter.apps.plugin.manifest.models.common.connection.metadata import (
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.manifest.models.sql_connection.spec import SAMSqlConnectionSpec
 from smarter.apps.plugin.models import SqlConnection
-from smarter.apps.plugin.serializers import SqlConnectionSerializer
 from smarter.lib import json
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
