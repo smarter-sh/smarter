@@ -13,19 +13,16 @@ designed to be compatible with Python 3, Django, DRF, and Pydantic.
 """
 import csv
 import hashlib
-import json  # library for interacting with JSON data https://www.json.org/json-en.html
 import logging
 import os
 import random
 import re
 import warnings
-from datetime import datetime
 from typing import Optional, Union
 
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
-from pydantic import SecretStr
 from rest_framework.request import Request
 
 from smarter.common.exceptions import SmarterValueError
@@ -52,57 +49,6 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
-
-class DateTimeEncoder(json.JSONEncoder):
-    """
-    Custom JSON encoder that handles serialization of ``datetime`` objects and ``SecretStr`` values.
-
-    This encoder extends :class:`json.JSONEncoder` to provide special handling for objects that are not natively serializable by the standard JSON encoder.
-
-    - ``datetime`` objects are converted to strings in the format ``YYYY-MM-DD``.
-    - ``SecretStr`` objects are redacted and replaced with the string ``"*** REDACTED ***"``.
-
-    :param o: The object to encode. This parameter is handled internally by the encoder and is not set directly by users.
-    :type o: Any
-
-    :return: A JSON-serializable representation of the input object.
-    :rtype: str
-
-    .. note::
-        For all other types, the default encoding behavior of :class:`json.JSONEncoder` is used.
-
-    .. warning::
-        This encoder is intended for use cases where redacting sensitive information (such as secrets) and formatting dates is required. It does not handle all possible custom types.
-
-    **Example usage:**
-
-    .. code-block:: python
-
-        import json
-        from smarter.common.utils import DateTimeEncoder
-        from datetime import datetime
-        from pydantic import SecretStr
-
-        data = {
-            "created": datetime(2025, 12, 4),
-            "password": SecretStr("supersecret"),
-            "name": "Alice"
-        }
-
-        json_str = json.dumps(data, cls=DateTimeEncoder)
-        print(json_str)
-        # Output: {"created": "2025-12-04", "password": "*** REDACTED ***", "name": "Alice"}
-
-    """
-
-    def default(self, o):
-        if isinstance(o, datetime):
-            return o.strftime("%Y-%m-%d")
-        if isinstance(o, SecretStr):
-            return "*** REDACTED ***"
-
-        return super().default(o)
 
 
 def is_authenticated_request(request: Optional[RequestType]) -> bool:

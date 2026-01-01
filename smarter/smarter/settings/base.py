@@ -12,7 +12,6 @@ notes:
 
 import ast
 import hashlib
-import json
 import logging
 import logging.config
 import math
@@ -33,6 +32,7 @@ from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
 from smarter.common.helpers.console_helpers import formatted_text_green
+from smarter.lib import json
 
 
 logger = logging.getLogger(__name__)
