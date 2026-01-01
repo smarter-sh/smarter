@@ -2,9 +2,9 @@
 """Smarter API Account Manifest handler"""
 
 import logging
-from typing import Optional, Type
+import traceback
+from typing import TYPE_CHECKING, Optional, Type
 
-from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
@@ -36,6 +36,10 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 
 def should_log(level):
@@ -152,7 +156,6 @@ class SAMAccountBroker(AbstractBroker):
             "name": self.manifest.metadata.name,
             "description": self.manifest.metadata.description,
             "version": self.manifest.metadata.version,
-            "tags": tags,
             "annotations": self.manifest.metadata.annotations,
             **config_dump,
         }
@@ -328,7 +331,7 @@ class SAMAccountBroker(AbstractBroker):
         """
         return Account
 
-    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example manifest for the Smarter API Account.
 
@@ -357,12 +360,12 @@ class SAMAccountBroker(AbstractBroker):
             )
         return self.json_response_ok(command=command, data=self.manifest.model_dump())
 
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         get the manifest(s) for the Smarter API Account.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
@@ -415,12 +418,12 @@ class SAMAccountBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Applies the manifest by copying its data to the Django ORM `Account` model and saving the model to the database.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
@@ -477,15 +480,16 @@ class SAMAccountBroker(AbstractBroker):
             self.account.tags.set(tags)
             self.account.refresh_from_db()
         except Exception as e:
-            raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
+            tb = traceback.format_exc()
+            raise SAMBrokerError(message=f"Error in {command}: {e}\n{tb}", thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Chat functionality is not implemented for the Smarter API Account.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
@@ -498,12 +502,12 @@ class SAMAccountBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Describe the manifest for the Smarter API Account.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
@@ -525,7 +529,7 @@ class SAMAccountBroker(AbstractBroker):
                 raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotFound(message="No account found", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
 
         .. attention::
@@ -533,7 +537,7 @@ class SAMAccountBroker(AbstractBroker):
             Delete functionality is not implemented for the Smarter API Account.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
@@ -546,7 +550,7 @@ class SAMAccountBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Delete not implemented", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
 
         .. attention::
@@ -554,7 +558,7 @@ class SAMAccountBroker(AbstractBroker):
             Deploy functionality is not implemented for the Smarter API Account.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
@@ -567,14 +571,14 @@ class SAMAccountBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         .. attention::
 
             Undeploy functionality is not implemented for the Smarter API Account.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
@@ -587,7 +591,7 @@ class SAMAccountBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
 
         .. attention::
@@ -595,7 +599,7 @@ class SAMAccountBroker(AbstractBroker):
             Logs functionality is not implemented for the Smarter API Account.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 

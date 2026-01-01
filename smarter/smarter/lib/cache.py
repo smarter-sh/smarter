@@ -38,9 +38,7 @@ import hashlib
 import logging
 import pickle
 from functools import wraps
-from typing import Any, Callable, Optional
-
-from django.http import HttpRequest
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
 from smarter.common.helpers.console_helpers import (
@@ -51,6 +49,9 @@ from smarter.common.helpers.console_helpers import (
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text("@cache_results()")
@@ -580,11 +581,13 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     Caches the result of a function based on the request URI and user identifier.
     Associates a Smarter user account number with the cache key if the user is authenticated.
     """
+    # pylint: disable=C0415
+    from django.http import HttpRequest
 
     def decorator(func):
 
         @wraps(func)
-        def wrapper(request: HttpRequest, *args, **kwargs):
+        def wrapper(request: "HttpRequest", *args, **kwargs):
             if request is None or not isinstance(request, HttpRequest):
                 logger.error(
                     "%s.cache_request() received an invalid request object: %s",

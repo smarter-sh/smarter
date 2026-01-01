@@ -3,9 +3,8 @@
 
 import logging
 from http import HTTPStatus
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from django.http import HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 
@@ -26,6 +25,10 @@ from ..swagger import (
     openai_success_response,
 )
 from .chat import CACHE_EXPIRATION, ApiV1CliChatBaseApiView
+
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 
 def should_log(level):
@@ -85,7 +88,7 @@ This is a Non-brokered operation.
         request_body=ChatConfigSerializer,
     )
     @csrf_exempt
-    def post(self, request: HttpRequest, name: str, *args, **kwargs):
+    def post(self, request: "HttpRequest", name: str, *args, **kwargs):
         uid: Optional[str] = request.POST.get("uid")
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
         logger.info(

@@ -2,10 +2,9 @@
 """Smarter API User Manifest handler"""
 
 import logging
-from typing import Any, Optional, Type
+from typing import TYPE_CHECKING, Any, Optional, Type
 
 from django.db import transaction
-from django.http import HttpRequest
 
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.user.metadata import SAMUserMetadata
@@ -41,6 +40,10 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 
 def should_log(level):
@@ -392,7 +395,7 @@ class SAMUserBroker(AbstractBroker):
         """
         return User
 
-    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return the SAM `User` model associated with the Smarter API User manifest.
 
@@ -410,7 +413,7 @@ class SAMUserBroker(AbstractBroker):
         data = self.django_orm_to_manifest_dict()
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve Smarter API User manifests as a list of serialized Pydantic models.
 
@@ -483,7 +486,7 @@ class SAMUserBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Apply the manifest data to the Django ORM `User` model and persist changes to the database.
 
@@ -561,7 +564,7 @@ class SAMUserBroker(AbstractBroker):
             ) from e
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
 
         .. attention::
@@ -581,7 +584,7 @@ class SAMUserBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Describe the Smarter API User manifest by retrieving the corresponding Django ORM `User` model instance.
 
@@ -629,7 +632,7 @@ class SAMUserBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the Smarter API User manifest by removing the corresponding Django ORM `User` model instance.
 
@@ -671,7 +674,7 @@ class SAMUserBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Deploy the Smarter API User manifest by activating the corresponding Django ORM `User` model instance.
 
@@ -698,7 +701,7 @@ class SAMUserBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Undeploy the Smarter API User manifest by deactivating the corresponding Django ORM `User` model instance.
 
@@ -723,7 +726,7 @@ class SAMUserBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve logs related to the Smarter API User manifest.
 

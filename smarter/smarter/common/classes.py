@@ -2,11 +2,11 @@
 
 import ipaddress
 import logging
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import yaml
+from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
-from django.http import HttpRequest
 from django.utils.deprecation import MiddlewareMixin
 
 from smarter.common.conf import settings as smarter_settings
@@ -22,15 +22,22 @@ from smarter.lib import json
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-try:
-    # this resolves an import issue in collect static assets where Django apps are not yet importable
-    from smarter.lib.django import waffle
-    from smarter.lib.django.waffle import SmarterWaffleSwitches
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
-    mixin_logging_is_active: bool = waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
-# pylint: disable=broad-except
-except AppRegistryNotReady as e:
-    mixin_logging_is_active: bool = False
+# guard against Sphinx doc build circular import errors
+mixin_logging_is_active: bool = False
+if apps.ready:
+    try:
+        # this resolves an import issue in collect static assets where Django apps are not yet importable
+        # pylint: disable=import-outside-toplevel,C0412
+        from smarter.lib.django import waffle
+        from smarter.lib.django.waffle import SmarterWaffleSwitches
+
+        mixin_logging_is_active = waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
+    # pylint: disable=broad-except
+    except (AppRegistryNotReady, ImportError):
+        pass
 
 
 def should_log(level):
@@ -130,7 +137,7 @@ class SmarterHelperMixin:
             "class_name": self.unformatted_class_name,
         }
 
-    def smarter_build_absolute_uri(self, request: HttpRequest) -> str:
+    def smarter_build_absolute_uri(self, request: "HttpRequest") -> str:
         """
         Attempts to get the absolute URI from a request object.
 

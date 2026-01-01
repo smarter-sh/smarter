@@ -18,12 +18,9 @@ import os
 import random
 import re
 import warnings
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import yaml
-from django.core.handlers.wsgi import WSGIRequest
-from django.http import HttpRequest
-from rest_framework.request import Request
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
@@ -31,9 +28,14 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-RequestType = Union[HttpRequest, Request, WSGIRequest]
+if TYPE_CHECKING:
+    from django.core.handlers.wsgi import WSGIRequest
+    from django.http import HttpRequest
+    from rest_framework.request import Request
+RequestType = Union["HttpRequest", "Request", "WSGIRequest"]
 
 
+# pylint: disable=W0613
 def should_log(level):
     """
     Check if logging should be done based on the waffle switch.
@@ -92,6 +94,11 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         print(authenticated)
     """
     try:
+        # pylint: disable=import-outside-toplevel
+        from django.core.handlers.wsgi import WSGIRequest
+        from django.http import HttpRequest
+        from rest_framework.request import Request
+
         return (
             isinstance(request, (HttpRequest, Request, WSGIRequest))
             and hasattr(request, "user")
@@ -511,12 +518,12 @@ def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_
     return masked_string
 
 
-def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
+def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
     """
     Attempts to construct the absolute URI for a given request object.
 
     :param request: The request object, which may be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, :class:`django.core.handlers.wsgi.WSGIRequest`, or a mock object for testing.
-    :type request: HttpRequest or compatible type
+    :type request: "HttpRequest" or compatible type
 
     :return: The absolute URI as a string, or a fallback test URL if the request is invalid or cannot be resolved.
     :rtype: Optional[str]
@@ -558,11 +565,6 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
         logger.debug("smarter_build_absolute_uri() called with None request")
         return "http://testserver/unknown/"
 
-    if isinstance(request, Request):
-        # recast DRF Request to Django HttpRequest
-        # pylint: disable=W0212
-        request = request._request
-
     # If it's a unittest.mock.Mock, synthesize a fake URL for testing
     if hasattr(request, "__class__") and request.__class__.__name__ == "Mock":
         logger.debug("smarter_build_absolute_uri() called with Mock request; returning fake test URL")
@@ -600,6 +602,15 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
             "smarter_build_absolute_uri() failed to build URL from request attributes: %s",
             formatted_text(str(e)),
         )
+
+    # do this last since we have to import
+    # pylint: disable=import-outside-toplevel
+    from rest_framework.request import Request
+
+    if isinstance(request, Request):
+        # recast DRF Request to Django HttpRequest
+        # pylint: disable=W0212
+        request = request._request
 
     # Fallback: synthesize a generic test URL
     logger.debug("smarter_build_absolute_uri() could not determine URL, returning fallback test URL")

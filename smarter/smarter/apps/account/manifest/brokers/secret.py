@@ -4,16 +4,14 @@
 import logging
 import traceback
 from datetime import datetime, timezone
-from typing import Any, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Optional, Type, Union
 
 from dateutil.relativedelta import relativedelta
 from django.forms.models import model_to_dict
-from django.http import HttpRequest
 from rest_framework import serializers
 
 from smarter.apps.account.manifest.enum import (
     SAMSecretMetadataKeys,
-    SAMSecretSpecKeys,
 )
 from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.secret.metadata import SAMSecretMetadata
@@ -47,6 +45,10 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 from smarter.lib.manifest.loader import SAMLoader
+
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 
 def should_log(level):
@@ -479,11 +481,11 @@ class SAMSecretBroker(AbstractBroker):
         """
         return Secret
 
-    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example Smarter API Secret manifest.
 
-        :param request: HttpRequest
+        :param request: "HttpRequest"
             The incoming HTTP request.
         :param args: tuple
             Additional positional arguments.
@@ -531,11 +533,11 @@ class SAMSecretBroker(AbstractBroker):
         )
         return self.json_response_ok(command=command, data=pydantic_model.model_dump())
 
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve Smarter API Secret manifests based on query parameters.
 
-        :param request: HttpRequest
+        :param request: "HttpRequest"
             The incoming HTTP request.
         :param args: tuple
             Additional positional arguments.
@@ -598,13 +600,13 @@ class SAMSecretBroker(AbstractBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Apply the manifest by copying its data to the Django ORM model and saving it to the database.
 
         This method ensures the manifest is loaded and validated before persisting it. Non-editable fields defined in `readonly_fields` are excluded from the ORM model prior to saving.
 
-        :param request: HttpRequest
+        :param request: "HttpRequest"
             The incoming HTTP request.
         :param args: tuple
             Additional positional arguments.
@@ -660,14 +662,14 @@ class SAMSecretBroker(AbstractBroker):
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
 
         .. attention::
 
             this is not implemented for Smarter API Secret manifests.
 
-        :param request: HttpRequest
+        :param request: "HttpRequest"
             The incoming HTTP request.
         :param args: tuple
             Additional positional arguments.
@@ -684,11 +686,11 @@ class SAMSecretBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Describe the Smarter API Secret manifest by retrieving its details from the database.
 
-        :param request: HttpRequest
+        :param request: "HttpRequest"
             The incoming HTTP request.
         :param args: tuple
             Additional positional arguments.
@@ -737,11 +739,11 @@ class SAMSecretBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotFound(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the Smarter API Secret manifest from the database.
 
-        :param request: HttpRequest
+        :param request: "HttpRequest"
             The incoming HTTP request.
         :param args: tuple
             Additional positional arguments.
@@ -769,14 +771,14 @@ class SAMSecretBroker(AbstractBroker):
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
 
         .. attention::
 
             this is not implemented for Smarter API Secret manifests.
 
-        :param request: HttpRequest
+        :param request: "HttpRequest"
             The incoming HTTP request.
         :param args: tuple
             Additional positional arguments.
@@ -790,14 +792,14 @@ class SAMSecretBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
 
         .. attention::
 
             this is not implemented for Smarter API Secret manifests.
 
-        :param request: HttpRequest
+        :param request: "HttpRequest"
             The incoming HTTP request.
         :param args: tuple
             Additional positional arguments.
@@ -811,14 +813,14 @@ class SAMSecretBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
 
         .. attention::
 
             this is not implemented for Smarter API Secret manifests.
 
-        :param request: HttpRequest
+        :param request: "HttpRequest"
             The incoming HTTP request.
         :param args: tuple
             Additional positional arguments.
