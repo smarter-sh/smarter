@@ -342,6 +342,7 @@ class Services:
         ]
 
 
+DOT_ENV_LOADED = DOT_ENV_LOADED or get_env("ENV_LOADED", False)
 if not DOT_ENV_LOADED and get_env("ENVIRONMENT", SmarterEnvironments.LOCAL) == SmarterEnvironments.LOCAL:
     print(
         formatted_text_red(
@@ -536,12 +537,12 @@ class SettingsDefaults:
 
     SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}", is_required=True)
     SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}", is_required=True)
-    SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com", is_required=True)
-    SMTP_PORT = int(get_env("SMTP_PORT", "587", is_required=True))
-    SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False, is_required=True))
-    SMTP_USE_TLS = bool(get_env("SMTP_USE_TLS", True, is_required=True))
+    SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
+    SMTP_PORT = int(get_env("SMTP_PORT", "587"))
+    SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
+    SMTP_USE_TLS = bool(get_env("SMTP_USE_TLS", True))
     SMTP_PASSWORD: SecretStr = SecretStr(get_env("SMTP_PASSWORD", is_secret=True, is_required=True))
-    SMTP_USERNAME: SecretStr = SecretStr(get_env("SMTP_USERNAME", is_secret=True, is_required=True))
+    SMTP_USERNAME: SecretStr = SecretStr(get_env("SMTP_USERNAME", is_secret=True))
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
