@@ -211,15 +211,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         if not self._broker:
             BrokerClass = self.BrokerClass
-            manifest: Optional[dict] = None
-            try:
-                manifest = (
-                    json.loads(self.loader.yaml_data)
-                    if self.loader and isinstance(self.loader.yaml_data, str)
-                    else None
-                )
-            except json.JSONDecodeError as e:
-                raise APIV1CLIViewError("Could not parse manifest yaml data into json.") from e
             self._broker = BrokerClass(
                 request=self.smarter_request,
                 api_version=SMARTER_API_VERSION,
@@ -227,7 +218,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 kind=self.manifest_kind,
                 account=self.user_profile.account if self.user_profile else None,
                 loader=self.loader,
-                manifest=manifest,
+                manifest=self.loader.json_data if self.loader else None,
             )
             if not self._broker:
                 raise APIV1CLIViewError("Could not load manifest.")

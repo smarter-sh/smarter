@@ -8,6 +8,7 @@ from typing import Optional
 import yaml
 from django.core.management import call_command
 
+from smarter.apps.account.const import DATA_PATH as ACCOUNT_DATA_PATH
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.conf import settings as smarter_settings
@@ -90,7 +91,7 @@ def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
     error_output = io.StringIO()
 
     # Add required secrets
-    manifest_path = os.path.join(PROJECT_ROOT, "apps/account/data/sample-secrets/smarter-test-db.yaml")
+    manifest_path = os.path.join(ACCOUNT_DATA_PATH, "example-manifests", "secret-smarter-test-db.yaml")
     call_command("apply_manifest", filespec=manifest_path, username=username, stdout=output)
     logger.info("Applied manifest %s. output: %s", manifest_path, output.getvalue())
     try:

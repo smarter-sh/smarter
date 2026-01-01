@@ -12,7 +12,7 @@ A Plugin that uses a REST API to retrieve its return data
 
 .. sphinx note: these are relative to the rst doc that calls automodule on this file.
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/account/data/sample-secrets/smarter-test-db.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml
     :language: yaml
     :caption: 1.) Example Smarter Secret Manifest
 

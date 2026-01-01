@@ -4,7 +4,7 @@
 import logging
 import os
 from http import HTTPStatus
-from typing import Optional, Type
+from typing import Type
 
 import yaml
 from django.http import HttpRequest
