@@ -710,7 +710,7 @@ class PluginBase(ABC, SmarterHelperMixin):
                     "plugin_class": self.manifest.metadata.pluginClass,
                     "version": self.manifest.metadata.version,
                     "author": self.user_profile,
-                    "annotations": self.manifest.metadata.annotations,
+                    "annotations": json.loads(json.dumps(self.manifest.metadata.annotations)),
                 }
             else:
                 logger.warning(
