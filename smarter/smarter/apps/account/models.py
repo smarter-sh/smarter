@@ -13,8 +13,7 @@ from cryptography.fernet import Fernet
 
 # django stuff
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, AnonymousUser, User
-from django.core.handlers.wsgi import WSGIRequest
+from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.loader import render_to_string
@@ -40,6 +39,14 @@ from .signals import (
     secret_edited,
 )
 
+
+if TYPE_CHECKING:
+    try:
+        from django.contrib.auth.models import AbstractUser, AnonymousUser, _AnyUser
+        from django.core.handlers.wsgi import WSGIRequest
+
+    except ImportError:
+        _AnyUser = Union[object]  # fallback for Sphinx/type checkers
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -96,16 +103,9 @@ def welcome_email_context(first_name: str) -> dict:
     }
 
 
-if TYPE_CHECKING:
-    try:
-        from django.contrib.auth.models import _AnyUser
-    except ImportError:
-        _AnyUser = object  # fallback for Sphinx/type checkers
-
-
 def get_resolved_user(
-    user: "Union[User, AbstractUser, AnonymousUser, SimpleLazyObject, _AnyUser]",
-) -> Optional[Union[User, AbstractUser, AnonymousUser]]:
+    user: Union[User, "AbstractUser", "AnonymousUser", SimpleLazyObject, "_AnyUser"],
+) -> Optional[Union[User, "AbstractUser", "AnonymousUser"]]:
     """
     Resolve and return a Django user object from a user-like instance.
 
@@ -144,7 +144,7 @@ def get_resolved_user(
         return None
 
     # this is the expected case
-    if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
+    if isinstance(user, Union[User, "AnonymousUser", "AbstractUser"]):
         return user
 
     # these are manageable edge cases
@@ -1127,7 +1127,7 @@ class Secret(MetaDataWithOwnershipModel):
         expiration = timezone.make_aware(self.expires_at) if timezone.is_naive(self.expires_at) else self.expires_at
         return timezone.now() > expiration
 
-    def has_permissions(self, request: WSGIRequest) -> bool:
+    def has_permissions(self, request: "WSGIRequest") -> bool:
         """
         Check if the authenticated user in the given request has permission to manage this secret.
 

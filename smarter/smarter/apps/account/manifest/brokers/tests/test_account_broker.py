@@ -6,7 +6,7 @@ import os
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
-from taggit.managers import TaggableManager
+from taggit.managers import TaggableManager, _TaggableManager
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
 from smarter.apps.account.manifest.models.account.metadata import SAMAccountMetadata
@@ -226,7 +226,7 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         # verify that account.tags (TaggableManager) contains the same tags.
         manifest_tags = set(self.broker.manifest.metadata.tags or [])
         django_orm_tags = None
-        if isinstance(self.broker.account.tags, TaggableManager):
+        if isinstance(self.broker.account.tags, (TaggableManager, _TaggableManager)):
             django_orm_tags = set(self.broker.account.tags.names()) if self.broker.account.tags else set()
         elif isinstance(self.broker.account.tags, set):
             django_orm_tags = self.broker.account.tags

@@ -2,13 +2,10 @@
 """A helper class that provides setters/getters for account and user."""
 
 import logging
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from django.contrib.auth.models import AnonymousUser
-from django.core.handlers.wsgi import WSGIRequest
-from django.http import HttpRequest
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.request import Request
 
 from smarter.apps.account.models import User
 from smarter.apps.account.serializers import UserMiniSerializer
@@ -32,13 +29,17 @@ from .utils import (
 )
 
 
-UserType = Union[AnonymousUser, User, None]
+if TYPE_CHECKING:
+    from django.core.handlers.wsgi import WSGIRequest
+    from django.http import HttpRequest
+    from rest_framework.request import Request
+
+UserType = Union["AnonymousUser", User, None]
 AccountNumberType = Optional[str]
 AccountType = Optional[Account]
 UserProfileType = Optional[UserProfile]
 ApiTokenType = Optional[bytes]
-OptionalRequestType = Optional[Union[WSGIRequest, HttpRequest, Request]]
-RequestType = Union[WSGIRequest, HttpRequest, Request]
+OptionalRequestType = Optional[Union["WSGIRequest", "HttpRequest", "Request"]]
 
 
 def should_log(level):
@@ -95,6 +96,11 @@ class AccountMixin(SmarterHelperMixin):
 
         request: OptionalRequestType = kwargs.get("request")
         if not request and args:
+            from django.core.handlers.wsgi import WSGIRequest
+            from django.http import HttpRequest
+            from rest_framework.request import Request
+
+            RequestType = Union[WSGIRequest, HttpRequest, Request]
             for arg in args:
                 if isinstance(arg, RequestType):
                     logger.debug(

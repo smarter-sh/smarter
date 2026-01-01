@@ -6,7 +6,6 @@ from http import HTTPStatus
 from typing import Optional
 
 from django import template
-from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
