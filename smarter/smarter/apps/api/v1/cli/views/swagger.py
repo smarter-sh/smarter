@@ -2,7 +2,6 @@
 Common Swagger definitions for CLI API views.
 """
 
-import json
 import os
 from http import HTTPStatus
 
@@ -14,6 +13,7 @@ from smarter.common.const import (
     SMARTER_BUG_REPORT_URL,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
 )
+from smarter.lib import json
 
 
 with open(os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "get", "plugins.json"), encoding="utf-8") as f:

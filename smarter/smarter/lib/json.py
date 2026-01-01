@@ -14,7 +14,6 @@ import uuid
 from json import (  # unmodified re-export
     JSONDecodeError,
     JSONDecoder,
-    JSONEncoder,
     load,
     loads,
 )
@@ -169,7 +168,7 @@ def dumps(
 __all__ = [
     "JSONDecodeError",
     "JSONDecoder",
-    "JSONEncoder",
+    "SmarterJSONEncoder",
     "dumps",
     "load",
     "loads",

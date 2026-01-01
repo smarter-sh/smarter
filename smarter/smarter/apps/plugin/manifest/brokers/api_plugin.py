@@ -1,7 +1,6 @@
 # pylint: disable=W0718
 """Smarter API ApiPlugin Manifest handler"""
 
-import json
 import logging
 from typing import Optional, Type
 
@@ -26,6 +25,7 @@ from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
 from smarter.apps.plugin.models import PluginDataApi, PluginMeta
 from smarter.apps.plugin.plugin.api import ApiPlugin
 from smarter.common.conf import settings as smarter_settings
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands

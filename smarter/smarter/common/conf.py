@@ -4311,7 +4311,7 @@ class Settings(BaseSettings):
             dict: A dictionary containing all settings and their values.
 
         Example:
-            >>> import json
+            >>> from smarter.lib import json
             >>> print(json.dumps(smarter_settings.dump(), indent=2))
             {
               "environment": {

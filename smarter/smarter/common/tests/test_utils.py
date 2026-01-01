@@ -11,7 +11,6 @@ from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..utils import (
-    DateTimeEncoder,
     camel_to_snake,
     camel_to_snake_dict,
     dict_is_contained_in,
@@ -52,7 +51,7 @@ class TestUtils(SmarterTestBase):
 
     def test_datetime_encoder(self):
         data = {"date": datetime(2024, 1, 1), "secret": SecretStr("abc")}
-        encoded = json.dumps(data, cls=DateTimeEncoder)
+        encoded = json.dumps(data, cls=json.SmarterJSONEncoder)
         self.assertIn("2024-01-01", encoded)
         self.assertIn("**********", encoded)
 

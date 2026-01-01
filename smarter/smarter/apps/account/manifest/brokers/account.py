@@ -1,11 +1,9 @@
 # pylint: disable=W0718
 """Smarter API Account Manifest handler"""
 
-import json
 import logging
 from typing import Optional, Type
 
-from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
