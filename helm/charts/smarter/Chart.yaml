@@ -25,7 +25,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: grafana.enabled
   - name: loki
-    version: 6.46.0
+    version: 6.49.0
     repository: https://grafana.github.io/helm-charts
     condition: loki.enabled
   - name: mysql
