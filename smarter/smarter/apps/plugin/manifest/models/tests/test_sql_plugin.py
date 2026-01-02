@@ -613,9 +613,6 @@ class TestSqlPluginLegacy(TestPluginBase, ManifestTestsMixin, SqlConnectionTestM
         }
 
         sam_sql_plugin = SAMSqlPlugin(**self._manifest)
-        logger.info(
-            "test_validate_api_sql_parameters_missing_required() Created SAMSqlPlugin: %s", sam_sql_plugin.model_dump()
-        )
 
         self._sql_plugin_model = None
         with self.assertRaises(SmarterValueError) as context:

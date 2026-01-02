@@ -65,7 +65,7 @@ class TestPluginClassBase(TestAccountMixin):
     @property
     def manifest(self) -> Optional[dict]:
         if not self._manifest and self.manifest_path:
-            logger.info("Loading manifest from %s", self.manifest_path)
+            logger.info("%s.manifest Loading manifest from %s", self.formatted_class_name, self.manifest_path)
             self._manifest = get_readonly_yaml_file(self.manifest_path)
             self.assertIsNotNone(self._manifest)
         return self._manifest
@@ -76,7 +76,7 @@ class TestPluginClassBase(TestAccountMixin):
         if not self._loader:
             if not self.manifest:
                 raise SmarterValueError(f"{self.__class__.__name__}.loader() called but manifest is None")
-            logger.info("initializing SAMLoader from manifest data")
+            logger.info("%s.loader initializing SAMLoader from manifest data", self.formatted_class_name)
             self._loader = SAMLoader(manifest=json.dumps(self.manifest))
             self.assertIsNotNone(self._loader)
         return self._loader

@@ -14,6 +14,7 @@ from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConne
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import ApiConnection, SqlConnection
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake_dict, get_readonly_yaml_file
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -50,12 +51,13 @@ class AuthenticatedRequestMixin(ConnectionTextMixinBase):
 
     client: Client
     request: HttpRequest
+    test_sam_api_plugin_logger_prefix = formatted_text(f"{__name__}.AuthenticatedRequestMixin()")
 
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
-        logger.info("Setting up AuthenticatedRequestMixin")
+        logger.info("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
         cls.client = Client()
         cls.client.force_login(cls.admin_user)
         response = cls.client.get("/some-url/")
@@ -64,7 +66,7 @@ class AuthenticatedRequestMixin(ConnectionTextMixinBase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        logger.info("Tearing down AuthenticatedRequestMixin")
+        logger.info("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
         super().tearDownClass()
 
 
@@ -78,12 +80,13 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
     connection_manifest: Optional[dict] = None
     connection_model: Optional[SAMApiConnection]
     connection_django_model: Optional[ApiConnection] = None
+    test_sam_api_plugin_logger_prefix = formatted_text(f"{__name__}.ApiConnectionTestMixin()")
 
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
-        logger.info("Setting up ApiConnectionTestMixin")
+        logger.info("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
 
         # setup an instance of ApiConnection() - a Django model
         # ---------------------------------------------------------------------
@@ -143,7 +146,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        logger.info("Tearing down ApiConnectionTestMixin")
+        logger.info("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
 
         cls.connection_manifest_path = None
         cls.connection_manifest = None
@@ -171,11 +174,13 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
     connection_manifest: Optional[dict] = None
     connection_model: Optional[SAMSqlConnection]
     connection_django_model: Optional[SqlConnection] = None
+    test_sam_api_plugin_logger_prefix = formatted_text(f"{__name__}.SqlConnectionTestMixin()")
 
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
+        logger.info("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
 
         # setup an instance of SqlConnection() - a Django model
         # ---------------------------------------------------------------------
@@ -229,7 +234,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        logger.info("Tearing down ApiConnectionTestMixin")
+        logger.info("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
 
         cls.connection_manifest_path = None
         cls.connection_manifest = None
