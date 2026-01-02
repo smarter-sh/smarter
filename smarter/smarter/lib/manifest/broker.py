@@ -1,4 +1,4 @@
-# pylint: disable=W0613
+# pylint: disable=W0613,C0302
 """Smarter API Manifest Abstract Broker class."""
 
 import logging
