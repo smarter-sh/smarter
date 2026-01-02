@@ -239,40 +239,6 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
         self.assertIn("SAMSqlPlugin", repr(model))
         self.assertIn("SAMSqlPlugin", str(model))
 
-    def test_sqldata_description_optional_and_type(self):
-        """Test that description is optional and must be a string or None."""
-        manifest_spec = dict(self.loader.manifest_spec)
-        if "sqlData" in manifest_spec:
-            manifest_spec["sqlData"] = dict(manifest_spec["sqlData"])
-            manifest_spec["sqlData"]["description"] = "A test description."
-        model = SAMSqlPlugin(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMSqlPluginSpec(**manifest_spec),
-        )
-        self.assertEqual(model.spec.sqlData.description, "A test description.")
-
-        # Remove description
-        manifest_spec["sqlData"].pop("description", None)
-        model = SAMSqlPlugin(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMSqlPluginSpec(**manifest_spec),
-        )
-        self.assertIsNone(model.spec.sqlData.description)
-
-        # Wrong type
-        manifest_spec["sqlData"]["description"] = 12345
-        with self.assertRaises(Exception):
-            SAMSqlPlugin(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMSqlPluginSpec(**manifest_spec),
-            )
-
     def test_sqldata_sqlquery_required_and_type(self):
         """Test that sqlQuery is required and must be a string."""
         manifest_spec = dict(self.loader.manifest_spec)

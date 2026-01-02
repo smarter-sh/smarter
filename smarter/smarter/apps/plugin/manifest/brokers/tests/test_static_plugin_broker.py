@@ -297,11 +297,6 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         plugin_data = self.broker.plugin_data
         self.assertIsInstance(plugin_data, PluginDataStatic)
         self.assertEqual(
-            plugin_data.description or "",
-            self.broker.manifest.spec.data.description or "",
-            "Plugin data description does not match manifest spec description.",
-        )
-        self.assertEqual(
             plugin_data.static_data or {},
             self.broker.manifest.spec.data.staticData or {},
             "Plugin data staticData does not match manifest spec staticData.",

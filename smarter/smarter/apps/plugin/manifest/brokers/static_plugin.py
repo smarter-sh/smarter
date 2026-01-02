@@ -340,7 +340,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         self._plugin = StaticPlugin(
             plugin_meta=self.plugin_meta,
             user_profile=self.user_profile,
-            manifest=self.manifest,
+            manifest=self._manifest,
             name=self.name,
         )
         return self._plugin

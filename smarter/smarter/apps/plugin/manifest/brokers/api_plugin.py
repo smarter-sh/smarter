@@ -246,7 +246,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         self._plugin = ApiPlugin(
             plugin_meta=self.plugin_meta,
             user_profile=self.user_profile,
-            manifest=self.manifest,
+            manifest=self._manifest,
             name=self.name,
         )
         return self._plugin
