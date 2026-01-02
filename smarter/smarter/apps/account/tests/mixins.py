@@ -1,12 +1,21 @@
 """Unit test class."""
 
+import logging
+
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .factories import admin_user_factory, factory_account_teardown, mortal_user_factory
 
 
+logger = logging.getLogger(__name__)
+HERE = __name__
+
+
 class TestAccountMixin(SmarterTestBase):
     """A mixin that adds class-level account and user creation/destruction."""
+
+    test_account_mixin_logger_prefix = formatted_text(f"{HERE}.TestAccountMixin()")
 
     @classmethod
     def setUpClass(cls):
@@ -16,11 +25,13 @@ class TestAccountMixin(SmarterTestBase):
         which is needed so that the django Secret model can be queried.
         """
         super().setUpClass()
+        logger.info("%s.setUpClass()", cls.test_account_mixin_logger_prefix)
         cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
         cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
 
     @classmethod
     def tearDownClass(cls):
+        logger.info("%s.tearDownClass()", cls.test_account_mixin_logger_prefix)
         try:
             factory_account_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
             factory_account_teardown(

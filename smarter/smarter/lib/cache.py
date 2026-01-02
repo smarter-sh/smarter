@@ -54,7 +54,9 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text("@cache_results()")
+logger_prefix_normal = formatted_text(f"{__name__}.@cache_results()")
+logger_prefix_green = formatted_text_green(f"{__name__}.@cache_results()")
+logger_prefix_red = formatted_text_red(f"{__name__}.@cache_results()")
 
 
 class CacheSentinel:
@@ -153,7 +155,7 @@ class LazyCache:
             from django.core.cache import cache, caches
             from django_redis.cache import RedisCache
 
-            logger.info("%s django.core.cache imported.", logger_prefix)
+            logger.info("%s django.core.cache imported.", logger_prefix_normal)
 
             self._cache = cache
 
@@ -162,16 +164,17 @@ class LazyCache:
                 cache.set("test_key", "test_value", timeout=5)
                 value = cache.get("test_key")
                 if value == "test_value":
-                    logger.info("Django cache is up and reachable.")
+                    logger.info("%s Django cache is up and reachable.", logger_prefix_normal)
                 else:
-                    logger.error("Django cache is not working as expected.")
+                    logger.error("%s Django cache is not working as expected.", logger_prefix_normal)
             # pylint: disable=broad-except
             except Exception as e:
-                logger.error("Error accessing Django cache: %s", e)
+                logger.error("%s Error accessing Django cache: %s", logger_prefix_normal, e)
 
             if not isinstance(caches["default"], RedisCache):
                 logger.warning(
-                    "django.core.cache.caches['default'] was expecting django_redis.cache.RedisCache but found: %s",
+                    "%s django.core.cache.caches['default'] was expecting django_redis.cache.RedisCache but found: %s",
+                    logger_prefix_normal,
                     caches["default"].__class__,
                 )
 
@@ -419,7 +422,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             try:
                 key_data = pickle.dumps((func.__name__, args, sorted_kwargs))
             except pickle.PickleError as e:
-                logger.error("%s Failed to pickle key data: %s", logger_prefix, e)
+                logger.error("%s Failed to pickle key data: %s", logger_prefix_normal, e)
                 return None
 
             return key_data
@@ -446,7 +449,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 return pickle.loads(key_data)  # nosec
             # pylint: disable=W0718
             except Exception as e:
-                logger.error("%s Failed to unpickle key data: %s", logger_prefix, e)
+                logger.error("%s Failed to unpickle key data: %s", logger_prefix_normal, e)
                 return None
 
         @wraps(func)
@@ -518,7 +521,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             # and return the result without caching.
             # This is a fallback to avoid breaking the application in case of pickling errors.
             if key_data is None:
-                logger.error("%s Failed to generate cache key data for %s", logger_prefix, func.__name__)
+                logger.error("%s Failed to generate cache key data for %s", logger_prefix_normal, func.__name__)
                 return func(*args, **kwargs)
             cache_key = generate_cache_key(func, key_data)
             # unpickled_cache_key = unpickle_key_data(key_data)
@@ -532,8 +535,8 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 )
                 if logging_enabled and lazy_cache.cache_logging:
                     logger.info(
+                        logger_prefix_green,
                         "%s cache hit for %s: %s",
-                        formatted_text_green("@cache_results()"),
                         cache_key,
                         "None" if result is None else result,
                     )
@@ -545,7 +548,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 if logging_enabled and lazy_cache.cache_logging:
                     logger.info(
                         "%s cache miss for %s, caching result: %s with timeout %s",
-                        formatted_text_red("@cache_results()"),
+                        logger_prefix_red,
                         cache_key,
                         cache_value,
                         timeout,
@@ -561,7 +564,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             if logging_enabled and lazy_cache.cache_logging:
                 logger.info(
                     "%s invalidated cache entry for %s",
-                    formatted_text_red("@cache_results()"),
+                    logger_prefix_normal,
                     cache_key,
                 )
 
@@ -591,7 +594,7 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             if request is None or not isinstance(request, HttpRequest):
                 logger.error(
                     "%s.cache_request() received an invalid request object: %s",
-                    logger_prefix,
+                    logger_prefix_normal,
                     type(request).__name__,
                 )
                 return func(request, *args, **kwargs)
@@ -602,7 +605,7 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             cache_key = f"{func.__name__}_{url}_{user_identifier}"
             result = lazy_cache.get(cache_key)
             if result and logging_enabled and lazy_cache.cache_logging:
-                logger.info("%s cache hit for %s", logger_prefix, cache_key)
+                logger.info("%s cache hit for %s", logger_prefix_normal, cache_key)
             else:
                 result = func(request, *args, **kwargs)
                 lazy_cache.set(cache_key, result, timeout)

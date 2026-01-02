@@ -16,6 +16,7 @@ from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.manifest.models.sql_plugin.spec import SAMSqlPluginSpec
 from smarter.apps.plugin.models import PluginDataSql
 from smarter.apps.plugin.plugin.sql import SqlPlugin
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
@@ -26,6 +27,7 @@ from .base_classes.plugin_base import TestSmarterPluginBrokerBase
 
 
 logger = logging.getLogger(__name__)
+HERE = __name__
 
 
 class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
@@ -34,6 +36,24 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
+
+    test_smarter_sql_plugin_broker_logger_prefix = formatted_text(f"{HERE}.TestSmarterSqlPluginBroker()")
+
+    @classmethod
+    def setUpClass(cls):
+        """
+        Class-level setup
+        """
+        super().setUpClass()
+        logger.info("%s.setUpClass()", cls.test_smarter_sql_plugin_broker_logger_prefix)
+
+    @classmethod
+    def tearDownClass(cls):
+        """
+        Class-level teardown
+        """
+        logger.info("%s.tearDownClass()", cls.test_smarter_sql_plugin_broker_logger_prefix)
+        super().tearDownClass()
 
     def setUp(self):
         super().setUp()

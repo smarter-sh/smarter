@@ -6,13 +6,10 @@ For the full list of built-in configuration values, see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
-import datetime
-
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import os
 import subprocess
 import sys
+from datetime import datetime
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -26,18 +23,10 @@ from smarter.common.conf import settings as smarter_settings
 if not smarter_settings.environment:
     raise RuntimeError("The 'smarter_settings.environment' variable is not set.")
 
-os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
-
-import django
-
-
-django.setup()
-
-
 project = "Smarter Documentation"
 
 # pylint: disable=redefined-builtin
-copyright = f"{datetime.datetime.now().year}"
+copyright = f"{datetime.now().year}"
 author = "Lawrence McDaniel"
 release = __version__
 
@@ -46,8 +35,6 @@ try:
 # pylint: disable=broad-except
 except Exception:
     commit = None
-
-from datetime import datetime
 
 
 last_updated = datetime.now().strftime("%Y-%m-%d")
@@ -86,9 +73,6 @@ rst_epilog = f"""
 .. |project_version| replace:: {release}
 """
 
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_theme_options = {
@@ -99,3 +83,14 @@ html_static_path = ["_static"]
 html_css_files = [
     "custom.css",
 ]
+
+
+###############################################################################
+# Django setup
+###############################################################################
+os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
+
+import django
+
+
+django.setup()
