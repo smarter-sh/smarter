@@ -104,10 +104,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     _sql_plugin_spec: Optional[SAMSqlPluginSpec] = None
     _sql_data: Optional[SqlData] = None
 
-    def __init__(self, *args, manifest: Optional[SAMSqlPlugin], **kwargs):
-        super().__init__(*args, **kwargs)
-        self._manifest = manifest
-
     def plugin_init(self) -> None:
         """
         Initialize the SQL plugin for this broker.
@@ -162,6 +158,16 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         """
         parent_class = super().formatted_class_name
         return f"{parent_class}.{self.__class__.__name__}()"
+
+    @property
+    def model_class(self) -> Type[PluginDataSql]:
+        """
+        Return the Django ORM model class for the broker.
+
+        :return: The Django ORM model class definition for the broker.
+        :rtype: Type[PluginDataSql]
+        """
+        return PluginDataSql
 
     @property
     def kind(self) -> str:
