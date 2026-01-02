@@ -227,8 +227,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self.user_profile,
             self.name,
             self._validated,
-            bool(self.manifest),
-            bool(self.loader),
+            bool(self._manifest),
+            bool(self._loader),
         )
 
     ###########################################################################

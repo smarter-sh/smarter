@@ -143,8 +143,11 @@ def get_resolved_user(
     if user is None:
         return None
 
+    # pylint: disable=import-outside-toplevel
+    from django.contrib.auth.models import AbstractUser, AnonymousUser
+
     # this is the expected case
-    if isinstance(user, Union[User, "AnonymousUser", "AbstractUser"]):
+    if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
         return user
 
     # these are manageable edge cases

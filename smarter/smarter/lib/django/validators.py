@@ -19,43 +19,10 @@ from urllib.parse import urlparse, urlunparse
 import validators
 
 
-try:
-    from django.core.exceptions import ValidationError  # type: ignore
-except ImportError:
-    logger.warning("Django is not installed. Some validation features may not work.")
-
-    # pylint: disable=missing-class-docstring
-    class ValidationError(Exception):
-        pass
-
-
-try:
-    from django.core.validators import URLValidator  # type: ignore
-    from django.core.validators import (
-        validate_email,
-        validate_ipv4_address,
-    )
-except ImportError:
-    logger.warning("Django is not installed. Some validation features may not work.")
-
-    # pylint: disable=missing-function-docstring,unused-argument
-
-    # pylint: disable=missing-class-docstring
-    class URLValidator:
-        def __init__(self, *args, **kwargs):
-            logger.warning("Django is not installed. URLValidator will not function properly.")
-
-        def __call__(self, value):
-            # Optionally, you could raise NotImplementedError or just pass
-            logger.warning("Django is not installed. URLValidator will not function properly.")
-
-    # pylint: disable=missing-function-docstring,unused-argument
-    def validate_email(*args, **kwargs):
-        logger.warning("Django is not installed. validate_email will not function properly.")
-
-    # pylint: disable=missing-function-docstring,unused-argument
-    def validate_ipv4_address(*args, **kwargs):
-        logger.warning("Django is not installed. validate_ipv4_address will not function properly.")
+class ValidationError(Exception):
+    """
+    Dummy ValidationError in case Django is not installed.
+    """
 
 
 from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
@@ -518,6 +485,9 @@ class SmarterValidator:
 
         """
         try:
+            # pylint: disable=import-outside-toplevel
+            from django.core.validators import validate_email
+
             validate_email(email)
         except ValidationError as e:
             raise SmarterValueError(f"Invalid email {email}") from e
@@ -542,6 +512,9 @@ class SmarterValidator:
 
         """
         try:
+            # pylint: disable=import-outside-toplevel
+            from django.core.validators import validate_ipv4_address
+
             validate_ipv4_address(ip)
         except ValidationError as e:
             raise SmarterValueError(f"Invalid IP address {ip}") from e
@@ -627,6 +600,8 @@ class SmarterValidator:
         except TypeError:
             pass
         try:
+            from django.core.validators import URLValidator
+
             validator = URLValidator(schemes=valid_protocols)
             validator(url)
             parsed = urlparse(url)

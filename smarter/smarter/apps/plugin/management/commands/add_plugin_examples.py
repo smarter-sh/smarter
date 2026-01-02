@@ -21,6 +21,7 @@ class Command(SmarterCommand):
     def add_arguments(self, parser):
         """Add arguments to the command."""
         parser.add_argument("--username", type=str, required=True, help="The user that will own the new plugin.")
+        parser.add_argument("--verbose", action="store_true", help="Enable verbose output.")
 
     def handle(self, *args, **options):
         """create the plugin."""
@@ -28,6 +29,7 @@ class Command(SmarterCommand):
 
         user_profile: Optional[UserProfile] = None
         username = options["username"]
+        verbose = options["verbose"]
 
         try:
             user: Optional[User] = get_cached_user_for_username(username=username)
@@ -44,10 +46,13 @@ class Command(SmarterCommand):
             raise ValueError(f"UserProfile for {user} does not exist.") from e
 
         try:
-            add_example_plugins(user_profile=user_profile)
+            add_example_plugins(user_profile=user_profile, verbose=verbose)
         # pylint: disable=broad-except
         except Exception as exc:
-            self.handle_completed_failure(exc)
+            import traceback
+
+            tb = traceback.format_exc()
+            self.handle_completed_failure(exc, f"Stack trace:\n{tb}")
             raise
 
         self.handle_completed_success()

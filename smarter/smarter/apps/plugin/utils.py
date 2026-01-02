@@ -10,9 +10,9 @@ from django.core.management import call_command
 
 from smarter.apps.account.const import DATA_PATH as ACCOUNT_DATA_PATH
 from smarter.apps.account.models import UserProfile
+from smarter.apps.api.utils import apply_manifest
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import PROJECT_ROOT
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -34,7 +34,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 # pylint: disable=W0613,C0415
-def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
+def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = False) -> bool:
     """
     Create example plugins for a new user.
 
@@ -92,57 +92,43 @@ def add_example_plugins(user_profile: Optional[UserProfile]) -> bool:
 
     # Add required secrets
     manifest_path = os.path.join(ACCOUNT_DATA_PATH, "example-manifests", "secret-smarter-test-db.yaml")
-    call_command("apply_manifest", filespec=manifest_path, username=username, stdout=output)
-    logger.info("Applied manifest %s. output: %s", manifest_path, output.getvalue())
-    try:
-        call_command(
-            "update_secret",
-            name=smarter_settings.smarter_mysql_test_database_secret_name,
-            username=username,
-            value=(
-                smarter_settings.smarter_mysql_test_database_password.get_secret_value()
-                if smarter_settings.smarter_mysql_test_database_password
-                else None
-            ),
-            stdout=output,
-            stderr=error_output,
-        )
-        if error_output.getvalue():
-            logger.warning("Command completed with warnings: %s", error_output.getvalue())
-        else:
-            logger.info(
-                "Updated secret %s with username %s. output: %s",
-                smarter_settings.smarter_mysql_test_database_secret_name,
-                username,
-                output.getvalue(),
-            )
+    if not apply_manifest(filespec=manifest_path, username=username, verbose=verbose):
+        raise SmarterValueError(f"Failed to apply manifest: {error_output.getvalue()}")
+    # try:
+    #     call_command(
+    #         "update_secret",
+    #         name=smarter_settings.smarter_mysql_test_database_secret_name,
+    #         username=username,
+    #         value=(
+    #             smarter_settings.smarter_mysql_test_database_password.get_secret_value()
+    #             if smarter_settings.smarter_mysql_test_database_password
+    #             else None
+    #         ),
+    #         stdout=output,
+    #         stderr=error_output,
+    #     )
+    #     if error_output.getvalue():
+    #         logger.warning("Command completed with warnings: %s", error_output.getvalue())
+    #     else:
+    #         logger.info(
+    #             "Updated secret %s with username %s. output: %s",
+    #             smarter_settings.smarter_mysql_test_database_secret_name,
+    #             username,
+    #             output.getvalue(),
+    #         )
 
-    except Exception as exc:
-        logger.error("Failed to update secret %s: %s", smarter_settings.smarter_mysql_test_database_secret_name, exc)
-        raise SmarterValueError(f"Failed to update secret: {exc}") from exc
+    # except Exception as exc:
+    #     logger.error("Failed to update secret %s: %s", smarter_settings.smarter_mysql_test_database_secret_name, exc)
+    #     raise SmarterValueError(f"Failed to update secret: {exc}") from exc
 
     # add required connections
     manifest_path = os.path.join(HERE, "data/sample-connections/smarter-test-db.yaml")
-    try:
-        call_command("apply_manifest", filespec=manifest_path, username=username, stdout=output, stderr=error_output)
-        if error_output.getvalue():
-            logger.warning("Command completed with warnings: %s", error_output.getvalue())
-        else:
-            logger.info("Applied manifest %s. output: %s", manifest_path, output.getvalue())
-    except Exception as exc:
-        logger.error("Failed to apply manifest %s: %s", manifest_path, exc)
-        raise SmarterValueError(f"Failed to apply manifest: {exc}") from exc
+    if not apply_manifest(filespec=manifest_path, username=username, verbose=verbose):
+        raise SmarterValueError(f"Failed to apply manifest: {error_output.getvalue()}")
 
     manifest_path = os.path.join(HERE, "data/sample-connections/smarter-test-api.yaml")
-    try:
-        call_command("apply_manifest", filespec=manifest_path, username=username, stdout=output, stderr=error_output)
-        if error_output.getvalue():
-            logger.warning("Command completed with warnings: %s", error_output.getvalue())
-        else:
-            logger.info("Applied manifest %s. output: %s", manifest_path, output.getvalue())
-    except Exception as exc:
-        logger.error("Failed to apply manifest %s: %s", manifest_path, exc)
-        raise SmarterValueError(f"Failed to apply manifest: {exc}") from exc
+    if not apply_manifest(filespec=manifest_path, username=username, verbose=verbose):
+        raise SmarterValueError(f"Failed to apply manifest: {error_output.getvalue()}")
 
     for plugin in plugin_examples.plugins:
         yaml_data = plugin.to_yaml()

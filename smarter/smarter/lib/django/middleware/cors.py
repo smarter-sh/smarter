@@ -7,7 +7,7 @@ import logging
 import re
 from collections.abc import Awaitable
 from functools import cached_property, lru_cache
-from typing import Optional, Pattern, Sequence
+from typing import Optional, Pattern, Sequence, Union
 from urllib.parse import SplitResult, urlsplit
 
 from corsheaders.conf import conf
@@ -86,7 +86,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     _chatbot: Optional[ChatBot] = None
     request: Optional[HttpRequest] = None
 
-    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+    def __call__(self, request: HttpRequest) -> Union[HttpResponseBase, Awaitable[HttpResponseBase]]:
 
         host = request.get_host()
         if not host:

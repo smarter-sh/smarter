@@ -2,9 +2,7 @@
 """Smarter API SqlPlugin Manifest handler"""
 
 import logging
-from typing import Optional, Type
-
-from django.http import HttpRequest
+from typing import TYPE_CHECKING, Optional, Type
 
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
@@ -43,6 +41,10 @@ from smarter.lib.manifest.enum import (
 
 from . import PluginSerializer, SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
+
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 
 def should_log(level):
@@ -227,7 +229,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         # If the Plugin has previously been persisted then
         # we can build the manifest components by mapping
         # Django ORM models to Pydantic models.
-        if self.plugin_meta:
+        if self._plugin_meta:
             metadata = self.plugin_metadata_orm2pydantic()
             sql_data = self.plugin_data_orm2pydantic()
             if not sql_data:
@@ -471,7 +473,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Returns an example SQL plugin manifest as a JSON response.
 
@@ -481,7 +483,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         response conventions.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments passed to the example manifest generator.
         :return: A JSON response containing the example SQL plugin manifest.
@@ -505,7 +507,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         data = SqlPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
-    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response with the manifest data for this SQL plugin.
 
@@ -514,7 +516,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         manifest by round-tripping the data through the Pydantic model to ensure schema compliance.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments for customization.
         :return: A `SmarterJournaledJsonResponse` containing the manifest data.
@@ -557,7 +559,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         data = json.loads(self.manifest.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response with a list of SQL plugins for this account.
 
@@ -566,7 +568,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         representations. Each plugin is validated by round-tripping through the Pydantic model.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments, such as filter criteria (e.g., ``name``).
         :return: A `SmarterJournaledJsonResponse` containing a list of SQL plugin manifests and metadata.
@@ -646,7 +648,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Apply the manifest: copy manifest data to the Django ORM model and save it to the database.
 
@@ -655,7 +657,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         includes the serialized plugin data or an error message if the operation fails.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments for customization.
         :return: A `SmarterJournaledJsonResponse` indicating success or failure.
@@ -720,7 +722,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Chat with the SQL plugin (not implemented).
         This is not implemented for SQL plugins.
@@ -728,7 +730,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
@@ -738,7 +740,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the SQL plugin.
         This method deletes the SQL plugin associated with this broker. It verifies that the plugin
@@ -749,7 +751,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :raises: SAMBrokerErrorNotReady: If the plugin is not ready for deletion.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :return: A `SmarterJournaledJsonResponse` indicating success or failure of the deletion.
@@ -793,14 +795,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                 command=command,
             ) from e
 
-    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Deploy the SQL plugin (not implemented).
         This is not implemented for SQL plugins.
 
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
@@ -810,7 +812,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Undeploy the SQL plugin (not implemented).
         This is not implemented for SQL plugins.
@@ -818,7 +820,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
@@ -828,14 +830,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve logs for the SQL plugin (not implemented).
         This is not implemented for SQL plugins.
 
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.

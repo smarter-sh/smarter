@@ -18,6 +18,7 @@ from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
 from smarter.apps.account.models import Account
 from smarter.apps.account.utils import cache_invalidate, get_cached_smarter_account
 from smarter.common.conf import settings as smarter_settings
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -150,13 +151,12 @@ class SAMAccountBroker(AbstractBroker):
                 command=SmarterJournalCliCommands.APPLY,
             )
         # Convert tags (list[str]) to set for TaggableManager compatibility
-        tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
         return {
             "account": self.account,
             "name": self.manifest.metadata.name,
             "description": self.manifest.metadata.description,
             "version": self.manifest.metadata.version,
-            "annotations": self.manifest.metadata.annotations,
+            "annotations": json.loads(json.dumps(self.manifest.metadata.annotations)),
             **config_dump,
         }
 

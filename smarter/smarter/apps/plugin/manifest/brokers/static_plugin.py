@@ -266,6 +266,16 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         if self._manifest:
             return self._manifest
 
+        # Otherwise, if we received a manifest via the loader,
+        # then use that to build the manifest.
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMStaticPlugin(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
+            )
+
         # If the Plugin has previously been persisted then
         # we can build the manifest components by mapping
         # Django ORM models to Pydantic models.
@@ -295,15 +305,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 status=status,
             )
             return self._manifest
-        # Otherwise, if we received a manifest via the loader,
-        # then use that to build the manifest.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMStaticPlugin(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
-            )
         if not self._manifest:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest

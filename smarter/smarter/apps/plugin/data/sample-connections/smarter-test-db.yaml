@@ -22,7 +22,7 @@ spec:
     username: smarter_test_user
     hostname: sql.lawrencemcdaniel.com
     maxOverflow: 10
-    password: smarter_test_db
+    password: smarter_test_user
     poolSize: 5
     port: 3306
     timeout: 30

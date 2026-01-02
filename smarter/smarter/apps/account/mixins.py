@@ -235,12 +235,13 @@ class AccountMixin(SmarterHelperMixin):
         elif self._user:
             self._account = get_cached_account_for_user(self._user)
             return self._account
-        logger.warning(
-            "%s.account() could not initialize _account for user: %s, user_profile: %s",
-            self.formatted_class_name,
-            self._user,
-            self._user_profile,
-        )
+        if self._user or self._user_profile:
+            logger.warning(
+                "%s.account() could not initialize _account for user: %s, user_profile: %s",
+                self.formatted_class_name,
+                self._user,
+                self._user_profile,
+            )
         return None
 
     @account.setter

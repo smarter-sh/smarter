@@ -29,6 +29,7 @@ from smarter.apps.plugin.models import (
 )
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.conf import settings as smarter_settings
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -135,12 +136,16 @@ class SAMPluginBaseBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.CHAT,
             )
+        if not self._manifest:
+            if self.loader:
+                self._manifest = self.loader.json_data
+
         controller = PluginController(
             request=self.smarter_request,
             user=self.user,
             account=self.account,
-            manifest=self.manifest,  # type: ignore
-            plugin_meta=self.plugin_meta if not self.manifest else None,
+            manifest=self._manifest,  # type: ignore
+            plugin_meta=self.plugin_meta if not self._manifest else None,
             name=self.name,
         )
         self._plugin = controller.obj
@@ -294,6 +299,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             )
         try:
             metadata = model_to_dict(self.plugin_meta)  # type: ignore[no-any-return]
+            metadata = json.loads(json.dumps(metadata))
             metadata = self.snake_to_camel(metadata)
             if not isinstance(metadata, dict):
                 raise SAMPluginBrokerError(

@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.utils import camel_to_snake
+from smarter.lib import json
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 
@@ -186,11 +187,26 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         if v is None:
             return v
         if isinstance(v, list):
+            v = [str(tag).strip() for tag in v]
             for tag in v:
                 if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, tag):
                     raise SAMValidationError(
                         f"Invalid tag: {tag}. Ensure that you do not include characters that are not URL friendly."
                     )
+        return v
+
+    @field_validator("annotations", mode="before")
+    def coerce_annotations_to_list(cls, v):
+        """
+        Pre-validator to coerce stringified JSON lists to Python lists for annotations.
+        This ensures that if the input is a string (e.g., '[{"key": "value"}]'),
+        it is parsed as a list before type validation.
+        """
+        if isinstance(v, str):
+            try:
+                v = json.loads(v)
+            except Exception as e:
+                raise SAMValidationError(f"Annotations field could not be parsed as JSON: {e}") from e
         return v
 
     @field_validator("annotations")
@@ -210,6 +226,12 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         """
         if v is None:
             return v
+
+        if isinstance(v, str):
+            try:
+                v = json.loads(v)
+            except Exception as e:
+                raise SAMValidationError(f"Annotations field could not be parsed as JSON: {e}") from e
         if not isinstance(v, list):
             raise SAMValidationError("Annotations must be a list of dictionaries.")
         for annotation in v:
