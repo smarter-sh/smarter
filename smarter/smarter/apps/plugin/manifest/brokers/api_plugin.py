@@ -2,9 +2,7 @@
 """Smarter API ApiPlugin Manifest handler"""
 
 import logging
-from typing import Optional, Type
-
-from django.http import HttpRequest
+from typing import TYPE_CHECKING, Optional, Type
 
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.plugin.manifest.models.api_plugin.const import MANIFEST_KIND
@@ -45,6 +43,10 @@ from smarter.lib.manifest.enum import (
 
 from . import PluginSerializer, SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
+
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 
 def should_log(level):
@@ -193,7 +195,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         # If the Plugin has previously been persisted then
         # we can build the manifest components by mapping
         # Django ORM models to Pydantic models.
-        if self.plugin_meta:
+        if self._plugin_meta:
             metadata = self.plugin_metadata_orm2pydantic()
             status = self.plugin_status_pydantic()
             api_data = self.plugin_data_orm2pydantic()
@@ -417,14 +419,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response containing an example API plugin manifest.
 
         This method generates a sample manifest for an API plugin, including all required fields and example values. The manifest is returned as a structured JSON response, which can be used for documentation, testing, or as a template for new plugin configurations.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments to customize the example manifest.
         :return: JSON response with the example manifest.
@@ -447,14 +449,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         data = ApiPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
-    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response containing the manifest data for the current API plugin.
 
         This method serializes the plugin manifest, metadata, specification, and status into a structured JSON response. It validates the plugin and its associated data, raising an error if any required component is missing or uninitialized.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: JSON response with manifest data.
@@ -495,14 +497,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         pydantic_model = json.loads(self.manifest.model_dump_json())
         return self.json_response_ok(command=command, data=pydantic_model)
 
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve API plugins matching the provided criteria and return them in a structured JSON response.
 
         This method queries the database for `PluginMeta` objects associated with the current account, optionally filtered by name. Each result is serialized, validated, and returned in a journaled JSON response, including metadata such as item count and model titles.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Optional keyword arguments, such as `name` to filter plugins.
         :type kwargs: dict
@@ -586,14 +588,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: "HttpRequest", *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         Apply the manifest by copying its data to the Django ORM model and saving it to the database.
 
         This method ensures the manifest is loaded and validated (via `super().apply`) before updating the database. It creates or updates the plugin and its metadata, and saves changes if the plugin is ready. Errors during creation or saving are returned in the response.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments containing manifest data.
         :type kwargs: dict
@@ -662,7 +664,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: "HttpRequest", *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         Handle chat interactions with the API plugin.
         This is not implemented for this class of Broker.
@@ -671,7 +673,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             Always raised to indicate that this method is not implemented.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: Not implemented error response.
@@ -681,14 +683,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: "HttpRequest", *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         Delete the API plugin associated with this broker and return a JSON response indicating the result.
 
         This method attempts to delete the plugin and its metadata from the database. If the plugin or its metadata is not initialized, or if the plugin is not ready, an appropriate error is raised. On successful deletion, an empty JSON response is returned.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :type kwargs: dict
@@ -747,7 +749,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
         )
 
-    def deploy(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: "HttpRequest", *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         Deploy the API plugin.
         This is not implemented for this class of Broker.
@@ -756,7 +758,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             Always raised to indicate that this method is not implemented.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: Not implemented error response.
@@ -766,7 +768,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: "HttpRequest", *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         Undeploy the API plugin.
         This is not implemented for this class of Broker.
@@ -775,7 +777,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             Always raised to indicate that this method is not implemented.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: Not implemented error response.
@@ -785,7 +787,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: "HttpRequest", *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         Retrieve logs for the API plugin.
         This is not implemented for this class of Broker.
@@ -794,7 +796,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             Always raised to indicate that this method is not implemented.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: Not implemented error response.

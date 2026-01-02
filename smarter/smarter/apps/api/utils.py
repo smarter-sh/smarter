@@ -11,8 +11,6 @@ from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.api.v1.cli.views.base import APIV1CLIViewError
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
@@ -87,6 +85,9 @@ def apply_manifest(
         - :py:class:`smarter.lib.drf.models.SmarterAuthToken`
 
     """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+    from smarter.apps.api.v1.cli.views.base import APIV1CLIViewError
 
     user: Optional[User] = None
     data: Optional[str] = None
