@@ -12,7 +12,7 @@ from smarter.apps.plugin.tests.base_classes import TestPluginClassBase
 class TestPluginController(TestPluginClassBase):
     """Test Plugin manifest controller"""
 
-    model: Union[SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin] = None
+    model: Union[SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin]
 
     def setUp(self):
         super().setUp()
