@@ -22,13 +22,14 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.loader import SAMLoader
-from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+
+from .base_classes.connection_base import TestSmarterConnectionBrokerBase
 
 
 logger = logging.getLogger(__name__)
 
 
-class TestSmarterSqlPluginBroker(TestSAMBrokerBaseClass):
+class TestSmarterSqlPluginBroker(TestSmarterConnectionBrokerBase):
     """
     Test the Smarter SAMSqlPluginBroker.
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,

@@ -11,6 +11,7 @@ from taggit.managers import TaggableManager
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.json import SmarterJSONEncoder
 
 
 logger = getLogger(__name__)
@@ -244,7 +245,12 @@ class MetaDataModel(TimestampedModel):
         blank=True,
         help_text="Tags for categorizing and organizing this resource.",
     )
-    annotations = models.JSONField(default=list, blank=True, help_text="Key-value pairs for annotating this resource.")
+    annotations = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Key-value pairs for annotating this resource.",
+        encoder=SmarterJSONEncoder,
+    )
 
     def validate(self):
         """

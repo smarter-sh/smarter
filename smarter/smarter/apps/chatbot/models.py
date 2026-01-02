@@ -434,7 +434,12 @@ class ChatBot(MetaDataWithOwnershipModel):
 
     #: The ChatBot UI configuration fields. Example prompts shown to the user in the Smarter React ChatBot component.
     #: Example: ["What AI courses do you offer?", "Is your program free?"]
-    app_example_prompts = models.JSONField(default=list, blank=True, null=True)
+    app_example_prompts = models.JSONField(
+        default=list,
+        blank=True,
+        null=True,
+        encoder=json.SmarterJSONEncoder,
+    )
 
     #: The ChatBot UI configuration fields. Placeholder text in the chat input area.
     #: Example: "Ask me anything about Stackademy..."
@@ -1155,7 +1160,11 @@ class ChatBotRequests(TimestampedModel):
         verbose_name_plural = "ChatBot Requests History"
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
-    request = models.JSONField(blank=True, null=True)
+    request = models.JSONField(
+        blank=True,
+        null=True,
+        encoder=json.SmarterJSONEncoder,
+    )
     session_key = models.CharField(max_length=255, blank=True, null=True)
     is_aggregation = models.BooleanField(default=False, blank=True, null=True)
 

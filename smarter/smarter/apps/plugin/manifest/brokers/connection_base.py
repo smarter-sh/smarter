@@ -15,6 +15,7 @@ from smarter.apps.plugin.manifest.models.common.connection.status import (
 )
 from smarter.apps.plugin.models import ConnectionBase
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -181,7 +182,9 @@ class SAMConnectionBaseBroker(AbstractBroker):
             broker.apply(request, manifest_data=manifest_dict)
 
         """
-        logger.info("%s.apply() called with request: %s", self.formatted_class_name, request.build_absolute_uri())
+        logger.info(
+            "%s.apply() called with request: %s", self.formatted_class_name, smarter_build_absolute_uri(request=request)
+        )
         super().apply(request, kwargs)
 
         # update the common meta fields
