@@ -215,6 +215,12 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         Test that we can convert the Django plugin spec ORM
         to a Pydantic manifest spec.
         """
+        response = self.broker.apply(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        is_valid_response = self.validate_apply(response)
+        self.assertTrue(is_valid_response)
+
         manifest_dict = self.broker.plugin_sql_spec_orm2pydantic()
         self.assertIsInstance(manifest_dict, SAMSqlPluginSpec)
 
@@ -387,7 +393,10 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
                 f"Parameter 'default' mismatch for '{manifest_param.name}'",
             )
 
-        # Compare testValues: Optional[List[TestValue]]
+        # testValues: Optional[List[TestValue]] = Field(
+        #     default=None,
+        #     description="A JSON dict containing test values for each parameter. Example: {'product_id': 1234}.",
+        # )
         manifest_test_values: List[TestValue] = self.broker.manifest.spec.sqlData.testValues or []
         plugin_test_values_raw = plugin_data.test_values or []
         plugin_test_values: List[TestValue] = []
