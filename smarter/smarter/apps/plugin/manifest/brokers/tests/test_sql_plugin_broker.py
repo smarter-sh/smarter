@@ -296,8 +296,6 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         self.assertEqual(self.broker.manifest.spec.prompt.systemRole, self.broker.plugin.plugin_prompt.system_role)
         self.assertEqual(self.broker.manifest.spec.prompt.model, self.broker.plugin.plugin_prompt.model)
         self.assertEqual(self.broker.manifest.spec.prompt.temperature, self.broker.plugin.plugin_prompt.temperature)
-        self.assertEqual(self.broker.manifest.spec.data.description, self.broker.plugin.plugin_data.description)
-        self.assertEqual(self.broker.manifest.spec.data.staticData, self.broker.plugin.plugin_data.static_data)
 
     def test_plugin(self):
         """

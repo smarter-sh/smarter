@@ -36,10 +36,6 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 class SqlData(SmarterBasePydanticModel):
     """Smarter API - generic API Connection class."""
 
-    description: Optional[str] = Field(
-        default=None,
-        description="A brief description what the Sql query returns.",
-    )
     sqlQuery: str = Field(
         ...,
         description="The SQL query that this plugin will execute when invoked by the user prompt.",
