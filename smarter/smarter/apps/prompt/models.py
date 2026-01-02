@@ -16,6 +16,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.lib import json
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -63,9 +64,21 @@ class ChatHistory(TimestampedModel):
         verbose_name_plural = "Chat History"
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
-    request = models.JSONField(blank=True, null=True)
-    response = models.JSONField(blank=True, null=True)
-    messages = models.JSONField(blank=True, null=True)
+    request = models.JSONField(
+        blank=True,
+        null=True,
+        encoder=json.SmarterJSONEncoder,
+    )
+    response = models.JSONField(
+        blank=True,
+        null=True,
+        encoder=json.SmarterJSONEncoder,
+    )
+    messages = models.JSONField(
+        blank=True,
+        null=True,
+        encoder=json.SmarterJSONEncoder,
+    )
 
     def __str__(self):
         return f"{self.chat.id}"  # type: ignore[return]
@@ -93,8 +106,16 @@ class ChatToolCall(TimestampedModel):
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE, blank=True, null=True)
     function_name = models.CharField(max_length=255, blank=True, null=True)
     function_args = models.CharField(max_length=255, blank=True, null=True)
-    request = models.JSONField(blank=True, null=True)
-    response = models.JSONField(blank=True, null=True)
+    request = models.JSONField(
+        blank=True,
+        null=True,
+        encoder=json.SmarterJSONEncoder,
+    )
+    response = models.JSONField(
+        blank=True,
+        null=True,
+        encoder=json.SmarterJSONEncoder,
+    )
 
     def __str__(self):
         if self.plugin:

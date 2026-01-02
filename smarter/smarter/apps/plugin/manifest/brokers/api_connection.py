@@ -92,6 +92,22 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
     """
 
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        if self._manifest:
+            return
+
+        if self._loader:
+            # pylint: disable=W0104
+            self.manifest
+            if not self._manifest:
+                raise SAMBrokerErrorNotReady(
+                    message="Failed to initialize manifest from loader",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
+
     # override the base abstract manifest model with the ApiConnection model
     _manifest: Optional[SAMApiConnection] = None
     _pydantic_model: Type[SAMApiConnection] = SAMApiConnection
