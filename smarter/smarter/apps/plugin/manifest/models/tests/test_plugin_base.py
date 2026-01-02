@@ -46,7 +46,6 @@ from smarter.apps.plugin.signals import (
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import camel_to_snake, get_readonly_yaml_file
 
 # python stuff

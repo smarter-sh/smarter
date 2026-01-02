@@ -359,7 +359,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
 
         with self.assertRaises(PydanticValidationError) as context:
             logger.info("Creating SAMSqlConnection pydantic model from bad loader data, %s", self.model.model_dump())
-        self.assertIn(f"Input should be a valid string", str(context.exception))
+        self.assertIn("Input should be a valid string", str(context.exception))
 
     def test_validate_timeout_invalid_value(self):
         """Test that the timeout validator raises an error for invalid values."""
@@ -510,7 +510,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
             self.fail("Model should not be None after loading the manifest")
 
         valid_max_overflow = 5
-        self._manifest["spec"]["connection"]["maxOverflow"] = valid_max_overflow
+        self.manifest["spec"]["connection"]["maxOverflow"] = valid_max_overflow
         self._loader = None
         self._model = None  # type: ignore[assignment]
         self.model
