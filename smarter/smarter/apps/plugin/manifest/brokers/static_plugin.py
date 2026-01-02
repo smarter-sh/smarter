@@ -120,6 +120,66 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     _plugin_static_spec_data: Optional[SAMPluginStaticSpecData] = None
     _plugin_static_spec: Optional[SAMPluginStaticSpec] = None
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the SAMStaticPluginBroker instance.
+
+        This constructor initializes the broker by calling the parent class's
+        constructor, which will attempt to bootstrap the class instance
+        with any combination of raw manifest data (in JSON or YAML format),
+        a manifest loader, or existing Django ORM models. If a manifest
+        loader is provided and its kind matches the expected kind for this broker,
+        the manifest is initialized using the loader's data.
+
+        This class can bootstrap itself in any of the following ways:
+
+        - request.body (yaml or json string)
+        - name + account (determined via authentication of the request object)
+        - SAMLoader instance
+        - manifest instance
+        - filepath to a manifest file
+
+        If raw manifest data is provided, whether as a string or a dictionary,
+        or a SAMLoader instance, the base class constructor will only goes as
+        far as initializing the loader. The actual manifest model initialization
+        is deferred to this constructor, which checks the loader's kind.
+
+        :param args: Positional arguments passed to the parent constructor.
+        :param kwargs: Keyword arguments passed to the parent constructor.
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMStaticPluginBroker(loader=loader, plugin_meta=plugin_meta)
+        .. seealso::
+            - `SAMPluginBaseBroker.__init__`
+        """
+        super().__init__(*args, **kwargs)
+        if self._manifest:
+            return
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMStaticPlugin(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
+            )
+            if self._manifest:
+                logger.info(
+                    "%s.__init__() initialized manifest from loader for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self._manifest.metadata.name,
+                )
+            if self.ready:
+                logger.info(
+                    "%s.__init__() broker is ready for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self._manifest.metadata.name,
+                )
+
     def plugin_init(self):
         """
         Initialize the SAMStaticPluginBroker instance.

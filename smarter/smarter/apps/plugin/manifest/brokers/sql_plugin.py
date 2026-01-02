@@ -104,6 +104,72 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     _sql_plugin_spec: Optional[SAMSqlPluginSpec] = None
     _sql_data: Optional[SqlData] = None
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the SAMSqlPluginBroker instance.
+
+        This constructor initializes the broker by calling the parent class's
+        constructor, which will attempt to bootstrap the class instance
+        with any combination of raw manifest data (in JSON or YAML format),
+        a manifest loader, or existing Django ORM models. If a manifest
+        loader is provided and its kind matches the expected kind for this broker,
+        the manifest is initialized using the loader's data.
+
+        This class can bootstrap itself in any of the following ways:
+
+        - request.body (yaml or json string)
+        - name + account (determined via authentication of the request object)
+        - SAMLoader instance
+        - manifest instance
+        - filepath to a manifest file
+
+        If raw manifest data is provided, whether as a string or a dictionary,
+        or a SAMLoader instance, the base class constructor will only goes as
+        far as initializing the loader. The actual manifest model initialization
+        is deferred to this constructor, which checks the loader's kind.
+
+        :param args: Positional arguments passed to the parent constructor.
+        :param kwargs: Keyword arguments passed to the parent constructor.
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMSqlPluginBroker(loader=loader, plugin_meta=plugin_meta)
+
+        .. seealso::
+            - `SAMPluginBaseBroker.__init__`
+        """
+        super().__init__(*args, **kwargs)
+        if self._manifest:
+            return
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMSqlPlugin(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
+                status=(
+                    SAMPluginCommonStatus(**self.loader.manifest_status)
+                    if self.loader and self.loader.manifest_status
+                    else None
+                ),
+            )
+            if self._manifest:
+                logger.info(
+                    "%s.__init__() initialized manifest from loader for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self._manifest.metadata.name,
+                )
+            if self.ready:
+                logger.info(
+                    "%s.__init__() broker is ready for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self._manifest.metadata.name,
+                )
+
     def plugin_init(self) -> None:
         """
         Initialize the SQL plugin for this broker.
@@ -398,7 +464,13 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         """
         if self._sql_plugin_spec:
             return self._sql_plugin_spec
-        if not self._plugin_meta:
+        if not self.plugin_meta:
+            logger.warning(
+                "%s.plugin_sql_spec_orm2pydantic could not be built for %s %s because plugin_meta is None",
+                self.formatted_class_name,
+                self.kind,
+                self.manifest.metadata.name if self.manifest and self.manifest.metadata else "<-- Missing Name -->",
+            )
             return None
         selector = self.plugin_selector_orm2pydantic()
         prompt = self.plugin_prompt_orm2pydantic()
@@ -428,6 +500,26 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         This method constructs a `SqlData` Pydantic model using the data associated with the current
         `plugin_meta`. It retrieves the data using the ORM-to-Pydantic conversion method.
 
+        parameters: an OpenAI Api compliant dictionary of parameters to pass to the API call.
+            {
+                'type': 'object',
+                'required': ['username'],
+                'properties': {
+                    'unit': {
+                        'enum': ['Celsius', 'Fahrenheit'],
+                        'type': 'string',
+                        'default': 'Celsius',
+                        'description': 'The temperature unit to use.'
+                    },
+                    'username': {
+                        'type': 'string',
+                        'default': 'admin',
+                        'description': 'The username to query.'
+                    }
+                },
+                'additionalProperties': False
+            }
+
         :return: The plugin data as a Pydantic model.
         :rtype: SqlData
 
@@ -451,27 +543,61 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             return None
 
         parameters: list[Parameter] = []
-        for parameter in self.plugin_data.parameters.all() if self.plugin_data else []:
+        orm_parameters: dict = self.plugin_data.parameters if self.plugin_data else {}
+        if not isinstance(orm_parameters, dict):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} plugin_data_orm2pydantic() expected parameters to be a dict for {self.kind} {self.plugin_meta.name} but got {type(orm_parameters)}: {orm_parameters}",
+                thing=self.kind,
+            )
+
+        # Handle OpenAPI-style parameter schema
+        # Example: {
+        #   'type': 'object',
+        #   'required': ['username'],
+        #   'properties': { ... }
+        # }
+        required_fields = orm_parameters.get("required", [])
+        properties = orm_parameters.get("properties", {})
+        for name, prop in properties.items():
             parameters.append(
                 Parameter(
-                    name=parameter.name,
-                    type=parameter.type,
-                    description=parameter.description,
-                    required=parameter.required,
-                    enum=parameter.enum,
-                    default=parameter.default,
+                    name=name,
+                    type=prop.get("type", "string"),
+                    description=prop.get("description"),
+                    required=name in required_fields,
+                    enum=prop.get("enum"),
+                    default=prop.get("default"),
                 )
             )
         test_values: list[TestValue] = []
-        for test_value in self.plugin_data.test_values.all() if self.plugin_data else []:
+        orm_test_values: list = self.plugin_data.test_values if self.plugin_data else []
+        if not isinstance(orm_test_values, list):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} plugin_data_orm2pydantic() expected test_values to be a list for {self.kind} {self.plugin_meta.name} but got {type(orm_test_values)}: {orm_test_values}",
+                thing=self.kind,
+            )
+        for test_value in orm_test_values:
+            logger.info(
+                "%s.plugin_data_orm2pydantic() processing test_value: %s", self.formatted_class_name, test_value
+            )
+            # example:  {'name': 'username', 'value': 'admin'}
+            if not isinstance(test_value, dict):
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name} plugin_data_orm2pydantic() expected each test_value to be a dict for {self.kind} {self.plugin_meta.name} but got {type(test_value)}: {test_value}",
+                    thing=self.kind,
+                )
+            if not "name" in test_value or not "value" in test_value:
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name} plugin_data_orm2pydantic() expected each test_value to have 'name' and 'value' keys for {self.kind} {self.plugin_meta.name} but got: {test_value}",
+                    thing=self.kind,
+                )
             test_values.append(
                 TestValue(
-                    name=test_value.name,
-                    value=test_value.value,
+                    name=test_value.get("name"),  # type: ignore
+                    value=test_value.get("value"),  # type: ignore
                 )
             )
         self._sql_data = SqlData(
-            description=self.plugin_data.description if self.plugin_data else "",
             sqlQuery=self.plugin_data.sql_query if self.plugin_data else "",
             parameters=parameters,
             testValues=test_values,
