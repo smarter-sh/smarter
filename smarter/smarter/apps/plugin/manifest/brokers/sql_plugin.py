@@ -352,11 +352,10 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         if self.plugin_meta is None:
             return None
 
-        try:
-            self._plugin_data = PluginDataSql.get_cached_data_by_plugin(plugin=self.plugin_meta)
-        except PluginDataSql.DoesNotExist:
+        self._plugin_data = PluginDataSql.get_cached_data_by_plugin(plugin=self.plugin_meta)
+        if not self._plugin_data:
             logger.warning(
-                "%s.plugin_data() PluginDataSql object does not exist for %s %s",
+                "%s.plugin_data could not be found for %s %s",
                 self.formatted_class_name,
                 self.kind,
                 self.plugin_meta.name,

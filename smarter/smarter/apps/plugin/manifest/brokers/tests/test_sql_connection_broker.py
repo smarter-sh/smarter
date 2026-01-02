@@ -38,8 +38,8 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
 
     def setUp(self):
         super().setUp()
-        self._broker_class = SAMSqlConnectionBroker
         self._here = os.path.abspath(os.path.dirname(__file__))
+        self._broker_class = SAMSqlConnectionBroker
         self._manifest_filespec = self.get_data_full_filepath("sql-connection.yaml")
 
     @property

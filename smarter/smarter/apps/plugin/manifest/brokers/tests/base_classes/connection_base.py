@@ -8,7 +8,6 @@ import os
 from smarter.apps.account.const import DATA_PATH as ACCOUNT_DATA_PATH
 from smarter.apps.account.models import Secret
 from smarter.apps.api.utils import apply_manifest
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -64,6 +63,7 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
                 user_profile=cls.user_profile,
                 name=cls.test_secret_name,
             )
+            cls.test_secret_value = cls.secret.get_secret()
         except Secret.DoesNotExist as e:
             raise SmarterValueError(f"Failed to get test secret '{cls.test_secret_name}' from database.") from e
         logger.info(
@@ -87,6 +87,7 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
                 user_profile=cls.user_profile,
                 name=cls.test_proxy_secret_name,
             )
+            cls.test_proxy_secret_value = cls.proxy_secret.get_secret()
         except Secret.DoesNotExist as e:
             raise SmarterValueError(
                 f"Failed to get test proxy secret '{cls.test_proxy_secret_name}' from database."

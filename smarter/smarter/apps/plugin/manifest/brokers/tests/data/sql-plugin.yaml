@@ -35,7 +35,7 @@ spec:
     model: gpt-4-turbo
     temperature: 0.0
     maxTokens: 256
-  connection: testConnection
+  connection: test_sql_connection
   sqlData:
     sqlQuery: >
       SELECT * FROM auth_user WHERE username = '{username}';

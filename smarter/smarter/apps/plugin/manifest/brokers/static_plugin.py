@@ -426,10 +426,10 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             - `PluginDataStatic`
             - `SAMPluginStaticSpecData`
         """
-        if not self.plugin_meta:
-            return None
         if self._plugin_static_spec_data:
             return self._plugin_static_spec_data
+        if not self.plugin_meta:
+            return None
         self._plugin_static_spec_data = SAMPluginStaticSpecData(
             description=self.plugin_meta.description,
             staticData=self.plugin_data.static_data if self.plugin_data else {},
