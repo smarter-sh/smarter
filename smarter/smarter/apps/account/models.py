@@ -24,6 +24,7 @@ from django.utils.functional import SimpleLazyObject
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import MetaDataModel, TimestampedModel
@@ -139,7 +140,7 @@ def get_resolved_user(
             :class:`django.utils.functional.SimpleLazyObject`
 
     """
-    logger.info("get_resolved_user() called for user type: %s", type(user))
+    logger.info("%s called for user type: %s", formatted_text(f"{__name__}.get_resolved_user()"), type(user))
     if user is None:
         return None
 

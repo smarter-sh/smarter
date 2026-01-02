@@ -10,6 +10,7 @@ import yaml
 from django.http import HttpRequest
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker
@@ -36,6 +37,19 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
     _broker: AbstractBroker
     _broker_class: Type[AbstractBroker]
     _manifest_filespec: str
+    test_sam_broker_base_logger_prefix = formatted_text(f"{__name__}.TestSAMBrokerBaseClass()")
+
+    @classmethod
+    def setUpClass(cls):
+        """class-level setup."""
+        super().setUpClass()
+        logger.info("%s.setUpClass()", cls.test_sam_broker_base_logger_prefix)
+
+    @classmethod
+    def tearDownClass(cls):
+        """class-level teardown."""
+        logger.info("%s.tearDownClass()", cls.test_sam_broker_base_logger_prefix)
+        super().tearDownClass()
 
     def setUp(self):
         """test-level setup."""

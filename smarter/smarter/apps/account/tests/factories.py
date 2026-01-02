@@ -15,7 +15,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text_red
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -23,7 +23,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-HERE = formatted_text_red(__name__)
+HERE = formatted_text(__name__)
 
 
 def should_log(level):

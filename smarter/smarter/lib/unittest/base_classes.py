@@ -12,33 +12,44 @@ from django.http import HttpRequest
 from django.test import RequestFactory
 
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib import json
 
 
 logger = logging.getLogger(__name__)
+HERE = __name__
 
 
 class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     """Base class for all unit tests."""
 
     name: str
+    smarter_test_base_logger_prefix = formatted_text(f"{HERE}.SmarterTestBase()")
 
     @classmethod
     def setUpClass(cls) -> None:
         """Set up the test class."""
         super().setUpClass()
+        logger.info("%s.setUpClass()", cls.smarter_test_base_logger_prefix)
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
         cls.name = camel_to_snake("smarterTestBase_" + cls.hash_suffix)
         cls.uid = SmarterTestBase.generate_uid()
 
-        logger.info("%s.setUpClass() Setting up test class with hash suffix: %s", "SmarterTestBase", cls.hash_suffix)
-        logger.info("%s.setUpClass() Setting up test class with name: %s", "SmarterTestBase", cls.name)
-        logger.info("%s.setUpClass() Setting up test class with uid: %s", "SmarterTestBase", cls.uid)
+        logger.info(
+            "%s.setUpClass() Setting up test class with hash suffix: %s",
+            cls.smarter_test_base_logger_prefix,
+            cls.hash_suffix,
+        )
+        logger.info(
+            "%s.setUpClass() Setting up test class with name: %s", cls.smarter_test_base_logger_prefix, cls.name
+        )
+        logger.info("%s.setUpClass() Setting up test class with uid: %s", cls.smarter_test_base_logger_prefix, cls.uid)
 
     @classmethod
     def tearDownClass(cls) -> None:
         """Tear down the test class."""
+        logger.info("%s.tearDownClass()", cls.smarter_test_base_logger_prefix)
         super().tearDownClass()
 
     @classmethod

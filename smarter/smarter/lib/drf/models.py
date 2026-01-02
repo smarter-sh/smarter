@@ -13,6 +13,7 @@ from knox.settings import CONSTANTS
 
 from smarter.apps.account.models import User
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 
 
@@ -53,7 +54,8 @@ class SmarterAuthTokenManager(AuthTokenManager):
             **kwargs,
         )
         logger.info(
-            "Creating API Key for user %s with token %s and expiry %s",
+            "%s Creating API Key for user %s with token %s and expiry %s",
+            formatted_text("lib.drf.models.SmarterAuthTokenManager.create()"),
             user,
             token_key,
             expiry,

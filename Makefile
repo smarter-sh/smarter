@@ -105,7 +105,7 @@ docker-init:
 		python manage.py create_smarter_admin --username admin --email admin@smarter.sh --password smarter && \
 		python manage.py create_user --account_number 3141-5926-5359 --username staff_user --email staff@smarter.sh --password smarter --first_name Smarter --last_name User --admin && \
 		python manage.py create_user --account_number 3141-5926-5359 --username customer_user --email customer@smarter.sh --password smarter --first_name Customer --last_name User && \
-		python manage.py add_plugin_examples --username admin && \
+		python manage.py add_plugin_examples --username admin --verbose && \
 		python manage.py verify_dns_configuration && \
 		python manage.py deploy_example_chatbot && \
 		python manage.py seed_chat_history && \
@@ -113,8 +113,8 @@ docker-init:
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2 && \
 		python manage.py initialize_wagtail && \
 		python manage.py initialize_providers && \
-		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
-		python manage.py update_secret --name smarter_test_db --username admin --value smarter_test_user && \
+		python manage.py apply_manifest --filespec 'smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml' --username admin && \
+		python manage.py update_secret --name smarter_test_user --username admin --value smarter_test_user && \
 		python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin && \
 		python manage.py create_stackademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user && \
 		python manage.py create_stackademy_sql_chatbot" && \
@@ -133,7 +133,7 @@ docker-run:
 # smarter.apps.account.manifest.brokers.tests.test_secret_broker
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.apps.plugin.manifest.brokers.tests.test_sql_connection_broker.TestSmarterSqlConnectionBroker.test_is_valid"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.plugin.manifest.brokers.tests.test_sql_plugin_broker.TestSmarterSqlPluginBroker.test_ready"
 
 docker-prune:
 	make docker-check && \

@@ -188,7 +188,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             )
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
         logger.info(
-            "AbstractBroker.__init__() initializing request: %s, args: %s, kwargs: %s", self.request, args, kwargs
+            "%s.__init__() initializing request: %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            self.request,
+            args,
+            kwargs,
         )
         self._api_version = api_version
         self._name = name  # i suspect that this is always None bc DRF sets name later in the process
@@ -237,7 +241,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         self._created = False
         self._validated = bool(manifest) or bool(self.loader and self.loader.ready)
         logger.info(
-            "AbstractBroker.__init__() finished initializing %s with api_version: %s, user: %s, name: %s, validated: %s, manifest: %s, loader: %s",
+            "%s.__init__() finished initializing %s with api_version: %s, user: %s, name: %s, validated: %s, manifest: %s, loader: %s",
+            self.formatted_class_name,
             self.kind,
             self.api_version,
             self.user_profile,

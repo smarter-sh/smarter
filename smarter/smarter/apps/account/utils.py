@@ -35,7 +35,7 @@ from smarter.apps.account.models import (
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
@@ -43,7 +43,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-HERE = formatted_text_red(__name__)
+HERE = formatted_text(__name__)
 
 
 def should_log(level):
@@ -264,11 +264,11 @@ def get_cached_account(
         """
         In-memory cache for account objects by ID.
         """
-        logger.info("%s._in_memory_account_by_id() retrieving and caching account %s", HERE, account_id)
+        logger.info("%s.get_cached_account() retrieving and caching account %s", HERE, account_id)
         try:
             account = Account.objects.get(id=account_id)
         except Account.DoesNotExist:
-            logger.warning("%s._in_memory_account_by_id() account with ID %s does not exist", HERE, account_id)
+            logger.warning("%s.get_cached_account() account with ID %s does not exist", HERE, account_id)
             return None
         return account
 
@@ -277,13 +277,11 @@ def get_cached_account(
         """
         In-memory cache for account objects by account number.
         """
-        logger.info("%s._in_memory_account_by_number() retrieving and caching account %s", HERE, account_number)
+        logger.info("%s.get_cached_account() retrieving and caching account %s", HERE, account_number)
         try:
             account = Account.objects.get(account_number=account_number)
         except Account.DoesNotExist:
-            logger.warning(
-                "%s._in_memory_account_by_number() account with number %s does not exist", HERE, account_number
-            )
+            logger.warning("%s.get_cached_account() account with number %s does not exist", HERE, account_number)
             return None
         return account
 
@@ -545,7 +543,7 @@ def get_cached_user_for_user_id(user_id: int, invalidate: bool = False) -> Optio
         """
         try:
             user = User.objects.get(id=user_id)
-            logger.info("%s._in_memory_user() retrieving and caching user %s", HERE, user)
+            logger.info("%s.get_cached_user_for_user_id() retrieving and caching user %s", HERE, user)
             return user  # type: ignore[return-value]
         except User.DoesNotExist:
             logger.error("%s.get_cached_user_for_user_id() user with ID %s does not exist", HERE, user_id)
@@ -586,7 +584,7 @@ def get_cached_user_for_username(username: str, invalidate: bool = False) -> Opt
         """
         try:
             user = User.objects.get(username=username)
-            logger.info("%s._in_memory_user_by_username() retrieving and caching user %s", HERE, user)
+            logger.info("%s.get_cached_user_for_username() retrieving and caching user %s", HERE, user)
             return user  # type: ignore[return-value]
         except User.DoesNotExist:
             logger.error("%s.get_cached_user_for_username() user with username %s does not exist", HERE, username)

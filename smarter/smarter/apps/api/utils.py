@@ -14,8 +14,8 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
+    formatted_text,
     formatted_text_green,
-    formatted_text_red,
 )
 from smarter.lib import json
 from smarter.lib.drf.models import SmarterAuthToken
@@ -91,15 +91,16 @@ def apply_manifest(
 
     user: Optional[User] = None
     data: Optional[str] = None
+    logger_prefix = formatted_text("smarter.apps.api.utils.apply_manifest()")
 
     if manifest:
-        logger.info("Using manifest provided in manifest argument.")
+        logger.info("%s Using manifest provided in manifest argument.", logger_prefix)
         data = manifest
     elif filespec:
         try:
             with open(filespec, encoding="utf-8") as file:
                 data = file.read()
-            logger.info("Using manifest from file: %s", filespec)
+            logger.info("%s Using manifest from file: %s", logger_prefix, filespec)
         except FileNotFoundError as e:
             raise SmarterValueError(f"File not found: {filespec}") from e
     if not data:
@@ -135,16 +136,16 @@ def apply_manifest(
 
     logger.info(
         "%s - Applying manifest via api endpoint %s as user %s (verbose=%s)",
-        formatted_text_red("smarter.apps.api.utils.apply_manifest()"),
+        logger_prefix,
         url,
         user.username,
         verbose,
     )
     if verbose:
-        logger.info("manifest: %s", data)
-        logger.info("headers: %s", headers)
+        logger.info("%s manifest: %s", logger_prefix, data)
+        logger.info("%s headers: %s", logger_prefix, headers)
 
-    logger.info("Applying manifest ...")
+    logger.info("%s Applying manifest ...", logger_prefix)
     httpx_response = httpx.post(url, content=data, headers=headers)
     token_record.delete()
 
@@ -160,12 +161,12 @@ def apply_manifest(
 
     response = json.dumps(response_json) + "\n"
     if httpx_response.status_code == httpx.codes.OK:
-        logger.info(formatted_text_green("manifest applied."))
+        logger.info("%s %s", logger_prefix, formatted_text_green("manifest applied."))
         if verbose:
-            logger.info(formatted_text_green(response))
+            logger.info("%s %s", logger_prefix, formatted_text_green(response))
     else:
-        logger.error("manifest: %s", data)
-        logger.error("response: %s", response)
+        logger.error("%s manifest: %s", logger_prefix, data)
+        logger.error("%s response: %s", logger_prefix, response)
         msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {data}\nresponse: {response}"
         raise APIV1CLIViewError(msg)
 
