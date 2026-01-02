@@ -60,24 +60,6 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
         plugin_meta.name,
     )
 
-    ChatPluginUsage.objects.filter(plugin=plugin_meta).delete()
-    logger.info(
-        "%s %s ChatPluginUsage records deleted.",
-        formatted_text(f"{prefix}.plugin_deleting"),
-        plugin_meta.name,
-    )
-    ChatToolCall.objects.filter(plugin=plugin_meta).delete()
-    logger.info(
-        "%s %s ChatToolCall records deleted.",
-        formatted_text(f"{prefix}.plugin_deleting"),
-        plugin_meta.name,
-    )
-    logger.info(
-        "%s %s has been pruned from all prompt usage records.",
-        formatted_text(f"{prefix}.plugin_deleting"),
-        plugin_meta.name,
-    )
-
 
 # chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
 @receiver(chat_session_invoked, dispatch_uid="chat_session_invoked")

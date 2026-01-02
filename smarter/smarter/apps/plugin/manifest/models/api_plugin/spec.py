@@ -51,7 +51,7 @@ class ApiData(SmarterBasePydanticModel):
         description="The HTTP method to use for the API request. Default is 'GET'.",
         max_length=10,
     )
-    url_params: Optional[List[UrlParam]] = Field(
+    urlParams: Optional[List[UrlParam]] = Field(
         default=None,
         description="A list of URL parameters to be included in the API request. Example: {'city': 'San Francisco'}",
     )
@@ -67,12 +67,13 @@ class ApiData(SmarterBasePydanticModel):
         default=None,
         description="A JSON dict containing parameter names and data types. Example: {'city': {'type': 'string', 'description': 'City name'}}",
     )
-    test_values: Optional[List[TestValue]] = Field(
+    testValues: Optional[List[TestValue]] = Field(
         default=None,
         description="A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}",
     )
     limit: Optional[int] = Field(
         default=100,
+        gt=1,
         description="The maximum number of records to return from the API. Default is 100.",
     )
 
@@ -81,7 +82,13 @@ class ApiData(SmarterBasePydanticModel):
         try:
             SmarterValidator.validate_url_endpoint(v)
         except (SAMValidationError, SmarterValueError) as e:
-            raise SAMValidationError(f"Invalid endpoint: {e}") from e
+            if isinstance(v, str) and not v.endswith("/"):
+                # Ensure trailing slash
+                v = v + "/"
+                try:
+                    SmarterValidator.validate_url_endpoint(v)
+                except (SAMValidationError, SmarterValueError):
+                    raise SAMValidationError(f"Invalid endpoint: {e}") from e
         return v
 
     @field_validator("method")
