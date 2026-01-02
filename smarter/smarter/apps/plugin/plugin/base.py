@@ -1203,6 +1203,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         """
         if not self._manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
+
         logger.info("%s.create() creating plugin %s", self.formatted_class_name, self.manifest.metadata.name)
 
         def committed(plugin: PluginMeta):
@@ -1291,8 +1292,10 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         with transaction.atomic():
             if isinstance(self.plugin_meta, PluginMeta):
+                read_only_attrs = ["id", "account", "name", "author", "created_at", "updated_at"]
                 for attr, value in plugin_meta_django_model.items():
-                    setattr(self.plugin_meta, attr, value)
+                    if attr not in read_only_attrs:
+                        setattr(self.plugin_meta, attr, value)
                 self.plugin_meta.save()
             else:
                 raise SmarterPluginError("PluginMeta is not set or is not a PluginMeta instance.")

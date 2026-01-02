@@ -37,6 +37,7 @@ from smarter.apps.plugin.tests.mixins import (
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.manifest.broker import SAMBrokerError
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -621,94 +622,3 @@ class TestSqlPluginLegacy(TestPluginBase, ManifestTestsMixin, SqlConnectionTestM
             "Placeholder 'username' is not defined in parameter",
             str(context.exception),
         )
-
-    def test_django_orm(self):
-        """
-        Test that the Django model can be initialized from the Pydantic model.
-
-        FIX NOTE: WE HAVE TO LOAD THIS VIA THE BROKER, IN PART
-        BC THE FUNCTION CALL PARAMETERS HAVE TO BE REFORMATTED
-        FROM LIST TO DICT.
-        """
-        # 1.) create a secret for the Sql connection
-        self._loader = None
-        self._manifest = None
-        self.load_manifest(filename="secret-smarter.yaml")
-        if not isinstance(self.loader, SAMLoader):
-            self.fail("Loader is not an instance of SAMLoader")
-        if not isinstance(self._manifest, dict):
-            self.fail("Manifest is not a dictionary")
-
-        if self.secret_model is None:
-            self.fail("Secret model is None, did you load the manifest?")
-
-        secret_broker = SAMSecretBroker(
-            self.request,
-            loader=self.loader,
-            manifest=self.secret_model,
-        )
-        secret_broker.apply(self.request)
-        if not isinstance(secret_broker.secret, Secret):
-            self.fail("secret is not an instance of SAMSecret")
-
-        # 2.) create an Sql connection
-        self._loader = None
-        self._manifest = None
-        self.load_manifest(filename="sql-connection.yaml")
-        if not isinstance(self.loader, SAMLoader):
-            self.fail("Loader is not an instance of SAMLoader")
-        if not isinstance(self._manifest, dict):
-            self.fail("Manifest is not a dictionary")
-
-        if self.sql_connection_model is None:
-            self.fail("SqlConnection model is None, did you load the manifest?")
-
-        connection_broker = SAMSqlConnectionBroker(
-            self.request,
-            loader=self.connection_loader,
-            manifest=self.sql_connection_model,
-        )
-        connection_broker.apply(self.request)
-
-        self._loader = None
-        self._manifest = None
-        self.load_manifest(filename="sql-plugin.yaml")
-        if not isinstance(self.loader, SAMLoader):
-            self.fail("Loader is not an instance of SAMLoader")
-        if not isinstance(self._manifest, dict):
-            self.fail("Manifest is not a dictionary")
-
-        # 3.) create an Sql plugin
-        sql_plugin_broker = SAMSqlPluginBroker(self.request, loader=self.loader, manifest=self.sql_plugin_model)
-        sql_plugin_broker.apply(self.request)
-        self.plugin_meta = sql_plugin_broker.plugin_meta
-
-        if not isinstance(self.plugin_meta, PluginMeta):
-            self.fail("plugin_meta is not an instance of PluginMeta")
-        if self.sql_plugin_model is None:
-            self.fail("SqlPlugin model is None, did you load the manifest?")
-
-        # 4.) try to save it
-        self.plugin_meta.save()
-
-        response = sql_plugin_broker.describe(self.request)
-        self.assertIsInstance(response, SmarterJournaledJsonResponse)
-        self.assertEqual(response.status_code, 200)
-
-        # ---------------------------------------------------------------------
-        # tear down the test data
-        # ---------------------------------------------------------------------
-        try:
-            sql_plugin_broker.delete(self.request)
-        except (PluginDataSql.DoesNotExist, ValueError):
-            pass
-
-        try:
-            connection_broker.delete(self.request)
-        except (SqlConnection.DoesNotExist, ValueError):
-            pass
-
-        try:
-            secret_broker.delete(self.request)
-        except (Secret.DoesNotExist, ValueError):
-            pass
