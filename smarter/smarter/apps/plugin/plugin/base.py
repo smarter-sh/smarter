@@ -1220,8 +1220,8 @@ class PluginBase(ABC, SmarterHelperMixin):
         if self.plugin_meta:
             logger.info(
                 "%s.create() Plugin %s already exists. Updating plugin %s.",
-                self.plugin_meta.name,
                 self.formatted_class_name,
+                self.plugin_meta.name,
                 self.plugin_meta.id,  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             )
             return self.update()
