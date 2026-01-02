@@ -86,7 +86,6 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
         formatted_text("smarter.apps.chatbot.receivers.plugin_deleting"),
         plugin_meta.name,
     )
-    ChatBotPlugin.objects.filter(plugin_meta=plugin_meta).delete()
     logger.info(
         "%s %s ChatBotPlugin records deleted.",
         formatted_text("smarter.apps.chatbot.receivers.plugin_deleting"),
