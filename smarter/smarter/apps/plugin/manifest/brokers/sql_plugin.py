@@ -311,7 +311,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         self._plugin = SqlPlugin(
             plugin_meta=self.plugin_meta,
             user_profile=self.user_profile,
-            manifest=self.manifest,
+            manifest=self._manifest,
             name=self.name,
         )
         return self._plugin
@@ -350,6 +350,10 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             return self._plugin_data
 
         if self.plugin_meta is None:
+            logger.warning(
+                "%s.plugin_data could not be retrieved because plugin_meta is None",
+                self.formatted_class_name,
+            )
             return None
 
         self._plugin_data = PluginDataSql.get_cached_data_by_plugin(plugin=self.plugin_meta)
@@ -394,7 +398,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         """
         if self._sql_plugin_spec:
             return self._sql_plugin_spec
-        if not self.plugin_meta:
+        if not self._plugin_meta:
             return None
         selector = self.plugin_selector_orm2pydantic()
         prompt = self.plugin_prompt_orm2pydantic()

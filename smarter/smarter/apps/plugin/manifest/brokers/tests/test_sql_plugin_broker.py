@@ -3,12 +3,14 @@
 
 import logging
 import os
+from typing import List
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
 from taggit.managers import TaggableManager, _TaggableManager
 
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
+from smarter.apps.plugin.manifest.models.common import Parameter, TestValue
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
@@ -310,17 +312,130 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         """
         Test that the plugin data matches the manifest spec.
         """
+        response = self.broker.apply(self.request, **self.kwargs)
+        is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
+        self.assertTrue(is_valid_response)
+        is_valid_response = self.validate_apply(response)
+        self.assertTrue(is_valid_response)
+
         plugin_data = self.broker.plugin_data
         self.assertIsInstance(plugin_data, PluginDataSql)
         self.assertEqual(
-            plugin_data.description or "",
-            self.broker.manifest.spec.data.description or "",
-            "Plugin data description does not match manifest spec description.",
+            plugin_data.sql_query,
+            self.broker.manifest.spec.sqlData.sqlQuery,
+            f"Plugin data sqlData.sql_query does not match manifest: {plugin_data.sql_query}\nmanifest_spec: {self.broker.manifest.spec.sqlData.sqlQuery}",
         )
+        # parameters: Optional[List[Parameter]] = Field(
+        #     default=None,
+        #     description="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use.'}}",
+        # )
+        # Convert plugin_data.parameters to a list of Parameter Pydantic objects using the manifest's Parameter class
+        manifest_params: List[Parameter] = self.broker.manifest.spec.sqlData.parameters or []
+        plugin_params_raw = plugin_data.parameters
+        plugin_params: List[Parameter] = []
+        if isinstance(plugin_params_raw, list) and plugin_params_raw and isinstance(plugin_params_raw[0], Parameter):
+            plugin_params = plugin_params_raw
+        elif isinstance(plugin_params_raw, list) and plugin_params_raw and isinstance(plugin_params_raw[0], dict):
+            plugin_params = [Parameter(**p) for p in plugin_params_raw]
+        elif isinstance(plugin_params_raw, dict) and "properties" in plugin_params_raw:
+            # OpenAI/function-calling style dict
+            properties = plugin_params_raw.get("properties", {})
+            required = set(plugin_params_raw.get("required", []))
+            for name, prop in properties.items():
+                param_dict = dict(name=name)
+                param_dict.update(prop)
+                param_dict["required"] = name in required
+                plugin_params.append(Parameter(**param_dict))
+
+        # Build a lookup for plugin_params by name
+        plugin_param_lookup = {p.name: p for p in plugin_params}
+
+        for manifest_param in manifest_params:
+            plugin_param = plugin_param_lookup.get(manifest_param.name)
+            self.assertIsNotNone(
+                plugin_param,
+                f"Parameter '{manifest_param.name}' missing in plugin_data.parameters.\nplugin_params: {plugin_params}\nmanifest_params: {manifest_params}",
+            )
+            logger.info(
+                "Testing parameter '%s'\n - manifest: %s\n - plugin: %s",
+                manifest_param.name,
+                manifest_param,
+                plugin_param,
+            )
+            self.assertEqual(
+                manifest_param.name, plugin_param.name, f"Parameter 'name' mismatch for '{manifest_param.name}'"
+            )
+            self.assertEqual(
+                manifest_param.type, plugin_param.type, f"Parameter 'type' mismatch for '{manifest_param.name}'"
+            )
+            self.assertEqual(
+                manifest_param.description,
+                plugin_param.description,
+                f"Parameter 'description' mismatch for '{manifest_param.name}'",
+            )
+            self.assertEqual(
+                manifest_param.required,
+                plugin_param.required,
+                f"Parameter 'required' mismatch for '{manifest_param.name}'",
+            )
+            self.assertEqual(
+                manifest_param.enum, plugin_param.enum, f"Parameter 'enum' mismatch for '{manifest_param.name}'"
+            )
+            self.assertEqual(
+                manifest_param.default,
+                plugin_param.default,
+                f"Parameter 'default' mismatch for '{manifest_param.name}'",
+            )
+
+        # Compare testValues: Optional[List[TestValue]]
+        manifest_test_values: List[TestValue] = self.broker.manifest.spec.sqlData.testValues or []
+        plugin_test_values_raw = plugin_data.test_values or []
+        plugin_test_values: List[TestValue] = []
+        if (
+            isinstance(plugin_test_values_raw, list)
+            and plugin_test_values_raw
+            and isinstance(plugin_test_values_raw[0], TestValue)
+        ):
+            plugin_test_values = plugin_test_values_raw
+        elif (
+            isinstance(plugin_test_values_raw, list)
+            and plugin_test_values_raw
+            and isinstance(plugin_test_values_raw[0], dict)
+        ):
+            plugin_test_values = [TestValue(**v) for v in plugin_test_values_raw]
+        elif isinstance(plugin_test_values_raw, dict):
+            # If plugin_test_values is a dict, treat each key as name and value as value
+            plugin_test_values = [TestValue(name=k, value=v) for k, v in plugin_test_values_raw.items()]
+
+        # Build a lookup for plugin_test_values by name
+        plugin_test_value_lookup = {v.name: v for v in plugin_test_values}
+
+        for manifest_test_value in manifest_test_values:
+            plugin_test_value = plugin_test_value_lookup.get(manifest_test_value.name)
+            self.assertIsNotNone(
+                plugin_test_value,
+                f"TestValue '{manifest_test_value.name}' missing in plugin_data.test_values.\nplugin_test_values: {plugin_test_values}\nmanifest_test_values: {manifest_test_values}",
+            )
+            self.assertEqual(
+                manifest_test_value.name,
+                plugin_test_value.name,
+                f"TestValue 'name' mismatch for '{manifest_test_value.name}'",
+            )
+            self.assertEqual(
+                manifest_test_value.value,
+                plugin_test_value.value,
+                f"TestValue 'value' mismatch for '{manifest_test_value.name}'",
+            )
+
+        # limit: Optional[int] = Field(
+        #     default=100,
+        #     gt=0,
+        #     description="The maximum number of rows to return from the query. Must be a non-negative integer.",
+        # )
         self.assertEqual(
-            plugin_data or {},
-            self.broker.manifest.spec.sqlData or {},
-            "Plugin data sqlData does not match manifest spec sqlData.",
+            plugin_data.limit,
+            self.broker.manifest.spec.sqlData.limit,
+            f"Plugin data sqlData.limit does not match manifest: {plugin_data.limit}\nmanifest_spec: {self.broker.manifest.spec.sqlData.limit}",
         )
 
     def test_describe(self):

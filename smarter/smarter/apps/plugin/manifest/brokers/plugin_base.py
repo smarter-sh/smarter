@@ -190,7 +190,11 @@ class SAMPluginBaseBroker(AbstractBroker):
             try:
                 self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
             except PluginMeta.DoesNotExist:
-                pass
+                logger.warning(
+                    "PluginMeta does not exist for name %s and account %s",
+                    self.name,
+                    self.account,
+                )
         return self._plugin_meta
 
     @plugin_meta.setter
@@ -285,7 +289,7 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         """
         command = SmarterJournalCliCommands("describe")
-        if not self.plugin_meta:
+        if not self._plugin_meta:
             raise SAMPluginBrokerError(
                 f"PluginMeta {self.name} not found",
                 thing=self.kind,

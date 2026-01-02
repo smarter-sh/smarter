@@ -146,7 +146,7 @@ def apply_manifest(
         logger.info("%s headers: %s", logger_prefix, headers)
 
     logger.info("%s Applying manifest ...", logger_prefix)
-    httpx_response = httpx.post(url, content=data, headers=headers)
+    httpx_response = httpx.post(url, content=data, headers=headers, timeout=60.0)
     token_record.delete()
 
     # wrap up the request

@@ -318,11 +318,6 @@ class StaticPlugin(PluginBase):
         if self._manifest:
             return {
                 "plugin": self.plugin_meta,
-                "description": (
-                    self.manifest.spec.data.description
-                    if self.manifest and self.manifest.spec and self.manifest.spec.data
-                    else None
-                ),
                 "static_data": (
                     self.manifest.spec.data.staticData
                     if self.manifest and self.manifest.spec and self.manifest.spec.data

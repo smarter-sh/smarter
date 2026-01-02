@@ -387,6 +387,48 @@ class SqlPlugin(PluginBase):
                     "default": None
                 }
             ]
+
+        .. code-block:: yaml
+
+            spec:
+                selector:
+                    directive: search_terms
+                    searchTerms:
+                    - admin
+                    - Smarter platform
+                    - admin account
+                prompt:
+                    provider: openai
+                    systemRole: >
+                    You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.
+                    model: gpt-4-turbo
+                    temperature: 0.0
+                    maxTokens: 256
+                connection: test_sql_connection
+                sqlData:
+                    sqlQuery: >
+                    SELECT * FROM auth_user WHERE username = '{username}';
+                    parameters:
+                    - name: username
+                        type: string
+                        description: The username to query.
+                        required: true
+                        default: admin
+                    - name: unit
+                        type: string
+                        enum:
+                        - Celsius
+                        - Fahrenheit
+                        description: The temperature unit to use.
+                        required: false
+                        default: Celsius
+                    testValues:
+                    - name: username
+                        value: admin
+                    - name: unit
+                        value: Celsius
+                    limit: 10
+
         """
         if not self._manifest:
             return None
@@ -427,45 +469,49 @@ class SqlPlugin(PluginBase):
         # to conform to openai's function calling schema.
         recasted_parameters = {"type": "object", "properties": {}, "required": [], "additionalProperties": False}
         parameters = self.manifest.spec.sqlData.parameters if self.manifest and self.manifest.spec else None
-        if not isinstance(parameters, list):
+        if parameters and not isinstance(parameters, list):
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
             )
-
-        logger.info("%s.plugin_data_django_model() recasting parameters: %s", self.formatted_class_name, parameters)
-        for parameter in parameters:
-            if isinstance(parameter, Parameter):
+        if parameters:
+            logger.info("%s.plugin_data_django_model() recasting parameters", self.formatted_class_name)
+            for parameter in parameters:
+                if not isinstance(parameter, Parameter):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a Pydantic Parameter model. Received: {parameter} {type(parameter)}"
+                    )
                 # if the parameter is a Pydantic model, we need to convert it to a
                 # standard json dict.
                 parameter = parameter.model_dump()
-            logger.info(
-                "%s.plugin_data_django_model() processing parameter: %s %s",
-                self.formatted_class_name,
-                type(parameter),
-                parameter,
-            )
-            if not isinstance(parameter, dict):
-                raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a valid json dict. Received: {parameter} {type(parameter)}"
+                logger.info(
+                    "%s.plugin_data_django_model() processing parameter: %s",
+                    self.formatted_class_name,
+                    parameter,
                 )
-            if "name" not in parameter or "type" not in parameter:
-                raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must have a 'name' and 'type' field. Received: {parameter}"
-                )
-            recasted_parameters["properties"][parameter["name"]] = {
-                "type": parameter["type"],
-                "description": parameter.get("description", ""),
-            }
-            if "enum" in parameter and parameter["enum"]:
-                if not isinstance(parameter["enum"], list):
+                if not isinstance(parameter, dict):
                     raise SmarterConfigurationError(
-                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameter 'enum' must be a list. Received: {parameter['enum']} {type(parameter['enum'])}"
+                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a valid json dict. Received: {parameter} {type(parameter)}"
                     )
-                recasted_parameters["properties"][parameter["name"]]["enum"] = parameter["enum"]
-            if parameter.get("required", False):
-                recasted_parameters["required"].append(parameter["name"])
+                if "name" not in parameter or "type" not in parameter:
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must have a 'name' and 'type' field. Received: {parameter}"
+                    )
+                recasted_parameters["properties"][parameter["name"]] = {
+                    "type": parameter["type"],
+                    "description": parameter.get("description", ""),
+                }
+                if "enum" in parameter and parameter["enum"]:
+                    if not isinstance(parameter["enum"], list):
+                        raise SmarterConfigurationError(
+                            f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameter 'enum' must be a list. Received: {parameter['enum']} {type(parameter['enum'])}"
+                        )
+                    recasted_parameters["properties"][parameter["name"]]["enum"] = parameter["enum"]
+                if parameter.get("required", False):
+                    recasted_parameters["required"].append(parameter["name"])
+                if "default" in parameter and parameter["default"] is not None:
+                    recasted_parameters["properties"][parameter["name"]]["default"] = parameter["default"]
 
-        sql_data["parameters"] = recasted_parameters
+            sql_data["parameters"] = recasted_parameters
 
         return {
             "plugin": self.plugin_meta,
