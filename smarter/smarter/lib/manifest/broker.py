@@ -193,6 +193,16 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         self._api_version = api_version
         self._name = name  # i suspect that this is always None bc DRF sets name later in the process
         self._kind = kind
+        if isinstance(file_path, str) and file_path:
+            self._loader = SAMLoader(file_path=file_path)
+            logger.info("%s.__init__() initialized loader from file_path: %s", self.formatted_class_name, file_path)
+            self._kind = self._loader.manifest_kind if self._loader.manifest_kind else self._kind
+            if isinstance(self._kind, str):
+                logger.info("%s.__init__() set kind to %s from loader", self.formatted_class_name, self._kind)
+            self._name = self._loader.manifest_metadata.get("name") if self._loader.manifest_metadata else self._name
+            if self._name:
+                logger.info("%s.__init__() set name to %s from loader metadata", self.formatted_class_name, self._name)
+
         if isinstance(manifest, AbstractSAMBase):
             self._manifest = manifest
             logger.info("%s.__init__() successfully initialized manifest: %s", self.formatted_class_name, self.manifest)
@@ -210,6 +220,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 self.formatted_class_name,
                 self._loader.manifest_kind,
             )
+            self._kind = self._loader.manifest_kind if self._loader.manifest_kind else self._kind
+            if isinstance(self._kind, str):
+                logger.info("%s.__init__() set kind to %s from loader", self.formatted_class_name, self._kind)
+            self._name = self._loader.manifest_metadata.get("name") if self._loader.manifest_metadata else self._name
+            if self._name:
+                logger.info("%s.__init__() set name to %s from loader metadata", self.formatted_class_name, self._name)
 
         if self.user:
             logger.info("%s.__init__() received user: %s", self.formatted_class_name, self.user_profile)

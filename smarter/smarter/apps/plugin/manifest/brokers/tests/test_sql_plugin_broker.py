@@ -8,6 +8,7 @@ from django.http import HttpRequest
 from pydantic_core import ValidationError
 from taggit.managers import TaggableManager, _TaggableManager
 
+from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
 from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
@@ -36,9 +37,38 @@ class TestSmarterSqlPluginBroker(TestSAMBrokerBaseClass):
 
     def setUp(self):
         super().setUp()
-        self._broker_class = SAMSqlPluginBroker
         self._here = os.path.abspath(os.path.dirname(__file__))
+
+        self.init_connection()
+        self._broker_class = SAMSqlConnectionBroker
         self._manifest_filespec = self.get_data_full_filepath("sql-plugin.yaml")
+
+    def tearDown(self):
+        try:
+            self.connection_broker.delete(self.request)
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("%s.tearDown() failed to delete connection broker: %s", self.formatted_class_name, str(e))
+        super().tearDown()
+
+    def init_connection(self) -> SAMSqlConnectionBroker:
+        """
+        Initialize the SQL connection for testing.
+        """
+        self._broker_class = SAMSqlConnectionBroker
+        self._manifest_filespec = self.get_data_full_filepath("sql-connection.yaml")
+        self._loader = SAMLoader(file_path=self._manifest_filespec)
+        connection_broker = SAMSqlConnectionBroker(self.request, loader=self._loader)
+        if not connection_broker.manifest:
+            raise ValueError("Failed to initialize connection broker manifest.")
+        if not connection_broker.ready:
+            raise ValueError("Connection broker is not ready.")
+        connection_broker.apply(self.request)
+
+        self._loader = None
+        self._manifest_filespec = None
+        self._broker_class = SAMSqlPluginBroker
+        return connection_broker
 
     @property
     def ready(self) -> bool:

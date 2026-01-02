@@ -108,6 +108,22 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
     """
 
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        if self._manifest:
+            return
+
+        if self._loader:
+            # pylint: disable=W0104
+            self.manifest
+            if not self._manifest:
+                raise SAMBrokerErrorNotReady(
+                    message="Failed to initialize manifest from loader",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
+
     # override the base abstract manifest model with the SqlConnection model
     _manifest: Optional[SAMSqlConnection] = None
     _pydantic_model: Type[SAMSqlConnection] = SAMSqlConnection
@@ -284,7 +300,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         # If the Connection has previously been persisted then
         # we can build the manifest components by mapping
         # Django ORM models to Pydantic models.
-        if self.connection:
+        if self._connection:
             metadata = self.sam_connection_metadata()
             if not metadata:
                 raise SAMBrokerErrorNotImplemented(
@@ -658,10 +674,30 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     print("Connection is missing or invalid.")
         """
         if self.connection is None:
+            logger.warning(
+                "%s is_valid() failed: connection is None for %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.name or "(name is missing)",
+            )
             return False
         try:
             if self.connection.validate():
-                return self.manifest is not None
+                logger.info(
+                    "%s is_valid() succeeded for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.name or "(name is missing)",
+                )
+                if self.manifest is not None:
+                    return True
+                logger.warning(
+                    "%s is_valid() failed for %s %s: manifest is missing",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.name or "(name is missing)",
+                )
+
         except Exception as e:
             logger.warning("%s is_valid() failed for %s %s", self.formatted_class_name, self.kind, str(e))
         return False
