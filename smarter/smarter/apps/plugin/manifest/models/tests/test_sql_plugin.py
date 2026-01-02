@@ -70,24 +70,12 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
 
     @classmethod
     def setUpClass(cls):
-        """
-        Set up the test class with a single account, and admin and non-admin users.
-        using the class setup so that we retain the same user_profile for each test,
-        which is needed so that the django Secret model can be queried.
-
-        # note: this is SMARTER_MYSQL_TEST_DATABASE_PASSWORD from .env
-        # cls.test_secret_value = smarter_settings.smarter_mysql_test_database_password.get_secret_value()
-
-        # note: this is SMARTER_MYSQL_TEST_DATABASE_PASSWORD from .env
-        # cls.test_proxy_secret_value = smarter_settings.smarter_mysql_test_database_password.get_secret_value()
-        """
         super().setUpClass()
         logger.info("%s.setUpClass()", cls.test_sam_sql_plugin_logger_prefix)
         cls.loader = SAMLoader(file_path=MANIFEST_PATH_SQL_PLUGIN)
 
     @classmethod
     def tearDownClass(cls):
-        """Clean up the created secret after all tests have run."""
         logger.info("%s.tearDownClass()", cls.test_sam_sql_plugin_logger_prefix)
         super().tearDownClass()
 
