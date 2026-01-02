@@ -27,23 +27,13 @@ from smarter.apps.plugin.tests.mixins import (
     AuthenticatedRequestMixin,
     SqlConnectionTestMixin,
 )
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=W0223

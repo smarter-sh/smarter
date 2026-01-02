@@ -51,21 +51,12 @@ from smarter.common.utils import camel_to_snake, get_readonly_yaml_file
 
 # python stuff
 from smarter.lib import json
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoaderError
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
