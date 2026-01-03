@@ -72,7 +72,7 @@ from ..signals import llm_tool_presented, llm_tool_requested, llm_tool_responded
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)

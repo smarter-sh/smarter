@@ -3,10 +3,27 @@ Middleware to ensure that all requests for 'application/JSON' return responses
 that are also in JSON format.
 """
 
+import logging
 from http import HTTPStatus
 
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
+
+from smarter.common.conf import settings as smarter_settings
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)) or level >= logging.WARNING
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+logger.debug("Loading %s.SmarterJsonErrorMiddleware", __name__)
 
 
 class SmarterJsonErrorMiddleware(MiddlewareMixin):

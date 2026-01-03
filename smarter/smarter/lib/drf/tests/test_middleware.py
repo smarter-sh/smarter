@@ -27,7 +27,7 @@ class TestSmarterTokenAuthenticationMiddleware(SmarterTestBase):
         super().setUp()
 
         self.admin_user, self.account, self.user_profile = admin_user_factory()
-        logger.info("%s Setting up test class with name: %s", self.formatted_class_name, self.name)
+        logger.debug("%s Setting up test class with name: %s", self.formatted_class_name, self.name)
 
         self.token_record, self.token_key = SmarterAuthToken.objects.create(
             name=self.name,

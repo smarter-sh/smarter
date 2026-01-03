@@ -48,10 +48,9 @@ HERE = formatted_text(__name__)
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-        or waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.CACHE_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
