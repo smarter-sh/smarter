@@ -17,6 +17,7 @@ from django.utils.functional import cached_property
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
@@ -34,7 +35,7 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-logger.debug("Loading %s.SmarterCsrfViewMiddleware", __name__)
+logger.debug("Loading %s", formatted_text(__name__ + ".SmarterCsrfViewMiddleware"))
 
 
 class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):

@@ -18,6 +18,7 @@ from django.http.response import HttpResponseBase
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -32,7 +33,7 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-logger.debug("Loading %s.SmarterCorsMiddleware", __name__)
+logger.debug("Loading %s", formatted_text(__name__ + ".SmarterCorsMiddleware"))
 
 
 class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):

@@ -25,7 +25,6 @@ import yaml
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
 from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
 if TYPE_CHECKING:
@@ -35,22 +34,8 @@ if TYPE_CHECKING:
 RequestType = Union["HttpRequest", "Request", "WSGIRequest"]
 
 
-# pylint: disable=W0613
-def should_log(level):
-    """
-    Check if logging should be done based on the waffle switch.
-
-    .. note::
-
-        we're too far down the call stack to use Django nor smarter_settings.
-        Therefore, we cannot leverage the WaffleSwitch class directly here.
-
-    """
-    return False
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(__name__)
 
 
 def is_authenticated_request(request: Optional[RequestType]) -> bool:
@@ -93,6 +78,7 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         authenticated = is_authenticated_request(drf_request)
         print(authenticated)
     """
+    logger.debug("%s.is_authenticated_request()", logger_prefix)
     try:
         # pylint: disable=import-outside-toplevel
         from django.core.handlers.wsgi import WSGIRequest
@@ -107,7 +93,7 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         )
     # pylint: disable=W0718
     except Exception as e:
-        logger.debug("is_authenticated_request() failed: %s", formatted_text(str(e)))
+        logger.debug("%s.is_authenticated_request() failed: %s", logger_prefix, formatted_text(str(e)))
         return False
 
 
@@ -142,6 +128,7 @@ def hash_factory(length: int = 16) -> str:
         print(long_token)  # e.g., 'a3f9c1e2b4d5f6a7c8e9d0b1a2c3d4e5'
 
     """
+    logger.debug("%s.hash_factory()", logger_prefix)
     return hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:length]
 
 
@@ -171,6 +158,7 @@ def get_readonly_yaml_file(file_path) -> dict:
         print(config)  # {'key': 'value', ...}
 
     """
+    logger.debug("%s.get_readonly_yaml_file()", logger_prefix)
     with open(file_path, encoding="utf-8") as file:
         return yaml.safe_load(file)
 
@@ -201,6 +189,7 @@ def get_readonly_csv_file(file_path):
         for row in rows:
             print(row)  # {'column1': 'value1', 'column2': 'value2', ...}
     """
+    logger.debug("%s.get_readonly_csv_file()", logger_prefix)
     with open(file_path, encoding="utf-8") as file:
         reader = csv.DictReader(file)
         return list(reader)
@@ -241,6 +230,7 @@ def camel_to_snake_dict(dictionary: dict) -> dict:
         # Output: {'user_name': 'alice', 'user_profile': {'first_name': 'Alice', 'last_name': 'Smith'}}
 
     """
+    logger.debug("%s.camel_to_snake_dict()", logger_prefix)
 
     def convert(name: str):
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
@@ -290,6 +280,7 @@ def recursive_sort_dict(d):
         # Output: {'a': {'c': 3, 'd': 4}, 'b': 2}
 
     """
+    logger.debug("%s.recursive_sort_dict()", logger_prefix)
     return {k: recursive_sort_dict(v) if isinstance(v, dict) else v for k, v in sorted(d.items())}
 
 
@@ -346,6 +337,7 @@ def dict_is_contained_in(dict1, dict2):
         print(result)  # False
 
     """
+    logger.debug("%s.dict_is_contained_in()", logger_prefix)
     for key, value in dict1.items():
         if key not in dict2:
             print(f"the key {key} is not present in the model dict: ")
@@ -417,6 +409,7 @@ def dict_is_subset(small, big) -> bool:
         print(result)  # False
 
     """
+    logger.debug("%s.dict_is_subset()", logger_prefix)
     if isinstance(small, dict) and isinstance(big, dict):
         for k, v in small.items():
             if k not in big:
@@ -489,6 +482,7 @@ def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_
         print(masked)  # Output: abc
 
     """
+    logger.debug("%s.mask_string()", logger_prefix)
     warnings.warn(
         "mask_string is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2
     )
@@ -561,13 +555,14 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         print(url)  # Output: http://testserver/unknown/
 
     """
+    logger.debug("%s.smarter_build_absolute_uri()", logger_prefix)
     if request is None:
-        logger.debug("smarter_build_absolute_uri() called with None request")
+        logger.debug("%s.smarter_build_absolute_uri() called with None request", logger_prefix)
         return "http://testserver/unknown/"
 
     # If it's a unittest.mock.Mock, synthesize a fake URL for testing
     if hasattr(request, "__class__") and request.__class__.__name__ == "Mock":
-        logger.debug("smarter_build_absolute_uri() called with Mock request; returning fake test URL")
+        logger.debug("%s.smarter_build_absolute_uri() called with Mock request; returning fake test URL", logger_prefix)
         return "http://testserver/mockpath/"
 
     # Try to use Django's build_absolute_uri if available
@@ -579,7 +574,8 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         # pylint: disable=W0718
         except Exception as e:
             logger.debug(
-                "smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
+                "%s.smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
+                logger_prefix,
                 formatted_text(str(e)),
             )
 
@@ -599,7 +595,8 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
     # pylint: disable=W0718
     except Exception as e:
         logger.debug(
-            "smarter_build_absolute_uri() failed to build URL from request attributes: %s",
+            "%s.smarter_build_absolute_uri() failed to build URL from request attributes: %s",
+            logger_prefix,
             formatted_text(str(e)),
         )
 
@@ -613,7 +610,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         request = request._request
 
     # Fallback: synthesize a generic test URL
-    logger.debug("smarter_build_absolute_uri() could not determine URL, returning fallback test URL")
+    logger.debug("%s.smarter_build_absolute_uri() could not determine URL, returning fallback test URL", logger_prefix)
     return "http://testserver/unknown/"
 
 
@@ -667,6 +664,7 @@ def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -
         # Output: {'userName': 'firstName'}
 
     """
+    logger.debug("%s.snake_to_camel()", logger_prefix)
 
     def convert(name: str) -> str:
         components = name.split("_")
@@ -719,6 +717,7 @@ def pascal_to_snake(name: str) -> str:
         print(pascal_to_snake("FirstName LastName"))  # Output: first_name_last_name
 
     """
+    logger.debug("%s.pascal_to_snake()", logger_prefix)
     pattern = re.compile(r"(?<!^)(?=[A-Z])")
     return pattern.sub("_", name).lower()
 
@@ -766,6 +765,7 @@ def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, li
         print(camel_to_snake(["firstName", "lastName"]))
         # Output: ['first_name', 'last_name']
     """
+    logger.debug("%s.camel_to_snake()", logger_prefix)
 
     def convert(name: str):
         name = name.replace(" ", "_")
@@ -832,6 +832,7 @@ def rfc1034_compliant_str(val) -> str:
         print(rfc1034_compliant_str(long_name))  # Output: thisisareallylongchatbotnamethatshouldbetruncatedtosixtythreecharacters
 
     """
+    logger.debug("%s.rfc1034_compliant_str()", logger_prefix)
     if not isinstance(val, str):
         raise SmarterValueError(f"Could not generate RFC 1034 compliant name from {type(val)}")
     # Replace underscores with hyphens
@@ -893,6 +894,7 @@ def rfc1034_compliant_to_snake(val) -> str:
             print(e)
         # Output: Could not convert RFC 1034 compliant name from <class 'int'>
     """
+    logger.debug("%s.rfc1034_compliant_to_snake()", logger_prefix)
     if not isinstance(val, str):
         raise SmarterValueError(f"Could not convert RFC 1034 compliant name from {type(val)}")
     # Replace hyphens with underscores
@@ -922,19 +924,17 @@ def generate_fernet_encryption_key() -> str:
         print(key)  # e.g., 'gAAAAABh...'
 
     """
+    logger.debug("%s.generate_fernet_encryption_key()", logger_prefix)
     # pylint: disable=C0415
     from cryptography.fernet import Fernet
 
-    logger.debug(
-        formatted_text_red(
-            "smarter.common.utils.generate_fernet_encryption_key() Generating new Fernet encryption key."
-        )
-    )
+    logger.debug("%s.generate_fernet_encryption_key() Generating new Fernet encryption key.", logger_prefix)
     return Fernet.generate_key().decode("utf-8")
 
 
 def bool_environment_variable(var_name: str, default: bool) -> bool:
     """Get a boolean environment variable"""
+    logger.debug("%s.bool_environment_variable()", logger_prefix)
     value = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
     if value is None:
         return default
