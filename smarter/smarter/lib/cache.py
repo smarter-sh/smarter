@@ -535,8 +535,8 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 )
                 if logging_enabled and lazy_cache.cache_logging:
                     logger.info(
-                        logger_prefix_green,
                         "%s cache hit for %s: %s",
+                        logger_prefix_green,
                         cache_key,
                         "None" if result is None else result,
                     )

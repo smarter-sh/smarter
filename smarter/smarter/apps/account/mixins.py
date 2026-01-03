@@ -14,6 +14,7 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import (
+    formatted_text,
     formatted_text_green,
     formatted_text_red,
 )
@@ -205,8 +206,8 @@ class AccountMixin(SmarterHelperMixin):
                 logger.warning("%s.__init__(): failed to authenticate user from API token", self.formatted_class_name)
 
         logger.info(
-            "%s.__init__(): AccountMixin is %s. user_profile: %s",
-            self.formatted_class_name,
+            "%s.__init__() is %s. user_profile: %s",
+            formatted_text(__name__ + ".AccountMixin"),
             self.accountmixin_ready_state,
             self.user_profile,
         )

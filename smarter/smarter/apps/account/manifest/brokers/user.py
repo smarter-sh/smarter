@@ -173,13 +173,11 @@ class SAMUserBroker(AbstractBroker):
                     thing=self.kind,
                 )
 
-        logger.info(
-            "%s.__init__() broker for %s %s is %s.",
-            self.formatted_class_name,
-            self.kind,
-            self.name,
-            self.ready_state,
-        )
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        if self.ready:
+            logger.info(msg)
+        else:
+            logger.error(msg)
 
     @property
     def ready(self) -> bool:

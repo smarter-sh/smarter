@@ -25,7 +25,6 @@ from smarter.apps.plugin.manifest.models.common.connection.status import (
 )
 from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.serializers import ApiConnectionSerializer
-from smarter.apps.plugin.signals import broker_ready
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
@@ -128,13 +127,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     self.kind,
                     self.manifest.metadata.name,
                 )
-        logger.info(
-            "%s.__init__() broker for %s %s is %s.",
-            self.formatted_class_name,
-            self.kind,
-            self.name,
-            self.ready_state,
-        )
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        if self.ready:
+            logger.info(msg)
+        else:
+            logger.error(msg)
 
     # override the base abstract manifest model with the ApiConnection model
     _manifest: Optional[SAMApiConnection] = None

@@ -244,21 +244,52 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         self._kind = self._kind or self.loader.manifest_kind if self.loader else None
         self._created = False
         self._validated = bool(manifest) or bool(self.loader and self.loader.ready)
-        logger.info(
-            "%s.__init__() finished initializing %s with api_version: %s, user: %s, name: %s, validated: %s, manifest: %s, loader: %s",
-            self.formatted_class_name,
-            self.kind,
-            self.api_version,
-            self.user_profile,
-            self.name,
-            self._validated,
-            bool(self._manifest),
-            bool(self._loader),
-        )
+
+        msg = f"{self.formatted_class_name}.__init__() {self.kind} broker is {self.abstract_broker_ready_state} with api_version: {self.api_version}, user: {self.user_profile}, name: {self.name}, validated: {self._validated}, manifest: {bool(self._manifest)}, loader: {bool(self._loader)}"
+        if self.is_ready_abstract_broker:
+            logger.info(msg)
+        else:
+            logger.error(msg)
 
     ###########################################################################
     # Class Instance Properties
     ###########################################################################
+    @property
+    def is_ready_abstract_broker(self) -> bool:
+        """Return True if the AbstractBroker is ready for operations.
+
+        An AbstractBroker is considered ready if it has a valid manifest loaded.
+
+        :return: True if the AbstractBroker is ready for operations.
+        :rtype: bool
+        """
+        if bool(self._manifest):
+            return True
+        if bool(self.loader) and self.loader.ready:
+            return True
+        if not bool(self._manifest):
+            logger.warning(
+                "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
+                self.formatted_class_name,
+            )
+        if not bool(self.loader) or not self.loader.ready:
+            logger.warning(
+                "%s.is_ready_abstract_broker() returning false because loader is not ready.",
+                self.formatted_class_name,
+            )
+        return False
+
+    @property
+    def abstract_broker_ready_state(self) -> str:
+        """Return a string representation of the AbstractBroker's ready state.
+
+        :return: "READY" if the AbstractBroker is ready, otherwise "NOT_READY".
+        :rtype: str
+        """
+        if self.is_ready_abstract_broker:
+            return formatted_text_green("INITIALIZED")
+        return formatted_text_red("NOT_INITIALIZED")
+
     @property
     def ready(self) -> bool:
         """Return True if the broker is ready for operations.
@@ -276,14 +307,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 self.kind,
             )
             return False
-        if not self._manifest:
-            logger.warning(
-                "%s.ready() manifest is not initialized for kind=%s",
-                self.formatted_class_name,
-                self.kind,
-            )
-            return False
-        return True
+        return retval and self.is_ready_abstract_broker
 
     @property
     def ready_state(self) -> str:
