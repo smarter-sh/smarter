@@ -55,7 +55,7 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
         # cls.test_proxy_secret_value = smarter_settings.smarter_mysql_test_database_password.get_secret_value()
         """
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.test_smarter_connection_broker_base_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.test_smarter_connection_broker_base_logger_prefix)
         test_secret_loader = SAMLoader(file_path=MANIFEST_PATH_SECRET_SMARTER_TEST_DB_PASSWORD)
         apply_manifest(username=cls.admin_user.username, manifest=test_secret_loader.yaml_data, verbose=True)
 
@@ -72,7 +72,7 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
             cls.test_secret_value = cls.secret.get_secret()
         except Secret.DoesNotExist as e:
             raise SmarterValueError(f"Failed to get test secret '{cls.test_secret_name}' from database.") from e
-        logger.info(
+        logger.debug(
             "%s.setUpClass() %s owned by %s created for connection broker tests.",
             cls.test_smarter_connection_broker_base_logger_prefix,
             cls.test_secret_name,
@@ -100,7 +100,7 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
                 f"Failed to get test proxy secret '{cls.test_proxy_secret_name}' from database."
             ) from e
 
-        logger.info(
+        logger.debug(
             "%s.setUpClass() %s owned by %s created for connection broker tests.",
             cls.test_smarter_connection_broker_base_logger_prefix,
             cls.test_proxy_secret_name,
@@ -110,10 +110,10 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
     @classmethod
     def tearDownClass(cls):
         """Clean up the created secret after all tests have run."""
-        logger.info("%s.tearDownClass()", cls.test_smarter_connection_broker_base_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.test_smarter_connection_broker_base_logger_prefix)
         try:
             cls.secret.delete()
-            logger.info(
+            logger.debug(
                 "%s.tearDownClass() Test secret %s owned by %s deleted after connection broker tests.",
                 cls.test_smarter_connection_broker_base_logger_prefix,
                 cls.test_secret_name,
@@ -131,7 +131,7 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
 
         try:
             cls.proxy_secret.delete()
-            logger.info(
+            logger.debug(
                 "%s.tearDownClass() Test proxy secret %s owned by %s deleted after connection broker tests.",
                 cls.test_smarter_connection_broker_base_logger_prefix,
                 cls.test_proxy_secret_name,

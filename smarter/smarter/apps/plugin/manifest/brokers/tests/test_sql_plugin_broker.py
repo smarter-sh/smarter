@@ -47,14 +47,14 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         Class-level setup
         """
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.test_smarter_sql_plugin_broker_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.test_smarter_sql_plugin_broker_logger_prefix)
 
     @classmethod
     def tearDownClass(cls):
         """
         Class-level teardown
         """
-        logger.info("%s.tearDownClass()", cls.test_smarter_sql_plugin_broker_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.test_smarter_sql_plugin_broker_logger_prefix)
         super().tearDownClass()
 
     def setUp(self):
@@ -98,7 +98,7 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         self.assertIsInstance(self.request, HttpRequest)
         self._broker = self.SAMBrokerClass(self.request, self.loader)
         self.assertIsInstance(self.broker, SAMSqlPluginBroker)
-        logger.info(
+        logger.debug(
             "%s.test_setup() SAMSqlPluginBroker initialized successfully for testing.", self.formatted_class_name
         )
 
@@ -134,7 +134,7 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         Test that the SAMSqlPlugin model can be initialized from the manifest data.
         """
         metadata = {**self.loader.manifest_metadata}
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
+        logger.debug("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
         SAMSqlPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
@@ -362,7 +362,7 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
                 plugin_param,
                 f"Parameter '{manifest_param.name}' missing in plugin_data.parameters.\nplugin_params: {plugin_params}\nmanifest_params: {manifest_params}",
             )
-            logger.info(
+            logger.debug(
                 "Testing parameter '%s'\n - manifest: %s\n - plugin: %s",
                 manifest_param.name,
                 manifest_param,
@@ -454,7 +454,7 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         response = self.broker.describe(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
-        logger.info("Describe response: %s", response.content.decode())
+        logger.debug("Describe response: %s", response.content.decode())
 
     def test_delete(self):
         pass

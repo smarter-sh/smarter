@@ -96,4 +96,4 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         # invoke dispatch method in order to set our class properties
         base_class.dispatch(self.request, name=self.broker.chatbot.name)
 
-        logger.info(f"test_base_class_properties() request={self.request} name={self.broker.chatbot.name}")
+        logger.debug(f"test_base_class_properties() request={self.request} name={self.broker.chatbot.name}")

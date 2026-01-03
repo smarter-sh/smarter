@@ -47,7 +47,7 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
         so that the django SqlConnection model can be queried.
         """
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.test_smarter_plugin_broker_base_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.test_smarter_plugin_broker_base_logger_prefix)
         test_sql_connection_loader = SAMLoader(file_path=MANIFEST_PATH_SQL_CONNECTION)
         apply_manifest(username=cls.admin_user.username, manifest=test_sql_connection_loader.yaml_data, verbose=True)
 
@@ -63,7 +63,7 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
             )
         except SqlConnection.DoesNotExist as e:
             raise SmarterValueError(f"Failed to get test secret '{cls.test_sql_connection_name}' from database.") from e
-        logger.info(
+        logger.debug(
             "%s.setUpClass() %s owned by %s created for connection broker tests.",
             cls.test_smarter_plugin_broker_base_logger_prefix,
             cls.test_sql_connection_name,
@@ -73,10 +73,10 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
     @classmethod
     def tearDownClass(cls):
         """Clean up the created secret after all tests have run."""
-        logger.info("%s.tearDownClass()", cls.test_smarter_plugin_broker_base_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.test_smarter_plugin_broker_base_logger_prefix)
         try:
             cls.sql_connection.delete()
-            logger.info(
+            logger.debug(
                 "%s.tearDownClass() Test SqlConnection %s owned by %s deleted after connection broker tests.",
                 cls.test_smarter_plugin_broker_base_logger_prefix,
                 cls.test_sql_connection_name,

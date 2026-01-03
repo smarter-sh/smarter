@@ -155,7 +155,7 @@ class LazyCache:
             from django.core.cache import cache, caches
             from django_redis.cache import RedisCache
 
-            logger.info("%s django.core.cache imported.", logger_prefix_normal)
+            logger.debug("%s django.core.cache imported.", logger_prefix_normal)
 
             self._cache = cache
 
@@ -164,7 +164,7 @@ class LazyCache:
                 cache.set("test_key", "test_value", timeout=5)
                 value = cache.get("test_key")
                 if value == "test_value":
-                    logger.info("%s Django cache is up and reachable.", logger_prefix_normal)
+                    logger.debug("%s Django cache is up and reachable.", logger_prefix_normal)
                 else:
                     logger.error("%s Django cache is not working as expected.", logger_prefix_normal)
             # pylint: disable=broad-except

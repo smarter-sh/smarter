@@ -43,12 +43,12 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
     def setUpClass(cls):
         """class-level setup."""
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.test_sam_broker_base_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.test_sam_broker_base_logger_prefix)
 
     @classmethod
     def tearDownClass(cls):
         """class-level teardown."""
-        logger.info("%s.tearDownClass()", cls.test_sam_broker_base_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.test_sam_broker_base_logger_prefix)
         super().tearDownClass()
 
     def setUp(self):
@@ -111,7 +111,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self.assertIsInstance(self._loader, SAMLoader)
         json.loads(json.dumps(self._loader.json_data))  # should not raise an exception
         yaml.safe_load(yaml.dump(self._loader.yaml_data))  # should not raise an exception
-        logger.info(
+        logger.debug(
             "%s.loader Loaded SAM manifest for testing from %s", self.formatted_class_name, self.manifest_filespec
         )
         return self._loader
@@ -146,7 +146,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self._request._body = yaml_data
 
         self.assertIsInstance(self._request, HttpRequest)
-        logger.info(
+        logger.debug(
             "%s.request() Created HttpRequest for testing with SAM manifest in body from %s",
             self.formatted_class_name,
             self.manifest_filespec,

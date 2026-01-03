@@ -25,13 +25,13 @@ class TestAccountMixin(SmarterTestBase):
         which is needed so that the django Secret model can be queried.
         """
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.test_account_mixin_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.test_account_mixin_logger_prefix)
         cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
         cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
 
     @classmethod
     def tearDownClass(cls):
-        logger.info("%s.tearDownClass()", cls.test_account_mixin_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.test_account_mixin_logger_prefix)
         try:
             factory_account_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
             factory_account_teardown(

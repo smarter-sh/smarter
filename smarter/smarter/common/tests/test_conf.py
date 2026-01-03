@@ -37,10 +37,10 @@ class TestSettings(SmarterTestBase):
     def setUpClass(cls):
         """Set up class by loading environment variables."""
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.smarter_test_base_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.smarter_test_base_logger_prefix)
         cls.smarter_settings = smarter_settings
 
-        logger.info(
+        logger.debug(
             "%s.setUpClass(): Testing environment %s",
             cls.smarter_test_base_logger_prefix,
             smarter_settings.environment,
@@ -49,7 +49,7 @@ class TestSettings(SmarterTestBase):
     @classmethod
     def tearDownClass(cls) -> None:
         """Tear down the test class."""
-        logger.info("%s.tearDownClass()", cls.smarter_test_base_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.smarter_test_base_logger_prefix)
         super().tearDownClass()
 
     ###########################################################################
