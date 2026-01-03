@@ -25,6 +25,7 @@ from smarter.apps.plugin.manifest.models.common.connection.status import (
 )
 from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.serializers import ApiConnectionSerializer
+from smarter.apps.plugin.signals import broker_ready
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
@@ -98,15 +99,38 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if self._manifest:
             return
 
-        if self._loader:
-            # pylint: disable=W0104
-            self.manifest
-            if not self._manifest:
-                raise SAMBrokerErrorNotReady(
-                    message="Failed to initialize manifest from loader",
-                    thing=self.kind,
-                    command=SmarterJournalCliCommands.APPLY,
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMApiConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
+                status=(
+                    SAMConnectionCommonStatus(**self.loader.manifest_status)
+                    if self.loader and self.loader.manifest_status
+                    else None
+                ),
+            )
+            if self._manifest:
+                logger.info(
+                    "%s.__init__() initialized manifest from loader for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self._manifest.metadata.name,
                 )
+            if self.ready:
+                logger.info(
+                    "%s.__init__() broker is ready for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self._manifest.metadata.name,
+                )
+            return
+        logger.warning(
+            "%s.__init__() could not initialize manifest for %s",
+            self.formatted_class_name,
+            self.kind,
+        )
 
     # override the base abstract manifest model with the ApiConnection model
     _manifest: Optional[SAMApiConnection] = None
@@ -578,6 +602,32 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
 
         return self._connection
+
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the broker is ready for operations.
+
+        This property determines whether the broker has been properly initialized and is ready to perform operations such as applying manifests or querying connections. It checks the presence of the manifest and connection properties.
+
+        :return: True if the broker is ready, False otherwise.
+        :rtype: bool
+
+        .. seealso::
+
+            :meth:`SAMApiConnectionBroker.manifest`
+            :meth:`SAMApiConnectionBroker.connection`
+
+        **Example usage**::
+            if broker.ready:
+                print("Broker is ready for operations.")
+        """
+        if not super().ready:
+            return False
+        if self._manifest and self._connection:
+            broker_ready.send(sender=self.__class__, broker=self)
+            return True
+        return False
 
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

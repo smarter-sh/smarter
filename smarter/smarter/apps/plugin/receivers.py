@@ -30,6 +30,7 @@ from .models import (
 )
 from .plugin.static import PluginBase
 from .signals import (  # plugin signals; sql_connection signals; api_connection signals
+    broker_ready,
     plugin_api_connection_attempted,
     plugin_api_connection_failed,
     plugin_api_connection_query_attempted,
@@ -620,3 +621,10 @@ def handle_plugin_selector_history_pre_delete(sender, instance, **kwargs):
         formatted_text(prefix + "PluginSelectorHistory()"),
         instance,
     )
+
+
+@receiver(broker_ready, dispatch_uid="broker_ready")
+def handle_broker_ready(sender, broker, **kwargs):
+    """Handle broker ready signal."""
+
+    logger.info("%s - %s", formatted_text(prefix + "broker_ready"), broker.__class__.__name__)
