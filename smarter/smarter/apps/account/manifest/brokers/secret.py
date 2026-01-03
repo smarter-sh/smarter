@@ -187,14 +187,11 @@ class SAMSecretBroker(AbstractBroker):
                 f"Manifest must be of type {SAMSecret.__name__}, got {type(self._manifest)}: {self._manifest}",
                 thing=self.kind,
             )
-
-        logger.info(
-            "%s.__init__() broker for %s %s is %s.",
-            self.formatted_class_name,
-            self.kind,
-            self.name,
-            self.ready_state,
-        )
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        if self.ready:
+            logger.info(msg)
+        else:
+            logger.error(msg)
 
     def init_secret(self):
         """Initialize the secret transformer."""
