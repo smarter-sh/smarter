@@ -14,6 +14,7 @@ from smarter.apps.plugin.manifest.models.common.connection.status import (
     SAMConnectionCommonStatus,
 )
 from smarter.apps.plugin.models import ConnectionBase
+from smarter.apps.plugin.signals import broker_ready
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.django import waffle
@@ -84,6 +85,34 @@ class SAMConnectionBaseBroker(AbstractBroker):
         self._connection = None
         self._sam_connection_metadata = None
         self._sam_connection_status = None
+
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the broker is ready for operations.
+
+        This property determines whether the broker has been properly initialized
+        and is ready to perform its functions. A broker is considered ready if
+        it has a valid manifest loaded, either from raw data, a loader, or
+        existing Django ORM models.
+
+        :returns: ``True`` if the broker is ready, ``False`` otherwise.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning("%s.ready() base class indicates not ready for %s", self.formatted_class_name, self.kind)
+            return False
+        retval = self.manifest is not None or self.plugin is not None
+        logger.debug(
+            "%s.ready() manifest presence indicates ready=%s for %s",
+            self.formatted_class_name,
+            retval,
+            self.kind,
+        )
+        if retval:
+            broker_ready.send(sender=self.__class__, broker=self)
+        return retval
 
     @property
     def model_class(self) -> Type[ConnectionBase]:

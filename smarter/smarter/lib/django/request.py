@@ -38,6 +38,11 @@ from smarter.apps.account.utils import (
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.console_helpers import (
+    formatted_text,
+    formatted_text_green,
+    formatted_text_red,
+)
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.common.utils import (
     hash_factory,
@@ -170,6 +175,13 @@ class SmarterRequestMixin(AccountMixin):
             super().__init__(request, *args, api_token=self.api_token, **kwargs)
         if self.smarter_request:
             self.smarter_request.user = self.user  # type: ignore
+
+        logger.info(
+            "%s.__init__() is %s - %s",
+            formatted_text(__name__ + ".SmarterRequestMixin"),
+            self.request_mixin_ready_state,
+            self.url if self._url else "URL not initialized",
+        )
 
     def init(self, request: HttpRequest, *args, **kwargs):
         """
@@ -1336,7 +1348,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         # cheap and easy way to fail.
         if not isinstance(self._smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
-            logger.debug(
+            logger.warning(
                 "%s.is_requestmixin_ready() - %s request is not a HttpRequest. Received %s. Cannot process request.",
                 self.formatted_class_name,
                 self._instance_id,
@@ -1344,7 +1356,7 @@ class SmarterRequestMixin(AccountMixin):
             )
             return False
         if not isinstance(self._parse_result, ParseResult):
-            logger.debug(
+            logger.warning(
                 "%s.is_requestmixin_ready() - %s _parse_result is not a ParseResult. Received %s. Cannot process request.",
                 self.formatted_class_name,
                 self._instance_id,
@@ -1352,7 +1364,7 @@ class SmarterRequestMixin(AccountMixin):
             )
             return False
         if not isinstance(self._url, str):
-            logger.debug(
+            logger.warning(
                 "%s.is_requestmixin_ready() - %s _url is not a string. Received %s. Cannot process request.",
                 self.formatted_class_name,
                 self._instance_id,
@@ -1362,6 +1374,15 @@ class SmarterRequestMixin(AccountMixin):
         return True
 
     @property
+    def request_mixin_ready_state(self) -> str:
+        """
+        Returns a string representation of the request mixin's ready state.
+
+        :return: A string indicating whether the request mixin is ready or not.
+        """
+        return formatted_text_green("Ready") if self.is_requestmixin_ready else formatted_text_red("Not Ready")
+
+    @property
     def ready(self) -> bool:
         """
         returns True if the request is ready for processing.
@@ -1369,11 +1390,16 @@ class SmarterRequestMixin(AccountMixin):
         :return: True if the request is ready, False otherwise.
 
         """
-        retval = bool(super().ready)
+        retval = super().ready
         if not retval:
-            logger.debug(
-                "%s.ready() - %s super().ready returned False. This might cause problems with other initializations.",
-                self.formatted_class_name,
+            logger.warning(
+                "%s.ready() - base class indicates not ready for AccountMixin.",
+                formatted_text(__name__ + ".SmarterRequestMixin"),
+            )
+        if not self.is_requestmixin_ready:
+            logger.warning(
+                "%s.ready() is_requestmixin_ready returned False. This might cause problems with other initializations.",
+                formatted_text(__name__ + ".SmarterRequestMixin"),
                 self._instance_id,
             )
         return retval and self.is_requestmixin_ready

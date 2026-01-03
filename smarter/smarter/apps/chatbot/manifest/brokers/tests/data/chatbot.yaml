@@ -14,7 +14,7 @@ spec:
     appExamplePrompts:
       - What is the weather in New York?
       - Tell me a joke
-      - whats the current price of Apple stock?
+      - what's the current price of Apple stock?
       - How many days ago was 29-Feb-1972?
     appFileAttachment: false
     appInfoUrl: https://example.com

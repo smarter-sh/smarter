@@ -111,36 +111,40 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        if not self.ready:
+            if not self.loader and not self.manifest and not self.connection:
+                logger.error(
+                    "%s.__init__() No loader nor existing Connection provided for %s broker. Cannot initialize.",
+                    self.formatted_class_name,
+                    self.kind,
+                )
+                return
+            if self.loader and self.loader.manifest_kind != self.kind:
+                raise SAMBrokerErrorNotReady(
+                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
+                    thing=self.kind,
+                )
 
-        if self._manifest:
-            return
-
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSqlConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
-            )
+            if self.loader:
+                self._manifest = SAMSqlConnection(
+                    apiVersion=self.loader.manifest_api_version,
+                    kind=self.loader.manifest_kind,
+                    metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                    spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
+                )
             if self._manifest:
                 logger.info(
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self._manifest.metadata.name,
+                    self.manifest.metadata.name,
                 )
-            if self.ready:
-                logger.info(
-                    "%s.__init__() broker is ready for %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    self._manifest.metadata.name,
-                )
-            return
-        logger.warning(
-            "%s.__init__() could not initialize manifest for %s",
+        logger.info(
+            "%s.__init__() broker for %s %s is %s.",
             self.formatted_class_name,
             self.kind,
+            self.name,
+            self.ready_state,
         )
 
     # override the base abstract manifest model with the SqlConnection model
@@ -719,32 +723,6 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         except Exception as e:
             logger.warning("%s is_valid() failed for %s %s", self.formatted_class_name, self.kind, str(e))
-        return False
-
-    @property
-    def ready(self) -> bool:
-        """
-        Check if the broker is ready for operations.
-
-        This property determines whether the broker has been properly initialized and is ready to perform operations such as applying manifests or querying connections. It checks the presence of the manifest and connection properties.
-
-        :return: True if the broker is ready, False otherwise.
-        :rtype: bool
-
-        .. seealso::
-
-            :meth:`SAMApiConnectionBroker.manifest`
-            :meth:`SAMApiConnectionBroker.connection`
-
-        **Example usage**::
-            if broker.ready:
-                print("Broker is ready for operations.")
-        """
-        if not super().ready:
-            return False
-        if self._manifest and self._connection:
-            broker_ready.send(sender=self.__class__, broker=self)
-            return True
         return False
 
     ###########################################################################

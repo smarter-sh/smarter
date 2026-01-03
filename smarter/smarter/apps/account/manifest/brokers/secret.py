@@ -23,6 +23,7 @@ from smarter.apps.account.manifest.models.secret.spec import (
 from smarter.apps.account.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.models import Secret
+from smarter.apps.account.signals import broker_ready
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.lib import json
@@ -129,6 +130,39 @@ class SAMSecretBroker(AbstractBroker):
     _secret_transformer: Optional[SecretTransformer] = None
 
     def __init__(self, *args, manifest: Optional[Union[SAMSecret, str, dict]] = None, **kwargs):
+        """
+        Initialize the SAMSecretBroker instance.
+
+        This constructor initializes the broker by calling the parent class's
+        constructor, which will attempt to bootstrap the class instance
+        with any combination of raw manifest data (in JSON or YAML format),
+        a manifest loader, or existing Django ORM models. If a manifest
+        loader is provided and its kind matches the expected kind for this broker,
+        the manifest is initialized using the loader's data.
+
+        This class can bootstrap itself in any of the following ways:
+
+        - request.body (yaml or json string)
+        - name + account (determined via authentication of the request object)
+        - SAMLoader instance
+        - manifest instance
+        - filepath to a manifest file
+
+        If raw manifest data is provided, whether as a string or a dictionary,
+        or a SAMLoader instance, the base class constructor will only goes as
+        far as initializing the loader. The actual manifest model initialization
+        is deferred to this constructor, which checks the loader's kind.
+
+        :param args: Positional arguments passed to the parent constructor.
+        :param kwargs: Keyword arguments passed to the parent constructor.
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMSecretBroker(loader=loader, plugin_meta=plugin_meta)
+
+        """
         super().__init__(*args, **kwargs)
         if manifest:
             if not isinstance(manifest, SAMSecret):
@@ -154,10 +188,46 @@ class SAMSecretBroker(AbstractBroker):
                 thing=self.kind,
             )
 
+        logger.info(
+            "%s.__init__() broker for %s %s is %s.",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            self.ready_state,
+        )
+
     def init_secret(self):
         """Initialize the secret transformer."""
         self._manifest = None
         self._secret_transformer = None
+
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the broker is ready for operations.
+
+        This property determines whether the broker has been properly initialized
+        and is ready to perform its functions. A broker is considered ready if
+        it has a valid manifest loaded, either from raw data, a loader, or
+        existing Django ORM models.
+
+        :returns: ``True`` if the broker is ready, ``False`` otherwise.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning("%s.ready() base class indicates not ready for %s", self.formatted_class_name, self.kind)
+            return False
+        retval = self.manifest is not None or self.secret is not None
+        logger.debug(
+            "%s.ready() manifest presence indicates ready=%s for %s",
+            self.formatted_class_name,
+            retval,
+            self.kind,
+        )
+        if retval:
+            broker_ready.send(sender=self.__class__, broker=self)
+        return retval
 
     @property
     def secret_transformer(self) -> Optional[SecretTransformer]:

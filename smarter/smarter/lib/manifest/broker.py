@@ -17,7 +17,11 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import (
+    formatted_text,
+    formatted_text_green,
+    formatted_text_red,
+)
 from smarter.common.utils import camel_to_snake as util_camel_to_snake
 from smarter.common.utils import snake_to_camel as util_snake_to_camel
 from smarter.lib.cache import cache_results
@@ -256,6 +260,43 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # Class Instance Properties
     ###########################################################################
     @property
+    def ready(self) -> bool:
+        """Return True if the broker is ready for operations.
+
+        A broker is considered ready if it has a valid manifest loaded.
+
+        :return: True if the broker is ready for operations.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning(
+                "%s.ready() parent class indicates not ready for kind=%s",
+                self.formatted_class_name,
+                self.kind,
+            )
+            return False
+        if not self._manifest:
+            logger.warning(
+                "%s.ready() manifest is not initialized for kind=%s",
+                self.formatted_class_name,
+                self.kind,
+            )
+            return False
+        return True
+
+    @property
+    def ready_state(self) -> str:
+        """Return a string representation of the broker's ready state.
+
+        :return: "READY" if the broker is ready, otherwise "NOT_READY".
+        :rtype: str
+        """
+        if self.ready:
+            return formatted_text_green("READY")
+        return formatted_text_red("NOT_READY")
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
@@ -359,29 +400,39 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     @property
     def name(self) -> Optional[str]:
         """
-        The name of the manifest.
+        Retrieve the unique name identifier for the ChatBot instance managed by this broker.
 
-        :return: The name of the manifest.
+        This property accesses the name used to distinguish the ChatBot within the database and across
+        the Smarter platform. The name is first returned from an internal cache if available. If not cached,
+        and if a manifest is present, the name is extracted from the manifest's metadata and stored for
+        subsequent access.
+
+        The name is essential for database queries, model lookups, and for associating related resources
+        such as API keys, plugins, and functions with the correct ChatBot instance.
+
+        :returns: The name of the ChatBot as a string, or ``None`` if the name is not set or cannot be determined.
         :rtype: Optional[str]
+
+        .. note::
+
+            The name property is a critical identifier used throughout the broker to ensure correct
+            mapping between manifest data and persistent application state.
         """
         if self._name:
             return self._name
-        if (
-            isinstance(
-                self._manifest, AbstractSAMBase
-            )  # note: do not access .metadata on initialization to avoid recursion
-            and self._manifest.metadata
-            and self._manifest.metadata.name
-        ):
-            # assign from the manifest metadata, if we have it
-            self._name = self._manifest.metadata.name
+        if self.manifest:
+            self._name = self.manifest.metadata.name
             logger.info("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
+            return self._name
+        if self.loader:
+            self._name = self.loader.manifest_metadata.get("name")
+            if self._name:
+                logger.info("%s.name() set name to %s from loader metadata", self.formatted_class_name, self._name)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
             if name_param:
                 self._name = name_param
                 logger.info("%s.__init__() set name to %s from name url param", self.formatted_class_name, self._name)
-
         return self._name
 
     @property

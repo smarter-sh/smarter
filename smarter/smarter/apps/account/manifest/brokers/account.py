@@ -16,6 +16,7 @@ from smarter.apps.account.manifest.models.account.spec import (
 )
 from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
 from smarter.apps.account.models import Account
+from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import cache_invalidate, get_cached_smarter_account
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
@@ -126,6 +127,62 @@ class SAMAccountBroker(AbstractBroker):
     _pydantic_model: Type[SAMAccount] = SAMAccount
     _account: Optional[Account] = None
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the SAMAccountBroker instance.
+
+        This constructor initializes the broker by calling the parent class's
+        constructor, which will attempt to bootstrap the class instance
+        with any combination of raw manifest data (in JSON or YAML format),
+        a manifest loader, or existing Django ORM models. If a manifest
+        loader is provided and its kind matches the expected kind for this broker,
+        the manifest is initialized using the loader's data.
+
+        This class can bootstrap itself in any of the following ways:
+
+        - request.body (yaml or json string)
+        - name + account (determined via authentication of the request object)
+        - SAMLoader instance
+        - manifest instance
+        - filepath to a manifest file
+
+        If raw manifest data is provided, whether as a string or a dictionary,
+        or a SAMLoader instance, the base class constructor will only goes as
+        far as initializing the loader. The actual manifest model initialization
+        is deferred to this constructor, which checks the loader's kind.
+
+        :param args: Positional arguments passed to the parent constructor.
+        :param kwargs: Keyword arguments passed to the parent constructor.
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMAccountBroker(loader=loader, plugin_meta=plugin_meta)
+        """
+        super().__init__(*args, **kwargs)
+        if not self.ready:
+            if not self.loader and not self.manifest and not self.account:
+                logger.error(
+                    "%s.__init__() No loader nor existing Account provided for %s broker. Cannot initialize.",
+                    self.formatted_class_name,
+                    self.kind,
+                )
+                return
+            if self.loader and self.loader.manifest_kind != self.kind:
+                raise SAMBrokerErrorNotReady(
+                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
+                    thing=self.kind,
+                )
+
+        logger.info(
+            "%s.__init__() broker for %s %s is %s.",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            self.ready_state,
+        )
+
     def manifest_to_django_orm(self) -> dict:
         """
         Transform the Smarter API Account manifest into a Django ORM model.
@@ -206,6 +263,34 @@ class SAMAccountBroker(AbstractBroker):
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the broker is ready for operations.
+
+        This property determines whether the broker has been properly initialized
+        and is ready to perform its functions. A broker is considered ready if
+        it has a valid manifest loaded, either from raw data, a loader, or
+        existing Django ORM models.
+
+        :returns: ``True`` if the broker is ready, ``False`` otherwise.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning("%s.ready() base class indicates not ready for %s", self.formatted_class_name, self.kind)
+            return False
+        retval = self.manifest is not None or self.account is not None
+        logger.debug(
+            "%s.ready() manifest presence indicates ready=%s for %s",
+            self.formatted_class_name,
+            retval,
+            self.kind,
+        )
+        if retval:
+            broker_ready.send(sender=self.__class__, broker=self)
+        return retval
+
     @property
     def formatted_class_name(self) -> str:
         """

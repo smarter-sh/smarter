@@ -685,7 +685,7 @@ class Settings(BaseSettings):
         if self.ready():
             ready_msg = formatted_text_green("READY")
         else:
-            ready_msg = formatted_text_red("NOT READY")
+            ready_msg = formatted_text_red("NOT_READY")
         logger.warning("%s Settings are %s.", msg, ready_msg)
 
     init_info: Optional[str] = Field(

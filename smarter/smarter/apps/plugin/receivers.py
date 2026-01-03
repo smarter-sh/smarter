@@ -16,6 +16,7 @@ from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.manifest.broker import AbstractBroker
 
 from .models import (
     ApiConnection,
@@ -624,7 +625,13 @@ def handle_plugin_selector_history_pre_delete(sender, instance, **kwargs):
 
 
 @receiver(broker_ready, dispatch_uid="broker_ready")
-def handle_broker_ready(sender, broker, **kwargs):
+def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
     """Handle broker ready signal."""
 
-    logger.info("%s - %s", formatted_text(prefix + "broker_ready"), broker.__class__.__name__)
+    logger.info(
+        "%s %s %s for %s is ready.",
+        formatted_text(f"{prefix}.broker_ready()"),
+        broker.kind,
+        str(broker),
+        broker.name,
+    )
