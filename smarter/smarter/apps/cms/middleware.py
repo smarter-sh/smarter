@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup, Comment
 from django.http import FileResponse
 from django.utils.deprecation import MiddlewareMixin
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -22,9 +22,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
-
-logger.debug("Loading %s.HTMLMinifyMiddleware", __name__)
+logger.debug("Loading %s", formatted_text(__name__ + ".HTMLMinifyMiddleware"))
 
 
 class HTMLMinifyMiddleware(MiddlewareMixin):

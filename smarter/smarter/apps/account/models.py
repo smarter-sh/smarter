@@ -140,7 +140,9 @@ def get_resolved_user(
             :class:`django.utils.functional.SimpleLazyObject`
 
     """
-    logger.info("%s called for user type: %s", formatted_text(f"{__name__}.get_resolved_user()"), type(user))
+    logger.info(
+        "%s.get_resolved_user() called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user)
+    )
     if user is None:
         return None
 
@@ -582,7 +584,11 @@ class AccountContact(TimestampedModel):
         if contact:
             contact.send_email(subject=subject, body=body, html=html, from_email=from_email)
         else:
-            logger.error("No primary contact found for account %s", account)
+            logger.error(
+                "%s.send_email_to_primary_contact() No primary contact found for account %s",
+                formatted_text(__name__ + ".AccountContact()"),
+                account,
+            )
 
     def save(self, *args, **kwargs):
         """
@@ -730,7 +736,10 @@ class UserProfile(MetaDataWithOwnershipModel):
             self.add_to_account_contacts(is_primary=is_primary)
 
             logger.debug(
-                "New user profile created for %s %s. Sending signal.", self.account.company_name, self.user.email
+                "%s.save() New user profile created for %s %s. Sending signal.",
+                formatted_text(__name__ + ".UserProfile()"),
+                self.account.company_name,
+                self.user.email,
             )
             new_user_created.send(sender=self.__class__, user_profile=self)
 
@@ -766,17 +775,25 @@ class UserProfile(MetaDataWithOwnershipModel):
         if admins.exists():
             return admins.first().user  # type: ignore[return-value]
 
-        logger.error("No admin found for account %s", account)
+        logger.error(
+            "%s.admin_for_account() No admin found for account %s", formatted_text(__name__ + ".UserProfile()"), account
+        )
 
         users = cls.objects.filter(account=account).order_by("user__id")
         if users.exists():
             user = users.first().user  # type: ignore[return-value]
             return user
 
-        logger.error("No user for account %s", account)
+        logger.error(
+            "%s.admin_for_account() No user for account %s", formatted_text(__name__ + ".UserProfile()"), account
+        )
         admin_user = cls.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
         user_profile = cls.objects.create(user=admin_user, account=account)
-        logger.warning("Created admin user for account %s. Use manage.py to set the password", account)
+        logger.warning(
+            "%s.admin_for_account() Created admin user for account %s. Use manage.py to set the password",
+            formatted_text(__name__ + ".UserProfile()"),
+            account,
+        )
         return user_profile.user
 
     def __str__(self):
@@ -914,7 +931,10 @@ class Charge(TimestampedModel):
         super().save(*args, **kwargs)
         if is_new:
             logger.debug(
-                "New user charge created for %s %s. Sending signal.", self.account.company_name, self.user.email
+                "%s.save() New user charge created for %s %s. Sending signal.",
+                formatted_text(__name__ + ".Charge()"),
+                self.account.company_name,
+                self.user.email,
             )
             new_charge_created.send(sender=self.__class__, charge=self)
 

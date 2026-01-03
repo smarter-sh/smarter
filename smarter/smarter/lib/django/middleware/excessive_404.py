@@ -9,7 +9,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseForbidden
 
 from smarter.common.classes import SmarterMiddlewareMixin
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle
@@ -25,7 +25,7 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-logger.debug("Loading %s.SmarterBlockExcessive404Middleware", __name__)
+logger.debug("Loading %s", formatted_text(__name__ + ".SmarterBlockExcessive404Middleware"))
 
 
 class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):

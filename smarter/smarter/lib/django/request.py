@@ -278,7 +278,11 @@ class SmarterRequestMixin(AccountMixin):
             msg = f"{self.formatted_class_name}.init() - request {self._instance_id} is not ready. request={self.smarter_request}"
             logger.warning(msg)
 
-        logger.info("SmarterRequestMixin().init() - finished %s", self.dump())
+        logger.debug(
+            "%s.init() - finished %s",
+            formatted_text(__name__ + ".SmarterRequestMixin"),
+            self.dump(),
+        )
 
     def invalidate_cached_properties(self):
         """

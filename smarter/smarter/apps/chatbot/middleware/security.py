@@ -5,12 +5,12 @@ import logging
 from typing import Optional
 from urllib.parse import urlparse
 
-from django.conf import settings
 from django.core.handlers.wsgi import WSGIRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,
@@ -33,7 +33,7 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-logger.debug("Loading %s.SmarterSecurityMiddleware", __name__)
+logger.debug("Loading %s", formatted_text(__name__ + ".SmarterSecurityMiddleware"))
 
 
 class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
