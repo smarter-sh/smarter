@@ -63,7 +63,7 @@ from smarter.common.helpers.console_helpers import formatted_text_green
 
 logger = logging.getLogger(__name__)
 prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")
-logger.info(formatted_text_green("smarter.lib.django.waffle module loaded"))
+logger.debug(formatted_text_green("smarter.lib.django.waffle module loaded"))
 
 
 # pylint: disable=C0115
@@ -260,8 +260,4 @@ def switch_is_active(switch_name: str) -> bool:
         logger.error(
             "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True
         )
-        return False
-    # pylint: disable=broad-except
-    except Exception as e:
-        logger.error("%s An error occurred while checking switch %s: %s", prefix, switch_name, e, exc_info=True)
         return False

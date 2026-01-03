@@ -50,12 +50,12 @@ spec:
         name: description
         required: false
         type: string
-    test_values:
+    testValues:
       - name: username
         value: admin
       - name: limit
         value: 1
-    url_params: null
+    urlParams: null
   connection: smarter_test_api
   prompt:
     maxTokens: 2048
