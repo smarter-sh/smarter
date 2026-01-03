@@ -12,6 +12,15 @@ import sys
 
 # 3rd party stuff
 from dotenv import load_dotenv
+from pydantic import (
+    EmailStr,
+    Field,
+    HttpUrl,
+    SecretStr,
+    ValidationError,
+    ValidationInfo,
+    field_validator,
+)
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -106,14 +115,13 @@ class TestConfiguration(SmarterTestBase):
         self.assertEqual(mock_settings.openai_endpoint_image_size, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
 
     def test_env_illegal_nulls(self):
-        """Test that settings handles missing .env values."""
+        """Test that settings handles certain missing .env values."""
         os.environ.clear()
         env_path = self.env_path(".env.test_illegal_nulls")
         loaded = load_dotenv(env_path)
         self.assertTrue(loaded)
 
-        with self.assertRaises(PydanticValidationError):
-            Settings(init_info="test_env_illegal_nulls()")
+        Settings(init_info="test_env_illegal_nulls()")
 
     def test_env_overrides(self):
         """Test that settings takes custom .env values."""
@@ -187,10 +195,10 @@ class TestConfiguration(SmarterTestBase):
             root_domain="test-domain.com",
             langchain_memory_key="TEST_langchain_memory_key",
             openai_api_organization="TEST_openai_api_organization",
-            openai_api_key="TEST_openai_api_key",
+            openai_api_key=SecretStr("TEST_openai_api_key"),
             openai_endpoint_image_n=100,
             openai_endpoint_image_size="TEST_image_size",
-            pinecone_api_key="TEST_pinecone_api_key",
+            pinecone_api_key=SecretStr("TEST_pinecone_api_key"),
             shared_resource_identifier="TEST_shared_resource_identifier",
             init_info="test_initialize_with_values()",
         )

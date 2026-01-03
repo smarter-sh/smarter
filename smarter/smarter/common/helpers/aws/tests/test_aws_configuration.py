@@ -45,9 +45,8 @@ class TestAWSConfiguration(SmarterTestBase):
     def test_invalid_aws_credentials(self):
         """Test that boto3 raises a validation error for environment variable with non-existent aws region code."""
 
-        print("test_invalid_aws_credentials")
-        with self.assertRaises(AWSNotReadyError):
-            AWSBase(aws_access_key_id="bad-key", aws_secret_access_key="bad-secret", aws_region="invalid-region")
+        aws_base = AWSBase(aws_access_key_id="bad-key", aws_secret_access_key="bad-secret", aws_region="invalid-region")
+        self.assertFalse(aws_base.ready)
 
     def test_configure_with_class_constructor(self):
         """test that we can set values with the class constructor"""
