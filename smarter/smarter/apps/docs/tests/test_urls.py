@@ -59,7 +59,7 @@ class TestDocsUrls(SmarterTestBase):
         """Process url."""
         self.client.logout()
         self.client.force_login(self.user)
-        logger.info("%s - Testing URL: %s", self.__class__.__name__, url)
+        logger.debug("%s - Testing URL: %s", self.__class__.__name__, url)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 

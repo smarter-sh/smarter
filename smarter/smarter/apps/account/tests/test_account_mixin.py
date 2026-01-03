@@ -7,6 +7,8 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
+import logging
+
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
@@ -15,22 +17,29 @@ from smarter.apps.account.utils import (
     get_cached_user_profile,
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.unittest.base_classes import SmarterTestBase
+
+
+logger = logging.getLogger(__name__)
 
 
 class TestAccountMixin(SmarterTestBase):
     """Test AccountMixin."""
 
+    test_account_mixin_logger_prefix = formatted_text(f"{__name__}.TestAccountMixin()")
+
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+        logger.debug("%s.setUpClass()", cls.test_account_mixin_logger_prefix)
         cls.mortal_user, cls.account, cls.user_profile = mortal_user_factory()
         cls.admin_user = get_cached_admin_user_for_account(cls.account)
         cls.other_user, cls.other_account, cls.other_user_profile = mortal_user_factory()
 
     @classmethod
     def tearDownClass(cls) -> None:
-        super().tearDownClass()
+        logger.debug("%s.tearDownClass()", cls.test_account_mixin_logger_prefix)
         instance = cls()
         # tear down the user, account, and user_profile
         try:
@@ -78,6 +87,7 @@ class TestAccountMixin(SmarterTestBase):
                 instance.other_account.delete()
         except Account.DoesNotExist:
             pass
+        super().tearDownClass()
 
     def test_initializations(self) -> None:
         """Test instantiation with all arguments."""

@@ -31,25 +31,25 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     def setUpClass(cls) -> None:
         """Set up the test class."""
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.smarter_test_base_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.smarter_test_base_logger_prefix)
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
         cls.name = camel_to_snake("smarterTestBase_" + cls.hash_suffix)
         cls.uid = SmarterTestBase.generate_uid()
 
-        logger.info(
+        logger.debug(
             "%s.setUpClass() Setting up test class with hash suffix: %s",
             cls.smarter_test_base_logger_prefix,
             cls.hash_suffix,
         )
-        logger.info(
+        logger.debug(
             "%s.setUpClass() Setting up test class with name: %s", cls.smarter_test_base_logger_prefix, cls.name
         )
-        logger.info("%s.setUpClass() Setting up test class with uid: %s", cls.smarter_test_base_logger_prefix, cls.uid)
+        logger.debug("%s.setUpClass() Setting up test class with uid: %s", cls.smarter_test_base_logger_prefix, cls.uid)
 
     @classmethod
     def tearDownClass(cls) -> None:
         """Tear down the test class."""
-        logger.info("%s.tearDownClass()", cls.smarter_test_base_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.smarter_test_base_logger_prefix)
         super().tearDownClass()
 
     @classmethod

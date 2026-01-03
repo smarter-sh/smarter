@@ -57,7 +57,7 @@ class AuthenticatedRequestMixin(ConnectionTextMixinBase):
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
         cls.client = Client()
         cls.client.force_login(cls.admin_user)
         response = cls.client.get("/some-url/")
@@ -66,7 +66,7 @@ class AuthenticatedRequestMixin(ConnectionTextMixinBase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        logger.info("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
         super().tearDownClass()
 
 
@@ -86,7 +86,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
 
         # setup an instance of ApiConnection() - a Django model
         # ---------------------------------------------------------------------
@@ -137,16 +137,16 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_django_model = ApiConnection(**connection_model_dump)
         cls.connection_django_model.save()
 
-        logger.info("connection_manifest_path initialized: %s", str(connection_manifest_path))
-        logger.info("connection_manifest initialized: %s", str(connection_manifest))
-        logger.info("connection_loader initialized: %s", str(connection_loader))
-        logger.info("connection_model initialized: %s", str(connection_model))
-        logger.info("connection_django_model initialized: %s", str(cls.connection_django_model))
+        logger.debug("connection_manifest_path initialized: %s", str(connection_manifest_path))
+        logger.debug("connection_manifest initialized: %s", str(connection_manifest))
+        logger.debug("connection_loader initialized: %s", str(connection_loader))
+        logger.debug("connection_model initialized: %s", str(connection_model))
+        logger.debug("connection_django_model initialized: %s", str(cls.connection_django_model))
 
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        logger.info("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
 
         cls.connection_manifest_path = None
         cls.connection_manifest = None
@@ -180,7 +180,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
 
         # setup an instance of SqlConnection() - a Django model
         # ---------------------------------------------------------------------
@@ -225,16 +225,16 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_django_model = SqlConnection(**connection_model_dump)
         cls.connection_django_model.save()
 
-        logger.info("connection_manifest_path initialized: %s", str(connection_manifest_path))
-        logger.info("connection_manifest initialized: %s", str(connection_manifest))
-        logger.info("connection_loader initialized: %s", str(connection_loader))
-        logger.info("connection_model initialized: %s", str(connection_model))
-        logger.info("connection_django_model initialized: %s", str(cls.connection_django_model))
+        logger.debug("connection_manifest_path initialized: %s", str(connection_manifest_path))
+        logger.debug("connection_manifest initialized: %s", str(connection_manifest))
+        logger.debug("connection_loader initialized: %s", str(connection_loader))
+        logger.debug("connection_model initialized: %s", str(connection_model))
+        logger.debug("connection_django_model initialized: %s", str(cls.connection_django_model))
 
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        logger.info("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
 
         cls.connection_manifest_path = None
         cls.connection_manifest = None

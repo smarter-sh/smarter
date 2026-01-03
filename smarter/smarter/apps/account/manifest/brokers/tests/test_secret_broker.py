@@ -43,7 +43,7 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         self._here = os.path.abspath(os.path.dirname(__file__))
         self._manifest_filespec = self.get_data_full_filepath("secret.yaml")
 
-        logger.info(
+        logger.debug(
             "%s.setUp() completed test-level setup with manifest\n%s", self.formatted_class_name, self.loader.yaml_data
         )
 
@@ -81,7 +81,7 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         self.assertIsInstance(self.broker, SAMSecretBroker)
         self._broker = self.SAMBrokerClass(self.request, self.loader)
         self.assertIsInstance(self.broker, SAMSecretBroker)
-        logger.info("%s.test_setup() SAMSecretBroker initialized successfully for testing.", self.formatted_class_name)
+        logger.debug("%s.test_setup() SAMSecretBroker initialized successfully for testing.", self.formatted_class_name)
 
     def test_ready(self):
         """Test that the test setup is ready."""
@@ -97,7 +97,7 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         """Test that the SAMSecretBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.
         metadata = {**self.loader.manifest_metadata}
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
+        logger.debug("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
         spec = {
             "config": SAMSecretSpecConfig(**self.loader.manifest_spec["config"]),
         }

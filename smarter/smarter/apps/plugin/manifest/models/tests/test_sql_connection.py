@@ -65,12 +65,12 @@ class TestSAMSqlConnection(TestSAMBrokerBaseClass):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.test_sam_sql_plugin_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.test_sam_sql_plugin_logger_prefix)
         cls.loader = SAMLoader(file_path=MANIFEST_PATH_SQL_CONNECTION)
 
     @classmethod
     def tearDownClass(cls):
-        logger.info("%s.tearDownClass()", cls.test_sam_sql_plugin_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.test_sam_sql_plugin_logger_prefix)
         super().tearDownClass()
 
     def setUp(self):
@@ -264,7 +264,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
     def model(self) -> Optional[SAMSqlConnection]:
         # create a SAMSqlConnection pydantic model from the loader
         if not self._model and self.loader:
-            logger.info("Creating SAMSqlConnection pydantic model from loader data")
+            logger.debug("Creating SAMSqlConnection pydantic model from loader data")
             self._model = SAMSqlConnection(**self.loader.pydantic_model_dump())
             self.assertIsNotNone(self._model)
         return self._model
@@ -284,7 +284,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
     def test_validate_db_engine_invalid_value(self):
         """Test that the dbEngine validator raises an error for invalid values."""
         self.load_manifest(filename="sql-connection-ssh.yaml")
-        logger.info("Testing dbEngine validator:\n%s", self.manifest)
+        logger.debug("Testing dbEngine validator:\n%s", self.manifest)
         if not self._manifest:
             self.fail("Manifest should not be None after loading the file")
 
@@ -358,7 +358,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         self._model = None  # type: ignore[assignment]
 
         with self.assertRaises(PydanticValidationError) as context:
-            logger.info("Creating SAMSqlConnection pydantic model from bad loader data, %s", self.model.model_dump())
+            logger.debug("Creating SAMSqlConnection pydantic model from bad loader data, %s", self.model.model_dump())
         self.assertIn("Input should be a valid string", str(context.exception))
 
     def test_validate_timeout_invalid_value(self):
@@ -621,7 +621,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
             model_dump["password"] = secret
 
         model_dump = camel_to_snake_dict(model_dump)
-        logger.info("test_django_orm_tcpip model_dump: %s", model_dump)
+        logger.debug("test_django_orm_tcpip model_dump: %s", model_dump)
 
         django_model = SqlConnection(**model_dump)
         django_model.save()
@@ -708,7 +708,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
 
         model_dump = camel_to_snake_dict(model_dump)
 
-        logger.info("test_django_orm_tcpip_ssl model_dump: %s", model_dump)
+        logger.debug("test_django_orm_tcpip_ssl model_dump: %s", model_dump)
 
         django_model = SqlConnection(**model_dump)
         # with self.assertRaises(SmarterValueError):
@@ -810,7 +810,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
 
         model_dump = camel_to_snake_dict(model_dump)
 
-        logger.info("test_django_orm_tcpip_ssh model_dump: %s", model_dump)
+        logger.debug("test_django_orm_tcpip_ssh model_dump: %s", model_dump)
 
         # pylint: disable=W0612
         example_output = {

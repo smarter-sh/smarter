@@ -65,12 +65,12 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        logger.info("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
+        logger.debug("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
         cls.loader = SAMLoader(file_path=MANIFEST_PATH_API_CONNECTION)
 
     @classmethod
     def tearDownClass(cls):
-        logger.info("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
+        logger.debug("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
         super().tearDownClass()
 
     def setUp(self):
