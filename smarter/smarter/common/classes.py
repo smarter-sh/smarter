@@ -42,7 +42,7 @@ if apps.ready:
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return mixin_logging_is_active and level >= smarter_settings.log_level
+    return mixin_logging_is_active
 
 
 base_logger = logging.getLogger(__name__)

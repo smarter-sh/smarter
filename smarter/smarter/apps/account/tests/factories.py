@@ -28,7 +28,7 @@ HERE = formatted_text(__name__)
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -152,7 +152,7 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         if user_profile:
             lbl = str(user_profile)
             user_profile.delete()
-            logger.info("%s.factory_account_teardown() Deleted user profile for %s", HERE, lbl)
+            logger.debug("%s.factory_account_teardown() Deleted user profile for %s", HERE, lbl)
 
     except UserProfile.DoesNotExist:
         pass
@@ -160,14 +160,14 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         if user:
             lbl = str(user)
             user.delete()
-            logger.info("%s.factory_account_teardown() Deleted user: %s", HERE, lbl)
+            logger.debug("%s.factory_account_teardown() Deleted user: %s", HERE, lbl)
     except User.DoesNotExist:
         pass
     try:
         if account:
             lbl = str(account)
             account.delete()
-            logger.info("%s.factory_account_teardown() Deleted account: %s", HERE, lbl)
+            logger.debug("%s.factory_account_teardown() Deleted account: %s", HERE, lbl)
     except Account.DoesNotExist:
         pass
 
@@ -202,7 +202,7 @@ def payment_method_factory(account: Account):
         card_exp_year=random.randint(datetime.now().year, datetime.now().year + 7),
         is_default=True,
     )
-    logger.info("%s.payment_method_factory() Created payment method: %s", HERE, payment_method.name)
+    logger.debug("%s.payment_method_factory() Created payment method: %s", HERE, payment_method.name)
     return payment_method
 
 
@@ -211,7 +211,7 @@ def payment_method_factory_teardown(payment_method: PaymentMethod):
         if payment_method:
             lbl = str(payment_method)
             payment_method.delete()
-            logger.info("%s.payment_method_factory_teardown() Deleted payment method: %s", HERE, lbl)
+            logger.debug("%s.payment_method_factory_teardown() Deleted payment method: %s", HERE, lbl)
     except PaymentMethod.DoesNotExist:
         pass
     except Exception as e:
@@ -242,7 +242,7 @@ def secret_factory(
         encrypted_value=encrypted_value,
         expires_at=expiration,
     )
-    logger.info("%s.secret_factory() Created secret: %s", HERE, secret)
+    logger.debug("%s.secret_factory() Created secret: %s", HERE, secret)
     return secret
 
 
@@ -251,7 +251,7 @@ def factory_secret_teardown(secret: Secret):
         if secret:
             lbl = str(secret)
             secret.delete()
-            logger.info("%s.factory_secret_teardown() Deleted secret: %s", HERE, lbl)
+            logger.debug("%s.factory_secret_teardown() Deleted secret: %s", HERE, lbl)
     except Secret.DoesNotExist:
         pass
     except Exception as e:
