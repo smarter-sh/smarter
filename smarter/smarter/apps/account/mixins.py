@@ -13,6 +13,10 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.common.helpers.console_helpers import (
+    formatted_text_green,
+    formatted_text_red,
+)
 from smarter.common.utils import mask_string
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -200,12 +204,12 @@ class AccountMixin(SmarterHelperMixin):
             except AuthenticationFailed:
                 logger.warning("%s.__init__(): failed to authenticate user from API token", self.formatted_class_name)
 
-        if self.is_accountmixin_ready:
-            logger.info(
-                "%s.__init__(): AccountMixin is ready: %s",
-                self.formatted_class_name,
-                self.user_profile,
-            )
+        logger.info(
+            "%s.__init__(): AccountMixin is %s. user_profile: %s",
+            self.formatted_class_name,
+            self.accountmixin_ready_state,
+            self.user_profile,
+        )
 
     def __str__(self):
         """
@@ -369,18 +373,28 @@ class AccountMixin(SmarterHelperMixin):
         are initialized.
         """
         if not isinstance(self.account, Account):
-            logger.debug(
+            logger.warning(
                 "%s.is_accountmixin_ready() returning false because account is not initialized.",
                 self.formatted_class_name,
             )
             return False
         if not isinstance(self.user, User):
-            logger.debug(
+            logger.warning(
                 "%s.is_accountmixin_ready() returning false because user is not initialized.",
                 self.formatted_class_name,
             )
             return False
         return True
+
+    @property
+    def accountmixin_ready_state(self) -> str:
+        """
+        Returns a string representation of the AccountMixin ready state.
+        """
+        if self.is_accountmixin_ready:
+            return formatted_text_green("READY")
+        else:
+            return formatted_text_red("NOT_READY")
 
     @property
     def ready(self) -> bool:
@@ -389,11 +403,21 @@ class AccountMixin(SmarterHelperMixin):
         """
         retval = super().ready
         if not retval:
-            logger.debug(
+            logger.warning(
                 "%s: ready() returning false because super().ready returned false. This might cause problems with other initializations.",
                 self.formatted_class_name,
             )
         return retval and self.is_accountmixin_ready
+
+    @property
+    def ready_state(self) -> str:
+        """
+        Returns a string representation of the ready state.
+        """
+        if self.ready:
+            return formatted_text_green("READY")
+        else:
+            return formatted_text_red("NOT_READY")
 
     @property
     def is_authenticated(self) -> bool:

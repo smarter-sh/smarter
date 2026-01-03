@@ -131,3 +131,15 @@ Example::
 
     secret_updated.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
 """
+
+broker_ready = Signal()
+"""
+Signal sent when a broker achieves a ready state.
+
+Arguments:
+    broker: The broker instance that is ready.
+
+Example::
+
+    broker_ready.send(sender=self.__class__, broker=self)
+"""

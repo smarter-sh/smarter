@@ -28,6 +28,7 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.plugin.base import PluginBase
+from smarter.apps.plugin.signals import broker_ready
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -70,6 +71,34 @@ class SAMPluginBaseBroker(AbstractBroker):
         self._plugin_prompt = None
         self._plugin_status = None
         self._manifest = None
+
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the broker is ready for operations.
+
+        This property determines whether the broker has been properly initialized
+        and is ready to perform its functions. A broker is considered ready if
+        it has a valid manifest loaded, either from raw data, a loader, or
+        existing Django ORM models.
+
+        :returns: ``True`` if the broker is ready, ``False`` otherwise.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning("%s.ready() base class indicates not ready for %s", self.formatted_class_name, self.kind)
+            return False
+        retval = self.manifest is not None or self.plugin is not None
+        logger.debug(
+            "%s.ready() manifest presence indicates ready=%s for %s",
+            self.formatted_class_name,
+            retval,
+            self.kind,
+        )
+        if retval:
+            broker_ready.send(sender=self.__class__, broker=self)
+        return retval
 
     @property
     def plugin(self) -> Optional[PluginBase]:

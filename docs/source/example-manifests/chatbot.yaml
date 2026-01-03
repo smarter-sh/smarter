@@ -4,10 +4,10 @@ metadata:
   description:
     To create and deploy an example Smarter chatbot. Prompt with example
     function calling to trigger the example Static Plugin
-  name: ExampleChatbot
+  name: example_chatbot
   version: 0.1.0
 spec:
-  apiKey: camelCaseNameOfApiKey
+  apiKey: snake_case_api_key_name
   config:
     appAssistant: Elle
     appBackgroundImageUrl: https://example.com/background-image.jpg

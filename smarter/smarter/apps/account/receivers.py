@@ -15,10 +15,12 @@ from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.manifest.broker import AbstractBroker
 
 from .manifest.transformers.secret import SecretTransformer
 from .models import Account, Charge, DailyBillingRecord, Secret, User, UserProfile
 from .signals import (
+    broker_ready,
     secret_accessed,
     secret_created,
     secret_deleted,
@@ -280,4 +282,16 @@ def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: Use
         user_profile,
         json_data,
         tags,
+    )
+
+
+@receiver(broker_ready)
+def broker_ready_receiver(sender, broker: AbstractBroker, **kwargs):
+    """Signal receiver for broker_ready signal."""
+    logger.info(
+        "%s %s %s for %s is ready.",
+        formatted_text(f"{module_prefix}.broker_ready()"),
+        broker.kind,
+        str(broker),
+        broker.name,
     )

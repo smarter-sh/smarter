@@ -16,6 +16,7 @@ from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.manifest.broker import AbstractBroker
 
 from .models import (
     ChatBot,
@@ -27,6 +28,7 @@ from .models import (
     ChatBotRequests,
 )
 from .signals import (
+    broker_ready,
     chatbot_called,
     chatbot_deploy_failed,
     chatbot_deploy_status_changed,
@@ -537,3 +539,15 @@ def handle_post_deploy_custom_api(sender, **kwargs):
     prefix = formatted_text(f"{module_prefix}.handle_post_deploy_custom_api()")
     chatbot_id = kwargs.get("chatbot_id")
     logger.info("%s - chatbot_id: %s", prefix, chatbot_id)
+
+
+@receiver(broker_ready, dispatch_uid="broker_ready")
+def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
+    """Handle broker ready signal."""
+    logger.info(
+        "%s %s %s for %s is ready.",
+        formatted_text(f"{module_prefix}.broker_ready()"),
+        broker.kind,
+        str(broker),
+        broker.name,
+    )

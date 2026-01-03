@@ -157,33 +157,40 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             - `SAMPluginBaseBroker.__init__`
         """
         super().__init__(*args, **kwargs)
-        if self._manifest:
-            return
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMStaticPlugin(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
-            )
+        if not self.ready:
+            if not self.loader and not self.manifest and not self.plugin:
+                logger.error(
+                    "%s.__init__() No loader nor existing Plugin provided for %s broker. Cannot initialize.",
+                    self.formatted_class_name,
+                    self.kind,
+                )
+                return
+            if self.loader and self.loader.manifest_kind != self.kind:
+                raise SAMBrokerErrorNotReady(
+                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
+                    thing=self.kind,
+                )
+
+            if self.loader:
+                self._manifest = SAMStaticPlugin(
+                    apiVersion=self.loader.manifest_api_version,
+                    kind=self.loader.manifest_kind,
+                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
+                )
             if self._manifest:
                 logger.info(
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
-                    self._manifest.metadata.name,
+                    self.manifest.metadata.name,
                 )
-            if self.ready:
-                logger.info(
-                    "%s.__init__() broker is ready for %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    self._manifest.metadata.name,
-                )
-        logger.warning(
-            "%s.__init__() could not initialize manifest for %s",
+        logger.info(
+            "%s.__init__() broker for %s %s is %s.",
             self.formatted_class_name,
             self.kind,
+            self.name,
+            self.ready_state,
         )
 
     def plugin_init(self):
