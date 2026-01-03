@@ -503,7 +503,7 @@ class SettingsDefaults:
     LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
     LOCAL_HOSTS.append("testserver")
 
-    LOG_LEVEL: int = logging.DEBUG if DEBUG_MODE else logging.INFO
+    LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
 
     LOGO: HttpUrl = get_env("LOGO", "https://cdn.example.com/images/logo/logo.png", is_required=True)
     MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY", is_secret=True))
@@ -3804,6 +3804,20 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return "https"
         return "http"
+
+    @property
+    def log_level_name(self) -> str:
+        """
+        Return the log level name.
+
+        Example:
+            >>> print(smarter_settings.log_level_name)
+            'INFO'
+
+        See Also:
+            - smarter_settings.log_level
+        """
+        return logging.getLevelName(self.log_level)
 
     @property
     def data_directory(self) -> str:

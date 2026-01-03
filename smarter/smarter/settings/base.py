@@ -1289,39 +1289,39 @@ LOGGING = {
     },
     "handlers": {
         "default": {
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "class": "logging.StreamHandler",
             "formatter": "timestamped",
         },
     },
     "root": {
         "handlers": ["default"],
-        "level": "INFO",
+        "level": smarter_settings.log_level_name,
     },
     "loggers": {
         "django": {
             "handlers": ["default"],
-            "level": "DEBUG",
+            "level": smarter_settings.log_level_name,
             "propagate": True,
         },
         "django.security.DisallowedHost": {
             "handlers": ["default"],
-            "level": "ERROR",
+            "level": smarter_settings.log_level_name,
             "propagate": False,
         },
         "celery": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "propagate": False,
         },
         "celery.task": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "propagate": True,
         },
         "celery.beat": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "propagate": True,
         },
     },
