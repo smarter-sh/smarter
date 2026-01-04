@@ -273,7 +273,24 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if self._manifest:
             return self._manifest
 
-        if self.connection:
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMApiConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
+                status=(
+                    SAMConnectionCommonStatus(**self.loader.manifest_status)
+                    if self.loader and self.loader.manifest_status
+                    else None
+                ),
+            )
+            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self.connection:
             metadata = self.sam_connection_metadata()
             if not metadata:
                 raise SAMBrokerErrorNotReady(
@@ -310,20 +327,6 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 status=status,
             )
             return self._manifest
-
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
-                status=(
-                    SAMConnectionCommonStatus(**self.loader.manifest_status)
-                    if self.loader and self.loader.manifest_status
-                    else None
-                ),
-            )
-            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
         else:
             logger.warning(
                 "%s.manifest() could not initialize manifest. Expected %s but got %s",

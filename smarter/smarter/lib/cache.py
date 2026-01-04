@@ -152,11 +152,11 @@ class LazyCache:
         :rtype: django.core.cache.Cache
         """
         if self._cache is None:
+            logger_prefix = formatted_text(f"{__name__}.LazyCache.cache()")
             from django.core.cache import cache, caches
             from django_redis.cache import RedisCache
 
-            logger.debug("%s django.core.cache imported.", logger_prefix_normal)
-
+            logger.debug("%s initialized django.core.cache.", logger_prefix)
             self._cache = cache
 
             try:
@@ -164,17 +164,17 @@ class LazyCache:
                 cache.set("test_key", "test_value", timeout=5)
                 value = cache.get("test_key")
                 if value == "test_value":
-                    logger.debug("%s Django cache is up and reachable.", logger_prefix_normal)
+                    logger.debug("%s Django cache is up and reachable.", logger_prefix)
                 else:
-                    logger.error("%s Django cache is not working as expected.", logger_prefix_normal)
+                    logger.error("%s Django cache is not working as expected.", logger_prefix)
             # pylint: disable=broad-except
             except Exception as e:
-                logger.error("%s Error accessing Django cache: %s", logger_prefix_normal, e)
+                logger.error("%s Error accessing Django cache: %s", logger_prefix, e)
 
             if not isinstance(caches["default"], RedisCache):
                 logger.warning(
                     "%s django.core.cache.caches['default'] was expecting django_redis.cache.RedisCache but found: %s",
-                    logger_prefix_normal,
+                    logger_prefix,
                     caches["default"].__class__,
                 )
 
@@ -581,13 +581,13 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 cached_value = lazy_cache.get(cache_key)
                 logger.info("%s found cache entry for %s: %s", logger_prefix_normal, cache_key, str(cached_value))
                 lazy_cache.delete(cache_key)
-                msg = f"{logger_prefix_normal} invalidated cache entry for {cache_key}"
+                msg = f"{logger_prefix_green} invalidated cache entry for {cache_key}"
                 if logging_enabled and lazy_cache.cache_logging:
                     logger.info(msg)
                 else:
                     logger.debug(msg)
             else:
-                msg = f"{logger_prefix_normal} no cache entry found for {cache_key} (nothing to invalidate)"
+                msg = f"{logger_prefix_red} no cache entry found for {cache_key} (nothing to invalidate)"
                 if logging_enabled and lazy_cache.cache_logging:
                     logger.info(msg)
                 else:

@@ -223,7 +223,6 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         if self._manifest:
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-
             try:
                 self._manifest = SAMSmarterAuthToken(
                     apiVersion=self.loader.manifest_api_version,

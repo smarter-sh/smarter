@@ -307,11 +307,23 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         """
         if self._manifest:
             return self._manifest
-
-        # If the Plugin has previously been persisted then
-        # we can build the manifest components by mapping
-        # Django ORM models to Pydantic models.
-        if self._plugin_meta:
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMSqlPlugin(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
+                status=(
+                    SAMPluginCommonStatus(**self.loader.manifest_status)
+                    if self.loader and self.loader.manifest_status
+                    else None
+                ),
+            )
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self._plugin_meta:
             metadata = self.plugin_metadata_orm2pydantic()
             sql_data = self.plugin_data_orm2pydantic()
             if not sql_data:
@@ -336,21 +348,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                 status=status,
             )
             return self._manifest
-        # Otherwise, if we received a manifest via the loader,
-        # then use that to build the manifest.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSqlPlugin(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
-                status=(
-                    SAMPluginCommonStatus(**self.loader.manifest_status)
-                    if self.loader and self.loader.manifest_status
-                    else None
-                ),
-            )
-        if not self._manifest:
+        else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 

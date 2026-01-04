@@ -464,7 +464,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return self._name
         if self._manifest:
             self._name = self.manifest.metadata.name
-            logger.info("%s.name() set name to %s from manifest metadata", logger_prefix, self._name)
+            logger.debug("%s.name() set name to %s from manifest metadata", logger_prefix, self._name)
             return self._name
         if self.loader:
             logger.warning(
@@ -474,12 +474,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             )
             self._name = self.loader.manifest_metadata.get("name")
             if self._name:
-                logger.info("%s.name() set name to %s from loader metadata", logger_prefix, self._name)
+                logger.debug("%s.name() set name to %s from loader metadata", logger_prefix, self._name)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
             if name_param:
                 self._name = name_param
-                logger.info("%s.__init__() set name to %s from name url param", logger_prefix, self._name)
+                logger.debug("%s.__init__() set name to %s from name url param", logger_prefix, self._name)
         return self._name
 
     @property
@@ -504,10 +504,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return self._loader
 
     def __str__(self):
-        if isinstance(self.manifest, AbstractSAMBase):
-            return f"{self.manifest.apiVersion if self.manifest else "Unknown Version"} {self.kind} Broker"
-        if isinstance(self.manifest, dict):
-            return f"{self.manifest.get("apiVersion", "Unknown Version")} {self.kind} Broker"
+        if isinstance(self._manifest, AbstractSAMBase):
+            return f"{self._manifest.apiVersion if self._manifest else "Unknown Version"} {self.kind} Broker"
+        if isinstance(self._manifest, dict):
+            return f"{self._manifest.get("apiVersion", "Unknown Version")} {self.kind} Broker"
         return f"Unknown Version {self.kind} Broker"
 
     ###########################################################################
@@ -562,7 +562,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 spec=AbstractSAMSpecBase(**self.loader.manifest_spec),
                 status=AbstractSAMStatusBase(**self.loader.manifest_status),
             )
-            logger.info("%s.manifest() initialized manifest from loader", logger_prefix)
+            logger.debug("%s.manifest() initialized manifest from loader", logger_prefix)
         else:
             logger.warning(
                 "%s.manifest() returning None: expected loader.manifest_kind of %s but received %s",
@@ -600,7 +600,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         .. todo:: Research why this is not an abstract method.
         """
-        logger.info(
+        logger.debug(
             "%s.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
             logger_prefix,
             request,
@@ -793,7 +793,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         try:
             secret = cached_secret_by_name_and_profile_id(name=name, profile_id=user_profile.id)
         except Secret.DoesNotExist as e:
-            logger.info(
+            logger.debug(
                 "%s.get_or_create_secret() Secret %s not found for user %s",
                 logger_prefix,
                 name,
