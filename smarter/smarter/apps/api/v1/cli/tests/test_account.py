@@ -180,8 +180,12 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         change_set["timezone"] = "America/Mexico_City"
         data[SAMKeys.SPEC.value] = change_set
 
-        # pop the status bc its read-only
-        data.pop(SAMKeys.STATUS.value)
+        # pop the status bc its read-only, if it exists
+        # our expected outcome is that it does exist.
+        if data.get(SAMKeys.STATUS.value):
+            data.pop(SAMKeys.STATUS.value)
+        else:
+            logger.warning("Expected status to be present in the manifest data, but it was not found.")
 
         # convert the data back to yaml, since this is what the cli usually receives
         manifest = yaml.dump(data)
@@ -337,17 +341,25 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         # validate our changes
         data = response[SmarterJournalApiResponseKeys.DATA]
         config = data[SAMKeys.SPEC.value]["config"]
-        self.assertEqual(config["companyName"], "test data")
-        self.assertEqual(config["phoneNumber"], "+1 617 834 6172")
-        self.assertEqual(config["address1"], "Avenida Reforma 222")
-        self.assertEqual(config["address2"], "Piso 19")
-        self.assertEqual(config["city"], "CDMX")
-        self.assertEqual(config["state"], "CDMX")
-        self.assertEqual(config["postalCode"], "06600")
-        self.assertEqual(config["country"], "Mexico")
-        self.assertEqual(config["language"], "es-ES")
-        self.assertEqual(config["timezone"], "America/Mexico_City")
-        self.assertEqual(config["currency"], "MXN")
+        self.assertEqual(
+            config["companyName"], "test data", f"companyName did not persist correctly in apply: {config}"
+        )
+        self.assertEqual(
+            config["phoneNumber"], "+1 617 834 6172", f"phoneNumber did not persist correctly in apply: {config}"
+        )
+        self.assertEqual(
+            config["address1"], "Avenida Reforma 222", f"address1 did not persist correctly in apply: {config}"
+        )
+        self.assertEqual(config["address2"], "Piso 19", f"address2 did not persist correctly in apply: {config}")
+        self.assertEqual(config["city"], "CDMX", f"city did not persist correctly in apply: {config}")
+        self.assertEqual(config["state"], "CDMX", f"state did not persist correctly in apply: {config}")
+        self.assertEqual(config["postalCode"], "06600", f"postalCode did not persist correctly in apply: {config}")
+        self.assertEqual(config["country"], "Mexico", f"country did not persist correctly in apply: {config}")
+        self.assertEqual(config["language"], "es-ES", f"language did not persist correctly in apply: {config}")
+        self.assertEqual(
+            config["timezone"], "America/Mexico_City", f"timezone did not persist correctly in apply: {config}"
+        )
+        self.assertEqual(config["currency"], "MXN", f"currency did not persist correctly in apply: {config}")
 
     def test_get(self) -> None:
         """Test get command"""

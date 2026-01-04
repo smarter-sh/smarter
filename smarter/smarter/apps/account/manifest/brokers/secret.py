@@ -24,7 +24,6 @@ from smarter.apps.account.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.models import Secret
 from smarter.apps.account.signals import broker_ready
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -451,6 +450,20 @@ class SAMSecretBroker(AbstractBroker):
 
         """
         return MANIFEST_KIND
+
+    @property
+    def name(self) -> Optional[str]:
+        """
+        Get the name of the Smarter API Account.
+
+        :returns: The name of the Smarter API Account, or None if not set.
+        :rtype: Optional[str]
+        """
+        retval = super().name
+        if retval:
+            return retval
+        if self.secret:
+            return str(self.secret.name)
 
     @property
     def manifest(self) -> Optional[SAMSecret]:
