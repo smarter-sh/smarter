@@ -2,6 +2,7 @@
 
 import ipaddress
 import logging
+import re
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 import yaml
@@ -24,6 +25,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+MOCK_REGEX = re.compile(r"<MagicMock|<Mock|mock\\.MagicMock|mock\\.Mock", re.IGNORECASE)
 
 # guard against Sphinx doc build circular import errors
 mixin_logging_is_active: bool = False
@@ -285,7 +287,16 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             ip_obj = ipaddress.ip_address(ip)
             return ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local
         except ValueError as e:
-            logger.warning("%s._is_private_ip() - Invalid IP address: %s, error: %s", self.formatted_class_name, ip, e)
+            # Regex to match MagicMock or mock object string representations
+            ip_str = str(ip)
+            if MOCK_REGEX.search(ip_str) or "Mock" in getattr(ip, "__class__", type(ip)).__name__:
+                logger.warning(
+                    "%s._is_private_ip() - Mock object detected as IP: %s", self.formatted_class_name, ip_str
+                )
+            else:
+                logger.warning(
+                    "%s._is_private_ip() - Invalid IP address: %s, error: %s", self.formatted_class_name, ip_str, e
+                )
             return True
 
     def has_auth_indicators(self, request):
