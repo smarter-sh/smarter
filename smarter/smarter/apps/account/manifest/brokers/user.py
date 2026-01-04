@@ -230,8 +230,10 @@ class SAMUserBroker(AbstractBroker):
         """
         if self._brokered_user:
             return self._brokered_user
+        if self._name is None:
+            return None
         try:
-            self._brokered_user = User.objects.get(username=self.name)
+            self._brokered_user = User.objects.get(username=self._name)
             logger.debug(
                 "%s.brokered_user() initialized existing User: %s",
                 self.formatted_class_name,

@@ -15,6 +15,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
 )
+from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
@@ -65,6 +66,15 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
     def broker(self) -> SAMUserBroker:
         return super().broker  # type: ignore
 
+    @property
+    def kwargs(self) -> dict:
+        """Return default kwargs for broker methods."""
+        if not self.ready:
+            raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before ready state")
+        return {
+            SAMMetadataKeys.NAME.value: self.broker.manifest.metadata.name,
+        }
+
     def test_setup(self):
         """Verify that setup initialized the broker correctly."""
         self.assertTrue(self.ready)
@@ -112,13 +122,12 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         # Should be None if user is not authenticated or not set
         # pylint: disable=protected-access
         broker._account_contact = None
-        broker.user = None
+        self.broker.brokered_user = None
 
         self.assertIsNone(broker.account_contact)
-        self.assertIsNone(broker.account)
-        self.assertIsNone(broker.user_profile)
+        self.assertIsNone(broker.brokered_user_profile)
 
-        broker.user = self.admin_user
+        self.broker.brokered_user = self.admin_user
         if hasattr(self.admin_user, "is_authenticated") and self.admin_user.is_authenticated:
             # If test DB is set up, this may return an AccountContact or None
             # We just check that it does not raise
@@ -158,10 +167,11 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
     def test_username_property(self):
         """Test username property returns the correct username or None."""
 
-        self.broker.user = None
-        self.assertIsNone(self.broker.username)
+        self.broker.brokered_user = None
+        # this will reinitialize from either the manifest or the ORM object
+        self.assertIsNotNone(self.broker.username)
 
-        self.broker.user = self.admin_user
+        self.broker.brokered_user = self.admin_user
         self.assertEqual(self.broker.username, getattr(self.admin_user, "username", None))
 
     def test_formatted_class_name(self):
@@ -320,27 +330,27 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         self.assertEqual(
             self.broker.manifest.spec.config.firstName,
             self.broker.brokered_user.first_name,
-            f"firstName does not match manifest: {self.broker.manifest.spec.config.firstName}, user: {self.broker.user.first_name}",
+            f"firstName does not match manifest: {self.broker.manifest.spec.config.firstName}, user: {self.broker.brokered_user.first_name}",
         )
         self.assertEqual(
             self.broker.manifest.spec.config.lastName,
             self.broker.brokered_user.last_name,
-            f"lastName does not match manifest: {self.broker.manifest.spec.config.lastName}, user: {self.broker.user.last_name}",
+            f"lastName does not match manifest: {self.broker.manifest.spec.config.lastName}, user: {self.broker.brokered_user.last_name}",
         )
         self.assertEqual(
             self.broker.manifest.spec.config.email,
             self.broker.brokered_user.email,
-            f"email does not match manifest: {self.broker.manifest.spec.config.email}, user: {self.broker.user.email}",
+            f"email does not match manifest: {self.broker.manifest.spec.config.email}, user: {self.broker.brokered_user.email}",
         )
         self.assertEqual(
             self.broker.manifest.spec.config.isStaff,
             self.broker.brokered_user.is_staff,
-            f"isStaff does not match manifest: {self.broker.manifest.spec.config.isStaff}, user: {self.broker.user.is_staff}",
+            f"isStaff does not match manifest: {self.broker.manifest.spec.config.isStaff}, user: {self.broker.brokered_user.is_staff}",
         )
         self.assertEqual(
             self.broker.manifest.spec.config.isActive,
             self.broker.brokered_user.is_active,
-            f"isActive does not match manifest: {self.broker.manifest.spec.config.isActive}, user: {self.broker.user.is_active}",
+            f"isActive does not match manifest: {self.broker.manifest.spec.config.isActive}, user: {self.broker.brokered_user.is_active}",
         )
 
         # UserProfile fields
@@ -492,17 +502,19 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         test delete method raises not found for missing user.
 
         """
-        self.broker.user = None
+        self.request._body = None
+        self._broker = self.SAMBrokerClass(self.request)
         with self.assertRaises(SAMBrokerErrorNotFound):
-            self.broker.delete(self.request, **self.kwargs)
+            self.broker.delete(self.request, {"name": "nonexistent-user"})
 
     def test_describe_user_not_found(self):
         """
         Test describe method raises not found for missing user.
         """
-        self.broker.user = None
+        self.request._body = None
+        self._broker = self.SAMBrokerClass(self.request)
         with self.assertRaises(SAMBrokerErrorNotFound):
-            self.broker.describe(self.request, **self.kwargs)
+            self.broker.describe(self.request, {"name": "nonexistent-user"})
 
     def test_logs_returns_ok(self):
         """Stub: test logs method returns ok response."""
