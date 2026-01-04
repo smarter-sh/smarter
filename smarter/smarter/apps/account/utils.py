@@ -32,7 +32,6 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -840,8 +839,10 @@ def cache_invalidate(user: Optional[User] = None, account: Optional[Account] = N
 
     get_cached_account(account_id=account.id, invalidate=True)
     get_cached_admin_user_for_account(account=account, invalidate=True)
+    get_cached_admin_user_for_account(account=account, invalidate=True)
 
     if isinstance(resolved_user, User):
         get_cached_account_for_user(user=resolved_user, invalidate=True)
         get_cached_user_profile(user=resolved_user, account=account, invalidate=True)
         get_cached_user_for_user_id(user_id=resolved_user.id, invalidate=True)
+        get_cached_user_for_username(username=resolved_user.username, invalidate=True)

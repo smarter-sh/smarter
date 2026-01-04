@@ -560,13 +560,19 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             if key_data is None:
                 return
             cache_key: str = generate_cache_key(func, key_data)
-            lazy_cache.delete(cache_key)
-            if logging_enabled and lazy_cache.cache_logging:
-                logger.info(
-                    "%s invalidated cache entry for %s",
-                    logger_prefix_normal,
-                    cache_key,
-                )
+            if lazy_cache.has_key(cache_key):
+                lazy_cache.delete(cache_key)
+                msg = f"{logger_prefix_normal} invalidated cache entry for {cache_key}"
+                if logging_enabled and lazy_cache.cache_logging:
+                    logger.info(msg)
+                else:
+                    logger.debug(msg)
+            else:
+                msg = f"{logger_prefix_normal} no cache entry found for {cache_key} (nothing to invalidate)"
+                if logging_enabled and lazy_cache.cache_logging:
+                    logger.info(msg)
+                else:
+                    logger.debug(msg)
 
         wrapper.invalidate = invalidate  # type: ignore[attr-defined]
         return wrapper

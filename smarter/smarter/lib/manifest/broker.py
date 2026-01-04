@@ -191,7 +191,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 thing=SmarterJournalThings.ACCOUNT,
             )
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
-        logger.info(
+        logger.debug(
             "%s.__init__() initializing request: %s, args: %s, kwargs: %s",
             logger_prefix,
             self.request,
@@ -199,6 +199,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             kwargs,
         )
         self._api_version = api_version
+        if "name" in kwargs and isinstance(kwargs["name"], str):
+            self._name = kwargs["name"]
+            logger.debug("%s.__init__() received name in kwargs: %s", logger_prefix, self._name)
+        self._name = name if isinstance(name, str) else self._name
 
         for arg in args:
             if isinstance(arg, SAMLoader):
@@ -226,35 +230,35 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         if isinstance(file_path, str) and file_path:
             self._loader = SAMLoader(file_path=file_path)
-            logger.info("%s.__init__() initialized loader from file_path: %s", logger_prefix, file_path)
+            logger.debug("%s.__init__() initialized loader from file_path: %s", logger_prefix, file_path)
             self._kind = self._loader.manifest_kind if self._loader.manifest_kind else self._kind
             if isinstance(self._kind, str):
-                logger.info("%s.__init__() set kind to %s from loader", logger_prefix, self._kind)
+                logger.debug("%s.__init__() set kind to %s from loader", logger_prefix, self._kind)
             self._name = self._loader.manifest_metadata.get("name") if self._loader.manifest_metadata else self._name
             if self._name:
-                logger.info("%s.__init__() set name to %s from loader metadata", logger_prefix, self._name)
+                logger.debug("%s.__init__() set name to %s from loader metadata", logger_prefix, self._name)
 
         if isinstance(manifest, AbstractSAMBase) and not self._manifest:
             self._manifest = manifest
-            logger.info("%s.__init__() successfully initialized manifest: %s", logger_prefix, self.manifest)
+            logger.debug("%s.__init__() successfully initialized manifest: %s", logger_prefix, self.manifest)
         if isinstance(manifest, dict) and not self._manifest:
             if not isinstance(loader, SAMLoader):
                 self._loader = SAMLoader(manifest=manifest)
-                logger.info("%s.__init__() initialized loader from manifest data: %s", logger_prefix, self.manifest)
+                logger.debug("%s.__init__() initialized loader from manifest data: %s", logger_prefix, self.manifest)
         if isinstance(loader, SAMLoader) and not self._loader:
             self._loader = loader
-            logger.info("%s.__init__() received %s loader", logger_prefix, self._loader.manifest_kind)
-            logger.info(
+            logger.debug("%s.__init__() received %s loader", logger_prefix, self._loader.manifest_kind)
+            logger.debug(
                 "%s.__init__() loader initialized with manifest kind: %s",
                 logger_prefix,
                 self._loader.manifest_kind,
             )
             self._kind = self._loader.manifest_kind if self._loader.manifest_kind else self._kind
             if isinstance(self._kind, str):
-                logger.info("%s.__init__() set kind to %s from loader", logger_prefix, self._kind)
+                logger.debug("%s.__init__() set kind to %s from loader", logger_prefix, self._kind)
             self._name = self._loader.manifest_metadata.get("name") if self._loader.manifest_metadata else self._name
             if self._name:
-                logger.info("%s.__init__() set name to %s from loader metadata", logger_prefix, self._name)
+                logger.debug("%s.__init__() set name to %s from loader metadata", logger_prefix, self._name)
 
         self._created = False
         self._validated = bool(manifest) or bool(self.loader and self.loader.ready)

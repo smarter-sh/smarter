@@ -5,6 +5,7 @@ import logging
 import traceback
 from typing import TYPE_CHECKING, Optional, Type
 
+from django.core import serializers
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
@@ -17,8 +18,7 @@ from smarter.apps.account.manifest.models.account.spec import (
 from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
 from smarter.apps.account.models import Account
 from smarter.apps.account.signals import broker_ready
-from smarter.apps.account.utils import cache_invalidate, get_cached_smarter_account
-from smarter.common.conf import settings as smarter_settings
+from smarter.apps.account.utils import get_cached_smarter_account
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -315,6 +315,20 @@ class SAMAccountBroker(AbstractBroker):
         return MANIFEST_KIND
 
     @property
+    def name(self) -> Optional[str]:
+        """
+        Get the name of the Smarter API Account.
+
+        :returns: The name of the Smarter API Account, or None if not set.
+        :rtype: Optional[str]
+        """
+        retval = super().name
+        if retval:
+            return retval
+        if self.account:
+            return str(self.account.name) or self.account.account_number
+
+    @property
     def manifest(self) -> Optional[SAMAccount]:
         """
         Get the manifest for the Smarter API Account as a Pydantic model.
@@ -344,6 +358,12 @@ class SAMAccountBroker(AbstractBroker):
         if self._manifest:
             return self._manifest
         if self.account:
+            logger.debug(
+                "%s.manifest() initializing from existing Account for %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.name,
+            )
             account_number = str(self.account.account_number)
             status = SAMAccountStatus(
                 adminAccount=account_number,
@@ -381,6 +401,9 @@ class SAMAccountBroker(AbstractBroker):
             return self._manifest
 
         if self.loader and self.loader.manifest_kind == self.kind:
+            logger.debug(
+                "%s.manifest() initializing from loader for %s %s", self.formatted_class_name, self.kind, self.name
+            )
             metadata = {**self.loader.manifest_metadata}
             spec = {
                 "config": SAMAccountSpecConfig(**self.loader.manifest_spec),
@@ -393,6 +416,7 @@ class SAMAccountBroker(AbstractBroker):
                 status=None,
             )
         if self._manifest:
+            logger.debug("%s.manifest() resettings self.account for %s", self.formatted_class_name, self.name)
             # reset account after manifest is created so that it will be
             # reinitialized from the manifest data on next access.
             self.account = None
@@ -550,17 +574,33 @@ class SAMAccountBroker(AbstractBroker):
         try:
             data = self.manifest_to_django_orm()
             for field in readonly_fields:
+                logger.debug(
+                    "%s.apply() Removing readonly field %s from data for %s",
+                    self.formatted_class_name,
+                    field,
+                    self.kind,
+                )
                 data.pop(field, None)
             for key, value in data.items():
                 setattr(self.account, key, value)
                 logger.info("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
-            logger.info("%s.apply() Saving %s", self.formatted_class_name, self.account)
-            cache_invalidate(user=self.user, account=self.account)  # type: ignore[reportArgumentType]
-
+            logger.info(
+                "%s.apply() Saving %s: %s",
+                self.formatted_class_name,
+                self.account,
+                serializers.serialize("json", [self.account]),
+            )
             self.account.save()
             tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
             self.account.tags.set(tags)
             self.account.refresh_from_db()
+            logger.info(
+                "%s.apply() Saved %s with ID %s: %s",
+                self.formatted_class_name,
+                self.account,
+                self.account.id,
+                serializers.serialize("json", [self.account]),
+            )
         except Exception as e:
             tb = traceback.format_exc()
             raise SAMBrokerError(message=f"Error in {command}: {e}\n{tb}", thing=self.kind, command=command) from e
@@ -603,9 +643,6 @@ class SAMAccountBroker(AbstractBroker):
         if self.account:
             try:
                 data = self.django_orm_to_manifest_dict()
-                logger.info(
-                    "%s.describe() fuck you and the horse you rode in on. data: %s", self.formatted_class_name, data
-                )
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e

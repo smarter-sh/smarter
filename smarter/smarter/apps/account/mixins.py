@@ -7,11 +7,7 @@ from typing import TYPE_CHECKING, Optional, Union
 from django.contrib.auth.models import AnonymousUser
 from rest_framework.exceptions import AuthenticationFailed
 
-from smarter.apps.account.models import User
-from smarter.apps.account.serializers import UserMiniSerializer
-from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import (
     formatted_text,
@@ -24,8 +20,12 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .models import Account, UserProfile
-from .serializers import AccountMiniSerializer, UserProfileSerializer
+from .models import Account, User, UserProfile
+from .serializers import (
+    AccountMiniSerializer,
+    UserMiniSerializer,
+    UserProfileSerializer,
+)
 from .utils import (
     account_number_from_url,
     get_cached_account,
@@ -101,6 +101,7 @@ class AccountMixin(SmarterHelperMixin):
 
         request: OptionalRequestType = kwargs.get("request")
         if not request and args:
+            # pylint: disable=import-outside-toplevel
             from django.core.handlers.wsgi import WSGIRequest
             from django.http import HttpRequest
             from rest_framework.request import Request
@@ -117,14 +118,14 @@ class AccountMixin(SmarterHelperMixin):
                     break
 
         if isinstance(account_number, str):
-            logger.info("%s.__init__(): received account_number %s", self.formatted_class_name, account_number)
+            logger.debug("%s.__init__(): received account_number %s", self.formatted_class_name, account_number)
             self._account = get_cached_account(account_number=account_number) if account_number else account
         if isinstance(account, Account):
-            logger.info("%s.__init__(): received account %s", self.formatted_class_name, account)
+            logger.debug("%s.__init__(): received account %s", self.formatted_class_name, account)
             self._account = account
         if isinstance(user, User):
             self._user = user
-            logger.info("%s.__init__(): received user %s", self.formatted_class_name, user)
+            logger.debug("%s.__init__(): received user %s", self.formatted_class_name, user)
             self._account = get_cached_account_for_user(user)
             if not self._account:
                 logger.debug(
@@ -132,7 +133,7 @@ class AccountMixin(SmarterHelperMixin):
                     self.formatted_class_name,
                     user,
                 )
-            logger.info(
+            logger.debug(
                 "%s.__init__(): set account to %s based on user %s",
                 self.formatted_class_name,
                 self._account,
@@ -151,7 +152,7 @@ class AccountMixin(SmarterHelperMixin):
                         self.formatted_class_name,
                         request.build_absolute_uri(),
                     )
-                logger.info(
+                logger.debug(
                     "%s.__init__(): found a user object in the request: %s",
                     self.formatted_class_name,
                     self._user,
@@ -163,7 +164,7 @@ class AccountMixin(SmarterHelperMixin):
                         self.formatted_class_name,
                         self._user,
                     )
-                logger.info(
+                logger.debug(
                     "%s.__init__(): set account to %s based on user: %s",
                     self.formatted_class_name,
                     self._account,
@@ -179,14 +180,14 @@ class AccountMixin(SmarterHelperMixin):
                 # by parsing the URL.
                 account_number = account_number_from_url(url)
                 if account_number and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING):
-                    logger.info(
+                    logger.debug(
                         "%s.__init__(): located account number %s from the request url %s",
                         self.formatted_class_name,
                         account_number,
                         url,
                     )
                     self._account = get_cached_account(account_number=account_number)
-                    logger.info("%s.__init__(): set account to %s", self.formatted_class_name, self._account)
+                    logger.debug("%s.__init__(): set account to %s", self.formatted_class_name, self._account)
                 elif not api_token:
                     logger.debug(
                         "%s.__init__(): did not find an account number in the request url nor an API token in the request header: %s",
@@ -194,7 +195,7 @@ class AccountMixin(SmarterHelperMixin):
                         url,
                     )
         if not self._user and isinstance(api_token, bytes):
-            logger.info(
+            logger.debug(
                 "%s.__init__(): found API token in kwargs: %s",
                 self.formatted_class_name,
                 mask_string(api_token.decode()),
@@ -292,7 +293,7 @@ class AccountMixin(SmarterHelperMixin):
         account = get_cached_account(account_number=account_number)
         if isinstance(account, Account):
             self._account = account
-            logger.info(
+            logger.debug(
                 "%s: set account to %s based on account_number %s",
                 self.formatted_class_name,
                 self._account,
@@ -320,7 +321,7 @@ class AccountMixin(SmarterHelperMixin):
         self.user_profile = None
         self.account = None
         self._user = user  # do this last bc user_profile and account might do things to _user.
-        logger.info("%s.user.setter: %s", self.formatted_class_name, user)
+        logger.debug("%s.user.setter: %s", self.formatted_class_name, user)
 
     @property
     def user_profile(self) -> UserProfileType:
