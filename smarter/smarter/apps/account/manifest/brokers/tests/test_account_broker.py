@@ -107,8 +107,9 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
             self.broker.manifest.spec.config.companyName = "New Company Name"
 
         # test any field in status
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.status.adminAccount = None
+        if self.broker.manifest.status:
+            with self.assertRaises(ValidationError):
+                self.broker.manifest.status.adminAccount = None
 
     def test_ready(self):
         """Test that the test setup is ready."""

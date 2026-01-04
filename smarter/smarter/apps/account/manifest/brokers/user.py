@@ -18,6 +18,7 @@ from smarter.apps.account.models import AccountContact, User, UserProfile
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import (
+    cache_invalidate,
     get_cached_smarter_admin_user_profile,
     get_cached_user_profile,
 )
@@ -122,6 +123,8 @@ class SAMUserBroker(AbstractBroker):
     _manifest: Optional[SAMUser] = None
     _pydantic_model: Type[SAMUser] = SAMUser
     _account_contact: Optional[AccountContact] = None
+    _brokered_user: Optional[User] = None
+    _brokered_user_profile: Optional[UserProfile] = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -158,7 +161,7 @@ class SAMUserBroker(AbstractBroker):
         """
         super().__init__(*args, **kwargs)
         if not self.ready:
-            if not self.loader and not self.manifest and not self.user:
+            if not self.loader and not self.manifest and not self.brokered_user:
                 logger.error(
                     "%s.__init__() No loader nor existing User provided for %s broker. Cannot initialize.",
                     self.formatted_class_name,
@@ -194,7 +197,7 @@ class SAMUserBroker(AbstractBroker):
         if not retval:
             logger.warning("%s.ready() base class indicates not ready for %s", self.formatted_class_name, self.kind)
             return False
-        retval = self.manifest is not None or self.user is not None
+        retval = self.manifest is not None or self.brokered_user is not None
         logger.debug(
             "%s.ready() manifest presence indicates ready=%s for %s",
             self.formatted_class_name,
@@ -204,6 +207,126 @@ class SAMUserBroker(AbstractBroker):
         if retval:
             broker_ready.send(sender=self.__class__, broker=self)
         return retval
+
+    @property
+    def brokered_user(self) -> Optional[User]:
+        """
+        Retrieve the `User` model instance associated with the current broker.
+
+        :returns: A `User` instance if found, otherwise `None`.
+
+        .. note::
+
+           - This property returns `None` if the user is not set.
+           - If no matching `User` exists for the broker's username, `None` is returned.
+
+        **Example usage:**
+        .. code-block:: python
+              user = broker.brokered_user
+                if user:
+                    print(user.first_name, user.last_name, user.email)
+        See Also:
+              - :class:`smarter.apps.account.models.User`
+        """
+        if self._brokered_user:
+            return self._brokered_user
+        try:
+            self._brokered_user = User.objects.get(username=self.name)
+            logger.debug(
+                "%s.brokered_user() initialized existing User: %s",
+                self.formatted_class_name,
+                self.name,
+            )
+        except User.DoesNotExist:
+            logger.debug(
+                "%s.brokered_user() User does not exist: %s",
+                self.formatted_class_name,
+                self.name,
+            )
+        return self._brokered_user
+
+    @brokered_user.setter
+    def brokered_user(self, value: User) -> None:
+        """
+        Set the `User` model instance for the current broker.
+
+        :param value: A `User` instance to associate with the broker.
+
+        **Example usage:**
+        .. code-block:: python
+              broker.brokered_user = user_instance
+        See Also:
+              - :class:`smarter.apps.account.models.User`
+        """
+        self._brokered_user = value
+        logger.debug(
+            "%s.brokered_user() set User: %s",
+            self.formatted_class_name,
+            value,
+        )
+
+    @property
+    def brokered_user_profile(self) -> Optional[UserProfile]:
+        """
+        Retrieve the `UserProfile` model instance associated with the current brokered user.
+
+        :returns: A `UserProfile` instance if found, otherwise `None`.
+
+        .. note::
+
+           - This property returns `None` if the brokered user is not set.
+           - If no matching `UserProfile` exists for the brokered user and account, `None` is returned.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+              profile = broker.brokered_user_profile
+                if profile:
+                    print(profile.name, profile.description)
+
+        See Also:
+              - :class:`smarter.apps.account.models.UserProfile`
+        """
+        if self._brokered_user_profile:
+            return self._brokered_user_profile
+        if not self._brokered_user:
+            return None
+
+        try:
+            self._brokered_user_profile = get_cached_user_profile(user=self.brokered_user, account=self.account)  # type: ignore
+            logger.debug(
+                "%s.brokered_user_profile() initialized existing UserProfile: %s",
+                self.formatted_class_name,
+                self._brokered_user_profile,
+            )
+        except UserProfile.DoesNotExist:
+            pass
+        return self._brokered_user_profile
+
+    @brokered_user_profile.setter
+    def brokered_user_profile(self, value: UserProfile) -> None:
+        """
+        Set the `UserProfile` model instance for the current brokered user.
+
+        :param value: A `UserProfile` instance to associate with the brokered user.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+              broker.brokered_user_profile = profile_instance
+
+        See Also:
+
+           - :class:`smarter.apps.account.models.UserProfile`
+        """
+        self._brokered_user_profile = value
+        logger.debug(
+            "%s.brokered_user_profile() set UserProfile: %s",
+            self.formatted_class_name,
+            value,
+        )
 
     @property
     def account_contact(self) -> Optional[AccountContact]:
@@ -234,12 +357,12 @@ class SAMUserBroker(AbstractBroker):
         """
         if self._account_contact:
             return self._account_contact
-        if not self.user:
+        if not self.brokered_user:
             return None
-        if not self.user.is_authenticated:
+        if not self.brokered_user.is_authenticated:
             return None
         try:
-            self._account_contact = AccountContact.objects.get(account=self.account, email=self.user.email)
+            self._account_contact = AccountContact.objects.get(account=self.account, email=self.brokered_user.email)
         except AccountContact.DoesNotExist:
             pass
         return self._account_contact
@@ -263,7 +386,7 @@ class SAMUserBroker(AbstractBroker):
 
            - :class:`smarter.apps.account.models.User`
         """
-        return self.user.username if self.user else None
+        return self.brokered_user.username if self.brokered_user else None
 
     def manifest_to_django_orm(self) -> dict:
         """
@@ -311,7 +434,7 @@ class SAMUserBroker(AbstractBroker):
 
            Field names are automatically converted from snake_case to camelCase for compatibility with Pydantic models.
 
-        :raises: :class:`SAMUserBrokerError` if `self.user` is not set.
+        :raises: :class:`SAMUserBrokerError` if `self.brokered_user` is not set.
 
         **Example usage:**
 
@@ -384,8 +507,8 @@ class SAMUserBroker(AbstractBroker):
         retval = super().name
         if retval:
             return retval
-        if self.user:
-            return str(self.user.username)
+        if self.brokered_user:
+            return str(self.brokered_user.username)
 
     @property
     def manifest(self) -> Optional[SAMUser]:
@@ -411,59 +534,52 @@ class SAMUserBroker(AbstractBroker):
         """
         if self._manifest:
             return self._manifest
-        if not self.user:
-            logger.warning("%s.manifest called with no user", self.formatted_class_name)
-            return None
         if not self.account:
             logger.warning("%s.manifest called with no account", self.formatted_class_name)
             return None
-        if not self.user_profile:
-            logger.warning("%s.manifest called with no user_profile", self.formatted_class_name)
-            return None
-
-        status = SAMUserStatus(
-            account_number=self.account.account_number,
-            username=self.user_profile.user.username,
-            created=self.user.date_joined,
-            modified=self.user.last_login or self.user.date_joined,
-        )
-        if self.user:
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
+        if self.loader and self.loader.manifest_kind == self.kind:
+            metadata = SAMUserMetadata(**self.loader.manifest_metadata)
+            spec = SAMUserSpec(**self.loader.manifest_spec)
+            self._manifest = SAMUser(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=metadata,
+                spec=spec,
+            )
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self.brokered_user:
             self._manifest = SAMUser(
                 apiVersion=self.api_version,
                 kind=self.kind,
                 metadata=SAMUserMetadata(
-                    name=self.user.username,
-                    description=self.user_profile.description or "no description",
-                    version=self.user_profile.version,
-                    username=self.user.username,
-                    tags=self.user_profile.tags.names(),
-                    annotations=self.user_profile.annotations,
+                    name=self.brokered_user.username,
+                    description=self.brokered_user_profile.description or "no description",
+                    version=self.brokered_user_profile.version,
+                    username=self.brokered_user_profile.username,
+                    tags=self.brokered_user_profile.tags.names(),
+                    annotations=self.brokered_user_profile.annotations,
                 ),
                 spec=SAMUserSpec(
                     config=SAMUserSpecConfig(
-                        firstName=self.user.first_name,
-                        lastName=self.user.last_name,
-                        email=self.user.email,
-                        isStaff=self.user.is_staff,
-                        isActive=self.user.is_active,
+                        firstName=self.brokered_user.first_name,
+                        lastName=self.brokered_user.last_name,
+                        email=self.brokered_user.email,
+                        isStaff=self.brokered_user.is_staff,
+                        isActive=self.brokered_user.is_active,
                     )
                 ),
-                status=status,
+                status=SAMUserStatus(
+                    account_number=self.account.account_number,
+                    username=self.brokered_user.username,
+                    created=self.brokered_user.date_joined,
+                    modified=self.brokered_user.last_login or self.brokered_user.date_joined,
+                ),
             )
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMUser(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMUserMetadata(**self.loader.manifest_metadata),
-                spec=SAMUserSpec(**self.loader.manifest_spec),
-                status=status,
-            )
-        if self._manifest:
-            # reset user after manifest is created so that it will be
-            # reinitialized from the manifest data on next access.
-            self.user = None
-        else:
+        if not self._manifest:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
@@ -504,7 +620,7 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        self.user = get_cached_smarter_admin_user_profile().user
+        self.brokered_user = get_cached_smarter_admin_user_profile().user
         data = self.django_orm_to_manifest_dict()
         return self.json_response_ok(command=command, data=data)
 
@@ -557,7 +673,7 @@ class SAMUserBroker(AbstractBroker):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for user in users:
             try:
-                self.user = user
+                self.brokered_user = user
                 model_dump = self.django_orm_to_manifest_dict()
                 if not model_dump:
                     raise SAMUserBrokerError(
@@ -624,36 +740,60 @@ class SAMUserBroker(AbstractBroker):
 
         if not self.manifest:
             raise SAMUserBrokerError("User manifest is not set", thing=self.kind, command=command)
-        if not self.user:
-            self.user = User()
-        if not self.user_profile:
-            self.user_profile = UserProfile(account=self.account, user=self.user)
 
         try:
             with transaction.atomic():
+                if not self.brokered_user:
+                    self.brokered_user = User(
+                        username=self.manifest.metadata.username,
+                        is_superuser=False,
+                    )
+                    logger.debug(
+                        "%s.apply() Created new (unsaved) User instance for %s", self.formatted_class_name, self.kind
+                    )
+                if not self.brokered_user_profile:
+                    self.brokered_user_profile = UserProfile(
+                        account=self.account,
+                        user=self.brokered_user,
+                        name=self.manifest.metadata.name,
+                    )
+                    logger.debug(
+                        "%s.apply() Created new (unsaved) UserProfile instance for %s",
+                        self.formatted_class_name,
+                        self.kind,
+                    )
+
                 # User model
                 data = self.manifest_to_django_orm()
                 for field in readonly_fields:
+                    logger.debug(
+                        "%s.apply() Removing readonly field %s from data for %s",
+                        self.formatted_class_name,
+                        field,
+                        self.kind,
+                    )
                     data.pop(field, None)
                 for key, value in data.items():
-                    setattr(self.user, key, value)
+                    setattr(self.brokered_user, key, value)
+                    logger.debug("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
 
                 # UserProfile model
-                self.user_profile.description = self.manifest.metadata.description
-                self.user_profile.version = self.manifest.metadata.version
+                self.brokered_user_profile.description = self.manifest.metadata.description
+                self.brokered_user_profile.version = self.manifest.metadata.version
                 # Convert tags to set for TaggableManager compatibility
                 tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
-                self.user_profile.tags = tags
-                self.user_profile.annotations = self.manifest.metadata.annotations
+                self.brokered_user_profile.tags = tags
+                self.brokered_user_profile.annotations = self.manifest.metadata.annotations
 
-                self.user.save()
-                self.user.refresh_from_db()
-                self.user_profile.save()
-                self.user_profile.refresh_from_db()
+                self.brokered_user.save()
+                self.brokered_user.refresh_from_db()
+                self.brokered_user_profile.save()
+                self.brokered_user_profile.refresh_from_db()
+                cache_invalidate(user=self.brokered_user, account=self.account)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
             raise SAMUserBrokerError(
-                f"Failed to apply {self.kind} {self.user.email if isinstance(self.user, User) else None}",
+                f"Failed to apply {self.kind} {self.brokered_user.email if isinstance(self.brokered_user, User) else None}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -698,7 +838,7 @@ class SAMUserBroker(AbstractBroker):
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
-        if not self.user:
+        if not self.brokered_user:
             raise SAMBrokerErrorNotFound(f"Failed to describe {self.kind}. Not found", thing=self.kind, command=command)
 
         try:
@@ -717,13 +857,13 @@ class SAMUserBroker(AbstractBroker):
                 command=command,
             ) from e
 
-        if self.user:
+        if self.brokered_user:
             try:
                 data = self.manifest.model_dump()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMUserBrokerError(
-                    f"Failed to describe {self.kind} {self.user.email}", thing=self.kind, command=command
+                    f"Failed to describe {self.kind} {self.brokered_user.email}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
@@ -746,7 +886,7 @@ class SAMUserBroker(AbstractBroker):
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
 
-        if not self.user:
+        if not self.brokered_user:
             raise SAMBrokerErrorNotFound(f"Failed to delete {self.kind}. Not found", thing=self.kind, command=command)
 
         if not isinstance(self.params, dict):
@@ -784,15 +924,15 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        if self.user:
+        if self.brokered_user:
             try:
-                if not self.user.is_active:
-                    self.user.is_active = True
-                    self.user.save()
+                if not self.brokered_user.is_active:
+                    self.brokered_user.is_active = True
+                    self.brokered_user.save()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(
-                    f"Failed to deploy {self.kind} {self.user.email}", thing=self.kind, command=command
+                    f"Failed to deploy {self.kind} {self.brokered_user.email}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
@@ -809,15 +949,15 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
-        if self.user:
+        if self.brokered_user:
             try:
-                if self.user.is_active:
-                    self.user.is_active = False
-                    self.user.save()
+                if self.brokered_user.is_active:
+                    self.brokered_user.is_active = False
+                    self.brokered_user.save()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(
-                    f"Failed to deploy {self.kind} {self.user.email}", thing=self.kind, command=command
+                    f"Failed to deploy {self.kind} {self.brokered_user.email}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 

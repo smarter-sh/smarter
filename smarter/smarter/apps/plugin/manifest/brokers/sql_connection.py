@@ -317,10 +317,18 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         """
         if self._manifest:
             return self._manifest
-        # If the Connection has previously been persisted then
-        # we can build the manifest components by mapping
-        # Django ORM models to Pydantic models.
-        if self._connection:
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMSqlConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
+            )
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self._connection:
             metadata = self.sam_connection_metadata()
             if not metadata:
                 raise SAMBrokerErrorNotImplemented(
@@ -369,17 +377,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 status=status,
             )
             return self._manifest
-
-        # Otherwise, if we received a manifest via the loader,
-        # then use that to build the manifest.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSqlConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
-            )
-        if not self._manifest:
+        else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 

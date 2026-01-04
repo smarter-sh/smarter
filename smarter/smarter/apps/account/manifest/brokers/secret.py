@@ -24,6 +24,7 @@ from smarter.apps.account.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.models import Secret
 from smarter.apps.account.signals import broker_ready
+from smarter.apps.account.utils import cache_invalidate
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -503,8 +504,18 @@ class SAMSecretBroker(AbstractBroker):
         if not self.user_profile:
             logger.warning("%s.manifest called with no user_profile", self.formatted_class_name)
             return None
-
-        if self._secret_transformer and self.secret:
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
+        if self.loader and self.loader.manifest_metadata and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMSecret(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMSecretMetadata(**self.loader.manifest_metadata),
+                spec=SAMSecretSpec(**self.loader.manifest_spec),
+            )
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self._secret_transformer and self.secret:
             self._manifest = SAMSecret(
                 apiVersion=self.api_version,
                 kind=self.kind,
@@ -530,13 +541,6 @@ class SAMSecretBroker(AbstractBroker):
                 ),
             )
             return self._manifest
-        if self.loader and self.loader.manifest_metadata and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSecret(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMSecretMetadata(**self.loader.manifest_metadata),
-                spec=SAMSecretSpec(**self.loader.manifest_spec),
-            )
         if not self._manifest:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
@@ -733,6 +737,7 @@ class SAMSecretBroker(AbstractBroker):
             try:
                 self.secret_transformer.save()
                 self.secret.refresh_from_db()
+                cache_invalidate(user=self.user, account=self.account)  # type: ignore
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
             return self.json_response_ok(command=command, data=self.to_json())

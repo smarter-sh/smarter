@@ -336,8 +336,8 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         if self._manifest:
             return self._manifest
 
-        # Otherwise, if we received a manifest via the loader,
-        # then use that to build the manifest.
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMStaticPlugin(
                 apiVersion=self.loader.manifest_api_version,
@@ -346,10 +346,9 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
             )
 
-        # If the Plugin has previously been persisted then
-        # we can build the manifest components by mapping
-        # Django ORM models to Pydantic models.
-        if self.plugin_meta:
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self.plugin_meta:
 
             metadata = self.plugin_metadata_orm2pydantic()
             data = self.plugin_static_spec_data_orm2pydantic()
@@ -375,7 +374,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 status=status,
             )
             return self._manifest
-        if not self._manifest:
+        else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 

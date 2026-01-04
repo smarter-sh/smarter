@@ -14,7 +14,6 @@ from smarter.apps.account.models import (
     UserProfile,
 )
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib.django import waffle
@@ -24,6 +23,7 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 HERE = formatted_text(__name__)
+COMMON_VERSION = "0.0.1"
 
 
 def should_log(level):
@@ -43,6 +43,9 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
     last_name = f"TestAdminLastName_{hashed_slug}"
 
     account = account or Account.objects.create(
+        name=f"test_account_admin_user_{hashed_slug}",
+        description="Account for admin user testing purposes",
+        version=COMMON_VERSION,
         is_default_account=True,
         is_active=True,
         company_name=f"TestAccount_AdminUser_{hashed_slug}",
@@ -77,11 +80,11 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
 
     user_profile = UserProfile.objects.create(
         name=user.username,
+        description="Admin user profile for testing purposes",
+        version=COMMON_VERSION,
         user=user,
         account=account,
         is_test=True,
-        description="Admin user profile for testing purposes",
-        version="1.0.0",
         annotations=[{"smarter.sh/role": "admin"}, {"smarter.sh/environment": "test"}],
     )
     user_profile.tags.set(["admin", "test"])
@@ -97,6 +100,9 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
     last_name = f"TestMortalLastName_{hashed_slug}"
 
     account = account or Account.objects.create(
+        name=f"test_account_mortal_user_{hashed_slug}",
+        description="Account for mortal user testing purposes",
+        version=COMMON_VERSION,
         is_default_account=True,
         is_active=True,
         company_name=f"TestAccount_MortalUser_{hashed_slug}",
@@ -131,11 +137,11 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
 
     user_profile = UserProfile.objects.create(
         name=user.username,
+        description="Mortal user profile for testing purposes",
+        version=COMMON_VERSION,
         user=user,
         account=account,
         is_test=True,
-        description="Mortal user profile for testing purposes",
-        version="1.0.0",
         annotations=[{"smarter.sh/role": "mortal"}, {"smarter.sh/environment": "test"}],
     )
     user_profile.tags.set(["mortal", "test"])

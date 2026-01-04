@@ -295,7 +295,6 @@ class Account(MetaDataModel):
         if self.account_number == "9999-9999-9999":
             self.account_number = self.randomized_account_number()
 
-        self.name = self.account_number.replace("-", "_") or self.name
         SmarterValidator.validate_account_number(self.account_number)
         super().save(*args, **kwargs)
 
@@ -725,7 +724,6 @@ class UserProfile(MetaDataWithOwnershipModel):
 
         """
         is_new = self.pk is None
-        self.name = self.user.username or self.name
 
         if self.user is None or self.account is None:
             raise SmarterValueError("User and Account cannot be null")

@@ -277,7 +277,7 @@ class SAMAccountBroker(AbstractBroker):
         if not retval:
             logger.warning("%s.ready() base class indicates not ready for %s", self.formatted_class_name, self.kind)
             return False
-        retval = self.manifest is not None or self.account is not None
+        retval = self._manifest is not None or self.account is not None
         logger.debug(
             "%s.ready() manifest presence indicates ready=%s for %s",
             self.formatted_class_name,
@@ -326,7 +326,7 @@ class SAMAccountBroker(AbstractBroker):
         if retval:
             return retval
         if self.account:
-            return str(self.account.name) or self.account.account_number
+            return str(self.account.name)
 
     @property
     def manifest(self) -> Optional[SAMAccount]:
@@ -360,29 +360,22 @@ class SAMAccountBroker(AbstractBroker):
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
         if self.loader and self.loader.manifest_kind == self.kind:
-            logger.debug(
-                "%s.manifest() initializing from loader for %s %s", self.formatted_class_name, self.kind, self.name
-            )
-            metadata = {**self.loader.manifest_metadata}
-            spec = {
-                "config": SAMAccountSpecConfig(**self.loader.manifest_spec),
-            }
             self._manifest = SAMAccount(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMAccountMetadata(**metadata),
-                spec=SAMAccountSpec(**spec),
+                metadata=SAMAccountMetadata(**self.loader.manifest_metadata),
+                spec=SAMAccountSpec(**self.loader.manifest_spec),
                 status=None,
             )
+            logger.debug(
+                "%s.manifest() initialized from loader: %s",
+                self.formatted_class_name,
+                self._manifest.model_dump(),
+            )
+            return self._manifest
         # 2.) next, (and only if a loader is not available) try to initialize
         #     from existing Account model if available
         elif self.account:
-            logger.debug(
-                "%s.manifest() initializing from existing Account for %s %s",
-                self.formatted_class_name,
-                self.kind,
-                self.name,
-            )
             account_number = str(self.account.account_number)
             status = SAMAccountStatus(
                 adminAccount=account_number,
@@ -417,13 +410,13 @@ class SAMAccountBroker(AbstractBroker):
                 spec=SAMAccountSpec(config=config),
                 status=status,
             )
+            logger.debug(
+                "%s.manifest() initialized from Account %s: %s",
+                self.formatted_class_name,
+                self.account,
+                serializers.serialize("json", [self.account]),
+            )
             return self._manifest
-
-        if self._manifest:
-            if self.account and self._manifest.metadata.accountNumber != self.account.account_number:
-                raise SAMBrokerError(
-                    f"Manifest account number {self._manifest.metadata.accountNumber} does not match account number {self.account.account_number}"
-                )
         else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
