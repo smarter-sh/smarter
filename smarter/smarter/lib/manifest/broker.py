@@ -16,7 +16,6 @@ from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import (
     formatted_text,
     formatted_text_green,
@@ -63,6 +62,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(__name__ + ".AbstractBroker()")
 
 
 class SAMBrokerError(SAMExceptionBase):
@@ -165,8 +165,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _loader: Optional[SAMLoader] = None
     _manifest: Optional[Union[AbstractSAMBase, dict]] = None
     _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
-    _name: Optional[str]
-    _kind: Optional[str]
+    _name: Optional[str] = None
+    _kind: Optional[str] = None
     _validated: bool = False
     _thing: Optional[SmarterJournalThings] = None
     _created: bool = False
@@ -193,59 +193,73 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
         logger.info(
             "%s.__init__() initializing request: %s, args: %s, kwargs: %s",
-            self.formatted_class_name,
+            logger_prefix,
             self.request,
             args,
             kwargs,
         )
         self._api_version = api_version
-        self._name = name  # i suspect that this is always None bc DRF sets name later in the process
-        self._kind = kind
+
+        for arg in args:
+            if isinstance(arg, SAMLoader):
+                logger.debug("%s.__init__() found SAMLoader in args, assigning to loader", logger_prefix)
+                loader = arg
+                self._loader = arg
+                break
+            if isinstance(arg, AbstractSAMBase):
+                logger.debug("%s.__init__() found AbstractSAMBase in args, assigning to manifest", logger_prefix)
+                manifest = arg
+                self._manifest = arg
+                break
+        if not isinstance(loader, SAMLoader):
+            for value in kwargs.values():
+                if isinstance(value, SAMLoader):
+                    logger.debug("%s.__init__() found SAMLoader in kwargs, assigning to loader", logger_prefix)
+                    loader = value
+                    self._loader = value
+                    break
+                if isinstance(value, AbstractSAMBase):
+                    logger.debug("%s.__init__() found AbstractSAMBase in kwargs, assigning to manifest", logger_prefix)
+                    manifest = value
+                    self._manifest = value
+                    break
+
         if isinstance(file_path, str) and file_path:
             self._loader = SAMLoader(file_path=file_path)
-            logger.info("%s.__init__() initialized loader from file_path: %s", self.formatted_class_name, file_path)
+            logger.info("%s.__init__() initialized loader from file_path: %s", logger_prefix, file_path)
             self._kind = self._loader.manifest_kind if self._loader.manifest_kind else self._kind
             if isinstance(self._kind, str):
-                logger.info("%s.__init__() set kind to %s from loader", self.formatted_class_name, self._kind)
+                logger.info("%s.__init__() set kind to %s from loader", logger_prefix, self._kind)
             self._name = self._loader.manifest_metadata.get("name") if self._loader.manifest_metadata else self._name
             if self._name:
-                logger.info("%s.__init__() set name to %s from loader metadata", self.formatted_class_name, self._name)
+                logger.info("%s.__init__() set name to %s from loader metadata", logger_prefix, self._name)
 
-        if isinstance(manifest, AbstractSAMBase):
+        if isinstance(manifest, AbstractSAMBase) and not self._manifest:
             self._manifest = manifest
-            logger.info("%s.__init__() successfully initialized manifest: %s", self.formatted_class_name, self.manifest)
-        if isinstance(manifest, dict):
+            logger.info("%s.__init__() successfully initialized manifest: %s", logger_prefix, self.manifest)
+        if isinstance(manifest, dict) and not self._manifest:
             if not isinstance(loader, SAMLoader):
                 self._loader = SAMLoader(manifest=manifest)
-                logger.info(
-                    "%s.__init__() initialized loader from manifest data: %s", self.formatted_class_name, self.manifest
-                )
-        if isinstance(loader, SAMLoader):
+                logger.info("%s.__init__() initialized loader from manifest data: %s", logger_prefix, self.manifest)
+        if isinstance(loader, SAMLoader) and not self._loader:
             self._loader = loader
-            logger.info("%s.__init__() received %s loader", self.formatted_class_name, self._loader.manifest_kind)
+            logger.info("%s.__init__() received %s loader", logger_prefix, self._loader.manifest_kind)
             logger.info(
                 "%s.__init__() loader initialized with manifest kind: %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self._loader.manifest_kind,
             )
             self._kind = self._loader.manifest_kind if self._loader.manifest_kind else self._kind
             if isinstance(self._kind, str):
-                logger.info("%s.__init__() set kind to %s from loader", self.formatted_class_name, self._kind)
+                logger.info("%s.__init__() set kind to %s from loader", logger_prefix, self._kind)
             self._name = self._loader.manifest_metadata.get("name") if self._loader.manifest_metadata else self._name
             if self._name:
-                logger.info("%s.__init__() set name to %s from loader metadata", self.formatted_class_name, self._name)
+                logger.info("%s.__init__() set name to %s from loader metadata", logger_prefix, self._name)
 
-        if self.user:
-            logger.info("%s.__init__() received user: %s", self.formatted_class_name, self.user_profile)
-
-        if self._name:
-            logger.info("%s.__init__() set name to %s", self.formatted_class_name, self._name)
-
-        self._kind = self._kind or self.loader.manifest_kind if self.loader else None
         self._created = False
         self._validated = bool(manifest) or bool(self.loader and self.loader.ready)
 
-        msg = f"{self.formatted_class_name}.__init__() {self.kind} broker is {self.abstract_broker_ready_state} with api_version: {self.api_version}, user: {self.user_profile}, name: {self.name}, validated: {self._validated}, manifest: {bool(self._manifest)}, loader: {bool(self._loader)}"
+        msg = f"{logger_prefix}.__init__() {self.kind} broker is {self.abstract_broker_ready_state} with api_version: {self.api_version}, user: {self.user_profile}, name: {self.name}, validated: {self._validated}, manifest: {bool(self._manifest)}, loader: {bool(self._loader)}"
         if self.is_ready_abstract_broker:
             logger.info(msg)
         else:
@@ -270,12 +284,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if not bool(self._manifest):
             logger.warning(
                 "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
-                self.formatted_class_name,
+                logger_prefix,
             )
         if not bool(self.loader) or not self.loader.ready:
             logger.warning(
                 "%s.is_ready_abstract_broker() returning false because loader is not ready.",
-                self.formatted_class_name,
+                logger_prefix,
             )
         return False
 
@@ -303,7 +317,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if not retval:
             logger.warning(
                 "%s.ready() parent class indicates not ready for kind=%s",
-                self.formatted_class_name,
+                logger_prefix,
                 self.kind,
             )
             return False
@@ -444,19 +458,24 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         if self._name:
             return self._name
-        if self.manifest:
+        if self._manifest:
             self._name = self.manifest.metadata.name
-            logger.info("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
+            logger.info("%s.name() set name to %s from manifest metadata", logger_prefix, self._name)
             return self._name
         if self.loader:
+            logger.warning(
+                "%s.name() encountered a SAMLoader while attempting to retrieve name from loader metadata. This should not happen as manifest should have already been set. self.loader.manifest_metadata: %s",
+                logger_prefix,
+                self.loader.manifest_metadata,
+            )
             self._name = self.loader.manifest_metadata.get("name")
             if self._name:
-                logger.info("%s.name() set name to %s from loader metadata", self.formatted_class_name, self._name)
+                logger.info("%s.name() set name to %s from loader metadata", logger_prefix, self._name)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
             if name_param:
                 self._name = name_param
-                logger.info("%s.__init__() set name to %s from name url param", self.formatted_class_name, self._name)
+                logger.info("%s.__init__() set name to %s from name url param", logger_prefix, self._name)
         return self._name
 
     @property
@@ -539,11 +558,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 spec=AbstractSAMSpecBase(**self.loader.manifest_spec),
                 status=AbstractSAMStatusBase(**self.loader.manifest_status),
             )
-            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
+            logger.info("%s.manifest() initialized manifest from loader", logger_prefix)
         else:
             logger.warning(
                 "%s.manifest() returning None: expected loader.manifest_kind of %s but received %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self.kind,
                 self.loader.manifest_kind if self.loader else None,
             )
@@ -579,7 +598,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         logger.info(
             "%s.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
-            self.formatted_class_name,
+            logger_prefix,
             request,
             args,
             kwargs,
@@ -772,7 +791,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         except Secret.DoesNotExist as e:
             logger.info(
                 "%s.get_or_create_secret() Secret %s not found for user %s",
-                self.formatted_class_name,
+                logger_prefix,
                 name,
                 user_profile.user.username,
             )

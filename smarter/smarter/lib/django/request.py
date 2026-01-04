@@ -70,6 +70,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(__name__ + ".SmarterRequestMixin")
 
 SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock]]
 """Type alias for all Smarter request types."""
@@ -170,7 +171,7 @@ class SmarterRequestMixin(AccountMixin):
         else:
             logger.debug(
                 "%s.__init__() - request is None. SmarterRequestMixin will be partially initialized. This might affect request processing.",
-                self.formatted_class_name,
+                logger_prefix,
             )
             super().__init__(request, *args, api_token=self.api_token, **kwargs)
         if self.smarter_request:
@@ -178,7 +179,7 @@ class SmarterRequestMixin(AccountMixin):
 
         logger.info(
             "%s.__init__() is %s - %s",
-            formatted_text(__name__ + ".SmarterRequestMixin"),
+            logger_prefix,
             self.request_mixin_ready_state,
             self.url if self._url else "URL not initialized",
         )
@@ -210,18 +211,14 @@ class SmarterRequestMixin(AccountMixin):
         """
         url = smarter_build_absolute_uri(self.smarter_request) if self.smarter_request else None
 
-        logger.info(
-            "%s.init() - initializing with request=%s, args=%s, kwargs=%s", self.formatted_class_name, url, args, kwargs
-        )
+        logger.info("%s.init() - initializing with request=%s, args=%s, kwargs=%s", logger_prefix, url, args, kwargs)
 
         if url is None:
-            raise SmarterValueError(
-                f"{self.formatted_class_name}.__init__() - request url is None or empty. request={request}"
-            )
+            raise SmarterValueError(f"{logger_prefix}.__init__() - request url is None or empty. request={request}")
 
         self._parse_result = urlparse(url)
         if not self._parse_result.scheme or not self._parse_result.netloc:
-            raise SmarterValueError(f"{self.formatted_class_name} - request url is not a valid URL. url={url}")
+            raise SmarterValueError(f"{logger_prefix} - request url is not a valid URL. url={url}")
 
         # rebuild the url minus any query parameters
         # example:
@@ -234,7 +231,7 @@ class SmarterRequestMixin(AccountMixin):
 
         logger.info(
             "%s.init() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s auth_header=%s user_profile=%s, account=%s",
-            self.formatted_class_name,
+            logger_prefix,
             self._instance_id,
             request,
             args,
@@ -248,7 +245,7 @@ class SmarterRequestMixin(AccountMixin):
             SmarterValidator.validate_session_key(self._session_key)
             logger.info(
                 "%s.init() - session_key is set to %s from kwargs",
-                self.formatted_class_name,
+                logger_prefix,
                 self._session_key,
             )
 
@@ -264,7 +261,7 @@ class SmarterRequestMixin(AccountMixin):
             if self.account and not self._user:
                 logger.debug(
                     "%s.init() - account (%s) is set but user is not.",
-                    self.formatted_class_name,
+                    logger_prefix,
                     self.account,
                 )
 
@@ -275,7 +272,7 @@ class SmarterRequestMixin(AccountMixin):
                 f"init() {self._instance_id} initialized successfully url={self.url}, session_key={self.session_key}, user={self.user_profile}"
             )
         else:
-            msg = f"{self.formatted_class_name}.init() - request {self._instance_id} is not ready. request={self.smarter_request}"
+            msg = f"{logger_prefix}.init() - request {self._instance_id} is not ready. request={self.smarter_request}"
             logger.warning(msg)
 
         logger.debug(
@@ -335,7 +332,7 @@ class SmarterRequestMixin(AccountMixin):
         if request is not None:
             logger.info(
                 "%s.smarter_request setter called with request: %s",
-                self.formatted_class_name,
+                logger_prefix,
                 smarter_build_absolute_uri(request),
             )
             self.init(request)
@@ -469,7 +466,7 @@ class SmarterRequestMixin(AccountMixin):
 
         logger.error(
             "%s.url() property was accessed before it was initialized. request: %s",
-            self.formatted_class_name,
+            logger_prefix,
             self.smarter_request,
         )
         raise SmarterValueError("The URL has not been initialized. Please check the request object.")
@@ -531,7 +528,7 @@ class SmarterRequestMixin(AccountMixin):
             except AttributeError as e:
                 logger.error(
                     "%s.params() internal error. Could not parse query string parameters: %s",
-                    self.formatted_class_name,
+                    logger_prefix,
                     e,
                 )
                 return None
@@ -585,7 +582,7 @@ class SmarterRequestMixin(AccountMixin):
         if not self.smarter_request:
             logger.warning(
                 "%s.cache_key() - request is None or not set. Cannot generate cache key.",
-                self.formatted_class_name,
+                logger_prefix,
             )
             return None
 
@@ -621,7 +618,7 @@ class SmarterRequestMixin(AccountMixin):
         if not self._session_key:
             self._session_key = self.find_session_key() or self.generate_session_key()
             SmarterValidator.validate_session_key(self._session_key)
-            logger.info("%s.session_key() - setting session_key to %s", self.formatted_class_name, self._session_key)
+            logger.info("%s.session_key() - setting session_key to %s", logger_prefix, self._session_key)
         return self._session_key
 
     @property
@@ -704,7 +701,7 @@ class SmarterRequestMixin(AccountMixin):
             except Exception:
                 logger.error(
                     "%s.smarter_request_chatbot_name() - failed to extract chatbot name from url: %s",
-                    self.formatted_class_name,
+                    logger_prefix,
                     self.url,
                 )
         # 3.) http://localhost:8000/api/v1/workbench/<int:chatbot_id>
@@ -723,7 +720,7 @@ class SmarterRequestMixin(AccountMixin):
             except Exception:
                 logger.error(
                     "%s.smarter_request_chatbot_name() - failed to extract chatbot name from url: %s",
-                    self.formatted_class_name,
+                    logger_prefix,
                     self.url,
                 )
 
@@ -770,7 +767,7 @@ class SmarterRequestMixin(AccountMixin):
             return None
 
         if not self.smarter_request:
-            logger.warning("%s.data() - request is None or not set.", self.formatted_class_name)
+            logger.warning("%s.data() - request is None or not set.", logger_prefix)
             return {}
         try:
             body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
@@ -781,7 +778,7 @@ class SmarterRequestMixin(AccountMixin):
                     self._data = json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
                     logger.info(
                         "%s.data() - initialized json from request body: %s",
-                        self.formatted_class_name,
+                        logger_prefix,
                         body_str,
                     )
                 except json.JSONDecodeError:
@@ -789,13 +786,13 @@ class SmarterRequestMixin(AccountMixin):
                         self._data = yaml.safe_load(body_str) if body_str else {}
                         logger.info(
                             "%s.data() - initialized json from parsed yaml request body: %s",
-                            self.formatted_class_name,
+                            logger_prefix,
                             body_str,
                         )
                     except yaml.YAMLError:
                         logger.error(
                             "%s.data() - failed to parse request body: %s",
-                            self.formatted_class_name,
+                            logger_prefix,
                             body_str,
                         )
                 self._data = self._data or {}
@@ -807,13 +804,13 @@ class SmarterRequestMixin(AccountMixin):
                     self._data = yaml.safe_load(body_str) if body_str else {}
                     logger.info(
                         "%s.data() - initialized from parsed request body as yaml: %s",
-                        self.formatted_class_name,
+                        logger_prefix,
                         body_str,
                     )
             except yaml.YAMLError:
                 logger.error(
                     "%s - failed to parse request body as JSON or YAML. request.body=%s",
-                    self.formatted_class_name,
+                    logger_prefix,
                     body_str,
                 )
 
@@ -1113,7 +1110,7 @@ class SmarterRequestMixin(AccountMixin):
         if account_number is not None:
             logger.info(
                 "%s.is_chatbot_named_url() - url is a named url with account number: %s",
-                self.formatted_class_name,
+                logger_prefix,
                 account_number,
             )
             if self.account is None:
@@ -1153,12 +1150,12 @@ class SmarterRequestMixin(AccountMixin):
             bool: True if the URL matches a chatbot sandbox endpoint, otherwise False.
         """
         if not self.smarter_request:
-            logger.warning("%s.is_chatbot_sandbox_url() - request is None or not set.", self.formatted_class_name)
+            logger.warning("%s.is_chatbot_sandbox_url() - request is None or not set.", logger_prefix)
             return False
         if not self.qualified_request:
             return False
         if not self._parse_result:
-            logger.warning("%s.is_chatbot_sandbox_url() - url is None or not set.", self.formatted_class_name)
+            logger.warning("%s.is_chatbot_sandbox_url() - url is None or not set.", logger_prefix)
             return False
 
         # smarter api - http://localhost:8000/api/v1/prompt/1/chat/
@@ -1197,7 +1194,7 @@ class SmarterRequestMixin(AccountMixin):
 
         logger.warning(
             "%s.is_chatbot_sandbox_url() - could not verify whether url is a chatbot sandbox url: %s",
-            self.formatted_class_name,
+            logger_prefix,
             path_parts,
         )
         return False
@@ -1354,7 +1351,7 @@ class SmarterRequestMixin(AccountMixin):
         if not isinstance(self._smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
             logger.warning(
                 "%s.is_requestmixin_ready() - %s request is not a HttpRequest. Received %s. Cannot process request.",
-                self.formatted_class_name,
+                logger_prefix,
                 self._instance_id,
                 type(self._smarter_request).__name__,
             )
@@ -1362,7 +1359,7 @@ class SmarterRequestMixin(AccountMixin):
         if not isinstance(self._parse_result, ParseResult):
             logger.warning(
                 "%s.is_requestmixin_ready() - %s _parse_result is not a ParseResult. Received %s. Cannot process request.",
-                self.formatted_class_name,
+                logger_prefix,
                 self._instance_id,
                 type(self._parse_result).__name__,
             )
@@ -1370,7 +1367,7 @@ class SmarterRequestMixin(AccountMixin):
         if not isinstance(self._url, str):
             logger.warning(
                 "%s.is_requestmixin_ready() - %s _url is not a string. Received %s. Cannot process request.",
-                self.formatted_class_name,
+                logger_prefix,
                 self._instance_id,
                 type(self._url).__name__,
             )
@@ -1585,7 +1582,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         Create a log entry
         """
-        logger.info("%s %s", self.formatted_class_name, message)
+        logger.info("%s %s", logger_prefix, message)
 
     def dump(self):
         """
