@@ -214,6 +214,10 @@ class SAMAccountBroker(AbstractBroker):
     @property
     def brokered_account(self) -> Optional[Account]:
         """
+        In order to disambiguate between the AccountMixin.account
+        (the authenticated account making the request) and the Account
+        resource being brokered, we use the term "brokered_account".
+
         Get the Django ORM `Account` instance associated with this broker.
 
         :returns: The `Account` instance if set, otherwise None.

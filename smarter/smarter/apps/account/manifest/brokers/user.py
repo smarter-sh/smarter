@@ -211,6 +211,10 @@ class SAMUserBroker(AbstractBroker):
     @property
     def brokered_user(self) -> Optional[User]:
         """
+        In order to disambiguate between the AccountMixin.user
+        (the authenticated user making the request) and the User
+        resource being brokered, we use the term "brokered_user".
+
         Retrieve the `User` model instance associated with the current broker.
 
         :returns: A `User` instance if found, otherwise `None`.
@@ -270,6 +274,10 @@ class SAMUserBroker(AbstractBroker):
     @property
     def brokered_user_profile(self) -> Optional[UserProfile]:
         """
+        The UserProfile associated with the brokered user. This disambiguates
+        between the AccountMixin.user_profile (the profile of the authenticated
+        user making the request) and the UserProfile resource being brokered.
+
         Retrieve the `UserProfile` model instance associated with the current brokered user.
 
         :returns: A `UserProfile` instance if found, otherwise `None`.
