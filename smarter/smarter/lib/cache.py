@@ -556,11 +556,30 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             return result
 
         def invalidate(*args, **kwargs):
+            """
+            Invalidates the cached result for the given arguments.
+            This method can be called on the decorated function to manually clear
+            the cache for specific input parameters.
+            :param args: Positional arguments for which to invalidate the cache.
+            :type args: tuple
+            :param kwargs: Keyword arguments for which to invalidate the cache.
+            :type kwargs: dict
+            """
+            if logging_enabled and lazy_cache.cache_logging:
+                logger.info(
+                    "%s -> %s().invalidate() called with args: %s kwargs: %s",
+                    logger_prefix_normal,
+                    func.__name__,
+                    args,
+                    kwargs,
+                )
             key_data: Optional[bytes] = generate_key_data(func, args, kwargs)
             if key_data is None:
                 return
             cache_key: str = generate_cache_key(func, key_data)
             if lazy_cache.has_key(cache_key):
+                cached_value = lazy_cache.get(cache_key)
+                logger.info("%s found cache entry for %s: %s", logger_prefix_normal, cache_key, str(cached_value))
                 lazy_cache.delete(cache_key)
                 msg = f"{logger_prefix_normal} invalidated cache entry for {cache_key}"
                 if logging_enabled and lazy_cache.cache_logging:

@@ -18,7 +18,7 @@ from smarter.apps.account.manifest.models.account.spec import (
 from smarter.apps.account.manifest.models.account.status import SAMAccountStatus
 from smarter.apps.account.models import Account
 from smarter.apps.account.signals import broker_ready
-from smarter.apps.account.utils import get_cached_smarter_account
+from smarter.apps.account.utils import cache_invalidate, get_cached_smarter_account
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -357,7 +357,26 @@ class SAMAccountBroker(AbstractBroker):
         """
         if self._manifest:
             return self._manifest
-        if self.account:
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
+        if self.loader and self.loader.manifest_kind == self.kind:
+            logger.debug(
+                "%s.manifest() initializing from loader for %s %s", self.formatted_class_name, self.kind, self.name
+            )
+            metadata = {**self.loader.manifest_metadata}
+            spec = {
+                "config": SAMAccountSpecConfig(**self.loader.manifest_spec),
+            }
+            self._manifest = SAMAccount(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMAccountMetadata(**metadata),
+                spec=SAMAccountSpec(**spec),
+                status=None,
+            )
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self.account:
             logger.debug(
                 "%s.manifest() initializing from existing Account for %s %s",
                 self.formatted_class_name,
@@ -400,26 +419,11 @@ class SAMAccountBroker(AbstractBroker):
             )
             return self._manifest
 
-        if self.loader and self.loader.manifest_kind == self.kind:
-            logger.debug(
-                "%s.manifest() initializing from loader for %s %s", self.formatted_class_name, self.kind, self.name
-            )
-            metadata = {**self.loader.manifest_metadata}
-            spec = {
-                "config": SAMAccountSpecConfig(**self.loader.manifest_spec),
-            }
-            self._manifest = SAMAccount(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMAccountMetadata(**metadata),
-                spec=SAMAccountSpec(**spec),
-                status=None,
-            )
         if self._manifest:
-            logger.debug("%s.manifest() resettings self.account for %s", self.formatted_class_name, self.name)
-            # reset account after manifest is created so that it will be
-            # reinitialized from the manifest data on next access.
-            self.account = None
+            if self.account and self._manifest.metadata.accountNumber != self.account.account_number:
+                raise SAMBrokerError(
+                    f"Manifest account number {self._manifest.metadata.accountNumber} does not match account number {self.account.account_number}"
+                )
         else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
@@ -583,8 +587,8 @@ class SAMAccountBroker(AbstractBroker):
                 data.pop(field, None)
             for key, value in data.items():
                 setattr(self.account, key, value)
-                logger.info("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
-            logger.info(
+                logger.debug("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
+            logger.debug(
                 "%s.apply() Saving %s: %s",
                 self.formatted_class_name,
                 self.account,
@@ -594,7 +598,8 @@ class SAMAccountBroker(AbstractBroker):
             tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
             self.account.tags.set(tags)
             self.account.refresh_from_db()
-            logger.info(
+            cache_invalidate(user=self.user, account=self.account)  # type: ignore
+            logger.debug(
                 "%s.apply() Saved %s with ID %s: %s",
                 self.formatted_class_name,
                 self.account,

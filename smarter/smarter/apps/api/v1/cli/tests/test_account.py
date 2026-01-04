@@ -9,7 +9,6 @@ from django.urls import reverse
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
@@ -171,7 +170,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         change_set["address2"] = "Piso 19"
         change_set["city"] = "CDMX"
         change_set["companyName"] = "test data"
-        change_set["country"] = "Mexico"
+        change_set["country"] = "MX"
         change_set["currency"] = "MXN"
         change_set["language"] = "es-ES"
         change_set["phoneNumber"] = "+1 617 834 6172"
@@ -354,7 +353,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         self.assertEqual(config["city"], "CDMX", f"city did not persist correctly in apply: {config}")
         self.assertEqual(config["state"], "CDMX", f"state did not persist correctly in apply: {config}")
         self.assertEqual(config["postalCode"], "06600", f"postalCode did not persist correctly in apply: {config}")
-        self.assertEqual(config["country"], "Mexico", f"country did not persist correctly in apply: {config}")
+        self.assertEqual(config["country"], "MX", f"country did not persist correctly in apply: {config}")
         self.assertEqual(config["language"], "es-ES", f"language did not persist correctly in apply: {config}")
         self.assertEqual(
             config["timezone"], "America/Mexico_City", f"timezone did not persist correctly in apply: {config}"

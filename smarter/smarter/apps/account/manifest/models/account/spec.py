@@ -79,13 +79,15 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
     @field_validator("currency")
     def validate_currency(cls, v):
         if not pycountry.currencies.get(alpha_3=v):
-            raise SmarterValueError("Invalid ISO 4217 currency code")
+            raise SmarterValueError("Invalid ISO 4217 currency code. Use 3-letter code. Example: 'USD'")
         return v
 
     @field_validator("country")
     def validate_country(cls, v):
         if not pycountry.countries.get(alpha_2=v) and not pycountry.countries.get(alpha_3=v):
-            raise SmarterValueError("Invalid ISO 3166 country code")
+            raise SmarterValueError(
+                "Invalid ISO 3166 country code. Use 2-letter or 3-letter code. Example: 'US' or 'USA'"
+            )
         return v
 
     @field_validator("language")
@@ -99,7 +101,7 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
         if len(parts) > 1:
             region_code = parts[1]
             if not pycountry.countries.get(alpha_2=region_code):
-                raise SmarterValueError("Invalid BCP 47 language tag")
+                raise SmarterValueError("Invalid BCP 47 language tag. Example: 'en' or 'en-US'")
         return v
 
     @field_validator("timezone")
@@ -107,7 +109,7 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
         try:
             zoneinfo.ZoneInfo(v)
         except Exception as e:
-            raise SmarterValueError("Invalid IANA timezone") from e
+            raise SmarterValueError("Invalid IANA timezone. Example: 'America/New_York'") from e
         return v
 
 
