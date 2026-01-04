@@ -1,7 +1,5 @@
 """Test cases for the cache decorators."""
 
-from unittest.mock import Mock, patch
-
 from smarter.lib.cache import LazyCache, cache_results
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
