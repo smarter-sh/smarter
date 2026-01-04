@@ -29,7 +29,7 @@ from smarter.apps.plugin.models import (
 )
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.signals import broker_ready
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -50,6 +50,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(__name__ + ".SAMPluginBaseBroker")
 
 
 class SAMPluginBaseBroker(AbstractBroker):
@@ -86,12 +87,12 @@ class SAMPluginBaseBroker(AbstractBroker):
         """
         retval = super().ready
         if not retval:
-            logger.warning("%s.ready() base class indicates not ready for %s", self.formatted_class_name, self.kind)
+            logger.warning("%s.ready() base class indicates not ready for %s", logger_prefix, self.kind)
             return False
         retval = self.manifest is not None or self.plugin is not None
         logger.debug(
             "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
+            logger_prefix,
             retval,
             self.kind,
         )
@@ -341,7 +342,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 )
             logger.info(
                 "%s.describe() PluginMeta %s %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self.kind,
                 metadata,
             )
@@ -349,7 +350,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             return metadata
         except PluginMeta.DoesNotExist as e:
             raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} PluginMeta does not exist for {self.plugin.name}",
+                f"{logger_prefix} {self.kind} PluginMeta does not exist for {self.plugin.name}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -623,7 +624,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 )
             logger.info(
                 "%s.describe() PluginSelector %s %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self.kind,
                 plugin_selector,
             )
@@ -631,7 +632,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             return plugin_selector
         except PluginSelector.DoesNotExist as e:
             raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
+                f"{logger_prefix} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -672,4 +673,4 @@ class SAMPluginBaseBroker(AbstractBroker):
                 print(response.status, response.data)
         """
         super().apply(request, kwargs)
-        logger.info("%s.apply() called %s with args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs)
+        logger.info("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
