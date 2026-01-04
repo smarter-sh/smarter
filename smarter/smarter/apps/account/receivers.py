@@ -9,7 +9,6 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -69,6 +68,7 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
         created,
     )
     if not created:
+        logger.info("%s invalidating cache for User: %s", formatted_text(f"{module_prefix}.user_post_save()"), instance)
         cache_invalidate(user=instance)
 
 
@@ -93,6 +93,11 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
         created,
     )
     if not created:
+        logger.info(
+            "%s invalidating cache for UserProfile: %s",
+            formatted_text(f"{module_prefix}.user_profile_post_save()"),
+            instance,
+        )
         cache_invalidate(user=instance.user, account=instance.account)
 
 
@@ -113,11 +118,13 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
     model_prefix = formatted_text(f"{module_prefix}.account_post_save()")
     account_json = json.dumps(model_to_dict(instance))
     if created:
-        logger.info("%s Account created: %s", model_prefix, instance)
+        logger.info("%s Account created: %s", model_prefix, account_json)
     else:
+        logger.info("%s Account updated: %s", model_prefix, account_json)
+        logger.info(
+            "%s invalidating cache for Account: %s", formatted_text(f"{module_prefix}.account_post_save()"), instance
+        )
         cache_invalidate(account=instance)
-
-    logger.info("%s instance: %s", model_prefix, account_json)
 
 
 @receiver(post_delete, sender=Account)
