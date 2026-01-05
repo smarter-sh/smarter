@@ -46,7 +46,6 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_green,
     formatted_text_red,
 )
-from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
