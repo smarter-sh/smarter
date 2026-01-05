@@ -4,7 +4,6 @@ import logging
 from http import HTTPStatus
 
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.utils.decorators import method_decorator
 from rest_framework.authentication import SessionAuthentication
@@ -13,7 +12,6 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from smarter.apps.api.signals import api_request_completed, api_request_initiated
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
@@ -38,7 +36,6 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 # ------------------------------------------------------------------------------
 
 
-@method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
     """Smarter base class for DRF API detail views that require authentication.
 
@@ -64,13 +61,13 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
             request (HttpRequest): The incoming HTTP request.
         """
         if not self.is_requestmixin_ready:
-            logger.info(
+            logger.debug(
                 "%s.initial() - completing initialization of SmarterRequestMixin with request: %s",
                 self.formatted_class_name,
                 request.build_absolute_uri(),
             )
             self.smarter_request = request
-        logger.info(
+        logger.debug(
             "%s.initial() - request: %s, args: %s, kwargs: %s",
             self.formatted_class_name,
             self.request,
@@ -102,7 +99,7 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
             self.smarter_request = request
         self.request = self.smarter_request
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
-        logger.info(
+        logger.debug(
             "%s.setup() - finished for request: %s, user: %s, self.user: %s is_authenticated: %s",
             self.formatted_class_name,
             smarter_build_absolute_uri(request),
@@ -112,7 +109,6 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
         )
 
 
-@method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
     """Smarter base class for DRF API list views that require authentication.
 
@@ -133,7 +129,7 @@ class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
         Args:
             request (HttpRequest): The incoming HTTP request.
         """
-        logger.info(
+        logger.debug(
             "%s.initial() - request: %s, args: %s, kwargs: %s",
             self.formatted_class_name,
             request,
@@ -170,7 +166,7 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
         Args:
             request (Request): The incoming HTTP request.
         """
-        logger.info(
+        logger.debug(
             "%s.setup() - called for request: %s", self.formatted_class_name, smarter_build_absolute_uri(request)
         )
 
@@ -181,7 +177,7 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
-        logger.info(
+        logger.debug(
             "CliBaseApiView().setup() - request: %s, user: %s, self.user: %s is_authenticated: %s",
             smarter_build_absolute_uri(request),
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
@@ -216,7 +212,7 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
             # barfs when the user object is None
             # File "/home/smarter_user/venv/lib/python3.12/site-packages/django/contrib/admin/views/decorators.py", line 13, in <lambda>
             return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
-        logger.info(
+        logger.debug(
             "%s.dispatch() - request: %s, user: %s",
             self.formatted_class_name,
             smarter_build_absolute_uri(self.request),
@@ -264,7 +260,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
-        logger.info(
+        logger.debug(
             "%s.setup() - request: %s, user: %s, user_profile: %s is_authenticated: %s",
             self.formatted_class_name,
             smarter_build_absolute_uri(request),
@@ -280,7 +276,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
             request (HttpRequest): The incoming HTTP request.
         """
         super().initial(request, *args, **kwargs)
-        logger.info(
+        logger.debug(
             "%s.initial() - running for request: %s, user: %s, args: %s, kwargs: %s",
             self.formatted_class_name,
             request,
@@ -318,7 +314,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
             # File "/home/smarter_user/venv/lib/python3.12/site-packages/django/contrib/admin/views/decorators.py", line 13, in <lambda>
             return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
 
-        logger.info(
+        logger.debug(
             "%s.dispatch() - request: %s, user: %s",
             self.formatted_class_name,
             smarter_build_absolute_uri(self.request),
@@ -333,7 +329,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
             request (HttpRequest): The incoming HTTP request.
             response (HttpResponse): The outgoing HTTP response.
         """
-        logger.info(
+        logger.debug(
             "%s.finalize_response() called for %s", self.formatted_class_name, smarter_build_absolute_uri(request)
         )
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)

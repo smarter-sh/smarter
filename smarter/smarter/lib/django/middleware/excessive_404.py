@@ -3,10 +3,13 @@ Middleware to block clients that trigger excessive 404 responses.
 """
 
 import logging
+from collections.abc import Awaitable
 from http import HTTPStatus
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseForbidden
+from django.http.request import HttpRequest
+from django.http.response import HttpResponseBase
 
 from smarter.common.classes import SmarterMiddlewareMixin
 from smarter.common.helpers.console_helpers import formatted_text
@@ -66,6 +69,15 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
 
     THROTTLE_TIMEOUT = 600  # seconds (10 minutes)
     """The duration of the timeout window in seconds during which 404 responses are counted and blocking is enforced."""
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging purposes."""
+        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        logger.info("%s.__call__(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
+        return super().__call__(request)
 
     def process_response(self, request: WSGIRequest, response):
         """

@@ -8,11 +8,12 @@ import unittest
 from typing import Union
 
 import yaml
+from django.core.cache import cache
 from django.http import HttpRequest
 from django.test import RequestFactory
 
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib import json
 
@@ -35,6 +36,7 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
         cls.name = camel_to_snake("smarterTestBase_" + cls.hash_suffix)
         cls.uid = SmarterTestBase.generate_uid()
+        cache.clear()
 
         logger.debug(
             "%s.setUpClass() Setting up test class with hash suffix: %s",
@@ -45,6 +47,11 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
             "%s.setUpClass() Setting up test class with name: %s", cls.smarter_test_base_logger_prefix, cls.name
         )
         logger.debug("%s.setUpClass() Setting up test class with uid: %s", cls.smarter_test_base_logger_prefix, cls.uid)
+        logger.debug(
+            "%s.setUpClass() %s",
+            cls.smarter_test_base_logger_prefix,
+            formatted_text_red("Django cache has been cleared"),
+        )
 
     @classmethod
     def tearDownClass(cls) -> None:

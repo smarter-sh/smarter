@@ -5,8 +5,8 @@ import logging
 
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
+from rest_framework.exceptions import AuthenticationFailed
 
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -31,17 +31,17 @@ module_prefix = "smarter.lib.drf.receivers"
 
 
 @receiver(post_save, sender=SmarterAuthToken)
-def smarter_auth_token_save(sender, instance, created, **kwargs):
+def handle_auth_token_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of SmarterAuthToken model."""
     if created:
-        logger.info(
+        logger.debug(
             "%s SmarterAuthToken: %s, created: %s",
             formatted_text(f"{module_prefix}.smarter_auth_token_save()"),
             instance,
             created,
         )
     else:
-        logger.info(
+        logger.debug(
             "%s SmarterAuthToken: %s, created: %s",
             formatted_text(f"{module_prefix}.smarter_auth_token_save()"),
             instance,
@@ -50,9 +50,9 @@ def smarter_auth_token_save(sender, instance, created, **kwargs):
 
 
 @receiver(post_delete, sender=SmarterAuthToken)
-def smarter_auth_token_delete(sender, instance, **kwargs):
+def handle_smarter_auth_token_delete(sender, instance, **kwargs):
     """Signal receiver for deleted of SmarterAuthToken model."""
-    logger.info(
+    logger.debug(
         "%s SmarterAuthToken: %s",
         formatted_text(f"{module_prefix}.smarter_auth_token_delete()"),
         instance,
@@ -60,20 +60,21 @@ def smarter_auth_token_delete(sender, instance, **kwargs):
 
 
 @receiver(smarter_token_authentication_request)
-def authentication_request_receiver(sender, token, **kwargs):
+def handle_smarter_token_authentication_request(sender, token, url, **kwargs):
     """Signal receiver for authentication request."""
-    logger.info(
-        "%s sender: %s, token: %s",
+    logger.debug(
+        "%s sender: %s, token: %s, url: %s",
         formatted_text(f"{module_prefix}.smarter_token_authentication_request()"),
         sender,
         token,
+        url,
     )
 
 
 @receiver(smarter_token_authentication_success)
-def authorization_granted_receiver(sender, user, token, **kwargs):
+def handle_smarter_token_authentication_success(sender, user, token, **kwargs):
     """Signal receiver for authorization granted."""
-    logger.info(
+    logger.debug(
         "%s sender: %s, user: %s, token: %s",
         formatted_text(f"{module_prefix}.smarter_token_authentication_success()"),
         sender,
@@ -83,12 +84,13 @@ def authorization_granted_receiver(sender, user, token, **kwargs):
 
 
 @receiver(smarter_token_authentication_failure)
-def authorization_denied_receiver(sender, user, token, **kwargs):
+def handle_smarter_token_authentication_failure(sender, user, token, error: AuthenticationFailed, **kwargs):
     """Signal receiver for authorization denied."""
-    logger.info(
-        "%s sender: %s, user: %s, token: %s",
+    logger.warning(
+        "%s sender: %s, user: %s, token: %s, error: %s",
         formatted_text(f"{module_prefix}.smarter_token_authentication_failure()"),
         sender,
         user,
         token,
+        str(error),
     )

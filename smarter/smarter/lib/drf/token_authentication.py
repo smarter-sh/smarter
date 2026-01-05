@@ -2,14 +2,15 @@
 
 import logging
 
+from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 from knox.auth import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.apps.account.models import User
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterException
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import mask_string
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -44,6 +45,17 @@ class SmarterTokenAuthenticationError(SmarterException):
         return "Smarter Token Authentication error"
 
 
+# pylint: disable=W0223
+class SmarterAnonymousUser(AnonymousUser):
+    """
+    AnonymousUser subclass for SmarterTokenAuthenticationMiddleware logging purposes.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.smarter = f"{__name__}.{self.__class__.__name__}"
+
+
 class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
     """Enhanced Django Rest Framework (DRF) knox TokenAuthentication
 
@@ -61,9 +73,14 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
 
     model = SmarterAuthToken
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging purposes."""
+        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        logger.info(
+        logger.debug(
             "%s.__init__() called args: %s, kwargs: %s",
             self.formatted_class_name,
             args,
@@ -88,33 +105,22 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         if not isinstance(token, bytes):
             raise AuthenticationFailed("Invalid token type. Expected bytes")
         masked_token = mask_string(string=token.decode())
-        smarter_token_authentication_request.send(
-            sender=self.__class__,
-            token=masked_token,
-        )
-        logger.info("%s.authenticate_credentials() - %s", self.formatted_class_name, masked_token)
+        smarter_token_authentication_request.send(sender=self.__class__, token=masked_token, url=None)
+        logger.debug("%s.authenticate_credentials() - %s", self.formatted_class_name, masked_token)
         try:
             user, auth_token = super().authenticate_credentials(token)
+            logger.debug(
+                "%s.authenticate_credentials() - retrieved user %s of type %s for token: %s",
+                self.formatted_class_name,
+                user,
+                type(user),
+                masked_token,
+            )
         except AuthenticationFailed as e:
             smarter_token_authentication_failure.send(
-                sender=self.__class__,
-                user=None,
-                token=masked_token,
-            )
-            logger.warning(
-                "%s.authenticate_credentials() - failed to authenticate token: %s, error: %s",
-                self.formatted_class_name,
-                masked_token,
-                str(e),
+                sender=self.__class__, user=SmarterAnonymousUser(), token=masked_token, error=e
             )
             raise
-        if not isinstance(user, User):
-            logger.warning(
-                "%s.authenticate_credentials() - failed to retrieve user for token: %s",
-                self.formatted_class_name,
-                masked_token,
-            )
-            raise AuthenticationFailed("Invalid token")
 
         # next, we need to ensure that the token is active, otherwise
         # we should raise an exception that exactly matches the one
@@ -151,32 +157,40 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         return (user, smarter_auth_token)
 
     @classmethod
-    def get_user_from_request(cls, request):
+    def get_user_from_request(cls, request) -> User | SmarterAnonymousUser:
         """Override get_user_from_request() to add logging and to use SmarterAuthToken.
 
         Args:
             request (HttpRequest): a Django request object.
 
         Returns:
-            User or None: The authenticated user if the token is valid, otherwise None.
+            User or SmarterAnonymousUser: The authenticated user if the token is valid, otherwise SmarterAnonymousUser.
         """
+        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_user_from_request()")
+
         auth_header = request.META.get("HTTP_AUTHORIZATION")
         if not auth_header or not auth_header.startswith("Token "):
-            return None
+            logger.warning(
+                "%s.get_user_from_request() no valid Token authorization header found. Returning SmarterAnonymousUser.",
+                logger_prefix,
+            )
+            return SmarterAnonymousUser()
         token_key = auth_header.split("Token ")[1]
         # If your tokens are bytes, decode as needed
         # token = token.encode()  # if needed
         try:
             auth_token = SmarterAuthToken.objects.get(token_key=token_key)
-            logger.info(
-                "SmarterTokenAuthentication.get_user_from_request() retrieved user %s for token_key: %s",
+            logger.debug(
+                "%s.get_user_from_request() retrieved user %s for token_key: %s",
+                logger_prefix,
                 auth_token.user,
                 token_key,
             )
             return auth_token.user
         except SmarterAuthToken.DoesNotExist:
             logger.warning(
-                "SmarterTokenAuthentication.get_user_from_request() failed to retrieve user for token_key: %s",
+                "%s.get_user_from_request() failed to retrieve user for token_key: %s. Returning SmarterAnonymousUser.",
+                logger_prefix,
                 token_key,
             )
-            return None
+            return SmarterAnonymousUser()

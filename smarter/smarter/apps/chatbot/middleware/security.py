@@ -91,7 +91,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     def process_request(self, request: WSGIRequest):
 
-        logger.info(
+        logger.debug(
             "%s.process_request() called for %s",
             self.formatted_class_name,
             self.smarter_build_absolute_uri(request),
@@ -102,7 +102,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         # Short-circuit for health checks
         if request.path.replace("/", "") in self.amnesty_urls:
-            logger.info(
+            logger.debug(
                 "%s %s found in amnesty_urls: %s",
                 self.formatted_class_name,
                 self.smarter_build_absolute_uri(request),
@@ -120,7 +120,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # Short-circuit for any requests born from internal IP address hosts
         # This is unlikely, but not impossible.
         if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
-            logger.info(
+            logger.debug(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
                 self.smarter_build_absolute_uri(request),
@@ -134,7 +134,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         host_no_port = host.split(":")[0]
         base_host = host_no_port.split(".")[-1]
         if base_host in [h.rsplit(".", maxsplit=1)[-1] for h in SmarterValidator.LOCAL_HOSTS]:
-            logger.info(
+            logger.debug(
                 "%s %s base host matched in SmarterValidator.LOCAL_HOSTS: %s",
                 self.formatted_class_name,
                 host,
@@ -143,7 +143,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             return None
 
         if host in SmarterValidator.LOCAL_HOSTS:
-            logger.info(
+            logger.debug(
                 "%s %s found in SmarterValidator.LOCAL_HOSTS: %s",
                 self.formatted_class_name,
                 host,
@@ -158,7 +158,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         path_parts = list(filter(None, parsed_url.path.split("/")))
         # if the entire path is healthz or readiness then we don't need to check
         if len(path_parts) == 1 and path_parts[0] in self.amnesty_urls:
-            logger.info(
+            logger.debug(
                 "%s %s found in amnesty_urls: %s",
                 self.formatted_class_name,
                 host,
@@ -171,7 +171,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         #    http://stackademy-sql.3141-5926-5359.api.example.com/.well-known/acme-challenge/QrRzO7QE7y6DhV8UqhfdD4_OoQ3Yh6XLR1qbJCRGcls
         # ---------------------------------------------------------------------
         if ".well-known/acme-challenge" in parsed_url.path:
-            logger.info(
+            logger.debug(
                 "%s %s identified as an ACME challenge request, exiting.",
                 self.formatted_class_name,
                 url,
@@ -183,7 +183,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         for allowed_host in smarter_settings.allowed_hosts:
             if fnmatch.fnmatch(host, allowed_host):
-                logger.info(
+                logger.debug(
                     "%s %s matched with smarter_settings.allowed_hosts: %s",
                     self.formatted_class_name,
                     host,
@@ -196,7 +196,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         #     to instantiate a ChatBotHelper object just to check if the host is a domain
         #     for a deployed ChatBot.
         # ---------------------------------------------------------------------
-        logger.info("%s instantiating ChatBotHelper() for url: %s", self.formatted_class_name, url)
+        logger.debug("%s instantiating ChatBotHelper() for url: %s", self.formatted_class_name, url)
         chatbot: Optional[ChatBot] = get_cached_chatbot_by_request(request=request)
         if chatbot is not None:
             logger.info("%s ChatBotHelper() verified that %s is a chatbot.", self.formatted_class_name, url)

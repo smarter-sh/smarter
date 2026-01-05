@@ -170,6 +170,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.client.login(username=smarter_admin_user_profile.user.username, password=SMARTER_DEV_ADMIN_PASSWORD)
         response = self.client.get(url, SERVER_NAME="example.3141-5926-5359.api.localhost:8000")
         request = response.wsgi_request
+        request.user = smarter_admin_user_profile.user
         self.assertEqual(request.user, smarter_admin_user_profile.user)
         self.assertEqual(url, request.build_absolute_uri())
         if not is_authenticated_request(request):

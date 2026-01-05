@@ -164,6 +164,11 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     THROTTLE_LIMIT = 5
     THROTTLE_TIMEOUT = 600  # seconds (10 minutes)
 
+    @property
+    def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging purposes."""
+        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+
     def __init__(self, get_response):
         super().__init__(get_response)
         self.get_response = get_response
@@ -173,6 +178,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         self.sensitive_files = SENSITIVE_FILES
 
     def __call__(self, request):
+        logger.info("%s.__call__(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
         request_path = request.path.lower()
         if request_path.replace("/", "") in self.amnesty_urls:
             logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
