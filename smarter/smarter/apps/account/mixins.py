@@ -17,7 +17,10 @@ from smarter.common.helpers.console_helpers import (
 from smarter.common.utils import mask_string
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
+from smarter.lib.drf.token_authentication import (
+    SmarterAnonymousUser,
+    SmarterTokenAuthentication,
+)
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import Account, User, UserProfile
@@ -54,6 +57,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(f"{__name__}.AccountMixin()")
 
 
 class AccountMixin(SmarterHelperMixin):
@@ -111,31 +115,31 @@ class AccountMixin(SmarterHelperMixin):
                 if isinstance(arg, RequestType):
                     logger.debug(
                         "%s.__init__(): received a request object: %s",
-                        self.formatted_class_name,
+                        logger_prefix,
                         self.smarter_build_absolute_uri(arg),
                     )
                     request = arg
                     break
 
         if isinstance(account_number, str):
-            logger.debug("%s.__init__(): received account_number %s", self.formatted_class_name, account_number)
+            logger.debug("%s.__init__(): received account_number %s", logger_prefix, account_number)
             self._account = get_cached_account(account_number=account_number) if account_number else account
         if isinstance(account, Account):
-            logger.debug("%s.__init__(): received account %s", self.formatted_class_name, account)
+            logger.debug("%s.__init__(): received account %s", logger_prefix, account)
             self._account = account
         if isinstance(user, User):
             self._user = user
-            logger.debug("%s.__init__(): received user %s", self.formatted_class_name, user)
+            logger.debug("%s.__init__(): received user %s", logger_prefix, user)
             self._account = get_cached_account_for_user(user)
             if not self._account:
                 logger.debug(
                     "%s.__init__(): did not find an account for user %s",
-                    self.formatted_class_name,
+                    logger_prefix,
                     user,
                 )
             logger.debug(
                 "%s.__init__(): set account to %s based on user %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self._account,
                 self.user_profile,
             )
@@ -143,37 +147,37 @@ class AccountMixin(SmarterHelperMixin):
         # evaluate these in reverse order, so that the first one wins.
         if request is not None:
             url: str = self.smarter_build_absolute_uri(request)
-            logger.debug("%s.__init__(): received a request object: %s", self.formatted_class_name, url)
+            logger.debug("%s.__init__(): received a request object: %s", logger_prefix, url)
             if hasattr(request, "user") and not isinstance(request.user, AnonymousUser):
                 self._user = request.user  # type: ignore[union-attr]
                 if not isinstance(self._user, User):
                     logger.debug(
                         "%s.__init__(): could not resolve user from the request object %s",
-                        self.formatted_class_name,
+                        logger_prefix,
                         request.build_absolute_uri(),
                     )
                 logger.debug(
                     "%s.__init__(): found a user object in the request: %s",
-                    self.formatted_class_name,
+                    logger_prefix,
                     self._user,
                 )
                 self._account = get_cached_account_for_user(self._user)
                 if not isinstance(self._account, Account):
                     logger.debug(
                         "%s.__init__(): could not resolve account from the user %s",
-                        self.formatted_class_name,
+                        logger_prefix,
                         self._user,
                     )
                 logger.debug(
                     "%s.__init__(): set account to %s based on user: %s",
-                    self.formatted_class_name,
+                    logger_prefix,
                     self._account,
                     self.user_profile,
                 )
             elif not api_token:
                 logger.debug(
                     "%s.__init__(): did not find a user in the request object nor an Api token in the request header",
-                    self.formatted_class_name,
+                    logger_prefix,
                 )
             if not self._account:
                 # if the account is not set, then try to get it from the request
@@ -182,36 +186,36 @@ class AccountMixin(SmarterHelperMixin):
                 if account_number and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING):
                     logger.debug(
                         "%s.__init__(): located account number %s from the request url %s",
-                        self.formatted_class_name,
+                        logger_prefix,
                         account_number,
                         url,
                     )
                     self._account = get_cached_account(account_number=account_number)
-                    logger.debug("%s.__init__(): set account to %s", self.formatted_class_name, self._account)
+                    logger.debug("%s.__init__(): set account to %s", logger_prefix, self._account)
                 elif not api_token:
                     logger.debug(
                         "%s.__init__(): did not find an account number in the request url nor an API token in the request header: %s",
-                        self.formatted_class_name,
+                        logger_prefix,
                         url,
                     )
         if not self._user and isinstance(api_token, bytes):
             logger.debug(
                 "%s.__init__(): found API token in kwargs: %s",
-                self.formatted_class_name,
+                logger_prefix,
                 mask_string(api_token.decode()),
             )
             try:
                 user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
                 self.user = user
             except AuthenticationFailed:
-                logger.warning("%s.__init__(): failed to authenticate user from API token", self.formatted_class_name)
+                self.user = SmarterAnonymousUser()
+                logger.warning("%s.__init__(): failed to authenticate user from API token", logger_prefix)
 
-        logger.info(
-            "%s.__init__() is %s. user_profile: %s",
-            formatted_text(__name__ + ".AccountMixin"),
-            self.accountmixin_ready_state,
-            self.user_profile,
-        )
+        msg = f"{formatted_text(__name__ + '.AccountMixin')}.__init__() is {self.accountmixin_ready_state} - {self.user_profile}"
+        if self.is_accountmixin_ready:
+            logger.debug(msg)
+        else:
+            logger.error(msg)
 
     def __str__(self):
         """
@@ -244,7 +248,7 @@ class AccountMixin(SmarterHelperMixin):
         if self._user or self._user_profile:
             logger.warning(
                 "%s.account() could not initialize _account for user: %s, user_profile: %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self._user,
                 self._user_profile,
             )
@@ -272,7 +276,7 @@ class AccountMixin(SmarterHelperMixin):
                 ) from e
             except TypeError as e:
                 # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x70f8a5377c20>>.
-                logger.error("%s: account not set, user_profile not found: %s", self.formatted_class_name, str(e))
+                logger.error("%s: account not set, user_profile not found: %s", logger_prefix, str(e))
 
     @property
     def account_number(self) -> AccountNumberType:
@@ -295,7 +299,7 @@ class AccountMixin(SmarterHelperMixin):
             self._account = account
             logger.debug(
                 "%s: set account to %s based on account_number %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self._account,
                 account_number,
             )
@@ -321,7 +325,7 @@ class AccountMixin(SmarterHelperMixin):
         self.user_profile = None
         self.account = None
         self._user = user  # do this last bc user_profile and account might do things to _user.
-        logger.debug("%s.user.setter: %s", self.formatted_class_name, user)
+        logger.debug("%s.user.setter: %s", logger_prefix, user)
 
     @property
     def user_profile(self) -> UserProfileType:
@@ -346,7 +350,7 @@ class AccountMixin(SmarterHelperMixin):
         if not self._user_profile:
             logger.debug(
                 "%s: user_profile() could not initialize _user_profile for user: %s, account: %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self._user,
                 self._account,
             )
@@ -377,13 +381,13 @@ class AccountMixin(SmarterHelperMixin):
         if not isinstance(self.account, Account):
             logger.warning(
                 "%s.is_accountmixin_ready() returning false because account is not initialized.",
-                self.formatted_class_name,
+                logger_prefix,
             )
             return False
         if not isinstance(self.user, User):
             logger.warning(
                 "%s.is_accountmixin_ready() returning false because user is not initialized.",
-                self.formatted_class_name,
+                logger_prefix,
             )
             return False
         return True
@@ -407,7 +411,7 @@ class AccountMixin(SmarterHelperMixin):
         if not retval:
             logger.warning(
                 "%s: ready() returning false because super().ready returned false. This might cause problems with other initializations.",
-                self.formatted_class_name,
+                logger_prefix,
             )
         return retval and self.is_accountmixin_ready
 

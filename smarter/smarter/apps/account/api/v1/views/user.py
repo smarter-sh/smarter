@@ -14,7 +14,6 @@ from rest_framework.response import Response
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.api.signals import api_request_completed
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib import json
 from smarter.lib.django import waffle

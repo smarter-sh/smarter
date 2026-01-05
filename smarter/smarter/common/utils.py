@@ -40,7 +40,7 @@ logger_prefix = formatted_text(__name__)
 
 def is_authenticated_request(request: Optional[RequestType]) -> bool:
     """
-    Determines whether the provided request is authenticated.
+    Determines whether the provided request is authenticated. Provides extensive logging for debugging purposes.
 
     :param request: The request object to check. This can be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, or :class:`django.core.handlers.wsgi.WSGIRequest`. If ``None`` is provided, the function will return ``False``.
 
@@ -85,12 +85,64 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         from django.http import HttpRequest
         from rest_framework.request import Request
 
-        return (
-            isinstance(request, (HttpRequest, Request, WSGIRequest))
-            and hasattr(request, "user")
-            and hasattr(request.user, "is_authenticated")
-            and request.user.is_authenticated
-        )
+        is_valid_request_object = isinstance(request, (HttpRequest, Request, WSGIRequest))
+        if is_valid_request_object:
+            logger.debug(
+                "%s.is_authenticated_request() Valid request object of type %s",
+                logger_prefix,
+                type(request),
+            )
+        else:
+            # suggests buggy code, hence the warning
+            logger.warning(
+                "%s.is_authenticated_request() Invalid request object of type %s - returning False",
+                logger_prefix,
+                type(request),
+            )
+            return False
+
+        has_user = hasattr(request, "user")
+        if has_user:
+            logger.debug(
+                "%s.is_authenticated_request() Request has 'user' attribute of type %s",
+                logger_prefix,
+                type(request.user),
+            )
+        else:
+            logger.debug(
+                "%s.is_authenticated_request() Request does not have 'user' attribute - returning False",
+                logger_prefix,
+            )
+
+        has_is_authenticated = has_user and hasattr(request.user, "is_authenticated")
+        if has_is_authenticated:
+            logger.debug(
+                "%s.is_authenticated_request() Request.user has 'is_authenticated' attribute",
+                logger_prefix,
+            )
+        else:
+            # this should not happen in normal code, hence the warning
+            logger.warning(
+                "%s.is_authenticated_request() Request.user of type %s does not have 'is_authenticated' attribute - returning False",
+                logger_prefix,
+                type(request.user),
+            )
+
+        if is_valid_request_object and has_user and has_is_authenticated:
+            retval = request.user.is_authenticated
+            logger.debug(
+                "%s.is_authenticated_request() Request is_authenticated: %s",
+                logger_prefix,
+                retval,
+            )
+        else:
+            retval = False
+            logger.debug(
+                "%s.is_authenticated_request() Request is not authenticated - returning False",
+                logger_prefix,
+            )
+        return retval
+
     # pylint: disable=W0718
     except Exception as e:
         logger.debug("%s.is_authenticated_request() failed: %s", logger_prefix, formatted_text(str(e)))
@@ -555,21 +607,35 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         print(url)  # Output: http://testserver/unknown/
 
     """
-    logger.debug("%s.smarter_build_absolute_uri()", logger_prefix)
     if request is None:
-        logger.debug("%s.smarter_build_absolute_uri() called with None request", logger_prefix)
-        return "http://testserver/unknown/"
+        retval = "http://testserver/unknown/"
+        logger.debug(
+            "%s.smarter_build_absolute_uri() called with None request. Returning fallback URL: %s",
+            logger_prefix,
+            retval,
+        )
+        return retval
 
     # If it's a unittest.mock.Mock, synthesize a fake URL for testing
     if hasattr(request, "__class__") and request.__class__.__name__ == "Mock":
-        logger.debug("%s.smarter_build_absolute_uri() called with Mock request; returning fake test URL", logger_prefix)
-        return "http://testserver/mockpath/"
+        retval = "http://testserver/mockpath/"
+        logger.debug(
+            "%s.smarter_build_absolute_uri() called with Mock request; returning fake test URL: %s",
+            logger_prefix,
+            retval,
+        )
+        return retval
 
     # Try to use Django's build_absolute_uri if available
     if hasattr(request, "build_absolute_uri"):
         try:
             url = request.build_absolute_uri()
             if url:
+                logger.debug(
+                    "%s.smarter_build_absolute_uri() obtained URL from request.build_absolute_uri(): %s",
+                    logger_prefix,
+                    url,
+                )
                 return url
         # pylint: disable=W0718
         except Exception as e:
@@ -591,6 +657,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         path = getattr(request, "get_full_path", lambda: None)() or "/"
         url = f"{scheme}://{host}{path}"
         if SmarterValidator.is_valid_url(url):
+            logger.debug("%s.smarter_build_absolute_uri() built URL from request attributes: %s", logger_prefix, url)
             return url
     # pylint: disable=W0718
     except Exception as e:

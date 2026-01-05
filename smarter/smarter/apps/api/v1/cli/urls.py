@@ -79,7 +79,7 @@ class ApiV1CliReverseViews:
 
     """
 
-    namespace = "api:v1:cli:"
+    namespace = f"api:v1:{namespace}:"
 
     manifest = "ApiV1CliManifestApiView".lower()
     apply = "ApiV1CliChatApiView".lower()

@@ -177,12 +177,11 @@ class SmarterRequestMixin(AccountMixin):
         if self.smarter_request:
             self.smarter_request.user = self.user  # type: ignore
 
-        logger.info(
-            "%s.__init__() is %s - %s",
-            logger_prefix,
-            self.request_mixin_ready_state,
-            self.url if self._url else "URL not initialized",
-        )
+        msg = f"{formatted_text(__name__ + '.SmarterRequestMixin')}.__init__() is {self.request_mixin_ready_state} - {self.url if self._url else 'URL not initialized'}"
+        if self.is_requestmixin_ready:
+            logger.debug(msg)
+        else:
+            logger.error(msg)
 
     def init(self, request: HttpRequest, *args, **kwargs):
         """
@@ -211,7 +210,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         url = smarter_build_absolute_uri(self.smarter_request) if self.smarter_request else None
 
-        logger.info("%s.init() - initializing with request=%s, args=%s, kwargs=%s", logger_prefix, url, args, kwargs)
+        logger.debug("%s.init() - initializing with request=%s, args=%s, kwargs=%s", logger_prefix, url, args, kwargs)
 
         if url is None:
             raise SmarterValueError(f"{logger_prefix}.__init__() - request url is None or empty. request={request}")
@@ -229,7 +228,7 @@ class SmarterRequestMixin(AccountMixin):
 
         super().__init__(request, *args, api_token=self.api_token, **kwargs)
 
-        logger.info(
+        logger.debug(
             "%s.init() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s auth_header=%s user_profile=%s, account=%s",
             logger_prefix,
             self._instance_id,
@@ -243,7 +242,7 @@ class SmarterRequestMixin(AccountMixin):
 
         if isinstance(self._session_key, str):
             SmarterValidator.validate_session_key(self._session_key)
-            logger.info(
+            logger.debug(
                 "%s.init() - session_key is set to %s from kwargs",
                 logger_prefix,
                 self._session_key,
@@ -330,7 +329,7 @@ class SmarterRequestMixin(AccountMixin):
     def smarter_request(self, request: SmarterRequestType):
         self._smarter_request = request
         if request is not None:
-            logger.info(
+            logger.debug(
                 "%s.smarter_request setter called with request: %s",
                 logger_prefix,
                 smarter_build_absolute_uri(request),
@@ -618,7 +617,7 @@ class SmarterRequestMixin(AccountMixin):
         if not self._session_key:
             self._session_key = self.find_session_key() or self.generate_session_key()
             SmarterValidator.validate_session_key(self._session_key)
-            logger.info("%s.session_key() - setting session_key to %s", logger_prefix, self._session_key)
+            logger.debug("%s.session_key() - setting session_key to %s", logger_prefix, self._session_key)
         return self._session_key
 
     @property
@@ -776,7 +775,7 @@ class SmarterRequestMixin(AccountMixin):
 
                 try:
                     self._data = json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
-                    logger.info(
+                    logger.debug(
                         "%s.data() - initialized json from request body: %s",
                         logger_prefix,
                         body_str,
@@ -784,7 +783,7 @@ class SmarterRequestMixin(AccountMixin):
                 except json.JSONDecodeError:
                     try:
                         self._data = yaml.safe_load(body_str) if body_str else {}
-                        logger.info(
+                        logger.debug(
                             "%s.data() - initialized json from parsed yaml request body: %s",
                             logger_prefix,
                             body_str,
@@ -802,7 +801,7 @@ class SmarterRequestMixin(AccountMixin):
                 if body is not None:
                     body_str = body.decode("utf-8").strip()
                     self._data = yaml.safe_load(body_str) if body_str else {}
-                    logger.info(
+                    logger.debug(
                         "%s.data() - initialized from parsed request body as yaml: %s",
                         logger_prefix,
                         body_str,
@@ -1108,7 +1107,7 @@ class SmarterRequestMixin(AccountMixin):
             return False
         account_number = self.url_account_number
         if account_number is not None:
-            logger.info(
+            logger.debug(
                 "%s.is_chatbot_named_url() - url is a named url with account number: %s",
                 logger_prefix,
                 account_number,
@@ -1582,7 +1581,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         Create a log entry
         """
-        logger.info("%s %s", logger_prefix, message)
+        logger.debug("%s %s", logger_prefix, message)
 
     def dump(self):
         """

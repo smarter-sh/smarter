@@ -18,13 +18,6 @@ from urllib.parse import urlparse, urlunparse
 
 import validators
 
-
-class ValidationError(Exception):
-    """
-    Dummy ValidationError in case Django is not installed.
-    """
-
-
 from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -506,6 +499,7 @@ class SmarterValidator:
         logger.debug("%s.validate_email() %s", logger_prefix, email)
         try:
             # pylint: disable=import-outside-toplevel
+            from django.core.exceptions import ValidationError
             from django.core.validators import validate_email
 
             validate_email(email)
@@ -534,6 +528,7 @@ class SmarterValidator:
         logger.debug("%s.validate_ip() %s", logger_prefix, ip)
         try:
             # pylint: disable=import-outside-toplevel
+            from django.core.exceptions import ValidationError
             from django.core.validators import validate_ipv4_address
 
             validate_ipv4_address(ip)
@@ -624,6 +619,8 @@ class SmarterValidator:
         except TypeError:
             pass
         try:
+            # pylint: disable=C0415
+            from django.core.exceptions import ValidationError
             from django.core.validators import URLValidator
 
             validator = URLValidator(schemes=valid_protocols)
