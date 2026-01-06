@@ -389,7 +389,7 @@ pyflakes==3.4.0
     # via -r smarter/requirements/in/constraints.in
 pyjwt==2.10.1
     # via social-auth-core
-pynacl==1.6.0
+pynacl==1.6.2
     # via paramiko
 pyparsing==3.2.4
     # via

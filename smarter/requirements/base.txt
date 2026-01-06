@@ -388,7 +388,7 @@ pyjwt[crypto]==2.10.1
     # via
     #   pyjwt
     #   social-auth-core
-pynacl==1.6.0
+pynacl==1.6.2
     # via paramiko
 pyparsing==3.2.5
     # via

@@ -526,7 +526,7 @@ pylint-django==2.6.1
     # via -r smarter/requirements/in/local.in
 pylint-plugin-utils==0.9.0
     # via pylint-django
-pynacl==1.6.0
+pynacl==1.6.2
     # via paramiko
 pyparsing==3.2.4
     # via
