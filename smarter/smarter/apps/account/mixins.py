@@ -98,10 +98,21 @@ class AccountMixin(SmarterHelperMixin):
         api_token: ApiTokenType = None,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        logger.debug(
+            "%s.__init__() called with args=%s, account_number=%s, account=%s, user=%s, api_token=%s, kwargs=%s",
+            logger_prefix,
+            args,
+            account_number,
+            account,
+            user,
+            mask_string(api_token.decode()) if api_token else None,
+            kwargs,
+        )
+
         self._account: AccountType = None
         self._user: UserType = None
         self._user_profile: UserProfileType = None
+        super().__init__(*args, **kwargs)
 
         request: OptionalRequestType = kwargs.get("request")
         if not request and args:

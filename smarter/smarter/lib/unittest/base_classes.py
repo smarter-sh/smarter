@@ -20,6 +20,7 @@ from smarter.lib import json
 
 logger = logging.getLogger(__name__)
 HERE = __name__
+logger_prefix = formatted_text(f"{HERE}.SmarterTestBase()")
 
 
 class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
@@ -32,8 +33,8 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     def setUpClass(cls) -> None:
         """Set up the test class."""
         super().setUpClass()
-        title = " Setup Test Class "
-        msg = "*" * ((80 - len(title)) // 2) + title + "*" * ((80 - len(title)) // 2)
+        title = f" {logger_prefix}.setUpClass() "
+        msg = "*" * ((120 - len(title)) // 2) + title + "*" * ((120 - len(title)) // 2)
         logger.debug(msg)
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
         cls.name = camel_to_snake("smarterTestBase_" + cls.hash_suffix)
@@ -62,15 +63,15 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
 
     def setUp(self) -> None:
         """SetUp the test case."""
-        title = f" setUp Test: {self._testMethodName} BEGIN "
-        msg = "-" * ((80 - len(title)) // 2) + title + "-" * ((80 - len(title)) // 2)
-        logger.debug(msg)
         super().setUp()
+        title = f" {logger_prefix}.{self._testMethodName}() "
+        msg = "-" * ((120 - len(title)) // 2) + title + "-" * ((120 - len(title)) // 2)
+        logger.debug(msg)
 
     def tearDown(self) -> None:
         """Tear down the test case."""
-        title = f" tearDown Test: {self._testMethodName} "
-        msg = "-" * ((80 - len(title)) // 2) + title + "-" * ((80 - len(title)) // 2)
+        title = f" {logger_prefix}.tearDown() {self._testMethodName} "
+        msg = "-" * ((120 - len(title)) // 2) + title + "-" * ((120 - len(title)) // 2)
         logger.debug(msg)
         super().tearDown()
 

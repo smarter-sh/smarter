@@ -24,6 +24,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(f"{HERE}.TestSAMBrokerBaseClass()")
 
 
 class TestSAMBrokerBaseClass(TestAccountMixin):
@@ -43,12 +44,16 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
     def setUpClass(cls):
         """class-level setup."""
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.test_sam_broker_base_logger_prefix)
+        title = f" {logger_prefix}.setUpClass() "
+        msg = "*" * ((120 - len(title)) // 2) + title + "*" * ((120 - len(title)) // 2)
+        logger.debug(msg)
 
     @classmethod
     def tearDownClass(cls):
         """class-level teardown."""
-        logger.debug("%s.tearDownClass()", cls.test_sam_broker_base_logger_prefix)
+        title = f" {logger_prefix}.tearDownClass() "
+        msg = "*" * ((120 - len(title)) // 2) + title + "*" * ((120 - len(title)) // 2)
+        logger.debug(msg)
         super().tearDownClass()
 
     def setUp(self):
@@ -59,8 +64,14 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self._request = None
         self._loader = None
         self._manifest_filespec = None
+        title = f" {logger_prefix}.{self._testMethodName}() "
+        msg = "-" * ((120 - len(title)) // 2) + title + "-" * ((120 - len(title)) // 2)
+        logger.debug(msg)
 
     def tearDown(self):
+        title = f" {logger_prefix}.tearDown() {self._testMethodName} "
+        msg = "-" * ((120 - len(title)) // 2) + title + "-" * ((120 - len(title)) // 2)
+        logger.debug(msg)
         self._here = None
         self._broker = None
         self._request = None
