@@ -8,7 +8,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
-from botocore.exceptions import ProfileNotFound
+import botocore.exceptions
 
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import Services
@@ -78,6 +78,9 @@ class AWSBase(SmarterHelperMixin):
     _authentication_credentials_are_initialized: bool = False
     _domain = None
     _aws_session = None
+    _client = None
+    _client_type: Optional[str] = None
+
     _root_domain: str = smarter_settings.root_domain
     _environment: str = smarter_settings.environment
     _environment_domain: Optional[str] = None
@@ -159,8 +162,8 @@ class AWSBase(SmarterHelperMixin):
             self._aws_access_key_id_source = "passed parameter"
             self._aws_secret_access_key_source = "passed parameter"
 
-        msg = f"{self.formatted_class_name}.__init__() is {self.is_ready_state}"
-        if self.ready:
+        msg = f"{self.formatted_class_name}.__init__() is {self.authentication_credentials_state}"
+        if self.authentication_credentials_are_initialized:
             logger.info(msg)
         else:
             logger.error(msg)
@@ -174,6 +177,38 @@ class AWSBase(SmarterHelperMixin):
         :rtype: str
         """
         return formatted_text(f"{__name__}.{self.__class__.__name__}")
+
+    @property
+    def client(self):
+        """
+        Return the AWS ACM client
+
+        :return: boto3 ACM client
+        :rtype: boto3.client
+        """
+        if self._client:
+            return self._client
+
+        if not self._client_type:
+            raise SmarterAWSException("Client type is not specified.")
+
+        if not self.ready:
+            logger.error("%s.client() AWS session is not ready", self.formatted_class_name)
+            return None
+        try:
+            self._client = self.aws_session.client(self._client_type)
+            logger.info(
+                "%s.client() AWS %s client created successfully", self.formatted_class_name, self._client_type.upper()
+            )
+        except botocore.exceptions.BotoCoreError as e:
+            logger.error(
+                "%s.client() Failed to create AWS %s client: %s",
+                self.formatted_class_name,
+                self._client_type.upper(),
+                str(e),
+            )
+            return None
+        return self._client
 
     @property
     def identity(self) -> Optional[dict]:
@@ -229,7 +264,7 @@ class AWSBase(SmarterHelperMixin):
             logger.info(msg)
         else:
             msg = f"{self.formatted_class_name}.identity {formatted_text_red('could not fetch AWS IAM identity.')}"
-            logger.warning(msg)
+            logger.error(msg)
         return self._identity
 
     @cached_property
@@ -411,7 +446,7 @@ class AWSBase(SmarterHelperMixin):
         if self.aws_profile:
             try:
                 self._aws_session = boto3.Session(profile_name=self.aws_profile, region_name=self.aws_region)
-            except ProfileNotFound:
+            except botocore.exceptions.ProfileNotFound:
                 msg = f"{self.formatted_class_name}.aws_session() {formatted_text_red(f'Unable to establish AWS boto session: aws_profile {self.aws_profile} not found')}"
                 logger.error(msg)
 
@@ -560,14 +595,14 @@ class AWSBase(SmarterHelperMixin):
         return True
 
     @property
-    def is_ready_state(self) -> str:
+    def authentication_credentials_state(self) -> str:
         """
         Return formatted ready state.
 
         :return: formatted ready state
         :rtype: str
         """
-        if self.ready:
+        if self.authentication_credentials_are_initialized:
             return formatted_text_green("READY")
         else:
             return formatted_text_red("NOT READY")

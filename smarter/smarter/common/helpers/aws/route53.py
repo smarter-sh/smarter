@@ -70,22 +70,7 @@ class AWSRoute53(AWSBase):
     """
 
     _client = None
-
-    @property
-    def client(self):
-        """
-        Return the AWS Route53 client.
-
-        :return: Boto3 Route53 client.
-        :rtype: botocore.client.Route53
-        """
-        if not self.ready:
-            raise SmarterAWSException("AWSRoute53 is not ready. Cannot create client.")
-        if not self.aws_session:
-            raise SmarterAWSException("AWS session is not initialized.")
-        if not self._client:
-            self._client = self.aws_session.client("route53")
-        return self._client
+    _client_type: str = "route53"
 
     def get_hosted_zone(self, domain_name) -> Optional[str]:
         """
