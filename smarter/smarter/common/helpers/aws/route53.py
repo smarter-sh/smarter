@@ -79,6 +79,8 @@ class AWSRoute53(AWSBase):
         :return: Boto3 Route53 client.
         :rtype: botocore.client.Route53
         """
+        if not self.ready:
+            raise SmarterAWSException("AWSRoute53 is not ready. Cannot create client.")
         if not self.aws_session:
             raise SmarterAWSException("AWS session is not initialized.")
         if not self._client:
