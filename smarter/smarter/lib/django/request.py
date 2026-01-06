@@ -682,7 +682,7 @@ class SmarterRequestMixin(AccountMixin):
 
         if self.is_chatbot_smarter_api_url:
             path_parts = self.url_path_parts
-            return int(path_parts[3])
+            return int(path_parts[3]) if isinstance(path_parts, list) and len(path_parts) > 3 else None
 
         if self.is_chatbot_named_url:
             # can't get from ChatBot bc of circular import
@@ -1051,10 +1051,30 @@ class SmarterRequestMixin(AccountMixin):
             bool: True if the URL is the environment root domain, otherwise False.
         """
         if not self.smarter_request:
+            logger.debug("%s.is_environment_root_domain() - smarter_request is None", logger_prefix)
             return False
         if not self.parsed_url:
+            logger.debug("%s.is_environment_root_domain() - parsed_url is None", logger_prefix)
             return False
-        return self.parsed_url.netloc == smarter_settings.environment_platform_domain and self.parsed_url.path == "/"
+
+        netloc_match = self.parsed_url.netloc == smarter_settings.environment_platform_domain
+        if not netloc_match:
+            logger.debug(
+                "%s.is_environment_root_domain() - netloc does not match. expected=%s actual=%s",
+                logger_prefix,
+                smarter_settings.environment_platform_domain,
+                self.parsed_url.netloc,
+            )
+            return False
+        path_match = self.parsed_url.path == "/"
+        if not path_match:
+            logger.debug(
+                "%s.is_environment_root_domain() - path does not match. expected='/' actual=%s",
+                logger_prefix,
+                self.parsed_url.path,
+            )
+            return False
+        return netloc_match and path_match
 
     @cached_property
     def is_chatbot(self) -> bool:
@@ -1094,11 +1114,20 @@ class SmarterRequestMixin(AccountMixin):
             bool: True if the URL matches the smarter API pattern, otherwise False.
         """
         if not self.smarter_request:
+            logger.debug("%s.is_smarter_api() - request is None", logger_prefix)
             return False
         if not self.url:
+            logger.debug("%s.is_smarter_api() - url is None or empty", logger_prefix)
             return False
-        if isinstance(self.url_path_parts, list) and "api" in self.url_path_parts:
+
+        # Check for 'api' in path parts or in the host (netloc)
+        in_path = isinstance(self.url_path_parts, list) and "api" in self.url_path_parts
+        in_host = self.parsed_url and "api" in self.parsed_url.netloc.split(".")
+        if in_path or in_host:
+            logger.debug("%s.is_smarter_api() - url is a smarter api url: %s", logger_prefix, self.url)
             return True
+
+        logger.debug("%s.is_smarter_api() - url is not a smarter api url: %s", logger_prefix, self.url)
         return False
 
     @cached_property
@@ -1116,29 +1145,60 @@ class SmarterRequestMixin(AccountMixin):
             bool: True if the URL matches a smarter API chatbot endpoint, otherwise False.
         """
         if not self.smarter_request:
+            logger.debug("%s.is_chatbot_smarter_api_url() - request is None", logger_prefix)
             return False
         if not self.qualified_request:
+            logger.debug("%s.is_chatbot_smarter_api_url() - request is not qualified", logger_prefix)
             return False
         if not self.parsed_url:
+            logger.debug("%s.is_chatbot_smarter_api_url() - url is None or empty", logger_prefix)
             return False
 
         if not isinstance(self.url_path_parts, list):
+            logger.debug("%s.is_chatbot_smarter_api_url() - url_path_parts is not a list", logger_prefix)
             return False
         if len(self.url_path_parts) != 5:
+            logger.debug(
+                "%s.is_chatbot_smarter_api_url() - url_path_parts does not have 5 parts: %s",
+                logger_prefix,
+                self.url_path_parts,
+            )
             return False
         if self.url_path_parts[0] != "api":
+            logger.debug(
+                "%s.is_chatbot_smarter_api_url() - first part is not 'api': %s", logger_prefix, self.url_path_parts
+            )
             return False
         if self.url_path_parts[1] != "v1":
+            logger.debug(
+                "%s.is_chatbot_smarter_api_url() - second part is not 'v1': %s", logger_prefix, self.url_path_parts
+            )
             return False
         if self.url_path_parts[2] not in ["workbench", "chatbots"]:
+            logger.debug(
+                "%s.is_chatbot_smarter_api_url() - third part is not 'workbench' or 'chatbots': %s",
+                logger_prefix,
+                self.url_path_parts,
+            )
             return False
         if not self.url_path_parts[3].isnumeric():
             # expecting <int:pk> to be numeric: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+            logger.debug(
+                "%s.is_chatbot_smarter_api_url() - fourth part is not numeric: %s",
+                logger_prefix,
+                self.url_path_parts,
+            )
             return False
         if self.url_path_parts[4] != "chat":
             # expecting 'chat' at the end of the path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+            logger.debug(
+                "%s.is_chatbot_smarter_api_url() - fifth part is not 'chat': %s",
+                logger_prefix,
+                self.url_path_parts,
+            )
             return False
 
+        logger.debug("%s.is_chatbot_smarter_api_url() - url is a smarter api chatbot url: %s", logger_prefix, self.url)
         return True
 
     @cached_property
@@ -1153,19 +1213,27 @@ class SmarterRequestMixin(AccountMixin):
             bool: True if the URL matches the CLI chatbot API pattern, otherwise False.
         """
         if not self.smarter_request:
+            logger.debug("%s.is_chatbot_cli_api_url() - request is None", logger_prefix)
             return False
         if not self.is_smarter_api:
+            logger.debug("%s.is_chatbot_cli_api_url() - request is not smarter api", logger_prefix)
             return False
 
         path_parts = self.url_path_parts
         try:
             if path_parts[2] != "cli":
+                logger.debug("%s.is_chatbot_cli_api_url() - third part is not 'cli': %s", logger_prefix, path_parts)
                 return False
             if path_parts[3] != "chat":
+                logger.debug("%s.is_chatbot_cli_api_url() - fourth part is not 'chat': %s", logger_prefix, path_parts)
                 return False
         except IndexError:
+            logger.debug(
+                "%s.is_chatbot_cli_api_url() - url_path_parts index out of range: %s", logger_prefix, path_parts
+            )
             return False
 
+        logger.debug("%s.is_chatbot_cli_api_url() - url is a cli chatbot api url: %s", logger_prefix, self.url)
         return True
 
     @cached_property
@@ -1181,16 +1249,25 @@ class SmarterRequestMixin(AccountMixin):
             bool: True if the URL matches the named chatbot pattern, otherwise False.
         """
         if not self.smarter_request:
+            logger.debug("%s.is_chatbot_named_url() - request is None", logger_prefix)
             return False
         if not self.url:
+            logger.debug("%s.is_chatbot_named_url() - url is None or empty", logger_prefix)
             return False
         if not smarter_settings.environment_api_domain in self.url:
+            logger.debug(
+                "%s.is_chatbot_named_url() - url %s does not contain environment_api_domain: %s",
+                logger_prefix,
+                self.url,
+                smarter_settings.environment_api_domain,
+            )
             return False
         account_number = self.url_account_number
         if account_number is not None:
             logger.debug(
-                "%s.is_chatbot_named_url() - url is a named url with account number: %s",
+                "%s.is_chatbot_named_url() - url %s is a named url with account number: %s",
                 logger_prefix,
+                self.url,
                 account_number,
             )
             if self.account is None:
@@ -1200,11 +1277,27 @@ class SmarterRequestMixin(AccountMixin):
 
         # Accept root path or root with trailing slash
         if isinstance(self.parsed_url, ParseResult) and self.parsed_url.path not in ("", "/"):
+            logger.debug(
+                "%s.is_chatbot_named_url() - url %s path is not root or trailing slash: %s",
+                logger_prefix,
+                self.url,
+                self.parsed_url.path,
+            )
             return False
 
         if isinstance(self.parsed_url, ParseResult) and netloc_pattern_named_url.match(self.parsed_url.netloc):
+            logger.debug(
+                "%s.is_chatbot_named_url() - url %s is a named url without account number.",
+                logger_prefix,
+                self.url,
+            )
             return True
 
+        logger.debug(
+            "%s.is_chatbot_named_url() - url %s is not a named url.",
+            logger_prefix,
+            self.url,
+        )
         return False
 
     @cached_property
@@ -1233,6 +1326,7 @@ class SmarterRequestMixin(AccountMixin):
             logger.warning("%s.is_chatbot_sandbox_url() - request is None or not set.", logger_prefix)
             return False
         if not self.qualified_request:
+            logger.debug("%s.is_chatbot_sandbox_url() - request is not qualified.", logger_prefix)
             return False
         if not self.parsed_url:
             logger.warning("%s.is_chatbot_sandbox_url() - url is None or not set.", logger_prefix)
@@ -1248,6 +1342,11 @@ class SmarterRequestMixin(AccountMixin):
             and path_parts[3].isnumeric()
             and path_parts[4] == "chat"
         ):
+            logger.debug(
+                "%s.is_chatbot_sandbox_url() - url %s is a chatbot sandbox smarter api url.",
+                logger_prefix,
+                self.url,
+            )
             return True
 
         # ---------------------------------------------------------------------
@@ -1258,18 +1357,47 @@ class SmarterRequestMixin(AccountMixin):
         #   ['workbench', '<slug>', 'chat']
         #   ['workbench', '<slug>', 'config']
         if self.parsed_url.netloc != smarter_settings.environment_platform_domain:
+            logger.debug(
+                "%s.is_chatbot_sandbox_url() - url %s netloc does not match environment platform domain: %s",
+                logger_prefix,
+                self.url,
+                smarter_settings.environment_platform_domain,
+            )
             return False
         if len(path_parts) != 3:
+            logger.debug(
+                "%s.is_chatbot_sandbox_url() - url %s does not have exactly 3 path parts: %s",
+                logger_prefix,
+                self.url,
+                path_parts,
+            )
             return False
         if path_parts[0] != "workbench":
+            logger.debug(
+                "%s.is_chatbot_sandbox_url() - url %s first path part is not 'workbench': %s",
+                logger_prefix,
+                self.url,
+                path_parts,
+            )
             return False
         if not path_parts[1].isalpha():
             # expecting <slug> to be alpha: ['workbench', '<slug>', 'config']
+            logger.debug(
+                "%s.is_chatbot_sandbox_url() - url %s second path part is not alphabetic slug: %s",
+                logger_prefix,
+                self.url,
+                path_parts,
+            )
             return False
         if path_parts[-1] in ["config", "chat"]:
             # expecting:
             #   ['workbench', '<slug>', 'chat']
             #   ['workbench', '<slug>', 'config']
+            logger.debug(
+                "%s.is_chatbot_sandbox_url() - url %s is a chatbot sandbox url.",
+                logger_prefix,
+                self.url,
+            )
             return True
 
         logger.warning(
@@ -1291,9 +1419,19 @@ class SmarterRequestMixin(AccountMixin):
             bool: True if the URL is the default environment domain, otherwise False.
         """
         if not self.smarter_request:
+            logger.debug("%s.is_default_domain() - request is None. Cannot determine default domain.", logger_prefix)
             return False
         if not self.url:
+            logger.debug(
+                "%s.is_default_domain() - url is None or empty. Cannot determine default domain.", logger_prefix
+            )
             return False
+        logger.debug(
+            "%s.is_default_domain() - checking if url %s contains default domain %s",
+            logger_prefix,
+            self.url,
+            smarter_settings.environment_api_domain,
+        )
         return smarter_settings.environment_api_domain in self.url
 
     @cached_property

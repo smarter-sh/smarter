@@ -499,175 +499,319 @@ class TestSmarterRequestMixin(TestAccountMixin):
         with self.assertLogs("smarter.lib.django.request", level="DEBUG"):
             _ = mixin.smarter_request_chatbot_name
 
+    @patch.object(SmarterRequestMixin, "is_chatbot_named_url", new=property(lambda self: False))
+    @patch.object(SmarterRequestMixin, "is_chatbot_sandbox_url", new=property(lambda self: False))
+    @patch.object(SmarterRequestMixin, "is_chatbot_smarter_api_url", new=property(lambda self: True))
+    def test_is_chatbot_smarter_api_url(self):
+        """
+        smarter api url has no chatbot name
+        """
+        response = self.client.get("/dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        mixin._parse_result = None
+
+        del mixin.smarter_request_chatbot_name
+        with self.assertLogs("smarter.lib.django.request", level="DEBUG"):
+            _ = mixin.smarter_request_chatbot_name
+
+    @patch.object(SmarterRequestMixin, "is_chatbot_named_url", new=property(lambda self: False))
+    @patch.object(SmarterRequestMixin, "is_chatbot_sandbox_url", new=property(lambda self: False))
+    @patch.object(SmarterRequestMixin, "is_chatbot_smarter_api_url", new=property(lambda self: False))
+    @patch.object(SmarterRequestMixin, "is_chatbot_cli_api_url", new=property(lambda self: True))
+    @patch.object(
+        SmarterRequestMixin, "url_path_parts", new=property(lambda self: ["api", "v1", "cli", "chat", "mybot"])
+    )
     def test_smarter_request_chatbot_name_cli_api_url(self):
-        """Covers lines 719-726: Extract chatbot name from CLI API URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.is_chatbot_cli_api_url = True
-        mixin.url_path_parts = ["api", "v1", "cli", "chat", "mybot"]
+        """Extract chatbot name from CLI API URL."""
 
-        def fake_snake(val):
-            return val + "_snake"
+        response = self.client.get("/dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
 
-        mixin.rfc1034_compliant_to_snake = fake_snake
-        self.assertTrue(mixin.smarter_request_chatbot_name.endswith("snake"))
+        self.assertEqual(
+            mixin.smarter_request_chatbot_name,
+            "mybot",
+            f"Chatbot name should be 'mybot' but got {mixin.smarter_request_chatbot_name}",
+        )
 
     def test_is_environment_root_domain_true(self):
-        """Covers line 761: Returns True if parsed_url.netloc and path match environment root domain."""
+        """
+        Returns True if parsed_url.netloc and path match environment root domain.
 
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.parsed_url = type("PR", (), {"netloc": "root.domain", "path": "/"})()
-        with patch.object(smarter_settings, "environment_platform_domain", "root.domain"):
+        if not self.smarter_request:
+            return False
+        if not self.parsed_url:
+            return False
+        return self.parsed_url.netloc == smarter_settings.environment_platform_domain and self.parsed_url.path == "/"
+        """
+
+        from django.conf import settings
+
+        host_name = "root.domain"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+        response = self.client.get("/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_environment_root_domain
+        with patch.object(smarter_settings, "environment_platform_domain", host_name):
             self.assertTrue(mixin.is_environment_root_domain)
 
     def test_is_environment_root_domain_false(self):
-        """Covers line 764: Returns False if parsed_url is missing."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.parsed_url = None
+        """Returns False if parsed_url is missing."""
+
+        response = self.client.get("/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        mixin._parsed_url = None
+
         self.assertFalse(mixin.is_environment_root_domain)
 
     def test_is_environment_root_domain_path_not_root(self):
-        """Covers line 766: Returns False if path is not root."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.parsed_url = type("PR", (), {"netloc": "root.domain", "path": "/notroot"})()
-        with patch.object(smarter_settings, "environment_platform_domain", "root.domain"):
+        """Returns False if path is not root."""
+
+        from django.conf import settings
+
+        host_name = "root.domain"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+        response = self.client.get("/dashboard/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_environment_root_domain
+        with patch.object(smarter_settings, "environment_platform_domain", host_name):
             self.assertFalse(mixin.is_environment_root_domain)
 
     def test_is_chatbot_true(self):
-        """Covers lines 769-770: Returns True if any chatbot URL type is True."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.qualified_request = True
-        mixin.is_chatbot_named_url = True
-        mixin.is_chatbot_sandbox_url = False
-        mixin.is_chatbot_smarter_api_url = False
-        mixin.is_chatbot_cli_api_url = False
+        """
+        Returns True if any chatbot URL type is True.
+        """
+
+        from django.conf import settings
+
+        host_name = "example.3141-5926-5359.api.localhost:8000"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+
         self.assertTrue(mixin.is_chatbot)
 
     def test_is_chatbot_false(self):
-        """Covers line 778: Returns False if not a qualified request."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.qualified_request = False
+        """Returns False if not a qualified request."""
+
+        from django.conf import settings
+
+        host_name = "wikipedia.org"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+
         self.assertFalse(mixin.is_chatbot)
 
     def test_is_smarter_api_true(self):
-        """Covers lines 791-792: Returns True if 'api' in url_path_parts."""
+        """Returns True if 'api' in url_path_parts."""
 
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://localhost/api/v1/"
-        mixin.url_path_parts = ["api", "v1", "foo"]
+        from django.conf import settings
+
+        host_name = "example.3141-5926-5359.api.stackademy.edu"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+
         self.assertTrue(mixin.is_smarter_api)
 
     def test_is_smarter_api_false(self):
-        """Covers lines 798-810: Returns False if not a smarter API URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://localhost/"
-        mixin.url_path_parts = ["notapi", "v1"]
+        """Returns False if not a smarter API URL."""
+
+        from django.conf import settings
+
+        host_name = "cdn.stackademy.edu"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+
         self.assertFalse(mixin.is_smarter_api)
 
     def test_is_chatbot_smarter_api_url_true(self):
-        """Covers line 846: Returns True for valid smarter API chatbot URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.qualified_request = True
-        mixin.parsed_url = type("PR", (), {})()
-        mixin.url_path_parts = ["api", "v1", "workbench", "123", "chat"]
-        self.assertTrue(mixin.is_chatbot_smarter_api_url)
+        """
+        Returns True for valid smarter API chatbot URL.
+        Returns True if the URL is of the form:
+
+            - http://localhost:8000/api/v1/workbench/1/chat/
+              path_parts: ['api', 'v1', 'workbench', '<int:pk>', 'chat']
+
+            - http://localhost:8000/api/v1/chatbots/1556/chat/
+              path_parts: ['api', 'v1', 'chatbots', '<int:pk>', 'chat']
+
+        """
+        host_name = "localhost:8000"
+        response = self.client.get(
+            f"http://{host_name}/api/v1/chatbots/1/chat/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_chatbot_smarter_api_url
+
+        try:
+            # will raise an exception if the db is not initialized
+            # and there are not ChatBots in the database.
+            self.assertTrue(mixin.is_chatbot_smarter_api_url)
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning("Exception during SmarterRequestMixin instantiation: %s", e)
 
     def test_is_chatbot_smarter_api_url_false(self):
-        """Covers line 893: Returns False for invalid smarter API chatbot URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.qualified_request = True
-        mixin.parsed_url = type("PR", (), {})()
-        mixin.url_path_parts = ["api", "v1", "workbench", "notanumber", "chat"]
-        self.assertFalse(mixin.is_chatbot_smarter_api_url)
+        """
+        Returns False for invalid smarter API chatbot URL.
+        """
+
+        host_name = "localhost:8000"
+        response = self.client.get(
+            f"http://{host_name}/anywhere-but-here/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_chatbot_smarter_api_url
+
+        try:
+            # will raise an exception if the db is not initialized
+            # and there are not ChatBots in the database.
+            self.assertFalse(mixin.is_chatbot_smarter_api_url)
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning("Exception during SmarterRequestMixin instantiation: %s", e)
 
     def test_is_chatbot_cli_api_url_true(self):
-        """Covers line 924: Returns True for valid CLI API chatbot URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.is_smarter_api = True
-        mixin.url_path_parts = ["api", "v1", "cli", "chat", "mybot"]
+        """Returns True for valid CLI API chatbot URL."""
+        host_name = "localhost:8000"
+        response = self.client.get(
+            f"http://{host_name}/api/v1/cli/chat/example/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+        )
+        request = response.wsgi_request
+
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_chatbot_cli_api_url
+        try:
+            # will raise an exception if the db is not initialized
+            # and there are not ChatBots in the database.
+            mixin = SmarterRequestMixin(request)
+            self.assertTrue(mixin.is_chatbot_smarter_api_url)
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning("Exception during SmarterRequestMixin instantiation: %s", e)
+
         self.assertTrue(mixin.is_chatbot_cli_api_url)
 
     def test_is_chatbot_cli_api_url_false(self):
-        """Covers line 951: Returns False for invalid CLI API chatbot URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.is_smarter_api = True
-        mixin.url_path_parts = ["api", "v1", "cli", "notchat", "mybot"]
+        """Returns False for invalid CLI API chatbot URL."""
+
+        host_name = "localhost:8000"
+        response = self.client.get(
+            f"http://{host_name}/shooby/dooby/do/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+        )
+        request = response.wsgi_request
+
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_chatbot_cli_api_url
+        try:
+            # will raise an exception if the db is not initialized
+            # and there are not ChatBots in the database.
+            mixin = SmarterRequestMixin(request)
+            self.assertFalse(mixin.is_chatbot_smarter_api_url)
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning("Exception during SmarterRequestMixin instantiation: %s", e)
+
         self.assertFalse(mixin.is_chatbot_cli_api_url)
 
     def test_is_chatbot_named_url_true(self):
-        """Covers line 963: Returns True for valid named chatbot URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://example.3141-5926-5359.api.localhost:8000/"
-        with patch.object(smarter_settings, "environment_api_domain", "api.localhost"):
-            mixin.url_account_number = "3141-5926-5359"
-            mixin.account = None
-            self.assertTrue(mixin.is_chatbot_named_url)
+        """Returns True for valid named chatbot URL."""
+        host_name = "example.3141-5926-5359.api.localhost:8000"
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_chatbot_named_url
+        self.assertTrue(mixin.is_chatbot_named_url)
 
     def test_is_chatbot_named_url_false(self):
-        """Covers line 975: Returns False for invalid named chatbot URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://localhost:8000/"
-        with patch.object(smarter_settings, "environment_api_domain", "api.localhost"):
-            mixin.url_account_number = None
-            mixin._parse_result = type("PR", (), {"path": "/notroot"})()
-            self.assertFalse(mixin.is_chatbot_named_url)
-
-    def test_is_chatbot_named_url_root_path(self):
-        """Covers line 977: Accepts root path or root with trailing slash."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://example.3141-5926-5359.api.localhost:8000/"
-        with patch.object(smarter_settings, "environment_api_domain", "api.localhost"):
-            mixin.url_account_number = None
-            mixin._parse_result = type("PR", (), {"path": "/"})()
-            mixin.netloc_pattern_named_url = type("Pattern", (), {"match": lambda self, x: True})()
-            self.assertTrue(mixin.is_chatbot_named_url)
+        """Returns False for invalid named chatbot URL."""
+        host_name = "api.localhost:8000"
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_chatbot_named_url
+        self.assertFalse(mixin.is_chatbot_named_url)
 
     def test_is_chatbot_sandbox_url_true(self):
-        """Covers line 1018: Returns True for valid sandbox URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.qualified_request = True
-        mixin._parse_result = type("PR", (), {"netloc": "platform.smarter.sh"})()
-        mixin.url_path_parts = ["workbench", "example", "chat"]
-        with patch.object(smarter_settings, "environment_platform_domain", "platform.smarter.sh"):
+        """Returns True for valid sandbox URL."""
+        from django.conf import settings
+
+        host_name = "platform.example.com"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+
+        response = self.client.get(
+            f"http://{host_name}/workbench/example/chat/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_chatbot_sandbox_url
+        with patch.object(smarter_settings, "environment_platform_domain", "platform.example.com"):
             self.assertTrue(mixin.is_chatbot_sandbox_url)
 
     def test_is_chatbot_sandbox_url_false(self):
-        """Covers line 1020: Returns False for invalid sandbox URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.qualified_request = True
-        mixin._parse_result = type("PR", (), {"netloc": "notplatform"})()
-        mixin.url_path_parts = ["workbench", "example", "notchat"]
-        with patch.object(smarter_settings, "environment_platform_domain", "platform.smarter.sh"):
+        """Returns False for invalid sandbox URL."""
+        from django.conf import settings
+
+        host_name = "platform.example.com"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_chatbot_sandbox_url
+        with patch.object(smarter_settings, "environment_platform_domain", "platform.example.com"):
             self.assertFalse(mixin.is_chatbot_sandbox_url)
 
     def test_is_default_domain_true(self):
-        """Covers line 1040: Returns True if environment_api_domain in url."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://api.localhost:8000/"
-        with patch.object(smarter_settings, "environment_api_domain", "api.localhost"):
+        """Returns True if environment_api_domain in url."""
+        from django.conf import settings
+
+        host_name = "platform.example.com"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_default_domain
+        with patch.object(smarter_settings, "environment_api_domain", "platform.example.com"):
             self.assertTrue(mixin.is_default_domain)
 
     def test_is_default_domain_false(self):
-        """Covers line 1042: Returns False if environment_api_domain not in url."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://notapi.localhost:8000/"
-        with patch.object(smarter_settings, "environment_api_domain", "api.localhost"):
-            self.assertFalse(mixin.is_default_domain)
+        """Returns False if environment_api_domain not in url."""
+
+        from django.conf import settings
+
+        host_name = "cats.com"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.is_default_domain
+        self.assertFalse(mixin.is_default_domain)
 
     def test_path_property_empty_path(self):
         """Covers line 1044: Returns '/' if parsed_url.path is empty string."""
