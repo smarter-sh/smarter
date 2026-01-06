@@ -162,6 +162,9 @@ class SmarterWaffleSwitches:
     TASK_LOGGING = "log_tasks"
     """Enables logging in all Celery tasks throughout the Smarter codebase."""
 
+    VALIDATOR_LOGGING = "log_validators"
+    """Enables logging in all Django model field validators throughout the Smarter codebase."""
+
     VIEW_LOGGING = "log_views"
     """Enables logging in all Django views throughout the Smarter codebase."""
 
@@ -186,6 +189,7 @@ class SmarterWaffleSwitches:
             self.REQUEST_MIXIN_LOGGING,
             self.RECEIVER_LOGGING,
             self.TASK_LOGGING,
+            self.VALIDATOR_LOGGING,
             self.VIEW_LOGGING,
         ]
 

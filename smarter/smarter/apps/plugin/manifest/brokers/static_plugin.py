@@ -21,7 +21,6 @@ from smarter.apps.plugin.models import (
 )
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.signals import broker_ready
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

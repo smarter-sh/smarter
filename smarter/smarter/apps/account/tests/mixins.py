@@ -10,6 +10,7 @@ from .factories import admin_user_factory, factory_account_teardown, mortal_user
 
 logger = logging.getLogger(__name__)
 HERE = __name__
+logger_prefix = formatted_text(f"{HERE}.TestAccountMixin()")
 
 
 class TestAccountMixin(SmarterTestBase):
@@ -25,13 +26,17 @@ class TestAccountMixin(SmarterTestBase):
         which is needed so that the django Secret model can be queried.
         """
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.test_account_mixin_logger_prefix)
+        title = f" {logger_prefix}.setUpClass() "
+        msg = "*" * ((120 - len(title)) // 2) + title + "*" * ((120 - len(title)) // 2)
+        logger.debug(msg)
         cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
         cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
 
     @classmethod
     def tearDownClass(cls):
-        logger.debug("%s.tearDownClass()", cls.test_account_mixin_logger_prefix)
+        title = f" {logger_prefix}.tearDownClass() "
+        msg = "*" * ((120 - len(title)) // 2) + title + "*" * ((120 - len(title)) // 2)
+        logger.debug(msg)
         try:
             factory_account_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
             factory_account_teardown(
@@ -50,9 +55,15 @@ class TestAccountMixin(SmarterTestBase):
         self._manifest_path = None
         self._loader = None
         self._model = None
+        title = f" {logger_prefix}.{self._testMethodName}() "
+        msg = "-" * ((120 - len(title)) // 2) + title + "-" * ((120 - len(title)) // 2)
+        logger.debug(msg)
 
     def tearDown(self):
         """We use different manifest test data depending on the test case."""
+        title = f" {logger_prefix}.tearDown() {self._testMethodName} "
+        msg = "-" * ((120 - len(title)) // 2) + title + "-" * ((120 - len(title)) // 2)
+        logger.debug(msg)
         self._manifest = None
         self._manifest_path = None
         self._loader = None

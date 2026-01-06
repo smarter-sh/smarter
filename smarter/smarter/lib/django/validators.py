@@ -7,21 +7,44 @@ or a Django utility that can do the validation.
 """
 
 import logging
-
-
-logger = logging.getLogger(__name__)
-
 import re
 import warnings
 from typing import Optional
 from urllib.parse import urlparse, urlunparse
 
 import validators
+from django.apps import apps
+from django.core.exceptions import AppRegistryNotReady
 
 from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+
+
+# guard against Sphinx doc build circular import errors
+validator_logging_is_active: bool = False
+if apps.ready:
+    try:
+        # this resolves an import issue in collect static assets where Django apps are not yet importable
+        # pylint: disable=import-outside-toplevel,C0412
+        from smarter.lib.django import waffle
+        from smarter.lib.django.waffle import SmarterWaffleSwitches
+
+        validator_logging_is_active = waffle.switch_is_active(SmarterWaffleSwitches.VALIDATOR_LOGGING)
+    # pylint: disable=broad-except
+    except (AppRegistryNotReady, ImportError):
+        pass
+
+
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return validator_logging_is_active
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 logger_prefix = formatted_text(f"{__name__}.SmarterValidator")

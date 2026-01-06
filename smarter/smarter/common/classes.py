@@ -77,7 +77,7 @@ class SmarterHelperMixin:
     """
 
     def __init__(self, *args, **kwargs):
-        pass
+        logger.debug("%s.__init__() - initializing with args=%s, kwargs=%s", self.formatted_class_name, args, kwargs)
 
     @property
     def formatted_class_name(self) -> str:
