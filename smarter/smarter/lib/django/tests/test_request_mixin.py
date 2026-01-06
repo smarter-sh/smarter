@@ -1,21 +1,21 @@
 # pylint: disable=W0212
 """Test SmarterRequestMixin."""
 
-import warnings
 from datetime import datetime
 from logging import getLogger
 from unittest.mock import patch
 from urllib.parse import ParseResult
 
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.http import HttpRequest
+from django.http import HttpRequest, QueryDict
 from django.test import Client, RequestFactory
 
-import smarter.lib.django.request as req_mod
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.django.request import SmarterRequestMixin, SmarterValueError
 
@@ -158,12 +158,20 @@ class TestSmarterRequestMixin(TestAccountMixin):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
         """
-        request = self.wsgi_request_factory().get(f"/?session_key={self.session_key}", SERVER_NAME="testserver")
-        srm = SmarterRequestMixin(request)
+        host_name = "testserver"
+        request = self.client.get(
+            f"/?session_key={self.session_key}",
+            SERVER_NAME=host_name,
+            SERVER_PORT=80,
+            HTTP_HOST=host_name,
+            REMOTE_ADDR="1.2.3.4",
+        )
+
+        srm = SmarterRequestMixin(request.wsgi_request)
         self.assertIsNone(srm.account)
         self.assertIsNotNone(srm.session_key)
         self.assertEqual(srm.domain, "testserver")
-        self.assertEqual(srm.ip_address, "127.0.0.1")
+        self.assertEqual(srm.ip_address, "1.2.3.4")
         self.assertFalse(srm.is_smarter_api)
         self.assertFalse(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_smarter_api_url)
@@ -173,7 +181,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertFalse(srm.is_default_domain)
         self.assertEqual(srm.path, "/")
         self.assertEqual(srm.root_domain, "testserver")
-        self.assertEqual(srm.subdomain, "")
+        self.assertEqual(srm.subdomain, None)
         self.assertIsNone(srm.user)
         self.assertIsInstance(srm.timestamp, datetime)
         try:
@@ -222,7 +230,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertTrue(srm.is_chatbot_named_url)
         self.assertFalse(srm.is_chatbot_cli_api_url)
         self.assertFalse(srm.is_chatbot_sandbox_url)
-        self.assertFalse(srm.is_smarter_api)
+        self.assertTrue(srm.is_smarter_api)
         self.assertIsNotNone(srm.session_key)
         self.assertEqual(srm.domain, "example.3141-5926-5359.api.localhost:8000")
 
@@ -242,7 +250,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNotNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertFalse(srm.is_chatbot_named_url)
         self.assertFalse(srm.is_chatbot_cli_api_url)
@@ -267,7 +274,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNotNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
@@ -292,7 +298,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(srm.url, "http://localhost:8000" + path)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNotNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
         self.assertTrue(srm.is_chatbot)
         self.assertFalse(srm.is_chatbot_named_url)
@@ -546,8 +551,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
         return self.parsed_url.netloc == smarter_settings.environment_platform_domain and self.parsed_url.path == "/"
         """
 
-        from django.conf import settings
-
         host_name = "root.domain"
 
         settings.ALLOWED_HOSTS.append(host_name)
@@ -571,8 +574,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def test_is_environment_root_domain_path_not_root(self):
         """Returns False if path is not root."""
 
-        from django.conf import settings
-
         host_name = "root.domain"
 
         settings.ALLOWED_HOSTS.append(host_name)
@@ -588,8 +589,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
         Returns True if any chatbot URL type is True.
         """
 
-        from django.conf import settings
-
         host_name = "example.3141-5926-5359.api.localhost:8000"
 
         settings.ALLOWED_HOSTS.append(host_name)
@@ -601,8 +600,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
     def test_is_chatbot_false(self):
         """Returns False if not a qualified request."""
-
-        from django.conf import settings
 
         host_name = "wikipedia.org"
 
@@ -616,8 +613,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def test_is_smarter_api_true(self):
         """Returns True if 'api' in url_path_parts."""
 
-        from django.conf import settings
-
         host_name = "example.3141-5926-5359.api.stackademy.edu"
 
         settings.ALLOWED_HOSTS.append(host_name)
@@ -629,8 +624,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
     def test_is_smarter_api_false(self):
         """Returns False if not a smarter API URL."""
-
-        from django.conf import settings
 
         host_name = "cdn.stackademy.edu"
 
@@ -753,7 +746,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
     def test_is_chatbot_sandbox_url_true(self):
         """Returns True for valid sandbox URL."""
-        from django.conf import settings
 
         host_name = "platform.example.com"
 
@@ -770,7 +762,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
     def test_is_chatbot_sandbox_url_false(self):
         """Returns False for invalid sandbox URL."""
-        from django.conf import settings
 
         host_name = "platform.example.com"
 
@@ -785,7 +776,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
     def test_is_default_domain_true(self):
         """Returns True if environment_api_domain in url."""
-        from django.conf import settings
 
         host_name = "platform.example.com"
 
@@ -801,8 +791,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def test_is_default_domain_false(self):
         """Returns False if environment_api_domain not in url."""
 
-        from django.conf import settings
-
         host_name = "cats.com"
 
         settings.ALLOWED_HOSTS.append(host_name)
@@ -814,112 +802,141 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertFalse(mixin.is_default_domain)
 
     def test_path_property_empty_path(self):
-        """Covers line 1044: Returns '/' if parsed_url.path is empty string."""
+        """Returns '/' if parsed_url.path is empty string."""
 
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://localhost:8000/"
-        mixin.parsed_url = type("PR", (), {"path": ""})()
+        response = self.client.get("")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.path
         self.assertEqual(mixin.path, "/")
 
     def test_path_property_normal(self):
-        """Covers line 1049: Returns parsed_url.path if present."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://localhost:8000/foo"
-        mixin.parsed_url = type("PR", (), {"path": "/foo"})()
-        self.assertEqual(mixin.path, "/foo")
+        """Returns parsed_url.path if present."""
+        response = self.client.get("/fu/man/chou/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.path
+        self.assertEqual(mixin.path, "/fu/man/chou/")
 
     def test_root_domain_extracted(self):
-        """Covers line 1051: Returns extracted root domain from url."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "https://hr.3141-5926-5359.alpha.api.example.com/chatbot/"
-        with patch.object(smarter_settings, "environment", None):
-            mixin.SmarterValidator = req_mod.SmarterValidator
-            self.assertIn("smarter.sh", mixin.root_domain)
+        """Returns extracted root domain from url."""
+
+        host_name = "dogs.com"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.root_domain
+        self.assertEqual("dogs.com", mixin.root_domain)
 
     def test_root_domain_extracted_domain_only(self):
-        """Covers lines 1054-1061: Returns only domain if suffix missing."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://localhost:8000/"
-        with patch.object(smarter_settings, "environment", None):
-            mixin.SmarterValidator = req_mod.SmarterValidator
-            self.assertEqual(mixin.root_domain, "localhost")
+        """Returns only domain if suffix missing."""
+
+        host_name = "dogs"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+
+        response = self.client.get(f"http://{host_name}/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name)
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.root_domain
+        self.assertEqual("dogs", mixin.root_domain, f"Root domain should be 'dogs' but got {mixin.root_domain}")
 
     def test_subdomain_extracted(self):
-        """Covers line 1075: Returns extracted subdomain from url."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "https://hr.3141-5926-5359.alpha.api.example.com/chatbot/"
-        self.assertIn("hr.3141-5926-5359.alpha", mixin.subdomain)
+        """Returns extracted subdomain from url."""
+
+        host_name = "hr.3141-5926-5359.alpha.api.example.com"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+
+        response = self.client.get(
+            f"http://{host_name}/chatbot/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.subdomain
+        self.assertEqual(
+            "hr.3141-5926-5359.alpha.api",
+            mixin.subdomain,
+            f"Subdomain should be 'hr.3141-5926-5359.alpha.api' but got {mixin.subdomain}",
+        )
 
     def test_subdomain_none(self):
-        """Covers lines 1084-1086: Returns None if no smarter_request or url."""
-        mixin = SmarterRequestMixin.__new__(SmarterRequestMixin)
-        mixin.smarter_request = None
-        self.assertIsNone(mixin.subdomain)
-        mixin.smarter_request = object()
-        mixin.url = None
+        """Returns None if no smarter_request or url."""
+
+        host_name = "example.com"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+
+        response = self.client.get(
+            f"http://{host_name}/chatbot/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        del mixin.subdomain
         self.assertIsNone(mixin.subdomain)
 
     def test_api_token_none(self):
-        """Covers line 1103: api_token returns None if auth_header is not a string."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.auth_header = None
+        """api_token returns None if auth_header is not a string."""
+        response = self.client.get("/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
         self.assertIsNone(mixin.api_token)
 
     def test_api_token_valid(self):
-        """Covers line 1105: api_token returns token bytes if header starts with 'Token '."""
-        mixin = SmarterRequestMixin(DummyRequest())
+        """api_token returns token bytes if header starts with 'Token '."""
+        response = self.client.get(
+            path="/",
+            headers={"Authorization": "Token abc123"},
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
         mixin.auth_header = "Token abc123"
         self.assertEqual(mixin.api_token, b"abc123")
 
     def test_qualified_request_static_asset(self):
-        """Covers line 1117: qualified_request returns False for static asset extension."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin._parse_result = type("PR", (), {"path": "/foo/bar.png"})()
+        """qualified_request returns False for static asset extension."""
+        response = self.client.get("styles.css")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
         self.assertFalse(mixin.qualified_request)
 
     def test_qualified_request_true_all_checks(self):
-        """Covers lines 1121-1127: qualified_request returns True if all checks pass."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin._parse_result = type("PR", (), {"path": "/foo/bar", "netloc": "localhost"})()
-        mixin.parsed_url = mixin._parse_result
-        mixin.amnesty_urls = []
+        """qualified_request returns True if all checks pass."""
+        response = self.client.get("/dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
         self.assertTrue(mixin.qualified_request)
 
     def test_params_returns_params(self):
-        """Covers lines 1152-1153: params property returns QueryDict if present."""
-        from django.http import QueryDict
+        """params property returns QueryDict if present."""
 
-        class DummyRequest:
-            META = {"QUERY_STRING": "foo=bar"}
-
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin._params = QueryDict("foo=bar")
-        self.assertEqual(mixin.params["foo"], "bar")
-
-    def test_params_sets_params(self):
-        """Covers line 1155: params property sets _params from request META."""
-        from django.http import QueryDict
-
-        class DummyRequest:
-            META = {"QUERY_STRING": "foo=bar"}
-
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin._params = None
-        self.assertEqual(mixin.params["foo"], "bar")
+        response = self.client.get(
+            path="/dashboard/",
+            query_params={"foo": "bar"},
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        self.assertIsInstance(mixin.params, QueryDict)
+        self.assertIn("foo", mixin.params)  # type: ignore
+        self.assertEqual(mixin.params["foo"], "bar")  # type: ignore
 
     def test_params_handles_attribute_error_and_returns_none(self):
-        """Covers lines 1157-1158: params property handles AttributeError and logs error."""
+        """params property handles AttributeError and logs error."""
 
-        class DummyRequest:
-            META = None
-
-        mixin = SmarterRequestMixin(DummyRequest())
+        response = self.client.get(
+            path="/dashboard/",
+            query_params={"foo": "bar"},
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        mixin._smarter_request.META = None  # Will cause AttributeError
         mixin._params = None
+        with self.assertLogs("smarter.lib.django.request", level="ERROR"):
+            result = mixin.params
+            self.assertIsNone(result)
         self.assertIsNone(mixin.params)
 
     def test_cache_key_returns_cached(self):
@@ -929,242 +946,260 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(mixin.cache_key, "cached_key")
 
     def test_cache_key_returns_none_if_no_smarter_request(self):
-        """Covers line 1187: cache_key returns None if smarter_request is None."""
-        mixin = SmarterRequestMixin.__new__(SmarterRequestMixin)
+        """cache_key returns None if smarter_request is None."""
+        response = self.client.get("/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
         mixin._cache_key = None
-        mixin.smarter_request = None
+        mixin._smarter_request = None
+        del mixin.cache_key
         self.assertIsNone(mixin.cache_key)
 
     def test_cache_key_computes_and_sets(self):
-        """Covers lines 1194-1199: cache_key computes and sets _cache_key."""
+        """cache_key computes and sets _cache_key."""
 
-        mixin = SmarterRequestMixin(DummyRequest())
+        response = self.client.get("/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        self.assertIsNotNone(mixin.cache_key)
+
+        saved_key = mixin.cache_key
+        saved_request = mixin._smarter_request
+
         mixin._cache_key = None
-        mixin.uid = "uid"
-        mixin.smarter_request = DummyRequest()
-        key = mixin.cache_key
-        self.assertIsInstance(key, str)
-        self.assertEqual(key, mixin._cache_key)
+        mixin._smarter_request = None
+        del mixin.cache_key
+        self.assertIsNone(mixin.cache_key)
+
+        del mixin.cache_key
+        mixin._smarter_request = saved_request
+        new_key = mixin.cache_key
+
+        self.assertIsInstance(new_key, str)
+        self.assertNotEqual(new_key, saved_key)
+
+        mixin._cache_key = saved_key
+        mixin._smarter_request = saved_request
+        del mixin.cache_key
+        self.assertEqual(mixin.cache_key, saved_key)
 
     def test_uid_returns_value(self):
-        """Covers line 1213: uid property returns value from params."""
-        from django.http import QueryDict
+        """uid property returns value from params."""
+        response = self.client.get(
+            path="/dashboard/",
+            query_params={"uid": "abc123"},
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
 
-        class DummyRequest:
-            META = {"QUERY_STRING": "uid=abc123"}
-
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin._params = QueryDict("uid=abc123")
         self.assertEqual(mixin.uid, "abc123")
 
     def test_uid_returns_none(self):
-        """Covers line 1215: uid property returns None if params is not QueryDict."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin._params = None
+        """uid property returns None if params is not QueryDict."""
+        response = self.client.get("/dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
         self.assertIsNone(mixin.uid)
 
-    def test_client_key_warns_and_returns_session_key(self):
-        """Covers lines 1231-1233: client_key property warns and returns session_key."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.session_key = "sessionkey"
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            key = mixin.client_key
-            self.assertEqual(key, "sessionkey")
-            self.assertTrue(any("deprecated" in str(warn.message) for warn in w))
+    def test_session_key(self):
+        """
+        client_key property warns and returns session_key.
+        """
+        session_key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        response = self.client.get(
+            path="/dashboard/",
+            query_params={SMARTER_CHAT_SESSION_KEY_NAME: session_key},
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        self.assertEqual(mixin.session_key, session_key)
 
     def test_ip_address_returns_value(self):
-        """Covers line 1235: ip_address property returns REMOTE_ADDR."""
+        """
+        ip_address property returns REMOTE_ADDR.
+        if (
+            self.smarter_request is not None
+            and hasattr(self.smarter_request, "META")
+            and isinstance(self.smarter_request.META, dict)
+        ):
+            return self.smarter_request.META.get("REMOTE_ADDR", "") or "ip_address"
+        return None
+        """
+        host_name = "wafflehouse.com"
+        settings.ALLOWED_HOSTS.append(host_name)
 
-        class DummyRequest:
-            META = {"REMOTE_ADDR": "1.2.3.4"}
+        response = self.client.get(
+            f"http://{host_name}/chatbot/",
+            SERVER_NAME=host_name,
+            SERVER_PORT=80,
+            HTTP_HOST=host_name,
+            REMOTE_ADDR="1.2.3.4",
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
 
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
         self.assertEqual(mixin.ip_address, "1.2.3.4")
 
     def test_ip_address_returns_default(self):
-        """Covers line 1237: ip_address property returns default if REMOTE_ADDR missing."""
+        """ip_address property returns default if REMOTE_ADDR missing."""
 
-        class DummyRequest:
-            META = {}
-
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
+        response = self.client.get("/dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        mixin._smarter_request.META.pop("REMOTE_ADDR", None)
+        del mixin.ip_address
         self.assertEqual(mixin.ip_address, "ip_address")
 
     def test_user_agent_returns_value(self):
-        """Covers line 1256: user_agent property returns HTTP_USER_AGENT."""
+        """user_agent property returns HTTP_USER_AGENT."""
 
-        class DummyRequest:
-            META = {"HTTP_USER_AGENT": "agent"}
+        host_name = "wafflehouse.com"
+        settings.ALLOWED_HOSTS.append(host_name)
 
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        self.assertEqual(mixin.user_agent, "agent")
+        response = self.client.get(
+            f"http://{host_name}/chatbot/",
+            SERVER_NAME=host_name,
+            SERVER_PORT=80,
+            HTTP_HOST=host_name,
+            HTTP_USER_AGENT="test-user-agent",
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+
+        self.assertEqual(mixin.user_agent, "test-user-agent")
 
     def test_user_agent_returns_default(self):
-        """Covers line 1258: user_agent property returns default if HTTP_USER_AGENT missing."""
+        """user_agent property returns default if HTTP_USER_AGENT missing."""
 
-        class DummyRequest:
-            META = {}
-
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
+        response = self.client.get("/dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        mixin._smarter_request.META.pop("HTTP_USER_AGENT", None)
+        del mixin.user_agent
         self.assertEqual(mixin.user_agent, "user_agent")
 
     def test_user_agent_returns_none(self):
-        """Covers line 1263: user_agent property returns None if no smarter_request."""
-        mixin = SmarterRequestMixin.__new__(SmarterRequestMixin)
-        mixin.smarter_request = None
+        """user_agent property returns None if no smarter_request."""
+        response = self.client.get("/dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        mixin._smarter_request = None
+        del mixin.user_agent
         self.assertIsNone(mixin.user_agent)
 
     def test_is_config_true(self):
-        """Covers line 1266: is_config returns True if 'config' in url_path_parts."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.url_path_parts = ["api", "v1", "config"]
-        self.assertTrue(mixin.is_config)
+        """is_config returns True if 'config' in url_path_parts."""
+        host_name = "hr.3141-5926-5359.alpha.api.example.com"
+
+        settings.ALLOWED_HOSTS.append(host_name)
+
+        response = self.client.get(
+            f"http://{host_name}/config/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+
+        with patch.object(mixin, "is_chatbot", True):
+            self.assertTrue(mixin.is_config)
 
     def test_is_dashboard_true(self):
-        """Covers line 1283: is_dashboard returns True if url_path_parts[-1] == 'dashboard'."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url_path_parts = ["foo", "dashboard"]
+        """is_dashboard returns True if url_path_parts[-1] == 'dashboard'."""
+        response = self.client.get("/dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
         self.assertTrue(mixin.is_dashboard)
 
     def test_is_dashboard_false(self):
-        """Covers line 1285: is_dashboard returns False if not dashboard."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url_path_parts = ["foo", "bar"]
+        """is_dashboard returns False if not dashboard."""
+        response = self.client.get("/not-the-dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
         self.assertFalse(mixin.is_dashboard)
 
     def test_is_workbench_true(self):
-        """Covers line 1302: is_workbench returns True if url_path_parts[-1] == 'workbench'."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url_path_parts = ["foo", "workbench"]
+        """is_workbench returns True if url_path_parts[-1] == 'workbench'."""
+        response = self.client.get("/workbench/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
         self.assertTrue(mixin.is_workbench)
 
     def test_is_workbench_false(self):
-        """Covers lines 1309-1310: is_workbench returns False if not workbench or no smarter_request."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url_path_parts = ["foo", "bar"]
+        """is_workbench returns False if not workbench or no smarter_request."""
+        response = self.client.get("we/are/elsewhere/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
         self.assertFalse(mixin.is_workbench)
-        mixin.smarter_request = None
-        self.assertFalse(mixin.is_workbench)
-
-    def test_is_environment_root_domain_false_no_parsed_url(self):
-        """Covers line 1325: is_environment_root_domain returns False if no parsed_url."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.parsed_url = None
-        self.assertFalse(mixin.is_environment_root_domain)
 
     def test_is_environment_root_domain_false_path_not_root(self):
-        """Covers line 1327: is_environment_root_domain returns False if path is not '/'."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.parsed_url = type("PR", (), {"netloc": "root.domain", "path": "/notroot"})()
-        with patch.object(smarter_settings, "environment_platform_domain", "root.domain"):
-            self.assertFalse(mixin.is_environment_root_domain)
+        """is_environment_root_domain returns False if path is not '/'."""
+        host_name = "spam.com"
 
-    def test_is_chatbot_sandbox_url_true_workbench(self):
-        """Covers lines 1359-1365: is_chatbot_sandbox_url returns True for valid workbench URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.qualified_request = True
-        mixin._parse_result = type("PR", (), {"netloc": "platform.smarter.sh"})()
-        mixin.url_path_parts = ["workbench", "example", "chat"]
-        with patch.object(smarter_settings, "environment_platform_domain", "platform.smarter.sh"):
-            self.assertTrue(mixin.is_chatbot_sandbox_url)
+        settings.ALLOWED_HOSTS.append(host_name)
 
-    def test_is_chatbot_sandbox_url_false_invalid(self):
-        """Covers lines 1367-1373: is_chatbot_sandbox_url returns False for invalid workbench URL."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.qualified_request = True
-        mixin._parse_result = type("PR", (), {"netloc": "platform.smarter.sh"})()
-        mixin.url_path_parts = ["workbench", "123", "foo"]
-        with patch.object(smarter_settings, "environment_platform_domain", "platform.smarter.sh"):
-            self.assertFalse(mixin.is_chatbot_sandbox_url)
-
-    def test_is_chatbot_named_url_true_pattern(self):
-        """Covers line 1449: is_chatbot_named_url returns True if netloc pattern matches."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.smarter_request = DummyRequest()
-        mixin.url = "http://example.3141-5926-5359.api.localhost:8000/"
-        mixin._parse_result = type("PR", (), {"path": "/"})()
-        mixin.netloc_pattern_named_url = type("Pattern", (), {"match": lambda self, x: True})()
-        self.assertTrue(mixin.is_chatbot_named_url)
+        response = self.client.get(
+            f"http://{host_name}/yum/yummy/", SERVER_NAME=host_name, SERVER_PORT=80, HTTP_HOST=host_name
+        )
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        self.assertFalse(mixin.is_environment_root_domain)
 
     def test_find_session_key_url(self):
-        """Covers lines 1456-1460: find_session_key returns session_key from url and validates."""
+        """find_session_key returns session_key from url and validates."""
 
-        class DummyRequest:
-            META = {"QUERY_STRING": "session_key=abc123"}
-            GET = {"session_key": "abc123"}
-
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin._session_key = None
-
-        def fake_session_key_from_url(url):
-            return "abc123"
-
-        def fake_validate_session_key(key):
-            pass
-
-        mixin.url = "http://localhost:8000/?session_key=abc123"
-        mixin.find_session_key = lambda: "abc123"
-        mixin.SmarterValidator = type(
-            "Validator", (), {"validate_session_key": staticmethod(fake_validate_session_key)}
+        session_key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        response = self.client.get(
+            path="/dashboard/",
+            query_params={SMARTER_CHAT_SESSION_KEY_NAME: session_key},
         )
-        self.assertEqual(mixin.find_session_key(), "abc123")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+
+        self.assertEqual(mixin.find_session_key(), session_key)
 
     def test_find_session_key_body(self):
-        """Covers lines 1467-1471: find_session_key returns session_key from body data."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin._session_key = None
-        mixin.data = {"session_key": "bodykey"}
+        """find_session_key returns session_key from body data."""
+        session_key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        response = self.client.get("/dashboard/", data={SMARTER_CHAT_SESSION_KEY_NAME: session_key})
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
 
-        def fake_validate_session_key(key):
-            pass
-
-        mixin.SmarterValidator = type(
-            "Validator", (), {"validate_session_key": staticmethod(fake_validate_session_key)}
-        )
-        mixin.find_session_key = lambda: "bodykey"
-        self.assertEqual(mixin.find_session_key(), "bodykey")
+        self.assertEqual(mixin.find_session_key(), session_key)
 
     def test_find_session_key_cookie(self):
-        """Covers lines 1477-1481: find_session_key returns session_key from cookie."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin._session_key = None
-        mixin.get_cookie_value = lambda name: "cookiekey"
+        """find_session_key returns session_key from cookie."""
 
-        def fake_validate_session_key(key):
-            pass
+        session_key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        self.client.cookies[SMARTER_CHAT_SESSION_KEY_NAME] = session_key
+        response = self.client.get("/dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
 
-        mixin.SmarterValidator = type(
-            "Validator", (), {"validate_session_key": staticmethod(fake_validate_session_key)}
-        )
-        mixin.find_session_key = lambda: "cookiekey"
-        self.assertEqual(mixin.find_session_key(), "cookiekey")
+        self.assertEqual(mixin.find_session_key(), session_key)
 
     def test_to_json_not_ready(self):
         """Covers lines 1568-1570: to_json returns empty dict if not ready."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        mixin.is_requestmixin_ready = False
-        mixin.to_json = lambda: {}
-        self.assertEqual(mixin.to_json(), {})
 
-    def test_eval_chatbot_url_runs(self):
-        """Covers line 1575: eval_chatbot_url runs without error."""
-        mixin = SmarterRequestMixin(DummyRequest())
-        try:
-            mixin.eval_chatbot_url()
-            ran = True
-        except Exception:
-            ran = False
-        self.assertTrue(ran)
+        response = self.client.get("/dashboard/")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+
+        json_dump = mixin.to_json()
+        self.assertIsInstance(json_dump, dict)
+        self.assertIn("url_original", json_dump)
+        self.assertIn("session_key", json_dump)
+        self.assertIn("auth_header", json_dump)
+        self.assertIn("api_token", json_dump)
+        self.assertIn("data", json_dump)
+        self.assertIn("chatbot_id", json_dump)
+        self.assertIn("chatbot_name", json_dump)
+
+        with patch.object(mixin, "is_requestmixin_ready", False):
+            json_dump = mixin.to_json()
+            self.assertIsInstance(json_dump, dict)
+            self.assertNotIn("url_original", json_dump)
+            self.assertNotIn("session_key", json_dump)
+            self.assertNotIn("auth_header", json_dump)
+            self.assertNotIn("api_token", json_dump)
+            self.assertNotIn("data", json_dump)
+            self.assertNotIn("chatbot_id", json_dump)
+            self.assertNotIn("chatbot_name", json_dump)

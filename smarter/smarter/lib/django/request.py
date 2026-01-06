@@ -227,7 +227,7 @@ class SmarterRequestMixin(AccountMixin):
         self._url = urlunsplit((parsed_url.scheme, parsed_url.netloc, parsed_url.path, "", ""))
         self._url = SmarterValidator.urlify(self._url)
 
-        if self._url != self._url_orig:
+        if self._url != SmarterValidator.trailing_slash(self._url_orig):
             raise SmarterValueError(
                 f"{logger_prefix}.__init__() - request url is not valid after urlunsplit. url={self._url_orig} urlunsplit={self._url}"
             )
@@ -476,13 +476,18 @@ class SmarterRequestMixin(AccountMixin):
             ".eot",
             ".ico",
         ]
-        if any(path.endswith(ext) for ext in static_extensions):
+        if isinstance(path, str) and any(path.replace("/", "").endswith(ext) for ext in static_extensions):
             logger.debug(
                 f"{logger_prefix}.qualified_request() - request path ends with a static file extension. Not a qualified request: {self.url}"
             )
             # static asset requests are not chatbot requests.
             return False
 
+        logger.debug(
+            "%s.qualified_request() - request is qualified: %s",
+            logger_prefix,
+            self.url,
+        )
         return True
 
     @property
@@ -922,23 +927,6 @@ class SmarterRequestMixin(AccountMixin):
         timestamp = self.timestamp.isoformat()
         return f"{account_number}.{url}.{self.user_agent}.{self.ip_address}.{timestamp}"
 
-    @property
-    def client_key(self) -> Optional[str]:
-        """
-        (Deprecated) For smarter.sh/v1 API endpoints, the `client_key` is used to identify the client.
-
-        Generates a unique client key based on the client's IP address, user agent, and the current datetime.
-
-        Returns:
-            str: A unique client key string.
-        """
-        warnings.warn(
-            "The 'client_key' property is deprecated and will be removed in a future version.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.session_key
-
     @cached_property
     def ip_address(self) -> Optional[str]:
         """
@@ -1010,7 +998,17 @@ class SmarterRequestMixin(AccountMixin):
         Returns:
             bool: True if the URL is a config endpoint, otherwise False.
         """
-        return "config" in self.url_path_parts if isinstance(self.url_path_parts, list) else False
+        if not self.is_chatbot:
+            logger.debug("%s.is_config() - not a chatbot url: %s", logger_prefix, self.url)
+            return False
+        if not isinstance(self.url_path_parts, list):
+            logger.debug("%s.is_config() - url_path_parts is not a list: %s", logger_prefix, self.url_path_parts)
+            return False
+        if "config" not in self.url_path_parts:
+            logger.debug("%s.is_config() - 'config' not in url_path_parts: %s", logger_prefix, self.url_path_parts)
+            return False
+        logger.debug("%s.is_config() - url is a config endpoint: %s", logger_prefix, self.url)
+        return True
 
     @cached_property
     def is_dashboard(self) -> bool:
@@ -1021,9 +1019,30 @@ class SmarterRequestMixin(AccountMixin):
             bool: True if the URL is a dashboard endpoint, otherwise False.
         """
         if not self.smarter_request:
+            logger.debug("%s.is_dashboard() - smarter_request is None", logger_prefix)
+            return False
+        if not isinstance(self.url_path_parts, list):
+            logger.debug("%s.is_dashboard() - url_path_parts is not a list", logger_prefix)
+            return False
+        if len(self.url_path_parts) == 0:
+            logger.debug("%s.is_dashboard() - url_path_parts is empty", logger_prefix)
             return False
         try:
-            return self.url_path_parts[-1] == "dashboard" if isinstance(self.url_path_parts, list) else False
+            if self.url_path_parts[-1] != "dashboard":
+                logger.debug(
+                    "%s.is_dashboard() - last url_path_part is not 'dashboard': %s",
+                    logger_prefix,
+                    self.url_path_parts[-1],
+                )
+                return False
+            if "/dashboard/" not in self.parsed_url.path:
+                logger.debug(
+                    "%s.is_dashboard() - '/dashboard/' not in url path: %s",
+                    logger_prefix,
+                    self.parsed_url.path,
+                )
+                return False
+            return True
         except IndexError:
             return False
 
@@ -1036,9 +1055,30 @@ class SmarterRequestMixin(AccountMixin):
             bool: True if the URL is a workbench endpoint, otherwise False.
         """
         if not self.smarter_request:
+            logger.debug("%s.is_dashboard() - smarter_request is None", logger_prefix)
+            return False
+        if not isinstance(self.url_path_parts, list):
+            logger.debug("%s.is_dashboard() - url_path_parts is not a list", logger_prefix)
+            return False
+        if len(self.url_path_parts) == 0:
+            logger.debug("%s.is_dashboard() - url_path_parts is empty", logger_prefix)
             return False
         try:
-            return self.url_path_parts[-1] == "workbench" if isinstance(self.url_path_parts, list) else False
+            if self.url_path_parts[-1] != "workbench":
+                logger.debug(
+                    "%s.is_workbench() - last url_path_part is not 'workbench': %s",
+                    logger_prefix,
+                    self.url_path_parts[-1],
+                )
+                return False
+            if "/workbench/" not in self.parsed_url.path:
+                logger.debug(
+                    "%s.is_workbench() - '/workbench/' not in url path: %s",
+                    logger_prefix,
+                    self.parsed_url.path,
+                )
+                return False
+            return True
         except IndexError:
             return False
 
@@ -1469,8 +1509,10 @@ class SmarterRequestMixin(AccountMixin):
 
         """
         if not self.smarter_request:
+            logger.debug("%s.root_domain() - request is None. Cannot extract root domain.", logger_prefix)
             return None
         if not self.url:
+            logger.debug("%s.root_domain() - url is None or empty. Cannot extract root domain.", logger_prefix)
             return None
         url = SmarterValidator.urlify(self.url, environment=smarter_settings.environment)  # type: ignore
         if url:
@@ -1479,6 +1521,7 @@ class SmarterRequestMixin(AccountMixin):
                 return f"{extracted.domain}.{extracted.suffix}"
             if extracted.domain:
                 return extracted.domain
+        logger.warning("%s.root_domain() - failed to extract root domain from url: %s", logger_prefix, self.url)
         return None
 
     @cached_property
@@ -1500,7 +1543,7 @@ class SmarterRequestMixin(AccountMixin):
         if not self.url:
             return None
         extracted = tldextract.extract(self.url)
-        return extracted.subdomain
+        return extracted.subdomain or None
 
     @cached_property
     def api_subdomain(self) -> Optional[str]:
@@ -1738,7 +1781,6 @@ class SmarterRequestMixin(AccountMixin):
             "domain": self.domain,
             "timestamp": self.timestamp.isoformat(),
             "unique_client_string": self.unique_client_string,
-            "client_key": self.client_key,
             "ip_address": self.ip_address,
             "user_agent": self.user_agent,
             "parsed_url": str(self.parsed_url) if self.parsed_url else None,
