@@ -9,7 +9,10 @@ import time
 from functools import cached_property
 from typing import Optional, Tuple
 
+from smarter.common.classes import Singleton, SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterException
+from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import (
     formatted_text,
     formatted_text_green,
@@ -17,9 +20,6 @@ from smarter.common.helpers.console_helpers import (
 )
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
-
-from ..classes import Singleton, SmarterHelperMixin
-from ..conf import settings as smarter_settings
 
 
 logger = logging.getLogger(__name__)
@@ -75,6 +75,11 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
 
         smarter_settings.environment_namespace
         """
+        if not aws_helper.ready:
+            msg = f"{module_prefix}.ready() {formatted_text_red('AWS not ready, cannot configure KubernetesHelper')}"
+            logger.warning(msg)
+            return False
+
         if not self.configured:
             msg = f"{module_prefix}.ready() {formatted_text_red('KubernetesHelper not configured')}"
             logger.warning(msg)

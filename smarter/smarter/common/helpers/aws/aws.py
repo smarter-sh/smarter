@@ -215,7 +215,15 @@ class AWSBase(SmarterHelperMixin):
             logger.warning("%s.identity requested but AWSBase is not initialized", self.formatted_class_name)
             return None
 
-        self._identity = self.aws_session.client("sts").get_caller_identity() if self.aws_session else None
+        try:
+            logger.debug("%s.identity fetching AWS IAM identity", self.formatted_class_name)
+            self._identity = self.aws_session.client("sts").get_caller_identity() if self.aws_session else None
+        # pylint: disable=broad-exception-caught
+        except Exception as e:
+            msg = f"{self.formatted_class_name}.identity {formatted_text_red('could not fetch AWS IAM identity due to an error')}: {e}"
+            logger.error(msg)
+            self._identity = None
+
         if self._identity:
             msg = f"{self.formatted_class_name}.identity {formatted_text_green('successfully fetched AWS IAM identity.')}: {self._identity}"
             logger.info(msg)
@@ -394,6 +402,7 @@ class AWSBase(SmarterHelperMixin):
         if self._aws_session:
             return self._aws_session
 
+        logger.debug("%s.aws_session() establishing AWS boto session", self.formatted_class_name)
         if not self.authentication_credentials_are_initialized:
             msg = f"{self.formatted_class_name}.aws_session() {formatted_text_red('AWSBase is not initialized')}"
             logger.error(msg)
