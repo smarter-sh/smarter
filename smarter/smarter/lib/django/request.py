@@ -884,7 +884,7 @@ class SmarterRequestMixin(AccountMixin):
                 )
 
         self._data = self._data or {}
-        logger.debug(f"request body json={self._data}")
+        logger.debug("%s.data() - request body json=%s", logger_prefix, self._data)
 
         return self._data
 
@@ -1670,7 +1670,7 @@ class SmarterRequestMixin(AccountMixin):
         :return: A unique session key string.
         """
         session_key = hash_factory(length=64)
-        logger.debug(f"Generated new session key: {session_key}")
+        logger.debug("%s.generate_session_key() Generated new session key: %s", logger_prefix, session_key)
         return session_key
 
     def find_session_key(self) -> Optional[str]:
