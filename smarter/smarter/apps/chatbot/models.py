@@ -1334,35 +1334,20 @@ class ChatBotHelper(SmarterRequestMixin):
         self._name = self._name or self.smarter_request_chatbot_name
 
         if self.is_chatbot:
-            chatbot_helper_logger.debug(
-                "%s.__init__() %s is a chatbot. url=%s, name=%s, account=%s",
-                self.formatted_class_name,
-                self._instance_id,
-                self.url,
-                self.name,
-                self.account,
-            )
-        else:
-            self._err = f"{self.formatted_class_name}.__init__() not a chatbot. Quitting. {self.url}"
-            chatbot_helper_logger.debug(self._err)
-            return None
+            if not isinstance(self.chatbot, ChatBot):
+                if self.account and self._name:
+                    self._chatbot = get_cached_chatbot(account=self.account, name=self._name)
 
-        chatbot_helper_logger.debug(
-            f"{self.formatted_class_name}.__init__() {self._instance_id} url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
-        )
-        if not isinstance(self.chatbot, ChatBot):
-            if self.account and self._name:
-                self._chatbot = self._chatbot or get_cached_chatbot(account=self.account, name=self._name)
-        if not isinstance(self._chatbot, ChatBot):
-            chatbot_helper_logger.warning(
-                "%s.__init__() %s did not find a ChatBot for url=%s, name=%s, chatbot_id=%s, account=%s",
-                self.formatted_class_name,
-                self._instance_id,
-                self.url,
-                self.name,
-                self.chatbot_id,
-                self.account,
-            )
+            if not isinstance(self._chatbot, ChatBot):
+                chatbot_helper_logger.warning(
+                    "%s.__init__() %s did not find a ChatBot for url=%s, name=%s, chatbot_id=%s, account=%s",
+                    self.formatted_class_name,
+                    self._instance_id,
+                    self.url,
+                    self.name,
+                    self.chatbot_id,
+                    self.account,
+                )
 
         msg = f"{self.formatted_class_name}.__init__() is {self.chatbothelper_ready_state} - {self.chatbot.name if self.chatbot else 'ChatBot not initialized'}"
         if self.is_chatbothelper_ready:
