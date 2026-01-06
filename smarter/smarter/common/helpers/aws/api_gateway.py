@@ -29,8 +29,8 @@ class AWSAPIGateway(AWSBase):
     @property
     def client(self):
         """Return the AWS API Gateway client."""
-        if self._client:
-            return self._client
+        if self.client:
+            return self.client
 
         if not self.ready:
             logger.error("%s.client() AWS session is not ready", self.formatted_class_name)
@@ -41,12 +41,12 @@ class AWSAPIGateway(AWSBase):
                 connect_timeout=SettingsDefaults.AWS_APIGATEWAY_CONNECT_TIMEOUT,
                 retries={"max_attempts": SettingsDefaults.AWS_APIGATEWAY_MAX_ATTEMPTS},
             )
-            self._client = self.aws_session.client(self._client_type, config=config)
+            self.client = self.aws_session.client(self._client_type, config=config)
             logger.info("%s.client() AWS API Gateway client created successfully", self.formatted_class_name)
         except botocore.exceptions.BotoCoreError as e:
             logger.error("%s.client() Failed to create AWS API Gateway client: %s", self.formatted_class_name, str(e))
             return None
-        return self._client
+        return self.client
 
     @property
     def name(self) -> Optional[str]:
