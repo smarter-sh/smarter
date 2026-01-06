@@ -37,7 +37,7 @@ class TestSmarterAuthTokenSerializer(SmarterTestBase):
             self.auth_token.delete()
         except SmarterAuthToken.DoesNotExist:
             pass
-        super().tearDownClass()
+        super().tearDown()
 
     def test_serializer_with_naive_datetime(self):
         # last_used_at is a naive datetime (no tzinfo)
