@@ -350,7 +350,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertFalse(mixin.qualified_request)
 
     def test_qualified_request_docs_path(self):
-        """Covers line 422: qualified_request returns False if path starts with /docs/."""
+        """qualified_request returns False if path starts with /docs/."""
 
         response = self.client.get("/docs")
         request = response.wsgi_request
@@ -358,7 +358,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertFalse(mixin.qualified_request)
 
     def test_qualified_request_static_extension(self):
-        """Covers line 424: qualified_request returns False if path ends with static extension."""
+        """qualified_request returns False if path ends with static extension."""
 
         response = self.client.get("/styles.css")
         request = response.wsgi_request
@@ -366,7 +366,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertFalse(mixin.qualified_request)
 
     def test_qualified_request_true(self):
-        """Covers line 441: qualified_request returns True if all checks pass."""
+        """qualified_request returns True if all checks pass."""
 
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
@@ -374,7 +374,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertTrue(mixin.qualified_request)
 
     def test_url_property_raises_if_parse_result_invalid(self):
-        """Covers line 460: url property raises if _parse_result is not ParseResult."""
+        """url property raises if _parse_result is not ParseResult."""
 
         with self.assertRaises(SmarterValueError):
             response = self.client.get("not a very good url")
@@ -382,7 +382,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
             SmarterRequestMixin(request)
 
     def test_url_property_logs_and_raises_if_url_not_set(self):
-        """Covers lines 466-471: url property logs error and raises if _url is not set."""
+        """url property logs error and raises if _url is not set."""
 
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
@@ -464,13 +464,13 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertIsNone(mixin.path)
 
     def test_root_domain_none_if_no_request(self):
-        """Covers line 665: root_domain returns None if smarter_request is None."""
+        """root_domain returns None if smarter_request is None."""
         mixin = SmarterRequestMixin.__new__(SmarterRequestMixin)
         mixin.smarter_request = None
         self.assertIsNone(mixin.root_domain)
 
     def test_root_domain_none_if_url_none(self):
-        """Covers line 667: root_domain returns None if url is None."""
+        """root_domain returns None if url is None."""
 
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
@@ -940,7 +940,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertIsNone(mixin.params)
 
     def test_cache_key_returns_cached(self):
-        """Covers line 1184: cache_key returns _cache_key if already set."""
+        """cache_key returns _cache_key if already set."""
         mixin = SmarterRequestMixin.__new__(SmarterRequestMixin)
         mixin._cache_key = "cached_key"
         self.assertEqual(mixin.cache_key, "cached_key")
@@ -1177,7 +1177,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(mixin.find_session_key(), session_key)
 
     def test_to_json_not_ready(self):
-        """Covers lines 1568-1570: to_json returns empty dict if not ready."""
+        """to_json returns empty dict if not ready."""
 
         response = self.client.get("/dashboard/")
         request = response.wsgi_request

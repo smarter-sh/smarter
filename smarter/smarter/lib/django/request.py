@@ -16,7 +16,6 @@ import hashlib
 import inspect
 import logging
 import re
-import warnings
 from datetime import datetime
 from functools import cached_property
 from typing import Any, Optional, Union
@@ -63,6 +62,7 @@ netloc_pattern_named_url = re.compile(
 )
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
@@ -536,7 +536,7 @@ class SmarterRequestMixin(AccountMixin):
                 )
         return self._parse_result
 
-    @property
+    @cached_property
     def url_path_parts(self) -> list[str]:
         """
         Extract the path parts from the URL.
@@ -984,7 +984,7 @@ class SmarterRequestMixin(AccountMixin):
             return self.smarter_request.META.get("HTTP_USER_AGENT", "user_agent")
         return None
 
-    @property
+    @cached_property
     def is_config(self) -> bool:
         """
         Returns True if the URL resolves to a config endpoint.
