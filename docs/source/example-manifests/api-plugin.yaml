@@ -59,7 +59,7 @@ spec:
   connection: smarter_test_api
   prompt:
     maxTokens: 2048
-    model: gpt-4-turbo
+    model: gpt-4o-mini
     provider: openai
     systemRole:
       You are a helpful assistant for Smarter platform. You can provide

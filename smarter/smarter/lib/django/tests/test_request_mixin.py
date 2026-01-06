@@ -65,16 +65,15 @@ class TestSmarterRequestMixin(TestAccountMixin):
         super().setUp()
         self.session_key = "1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a"
         self.client = Client()
-        logger.debug("-" * 35 + " Begin Test: %s " + "-" * 35, self._testMethodName)
 
     def tearDown(self):
-        logger.debug("-" * 35 + " End Test: %s " + "-" * 35, self._testMethodName)
         try:
             self.client.logout()
             self.client = None
         # pylint: disable=W0718
         except Exception:
             pass
+        super().tearDown()
 
     def wsgi_request_factory(self) -> RequestFactory:
         """

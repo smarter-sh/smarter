@@ -32,7 +32,9 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     def setUpClass(cls) -> None:
         """Set up the test class."""
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.smarter_test_base_logger_prefix)
+        title = " Setup Test Class "
+        msg = "*" * ((80 - len(title)) // 2) + title + "*" * ((80 - len(title)) // 2)
+        logger.debug(msg)
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
         cls.name = camel_to_snake("smarterTestBase_" + cls.hash_suffix)
         cls.uid = SmarterTestBase.generate_uid()
@@ -56,8 +58,21 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     @classmethod
     def tearDownClass(cls) -> None:
         """Tear down the test class."""
-        logger.debug("%s.tearDownClass()", cls.smarter_test_base_logger_prefix)
         super().tearDownClass()
+
+    def setUp(self) -> None:
+        """SetUp the test case."""
+        title = f" setUp Test: {self._testMethodName} BEGIN "
+        msg = "-" * ((80 - len(title)) // 2) + title + "-" * ((80 - len(title)) // 2)
+        logger.debug(msg)
+        super().setUp()
+
+    def tearDown(self) -> None:
+        """Tear down the test case."""
+        title = f" tearDown Test: {self._testMethodName} "
+        msg = "-" * ((80 - len(title)) // 2) + title + "-" * ((80 - len(title)) // 2)
+        logger.debug(msg)
+        super().tearDown()
 
     @classmethod
     def generate_uid(cls) -> str:

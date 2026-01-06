@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 HERE = Path(__file__).resolve().parent
 
 OPENAI_API = "OpenAI"
-OPENAI_DEFAULT_MODEL = "gpt-4-turbo"
+OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
 OPENAI_API_KEY_NAME = "openai_api_key"
 
 GOOGLE_API = "GoogleAI"
