@@ -37,8 +37,14 @@ from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
+from smarter.lib.manifest.enum import (
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
 
-from . import SAMPluginBrokerError
+from . import PluginSerializer, SAMPluginBrokerError
 
 
 def should_log(level):
@@ -674,3 +680,92 @@ class SAMPluginBaseBroker(AbstractBroker):
         """
         super().apply(request, kwargs)
         logger.info("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
+
+    def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return a JSON response with a list of SQL plugins for this account.
+
+        This method queries the database for all SQL plugins associated with the current account,
+        optionally filtered by name, and returns a structured JSON response containing their serialized
+        representations. Each plugin is validated by round-tripping through the Pydantic model.
+
+        :param request: The HTTP request object.
+        :type request: "HttpRequest"
+        :param args: Additional positional arguments (unused).
+        :param kwargs: Additional keyword arguments, such as filter criteria (e.g., ``name``).
+        :return: A `SmarterJournaledJsonResponse` containing a list of SQL plugin manifests and metadata.
+        :rtype: SmarterJournaledJsonResponse
+
+        **Example:**
+
+        .. code-block:: python
+
+            response = broker.get(request, name="my_plugin")
+            print(response.data)
+
+        :raises SAMPluginBrokerError:
+            If a plugin cannot be serialized or validated
+            during the retrieval process.
+
+        .. seealso::
+            :class:`PluginMeta`
+            :class:`PluginSerializer`
+            :class:`SAMSqlPlugin`
+            :class:`SmarterJournaledJsonResponse`
+            :class:`SmarterJournalCliCommands`
+            :class:`SAMKeys`
+            :class:`SAMMetadataKeys`
+            :class:`SCLIResponseGet`
+            :class:`SCLIResponseGetData`
+        """
+        command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
+
+        data = []
+        name = kwargs.get(SAMMetadataKeys.NAME.value)
+        name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
+
+        # generate a QuerySet of PluginMeta objects that match our search criteria
+        if name:
+            plugins = PluginMeta.objects.filter(account=self.account, name=name)
+        else:
+            plugins = PluginMeta.objects.filter(account=self.account)
+        logger.info(
+            "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
+        )
+
+        model_titles = self.get_model_titles(serializer=PluginSerializer())
+
+        # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
+        for plugin in plugins:
+            try:
+                self.plugin_init()
+                self.plugin_meta = plugin
+
+                model_dump = PluginSerializer(plugin).data
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
+
+            except Exception as e:
+                logger.error(
+                    "%s.get() failed to serialize %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    plugin.name,
+                    exc_info=True,
+                )
+                raise SAMPluginBrokerError(
+                    f"Failed to serialize {self.kind} {plugin.name}", thing=self.kind, command=command
+                ) from e
+        data = {
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMMetadataKeys.NAME.value: name,
+            SAMKeys.METADATA.value: {"count": len(data)},
+            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.DATA.value: {
+                SCLIResponseGetData.TITLES.value: model_titles,
+                SCLIResponseGetData.ITEMS.value: data,
+            },
+        }
+        return self.json_response_ok(command=command, data=data)
