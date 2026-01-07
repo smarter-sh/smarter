@@ -727,18 +727,18 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         else:
             api_connections = ApiConnection.objects.filter(account=self.account)
 
+        model_titles = self.get_model_titles(serializer=self.serializer())
+
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each ApiConnection
         for api_connection in api_connections:
             try:
                 self.connection_init()
-                self.connection = api_connection
+                self._connection = api_connection
 
-                model_dump = self.manifest.model_dump()
-                if not model_dump:
-                    raise SAMConnectionBrokerError(
-                        f"Model dump failed for {self.kind} {api_connection.name}", thing=self.kind, command=command
-                    )
-                data.append(model_dump)
+                model_dump = self.serializer(api_connection).data
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
+
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         data = {
@@ -748,7 +748,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=self.serializer()),
+                SCLIResponseGetData.TITLES.value: model_titles,
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
