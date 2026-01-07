@@ -268,7 +268,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if self.is_ready_abstract_broker:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     ###########################################################################
     # Class Instance Properties

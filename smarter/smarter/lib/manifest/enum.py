@@ -19,7 +19,16 @@ class SAMEnumException(SAMExceptionBase):
 
 
 class SAMDataFormats(SmarterEnumAbstract):
-    """Data format enumeration."""
+    """
+    Data format enumeration.
+
+    Used to specify the format of data being handled, such as JSON or YAML.
+
+    attributes:
+        JSON: Represents data in JSON format.
+        YAML: Represents data in YAML format.
+        UNKNOWN: Represents an unknown or unsupported data format.
+    """
 
     JSON = "json"
     YAML = "yaml"
@@ -27,7 +36,15 @@ class SAMDataFormats(SmarterEnumAbstract):
 
 
 class SAMSpecificationKeyOptions(SmarterEnumAbstract):
-    """Key types enumeration."""
+    """
+    Key types enumeration.
+    Used to specify whether a key in the specification is required, optional, or read-only.
+
+    attributes:
+        REQUIRED: Indicates that the key is mandatory.
+        OPTIONAL: Indicates that the key is optional.
+        READONLY: Indicates that the key is read-only and cannot be modified.
+    """
 
     REQUIRED = "required"
     OPTIONAL = "optional"
@@ -35,7 +52,16 @@ class SAMSpecificationKeyOptions(SmarterEnumAbstract):
 
 
 class SAMKeys(SmarterEnumAbstract):
-    """Smarter API required keys enumeration."""
+    """
+    Smarter API required keys enumeration.
+
+    attributes:
+        APIVERSION: The API version key.
+        KIND: The kind key.
+        METADATA: The metadata key.
+        SPEC: The specification key.
+        STATUS: The status key.
+    """
 
     APIVERSION = "apiVersion"
     KIND = "kind"
@@ -45,7 +71,18 @@ class SAMKeys(SmarterEnumAbstract):
 
 
 class SAMMetadataKeys(SmarterEnumAbstract):
-    """Smarter API Plugin Metadata keys enumeration."""
+    """
+    Smarter API Plugin Metadata keys enumeration.
+
+    attributes:
+        ACCOUNT: The account key.
+        AUTHOR: The author key.
+        NAME: The name key.
+        DESCRIPTION: The description key.
+        VERSION: The version key.
+        TAGS: The tags key.
+        ANNOTATIONS: The annotations key.
+    """
 
     ACCOUNT = "account"
     AUTHOR = "author"
@@ -60,14 +97,26 @@ class SAMMetadataKeys(SmarterEnumAbstract):
 # Smarter API cli response Enumerations
 ###############################################################################
 class SCLIResponseGet(SmarterEnumAbstract):
-    """CLI get response enumeration."""
+    """
+    CLI get response enumeration.
+
+    attributes:
+        KWARGS: The kwargs key.
+        DATA: The data key.
+    """
 
     KWARGS = "kwargs"
     DATA = "data"
 
 
 class SCLIResponseGetData(SmarterEnumAbstract):
-    """CLI get response data enumeration."""
+    """
+    CLI get response data enumeration.
+
+    attributes:
+        TITLES: The titles key.
+        ITEMS: The items key.
+    """
 
     TITLES = "titles"
     ITEMS = "items"

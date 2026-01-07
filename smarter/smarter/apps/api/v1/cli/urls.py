@@ -77,7 +77,10 @@ class ApiV1CliReverseViews:
     .. code-block:: python
 
         from django.urls import reverse
-        url = reverse(ApiV1CliReverseViews.deploy, kwargs={'kind': 'example'})
+        url = reverse(ApiV1CliReverseViews.deploy, kwargs={'kind': 'Plugin'})
+
+        str(ApiV1CliReverseViews.deploy)
+        returns 'api_v1_cli_deploy_api_view'
 
     """
 
