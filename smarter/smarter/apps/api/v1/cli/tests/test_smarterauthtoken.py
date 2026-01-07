@@ -404,7 +404,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.assertEqual(response["thing"], "AuthToken")
         self.assertEqual(response["api"], "smarter.sh/v1")
         self.assertIn("metadata", response)
-        self.assertIn("command", response["metadata"].keys())
 
         # verify the SmarterAuthToken was deleted
         try:

@@ -89,10 +89,21 @@ This is a Non-brokered operation.
     )
     @csrf_exempt
     def post(self, request: "HttpRequest", name: str, *args, **kwargs):
+        """Handle POST requests for chat config"""
+
+        logger.debug(
+            "%s.post() called for chat %s with %s, args %s, kwargs %s",
+            self.formatted_class_name,
+            name,
+            request.POST,
+            args,
+            kwargs,
+        )
+
         uid: Optional[str] = request.POST.get("uid")
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        logger.info(
-            "%s Chat config view for chat %s and client %s and session_key %s request user %s self.user %s account %s",
+        logger.debug(
+            "%s.post() view for chat %s and client %s and session_key %s request user %s self.user %s account %s",
             self.formatted_class_name,
             name,
             uid,
@@ -119,7 +130,13 @@ This is a Non-brokered operation.
                 )
             session_key = content.get(SMARTER_CHAT_SESSION_KEY_NAME)
             cache.set(key=self.cache_key, value=session_key, timeout=CACHE_EXPIRATION)
+            logger.debug(
+                "%s.post() cached session key for chat config view with key %s",
+                self.formatted_class_name,
+                self.cache_key,
+            )
         except json.JSONDecodeError as e:
             raise APIV1CLIViewError("Misconfigured. Failed to cache session key for chat config view.") from e
 
+        logger.debug("%s.post() completed for chat config view: %s", self.formatted_class_name, response)
         return response
