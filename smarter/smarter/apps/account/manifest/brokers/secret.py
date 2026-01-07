@@ -599,7 +599,7 @@ class SAMSecretBroker(AbstractBroker):
                 {"smarter.sh/purpose": "demonstration only"},
             ],
         )
-        config = SAMSecretSpecConfig(value="<** your unencrypted credential value **>", expiration_date=expiration_date)
+        config = SAMSecretSpecConfig(value="<** your unencrypted credential value **>", expiration_date=expiration_date)  # type: ignore
         spec = SAMSecretSpec(config=config)
         status = SAMSecretStatus(
             accountNumber=SMARTER_ACCOUNT_NUMBER,

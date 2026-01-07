@@ -836,6 +836,7 @@ def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, li
 
     def convert(name: str):
         name = name.replace(" ", "_")
+        name = name[0].lower() + name[1:] if name and len(name) > 1 and name[0].isupper() else name
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
         result = re.sub("_+", "_", result)

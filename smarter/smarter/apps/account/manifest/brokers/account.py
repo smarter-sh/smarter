@@ -225,7 +225,9 @@ class SAMAccountBroker(AbstractBroker):
         """
         if self._brokered_account:
             return self._brokered_account
+
         if not self.name:
+            logger.debug("%s.brokered_account() no name provided, cannot retrieve Account.", self.formatted_class_name)
             return None
 
         try:
@@ -498,6 +500,8 @@ class SAMAccountBroker(AbstractBroker):
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
+        logger.debug("%s.example_manifest() called", self.formatted_class_name)
+
         self.user = None
         self.brokered_account = get_cached_smarter_account()
         if not self.brokered_account:
@@ -526,6 +530,7 @@ class SAMAccountBroker(AbstractBroker):
         # name: str = None, all_objects: bool = False, tags: str = None
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
+        logger.debug("%s.get() called", self.formatted_class_name)
         data = []
         if self.brokered_account is None:
             raise SAMBrokerErrorNotReady(
@@ -534,20 +539,24 @@ class SAMAccountBroker(AbstractBroker):
                 command=command,
             )
 
+        # returns Optional[list[dict[str, str]]]:
+        # [
+        #     {"name": "accountNumber", "type": "CharField"},
+        #     {"name": "companyName", "type": "CharField"},
+        #     {"name": "createdAt", "type": "DateTimeField"},
+        #     {"name": "updatedAt", "type": "DateTimeField"},
+        # ]
+        model_titles = self.get_model_titles(serializer=AccountSerializer())
+
         # generate a QuerySet of PluginMeta objects that match our search criteria
         accounts = Account.objects.filter(id=self.brokered_account.id)  # type: ignore
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for account in accounts:
             try:
+                logger.debug("%s.get() processing Account: %s", self.formatted_class_name, account)
                 self.brokered_account = account
-                model_dump = self.django_orm_to_manifest_dict()
-                if not model_dump:
-                    raise SAMAccountBrokerError(
-                        message=f"Model dump failed for {self.kind} {account.account_number}",
-                        thing=self.kind,
-                        command=command,
-                    )
+                model_dump = AccountSerializer(account).data
                 camel_cased_model_dump = self.snake_to_camel(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
@@ -560,7 +569,7 @@ class SAMAccountBroker(AbstractBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=AccountSerializer()),
+                SCLIResponseGetData.TITLES.value: model_titles,
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
@@ -600,6 +609,7 @@ class SAMAccountBroker(AbstractBroker):
             - :meth:`django_orm_to_manifest_dict`
 
         """
+        logger.debug("%s.apply() called", self.formatted_class_name)
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
@@ -663,6 +673,7 @@ class SAMAccountBroker(AbstractBroker):
         :returns: A JSON response indicating that chat is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug("%s.chat() called", self.formatted_class_name)
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
@@ -684,14 +695,15 @@ class SAMAccountBroker(AbstractBroker):
         command = command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.describe() called for %s", self.formatted_class_name, self.name)
-        if self.brokered_account:
-            try:
-                data = self.django_orm_to_manifest_dict()
-                logger.debug("%s.describe() returning manifest for %s: %s", self.formatted_class_name, self.name, data)
-                return self.json_response_ok(command=command, data=data)
-            except Exception as e:
-                raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e
-        raise SAMBrokerErrorNotFound(message="No account found", thing=self.kind, command=command)
+        if not self.brokered_account:
+            raise SAMBrokerErrorNotFound(message="No account found", thing=self.kind, command=command)
+
+        try:
+            data = self.django_orm_to_manifest_dict()
+            logger.debug("%s.describe() returning manifest for %s: %s", self.formatted_class_name, self.name, data)
+            return self.json_response_ok(command=command, data=data)
+        except Exception as e:
+            raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -710,6 +722,7 @@ class SAMAccountBroker(AbstractBroker):
         :returns: A JSON response indicating that delete is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug("%s.delete() called", self.formatted_class_name)
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Delete not implemented", thing=self.kind, command=command)
@@ -731,6 +744,7 @@ class SAMAccountBroker(AbstractBroker):
         :returns: A JSON response indicating that deploy is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug("%s.deploy() called", self.formatted_class_name)
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
@@ -751,6 +765,7 @@ class SAMAccountBroker(AbstractBroker):
         :returns: A JSON response indicating that undeploy is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug("%s.undeploy() called", self.formatted_class_name)
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
@@ -770,6 +785,7 @@ class SAMAccountBroker(AbstractBroker):
         :returns: A JSON response indicating that logs is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug("%s.logs() called", self.formatted_class_name)
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         data = {}
