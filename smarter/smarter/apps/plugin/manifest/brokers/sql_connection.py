@@ -853,14 +853,18 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         else:
             sql_connections = SqlConnection.objects.filter(account=self.account)
 
+        model_titles = self.get_model_titles(serializer=self.serializer())
+
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each SqlConnection
         for sql_connection in sql_connections:
             try:
                 self.connection_init()
                 self.connection = sql_connection
 
-                model_dump = self.manifest.model_dump()
-                data.append(model_dump)
+                model_dump = self.serializer(sql_connection).data
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
+
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         data = {
@@ -870,7 +874,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=self.serializer()),
+                SCLIResponseGetData.TITLES.value: model_titles,
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }

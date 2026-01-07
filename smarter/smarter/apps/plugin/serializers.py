@@ -480,9 +480,9 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
 
     """
 
-    account = AccountMiniSerializer(read_only=True)
-    api_key = SecretSerializer(read_only=True)
-    proxy_password = SecretSerializer(read_only=True)
+    account = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    api_key = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    proxy_password = serializers.SlugRelatedField(slug_field="name", read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:
