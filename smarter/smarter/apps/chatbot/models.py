@@ -1301,7 +1301,6 @@ class ChatBotHelper(SmarterRequestMixin):
         "_chatbot_requests",
         "_chatbot_id",
         "_name",
-        "_err",
     )
 
     def __init__(self, request: HttpRequest, *args, **kwargs):
@@ -1320,11 +1319,9 @@ class ChatBotHelper(SmarterRequestMixin):
             args,
             kwargs,
         )
-        self._instance_id = id(self)
         self._chatbot: Optional[ChatBot] = kwargs.get("chatbot")
         self._chatbot_custom_domain: Optional[ChatBotCustomDomain] = kwargs.get("chatbot_custom_domain")
         self._chatbot_requests: Optional[ChatBotRequests] = kwargs.get("chatbot_requests")
-        self._err: Optional[str] = kwargs.get("err")
         self._chatbot_id: Optional[int] = kwargs.get("chatbot_id")
         self._name: Optional[str] = kwargs.get("name")
 
@@ -1340,9 +1337,8 @@ class ChatBotHelper(SmarterRequestMixin):
 
             if not isinstance(self._chatbot, ChatBot):
                 chatbot_helper_logger.warning(
-                    "%s.__init__() %s did not find a ChatBot for url=%s, name=%s, chatbot_id=%s, account=%s",
+                    "%s.__init__() did not find a ChatBot for url=%s, name=%s, chatbot_id=%s, account=%s",
                     self.formatted_class_name,
-                    self._instance_id,
                     self.url,
                     self.name,
                     self.chatbot_id,
@@ -1353,9 +1349,8 @@ class ChatBotHelper(SmarterRequestMixin):
         if self.is_chatbothelper_ready:
             chatbot_helper_logger.debug(msg)
             chatbot_helper_logger.debug(
-                "%s.__init__() %s initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
+                "%s.__init__() initialized with url=%s, name=%s, chatbot_id=%s, user=%s, account=%s, session_key=%s",
                 self.formatted_class_name,
-                self._instance_id,
                 self.url if self.url else "undefined",
                 self.name,
                 self.chatbot_id,
@@ -1526,63 +1521,57 @@ class ChatBotHelper(SmarterRequestMixin):
         :rtype: bool
         """
         if not self.is_chatbot:
-            self._err = f"{self.formatted_class_name}.is_chatbothelper_ready() {self._instance_id} returning false because URL is not a chatbot URL. url={self._url}"
+            self._err = f"{self.formatted_class_name}.is_chatbothelper_ready() returning false because URL is not a chatbot URL. url={self._url}"
             chatbot_helper_logger.debug(self._err)
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() %s confirmed URL is a chatbot URL. url=%s",
+                "%s.is_chatbothelper_ready() confirmed URL is a chatbot URL. url=%s",
                 self.formatted_class_name,
-                self._instance_id,
                 self._url,
             )
         if not self.user or not self.user.is_authenticated:
             chatbot_helper_logger.warning(
-                "%s.__init__() %s called with unauthenticated request", self.formatted_class_name, self._instance_id
+                "%s.__init__() called with unauthenticated request", self.formatted_class_name
             )
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() %s confirmed request user is authenticated: %s",
+                "%s.is_chatbothelper_ready() confirmed request user is authenticated: %s",
                 self.formatted_class_name,
-                self._instance_id,
                 self.user.username,
             )
         if not self.account:
-            chatbot_helper_logger.warning(
-                "%s.__init__() %s called with no account", self.formatted_class_name, self._instance_id
-            )
+            chatbot_helper_logger.warning("%s.__init__() called with no account", self.formatted_class_name)
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() %s confirmed account is assigned: %s",
+                "%s.is_chatbothelper_ready()confirmed account is assigned: %s",
                 self.formatted_class_name,
-                self._instance_id,
                 self.account,
             )
         if not isinstance(self.name, str):
             chatbot_helper_logger.warning(
-                "%s.__init__() %s did not find a name for the chatbot.",
+                "%s.__init__() did not find a name for the chatbot.",
                 self.formatted_class_name,
-                self._instance_id,
             )
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() %s confirmed chatbot name is assigned: %s",
+                "%s.is_chatbothelper_ready() confirmed chatbot name is assigned: %s",
                 self.formatted_class_name,
-                self._instance_id,
                 self.name,
             )
         if not isinstance(self._chatbot, ChatBot):
-            self._err = f"{self.formatted_class_name}.is_chatbothelper_ready() {self._instance_id} returning false because ChatBot is not initialized. url={self._url}"
-            chatbot_helper_logger.debug(self._err)
+            chatbot_helper_logger.debug(
+                "%s.is_chatbothelper_ready() confirmed ChatBot is not initialized.",
+                self.formatted_class_name,
+            )
             return False
         else:
             chatbot_helper_logger.debug(
-                "%s.is_chatbothelper_ready() %s confirmed ChatBot is initialized: %s",
+                "%s.is_chatbothelper_ready() confirmed ChatBot is initialized: %s",
                 self.formatted_class_name,
-                self._instance_id,
                 self._chatbot,
             )
         return True
@@ -1637,12 +1626,13 @@ class ChatBotHelper(SmarterRequestMixin):
                         else None
                     ),
                     "environment_api_domain": smarter_settings.environment_api_domain,
-                    "err": self._err,
                     "is_custom_domain": self.is_custom_domain,
                     "is_deployed": self.is_deployed,
-                    "is_valid": self.is_valid,
                     "is_authentication_required": self.is_authentication_required,
+                    "is_chatbothelper_ready": self.is_chatbothelper_ready,
+                    "rfc1034_compliant_name": self.rfc1034_compliant_name,
                     "chatbot": ChatBotSerializer(self.chatbot).data if self.chatbot else None,
+                    "url": self.url,
                     **super().to_json(),
                 }.items()
             )
@@ -1687,27 +1677,6 @@ class ChatBotHelper(SmarterRequestMixin):
     @property
     def is_deployed(self) -> bool:
         return self.chatbot.deployed if self.chatbot else False  # type: ignore[return-value]
-
-    @property
-    def is_valid(self) -> bool:
-        """
-        Validates whether the ChatBot is in a ready state,
-        and if it is usable for making API calls.
-
-        :returns: ``True`` if the ChatBot is valid and ready, otherwise ``False``.
-        :rtype: bool
-        """
-        if not self.ready:
-            self._err = f"is_valid() returning false because ChatBotHelper is not in a ready state: {self._url}"
-            return False
-        if self.is_authentication_required:
-            if not self.user:
-                self._err = f"is_valid() returning false because {self.name} chatbot requires authentication but user is unassigned"
-                return False
-            if not self.user.is_authenticated:
-                self._err = f"is_valid() returning false because {self.name} chatbot requires authentication but user {self.user.username} is not authenticated"
-                return False
-        return True
 
     @cached_property
     def is_authentication_required(self) -> bool:

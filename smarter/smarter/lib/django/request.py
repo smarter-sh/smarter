@@ -222,9 +222,8 @@ class SmarterRequestMixin(AccountMixin):
         self.smarter_request.user = self.user  # type: ignore
 
         logger.debug(
-            "%s.__init__() - initializing with instance_id=%s, request=%s, args=%s, kwargs=%s auth_header=%s user_profile=%s, account=%s",
+            "%s.__init__() - initializing with request=%s, args=%s, kwargs=%s auth_header=%s user_profile=%s, account=%s",
             logger_prefix,
-            self._instance_id,
             request,
             args,
             kwargs,
@@ -271,13 +270,13 @@ class SmarterRequestMixin(AccountMixin):
 
         if self.is_requestmixin_ready:
             logger.debug(
-                f"init() {self._instance_id} initialized successfully url={self.url}, session_key={self.session_key}, user={self.user_profile}"
+                f"{logger_prefix}.init()  initialized successfully url={self.url}, session_key={self.session_key}, user={self.user_profile}"
             )
         else:
-            msg = f"{logger_prefix}.init() - request {self._instance_id} is not ready. request={self.smarter_request}"
+            msg = f"{logger_prefix}.init() - request is not ready. request={self.smarter_request}"
             logger.warning(msg)
 
-        msg = f"{formatted_text(__name__ + '.SmarterRequestMixin')}.__init__() is {self.request_mixin_ready_state} - {self.url if self._url else 'URL not initialized'}"
+        msg = f"{logger_prefix}.__init__() is {self.request_mixin_ready_state} - {self.url if self._url else 'URL not initialized'}"
         if self.is_requestmixin_ready:
             logger.debug(msg)
         else:
@@ -831,61 +830,61 @@ class SmarterRequestMixin(AccountMixin):
             return self._data
 
         if not self.smarter_request:
+            logger.debug(
+                "%s.data() - request is None. Cannot parse request body.",
+                logger_prefix,
+            )
             return None
         if not self.qualified_request:
+            logger.debug(
+                "%s.data() - request is not a qualified_request. Cannot parse request body: %s",
+                logger_prefix,
+                self.url,
+            )
             return None
 
-        if not self.smarter_request:
-            logger.warning("%s.data() - request is None or not set.", logger_prefix)
-            return {}
-        try:
-            body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
-            if body is not None:
-                body_str = body.decode("utf-8").strip()
-
+        body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
+        if not isinstance(body, (str, bytearray, bytes)):
+            logger.debug(
+                "%s.data() - request body is not a string or bytes. Cannot parse request body: %s",
+                logger_prefix,
+                body,
+            )
+            return None
+        body_str = body.decode("utf-8").strip()
+        if body_str is not None:
+            try:
+                self._data = json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
+                logger.debug(
+                    "%s.data() - initialized json from request body: %s",
+                    logger_prefix,
+                    json.dumps(self._data, indent=4),
+                )
+            except json.JSONDecodeError:
                 try:
-                    self._data = json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
-                    logger.debug(
-                        "%s.data() - initialized json from request body: %s",
-                        logger_prefix,
-                        body_str,
-                    )
-                except json.JSONDecodeError:
-                    try:
-                        self._data = yaml.safe_load(body_str) if body_str else {}
+                    self._data = yaml.safe_load(body_str) if body_str else None
+                    if isinstance(self._data, (dict, list)):
                         logger.debug(
                             "%s.data() - initialized json from parsed yaml request body: %s",
                             logger_prefix,
-                            body_str,
+                            json.dumps(self._data, indent=4),
                         )
-                    except yaml.YAMLError:
-                        logger.error(
-                            "%s.data() - failed to parse request body: %s",
-                            logger_prefix,
-                            body_str,
-                        )
-                self._data = self._data or {}
-        except json.JSONDecodeError:
-            try:
-                body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
-                if body is not None:
-                    body_str = body.decode("utf-8").strip()
-                    self._data = yaml.safe_load(body_str) if body_str else {}
-                    logger.debug(
-                        "%s.data() - initialized from parsed request body as yaml: %s",
+                except yaml.YAMLError:
+                    logger.error(
+                        "%s.data() - failed to parse request body: %s",
                         logger_prefix,
                         body_str,
                     )
-            except yaml.YAMLError:
-                logger.error(
-                    "%s - failed to parse request body as JSON or YAML. request.body=%s",
-                    logger_prefix,
-                    body_str,
-                )
+        if self._data is not None:
+            logger.debug(
+                "%s.data() - request body parsed successfully: %s", logger_prefix, json.dumps(self._data, indent=4)
+            )
+        else:
+            logger.debug(
+                "%s.data() - request body is empty or could not be parsed and has been defaulted to {}", logger_prefix
+            )
 
         self._data = self._data or {}
-        logger.debug("%s.data() - request body json=%s", logger_prefix, self._data)
-
         return self._data
 
     @cached_property
@@ -1600,25 +1599,22 @@ class SmarterRequestMixin(AccountMixin):
         # cheap and easy way to fail.
         if not isinstance(self._smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
             logger.warning(
-                "%s.is_requestmixin_ready() - %s request is not a HttpRequest. Received %s. Cannot process request.",
+                "%s.is_requestmixin_ready() - request is not a HttpRequest. Received %s. Cannot process request.",
                 logger_prefix,
-                self._instance_id,
                 type(self._smarter_request).__name__,
             )
             return False
         if not isinstance(self._parse_result, ParseResult):
             logger.warning(
-                "%s.is_requestmixin_ready() - %s _parse_result is not a ParseResult. Received %s. Cannot process request.",
+                "%s.is_requestmixin_ready() - _parse_result is not a ParseResult. Received %s. Cannot process request.",
                 logger_prefix,
-                self._instance_id,
                 type(self._parse_result).__name__,
             )
             return False
         if not isinstance(self._url, str):
             logger.warning(
-                "%s.is_requestmixin_ready() - %s _url is not a string. Received %s. Cannot process request.",
+                "%s.is_requestmixin_ready() - _url is not a string. Received %s. Cannot process request.",
                 logger_prefix,
-                self._instance_id,
                 type(self._url).__name__,
             )
             return False

@@ -5,6 +5,7 @@ import logging
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
+from functools import cached_property
 from http import HTTPStatus
 from typing import Any, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
@@ -200,9 +201,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
         self._api_version = api_version
         if "name" in kwargs and isinstance(kwargs["name"], str):
-            self._name = kwargs["name"]
-            logger.debug("%s.__init__() received name in kwargs: %s", logger_prefix, self._name)
-        self._name = name if isinstance(name, str) else self._name
+            self.name_cached_property_setter(kwargs["name"])
+            if self._name:
+                logger.debug("%s.__init__() set name to %s %s from kwargs", logger_prefix, self._name, type(self._name))
 
         for arg in args:
             if isinstance(arg, SAMLoader):
@@ -439,7 +440,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         return self._kind
 
-    @property
+    @cached_property
     def name(self) -> Optional[str]:
         """
         Retrieve the unique name identifier for the ChatBot instance managed by this broker.
@@ -466,6 +467,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._name = self.manifest.metadata.name
             logger.debug("%s.name() set name to %s from manifest metadata", logger_prefix, self._name)
             return self._name
+        else:
+            logger.debug("%s.name() manifest is not set, cannot retrieve name from manifest", logger_prefix)
         if self.loader:
             logger.warning(
                 "%s.name() encountered a SAMLoader while attempting to retrieve name from loader metadata. This should not happen as manifest should have already been set. self.loader.manifest_metadata: %s",
@@ -475,12 +478,41 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._name = self.loader.manifest_metadata.get("name")
             if self._name:
                 logger.debug("%s.name() set name to %s from loader metadata", logger_prefix, self._name)
+            else:
+                logger.debug("%s.name() loader metadata does not contain a name", logger_prefix)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
             if name_param:
                 self._name = name_param
-                logger.debug("%s.__init__() set name to %s from name url param", logger_prefix, self._name)
+                logger.debug("%s.name() set name to %s from name url param", logger_prefix, self._name)
+            else:
+                logger.debug("%s.name() url params do not contain a name", logger_prefix)
+        if not self._name:
+            logger.warning("%s.name() could not determine name, returning None", logger_prefix)
         return self._name
+
+    def name_cached_property_setter(self, value: str):
+        """
+        A workaround to the limitation that you cannot use both @cached_property and
+        a setter for the same attribute name (name). In Python, you cannot have a
+        property (or cached_property) and a setter with the same name unless you use the
+        @property decorator (not @cached_property).
+
+        We need the cached_property so that the lazy evaluation of the name only happens
+        once, and subsequent accesses return the cached value for performance.
+        However, we also need to be able to set the name explicitly in some cases,
+
+        :param value: The name to set for the manifest.
+        :type value: str
+        """
+        self._name = value
+        # Delete cached_property value if present
+        try:
+            del self.__dict__["name"]
+            logger.debug("%s.name() setter cleared cached_property", logger_prefix)
+        except KeyError:
+            pass
+        logger.debug("%s.name() setter set name to %s", logger_prefix, self._name)
 
     @property
     def api_version(self) -> str:
@@ -1047,13 +1079,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :raises SAMBrokerErrorNotReady: If neither a manifest nor a name param is provided.
         :return: None
         """
-        self._name = kwargs.get("name", None) or self._name
-        if not self.manifest and not self.name:
-            raise SAMBrokerErrorNotReady(
-                f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",
-                thing=self.kind,
-                command=command,
-            )
+        name = kwargs.get("name")
+        if name:
+            self.name_cached_property_setter(name)
 
     # pylint: disable=W0212
     def get_model_titles(self, serializer: ModelSerializer) -> Optional[list[dict[str, str]]]:
