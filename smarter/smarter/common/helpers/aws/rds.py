@@ -2,11 +2,9 @@
 
 import logging
 
-import botocore.exceptions
-
 from smarter.common.conf import settings as smarter_settings
 
-from .aws import AWSBase, SmarterAWSException
+from .aws import AWSBase
 
 
 logger = logging.getLogger(__name__)
@@ -37,6 +35,7 @@ class AWSRds(AWSBase):
         :return: MySQL server information
         :rtype: dict
         """
+        logger.debug("%s.get_mysql_info() called", self.formatted_class_name)
         response = self.client.describe_db_instances(DBInstanceIdentifier=smarter_settings.aws_db_instance_identifier)
         response = response["DBInstances"][0]
         retval = {

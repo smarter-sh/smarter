@@ -186,8 +186,8 @@ class AWSBase(SmarterHelperMixin):
         :return: boto3 client instance
         :rtype: a child of boto3.client
         """
-        if self.client:
-            return self.client
+        if self._client:
+            return self._client
 
         if not self.client_type:
             raise SmarterAWSException("Client type is not specified.")
@@ -197,8 +197,8 @@ class AWSBase(SmarterHelperMixin):
             return None
         try:
             logger.debug("%s.client() creating AWS %s client", self.formatted_class_name, self.client_type.upper())
-            self.client = self.aws_session.client(self.client_type)
-            msg = f"{self.formatted_class_name}.client() {formatted_text_green(f'AWS Boto {type(self.client).__name__} client created')}."
+            self._client = self.aws_session.client(self.client_type)
+            msg = f"{self.formatted_class_name}.client() {formatted_text_green(f'AWS Boto {type(self._client).__name__} client created')}."
             logger.info(msg)
         except botocore.exceptions.BotoCoreError as e:
             logger.error(
@@ -208,7 +208,7 @@ class AWSBase(SmarterHelperMixin):
                 str(e),
             )
             return None
-        return self.client
+        return self._client
 
     @property
     def client_type(self) -> Optional[str]:

@@ -35,6 +35,7 @@ class AWSEks(AWSBase):
         :return: Kubernetes cluster information
         :rtype: dict
         """
+        logger.debug("%s.get_kubernetes_info() called", self.formatted_class_name)
         response = self.client.describe_cluster(name=smarter_settings.aws_eks_cluster_name)
         response = response["cluster"]
         retval = {
