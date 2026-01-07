@@ -44,8 +44,6 @@ if TYPE_CHECKING:
 
 UserType = Union["AnonymousUser", User, None]
 AccountNumberType = Optional[str]
-AccountType = Optional[Account]
-UserProfileType = Optional[UserProfile]
 ApiTokenType = Optional[bytes]
 OptionalRequestType = Optional[Union["WSGIRequest", "HttpRequest", "Request"]]
 
@@ -93,7 +91,7 @@ class AccountMixin(SmarterHelperMixin):
         self,
         *args,
         account_number: AccountNumberType = None,
-        account: AccountType = None,
+        account: Optional[Account] = None,
         user: UserType = None,
         api_token: ApiTokenType = None,
         **kwargs,
@@ -109,9 +107,9 @@ class AccountMixin(SmarterHelperMixin):
             kwargs,
         )
 
-        self._account: AccountType = None
+        self._account: Optional[Account] = None
         self._user: UserType = None
-        self._user_profile: UserProfileType = None
+        self._user_profile: Optional[UserProfile] = None
         super().__init__(*args, **kwargs)
 
         request: OptionalRequestType = kwargs.get("request")
@@ -266,7 +264,7 @@ class AccountMixin(SmarterHelperMixin):
         return None
 
     @account.setter
-    def account(self, account: AccountType):
+    def account(self, account: Optional[Account]):
         """
         Set the account for the current user. Handle
         management of user_profile.
@@ -339,7 +337,7 @@ class AccountMixin(SmarterHelperMixin):
         logger.debug("%s.user.setter: %s", logger_prefix, user)
 
     @property
-    def user_profile(self) -> UserProfileType:
+    def user_profile(self) -> Optional[UserProfile]:
         """
         Returns the user_profile for the current user. Handle
         lazy instantiation from user or account.
@@ -368,7 +366,7 @@ class AccountMixin(SmarterHelperMixin):
         return self._user_profile
 
     @user_profile.setter
-    def user_profile(self, user_profile: UserProfileType):
+    def user_profile(self, user_profile: Optional[UserProfile]):
         """
         Set the user_profile for the current user. If we're unsetting the user_profile,
         then leave the user and account as they are. But if we're setting the user_profile,

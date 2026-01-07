@@ -252,8 +252,8 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         def sort_annotations(annotations):
             return sorted(annotations, key=lambda d: sorted(d.items()))
 
-        manifest_annotations = sort_annotations(self.broker.manifest.metadata.annotations or [])
-        account_annotations = sort_annotations(self.broker.brokered_account.annotations or [])
+        manifest_annotations = json.dumps(sort_annotations(self.broker.manifest.metadata.annotations or []))
+        account_annotations = json.dumps(sort_annotations(self.broker.brokered_account.annotations or []))
         self.assertEqual(
             manifest_annotations,
             account_annotations,
