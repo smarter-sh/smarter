@@ -859,7 +859,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         for sql_connection in sql_connections:
             try:
                 self.connection_init()
-                self.connection = sql_connection
+                self._connection = sql_connection
 
                 model_dump = self.serializer(sql_connection).data
                 camel_cased_model_dump = self.snake_to_camel(model_dump)
