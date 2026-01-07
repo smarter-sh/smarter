@@ -234,7 +234,11 @@ class SAMUserBroker(AbstractBroker):
         """
         if self._brokered_user:
             return self._brokered_user
-        if self._name is None:
+        if self.name is None:
+            logger.debug(
+                "%s.brokered_user() brokered user name is not set. Cannot retrieve User.",
+                self.formatted_class_name,
+            )
             return None
         try:
             self._brokered_user = User.objects.get(username=self._name)
@@ -301,6 +305,10 @@ class SAMUserBroker(AbstractBroker):
         if self._brokered_user_profile:
             return self._brokered_user_profile
         if not self._brokered_user:
+            logger.debug(
+                "%s.brokered_user_profile() brokered user is not set. Cannot retrieve UserProfile.",
+                self.formatted_class_name,
+            )
             return None
 
         try:
@@ -311,7 +319,12 @@ class SAMUserBroker(AbstractBroker):
                 self._brokered_user_profile,
             )
         except UserProfile.DoesNotExist:
-            pass
+            logger.warning(
+                "%s.brokered_user_profile() UserProfile does not exist for user: %s and account: %s",
+                self.formatted_class_name,
+                self.brokered_user,
+                self.account,
+            )
         return self._brokered_user_profile
 
     @brokered_user_profile.setter
@@ -336,6 +349,12 @@ class SAMUserBroker(AbstractBroker):
             "%s.brokered_user_profile() set UserProfile: %s",
             self.formatted_class_name,
             value,
+        )
+        self._brokered_user = value.user
+        logger.debug(
+            "%s.brokered_user_profile() set brokered User: %s from UserProfile",
+            self.formatted_class_name,
+            value.user,
         )
 
     @property
@@ -517,8 +536,8 @@ class SAMUserBroker(AbstractBroker):
         retval = super().name
         if retval:
             return retval
-        if self.brokered_user:
-            return str(self.brokered_user.username)
+        if self._brokered_user:
+            return str(self._brokered_user.username)
 
     @property
     def manifest(self) -> Optional[SAMUser]:
@@ -568,7 +587,7 @@ class SAMUserBroker(AbstractBroker):
                     name=self.brokered_user.username,
                     description=self.brokered_user_profile.description or "no description",
                     version=self.brokered_user_profile.version,
-                    username=self.brokered_user_profile.username,
+                    username=self.brokered_user_profile.user.username,
                     tags=self.brokered_user_profile.tags.names(),
                     annotations=self.brokered_user_profile.annotations,
                 ),
@@ -630,7 +649,10 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        self.brokered_user = get_cached_smarter_admin_user_profile().user
+        logger.debug("%s.example_manifest() called", self.formatted_class_name)
+        smarter_admin_profile = get_cached_smarter_admin_user_profile()
+        self.brokered_user = smarter_admin_profile.user
+        self.brokered_user_profile = smarter_admin_profile
         data = self.django_orm_to_manifest_dict()
         return self.json_response_ok(command=command, data=data)
 
@@ -671,6 +693,7 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
+        logger.debug("%s.get() called", self.formatted_class_name)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
 
@@ -680,15 +703,13 @@ class SAMUserBroker(AbstractBroker):
             user_profiles = UserProfile.objects.filter(account=self.account)
         users = [user_profile.user for user_profile in user_profiles]
 
+        model_titles = self.get_model_titles(serializer=UserSerializer())
+
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for user in users:
             try:
                 self.brokered_user = user
-                model_dump = self.django_orm_to_manifest_dict()
-                if not model_dump:
-                    raise SAMUserBrokerError(
-                        f"Model dump failed for {self.kind} {user.username}", thing=self.kind, command=command
-                    )
+                model_dump = UserSerializer(user).data
                 camel_cased_model_dump = self.snake_to_camel(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
@@ -701,7 +722,7 @@ class SAMUserBroker(AbstractBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: self.params,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=UserSerializer()),
+                SCLIResponseGetData.TITLES.value: model_titles,
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
@@ -746,6 +767,7 @@ class SAMUserBroker(AbstractBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+        logger.debug("%s.apply() called", self.formatted_class_name)
         readonly_fields = ["id", "date_joined", "last_login", "username", "is_superuser"]
 
         if not self.manifest:
@@ -827,6 +849,7 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
+        logger.debug("%s.chat() called", self.formatted_class_name)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -847,6 +870,7 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
+        logger.debug("%s.describe() called", self.formatted_class_name)
 
         if not self.brokered_user:
             raise SAMBrokerErrorNotFound(f"Failed to describe {self.kind}. Not found", thing=self.kind, command=command)
@@ -895,6 +919,7 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+        logger.debug("%s.delete() called", self.formatted_class_name)
 
         if not self.brokered_user:
             raise SAMBrokerErrorNotFound(f"Failed to delete {self.kind}. Not found", thing=self.kind, command=command)
@@ -934,6 +959,8 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
+        logger.debug("%s.deploy() called", self.formatted_class_name)
+
         if self.brokered_user:
             try:
                 if not self.brokered_user.is_active:
@@ -959,6 +986,8 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
+        logger.debug("%s.undeploy() called", self.formatted_class_name)
+
         if self.brokered_user:
             try:
                 if self.brokered_user.is_active:
@@ -983,5 +1012,7 @@ class SAMUserBroker(AbstractBroker):
         """
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
+        logger.debug("%s.logs() called", self.formatted_class_name)
+
         data = {}
         return self.json_response_ok(command=command, data=data)
