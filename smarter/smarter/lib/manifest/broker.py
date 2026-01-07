@@ -1099,6 +1099,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             item = self.snake_to_camel({"name": field_name, "type": type(field).__name__}, convert_values=True)
             if isinstance(item, dict) and all(isinstance(k, str) and isinstance(v, str) for k, v in item.items()):
                 fields_and_types.append(item)
+            else:
+                logger.warning(
+                    "%s.get_model_titles() skipping field %s: expected dict with str keys and str values but got: %s",
+                    logger_prefix,
+                    field_name,
+                    item,
+                )
         return fields_and_types
 
     def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
