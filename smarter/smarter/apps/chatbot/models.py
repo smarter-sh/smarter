@@ -1795,7 +1795,7 @@ def get_cached_chatbot_by_request(request: HttpRequest) -> Optional[ChatBot]:
 
     def get_chatbot_by_url(url: str) -> Optional[ChatBot]:
         chatbot_helper = ChatBotHelper(request)
-        if chatbot_helper.is_valid:
+        if chatbot_helper.ready:
             chatbot = chatbot_helper.chatbot
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logging.info("get_cached_chatbot_by_request() caching chatbot %s for %s", chatbot, url)

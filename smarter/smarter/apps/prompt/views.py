@@ -51,6 +51,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseServerError,
 )
 from smarter.lib.django.view_helpers import (
+    SmarterAuthenticatedCachedWebView,
     SmarterAuthenticatedNeverCachedWebView,
     SmarterNeverCachedWebView,
 )
@@ -165,7 +166,7 @@ class SmarterChatSession(SmarterHelperMixin):
 
 # pylint: disable=R0902
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatConfigView(SmarterNeverCachedWebView):
+class ChatConfigView(SmarterAuthenticatedCachedWebView):
     """
     Chat configuration view for the Smarter web application.
 

@@ -102,23 +102,28 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
         path = reverse(self.namespace + ApiV1CliReverseViews.chat_config, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
+
+        logger.debug("chat_config() raw response: %s", response)
 
         # pylint: disable=W0612
         expected_output = {
             "data": {
-                "session_key": "25046e8d285b6bc3cefaac912397bfd542ea3d1ca6c596a527842403ef138bbd",
+                "session_key": "a506bd92f58682c8280d756066f18ce2d2a3381b7fb7bb13fbe54dd5d114d24f",
                 "sandbox_mode": False,
                 "debug_mode": True,
                 "chatbot": {
-                    "id": 1581,
-                    "url_chatbot": "http://localhost:8000/api/v1/workbench/1581/chat/",
-                    "account": {"accountNumber": "2873-5129-3755"},
-                    "default_system_role": "The current date/time is Thursday, 2025-05-22T19:35:04+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
-                    "created_at": "2025-05-22T19:35:03.935229Z",
-                    "updated_at": "2025-05-22T19:35:03.935243Z",
-                    "name": "test35dd6e57c0deb505",
+                    "id": 372,
+                    "url_chatbot": "http://localhost:8000/api/v1/chatbots/372/chat/",
+                    "account": {"accountNumber": "7154-0706-7820"},
+                    "default_system_role": "The current date/time is Wednesday, 2026-01-07T23:25:02+0000\nYou are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                    "created_at": "2026-01-07T23:25:02.548999Z",
+                    "updated_at": "2026-01-07T23:25:02.549006Z",
+                    "name": "smarter_test_base_364beb79380074c9",
                     "description": "Test ChatBot",
                     "version": "1.0.0",
+                    "annotations": [],
                     "deployed": False,
                     "provider": "openai",
                     "default_model": None,
@@ -140,15 +145,16 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                 },
                 "history": {
                     "chat": {
-                        "id": 512,
-                        "created_at": "2025-05-22T19:35:04.427757Z",
-                        "updated_at": "2025-05-22T19:35:04.427783Z",
-                        "session_key": "25046e8d285b6bc3cefaac912397bfd542ea3d1ca6c596a527842403ef138bbd",
-                        "ip_address": "127.0.0.1",
-                        "user_agent": "user_agent",
-                        "url": "http://testserver.local/api/v1/cli/chat/config/test35dd6e57c0deb505/",
-                        "account": 5189,
-                        "chatbot": 1581,
+                        "name": "",
+                        "description": "",
+                        "version": "",
+                        "annotations": None,
+                        "session_key": "",
+                        "ip_address": "",
+                        "user_agent": "",
+                        "url": "",
+                        "account": None,
+                        "chatbot": None,
                     },
                     "chat_history": [],
                     "chat_tool_call_history": [],
@@ -157,46 +163,21 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                     "plugin_selector_history": [],
                 },
                 "meta_data": {
-                    "url": "http://testserver/api/v1/cli/chat/config/test35dd6e57c0deb505/",
-                    "session_key": "856286a90329ae59ccaaa6b8edf15157f4671dfde34c72068fb79556c5ea6d1c",
-                    "data": {},
-                    "chatbot_id": 1581,
-                    "chatbot_name": "test35dd6e57c0deb505",
-                    "is_smarter_api": True,
-                    "is_chatbot": True,
-                    "is_chatbot_smarter_api_url": False,
-                    "is_chatbot_named_url": False,
-                    "is_chatbot_sandbox_url": False,
-                    "is_chatbot_cli_api_url": True,
-                    "is_default_domain": False,
-                    "path": "/api/v1/cli/chat/config/test35dd6e57c0deb505/",
-                    "root_domain": "testserver",
-                    "subdomain": "",
+                    "account": {"accountNumber": "7154-0706-7820"},
+                    "api_host": "api.localhost:8000",
                     "api_subdomain": "testserver",
-                    "domain": "testserver",
-                    "user": "testAdminUser_39083d40df6e1149",
-                    "account": "2873-5129-3755",
-                    "timestamp": "2025-05-22T19:35:04.392831",
-                    "unique_client_string": "2873-5129-3755.http://testserver/api/v1/cli/chat/config/test35dd6e57c0deb505/.user_agent.127.0.0.1.2025-05-22T19:35:04.392831",
-                    "client_key": "856286a90329ae59ccaaa6b8edf15157f4671dfde34c72068fb79556c5ea6d1c",
-                    "ip_address": "127.0.0.1",
-                    "user_agent": "user_agent",
-                    "parsed_url": "",
-                    "environment": "local",
-                    "environment_api_domain": "api.localhost:8000",
-                    "is_deployed": False,
-                    "is_valid": True,
-                    "error": None,
-                    "is_authentication_required": False,
-                    "name": "test35dd6e57c0deb505",
+                    "api_token": "****c10e",
+                    "auth_header": "Token 5d65****",
+                    "cache_key": "887e673f7be35b7190caf0934bcdc09c2286f9f941799310444fcd70d5e3971a",
                     "chatbot": {
-                        "id": 1581,
-                        "created_at": "2025-05-22T19:35:03.935229Z",
-                        "updated_at": "2025-05-22T19:35:03.935243Z",
-                        "account": {"accountNumber": "2873-5129-3755"},
-                        "name": "test35dd6e57c0deb505",
+                        "id": 372,
+                        "created_at": "2026-01-07T23:25:02.548999Z",
+                        "updated_at": "2026-01-07T23:25:02.549006Z",
+                        "name": "smarter_test_base_364beb79380074c9",
                         "description": "Test ChatBot",
                         "version": "1.0.0",
+                        "annotations": [],
+                        "account": {"accountNumber": "7154-0706-7820"},
                         "subdomain": None,
                         "custom_domain": None,
                         "deployed": False,
@@ -216,34 +197,73 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
                         "app_file_attachment": False,
                         "dns_verification_status": "Not Verified",
                         "tls_certificate_issuance_status": "No Certificate",
-                        "url_chatbot": "http://localhost:8000/api/v1/workbench/1581/chat/",
+                        "tags": [],
+                        "tagged_items": [],
+                        "url_chatbot": "http://localhost:8000/api/v1/chatbots/372/chat/",
                     },
-                    "api_host": None,
-                    "is_custom_domain": False,
                     "chatbot_custom_domain": None,
+                    "chatbot_id": None,
+                    "chatbot_name": "smarter_test_base_364beb79380074c9",
+                    "class_name": "ChatBotHelper",
+                    "data": {},
+                    "domain": "testserver",
+                    "environment_api_domain": "api.localhost:8000",
+                    "ip_address": "127.0.0.1",
+                    "is_authentication_required": False,
+                    "is_chatbot": True,
+                    "is_chatbot_cli_api_url": True,
+                    "is_chatbot_named_url": False,
+                    "is_chatbot_sandbox_url": False,
+                    "is_chatbot_smarter_api_url": False,
+                    "is_chatbothelper_ready": True,
+                    "is_config": True,
+                    "is_custom_domain": False,
+                    "is_dashboard": False,
+                    "is_default_domain": False,
+                    "is_deployed": False,
+                    "is_environment_root_domain": False,
+                    "is_smarter_api": True,
+                    "is_workbench": False,
+                    "name": "smarter_test_base_364beb79380074c9",
+                    "params": {"uid": "198f94309784a5a8465ae2f99f29d350319218aa7da93f2bc97028ade398afd3"},
+                    "parsed_url": "ParseResult(scheme='http', netloc='testserver', path='/api/v1/cli/chat/config/smarter_test_base_364beb79380074c9/', params='', query='', fragment='')",
+                    "path": "/api/v1/cli/chat/config/smarter_test_base_364beb79380074c9/",
+                    "qualified_request": True,
+                    "ready": True,
+                    "request": True,
+                    "rfc1034_compliant_name": "smarter-test-base-364beb79380074c9",
+                    "root_domain": "testserver",
+                    "session_key": "a506bd92f58682c8280d756066f18ce2d2a3381b7fb7bb13fbe54dd5d114d24f",
+                    "subdomain": None,
+                    "timestamp": "2026-01-07T23:25:02.909556",
+                    "uid": "198f94309784a5a8465ae2f99f29d350319218aa7da93f2bc97028ade398afd3",
+                    "unique_client_string": "7154-0706-7820.http://testserver/api/v1/cli/chat/config/smarter_test_base_364beb79380074c9/.user_agent.127.0.0.1.2026-01-07T23:25:02.909556",
+                    "url": "http://testserver/api/v1/cli/chat/config/smarter_test_base_364beb79380074c9/",
+                    "url_original": "http://testserver/api/v1/cli/chat/config/smarter_test_base_364beb79380074c9/",
+                    "url_path_parts": ["api", "v1", "cli", "chat", "config", "smarter_test_base_364beb79380074c9"],
+                    "user": {
+                        "username": "test_admin_user_8a37f9ec927e391e",
+                        "email": "test-admin-8a37f9ec927e391e@mail.com",
+                    },
+                    "user_agent": "user_agent",
+                    "user_profile": {
+                        "user": {
+                            "username": "test_admin_user_8a37f9ec927e391e",
+                            "email": "test-admin-8a37f9ec927e391e@mail.com",
+                        },
+                        "account": {"accountNumber": "7154-0706-7820"},
+                    },
                 },
                 "plugins": {"meta_data": {"total_plugins": 0, "plugins_returned": 0}, "plugins": []},
             },
             "api": "smarter.sh/v1",
             "thing": "ChatConfig",
-            "metadata": {"key": "1dbeec326a275722d0456d1cac97c029b34f183e850ac3655c7f57d4278b7975"},
+            "metadata": {"key": "8dc3217f96ff966ba44adb4493f58d523d9680be2527a0854b5f424534046354"},
         }
 
-        self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.validate_data(data=data)
-        metadata = response[SmarterJournalApiResponseKeys.METADATA]
-        metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.CHAT_CONFIG.value
-
-        session_key = data[SMARTER_CHAT_SESSION_KEY_NAME]
-
-        # re-request the config to verify that we have a sticky session.
-        # the session_key should be the same as the first request.
-        response, status = self.get_response(path=url_with_query_params)
-        data = response[SmarterJournalApiResponseKeys.DATA]
-        next_session_key = data[SMARTER_CHAT_SESSION_KEY_NAME]
-        self.assertEqual(session_key, next_session_key)
 
         # add assertions for existence of the top-level keys
         self.assertIn(SmarterJournalApiResponseKeys.API, response)
@@ -257,3 +277,15 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
         self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
         self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.CHAT_CONFIG.value)
+
+        metadata = response[SmarterJournalApiResponseKeys.METADATA]
+        metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.CHAT_CONFIG.value
+
+        session_key = data[SMARTER_CHAT_SESSION_KEY_NAME]
+
+        # re-request the config to verify that we have a sticky session.
+        # the session_key should be the same as the first request.
+        response, status = self.get_response(path=url_with_query_params)
+        data = response[SmarterJournalApiResponseKeys.DATA]
+        next_session_key = data[SMARTER_CHAT_SESSION_KEY_NAME]
+        self.assertEqual(session_key, next_session_key)
