@@ -264,6 +264,7 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.validate_data(data=data)
+        session_key = data[SMARTER_CHAT_SESSION_KEY_NAME]
 
         # add assertions for existence of the top-level keys
         self.assertIn(SmarterJournalApiResponseKeys.API, response)
@@ -281,11 +282,14 @@ class TestApiCliV1ChatConfig(ApiV1CliTestBase):
         metadata = response[SmarterJournalApiResponseKeys.METADATA]
         metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.CHAT_CONFIG.value
 
-        session_key = data[SMARTER_CHAT_SESSION_KEY_NAME]
-
         # re-request the config to verify that we have a sticky session.
         # the session_key should be the same as the first request.
+        query_params = self.query_params + f"&{SMARTER_CHAT_SESSION_KEY_NAME}={session_key}"
+        url_with_query_params = f"{path}?{query_params}"
         response, status = self.get_response(path=url_with_query_params)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
+
         data = response[SmarterJournalApiResponseKeys.DATA]
         next_session_key = data[SMARTER_CHAT_SESSION_KEY_NAME]
         self.assertEqual(session_key, next_session_key)

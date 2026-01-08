@@ -1333,7 +1333,7 @@ class ChatBotHelper(SmarterRequestMixin):
         if self.is_chatbot:
             if not isinstance(self.chatbot, ChatBot):
                 if self.account and self._name:
-                    self._chatbot = get_cached_chatbot(account=self.account, name=self._name)
+                    self.chatbot = get_cached_chatbot(account=self.account, name=self._name)
 
             if not isinstance(self._chatbot, ChatBot):
                 chatbot_helper_logger.warning(
@@ -1440,7 +1440,7 @@ class ChatBotHelper(SmarterRequestMixin):
             return self._chatbot_id
 
         if self.chatbot_name and self.account:
-            self._chatbot = get_cached_chatbot(name=self.chatbot_name, account=self.account)
+            self.chatbot = get_cached_chatbot(name=self.chatbot_name, account=self.account)
             chatbot_helper_logger.debug(
                 f"chatbot_id() initialized self.chatbot_id={self.chatbot_id} from name={ self.chatbot_name } and account={ self.account }"
             )
@@ -1454,7 +1454,7 @@ class ChatBotHelper(SmarterRequestMixin):
         chatbot = get_cached_chatbot(chatbot_id=self.chatbot_id)
         if chatbot and chatbot.account != self.account:
             raise SmarterValueError("ChatBotHelper.chatbot_id setter: chatbot.account does not match self.account")
-        self._chatbot = chatbot
+        self.chatbot = chatbot
         if self._chatbot:
             chatbot_helper_logger.debug(
                 f"@chatbot_id.setter initialized self.chatbot_id={self.chatbot_id} from chatbot_id"
@@ -1509,7 +1509,7 @@ class ChatBotHelper(SmarterRequestMixin):
             return self._chatbot.rfc1034_compliant_name
         return None
 
-    @property
+    @cached_property
     def is_chatbothelper_ready(self) -> bool:
         """
         Returns ``True`` if the ChatBotHelper is ready to be used.
@@ -1521,8 +1521,6 @@ class ChatBotHelper(SmarterRequestMixin):
         :rtype: bool
         """
         if not self.is_chatbot:
-            self._err = f"{self.formatted_class_name}.is_chatbothelper_ready() returning false because URL is not a chatbot URL. url={self._url}"
-            chatbot_helper_logger.debug(self._err)
             return False
         else:
             chatbot_helper_logger.debug(
@@ -1711,14 +1709,14 @@ class ChatBotHelper(SmarterRequestMixin):
 
         # cheapest possibility
         if self._chatbot_id:
-            self._chatbot = get_cached_chatbot(chatbot_id=self.chatbot_id)
+            self.chatbot = get_cached_chatbot(chatbot_id=self.chatbot_id)
             chatbot_helper_logger.debug(f"initialized chatbot {self._chatbot} from chatbot_id {self.chatbot_id}")
             return self._chatbot
 
         # our expected case
         if self.account and self.name:
             try:
-                self._chatbot = get_cached_chatbot(account=self.account, name=self.name)
+                self.chatbot = get_cached_chatbot(account=self.account, name=self.name)
                 chatbot_helper_logger.debug(
                     f"initialized chatbot {self._chatbot} from account {self.account} and name {self.name}"
                 )
@@ -1732,6 +1730,25 @@ class ChatBotHelper(SmarterRequestMixin):
                 )
 
         return self._chatbot
+
+    @chatbot.setter
+    def chatbot(self, chatbot: ChatBot):
+        """
+        Sets the ChatBot instance for this ChatBotHelper.
+        """
+        self._chatbot = chatbot
+        if self._chatbot:
+            self._chatbot_id = self._chatbot.id
+            self._name = self._chatbot.name
+            chatbot_helper_logger.debug(
+                f"@chatbot.setter initialized self.chatbot_id={self.chatbot_id} and self.name={self.name} from chatbot"
+            )
+        else:
+            self._chatbot_id = None
+            self._name = None
+            chatbot_helper_logger.debug("@chatbot.setter cleared self.chatbot_id and self.name because chatbot is None")
+        if hasattr(self, "is_chatbothelper_ready"):
+            del self.is_chatbothelper_ready
 
     @property
     def is_custom_domain(self) -> bool:
