@@ -176,6 +176,26 @@ class SmarterRequestMixin(AccountMixin):
             kwargs,
         )
         if not request:
+            for arg in args:
+                if isinstance(arg, (RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock)):
+                    request = arg
+                    logger.debug(
+                        "%s.__init__() - extracted request from args: %s",
+                        logger_prefix,
+                        smarter_build_absolute_uri(request),
+                    )
+                    break
+        if not request:
+            for value in kwargs.values():
+                if isinstance(value, (RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock)):
+                    request = value
+                    logger.debug(
+                        "%s.__init__() - extracted request from kwargs: %s",
+                        logger_prefix,
+                        smarter_build_absolute_uri(request),
+                    )
+                    break
+        if not request:
             logger.debug(
                 "%s.__init__() - request is None. SmarterRequestMixin will be partially initialized. This might affect request processing.",
                 logger_prefix,
