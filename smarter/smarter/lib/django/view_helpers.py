@@ -264,6 +264,9 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         """
         logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
+        # we have to initialize this, but we won't have the request
+        # until later in the DRF lifecycle.
+        SmarterRequestMixin.__init__(self, request=None, *args, **kwargs)
 
     def setup(self, request: HttpRequest, *args, **kwargs):
         """

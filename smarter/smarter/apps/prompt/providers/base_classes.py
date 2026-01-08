@@ -355,7 +355,7 @@ class ChatProviderBase(ProviderDbMixin):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class} ChatProviderBase()"
+        return f"{inherited_class} {ChatProviderBase.__name__}()"
 
     @property
     def provider(self) -> Optional[str]:

@@ -38,7 +38,7 @@ class ApiV1CliManifestApiView(CliBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliManifestApiView()"
+        return f"{inherited_class}.{ApiV1CliManifestApiView.__name__}()"
 
     @swagger_auto_schema(
         operation_description="""
