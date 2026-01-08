@@ -2,6 +2,7 @@
 """Test API Keys."""
 
 # python stuff
+import logging
 import uuid
 from http import HTTPStatus
 
@@ -10,9 +11,13 @@ from django.test import RequestFactory
 
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.drf.models import SmarterAuthToken
 
 from ..views.dashboard.api_keys import APIKeysView, APIKeyView
+
+
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=R0902
@@ -43,7 +48,7 @@ class TestAPIKeys(TestAccountMixin):
             user=self.admin_user,
             description="Test API Key",
             is_active=True,
-        )
+        )  # type: ignore
         return api_key
 
     def test_get_api_key(self):
@@ -62,8 +67,10 @@ class TestAPIKeys(TestAccountMixin):
             user=self.admin_user,
             name=self.admin_user.username,
             description="ANOTHER Test API Key",
-        )
-        url = self.base_url + str(another_api_key) + "/"
+        )  # type: ignore
+
+        url = self.base_url + str(another_api_key.name) + "/"
+        logger.debug("test_get_api_key_no_permissions() url: %s", url)
         factory = RequestFactory()
         request = factory.get(url)
         request.user = self.non_staff_authenticated_user

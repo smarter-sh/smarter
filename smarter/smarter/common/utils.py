@@ -644,7 +644,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
                 retval,
             )
             return retval
-        logger.debug(
+        logger.warning(
             "%s.smarter_build_absolute_uri() could not determine host from %s request; returning 'testserver'",
             logger_prefix,
             type(request).__name__,
@@ -653,7 +653,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
 
     if request is None:
         retval = "http://testserver/unknown/"
-        logger.debug(
+        logger.warning(
             "%s.smarter_build_absolute_uri() called with None request. Returning fallback URL: %s",
             logger_prefix,
             retval,
@@ -720,7 +720,18 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
     if isinstance(request, Request):
         # recast DRF Request to Django HttpRequest
         # pylint: disable=W0212
-        request = request._request
+        if hasattr(request, "_request"):
+            logger.debug(
+                "%s.smarter_build_absolute_uri() recasting DRF Request to Django HttpRequest",
+                logger_prefix,
+            )
+            request = request._request  # type: ignore
+        if hasattr(request, "build_absolute_uri"):
+            logger.debug(
+                "%s.smarter_build_absolute_uri() obtaining URL from recast DRF request.build_absolute_uri()",
+                logger_prefix,
+            )
+            return request.build_absolute_uri()
 
     # Fallback: synthesize a generic test URL
     logger.debug("%s.smarter_build_absolute_uri() could not determine URL, returning fallback test URL", logger_prefix)

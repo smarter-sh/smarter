@@ -1327,6 +1327,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         # initializations that depend on the superclass
         super().__init__(request, *args, **kwargs)
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
         self._chatbot_id = self._chatbot_id or self.smarter_request_chatbot_id
         self._name = self._name or self.smarter_request_chatbot_name
 

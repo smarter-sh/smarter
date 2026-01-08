@@ -236,7 +236,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         :rtype: str
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class} ChatBotApiBaseViewSet()"
+        return f"{inherited_class} {ChatBotApiBaseViewSet.__name__}()"
 
     @property
     def url(self) -> Optional[ParseResult]:
