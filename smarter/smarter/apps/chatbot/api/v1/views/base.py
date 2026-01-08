@@ -22,8 +22,7 @@ from smarter.apps.prompt.providers.providers import chat_providers
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
-from smarter.lib.django.request import SmarterRequestMixin
-from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
+from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -48,7 +47,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 # pylint: disable=too-many-instance-attributes
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
+class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     """
     Base viewset for all ChatBot API endpoints.
 
@@ -322,7 +321,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
             args,
             kwargs,
         )
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        # SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        self.smarter_request = request
         return super().setup(request, *args, **kwargs)
 
     def dispatch(self, request: WSGIRequest, *args, name: Optional[str] = None, **kwargs):
@@ -410,7 +410,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
             raise SmarterChatBotException(
                 f"ChatBotHelper not found. request={self.smarter_request} name={self.name}, chatbot_id={self.chatbot_id}, session_key={self.session_key}, user_profile={self.user_profile}"
             )
-        if not self.chatbot_helper.is_valid:
+        if not self.chatbot_helper.ready:
             data = {
                 "data": {
                     "error": {
@@ -423,7 +423,6 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
                     },
                 },
             }
-            self.chatbot_helper.log_dump()
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST.value)
         if self.chatbot_helper.is_authentication_required and not is_authenticated_request(request):
             data = {"message": "Forbidden. Please provide a valid API key."}
