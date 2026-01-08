@@ -176,7 +176,7 @@ class AWSBase(SmarterHelperMixin):
         :return: formatted class name
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+        return formatted_text(f"{__name__}.{AWSBase.__name__}")
 
     @property
     def client(self):

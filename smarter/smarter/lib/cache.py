@@ -151,7 +151,7 @@ class LazyCache:
         :rtype: django.core.cache.Cache
         """
         if self._cache is None:
-            logger_prefix = formatted_text(f"{__name__}.LazyCache.cache()")
+            logger_prefix = formatted_text(f"{__name__}.{LazyCache.__name__}.cache()")
             from django.core.cache import cache, caches
             from django_redis.cache import RedisCache
 

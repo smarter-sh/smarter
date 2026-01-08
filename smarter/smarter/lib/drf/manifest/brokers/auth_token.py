@@ -129,7 +129,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         This is used to serialize the object to JSON for the API response.
         """
         if self._smarter_auth_token:
-            return SmarterAuthTokenSerializer(self.smarter_auth_token).data
+            return self.sorted_dict(SmarterAuthTokenSerializer(self.smarter_auth_token).data)
         return None
 
     @property
