@@ -741,6 +741,7 @@ class SAMChatbotBroker(AbstractBroker):
                 for key, value in data.items():
                     setattr(self.chatbot, key, value)
                 self.chatbot.save()
+                self.chatbot.refresh_from_db()
             except Exception as e:
                 logger.error(
                     "%s.apply() failed to save %s %s",
@@ -906,6 +907,7 @@ class SAMChatbotBroker(AbstractBroker):
             try:
                 self.chatbot.deployed = True
                 self.chatbot.save()
+                self.chatbot.refresh_from_db()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(
@@ -929,6 +931,7 @@ class SAMChatbotBroker(AbstractBroker):
             try:
                 self.chatbot.deployed = False
                 self.chatbot.save()
+                self.chatbot.refresh_from_db()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(
