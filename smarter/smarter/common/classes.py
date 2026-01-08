@@ -139,7 +139,7 @@ class SmarterHelperMixin:
             "class_name": self.unformatted_class_name,
         }
 
-    def smarter_build_absolute_uri(self, request: "HttpRequest") -> str:
+    def smarter_build_absolute_uri(self, request: "HttpRequest") -> Optional[str]:
         """
         Attempts to get the absolute URI from a request object.
 
@@ -149,18 +149,12 @@ class SmarterHelperMixin:
         ``build_absolute_uri()``.
 
         :param request: The request object.
-        :type request: HttpRequest
+        :type request: Optional[HttpRequest]
         :return: The absolute request URL.
-        :rtype: str
+        :rtype: Optional[str]
         :raises SmarterValueError: If the URI cannot be built from the request.
         """
-        retval = utils_smarter_build_absolute_uri(request)
-        if not retval:
-            raise SmarterValueError(
-                "Failed to build absolute URI from request. "
-                "Ensure the request object is valid and has the necessary attributes."
-            )
-        return retval
+        return utils_smarter_build_absolute_uri(request)
 
     def data_to_dict(self, data: Union[dict, str]) -> dict:
         """

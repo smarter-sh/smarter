@@ -169,13 +169,19 @@ class SmarterRequestMixin(AccountMixin):
         self._cache_key: Optional[str] = None
 
         logger.debug(
-            "%s.__init__() - initializing with request=%s, args=%s, kwargs=%s",
+            "%s.__init__() - called with request=%s, args=%s, kwargs=%s",
             logger_prefix,
-            request.build_absolute_uri() if request else None,
+            self.smarter_build_absolute_uri(request),
             args,
             kwargs,
         )
-        if not request:
+        if request:
+            logger.debug(
+                "%s.__init__() - request provided: %s",
+                logger_prefix,
+                self.smarter_build_absolute_uri(request),
+            )
+        else:
             for arg in args:
                 if isinstance(arg, (RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock)):
                     request = arg
@@ -195,13 +201,13 @@ class SmarterRequestMixin(AccountMixin):
                         smarter_build_absolute_uri(request),
                     )
                     break
-        if not request:
-            logger.debug(
-                "%s.__init__() - request is None. SmarterRequestMixin will be partially initialized. This might affect request processing.",
+        if request:
+            self.smarter_request = request
+        else:
+            logger.warning(
+                "%s.__init__() - did not find a request object. SmarterRequestMixin will be partially initialized. This might affect request processing.",
                 logger_prefix,
             )
-
-        self.smarter_request = request
 
         # ---------------------------------------------------------------------
         # all of the following depends on self.smarter_request being set.

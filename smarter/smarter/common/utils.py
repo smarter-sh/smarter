@@ -607,6 +607,50 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         print(url)  # Output: http://testserver/unknown/
 
     """
+
+    def get_host(request: "HttpRequest") -> str:
+        """
+        Helper function to extract the host from the request object.
+        """
+        try:
+            # Try Django's get_host method first. works well except that
+            # it can raise KeyError on certain edge cases.
+            if hasattr(request, "get_host"):
+                retval = request.get_host()
+                logger.debug(
+                    "%s.smarter_build_absolute_uri() obtained host from %s request.get_host(): %s",
+                    logger_prefix,
+                    type(request).__name__,
+                    retval,
+                )
+                return retval
+        except KeyError:
+            pass
+        if hasattr(request, "META") and "HTTP_HOST" in request.META:
+            retval = request.META["HTTP_HOST"]
+            logger.debug(
+                "%s.smarter_build_absolute_uri() obtained host from %s request.META['HTTP_HOST']: %s",
+                logger_prefix,
+                type(request).__name__,
+                retval,
+            )
+            return retval
+        if hasattr(request, "META") and "SERVER_NAME" in request.META:
+            retval = request.META["SERVER_NAME"]
+            logger.debug(
+                "%s.smarter_build_absolute_uri() obtained host from %s request.META['SERVER_NAME']: %s",
+                logger_prefix,
+                type(request).__name__,
+                retval,
+            )
+            return retval
+        logger.debug(
+            "%s.smarter_build_absolute_uri() could not determine host from %s request; returning 'testserver'",
+            logger_prefix,
+            type(request).__name__,
+        )
+        return "testserver"
+
     if request is None:
         retval = "http://testserver/unknown/"
         logger.debug(
@@ -627,7 +671,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         return retval
 
     # Try to use Django's build_absolute_uri if available
-    if hasattr(request, "build_absolute_uri"):
+    if hasattr(request, "build_absolute_uri") and getattr(request, "META", {}).get("SERVER_NAME") is not None:
         try:
             url = request.build_absolute_uri()
             if url:
@@ -642,29 +686,31 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
             logger.debug(
                 "%s.smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
                 logger_prefix,
-                formatted_text(str(e)),
+                formatted_text_red(str(e)),
             )
 
     # Try to build from scheme, host, and path
     try:
         scheme = getattr(request, "scheme", None) or getattr(request, "META", {}).get("wsgi.url_scheme", "http")
-        host = (
-            getattr(request, "get_host", lambda: None)()
-            or getattr(request, "META", {}).get("HTTP_HOST")
-            or getattr(request, "META", {}).get("SERVER_NAME")
-            or "testserver"
-        )
+        host = get_host(request)
         path = getattr(request, "get_full_path", lambda: None)() or "/"
         url = f"{scheme}://{host}{path}"
         if SmarterValidator.is_valid_url(url):
             logger.debug("%s.smarter_build_absolute_uri() built URL from request attributes: %s", logger_prefix, url)
             return url
+    except KeyError as e:
+        logger.debug(
+            "%s.smarter_build_absolute_uri() could not build url from request attributes due to a KeyError: %s",
+            logger_prefix,
+            formatted_text_red(str(e)),
+        )
     # pylint: disable=W0718
     except Exception as e:
         logger.debug(
-            "%s.smarter_build_absolute_uri() failed to build URL from request attributes: %s",
+            "%s.smarter_build_absolute_uri() failed to build URL from request attributes: %s (%s)",
             logger_prefix,
-            formatted_text(str(e)),
+            formatted_text_red(str(e)),
+            type(e),
         )
 
     # do this last since we have to import
