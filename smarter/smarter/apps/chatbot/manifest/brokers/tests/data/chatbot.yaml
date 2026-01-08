@@ -7,7 +7,7 @@ metadata:
   name: example_chatbot
   version: 0.1.0
 spec:
-  apiKey: snake_case_api_key_name
+  apiKey: null
   config:
     appAssistant: Elle
     appBackgroundImageUrl: https://example.com/background-image.jpg
@@ -36,11 +36,6 @@ spec:
     deployed: true
     dnsVerificationStatus: Not Verified
     provider: openai
-    subdomain: example-chatbot
-  functions:
-    - weather
-    - datemath
-    - stockprice
-  plugins:
-    - everlasting_gobstopper
-    - example_configuration
+    subdomain: null
+  functions: null
+  plugins: null
