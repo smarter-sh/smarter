@@ -190,7 +190,7 @@ class AccountMixin(SmarterHelperMixin):
             if not self._account:
                 # if the account is not set, then try to get it from the request
                 # by parsing the URL.
-                account_number = account_number_from_url(url)
+                account_number = account_number_from_url(url) if url else None
                 if account_number and waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING):
                     logger.debug(
                         "%s.__init__(): located account number %s from the request url %s",

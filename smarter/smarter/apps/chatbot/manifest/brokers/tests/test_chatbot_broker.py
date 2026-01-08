@@ -4,6 +4,7 @@
 import logging
 import os
 
+from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from pydantic_core import ValidationError
 from taggit.managers import TaggableManager, _TaggableManager
@@ -15,6 +16,7 @@ from smarter.apps.chatbot.manifest.models.chatbot.spec import (
     SAMChatbotSpec,
     SAMChatbotSpecConfig,
 )
+from smarter.apps.chatbot.models import ChatBotFunctions
 from smarter.lib import json
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
@@ -226,86 +228,133 @@ class TestSmarterChatBotBroker(TestSAMBrokerBaseClass):
         # verify that account.tags (TaggableManager) contains the same tags.
         manifest_tags = set(self.broker.manifest.metadata.tags or [])
         django_orm_tags = None
-        if isinstance(self.broker.account.tags, (TaggableManager, _TaggableManager)):
-            django_orm_tags = set(self.broker.account.tags.names()) if self.broker.account.tags else set()
-        elif isinstance(self.broker.account.tags, set):
-            django_orm_tags = self.broker.account.tags
+        if isinstance(self.broker.chatbot.tags, (TaggableManager, _TaggableManager)):
+            django_orm_tags = set(self.broker.chatbot.tags.names()) if self.broker.chatbot.tags else set()
+        elif isinstance(self.broker.chatbot.tags, set):
+            django_orm_tags = self.broker.chatbot.tags
+        elif isinstance(self.broker.chatbot.tags, list):
+            django_orm_tags = set(self.broker.chatbot.tags)
         else:
-            self.fail(f"account.tags is of unexpected type: {type(self.broker.account.tags)}")
+            self.fail(f"chatbot.tags is of unexpected type: {type(self.broker.chatbot.tags)}")
         self.assertEqual(manifest_tags, django_orm_tags)
 
         # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
-        # verify that account.annotations (JSONField) contains the same annotations.
+        # verify that plugin.annotations (JSONField) contains the same annotations.
         def sort_annotations(annotations):
             return sorted(annotations, key=lambda d: sorted(d.items()))
 
         manifest_annotations = sort_annotations(self.broker.manifest.metadata.annotations or [])
-        account_annotations = sort_annotations(self.broker.account.annotations or [])
+        chatbot_annotations = sort_annotations(self.broker.chatbot.annotations or [])
         self.assertEqual(
             manifest_annotations,
-            account_annotations,
-            f"ChatBot annotations do not match manifest annotations. manifest: {manifest_annotations}, account: {account_annotations}",
+            chatbot_annotations,
+            f"ChatBot annotations do not match manifest annotations. manifest: {manifest_annotations}, chatbot: {chatbot_annotations}",
         )
+
+        # self.broker.manifest.spec.functions is a list of strings or None.
+        # verify that chatbot.functions List[str] contains the same functions.
+        manifest_functions = set(self.broker.manifest.spec.functions or [])
+        django_orm_functions = set()
+        if isinstance(self.broker.functions, list):
+            django_orm_functions = set(self.broker.functions)
+        elif self.broker.functions is not None:
+            self.fail(f"broker.functions is of unexpected type: {type(self.broker.functions)}")
+        self.assertEqual(manifest_functions, django_orm_functions)
+
+        # self.broker.manifest.spec.plugins is a list of strings or None.
+        # verify that chatbot.plugins List[str] contains the same plugins.
+        manifest_plugins = set(self.broker.manifest.spec.plugins or [])
+        django_orm_plugins = set()
+        if isinstance(self.broker.plugins, list):
+            django_orm_plugins = set(self.broker.plugins)
+        elif self.broker.plugins is not None:
+            self.fail(f"broker.plugins is of unexpected type: {type(self.broker.plugins)}")
+        self.assertEqual(manifest_plugins, django_orm_plugins)
 
         self.assertEqual(
             self.broker.manifest.metadata.name,
-            self.broker.account.name,
-            f"ChatBot name does not match manifest name. manifest: {self.broker.manifest.metadata.name}, account: {self.broker.account.name}",
+            self.broker.chatbot.name,
+            f"ChatBot name does not match manifest name. manifest: {self.broker.manifest.metadata.name}, chatbot: {self.broker.chatbot.name}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.companyName,
-            self.broker.account.company_name,
-            f"ChatBot company_name does not match manifest companyName. manifest: {self.broker.manifest.spec.config.companyName}, account: {self.broker.account.company_name}",
+            self.broker.manifest.spec.config.subdomain,
+            self.broker.chatbot.subdomain,
+            f"ChatBot subdomain does not match manifest subdomain. manifest: {self.broker.manifest.spec.config.subdomain}, chatbot: {self.broker.chatbot.subdomain}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.address1 or "",
-            self.broker.account.address1 or "",
-            f"ChatBot address1 does not match manifest address1. manifest: {self.broker.manifest.spec.config.address1}, account: {self.broker.account.address1}",
+            self.broker.manifest.spec.config.customDomain,
+            self.broker.chatbot.custom_domain,
+            f"ChatBot customDomain does not match manifest customDomain. manifest: {self.broker.manifest.spec.config.customDomain}, chatbot: {self.broker.chatbot.custom_domain}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.address2 or "",
-            self.broker.account.address2 or "",
-            f"ChatBot address2 does not match manifest address2. manifest: {self.broker.manifest.spec.config.address2}, account: {self.broker.account.address2}",
+            self.broker.manifest.spec.config.provider,
+            self.broker.chatbot.provider,
+            f"ChatBot provider does not match manifest provider. manifest: {self.broker.manifest.spec.config.provider}, chatbot: {self.broker.chatbot.provider}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.city or "",
-            self.broker.account.city or "",
-            f"ChatBot city does not match manifest city. manifest: {self.broker.manifest.spec.config.city}, account: {self.broker.account.city}",
+            self.broker.manifest.spec.config.defaultModel,
+            self.broker.chatbot.default_model,
+            f"ChatBot defaultModel does not match manifest defaultModel. manifest: {self.broker.manifest.spec.config.defaultModel}, chatbot: {self.broker.chatbot.default_model}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.state or "",
-            self.broker.account.state or "",
-            f"ChatBot state does not match manifest state. manifest: {self.broker.manifest.spec.config.state}, account: {self.broker.account.state}",
+            self.broker.manifest.spec.config.defaultSystemRole,
+            self.broker.chatbot.default_system_role,
+            f"ChatBot defaultSystemRole does not match manifest defaultSystemRole. manifest: {self.broker.manifest.spec.config.defaultSystemRole}, chatbot: {self.broker.chatbot.default_system_role}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.postalCode or "",
-            self.broker.account.postal_code or "",
-            f"ChatBot postal_code does not match manifest postalCode. manifest: {self.broker.manifest.spec.config.postalCode}, account: {self.broker.account.postal_code}",
+            self.broker.manifest.spec.config.defaultTemperature,
+            self.broker.chatbot.default_temperature,
+            f"ChatBot defaultTemperature does not match manifest defaultTemperature. manifest: {self.broker.manifest.spec.config.defaultTemperature}, chatbot: {self.broker.chatbot.default_temperature}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.country or "",
-            self.broker.account.country or "",
-            f"ChatBot country does not match manifest country. manifest: {self.broker.manifest.spec.config.country}, account: {self.broker.account.country}",
+            self.broker.manifest.spec.config.defaultMaxTokens,
+            self.broker.chatbot.default_max_tokens,
+            f"ChatBot defaultMaxTokens does not match manifest defaultMaxTokens. manifest: {self.broker.manifest.spec.config.defaultMaxTokens}, chatbot: {self.broker.chatbot.default_max_tokens}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.phoneNumber or "",
-            self.broker.account.phone_number or "",
-            f"ChatBot phone_number does not match manifest phoneNumber. manifest: {self.broker.manifest.spec.config.phoneNumber}, account: {self.broker.account.phone_number}",
+            self.broker.manifest.spec.config.appName,
+            self.broker.chatbot.app_name,
+            f"ChatBot appName does not match manifest appName. manifest: {self.broker.manifest.spec.config.appName}, chatbot: {self.broker.chatbot.app_name}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.timezone or "",
-            self.broker.account.timezone or "",
-            f"ChatBot timezone does not match manifest timezone. manifest: {self.broker.manifest.spec.config.timezone}, account: {self.broker.account.timezone}",
+            self.broker.manifest.spec.config.appAssistant,
+            self.broker.chatbot.app_assistant,
+            f"ChatBot appAssistant does not match manifest appAssistant. manifest: {self.broker.manifest.spec.config.appAssistant}, chatbot: {self.broker.chatbot.app_assistant}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.currency or "",
-            self.broker.account.currency or "",
-            f"ChatBot currency does not match manifest currency. manifest: {self.broker.manifest.spec.config.currency}, account: {self.broker.account.currency}",
+            self.broker.manifest.spec.config.appWelcomeMessage,
+            self.broker.chatbot.app_welcome_message,
+            f"ChatBot appWelcomeMessage does not match manifest appWelcomeMessage. manifest: {self.broker.manifest.spec.config.appWelcomeMessage}, chatbot: {self.broker.chatbot.app_welcome_message}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.language or "",
-            self.broker.account.language or "",
-            f"ChatBot language does not match manifest language. manifest: {self.broker.manifest.spec.config.language}, account: {self.broker.account.language}",
+            self.broker.manifest.spec.config.appExamplePrompts,
+            self.broker.chatbot.app_example_prompts,
+            f"ChatBot appExamplePrompts does not match manifest appExamplePrompts. manifest: {self.broker.manifest.spec.config.appExamplePrompts}, chatbot: {self.broker.chatbot.app_example_prompts}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.appPlaceholder,
+            self.broker.chatbot.app_placeholder,
+            f"ChatBot appPlaceholder does not match manifest appPlaceholder. manifest: {self.broker.manifest.spec.config.appPlaceholder}, chatbot: {self.broker.chatbot.app_placeholder}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.appInfoUrl,
+            self.broker.chatbot.app_info_url,
+            f"ChatBot appInfoUrl does not match manifest appInfoUrl. manifest: {self.broker.manifest.spec.config.appInfoUrl}, chatbot: {self.broker.chatbot.app_info_url}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.appBackgroundImageUrl,
+            self.broker.chatbot.app_background_image_url,
+            f"ChatBot appBackgroundImageUrl does not match manifest appBackgroundImageUrl. manifest: {self.broker.manifest.spec.config.appBackgroundImageUrl}, chatbot: {self.broker.chatbot.app_background_image_url}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.appLogoUrl,
+            self.broker.chatbot.app_logo_url,
+            f"ChatBot appLogoUrl does not match manifest appLogoUrl. manifest: {self.broker.manifest.spec.config.appLogoUrl}, chatbot: {self.broker.chatbot.app_logo_url}",
+        )
+        self.assertEqual(
+            self.broker.manifest.spec.config.appFileAttachment,
+            self.broker.chatbot.app_file_attachment,
+            f"ChatBot appFileAttachment does not match manifest appFileAttachment. manifest: {self.broker.manifest.spec.config.appFileAttachment}, chatbot: {self.broker.chatbot.app_file_attachment}",
         )
 
     def test_describe(self):

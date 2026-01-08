@@ -170,7 +170,7 @@ class SmarterRequestMixin(AccountMixin):
         logger.debug(
             "%s.__init__() - called with request=%s, args=%s, kwargs=%s",
             self.logger_prefix,
-            self.smarter_build_absolute_uri(request),
+            self.smarter_build_absolute_uri(request) if request else None,
             args,
             kwargs,
         )

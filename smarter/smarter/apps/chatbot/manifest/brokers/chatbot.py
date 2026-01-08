@@ -2,7 +2,7 @@
 """Smarter API Chatbot Manifest handler"""
 
 import logging
-from typing import Optional, Type
+from typing import List, Optional, Type
 
 from django.db import transaction
 from django.forms.models import model_to_dict
@@ -24,7 +24,6 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import SettingsDefaults
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -111,6 +110,8 @@ class SAMChatbotBroker(AbstractBroker):
     _manifest: Optional[SAMChatbot] = None
     _pydantic_model: Type[SAMChatbot] = SAMChatbot
     _chatbot: Optional[ChatBot] = None
+    _functions: Optional[List[str]] = None
+    _plugins: Optional[List[str]] = None
     _chatbot_api_key: Optional[ChatBotAPIKey] = None
     _name: Optional[str] = None
 
@@ -243,6 +244,34 @@ class SAMChatbotBroker(AbstractBroker):
                 if self.manifest:
                     data = self.manifest_to_django_orm()
                     logger.info("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
+                    example_data = {
+                        "account": "<Account: 9595-3980-5981 - TestAccount_AdminUser_f5b5c15e8e8f1568>",
+                        "name": "example_chatbot",
+                        "description": "To create and deploy an example Smarter chatbot. Prompt with example function calling to trigger the example Static Plugin",
+                        "version": "0.1.0",
+                        "subdomain": "example-chatbot",
+                        "custom_domain": None,
+                        "deployed": True,
+                        "provider": "openai",
+                        "default_model": "gpt-4o-mini",
+                        "default_system_role": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                        "default_temperature": 0.5,
+                        "default_max_tokens": 2048,
+                        "app_name": "Example Chatbot",
+                        "app_assistant": "Elle",
+                        "app_welcome_message": "Welcome to the Example Chatbot! How can I help you today?",
+                        "app_example_prompts": [
+                            "What is the weather in New York?",
+                            "Tell me a joke",
+                            "what's the current price of Apple stock?",
+                            "How many days ago was 29-Feb-1972?",
+                        ],
+                        "app_placeholder": "Ask me anything...",
+                        "app_info_url": "https://example.com",
+                        "app_background_image_url": "https://example.com/background-image.jpg",
+                        "app_logo_url": "https://example.com/logo.png",
+                        "app_file_attachment": False,
+                    }
                     self._chatbot = ChatBot.objects.create(**data)
                     self._created = True
                 else:
@@ -251,6 +280,60 @@ class SAMChatbotBroker(AbstractBroker):
                     )
 
         return self._chatbot
+
+    @property
+    def functions(self) -> Optional[List[str]]:
+        """
+        Provides access to the Django ORM model class representing ChatBot functions.
+
+        This property retrieves a list of the names of the ``ChatBotFunctions`` Django ORM model
+        objects that are linked to the ChatBot managed by this broker.
+        The functions define the capabilities and operations
+        that the ChatBot can perform, as specified in the manifest.
+
+        If the functions have already been retrieved and cached, they are returned immediately.
+        Otherwise, the property attempts to fetch the functions from the database using the
+        current ChatBot instance. If no functions are found, ``None`` is returned.
+
+        :returns: A list of names of ``ChatBotFunctions`` instances associated with the ChatBot, or ``None`` if no functions exist.
+        :rtype: Optional[List[str]]
+        """
+        if self._functions:
+            return self._functions
+        if not self.chatbot:
+            return None
+
+        queryset = ChatBotFunctions.objects.filter(chatbot=self.chatbot)
+        self._functions = list(queryset.values_list("name", flat=True))
+
+        return self._functions
+
+    @property
+    def plugins(self) -> Optional[List[str]]:
+        """
+        Provides access to the Django ORM model class representing ChatBot plugins.
+
+        This property retrieves a list of the names of the ``ChatBotPlugin`` Django ORM model
+        objects that are linked to the ChatBot managed by this broker.
+        The plugins extend the functionality of the ChatBot,
+        as specified in the manifest.
+
+        If the plugins have already been retrieved and cached, they are returned immediately.
+        Otherwise, the property attempts to fetch the plugins from the database using the
+        current ChatBot instance. If no plugins are found, ``None`` is returned.
+
+        :returns: A list of names of ``ChatBotPlugin`` instances associated with the ChatBot, or ``None`` if no plugins exist.
+        :rtype: Optional[List[str]]
+        """
+        if self._plugins:
+            return self._plugins
+        if not self.chatbot:
+            return None
+
+        queryset = ChatBotPlugin.objects.filter(chatbot=self.chatbot)
+        self._plugins = list(queryset.values_list("plugin_meta__name", flat=True))
+
+        return self._plugins
 
     @property
     def chatbot_api_key(self) -> Optional[ChatBotAPIKey]:
