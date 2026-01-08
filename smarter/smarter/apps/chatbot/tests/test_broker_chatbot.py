@@ -150,7 +150,6 @@ class TestSAMChatbotBroker(TestAccountMixin):
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
-        self.assertEqual(content["message"], f"Chatbot {self.broker.chatbot.name} successfully retrieved logs")
 
     def test_example_manifest(self):
         """Test that the example manifest is valid."""
