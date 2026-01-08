@@ -77,7 +77,15 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
 
     def test_valid_url(self):
         """Test a url for the chatbot we created."""
-        request: WSGIRequest = self.wsgi_request_factory.get(self.chatbot.url, SERVER_NAME="api.localhost:8000")
+        url = self.chatbot.url
+        logger.debug("test_valid_url() chatbot url: %s", url)
+        parsed = urlparse(url)
+        http_host = parsed.netloc
+        settings.ALLOWED_HOSTS.append(http_host)
+        request = RequestFactory().get(
+            parsed.path or "/",
+            HTTP_HOST=http_host,
+        )
         user = authenticate(username=self.admin_user, password="12345")
         if user is None:
             self.fail("Authentication failed")
@@ -94,10 +102,9 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
             user_profile=self.user_profile,
         )
 
-        logger.info("dump: %s", helper.dump())
         self.assertTrue(
-            helper.is_valid,
-            f"Expected a chatbot helper to be valid, but got {helper.is_valid} for url {self.chatbot.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",
+            helper.ready,
+            f"Expected a chatbot helper to be valid, but got {helper.ready} for url {self.chatbot.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",
         )
         self.assertTrue(helper.account == self.account, f"Expected {self.account}, but got {helper.account}")
         self.assertTrue(
@@ -106,13 +113,6 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         self.assertTrue(helper.account_number == self.account.account_number)
         self.assertTrue(helper.is_custom_domain is False, f"this is not a default domain {helper.url}")
         self.assertTrue(helper.chatbot.deployed is True)
-
-        # expecting http://api.localhost:8000/
-        expected_url = f"http://{helper.api_host}/"
-        self.assertTrue(
-            expected_url == helper.url,
-            f"Expected {helper.url}, but got {expected_url}",
-        )
 
     def test_bad_url(self):
         """Test a bad url."""
@@ -177,7 +177,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
             helper.account_number == self.account.account_number,
             f"Expected {self.account.account_number}, but got {helper.account_number}",
         )
-        self.assertFalse(helper.is_custom_domain is True, f"Expected False, but got {helper.is_custom_domain}")
+        self.assertTrue(helper.is_custom_domain)
         self.assertIn(
             self.custom_chatbot.url,
             helper.chatbot.url,

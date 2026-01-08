@@ -796,7 +796,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         return self._timestamp
 
-    @property
+    @cached_property
     def data(self) -> Optional[Union[dict, list, str]]:
         """
         Get the request body data as a dictionary, list or str.
