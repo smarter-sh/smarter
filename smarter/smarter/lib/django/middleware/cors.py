@@ -90,7 +90,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+        return formatted_text(f"{__name__}.{SmarterCorsMiddleware.__name__}")
 
     def __call__(self, request: HttpRequest) -> Union[HttpResponseBase, Awaitable[HttpResponseBase]]:
 

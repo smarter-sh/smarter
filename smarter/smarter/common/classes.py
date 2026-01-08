@@ -183,6 +183,17 @@ class SmarterHelperMixin:
         else:
             raise SmarterValueError("Unsupported data type for conversion to dict.")
 
+    def sorted_dict(self, data: dict) -> dict:
+        """
+        Returns a new dictionary with keys sorted.
+
+        :param data: The dictionary to sort.
+        :type data: dict
+        :return: A new dictionary with sorted keys.
+        :rtype: dict
+        """
+        return {k: data[k] for k in sorted(data.keys())}
+
 
 class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
     """A mixin for middleware classes with helper functions.

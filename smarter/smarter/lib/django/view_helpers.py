@@ -66,7 +66,10 @@ class SmarterView(View, SmarterHelperMixin):
 
     template_path: str = ""
     context: dict = {}
-    logger_prefix = formatted_text(f"{__name__}.SmarterView")
+
+    @property
+    def logger_prefix(self):
+        return formatted_text(f"{__name__}.{SmarterView.__name__}")
 
     @register.filter
     def remove_comments(self, html):
@@ -131,7 +134,9 @@ class SmarterWebXmlView(SmarterView):
     Base view for smarter xml web views.
     """
 
-    logger_prefix = formatted_text(f"{__name__}.SmarterWebXmlView")
+    @property
+    def logger_prefix(self):
+        return formatted_text(f"{__name__}.{SmarterWebXmlView.__name__}")
 
     def get(self, request):
         return render(request=request, template_name=self.template_path, context=self.context)
@@ -142,7 +147,9 @@ class SmarterWebTxtView(SmarterView):
     Base view for smarter xml web views.
     """
 
-    logger_prefix = formatted_text(f"{__name__}.SmarterWebTxtView")
+    @property
+    def logger_prefix(self):
+        return formatted_text(f"{__name__}.{SmarterWebTxtView.__name__}")
 
     def get(self, request):
         minified_html = self.render_clean_html(request, template_path=self.template_path, context=self.context)
@@ -157,7 +164,9 @@ class SmarterWebHtmlView(SmarterView):
 
     """
 
-    logger_prefix = formatted_text(f"{__name__}.SmarterWebHtmlView")
+    @property
+    def logger_prefix(self):
+        return formatted_text(f"{__name__}.{SmarterWebHtmlView.__name__}")
 
     # pylint: disable=W0613
     def clean_http_response(self, request: HttpRequest, template_path, *args, context=None, **kwargs):
@@ -214,7 +223,9 @@ class SmarterNeverCachedWebView(SmarterWebHtmlView):
     This makes it ideal for pages displaying private, frequently changing, or security-sensitive data.
     """
 
-    logger_prefix = formatted_text(f"{__name__}.SmarterNeverCachedWebView")
+    @property
+    def logger_prefix(self):
+        return formatted_text(f"{__name__}.{SmarterNeverCachedWebView.__name__}")
 
 
 class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
@@ -249,7 +260,9 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
     .. versionadded:: v0.13.39
     """
 
-    logger_prefix = formatted_text(f"{__name__}.SmarterAuthenticatedWebView")
+    @property
+    def logger_prefix(self):
+        return formatted_text(f"{__name__}.{SmarterAuthenticatedWebView.__name__}")
 
     def __init__(self, *args, **kwargs):
         """
@@ -338,7 +351,9 @@ class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
     on cookies, further protecting user data.
     """
 
-    logger_prefix = formatted_text(f"{__name__}.SmarterAuthenticatedCachedWebView")
+    @property
+    def logger_prefix(self):
+        return formatted_text(f"{__name__}.{SmarterAuthenticatedCachedWebView.__name__}")
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
@@ -374,7 +389,9 @@ class SmarterAuthenticatedNeverCachedWebView(SmarterAuthenticatedWebView):
     This makes it ideal for pages displaying private, frequently changing, or security-sensitive data, where both authentication and cache prevention are essential.
     """
 
-    logger_prefix = formatted_text(f"{__name__}.SmarterAuthenticatedNeverCachedWebView")
+    @property
+    def logger_prefix(self):
+        return formatted_text(f"{__name__}.{SmarterAuthenticatedNeverCachedWebView.__name__}")
 
 
 class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
@@ -404,7 +421,9 @@ class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
         :versionadded: v0.13.39
     """
 
-    logger_prefix = formatted_text(f"{__name__}.SmarterAdminWebView")
+    @property
+    def logger_prefix(self):
+        return formatted_text(f"{__name__}.{SmarterAdminWebView.__name__}")
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         # Enforce login_required

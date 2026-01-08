@@ -78,8 +78,6 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-logger_prefix = formatted_text(f"{__name__}.CliBaseApiView")
-
 
 class APIV1CLIViewError(SmarterException):
     """Base class for all APIV1CLIView errors."""
@@ -141,8 +139,18 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _prompt: Optional[str] = None
 
     def __init__(self, *args, **kwargs):
-        logger.debug("%s.__init__() called with args %s and kwargs %s", logger_prefix, args, kwargs)
+        logger.debug("%s.__init__() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
+
+    @property
+    def logger_prefix(self) -> str:
+        """
+        Get the logger prefix for this class.
+
+        :return: Logger prefix string
+        :rtype: str
+        """
+        return formatted_text(f"{__name__}.{CliBaseApiView.__name__}()")
 
     @property
     def formatted_class_name(self) -> str:
@@ -177,7 +185,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     kind=self.manifest_kind,
                     manifest=json.dumps(self.manifest_data),
                 )
-                logger.debug("%s.loader() - loaded manifest kind: %s", logger_prefix, self.manifest_kind)
+                logger.debug("%s.loader() - loaded manifest kind: %s", self.logger_prefix, self.manifest_kind)
                 if not self._loader or not self._loader.ready:
                     raise APIV1CLIViewError("SAMLoader is not ready.")
             except APIV1CLIViewError:
@@ -293,7 +301,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             if self._manifest_kind:
                 logger.warning(
                     "%s.manifest_kind() setting manifest kind to %s from analysis of url %s",
-                    logger_prefix,
+                    self.logger_prefix,
                     self._manifest_kind,
                     self.url,
                 )
@@ -335,7 +343,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         super().setup(request, *args, **kwargs)
         logger.debug(
             "%s.setup() called for request: %s with args %s and kwargs %s",
-            logger_prefix,
+            self.logger_prefix,
             smarter_build_absolute_uri(request),
             args,
             kwargs,
@@ -347,16 +355,16 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
         logger.debug(
             "%s.setup() - finished for request: %s, user: %s, self.user: %s is_authenticated: %s",
-            logger_prefix,
+            self.logger_prefix,
             smarter_build_absolute_uri(request),
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
             is_authenticated_request(request),
         )
         if self.is_cli_base_api_view_ready:
-            logger.debug("%s.setup() - is %s", logger_prefix, self.is_cli_base_api_view_ready_state)
+            logger.debug("%s.setup() - is %s", self.logger_prefix, self.is_cli_base_api_view_ready_state)
         else:
-            logger.error("%s.setup() - is %s", logger_prefix, self.is_cli_base_api_view_ready_state)
+            logger.error("%s.setup() - is %s", self.logger_prefix, self.is_cli_base_api_view_ready_state)
 
     @property
     def is_cli_base_api_view_ready(self) -> bool:
@@ -368,11 +376,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         ready = self.smarter_request is not None
         if not ready:
-            logger.warning("%s.is_cli_base_api_view_ready() - smarter_request is None", logger_prefix)
+            logger.warning("%s.is_cli_base_api_view_ready() - smarter_request is None", self.logger_prefix)
             return False
         ready = ready and self.user_profile is not None
         if not ready:
-            logger.warning("%s.is_cli_base_api_view_ready() - user_profile is None", logger_prefix)
+            logger.warning("%s.is_cli_base_api_view_ready() - user_profile is None", self.logger_prefix)
             return False
         return True
 
@@ -397,7 +405,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :rtype: bool
         """
         if not super().ready:
-            logger.warning("%s.ready() - returning False because SmarterRequestMixin is not ready", logger_prefix)
+            logger.warning("%s.ready() - returning False because SmarterRequestMixin is not ready", self.logger_prefix)
             return False
         return self.is_cli_base_api_view_ready
 
@@ -461,12 +469,12 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         url = smarter_build_absolute_uri(request)
         logger.debug(
-            "%s.initial() - called for request: %s with args %s and kwargs %s", logger_prefix, url, args, kwargs
+            "%s.initial() - called for request: %s with args %s and kwargs %s", self.logger_prefix, url, args, kwargs
         )
         if not self.is_requestmixin_ready:
             logger.debug(
                 "%s.initial() - completing initialization of SmarterRequestMixin with request: %s",
-                logger_prefix,
+                self.logger_prefix,
                 url,
             )
             self.smarter_request = request
@@ -482,7 +490,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
             logger.debug(
                 "%s.initial() - authenticated request: %s, user: %s, self.user: %s is_authenticated: %s, auth_header: %s",
-                logger_prefix,
+                self.logger_prefix,
                 url,
                 request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
                 self.user_profile,
@@ -494,7 +502,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             if internal_api_request:
                 logger.debug(
                     "%s.initial() - internal api request. Skipping authentication: %s",
-                    logger_prefix,
+                    self.logger_prefix,
                     url,
                 )
             else:
@@ -505,13 +513,13 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 if auth_header:
                     logger.error(
                         "%s.initial() - Authorization header contains an invalid, inactive or malformed token: %s",
-                        logger_prefix,
+                        self.logger_prefix,
                         e,
                     )
                 else:
                     logger.error(
                         "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact support@smarter.sh %s",
-                        logger_prefix,
+                        self.logger_prefix,
                         e,
                     )
                 raise SmarterAPIV1CLIViewErrorNotAuthenticated(
@@ -533,7 +541,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 f"{self.formatted_class_name}.smarter_request request object is not set. This should not happen."
             )
         if not self.ready:
-            logger.warning(f"{logger_prefix}.initial() is not in a ready state. This might affect some operations.")
+            logger.warning(
+                f"{self.logger_prefix}.initial() is not in a ready state. This might affect some operations."
+            )
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
@@ -555,7 +565,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
         user_agent = request.headers.get("User-Agent", "")
         if "Go-http-client" not in user_agent:
-            logger.warning("%s.initial() The User-Agent is not a Go lang application: %s", logger_prefix, user_agent)
+            logger.warning(
+                "%s.initial() The User-Agent is not a Go lang application: %s", self.logger_prefix, user_agent
+            )
 
         kind = kwargs.get("kind", None)
         if kind:
@@ -573,7 +585,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 )
         logger.debug(
             "%s.initial() - finished initializing view for request: %s, user: %s",
-            logger_prefix,
+            self.logger_prefix,
             url,
             request.user.username if request and getattr(request, "user", None) and getattr(request.user, "is_authenticated", False) else "Anonymous",  # type: ignore[assignment]
         )
@@ -629,11 +641,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         response = None
         try:
             url = smarter_build_absolute_uri(request)
-            logger.debug("%s.dispatch() - called for request: %s", logger_prefix, url)
+            logger.debug("%s.dispatch() - called for request: %s", self.logger_prefix, url)
             response = super().dispatch(request, *args, **kwargs)
             logger.debug(
                 "%s.dispatch() - finished processing request: %s, user_profile: %s, account: %s",
-                logger_prefix,
+                self.logger_prefix,
                 url,
                 self.user_profile if self.user_profile else None,
                 self.account if self.account else None,

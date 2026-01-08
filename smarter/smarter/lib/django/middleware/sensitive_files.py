@@ -167,7 +167,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+        return formatted_text(f"{__name__}.{SmarterBlockSensitiveFilesMiddleware.__name__}")
 
     def __init__(self, get_response):
         super().__init__(get_response)

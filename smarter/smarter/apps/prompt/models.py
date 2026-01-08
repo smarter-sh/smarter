@@ -321,15 +321,17 @@ class ChatHelper(SmarterRequestMixin):
         :returns: A dictionary containing the serialized state of the ChatHelper.
         :rtype: dict[str, Any]
         """
-        return {
-            **super().to_json(),
-            "ready": self.ready,
-            "session_key": self.session_key,
-            "chat": self.chat.id if self.chat else None,  # type: ignore[return]
-            "chatbot": self.chatbot.id if self.chatbot else None,  # type: ignore[return]
-            "history": self.history,
-            "unique_client_string": self.unique_client_string,
-        }
+        return self.sorted_dict(
+            {
+                **super().to_json(),
+                "ready": self.ready,
+                "session_key": self.session_key,
+                "chat": self.chat.id if self.chat else None,  # type: ignore[return]
+                "chatbot": self.chatbot.id if self.chatbot else None,  # type: ignore[return]
+                "history": self.history,
+                "unique_client_string": self.unique_client_string,
+            }
+        )
 
     @cached_property
     def formatted_class_name(self) -> str:

@@ -78,7 +78,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+        return formatted_text(f"{__name__}.{SmarterTokenAuthenticationMiddleware.__name__}")
 
     # pylint: disable=unused-argument
     def is_token_auth(self, request) -> bool:

@@ -53,7 +53,7 @@ class SmarterAnonymousUser(AnonymousUser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.smarter = f"{__name__}.{self.__class__.__name__}"
+        self.smarter = f"{__name__}.{SmarterAnonymousUser.__name__}"
 
 
 class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
@@ -166,7 +166,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         Returns:
             User or SmarterAnonymousUser: The authenticated user if the token is valid, otherwise SmarterAnonymousUser.
         """
-        logger_prefix = formatted_text(f"{__name__}.{cls.__name__}.get_user_from_request()")
+        logger_prefix = formatted_text(f"{__name__}.{SmarterTokenAuthentication}.get_user_from_request()")
 
         auth_header = request.META.get("HTTP_AUTHORIZATION")
         if not auth_header or not auth_header.startswith("Token "):

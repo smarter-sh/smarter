@@ -1385,7 +1385,7 @@ class ChatBotHelper(SmarterRequestMixin):
         >>> helper.formatted_class_name
         'smarter.apps.chatbot.models.ChatBotHelper()'
         """
-        return formatted_text(f"{__name__}.ChatBotHelper()")
+        return formatted_text(f"{__name__}.{ChatBotHelper.__name__}[{id(self)}]")
 
     @cached_property
     def account(self) -> Optional[Account]:
@@ -1610,32 +1610,27 @@ class ChatBotHelper(SmarterRequestMixin):
         :returns: A dictionary containing the serialized state of the ChatBotHelper.
         :rtype: dict[str, Any]
         """
-        return {
-            k: v
-            for k, v in sorted(
-                {
-                    "ready": self.ready,
-                    "name": self.name,
-                    "api_host": self.api_host,
-                    "chatbot_id": self.chatbot_id,
-                    "chatbot_name": self.chatbot_name,
-                    "chatbot_custom_domain": (
-                        ChatBotCustomDomainSerializer(self.chatbot_custom_domain)
-                        if self.chatbot_custom_domain
-                        else None
-                    ),
-                    "environment_api_domain": smarter_settings.environment_api_domain,
-                    "is_custom_domain": self.is_custom_domain,
-                    "is_deployed": self.is_deployed,
-                    "is_authentication_required": self.is_authentication_required,
-                    "is_chatbothelper_ready": self.is_chatbothelper_ready,
-                    "rfc1034_compliant_name": self.rfc1034_compliant_name,
-                    "chatbot": ChatBotSerializer(self.chatbot).data if self.chatbot else None,
-                    "url": self.url,
-                    **super().to_json(),
-                }.items()
-            )
-        }
+        return self.sorted_dict(
+            {
+                "ready": self.ready,
+                "name": self.name,
+                "api_host": self.api_host,
+                "chatbot_id": self.chatbot_id,
+                "chatbot_name": self.chatbot_name,
+                "chatbot_custom_domain": (
+                    ChatBotCustomDomainSerializer(self.chatbot_custom_domain) if self.chatbot_custom_domain else None
+                ),
+                "environment_api_domain": smarter_settings.environment_api_domain,
+                "is_custom_domain": self.is_custom_domain,
+                "is_deployed": self.is_deployed,
+                "is_authentication_required": self.is_authentication_required,
+                "is_chatbothelper_ready": self.is_chatbothelper_ready,
+                "rfc1034_compliant_name": self.rfc1034_compliant_name,
+                "chatbot": ChatBotSerializer(self.chatbot).data if self.chatbot else None,
+                "url": self.url,
+                **super().to_json(),
+            }
+        )
 
     @cached_property
     def api_host(self) -> Optional[str]:

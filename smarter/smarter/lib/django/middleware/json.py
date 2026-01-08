@@ -76,7 +76,7 @@ class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+        return formatted_text(f"{__name__}.{SmarterJsonErrorMiddleware.__name__}")
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
         logger.debug("%s.__call__(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))

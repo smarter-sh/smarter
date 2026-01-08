@@ -465,10 +465,12 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns a JSON representation of the account, user, and user_profile.
         """
-        return {
-            "ready": self.ready,
-            "account": AccountMiniSerializer(self.account).data if self.account else None,
-            "user": UserMiniSerializer(self.user).data if self.user else None,
-            "user_profile": UserProfileSerializer(self.user_profile).data if self.user_profile else None,
-            **super().to_json(),
-        }
+        return self.sorted_dict(
+            {
+                "ready": self.ready,
+                "account": AccountMiniSerializer(self.account).data if self.account else None,
+                "user": UserMiniSerializer(self.user).data if self.user else None,
+                "user_profile": UserProfileSerializer(self.user_profile).data if self.user_profile else None,
+                **super().to_json(),
+            }
+        )
