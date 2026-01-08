@@ -111,3 +111,9 @@ class DocsJsonSchemaSecretView(DocsJsonSchemaBaseView):
     """Secret JSON Schema view"""
 
     kind = SAMKinds(SAMKinds.SECRET)
+
+
+class DocsJsonSchemaProviderView(DocsJsonSchemaBaseView):
+    """Provider JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.PROVIDER)
