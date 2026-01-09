@@ -157,10 +157,11 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
 
         # this is a workaround to not being able to inherit from
         # SmarterRequestMixin inside of middleware.
-        logger.debug("%s.process_request - initializing SmarterRequestMixin", self.formatted_class_name)
-        self.smarter_request = SmarterRequestMixin(request)
-        if self.smarter_request and hasattr(self.smarter_request, "user") and self.smarter_request.user is not None:
-            request.user = self.smarter_request.user
+        if request is not None:
+            logger.debug("%s.process_request - initializing SmarterRequestMixin", self.formatted_class_name)
+            self.smarter_request = SmarterRequestMixin(request)
+            if self.smarter_request and hasattr(self.smarter_request, "user") and self.smarter_request.user is not None:
+                request.user = self.smarter_request.user
 
         if not is_authenticated_request(request):
             # this would only happen if the url routes to DRF but no

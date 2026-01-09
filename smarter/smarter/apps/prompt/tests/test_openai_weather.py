@@ -6,6 +6,11 @@ import os
 import sys
 from pathlib import Path
 
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+    Function,
+)
+
 # python stuff
 from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -27,7 +32,14 @@ class TestLambdaOpenaiFunctionWeather(SmarterTestBase):
     # pylint: disable=broad-exception-caught
     def test_get_current_weather(self):
         """Test default return value of get_current_weather()"""
-        retval = get_current_weather("London, UK")
+        location = "London, UK"
+        unit = "METRIC"
+        function = Function(
+            name="get_current_weather", arguments='{"location": "Cambridge, MA, near Kendall Square", "unit": "METRIC"}'
+        )
+        tool_call = ChatCompletionMessageToolCall(id="test_get_current_weather", function=function, type="function")
+
+        retval = get_current_weather(tool_call=tool_call, location=location, unit=unit)
         self.assertIsInstance(retval, str)
         try:
             json.loads(retval)

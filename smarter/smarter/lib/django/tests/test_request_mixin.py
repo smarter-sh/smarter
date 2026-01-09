@@ -108,9 +108,11 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
     def test_init_without_request_object(self):
         """
-        Test that SmarterRequestMixin will initialize without a request object.
+        Test that SmarterRequestMixin raises SmarterValueError
+        when initialized without a request object.
         """
-        SmarterRequestMixin(request=None)
+        with self.assertRaises(SmarterValueError):
+            SmarterRequestMixin(request=None)
 
     def test_unauthenticated_instantiation(self):
         """
@@ -132,26 +134,18 @@ class TestSmarterRequestMixin(TestAccountMixin):
         srm = SmarterRequestMixin(request)
         self.assertIsNotNone(srm.to_json())
 
-    def test_request_object_can_be_set(self):
+    def test_request_object_cannot_be_modified(self):
         """
         Test that SmarterRequestMixin request object is read-only.
         """
         self.client.login(username=self.admin_user.username, password="12345")
         response = self.client.get("/")
+        request = response.wsgi_request
 
-        # we should be able to instantiate SmarterRequestMixin with a None request
-        request = None
         srm = SmarterRequestMixin(request)
 
-        # and afterwards we should later be able to set smarter_request
-        srm.smarter_request = response.wsgi_request
-
-        # and after that, we should see authenticated user data
-        self.assertIsNotNone(srm.user)
-        self.assertIsNotNone(srm.account)
-        self.assertIsNotNone(srm.user_profile)
-        self.assertIsNotNone(srm.url)
-        self.assertTrue(srm.is_authenticated)
+        with self.assertRaises(SmarterValueError):
+            srm.smarter_request = None
 
     def test_unauthenticated_base_case(self):
         """
@@ -314,8 +308,9 @@ class TestSmarterRequestMixin(TestAccountMixin):
     ###########################################################################
     def test_qualified_request_no_path(self):
         """qualified_request returns False if no path."""
-        mixin = SmarterRequestMixin(request=None)
-        self.assertFalse(mixin.qualified_request)
+
+        with self.assertRaises(SmarterValueError):
+            SmarterRequestMixin(request=None)
 
     def test_qualified_request_internal_subnet(self):
         """qualified_request returns False if netloc starts with 192.168."""
@@ -426,9 +421,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
                 )
 
         """
-
-        class DummyRequest:
-            META = None  # Will cause AttributeError
 
         mixin = SmarterRequestMixin(DummyRequest())
         mixin._params = None
@@ -959,28 +951,35 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         response = self.client.get("/")
         request = response.wsgi_request
+
+        # create a new mixin instance
+        logger.debug("1. Creating SmarterRequestMixin for cache_key test.")
         mixin = SmarterRequestMixin(request)
         self.assertIsNotNone(mixin.cache_key)
 
-        saved_key = mixin.cache_key
-        saved_request = mixin._smarter_request
+        # stash the current cache key and request
+        saved_mixin_cache_key = mixin.cache_key
+        saved_smarter_request = mixin.smarter_request
 
-        mixin._cache_key = None
-        mixin._smarter_request = None
-        del mixin.cache_key
+        # clear the cache key and smarter_request to force recomputation
+        logger.debug("2. Clearing cached cache_key.")
+        mixin.clear_cached()
         self.assertIsNone(mixin.cache_key)
 
-        del mixin.cache_key
-        mixin._smarter_request = saved_request
+        # restore the smarter_request and recompute cache key
+        logger.debug("3. Restoring smarter_request and recomputing cache_key.")
+        mixin.clear_cached()
+        mixin.smarter_request = saved_smarter_request
         new_key = mixin.cache_key
 
         self.assertIsInstance(new_key, str)
-        self.assertNotEqual(new_key, saved_key)
+        self.assertNotEqual(new_key, saved_mixin_cache_key)
 
-        mixin._cache_key = saved_key
-        mixin._smarter_request = saved_request
-        del mixin.cache_key
-        self.assertEqual(mixin.cache_key, saved_key)
+        logger.debug("4. Restoring original cache_key.")
+        mixin.clear_cached()
+        mixin._cache_key = saved_mixin_cache_key
+        mixin.smarter_request = saved_smarter_request
+        self.assertEqual(mixin.cache_key, saved_mixin_cache_key)
 
     def test_uid_returns_value(self):
         """uid property returns value from params."""
