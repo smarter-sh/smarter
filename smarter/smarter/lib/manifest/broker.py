@@ -468,17 +468,18 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             logger.debug("%s.name() set name to %s from manifest metadata", logger_prefix, self._name)
             return self._name
         else:
-            logger.debug("%s.name() manifest is not set, cannot retrieve name from manifest", logger_prefix)
+            logger.debug("%s.name() manifest is not set.", logger_prefix)
         if self.loader:
-            logger.warning(
-                "%s.name() encountered a SAMLoader while attempting to retrieve name from loader metadata. This should not happen as manifest should have already been set. self.loader.manifest_metadata: %s",
-                logger_prefix,
-                self.loader.manifest_metadata,
-            )
-            self._name = self.loader.manifest_metadata.get("name")
-            if self._name:
-                logger.debug("%s.name() set name to %s from loader metadata", logger_prefix, self._name)
+            logger.debug("%s.name() found a SAMLoader. Attempting to initialize the manifest.", logger_prefix)
+            if self.manifest:
+                self._name = self.manifest.metadata.name
+                logger.debug("%s.name() set name to %s from manifest metadata", logger_prefix, self._name)
+                return self._name
             else:
+                self._name = self.loader.manifest_metadata.get("name")
+                if self._name:
+                    logger.debug("%s.name() set name to %s from loader metadata", logger_prefix, self._name)
+                    return self._name
                 logger.debug("%s.name() loader metadata does not contain a name", logger_prefix)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)

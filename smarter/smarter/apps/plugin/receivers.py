@@ -358,7 +358,7 @@ def handle_plugin_sql_connection_attempted(sender, connection: SqlConnection, **
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "plugin_sql_connection_attempted"),
+        formatted_text(prefix + "plugin_sql_connection_attempted()"),
         connection.get_connection_string(),
     )
 
@@ -369,7 +369,7 @@ def handle_plugin_sql_connection_success(sender, connection: SqlConnection, **kw
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "plugin_sql_connection_success"),
+        formatted_text(prefix + "plugin_sql_connection_success()"),
         connection.get_connection_string(),
     )
 
@@ -380,7 +380,7 @@ def handle_plugin_sql_connection_validated(sender, connection: SqlConnection, **
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "plugin_sql_connection_validated"),
+        formatted_text(prefix + "plugin_sql_connection_validated()"),
         connection.get_connection_string(),
     )
 
@@ -391,7 +391,7 @@ def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, error
 
     logger.error(
         "%s - %s - error: %s",
-        formatted_text(prefix + "plugin_sql_connection_failed"),
+        formatted_text(prefix + "plugin_sql_connection_failed()"),
         connection.get_connection_string(masked=not smarter_settings.debug_mode),
         error,
     )
@@ -407,7 +407,7 @@ def handle_plugin_sql_connection_query_attempted(sender, connection: SqlConnecti
 
     logger.info(
         "%s - %s - sql: %s - limit: %s",
-        formatted_text(prefix + "plugin_sql_connection_query_attempted"),
+        formatted_text(prefix + "plugin_sql_connection_query_attempted()"),
         connection.get_connection_string(),
         sql,
         limit,
@@ -420,7 +420,7 @@ def handle_plugin_sql_connection_query_success(sender, connection: SqlConnection
 
     logger.info(
         "%s - %s - sql: %s - limit: %s",
-        formatted_text(prefix + "plugin_sql_connection_query_success"),
+        formatted_text(prefix + "plugin_sql_connection_query_success()"),
         connection.get_connection_string(),
         sql,
         limit,
@@ -435,7 +435,7 @@ def handle_plugin_sql_connection_query_failed(
 
     logger.info(
         "%s - %s - sql: %s - limit: %s - error: %s",
-        formatted_text(prefix + "plugin_sql_connection_query_failed"),
+        formatted_text(prefix + "plugin_sql_connection_query_failed()"),
         connection.get_connection_string(),
         sql,
         limit,
@@ -453,7 +453,7 @@ def handle_plugin_api_connection_attempted(sender, connection: ApiConnection, **
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "plugin_api_connection_attempted"),
+        formatted_text(prefix + "plugin_api_connection_attempted()"),
         connection.get_connection_string(),
     )
 
@@ -464,7 +464,7 @@ def handle_plugin_api_connection_success(sender, connection: ApiConnection, **kw
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "plugin_api_connection_success"),
+        formatted_text(prefix + "plugin_api_connection_success()"),
         connection.get_connection_string(),
     )
 
@@ -475,7 +475,7 @@ def handle_plugin_api_connection_failed(sender, connection: ApiConnection, error
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "plugin_api_connection_failed"),
+        formatted_text(prefix + "plugin_api_connection_failed()"),
         connection.get_connection_string(),
     )
 
@@ -486,7 +486,7 @@ def handle_plugin_api_connection_query_attempted(sender, connection: ApiConnecti
 
     logger.info(
         "%s - %s",
-        formatted_text(prefix + "plugin_api_connection_query_attempted"),
+        formatted_text(prefix + "plugin_api_connection_query_attempted()"),
         connection.get_connection_string(),
     )
 
@@ -499,7 +499,7 @@ def handle_plugin_api_connection_query_success(
 
     logger.info(
         "%s - %s - response: %s",
-        formatted_text(prefix + "plugin_api_connection_query_success"),
+        formatted_text(prefix + "plugin_api_connection_query_success()"),
         connection.get_connection_string(),
         formatted_json(response.json()) if response else None,
     )
@@ -513,7 +513,7 @@ def handle_plugin_api_connection_query_failed(
 
     logger.info(
         "%s - %s - response: %s - error: %s",
-        formatted_text(prefix + "plugin_api_connection_query_failed"),
+        formatted_text(prefix + "plugin_api_connection_query_failed()"),
         connection.get_connection_string(),
         formatted_json(response.json()) if response else None,
         error,
@@ -539,7 +539,7 @@ def handle_api_connection_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for ApiConnection."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "ApiConnection()"),
+        formatted_text(prefix + "ApiConnection().pre_delete()"),
         instance,
     )
 
@@ -549,7 +549,7 @@ def handle_sql_connection_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for SqlConnection."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "SqlConnection()"),
+        formatted_text(prefix + "SqlConnection().pre_delete()"),
         instance,
     )
 
@@ -559,7 +559,7 @@ def handle_plugin_data_api_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for PluginDataApi."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "PluginDataApi()"),
+        formatted_text(prefix + "PluginDataApi().pre_delete()"),
         instance,
     )
 
@@ -569,7 +569,7 @@ def handle_plugin_data_sql_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for PluginDataSql."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "PluginDataSql()"),
+        formatted_text(prefix + "PluginDataSql().pre_delete()"),
         instance,
     )
 
@@ -579,7 +579,7 @@ def handle_plugin_data_static_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for PluginDataStatic."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "PluginDataStatic()"),
+        formatted_text(prefix + "PluginDataStatic().pre_delete()"),
         instance,
     )
 
@@ -589,7 +589,7 @@ def handle_plugin_meta_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for PluginMeta."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "PluginMeta()"),
+        formatted_text(prefix + "PluginMeta().pre_delete()"),
         instance,
     )
 
@@ -599,7 +599,7 @@ def handle_plugin_prompt_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for PluginPrompt."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "PluginPrompt()"),
+        formatted_text(prefix + "PluginPrompt().pre_delete()"),
         instance,
     )
 
@@ -609,7 +609,7 @@ def handle_plugin_selector_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for PluginSelector."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "PluginSelector()"),
+        formatted_text(prefix + "PluginSelector().pre_delete()"),
         instance,
     )
 
@@ -619,7 +619,7 @@ def handle_plugin_selector_history_pre_delete(sender, instance, **kwargs):
     """Handle pre-delete signal for PluginSelectorHistory."""
     logger.info(
         "%s - %s deleting.",
-        formatted_text(prefix + "PluginSelectorHistory()"),
+        formatted_text(prefix + "PluginSelectorHistory().pre_delete()"),
         instance,
     )
 
@@ -630,7 +630,7 @@ def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
 
     logger.info(
         "%s %s %s for %s is ready.",
-        formatted_text(f"{prefix}.broker_ready()"),
+        formatted_text(f"{prefix}broker_ready()"),
         broker.kind,
         str(broker),
         broker.name,

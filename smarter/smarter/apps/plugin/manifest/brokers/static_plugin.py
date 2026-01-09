@@ -177,7 +177,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                     spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
                 )
             if self._manifest:
-                logger.info(
+                logger.debug(
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
@@ -344,11 +344,20 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
                 spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
             )
+            logger.debug(
+                "%s.manifest initialized from loader for %s %s", self.formatted_class_name, self.kind, self.name
+            )
+            return self._manifest
 
         # 2.) next, (and only if a loader is not available) try to initialize
         #     from existing Account model if available
         elif self.plugin_meta:
-
+            logger.debug(
+                "%s.manifest building from ORM models for %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin_meta.name,
+            )
             metadata = self.plugin_metadata_orm2pydantic()
             data = self.plugin_static_spec_data_orm2pydantic()
             if not data:
@@ -371,6 +380,12 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 metadata=metadata,
                 spec=spec,
                 status=status,
+            )
+            logger.debug(
+                "%s.manifest initialized from ORM models for %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin_meta.name,
             )
             return self._manifest
         else:
@@ -486,10 +501,23 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 print("Broker is ready for operations.")
         """
         if not super().ready:
+            logger.debug(
+                "%s.ready retturning False because SAMPluginBaseBroker is not ready", self.formatted_class_name
+            )
             return False
-        if self._manifest and self._plugin:
+        if self._manifest or self._plugin:
+            logger.debug(
+                "%s.ready returning True because manifest %s and/or plugin %s has been initialized",
+                self.formatted_class_name,
+                self._manifest,
+                self._plugin,
+            )
             broker_ready.send(sender=self.__class__, broker=self)
             return True
+        logger.debug(
+            "%s.ready returning False because neither manifest nor plugin could be initialized",
+            self.formatted_class_name,
+        )
         return False
 
     def plugin_static_spec_data_orm2pydantic(self) -> Optional[SAMPluginStaticSpecData]:
