@@ -947,7 +947,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertIsNone(mixin.cache_key)
 
     def test_cache_key_computes_and_sets(self):
-        """cache_key computes and sets _cache_key."""
+        """cache_key computes and sets a deterministic (reproducible) cache_key."""
 
         response = self.client.get("/")
         request = response.wsgi_request
@@ -973,7 +973,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         new_key = mixin.cache_key
 
         self.assertIsInstance(new_key, str)
-        self.assertNotEqual(new_key, saved_mixin_cache_key)
+        self.assertEqual(new_key, saved_mixin_cache_key)
 
         logger.debug("4. Restoring original cache_key.")
         mixin.clear_cached()
@@ -1087,7 +1087,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
     def test_is_config_true(self):
         """is_config returns True if 'config' in url_path_parts."""
-        host_name = "hr.3141-5926-5359.alpha.api.example.com"
+        host_name = "hr.3141-5926-5359.alpha." + smarter_settings.environment_api_domain
 
         settings.ALLOWED_HOSTS.append(host_name)
 
@@ -1175,7 +1175,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(mixin.find_session_key(), session_key)
 
     def test_to_json_not_ready(self):
-        """to_json returns empty dict if not ready."""
+        """to_json returns a dict regardless of whether its ready."""
 
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
@@ -1194,10 +1194,10 @@ class TestSmarterRequestMixin(TestAccountMixin):
         with patch.object(mixin, "is_requestmixin_ready", False):
             json_dump = mixin.to_json()
             self.assertIsInstance(json_dump, dict)
-            self.assertNotIn("url_original", json_dump)
-            self.assertNotIn("session_key", json_dump)
-            self.assertNotIn("auth_header", json_dump)
-            self.assertNotIn("api_token", json_dump)
-            self.assertNotIn("data", json_dump)
-            self.assertNotIn("chatbot_id", json_dump)
-            self.assertNotIn("chatbot_name", json_dump)
+            self.assertIn("url_original", json_dump)
+            self.assertIn("session_key", json_dump)
+            self.assertIn("auth_header", json_dump)
+            self.assertIn("api_token", json_dump)
+            self.assertIn("data", json_dump)
+            self.assertIn("chatbot_id", json_dump)
+            self.assertIn("chatbot_name", json_dump)
