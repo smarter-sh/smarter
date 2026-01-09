@@ -63,7 +63,6 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-logger_prefix = formatted_text(__name__ + ".AbstractBroker()")
 
 
 class SAMBrokerError(SAMExceptionBase):
@@ -187,9 +186,16 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         **kwargs,
     ):
         logger.debug(
-            "%s.__init__() called with: %s, args: %s, kwargs: %s",
-            logger_prefix,
+            "%s.__init__() called with request=%s, name=%s, kind=%s, loader=%s, api_version=%s, manifest=%s, file_path=%s, url=%s, args=%s, kwargs=%s",
+            self.abstract_broker_logger_prefix,
             request,
+            name,
+            kind,
+            loader,
+            api_version,
+            manifest,
+            file_path,
+            url,
             args,
             kwargs,
         )
@@ -198,73 +204,109 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 message=f"Unsupported apiVersion: {api_version}",
                 thing=SmarterJournalThings.ACCOUNT,
             )
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(self, request, user=user, account=account, user_profile=user_profile, **kwargs)
         self._api_version = api_version
+        if isinstance(name, str):
+            self.name_cached_property_setter(name)
+        self._kind = kind
         if "name" in kwargs and isinstance(kwargs["name"], str):
             self.name_cached_property_setter(kwargs["name"])
             if self._name:
-                logger.debug("%s.__init__() set name to %s %s from kwargs", logger_prefix, self._name, type(self._name))
+                logger.debug(
+                    "%s.__init__() set name to %s %s from kwargs",
+                    self.abstract_broker_logger_prefix,
+                    self._name,
+                    type(self._name),
+                )
 
         for arg in args:
             if isinstance(arg, SAMLoader):
-                logger.debug("%s.__init__() found SAMLoader in args, assigning to loader", logger_prefix)
+                logger.debug(
+                    "%s.__init__() found SAMLoader in args, assigning to loader", self.abstract_broker_logger_prefix
+                )
                 loader = arg
                 self._loader = arg
                 break
             if isinstance(arg, AbstractSAMBase):
-                logger.debug("%s.__init__() found AbstractSAMBase in args, assigning to manifest", logger_prefix)
+                logger.debug(
+                    "%s.__init__() found AbstractSAMBase in args, assigning to manifest",
+                    self.abstract_broker_logger_prefix,
+                )
                 manifest = arg
                 self._manifest = arg
                 break
         if not isinstance(loader, SAMLoader):
             for value in kwargs.values():
                 if isinstance(value, SAMLoader):
-                    logger.debug("%s.__init__() found SAMLoader in kwargs, assigning to loader", logger_prefix)
+                    logger.debug(
+                        "%s.__init__() found SAMLoader in kwargs, assigning to loader",
+                        self.abstract_broker_logger_prefix,
+                    )
                     loader = value
                     self._loader = value
                     break
                 if isinstance(value, AbstractSAMBase):
-                    logger.debug("%s.__init__() found AbstractSAMBase in kwargs, assigning to manifest", logger_prefix)
+                    logger.debug(
+                        "%s.__init__() found AbstractSAMBase in kwargs, assigning to manifest",
+                        self.abstract_broker_logger_prefix,
+                    )
                     manifest = value
                     self._manifest = value
                     break
 
         if isinstance(file_path, str) and file_path:
             self._loader = SAMLoader(file_path=file_path)
-            logger.debug("%s.__init__() initialized loader from file_path: %s", logger_prefix, file_path)
+            logger.debug(
+                "%s.__init__() initialized loader from file_path: %s", self.abstract_broker_logger_prefix, file_path
+            )
             self._kind = self._loader.manifest_kind if self._loader.manifest_kind else self._kind
             if isinstance(self._kind, str):
-                logger.debug("%s.__init__() set kind to %s from loader", logger_prefix, self._kind)
+                logger.debug("%s.__init__() set kind to %s from loader", self.abstract_broker_logger_prefix, self._kind)
             self._name = self._loader.manifest_metadata.get("name") if self._loader.manifest_metadata else self._name
             if self._name:
-                logger.debug("%s.__init__() set name to %s from loader metadata", logger_prefix, self._name)
+                logger.debug(
+                    "%s.__init__() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
+                )
 
         if isinstance(manifest, AbstractSAMBase) and not self._manifest:
             self._manifest = manifest
-            logger.debug("%s.__init__() successfully initialized manifest: %s", logger_prefix, self.manifest)
+            logger.debug(
+                "%s.__init__() successfully initialized manifest: %s", self.abstract_broker_logger_prefix, self.manifest
+            )
         if isinstance(manifest, dict) and not self._manifest:
             if not isinstance(loader, SAMLoader):
                 self._loader = SAMLoader(manifest=manifest)
-                logger.debug("%s.__init__() initialized loader from manifest data: %s", logger_prefix, self.manifest)
+                logger.debug(
+                    "%s.__init__() initialized loader from manifest data: %s",
+                    self.abstract_broker_logger_prefix,
+                    self.manifest,
+                )
         if isinstance(loader, SAMLoader) and not self._loader:
             self._loader = loader
-            logger.debug("%s.__init__() received %s loader", logger_prefix, self._loader.manifest_kind)
+            logger.debug(
+                "%s.__init__() received %s loader", self.abstract_broker_logger_prefix, self._loader.manifest_kind
+            )
             logger.debug(
                 "%s.__init__() loader initialized with manifest kind: %s",
-                logger_prefix,
+                self.abstract_broker_logger_prefix,
                 self._loader.manifest_kind,
             )
             self._kind = self._loader.manifest_kind if self._loader.manifest_kind else self._kind
             if isinstance(self._kind, str):
-                logger.debug("%s.__init__() set kind to %s from loader", logger_prefix, self._kind)
+                logger.debug("%s.__init__() set kind to %s from loader", self.abstract_broker_logger_prefix, self._kind)
             self._name = self._loader.manifest_metadata.get("name") if self._loader.manifest_metadata else self._name
             if self._name:
-                logger.debug("%s.__init__() set name to %s from loader metadata", logger_prefix, self._name)
+                logger.debug(
+                    "%s.__init__() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
+                )
 
         self._created = False
         self._validated = bool(manifest) or bool(self.loader and self.loader.ready)
 
-        msg = f"{logger_prefix}.__init__() {self.kind} broker is {self.abstract_broker_ready_state} with api_version: {self.api_version}, user: {self.user_profile}, name: {self.name}, validated: {self._validated}, manifest: {bool(self._manifest)}, loader: {bool(self._loader)}"
+        msg = f"{self.abstract_broker_logger_prefix}.__init__() {self.kind} broker is {self.abstract_broker_ready_state} with user: {self.user_profile}, name: {self.name}, manifest: {bool(self._manifest)}, loader: {bool(self._loader)}"
         if self.is_ready_abstract_broker:
             logger.info(msg)
         else:
@@ -274,6 +316,15 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     # Class Instance Properties
     ###########################################################################
     @property
+    def abstract_broker_logger_prefix(self) -> str:
+        """Return the logger prefix for the AbstractBroker.
+
+        :return: The logger prefix for the AbstractBroker.
+        :rtype: str
+        """
+        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+
+    @property
     def is_ready_abstract_broker(self) -> bool:
         """Return True if the AbstractBroker is ready for operations.
 
@@ -282,19 +333,39 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: True if the AbstractBroker is ready for operations.
         :rtype: bool
         """
+        if not self.is_accountmixin_ready:
+            logger.warning(
+                "%s.is_ready_abstract_broker() - AccountMixin is not ready. Cannot process broker.",
+                self.abstract_broker_logger_prefix,
+            )
+            return False
+        if not self.is_requestmixin_ready:
+            logger.warning(
+                "%s.is_ready_abstract_broker() - RequestMixin is not ready. Cannot process broker.",
+                self.abstract_broker_logger_prefix,
+            )
+            return False
         if bool(self._manifest):
+            logger.debug(
+                "%s.is_ready_abstract_broker() returning true because manifest is loaded.",
+                self.abstract_broker_logger_prefix,
+            )
             return True
         if bool(self.loader) and self.loader.ready:
+            logger.debug(
+                "%s.is_ready_abstract_broker() returning true because loader is ready.",
+                self.abstract_broker_logger_prefix,
+            )
             return True
         if not bool(self._manifest):
             logger.warning(
                 "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
-                logger_prefix,
+                self.abstract_broker_logger_prefix,
             )
         if not bool(self.loader) or not self.loader.ready:
             logger.warning(
                 "%s.is_ready_abstract_broker() returning false because loader is not ready.",
-                logger_prefix,
+                self.abstract_broker_logger_prefix,
             )
         return False
 
@@ -306,8 +377,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: str
         """
         if self.is_ready_abstract_broker:
-            return formatted_text_green("INITIALIZED")
-        return formatted_text_red("NOT_INITIALIZED")
+            return formatted_text_green("READY")
+        return formatted_text_red("NOT_READY")
 
     @property
     def ready(self) -> bool:
@@ -322,7 +393,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if not retval:
             logger.warning(
                 "%s.ready() SmarterRequestMixin is not ready for kind=%s",
-                logger_prefix,
+                self.abstract_broker_logger_prefix,
                 self.kind,
             )
             return False
@@ -465,31 +536,42 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return self._name
         if self._manifest:
             self._name = self.manifest.metadata.name
-            logger.debug("%s.name() set name to %s from manifest metadata", logger_prefix, self._name)
+            logger.debug(
+                "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
+            )
             return self._name
         else:
-            logger.debug("%s.name() manifest is not set.", logger_prefix)
+            logger.debug("%s.name() manifest is not set.", self.abstract_broker_logger_prefix)
         if self.loader:
-            logger.debug("%s.name() found a SAMLoader. Attempting to initialize the manifest.", logger_prefix)
+            logger.debug(
+                "%s.name() found a SAMLoader. Attempting to initialize the manifest.",
+                self.abstract_broker_logger_prefix,
+            )
             if self.manifest:
                 self._name = self.manifest.metadata.name
-                logger.debug("%s.name() set name to %s from manifest metadata", logger_prefix, self._name)
+                logger.debug(
+                    "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
+                )
                 return self._name
             else:
                 self._name = self.loader.manifest_metadata.get("name")
                 if self._name:
-                    logger.debug("%s.name() set name to %s from loader metadata", logger_prefix, self._name)
+                    logger.debug(
+                        "%s.name() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
+                    )
                     return self._name
-                logger.debug("%s.name() loader metadata does not contain a name", logger_prefix)
+                logger.debug("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
             if name_param:
                 self._name = name_param
-                logger.debug("%s.name() set name to %s from name url param", logger_prefix, self._name)
+                logger.debug(
+                    "%s.name() set name to %s from name url param", self.abstract_broker_logger_prefix, self._name
+                )
             else:
-                logger.debug("%s.name() url params do not contain a name", logger_prefix)
+                logger.debug("%s.name() url params do not contain a name", self.abstract_broker_logger_prefix)
         if not self._name:
-            logger.warning("%s.name() could not determine name, returning None", logger_prefix)
+            logger.warning("%s.name() could not determine name, returning None", self.abstract_broker_logger_prefix)
         return self._name
 
     def name_cached_property_setter(self, value: str):
@@ -510,10 +592,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         # Delete cached_property value if present
         try:
             del self.__dict__["name"]
-            logger.debug("%s.name() setter cleared cached_property", logger_prefix)
+            logger.debug("%s.name() setter cleared cached_property", self.abstract_broker_logger_prefix)
         except KeyError:
             pass
-        logger.debug("%s.name() setter set name to %s", logger_prefix, self._name)
+        logger.debug("%s.name() setter set name to %s", self.abstract_broker_logger_prefix, self._name)
 
     @property
     def api_version(self) -> str:
@@ -595,11 +677,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 spec=AbstractSAMSpecBase(**self.loader.manifest_spec),
                 status=AbstractSAMStatusBase(**self.loader.manifest_status),
             )
-            logger.debug("%s.manifest() initialized manifest from loader", logger_prefix)
+            logger.debug("%s.manifest() initialized manifest from loader", self.abstract_broker_logger_prefix)
         else:
             logger.warning(
                 "%s.manifest() returning None: expected loader.manifest_kind of %s but received %s",
-                logger_prefix,
+                self.abstract_broker_logger_prefix,
                 self.kind,
                 self.loader.manifest_kind if self.loader else None,
             )
@@ -635,7 +717,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         logger.debug(
             "%s.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
-            logger_prefix,
+            self.abstract_broker_logger_prefix,
             request,
             args,
             kwargs,
@@ -828,7 +910,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         except Secret.DoesNotExist as e:
             logger.debug(
                 "%s.get_or_create_secret() Secret %s not found for user %s",
-                logger_prefix,
+                self.abstract_broker_logger_prefix,
                 name,
                 user_profile.user.username,
             )
@@ -859,6 +941,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 expires_at=expiration,
             )
 
+        if not secret:
+            raise SAMBrokerError(
+                message=f"Failed to create or retrieve Secret {name}",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.GET,
+            )
         return secret
 
     ###########################################################################
@@ -1103,7 +1191,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             else:
                 logger.warning(
                     "%s.get_model_titles() skipping field %s: expected dict with str keys and str values but got: %s",
-                    logger_prefix,
+                    self.abstract_broker_logger_prefix,
                     field_name,
                     item,
                 )

@@ -279,7 +279,13 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         super().__init__(*args, **kwargs)
         # we have to initialize this, but we won't have the request
         # until later in the DRF lifecycle.
-        SmarterRequestMixin.__init__(self, request=None, *args, **kwargs)
+        request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
 
     def setup(self, request: HttpRequest, *args, **kwargs):
         """
