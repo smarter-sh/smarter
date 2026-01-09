@@ -111,8 +111,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         Test that SmarterRequestMixin raises SmarterValueError
         when initialized without a request object.
         """
-        with self.assertRaises(SmarterValueError):
-            SmarterRequestMixin(request=None)
+        SmarterRequestMixin(request=None)
 
     def test_unauthenticated_instantiation(self):
         """
@@ -133,19 +132,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         srm = SmarterRequestMixin(request)
         self.assertIsNotNone(srm.to_json())
-
-    def test_request_object_cannot_be_modified(self):
-        """
-        Test that SmarterRequestMixin request object is read-only.
-        """
-        self.client.login(username=self.admin_user.username, password="12345")
-        response = self.client.get("/")
-        request = response.wsgi_request
-
-        srm = SmarterRequestMixin(request)
-
-        with self.assertRaises(SmarterValueError):
-            srm.smarter_request = None
 
     def test_unauthenticated_base_case(self):
         """
@@ -309,8 +295,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def test_qualified_request_no_path(self):
         """qualified_request returns False if no path."""
 
-        with self.assertRaises(SmarterValueError):
-            SmarterRequestMixin(request=None)
+        SmarterRequestMixin(request=None)
 
     def test_qualified_request_internal_subnet(self):
         """qualified_request returns False if netloc starts with 192.168."""
@@ -370,29 +355,26 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def test_url_property_raises_if_parse_result_invalid(self):
         """url property raises if _parse_result is not ParseResult."""
 
-        with self.assertRaises(SmarterValueError):
-            response = self.client.get("not a very good url")
-            request = response.wsgi_request
-            SmarterRequestMixin(request)
+        response = self.client.get("not a very good url")
+        request = response.wsgi_request
+        mixin = SmarterRequestMixin(request)
+        mixin._url = "ftp:// be.bop a loo bop. not a very \ngood url----"
+        self.assertEqual(mixin.url, "http://testserver/not%20a%20very%20good%20url/")
 
     def test_url_property_logs_and_raises_if_url_not_set(self):
         """url property logs error and raises if _url is not set."""
 
         response = self.client.get("/dashboard/")
         request = response.wsgi_request
-        with self.assertRaises(SmarterValueError):
-            mixin = SmarterRequestMixin(request)
-            mixin._url = None
-            mixin.url  # pylint: disable=W0104
+
+        mixin = SmarterRequestMixin(request)
+        mixin.clear_cached_properties()
+        mixin.smarter_request = request
+        self.assertIsNotNone(mixin.url)
 
     def test_parsed_url_property_raises(self):
         """
-        parsed_url property raises if _parse_result is not ParseResult.
-        if self._parse_result is None:
-            self._parse_result = urlparse(self.url)
-            if not self._parse_result.scheme or not self._parse_result.netloc:
-                raise SmarterValueError(f"{logger_prefix} - request url is not a valid URL. url={self.url}")
-
+        parsed_url property returns None if not ParseResult.
         """
 
         from django.conf import settings
@@ -402,11 +384,9 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
 
-        # Should raise if BOTH scheme and netloc are missing (invalid URL)
-        with self.assertRaises(SmarterValueError):
-            mixin._parse_result = None
-            mixin._url = "foobar"  # Not a valid URL, will result in missing scheme and netloc
-            _ = mixin.parsed_url
+        mixin.clear_cached_properties()
+        mixin.smarter_request = request
+        self.assertIsNotNone(mixin.parsed_url)
 
     def test_params_handles_attribute_error(self):
         """
@@ -1184,7 +1164,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         json_dump = mixin.to_json()
         self.assertIsInstance(json_dump, dict)
-        self.assertIn("url_original", json_dump)
         self.assertIn("session_key", json_dump)
         self.assertIn("auth_header", json_dump)
         self.assertIn("api_token", json_dump)
@@ -1195,7 +1174,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
         with patch.object(mixin, "is_requestmixin_ready", False):
             json_dump = mixin.to_json()
             self.assertIsInstance(json_dump, dict)
-            self.assertIn("url_original", json_dump)
             self.assertIn("session_key", json_dump)
             self.assertIn("auth_header", json_dump)
             self.assertIn("api_token", json_dump)

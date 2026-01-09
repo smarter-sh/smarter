@@ -64,18 +64,19 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         cls.manifest = get_readonly_yaml_file(config_path)
         cls.loader = SAMLoader(manifest=cls.manifest)
 
-        # name: test_chatbot
-        cls.broker = SAMChatbotBroker(
-            request=cls.create_generic_request("/anywhere/"),
-            account=cls.account,
-            loader=cls.loader,
-        )
-        cls.request = cls.create_generic_request(url=cls.broker.chatbot.url_chatbot)
+        cls.request = cls.create_generic_request("/anywhere/")
 
         cls.request.user = cls.admin_user
         cls.client = APIClient()
         cls.client.force_login(cls.admin_user)
         cls.kwargs = {}
+
+        # name: test_chatbot
+        cls.broker = SAMChatbotBroker(
+            request=cls.request,
+            account=cls.account,
+            loader=cls.loader,
+        )
 
         # Add example plugins to the user profile
         add_example_plugins(user_profile=cls.user_profile)
