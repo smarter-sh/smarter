@@ -13,7 +13,6 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import dns.resolver
-from django.conf import settings
 
 from smarter.apps.account.models import Account, AccountContact
 from smarter.common.conf import settings as smarter_settings
@@ -44,6 +43,10 @@ from .models import (
     ChatBotRequests,
 )
 from .signals import (
+    chatbot_dns_failed,
+    chatbot_dns_verification_initiated,
+    chatbot_dns_verification_status_changed,
+    chatbot_dns_verified,
     post_create_chatbot_request,
     post_create_custom_domain_dns_record,
     post_delete_default_api,
@@ -442,13 +445,21 @@ def verify_domain(
     activate_chatbot: bool = False,
     hosted_zone_id: Optional[str] = None,
 ) -> bool:
-    """Verify that an Internet domain name resolves to NS records."""
+    """
+    Verify that an Internet domain name resolves to NS records.
+
+    Signals:
+    chatbot_dns_verification_initiated
+    chatbot_dns_failed,
+    chatbot_dns_verified,
+    """
     if not is_taskable():
         return False
     if not aws_helper.route53:
         return False
 
     pre_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
+    chatbot_dns_verification_initiated.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
 
     fn_name = "verify_domain()"
 
@@ -500,6 +511,7 @@ def verify_domain(
                 logger.info("%s Chatbot %s has been deployed to %s", fn_name, chatbot.name, domain_name)
 
             post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
+            chatbot_dns_verified.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
             return True
         except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
             logger.warning("%s unable to resolve domain %s.", fn_name, domain_name)
@@ -510,6 +522,7 @@ def verify_domain(
 
     logger.error("%s unable to verify domain %s after %s attempts.", fn_name, domain_name, max_attempts)
     post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
+    chatbot_dns_failed.send(sender=verify_domain, domain_name=domain_name, record_type=record_type)
     return False
 
 
@@ -577,7 +590,19 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
     queue=smarter_settings.chatbot_tasks_celery_task_queue,
 )
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
-    """Create a customer API default domain A record for a chatbot."""
+    """
+    Create a customer API default domain A record for a chatbot.
+
+    Signals:
+    ------------------------------
+    pre_deploy_default_api
+    post_deploy_default_api
+    chatbot_dns_verification_initiated,
+    chatbot_dns_verified,
+    chatbot_dns_failed,
+    chatbot_dns_verification_status_changed,
+
+    """
     if not is_taskable():
         return
 
@@ -630,6 +655,8 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         chatbot.deployed = True
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFIED
         chatbot.save()
+        chatbot_dns_verification_status_changed.send(sender=deploy_default_api, chatbot=chatbot)
+        chatbot_dns_verified.send(sender=deploy_default_api, chatbot=chatbot)
         logger.info("%s Chatbot %s has been deployed to %s", fn_name, chatbot.name, domain_name)
 
         # send an email to the account owner to notify them that the chatbot has been deployed
