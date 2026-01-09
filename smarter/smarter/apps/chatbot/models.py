@@ -1241,21 +1241,9 @@ def get_cached_chatbot_by_request(request: HttpRequest) -> Optional[ChatBot]:
     it queries the database with assistance from ChatBotHelper
     and caches the result.
     """
-    url = smarter_build_absolute_uri(request)
-    if not url:
-        return None
-    url = clean_url(url)
 
-    @cache_results()
-    def get_chatbot_by_url(url: str) -> Optional[ChatBot]:
-        chatbot_helper = ChatBotHelper(request)
-        if chatbot_helper.ready:
-            chatbot = chatbot_helper.chatbot
-            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logging.info("get_cached_chatbot_by_request() caching chatbot %s for %s", chatbot, url)
-            return chatbot
-
-    return get_chatbot_by_url(url)
+    chatbot_helper = ChatBotHelper(request)
+    return chatbot_helper.chatbot
 
 
 class ChatBotHelper(SmarterRequestMixin):
