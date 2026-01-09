@@ -1,26 +1,30 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
 ## [0.13.58](https://github.com/smarter-sh/smarter/compare/v0.13.57...v0.13.58) (2026-01-09)
 
+### Refactor
 
-### Bug Fixes
-
-* force a new release ([66c16aa](https://github.com/smarter-sh/smarter/commit/66c16aaebdd679fffeb21a63714eebeb52910458))
+- Test Coverage - Added approximately 450 unit tests, focused on smarter.lib, smarter.common, smarter.apps.api.v1.cli, and the SAM broker model in general.
+- Documentation - Published a Read the Docs site: [https://docs.smarter.sh/en/latest/](https://docs.smarter.sh/en/latest/)
+- Caching - strategically implemented caching vis a vis @cache_results() on the most commonly accessed Python objects.
 
 ## [0.13.57](https://github.com/smarter-sh/smarter/compare/v0.13.56...v0.13.57) (2025-12-26)
 
-
 ### Bug Fixes
 
-* add APIKeyListView ([698a07a](https://github.com/smarter-sh/smarter/commit/698a07a96c8d209c79b67aefba821d710b139b5f))
-* add link to Dashboard Connection card ([178405a](https://github.com/smarter-sh/smarter/commit/178405a4baac612591220df0d18105d24d79ae95))
-* add Secrets, Custom Domains, Api Keys to left side bar ([4ef17f4](https://github.com/smarter-sh/smarter/commit/4ef17f4082128ac447c9e55b4587be5122a88819))
-* add waffle should_log() ([96354d7](https://github.com/smarter-sh/smarter/commit/96354d78ff1df0ff31e1decdf30411a186990648))
-* exit gracefully if smarter_request_mixin.is_smarter_api == False ([6c8a5eb](https://github.com/smarter-sh/smarter/commit/6c8a5eb003a7e5fc70216b3cba15b9ca1a6a8fe7))
-* implement Provider broker ([94bace6](https://github.com/smarter-sh/smarter/commit/94bace6dad2276178203febb0379a078eed35dd2))
-* look for environment variable overrides ([4a00a67](https://github.com/smarter-sh/smarter/commit/4a00a67318b6e53bb6a1e7e2ecd375814dd71b3e))
-* remove django login_required and staff decorators. replace with our own logic ([cc4c262](https://github.com/smarter-sh/smarter/commit/cc4c262de357fe9db6c13ccdc103f641e34a93e0))
-* SmarterSecurityMiddleware should allow .well-known/acme-challenge requests ([2a97e86](https://github.com/smarter-sh/smarter/commit/2a97e862a53e49310473ac019065c1c783cf383d))
-
-# <<<<<<< HEAD
+- add APIKeyListView ([698a07a](https://github.com/smarter-sh/smarter/commit/698a07a96c8d209c79b67aefba821d710b139b5f))
+- add link to Dashboard Connection card ([178405a](https://github.com/smarter-sh/smarter/commit/178405a4baac612591220df0d18105d24d79ae95))
+- add Secrets, Custom Domains, Api Keys to left side bar ([4ef17f4](https://github.com/smarter-sh/smarter/commit/4ef17f4082128ac447c9e55b4587be5122a88819))
+- add waffle should_log() ([96354d7](https://github.com/smarter-sh/smarter/commit/96354d78ff1df0ff31e1decdf30411a186990648))
+- exit gracefully if smarter_request_mixin.is_smarter_api == False ([6c8a5eb](https://github.com/smarter-sh/smarter/commit/6c8a5eb003a7e5fc70216b3cba15b9ca1a6a8fe7))
+- implement Provider broker ([94bace6](https://github.com/smarter-sh/smarter/commit/94bace6dad2276178203febb0379a078eed35dd2))
+- look for environment variable overrides ([4a00a67](https://github.com/smarter-sh/smarter/commit/4a00a67318b6e53bb6a1e7e2ecd375814dd71b3e))
+- remove django login_required and staff decorators. replace with our own logic ([cc4c262](https://github.com/smarter-sh/smarter/commit/cc4c262de357fe9db6c13ccdc103f641e34a93e0))
+- SmarterSecurityMiddleware should allow .well-known/acme-challenge requests ([2a97e86](https://github.com/smarter-sh/smarter/commit/2a97e862a53e49310473ac019065c1c783cf383d))
 
 ## [0.13.56](https://github.com/smarter-sh/smarter/compare/v0.13.55...v0.13.56) (2025-12-24)
 
@@ -119,8 +123,6 @@
 
 - create SmarterValidator.is_api_endpoint and use this to evaluate request path in SmarterTokenAuthenticationMiddleware ([8a157fc](https://github.com/smarter-sh/smarter/commit/8a157fc04a0deb03c2631f660a19245b11c28412))
 
-> > > > > > > main
-
 ## [0.13.40](https://github.com/smarter-sh/smarter/compare/v0.13.39...v0.13.40) (2025-12-11)
 
 ### Bug Fixes
@@ -148,12 +150,6 @@
 ### Bug Fixes
 
 - release sphinx Read the Docs ([1ee9cb0](https://github.com/smarter-sh/smarter/commit/1ee9cb07fadd70073795464f1ddb227cd8ee7093))
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 0.13.37
 
