@@ -22,7 +22,7 @@ from smarter.apps.account.manifest.models.secret.spec import (
 )
 from smarter.apps.account.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
-from smarter.apps.account.models import Secret
+from smarter.apps.account.models import Account, Secret, User, UserProfile
 from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import cache_invalidate
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
@@ -45,6 +45,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.manifest.loader import SAMLoader
 
 
 if TYPE_CHECKING:
@@ -128,7 +129,13 @@ class SAMSecretBroker(AbstractBroker):
     _pydantic_model: Type[SAMSecret] = SAMSecret
     _secret_transformer: Optional[SecretTransformer] = None
 
-    def __init__(self, *args, manifest: Optional[Union[SAMSecret, str, dict]] = None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        manifest: Optional[Union[SAMSecret, str, dict]] = None,
+        loader: Optional[SAMLoader] = None,
+        **kwargs,
+    ):
         """
         Initialize the SAMSecretBroker instance.
 
@@ -182,16 +189,40 @@ class SAMSecretBroker(AbstractBroker):
             args,
             kwargs,
         )
+        # ---------------------------------------------------------------------
+        # Initial resolution of parameters, taking into consideration that
+        # they may be passed in via args or kwargs.
+        # ---------------------------------------------------------------------
         request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
+        account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
+        user_profile = kwargs.pop("user_profile", None) or next(
+            (arg for arg in args if isinstance(arg, UserProfile)), None
+        )
+        api_token = kwargs.pop("api_token", None)
+        if not request and args:
+            # pylint: disable=import-outside-toplevel
+            from django.core.handlers.wsgi import WSGIRequest
+            from django.http import HttpRequest
+            from rest_framework.request import Request
+
+            request = kwargs.get("request") or next(
+                (arg for arg in args if isinstance(arg, (WSGIRequest, HttpRequest, Request))), None
+            )
+
         name = kwargs.pop("name", None)
         kind = kwargs.pop("kind", None)
-        loader = kwargs.pop("loader", None)
+        loader = loader or kwargs.pop("loader", None) or next((arg for arg in args if isinstance(arg, SAMLoader)), None)
         api_version = kwargs.pop("api_version", None)
-        manifest = kwargs.pop("manifest", manifest)
+        manifest = (
+            manifest
+            or kwargs.pop("manifest", manifest)
+            or next((arg for arg in args if isinstance(arg, (dict, SAMSecret))), None)
+        )
         file_path = kwargs.pop("file_path", None)
         url = kwargs.pop("url", None)
         super().__init__(
-            request=request,
+            request=request,  # type: ignore
             name=name,
             kind=kind,
             loader=loader,
@@ -199,6 +230,10 @@ class SAMSecretBroker(AbstractBroker):
             manifest=manifest,  # type: ignore
             file_path=file_path,
             url=url,
+            user=user,
+            account=account,
+            user_profile=user_profile,
+            api_token=api_token,
             **kwargs,
         )
 
@@ -273,11 +308,8 @@ class SAMSecretBroker(AbstractBroker):
         if self._secret_transformer:
             return self._secret_transformer
         if not self.user_profile:
-            raise SAMBrokerErrorNotReady(
-                "User profile is not set. Cannot create SecretTransformer.",
-                thing=self.kind,
-                command=SmarterJournalCliCommands.APPLY,
-            )
+            logger.warning("%s.secret_transformer() called with no user_profile", self.formatted_class_name)
+            return None
         if self._name or self.manifest:
             self._secret_transformer = SecretTransformer(
                 user_profile=self.user_profile,

@@ -118,6 +118,7 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_initialization_from_class(self):
         """Test initialization of SAMSecretBroker from class."""
+        self.assertIsInstance(self.loader, SAMLoader)
         broker: SAMSecretBroker = self.SAMBrokerClass(self.request, self.loader)
         self.assertIsInstance(broker, SAMSecretBroker)
         self.assertTrue(broker.ready)

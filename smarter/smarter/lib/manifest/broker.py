@@ -307,7 +307,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         self._created = False
         self._validated = bool(manifest) or bool(self.loader and self.loader.ready)
 
-        msg = f"{self.abstract_broker_logger_prefix}.__init__() {self.kind} broker is {self.abstract_broker_ready_state} with user: {self.user_profile}, name: {self.name}, manifest: {bool(self._manifest)}, loader: {bool(self._loader)}"
+        msg = f"{self.abstract_broker_logger_prefix}.__init__() {self.kind} broker is {self.abstract_broker_ready_state} with user: {self.user_profile}, name: {self._name}, manifest: {bool(self._manifest)}, loader: {bool(self._loader)}"
         if self.is_ready_abstract_broker:
             logger.info(msg)
         else:
