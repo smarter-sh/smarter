@@ -385,7 +385,7 @@ class TestSmarterChatBotBroker(TestSAMBrokerBaseClass):
         response = self.broker.deploy(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
-        self.assertFalse(self.broker.chatbot.deployed)
+        self.assertTrue(self.broker.chatbot.deployed)
 
     def test_undeploy(self):
         """

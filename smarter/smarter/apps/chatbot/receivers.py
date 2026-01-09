@@ -10,7 +10,6 @@ from django.http import HttpRequest
 
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.signals import plugin_deleting
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
