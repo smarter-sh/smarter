@@ -72,6 +72,8 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def post(self, request, kind: str, *args, **kwargs):
-        logger.info("%s.post() %s", self.formatted_class_name, kwargs)
+        logger.debug(
+            "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+        )
         response = self.broker.get(request=request, kwargs=kwargs)
         return response
