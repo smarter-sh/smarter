@@ -28,13 +28,14 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
 
     name: str
     smarter_test_base_logger_prefix = formatted_text(f"{HERE}.SmarterTestBase()")
+    line_width = 150
 
     @classmethod
     def setUpClass(cls) -> None:
         """Set up the test class."""
         super().setUpClass()
         title = f" {logger_prefix}.setUpClass() "
-        msg = "*" * ((120 - len(title)) // 2) + title + "*" * ((120 - len(title)) // 2)
+        msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
         cls.name = camel_to_snake("smarterTestBase_" + cls.hash_suffix)
@@ -65,13 +66,13 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         """SetUp the test case."""
         super().setUp()
         title = f" {logger_prefix}.{self._testMethodName}() "
-        msg = "-" * ((120 - len(title)) // 2) + title + "-" * ((120 - len(title)) // 2)
+        msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
         logger.debug(msg)
 
     def tearDown(self) -> None:
         """Tear down the test case."""
         title = f" {logger_prefix}.tearDown() {self._testMethodName} "
-        msg = "-" * ((120 - len(title)) // 2) + title + "-" * ((120 - len(title)) // 2)
+        msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
         logger.debug(msg)
         super().tearDown()
 

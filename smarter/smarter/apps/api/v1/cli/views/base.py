@@ -6,10 +6,13 @@ import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Type
 
+from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest
 from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.api.signals import (
     api_request_completed,
     api_request_failed,
@@ -147,10 +150,14 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # via kwargs, since DRF begins the request lifecycle by calling
         # setup() and dispatch(), but we include them here for completeness
         # as well as to document the expected parameters.
-        user = kwargs.pop("user", None)
-        account = kwargs.pop("account", None)
-        user_profile = kwargs.pop("user_profile", None)
-        request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
+        account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
+        user_profile = kwargs.pop("user_profile", None) or next(
+            (arg for arg in args if isinstance(arg, UserProfile)), None
+        )
+        request = kwargs.pop("request", None) or next(
+            (arg for arg in args if isinstance(arg, (Request, HttpRequest, WSGIRequest))), None
+        )
         SmarterRequestMixin.__init__(
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
@@ -482,10 +489,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 url,
                 request.headers.get("Authorization"),
             )
-            user = kwargs.pop("user", None)
-            account = kwargs.pop("account", None)
-            user_profile = kwargs.pop("user_profile", None)
-            response = super().dispatch(request, *args, user=user, account=account, user_profile=user_profile, **kwargs)
+            response = super().dispatch(request, *args, **kwargs)
             logger.debug(
                 "%s.dispatch() - finished processing request: %s, user_profile: %s, account: %s",
                 self.logger_prefix,
