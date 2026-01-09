@@ -60,14 +60,14 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         )
 
         title = f" {logger_prefix}.setUpClass() "
-        msg = "*" * ((120 - len(title)) // 2) + title + "*" * ((120 - len(title)) // 2)
+        msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
 
     @classmethod
     def tearDownClass(cls):
         """class-level teardown."""
         title = f" {logger_prefix}.tearDownClass() "
-        msg = "*" * ((120 - len(title)) // 2) + title + "*" * ((120 - len(title)) // 2)
+        msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
         try:
             cls.token_record.delete()
@@ -85,12 +85,12 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self._loader = None
         self._manifest_filespec = None
         title = f" {logger_prefix}.{self._testMethodName}() "
-        msg = "-" * ((120 - len(title)) // 2) + title + "-" * ((120 - len(title)) // 2)
+        msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
         logger.debug(msg)
 
     def tearDown(self):
         title = f" {logger_prefix}.tearDown() {self._testMethodName} "
-        msg = "-" * ((120 - len(title)) // 2) + title + "-" * ((120 - len(title)) // 2)
+        msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
         logger.debug(msg)
         self._here = None
         self._broker = None

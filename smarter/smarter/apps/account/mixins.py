@@ -214,6 +214,8 @@ class AccountMixin(SmarterHelperMixin):
                 if account:
                     self.account = account
                     assert self.user_profile is not None
+            elif account:
+                self.account = account
 
         logger.debug(
             "%s.__init__() - finished %s",
