@@ -474,8 +474,8 @@ class SmarterRequestMixin(AccountMixin):
         )
         return True
 
-    @property
-    def url(self) -> str:
+    @cached_property
+    def url(self) -> Optional[str]:
         """
         The string representation of the ParseResult object stored in _parsed_url.
 
@@ -489,7 +489,18 @@ class SmarterRequestMixin(AccountMixin):
 
         """
         if self._url:
-            return self._url
+            try:
+                url = SmarterValidator.urlify(self._url)
+                parsed = urlparse(url)
+                base_url = parsed._replace(query="", fragment="").geturl()
+                return base_url
+            except SmarterValueError as e:
+                logger.error(
+                    "%s.url() property encountered an error while validating URL: %s",
+                    self.request_mixin_logger_prefix,
+                    e,
+                )
+                return None
 
         logger.error(
             "%s.url() property was accessed before it was initialized. request: %s",
@@ -1762,6 +1773,7 @@ class SmarterRequestMixin(AccountMixin):
         # this is our expected case. we look for the session key in the parsed url.
         session_key = session_key_from_url(self.url)
         if session_key:
+            session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
             logger.debug(
                 f"session_key() - initialized from url: {session_key}",
@@ -1773,6 +1785,7 @@ class SmarterRequestMixin(AccountMixin):
             session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
             session_key = session_key.strip() if isinstance(session_key, str) else None
             if session_key:
+                session_key = session_key.rstrip("/")
                 SmarterValidator.validate_session_key(session_key)
                 logger.debug(
                     f"session_key() - initialized from request body: {session_key}",
@@ -1783,6 +1796,7 @@ class SmarterRequestMixin(AccountMixin):
         session_key = self.get_cookie_value(SMARTER_CHAT_SESSION_KEY_NAME)
         session_key = session_key.strip() if isinstance(session_key, str) else None
         if session_key:
+            session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
             logger.debug(
                 f"session_key() - initialized from cookie data of the request object: {session_key}",
@@ -1793,6 +1807,7 @@ class SmarterRequestMixin(AccountMixin):
         session_key = self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) if self.smarter_request else None
         session_key = session_key.strip() if isinstance(session_key, str) else None
         if session_key:
+            session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
             logger.debug(
                 f"session_key() - initialized from the get() parameters of the request object: {session_key}",

@@ -249,6 +249,7 @@ class SAMChatbotBroker(AbstractBroker):
             except ChatBot.DoesNotExist:
                 if self.manifest:
                     data = self.manifest_to_django_orm()
+                    data["account"] = self.account
                     logger.info("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
                     example_data = {
                         "account": "<Account: 9595-3980-5981 - TestAccount_AdminUser_f5b5c15e8e8f1568>",
@@ -278,7 +279,9 @@ class SAMChatbotBroker(AbstractBroker):
                         "app_logo_url": "https://example.com/logo.png",
                         "app_file_attachment": False,
                     }
+                    logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
                     self._chatbot = ChatBot.objects.create(**data)
+
                     self._created = True
                 else:
                     logger.warning(

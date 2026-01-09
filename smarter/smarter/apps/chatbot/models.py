@@ -1448,7 +1448,7 @@ class ChatBotHelper(SmarterRequestMixin):
         :returns: The resolved :class:`Account` instance, or ``None`` if not found.
         :rtype: Optional[Account]
         """
-        account_number = account_number_from_url(self.url)
+        account_number = account_number_from_url(self._url)  # type: ignore[arg-type]
         if account_number:
             chatbot_helper_logger.debug("overriding account with account_number from named url: %s", self.url)
             return get_cached_account(account_number=account_number)  # type: ignore[return-value]
