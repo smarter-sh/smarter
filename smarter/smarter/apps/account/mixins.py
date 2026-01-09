@@ -46,7 +46,6 @@ if TYPE_CHECKING:
 UserType = Union["AnonymousUser", User, None]
 AccountNumberType = Optional[str]
 ApiTokenType = Optional[bytes]
-OptionalRequestType = Optional[Union["WSGIRequest", "HttpRequest", "Request"]]
 
 
 def should_log(level):
@@ -121,34 +120,27 @@ class AccountMixin(SmarterHelperMixin):
         # Initial resolution of parameters, taking into consideration that
         # they may be passed in via args or kwargs.
         # ---------------------------------------------------------------------
+        request = kwargs.get("request")
+        user = user or kwargs.get("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
+        account = (
+            account or kwargs.get("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
+        )
         user_profile = (
             user_profile
             or kwargs.get("user_profile", None)
             or next((arg for arg in args if isinstance(arg, UserProfile)), None)
         )
-        account = (
-            account or kwargs.get("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
-        )
-
-        user = user or kwargs.get("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
         api_token = api_token or kwargs.get("api_token", None)
-        request: OptionalRequestType = kwargs.get("request")
         if not request and args:
             # pylint: disable=import-outside-toplevel
             from django.core.handlers.wsgi import WSGIRequest
             from django.http import HttpRequest
             from rest_framework.request import Request
 
-            RequestType = Union[WSGIRequest, HttpRequest, Request]
-            for arg in args:
-                if isinstance(arg, RequestType):
-                    logger.debug(
-                        "%s.__init__(): received a request object: %s",
-                        self.account_mixin_logger_prefix,
-                        self.smarter_build_absolute_uri(arg),
-                    )
-                    request = arg
-                    break
+            request = kwargs.get("request") or next(
+                (arg for arg in args if isinstance(arg, (WSGIRequest, HttpRequest, Request))), None
+            )
+
         if isinstance(account_number, str):
             logger.debug(
                 "%s.__init__(): received account_number %s. This will take precedence over other account information",
