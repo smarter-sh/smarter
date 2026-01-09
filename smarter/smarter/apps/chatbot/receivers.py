@@ -102,7 +102,7 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 @receiver(chatbot_deploy_failed, dispatch_uid="chatbot_deploy_failed")
 def handle_chatbot_deploy_failed(sender, **kwargs):
     """Handle chatbot_deploy_failed signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_chatbot_deploy_failed()")
+    prefix = formatted_text(f"{module_prefix}.chatbot_deploy_failed()")
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.error("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
     if chatbot:
@@ -221,7 +221,7 @@ def chatbot_requests_saved(sender, instance: ChatBotRequests, created: bool, **k
 @receiver(chatbot_deploy_status_changed, dispatch_uid="chatbot_deploy_status_changed")
 def handle_chatbot_deploy_status_changed(sender, **kwargs):
     """Handle chatbot_deploy_status_changed signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_chatbot_deploy_status_changed()")
+    prefix = formatted_text(f"{module_prefix}.chatbot_deploy_status_changed()")
 
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info(
@@ -235,7 +235,7 @@ def handle_chatbot_deploy_status_changed(sender, **kwargs):
 @receiver(chatbot_undeployed, dispatch_uid="chatbot_undeployed")
 def handle_chatbot_undeployed(sender, **kwargs):
     """Handle chatbot_undeployed signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_chatbot_undeployed()")
+    prefix = formatted_text(f"{module_prefix}.chatbot_undeployed()")
 
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
@@ -246,7 +246,7 @@ def handle_chatbot_undeployed(sender, **kwargs):
 @receiver(chatbot_deployed, dispatch_uid="chatbot_deployed")
 def handle_chatbot_deployed(sender, **kwargs):
     """Handle chatbot_deployed signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_chatbot_deployed()")
+    prefix = formatted_text(f"{module_prefix}.chatbot_deployed()")
 
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info("%s signal received - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
@@ -257,7 +257,7 @@ def handle_chatbot_deployed(sender, **kwargs):
 @receiver(chatbot_dns_verification_status_changed, dispatch_uid="chatbot_dns_verification_status_changed")
 def handle_chatbot_dns_verification_status_changed(sender, **kwargs):
     """Handle chatbot_dns_verification_status_changed signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_chatbot_deployed()")
+    prefix = formatted_text(f"{module_prefix}.chatbot_dns_verification_status_changed()")
 
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info(
@@ -271,7 +271,7 @@ def handle_chatbot_dns_verification_status_changed(sender, **kwargs):
 @receiver(chatbot_dns_verification_initiated, dispatch_uid="chatbot_dns_verification_initiated")
 def handle_chatbot_dns_verification_initiated(sender, **kwargs):
     """Handle chatbot_dns_verification_initiated signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_chatbot_dns_verification_initiated()")
+    prefix = formatted_text(f"{module_prefix}.chatbot_dns_verification_initiated()")
 
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
@@ -280,7 +280,7 @@ def handle_chatbot_dns_verification_initiated(sender, **kwargs):
 @receiver(chatbot_dns_verified, dispatch_uid="chatbot_dns_verified")
 def handle_chatbot_dns_verified(sender, **kwargs):
     """Handle chatbot_dns_verified signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_chatbot_dns_verified()")
+    prefix = formatted_text(f"{module_prefix}.chatbot_dns_verified()")
 
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
@@ -289,7 +289,7 @@ def handle_chatbot_dns_verified(sender, **kwargs):
 @receiver(chatbot_dns_failed, dispatch_uid="chatbot_dns_failed")
 def handle_chatbot_dns_failed(sender, **kwargs):
     """Handle chatbot_dns_failed signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_chatbot_dns_failed()")
+    prefix = formatted_text(f"{module_prefix}.chatbot_dns_failed()")
 
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
@@ -298,7 +298,7 @@ def handle_chatbot_dns_failed(sender, **kwargs):
 @receiver(chatbot_called, dispatch_uid="chatbot_called")
 def handle_chatbot_called(sender, **kwargs):
     """Handle chatbot_called signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_chatbot_called()")
+    prefix = formatted_text(f"{module_prefix}.chatbot_called()")
 
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
     logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
@@ -327,7 +327,7 @@ def handle_chatbot_called(sender, **kwargs):
 @receiver(pre_verify_certificate, dispatch_uid="pre_verify_certificate")
 def handle_pre_verify_certificate(sender, **kwargs):
     """Handle pre_verify_certificate signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_verify_certificate()")
+    prefix = formatted_text(f"{module_prefix}.pre_verify_certificate()")
     certificate_arn = kwargs.get("certificate_arn")
     logger.info("%s - certificate_arn: %s", prefix, certificate_arn)
 
@@ -335,7 +335,7 @@ def handle_pre_verify_certificate(sender, **kwargs):
 @receiver(post_verify_certificate, dispatch_uid="post_verify_certificate")
 def handle_post_verify_certificate(sender, **kwargs):
     """Handle post_verify_certificate signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_verify_certificate()")
+    prefix = formatted_text(f"{module_prefix}.post_verify_certificate()")
     certificate_arn = kwargs.get("certificate_arn")
     logger.info("%s - certificate_arn: %s", prefix, certificate_arn)
 
@@ -343,7 +343,7 @@ def handle_post_verify_certificate(sender, **kwargs):
 @receiver(pre_create_chatbot_request, dispatch_uid="pre_create_chatbot_request")
 def handle_pre_create_chatbot_request(sender, **kwargs):
     """Handle pre_create_chatbot_request signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_create_chatbot_request()")
+    prefix = formatted_text(f"{module_prefix}.pre_create_chatbot_request()")
     chatbot_id = kwargs.get("chatbot_id")
     request_data = kwargs.get("request_data")
     request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
@@ -353,7 +353,7 @@ def handle_pre_create_chatbot_request(sender, **kwargs):
 @receiver(post_create_chatbot_request, dispatch_uid="post_create_chatbot_request")
 def handle_post_create_chatbot_request(sender, **kwargs):
     """Handle post_create_chatbot_request signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_create_chatbot_request()")
+    prefix = formatted_text(f"{module_prefix}.post_create_chatbot_request()")
     chatbot_id = kwargs.get("chatbot_id")
     request_data = kwargs.get("request_data")
     request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
@@ -363,7 +363,7 @@ def handle_post_create_chatbot_request(sender, **kwargs):
 @receiver(pre_register_custom_domain, dispatch_uid="pre_register_custom_domain")
 def handle_pre_register_custom_domain(sender, **kwargs):
     """Handle pre_register_custom_domain signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_register_custom_domain()")
+    prefix = formatted_text(f"{module_prefix}.pre_register_custom_domain()")
     account_id = kwargs.get("account_id")
     domain_name = kwargs.get("domain_name")
     logger.info("%s - account_id: %s, domain_name: %s", prefix, account_id, domain_name)
@@ -372,7 +372,7 @@ def handle_pre_register_custom_domain(sender, **kwargs):
 @receiver(post_register_custom_domain, dispatch_uid="post_register_custom_domain")
 def handle_post_register_custom_domain(sender, **kwargs):
     """Handle post_register_custom_domain signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_register_custom_domain()")
+    prefix = formatted_text(f"{module_prefix}.post_register_custom_domain()")
     account_id = kwargs.get("account_id")
     domain_name = kwargs.get("domain_name")
     logger.info("%s - account_id: %s, domain_name: %s", prefix, account_id, domain_name)
@@ -381,7 +381,7 @@ def handle_post_register_custom_domain(sender, **kwargs):
 @receiver(pre_create_custom_domain_dns_record, dispatch_uid="pre_create_custom_domain_dns_record")
 def handle_pre_create_custom_domain_dns_record(sender, **kwargs):
     """Handle pre_create_custom_domain_dns_record signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_create_custom_domain_dns_record()")
+    prefix = formatted_text(f"{module_prefix}.pre_create_custom_domain_dns_record()")
     chatbot_custom_domain_id = kwargs.get("chatbot_custom_domain_id")
     record_name = kwargs.get("record_name")
     record_type = kwargs.get("record_type")
@@ -401,7 +401,7 @@ def handle_pre_create_custom_domain_dns_record(sender, **kwargs):
 @receiver(post_create_custom_domain_dns_record, dispatch_uid="post_create_custom_domain_dns_record")
 def handle_post_create_custom_domain_dns_record(sender, **kwargs):
     """Handle post_create_custom_domain_dns_record signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_create_custom_domain_dns_record()")
+    prefix = formatted_text(f"{module_prefix}.post_create_custom_domain_dns_record()")
     chatbot_custom_domain_id = kwargs.get("chatbot_custom_domain_id")
     record_name = kwargs.get("record_name")
     record_type = kwargs.get("record_type")
@@ -421,7 +421,7 @@ def handle_post_create_custom_domain_dns_record(sender, **kwargs):
 @receiver(pre_verify_custom_domain, dispatch_uid="pre_verify_custom_domain")
 def handle_pre_verify_custom_domain(sender, **kwargs):
     """Handle pre_verify_custom_domain signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_verify_custom_domain()")
+    prefix = formatted_text(f"{module_prefix}.pre_verify_custom_domain()")
     hosted_zone_id = kwargs.get("hosted_zone_id")
     logger.info("%s - hosted_zone_id: %s", prefix, hosted_zone_id)
 
@@ -429,7 +429,7 @@ def handle_pre_verify_custom_domain(sender, **kwargs):
 @receiver(post_verify_custom_domain, dispatch_uid="post_verify_custom_domain")
 def handle_post_verify_custom_domain(sender, **kwargs):
     """Handle post_verify_custom_domain signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_verify_custom_domain()")
+    prefix = formatted_text(f"{module_prefix}.post_verify_custom_domain()")
     hosted_zone_id = kwargs.get("hosted_zone_id")
     logger.info("%s - hosted_zone_id: %s", prefix, hosted_zone_id)
 
@@ -437,7 +437,7 @@ def handle_post_verify_custom_domain(sender, **kwargs):
 @receiver(pre_verify_domain, dispatch_uid="pre_verify_domain")
 def handle_pre_verify_domain(sender, **kwargs):
     """Handle pre_verify_domain signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_verify_domain()")
+    prefix = formatted_text(f"{module_prefix}.pre_verify_domain()")
     domain_name = kwargs.get("domain_name")
     record_type = kwargs.get("record_type")
     logger.info("%s - domain_name: %s, record_type: %s", prefix, domain_name, record_type)
@@ -446,7 +446,7 @@ def handle_pre_verify_domain(sender, **kwargs):
 @receiver(post_verify_domain, dispatch_uid="post_verify_domain")
 def handle_post_verify_domain(sender, **kwargs):
     """Handle post_verify_domain signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_verify_domain()")
+    prefix = formatted_text(f"{module_prefix}.post_verify_domain()")
     domain_name = kwargs.get("domain_name")
     record_type = kwargs.get("record_type")
     logger.info("%s - domain_name: %s, record_type: %s", prefix, domain_name, record_type)
@@ -455,7 +455,7 @@ def handle_post_verify_domain(sender, **kwargs):
 @receiver(pre_destroy_domain_A_record, dispatch_uid="pre_destroy_domain_A_record")
 def handle_pre_destroy_domain_A_record(sender, **kwargs):
     """Handle pre_destroy_domain_A_record signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_destroy_domain_A_record()")
+    prefix = formatted_text(f"{module_prefix}.pre_destroy_domain_A_record()")
     hostname = kwargs.get("hostname")
     api_host_domain = kwargs.get("api_host_domain")
     logger.info("%s - hostname: %s, api_host_domain: %s", prefix, hostname, api_host_domain)
@@ -464,7 +464,7 @@ def handle_pre_destroy_domain_A_record(sender, **kwargs):
 @receiver(post_destroy_domain_A_record, dispatch_uid="post_destroy_domain_A_record")
 def handle_post_destroy_domain_A_record(sender, **kwargs):
     """Handle post_destroy_domain_A_record signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_destroy_domain_A_record()")
+    prefix = formatted_text(f"{module_prefix}.post_destroy_domain_A_record()")
     hostname = kwargs.get("hostname")
     api_host_domain = kwargs.get("api_host_domain")
     logger.info("%s - hostname: %s, api_host_domain: %s", prefix, hostname, api_host_domain)
@@ -473,7 +473,7 @@ def handle_post_destroy_domain_A_record(sender, **kwargs):
 @receiver(pre_deploy_default_api, dispatch_uid="pre_deploy_default_api")
 def handle_pre_deploy_default_api(sender, **kwargs):
     """Handle pre_deploy_default_api signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_deploy_default_api()")
+    prefix = formatted_text(f"{module_prefix}.pre_deploy_default_api()")
     chatbot_id = kwargs.get("chatbot_id")
     with_domain_verification = kwargs.get("with_domain_verification")
     logger.info("%s - chatbot_id: %s, with_domain_verification: %s", prefix, chatbot_id, with_domain_verification)
@@ -482,7 +482,7 @@ def handle_pre_deploy_default_api(sender, **kwargs):
 @receiver(post_deploy_default_api, dispatch_uid="post_deploy_default_api")
 def handle_post_deploy_default_api(sender, **kwargs):
     """Handle post_deploy_default_api signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_deploy_default_api()")
+    prefix = formatted_text(f"{module_prefix}.post_deploy_default_api()")
     chatbot_id = kwargs.get("chatbot_id")
     with_domain_verification = kwargs.get("with_domain_verification")
     logger.info("%s - chatbot_id: %s, with_domain_verification: %s", prefix, chatbot_id, with_domain_verification)
@@ -491,7 +491,7 @@ def handle_post_deploy_default_api(sender, **kwargs):
 @receiver(pre_undeploy_default_api, dispatch_uid="pre_undeploy_default_api")
 def handle_pre_undeploy_default_api(sender, **kwargs):
     """Handle pre_undeploy_default_api signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_undeploy_default_api()")
+    prefix = formatted_text(f"{module_prefix}.pre_undeploy_default_api()")
     chatbot_id = kwargs.get("chatbot_id")
     logger.info("%s - chatbot_id: %s", prefix, chatbot_id)
 
@@ -499,7 +499,7 @@ def handle_pre_undeploy_default_api(sender, **kwargs):
 @receiver(post_undeploy_default_api, dispatch_uid="post_undeploy_default_api")
 def handle_post_undeploy_default_api(sender, **kwargs):
     """Handle post_undeploy_default_api signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_undeploy_default_api()")
+    prefix = formatted_text(f"{module_prefix}.post_undeploy_default_api()")
     chatbot_id = kwargs.get("chatbot_id")
     logger.info("%s - chatbot_id: %s", prefix, chatbot_id)
 
@@ -507,7 +507,7 @@ def handle_post_undeploy_default_api(sender, **kwargs):
 @receiver(pre_delete_default_api, dispatch_uid="pre_delete_default_api")
 def handle_pre_delete_default_api(sender, **kwargs):
     """Handle pre_delete_default_api signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_delete_default_api()")
+    prefix = formatted_text(f"{module_prefix}.pre_delete_default_api()")
     url = kwargs.get("url")
     account_number = kwargs.get("account_number")
     name = kwargs.get("name")
@@ -517,7 +517,7 @@ def handle_pre_delete_default_api(sender, **kwargs):
 @receiver(post_delete_default_api, dispatch_uid="post_delete_default_api")
 def handle_post_delete_default_api(sender, **kwargs):
     """Handle post_delete_default_api signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_delete_default_api()")
+    prefix = formatted_text(f"{module_prefix}.post_delete_default_api()")
     url = kwargs.get("url")
     account_number = kwargs.get("account_number")
     name = kwargs.get("name")
@@ -527,7 +527,7 @@ def handle_post_delete_default_api(sender, **kwargs):
 @receiver(pre_deploy_custom_api, dispatch_uid="pre_deploy_custom_api")
 def handle_pre_deploy_custom_api(sender, **kwargs):
     """Handle pre_deploy_custom_api signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_pre_deploy_custom_api()")
+    prefix = formatted_text(f"{module_prefix}.pre_deploy_custom_api()")
     chatbot_id = kwargs.get("chatbot_id")
     logger.info("%s - chatbot_id: %s", prefix, chatbot_id)
 
@@ -535,7 +535,7 @@ def handle_pre_deploy_custom_api(sender, **kwargs):
 @receiver(post_deploy_custom_api, dispatch_uid="post_deploy_custom_api")
 def handle_post_deploy_custom_api(sender, **kwargs):
     """Handle post_deploy_custom_api signal."""
-    prefix = formatted_text(f"{module_prefix}.handle_post_deploy_custom_api()")
+    prefix = formatted_text(f"{module_prefix}.post_deploy_custom_api()")
     chatbot_id = kwargs.get("chatbot_id")
     logger.info("%s - chatbot_id: %s", prefix, chatbot_id)
 

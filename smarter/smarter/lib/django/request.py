@@ -179,6 +179,12 @@ class SmarterRequestMixin(AccountMixin):
             args,
             kwargs,
         )
+        # ---------------------------------------------------------------------
+        # the following reassignments are not necessarily technically required,
+        # but they make it explicit what arguments are being passed to
+        # the parent AccountMixin class, and this gives us an opportunity to
+        # log the values for debugging purposes.
+        # ---------------------------------------------------------------------
         user = kwargs.pop("user", None)
         if user:
             logger.debug(
@@ -187,8 +193,21 @@ class SmarterRequestMixin(AccountMixin):
                 user,
             )
             self._smarter_request_user = user
-        super().__init__(request, *args, user=self.smarter_request_user, **kwargs)
-
+        user_profile = kwargs.pop("user_profile", None)
+        if user_profile:
+            logger.debug(
+                "%s.__init__() - found a user_profile argument: %s",
+                self.request_mixin_logger_prefix,
+                user_profile,
+            )
+        account = kwargs.pop("account", None)
+        if account:
+            logger.debug(
+                "%s.__init__() - found an account argument: %s",
+                self.request_mixin_logger_prefix,
+                account,
+            )
+        AccountMixin.__init__(self, account=account, user=self._smarter_request_user, user_profile=user_profile)
         if request:
             self.smarter_request = request
         else:
@@ -284,7 +303,6 @@ class SmarterRequestMixin(AccountMixin):
     @smarter_request.setter
     def smarter_request(self, request: SmarterRequestType):
         self.clear_cached_properties()
-        self.user = None
         self._smarter_request = request
         logger.debug(
             "%s.smarter_request setter - request set to: %s",
