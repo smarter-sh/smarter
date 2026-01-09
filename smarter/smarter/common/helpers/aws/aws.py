@@ -615,4 +615,4 @@ class AWSBase(SmarterHelperMixin):
         if self.authentication_credentials_are_initialized:
             return formatted_text_green("READY")
         else:
-            return formatted_text_red("NOT READY")
+            return formatted_text_red("NOT_READY")

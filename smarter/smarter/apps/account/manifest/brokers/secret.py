@@ -45,13 +45,13 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and waffle.switch_is_active(
@@ -161,8 +161,20 @@ class SAMSecretBroker(AbstractBroker):
 
             broker = SAMSecretBroker(loader=loader, plugin_meta=plugin_meta)
 
+        def __init__(
+            self,
+            request: HttpRequest,
+            *args,
+            name: Optional[str] = None,  # i suspect that this is always None bc DRF sets name later in the process
+            kind: Optional[str] = None,
+            loader: Optional[SAMLoader] = None,
+            api_version: str = SmarterApiVersions.V1,
+            manifest: Optional[Union[dict, AbstractSAMBase]] = None,
+            file_path: Optional[str] = None,
+            url: Optional[str] = None,
+            **kwargs,
+        ):
         """
-        super().__init__(*args, **kwargs)
         logger.debug(
             "%s.__init__() called with manifest=%s, args=%s, kwargs=%s",
             self.formatted_class_name,
@@ -170,23 +182,25 @@ class SAMSecretBroker(AbstractBroker):
             args,
             kwargs,
         )
-        if manifest:
-            if not isinstance(manifest, SAMSecret):
-                logger.debug(
-                    "%s.__init__() received manifest of type %s. converting to SAMSecret via SAMLoader()",
-                    self.formatted_class_name,
-                    type(manifest),
-                )
-                if isinstance(manifest, str):
-                    self._loader = SAMLoader(
-                        manifest=manifest,
-                    )
-                if isinstance(manifest, dict):
-                    self._loader = SAMLoader(
-                        manifest=json.dumps(manifest),
-                    )
-            else:
-                self._manifest = manifest
+        request = kwargs.pop("request", None)
+        name = kwargs.pop("name", None)
+        kind = kwargs.pop("kind", None)
+        loader = kwargs.pop("loader", None)
+        api_version = kwargs.pop("api_version", None)
+        manifest = kwargs.pop("manifest", manifest)
+        file_path = kwargs.pop("file_path", None)
+        url = kwargs.pop("url", None)
+        super().__init__(
+            request=request,
+            name=name,
+            kind=kind,
+            loader=loader,
+            api_version=api_version,
+            manifest=manifest,  # type: ignore
+            file_path=file_path,
+            url=url,
+            **kwargs,
+        )
 
         if self._manifest and not isinstance(self._manifest, SAMSecret):
             raise SAMSecretBrokerError(

@@ -9,7 +9,6 @@ from http import HTTPStatus
 from django.core.handlers.wsgi import WSGIRequest
 from drf_yasg.utils import swagger_auto_schema
 
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -90,7 +89,12 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         if not self.manifest_data:
             raise APIV1CLIViewManifestNotFoundError("No YAML manifest provided.")
 
-        response = self.broker.apply(request, args=args, kwargs=kwargs)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        response = self.broker.apply(
+            request, user=user, account=account, user_profile=user_profile, args=args, kwargs=kwargs
+        )
         if response and response.status_code == HTTPStatus.OK:
             logger.debug(
                 f"{self.formatted_class_name}.post(): Applied {self.manifest_kind} manifest for {self.manifest_name}"

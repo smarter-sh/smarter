@@ -49,6 +49,17 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
+    def __init__(self, *args, **kwargs):
+        """Initialize the SmarterAdminListAPIView."""
+        super().__init__(*args, **kwargs)
+        request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
+
     def initial(self, request, *args, **kwargs):
         """Extend initial() DRF view method. Initialize the view with the request and any additional arguments.
 
@@ -162,7 +173,13 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
     def __init__(self, *args, **kwargs):
         """Initialize the SmarterAdminAPIView."""
         super().__init__(*args, **kwargs)
-        SmarterRequestMixin.__init__(self, request=None, *args, **kwargs)
+        request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
 
     def setup(self, request: Request, *args, **kwargs):
         """Extend DRF setup() the view. This is called by Django before dispatch() and is used to
@@ -253,6 +270,17 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
+    def __init__(self, *args, **kwargs):
+        """Initialize the SmarterAdminListAPIView."""
+        super().__init__(*args, **kwargs)
+        request = kwargs.pop("request", None)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
+
     def setup(self, request: Request, *args, **kwargs):
         """Extend DRF setup() to add Django signals.
 
@@ -260,7 +288,12 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
             request (Request): The incoming HTTP request.
         """
         super().setup(request, *args, **kwargs)
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(
+            self, request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.

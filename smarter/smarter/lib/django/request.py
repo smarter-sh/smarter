@@ -28,11 +28,10 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest, QueryDict
 from rest_framework.request import Request as RestFrameworkRequest
 
-from smarter.apps.account.mixins import AccountMixin, User, UserType
+from smarter.apps.account.mixins import AccountMixin, UserType
 from smarter.apps.account.utils import (
     account_number_from_url,
     get_cached_account,
-    get_cached_account_for_user,
     get_cached_admin_user_for_account,
 )
 from smarter.common.conf import settings as smarter_settings
@@ -174,7 +173,7 @@ class SmarterRequestMixin(AccountMixin):
         logger.debug(
             "%s.__init__() - called by %s with request=%s, args=%s, kwargs=%s",
             self.request_mixin_logger_prefix,
-            module_name,
+            formatted_text(module_name),
             request,
             args,
             kwargs,
@@ -242,11 +241,7 @@ class SmarterRequestMixin(AccountMixin):
             json.dumps(self.to_json(), indent=4),
         )
 
-        msg = f"{self.request_mixin_logger_prefix}.__init__() is {self.request_mixin_ready_state} - {self.url if self._url else 'URL not initialized'}"
-        if self.is_requestmixin_ready:
-            logger.debug(msg)
-        else:
-            logger.error(msg)
+        self.log_request_mixin_ready_status()
 
     def invalidate_cached_properties(self):
         """
@@ -316,17 +311,27 @@ class SmarterRequestMixin(AccountMixin):
                 self.request_mixin_logger_prefix,
                 self._url,
             )
-            if hasattr(request, "user") and isinstance(request.user, (User, MagicMock)):
+            if (
+                hasattr(request, "user")
+                and request.user
+                and hasattr(request.user, "is_authenticated")
+                and request.user.is_authenticated
+            ):
                 self._smarter_request_user = request.user  # type: ignore
                 logger.debug(
-                    "%s.smarter_request setter - user set to: %s",
+                    "%s.smarter_request setter - smarter_request_user set to: %s is_authenticated=%s",
                     self.request_mixin_logger_prefix,
                     self.smarter_request_user,
+                    request.user.is_authenticated,
                 )
-                account = get_cached_account_for_user(user=self.smarter_request_user)
-                if not super().ready and self.smarter_request_user and account:
-                    AccountMixin.__init__(self, account=account, user=self.smarter_request_user)
             else:
+                # this duplicates the functionality of the DRF
+                # authentication class. there are a variety of
+                # cases where SmarterRequestMixin is initialized
+                # before DRF reaches the point in its lifecycle
+                # where authentication is performed. in those cases,
+                # we attempt to authenticate here, to the same overall
+                # effect.
                 self.authenticate()
 
     @property
@@ -747,7 +752,7 @@ class SmarterRequestMixin(AccountMixin):
             return None
         if not self.qualified_request:
             return None
-        self._url_account_number = account_number_from_url(self.url)
+        self._url_account_number = account_number_from_url(self.url)  # type: ignore
         return self._url_account_number
 
     @cached_property
@@ -1648,8 +1653,9 @@ class SmarterRequestMixin(AccountMixin):
             return None
         try:
             result = urlparse(self.url)
-            domain_parts = result.netloc.split(".")
-            return domain_parts[0]
+            netloc = result.netloc.decode() if isinstance(result.netloc, bytes) else result.netloc
+            domain_parts = netloc.split(".")  # type: ignore
+            return str(domain_parts[0]) if len(domain_parts) > 0 else None
         except TypeError:
             return None
 
@@ -1691,6 +1697,12 @@ class SmarterRequestMixin(AccountMixin):
         :return: True if the request mixin is ready, False otherwise.
         """
         # cheap and easy way to fail.
+        if not self.is_accountmixin_ready:
+            logger.warning(
+                "%s.is_requestmixin_ready() - AccountMixin is not ready. Cannot process request.",
+                self.request_mixin_logger_prefix,
+            )
+            return False
         if not isinstance(self.smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
             logger.warning(
                 "%s.is_requestmixin_ready() - request is not a HttpRequest. Received %s. Cannot process request.",
@@ -1789,7 +1801,7 @@ class SmarterRequestMixin(AccountMixin):
         session_key: Optional[str]
 
         # this is our expected case. we look for the session key in the parsed url.
-        session_key = session_key_from_url(self.url)
+        session_key = session_key_from_url(self.url)  # type: ignore
         if session_key:
             session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
@@ -1900,6 +1912,16 @@ class SmarterRequestMixin(AccountMixin):
                 if isinstance(value, cached_property):
                     # name is the property name decorated with @cached_property
                     self.__dict__.pop(name, None)
+
+    def log_request_mixin_ready_status(self):
+        """
+        Logs the ready status of the SmarterRequestMixin.
+        """
+        msg = f"{self.request_mixin_logger_prefix}.__init__() is {self.request_mixin_ready_state} - {self.url if self._url else 'URL not initialized'} - authenticated user: {self.user_profile if self.user_profile else 'Anonymous'}"
+        if self.is_requestmixin_ready:
+            logger.debug(msg)
+        else:
+            logger.error(msg)
 
     def to_json(self) -> dict[str, Any]:
         """

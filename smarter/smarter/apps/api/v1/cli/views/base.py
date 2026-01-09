@@ -141,7 +141,19 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     def __init__(self, *args, **kwargs):
         logger.debug("%s.__init__() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
-        SmarterRequestMixin.__init__(self, request=None, *args, **kwargs)
+
+        # extract user, account, user_profile, and request from kwargs
+        # in practice it is highly unlikely that these will be passed in
+        # via kwargs, since DRF begins the request lifecycle by calling
+        # setup() and dispatch(), but we include them here for completeness
+        # as well as to document the expected parameters.
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        request = kwargs.pop("request", None)
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
 
     @property
     def logger_prefix(self) -> str:
@@ -151,7 +163,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: Logger prefix string
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{CliBaseApiView.__name__}()")
+        return formatted_text(f"{__name__}.{CliBaseApiView.__name__}[{id(self)}]")
 
     @property
     def formatted_class_name(self) -> str:
@@ -209,7 +221,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             if self.manifest_kind:
                 self._BrokerClass = Brokers.get_broker(self.manifest_kind)
                 logger.debug(
-                    "%s.BrokerClass() - found broker class for manifest kind: %s",
+                    "%s.BrokerClass() - set to: %s",
                     self.logger_prefix,
                     self._BrokerClass.__name__ if self._BrokerClass else "<None>",
                 )
@@ -237,9 +249,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 api_version=SMARTER_API_VERSION,
                 name=self.manifest_name,
                 kind=self.manifest_kind,
-                account=self.user_profile.account if self.user_profile else None,
                 loader=self.loader,
                 manifest=self.loader.json_data if self.loader else None,
+                user=self.user,
+                account=self.user_profile.account if self.user_profile else None,
+                user_profile=self.user_profile,
             )
             logger.debug(
                 "%s.broker() - instantiated broker for manifest: %s %s",
@@ -352,12 +366,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: True if the view is ready, False otherwise
         :rtype: bool
         """
-        if not self.is_accountmixin_ready:
-            logger.warning("%s.is_cli_base_api_view_ready() - AccountMixin is not ready", self.logger_prefix)
-            return False
-        if not self.is_requestmixin_ready:
-            logger.warning("%s.is_cli_base_api_view_ready() - SmarterRequestMixin is not ready", self.logger_prefix)
-            return False
         return True
 
     @property
@@ -370,7 +378,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         if self.is_cli_base_api_view_ready:
             return formatted_text_green("READY")
-        return formatted_text_red("NOT READY")
+        return formatted_text_red("NOT_READY")
 
     @property
     def ready(self) -> bool:
@@ -380,7 +388,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: True if both the view and mixin are ready, False otherwise
         :rtype: bool
         """
-        if not super().ready:
+        if not self.is_accountmixin_ready:
+            logger.warning("%s.ready() - returning False because AccountMixin is not ready", self.logger_prefix)
+            return False
+        if not self.is_requestmixin_ready:
             logger.warning("%s.ready() - returning False because SmarterRequestMixin is not ready", self.logger_prefix)
             return False
         return self.is_cli_base_api_view_ready
@@ -458,10 +469,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         logger.debug("%s.dispatch() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
         self.smarter_request = request
         response = None
+        msg = f"{self.logger_prefix}.dispatch() - is {self.is_cli_base_api_view_ready_state} - {self.url} - {self.user_profile if self.user_profile else "Anonymous"}"
         if self.ready:
-            logger.debug("%s.dispatch() - is %s", self.logger_prefix, self.is_cli_base_api_view_ready_state)
+            logger.debug(msg)
         else:
-            logger.error("%s.dispatch() - is %s", self.logger_prefix, self.is_cli_base_api_view_ready_state)
+            logger.error(msg)
         try:
             url = smarter_build_absolute_uri(request)
             logger.debug(
@@ -470,7 +482,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 url,
                 request.headers.get("Authorization"),
             )
-            response = super().dispatch(request, *args, **kwargs)
+            user = kwargs.pop("user", None)
+            account = kwargs.pop("account", None)
+            user_profile = kwargs.pop("user_profile", None)
+            response = super().dispatch(request, *args, user=user, account=account, user_profile=user_profile, **kwargs)
             logger.debug(
                 "%s.dispatch() - finished processing request: %s, user_profile: %s, account: %s",
                 self.logger_prefix,
