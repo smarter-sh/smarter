@@ -169,6 +169,15 @@ class SmarterRequestMixin(AccountMixin):
 
         if request:
             self.smarter_request = request
+        else:
+            logger.debug(
+                "%s.__init__() - no request provided. Cannot initialize. Calling super().__init__() with args=%s, kwargs=%s",
+                self.request_mixin_logger_prefix,
+                args,
+                kwargs,
+            )
+            super().__init__(*args, **kwargs)
+            return None
 
         stack = inspect.stack()
         caller = stack[1]
@@ -181,18 +190,6 @@ class SmarterRequestMixin(AccountMixin):
             args,
             kwargs,
         )
-        if not self.smarter_request:
-            for arg in args:
-                if isinstance(arg, (RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock)):
-                    self.smarter_request = arg
-                    break
-        if not self.smarter_request:
-            self.smarter_request = kwargs.get("request")
-        if not self.smarter_request:
-            for value in kwargs.values():
-                if isinstance(value, (RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock)):
-                    self.smarter_request = value
-                    break
         if not self.smarter_request:
             raise SmarterValueError(
                 f"{self.request_mixin_logger_prefix}.__init__() - did not find a request object. SmarterRequestMixin cannot be initialized."
@@ -609,8 +606,7 @@ class SmarterRequestMixin(AccountMixin):
 
         uid = self.uid or "unknown_uid"
         username = getattr(self.smarter_request, "user", "Anonymous") if self.smarter_request else "Anonymous"
-        timestamp = datetime.now().isoformat()
-        raw_string = f"{self.__class__.__name__}_{str(username)}_{timestamp}_cache_key()_{str(uid)}"
+        raw_string = f"{self.__class__.__name__}_{str(username)}_cache_key()_{str(uid)}"
         hash_object = hashlib.sha256()
         hash_object.update(raw_string.encode())
         hash_string = hash_object.hexdigest()

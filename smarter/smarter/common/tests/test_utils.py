@@ -59,7 +59,7 @@ class TestUtils(SmarterTestBase):
         self.assertEqual(camel_to_snake("camelCase"), "camel_case")
         self.assertEqual(camel_to_snake("CamelCase"), "camel_case")
         self.assertEqual(camel_to_snake("Camel Case"), "camel_case")
-        self.assertEqual(camel_to_snake("MYEverlastingSUPERDUPERGobstopper"), "my_everlasting_superduper_gobstopper")
+        self.assertEqual(camel_to_snake("MyEverlastingSUPERDUPERGobstopper"), "my_everlasting_superduper_gobstopper")
         self.assertEqual(camel_to_snake("already_snake_case"), "already_snake_case")
         self.assertEqual(camel_to_snake(""), "")
 
