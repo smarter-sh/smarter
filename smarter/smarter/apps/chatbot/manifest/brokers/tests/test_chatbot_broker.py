@@ -123,14 +123,16 @@ class TestSmarterChatBotBroker(TestSAMBrokerBaseClass):
         # Verify that our SAM manifest is capable of initializing the SAM Model.
         metadata = {**self.loader.manifest_metadata}
         logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
-        spec = {
-            "config": SAMChatbotSpecConfig(**self.loader.manifest_spec["config"]),
-        }
         SAMChatbot(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
             metadata=SAMChatbotMetadata(**metadata),
-            spec=SAMChatbotSpec(**spec),
+            spec=SAMChatbotSpec(
+                config=SAMChatbotSpecConfig(**self.loader.manifest_spec["config"]),
+                plugins=[],
+                functions=[],
+                apiKey=None,
+            ),
         )
 
     def test_broker_initialization(self):

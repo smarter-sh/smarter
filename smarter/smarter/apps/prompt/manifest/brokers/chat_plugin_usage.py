@@ -149,10 +149,10 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         This is used to provide a more readable class name in logs.
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMPluginUsageBroker()"
+        return f"{parent_class}.SAMPluginUsageBroker[{id(self)}]"
 
     @property
-    def model_class(self) -> ChatPluginUsage:
+    def model_class(self) -> typing.Type[ChatPluginUsage]:
         return ChatPluginUsage
 
     @property

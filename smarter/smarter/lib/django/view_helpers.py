@@ -309,7 +309,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
                 args,
                 kwargs,
             )
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        self.smarter_request = request
         return super().setup(request, *args, **kwargs)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):

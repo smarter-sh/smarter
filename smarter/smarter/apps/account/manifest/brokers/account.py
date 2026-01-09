@@ -198,7 +198,7 @@ class SAMAccountBroker(AbstractBroker):
         """
         retval = super().ready
         if not retval:
-            logger.warning("%s.ready() base class indicates not ready for %s", self.formatted_class_name, self.kind)
+            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
             return False
         retval = self._manifest is not None or self.brokered_account is not None
         logger.debug(
@@ -269,7 +269,7 @@ class SAMAccountBroker(AbstractBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMAccountBroker()"
+        return f"{parent_class}.{SAMAccountBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:

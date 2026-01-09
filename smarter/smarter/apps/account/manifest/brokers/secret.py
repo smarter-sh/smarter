@@ -163,9 +163,16 @@ class SAMSecretBroker(AbstractBroker):
 
         """
         super().__init__(*args, **kwargs)
+        logger.debug(
+            "%s.__init__() called with manifest=%s, args=%s, kwargs=%s",
+            self.formatted_class_name,
+            manifest,
+            args,
+            kwargs,
+        )
         if manifest:
             if not isinstance(manifest, SAMSecret):
-                logger.info(
+                logger.debug(
                     "%s.__init__() received manifest of type %s. converting to SAMSecret via SAMLoader()",
                     self.formatted_class_name,
                     type(manifest),
@@ -188,7 +195,7 @@ class SAMSecretBroker(AbstractBroker):
             )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
-            logger.info(msg)
+            logger.debug(msg)
         else:
             logger.error(msg)
 
@@ -212,7 +219,7 @@ class SAMSecretBroker(AbstractBroker):
         """
         retval = super().ready
         if not retval:
-            logger.warning("%s.ready() base class indicates not ready for %s", self.formatted_class_name, self.kind)
+            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
             return False
         retval = self.manifest is not None or self.secret is not None
         logger.debug(
@@ -424,11 +431,11 @@ class SAMSecretBroker(AbstractBroker):
 
         **Example usage**::
 
-            logger.info(broker.formatted_class_name)
+            logger.debug(broker.formatted_class_name)
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMSecretBroker()"
+        return f"{parent_class}.{SAMSecretBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:

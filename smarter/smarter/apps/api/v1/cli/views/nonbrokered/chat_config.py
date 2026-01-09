@@ -69,7 +69,7 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliChatConfigApiView.__name__}()"
+        return f"{inherited_class}.{ApiV1CliChatConfigApiView.__name__}[{id(self)}]"
 
     @swagger_auto_schema(
         operation_description="""

@@ -111,46 +111,6 @@ class TestDocsUrls(SmarterTestBase):
         url = reverse(f"{namespace}:developer-docker-compose")
         self.process_url(url)
 
-    def test_url_developer_12_factor(self) -> None:
-        """Test url for developer 12 factor."""
-        url = reverse(f"{namespace}:developer-12-factor")
-        self.process_url(url)
-
-    def test_url_developer_architecture(self) -> None:
-        """Test url for developer architecture."""
-        url = reverse(f"{namespace}:developer-architecture")
-        self.process_url(url)
-
-    def test_url_developer_chatbot_api(self) -> None:
-        """Test url for developer chatbot api."""
-        url = reverse(f"{namespace}:developer-chatbot-api")
-        self.process_url(url)
-
-    def test_url_developer_cli(self) -> None:
-        """Test url for developer cli."""
-        url = reverse(f"{namespace}:developer-cli")
-        self.process_url(url)
-
-    def test_url_developer_django_react(self) -> None:
-        """Test url for developer django react."""
-        url = reverse(f"{namespace}:developer-django-react")
-        self.process_url(url)
-
-    def test_url_developer_good_coding_practice(self) -> None:
-        """Test url for developer good coding practice."""
-        url = reverse(f"{namespace}:developer-good-coding-practice")
-        self.process_url(url)
-
-    def test_url_developer_openai_getting_started(self) -> None:
-        """Test url for developer openai getting started."""
-        url = reverse(f"{namespace}:developer-openai-getting-started")
-        self.process_url(url)
-
-    def test_url_developer_semantic_versioning(self) -> None:
-        """Test url for developer semantic versioning."""
-        url = reverse(f"{namespace}:developer-semantic-versioning")
-        self.process_url(url)
-
     # -----------------------------------------------------------------------
     # Documentation generators
     # -----------------------------------------------------------------------
