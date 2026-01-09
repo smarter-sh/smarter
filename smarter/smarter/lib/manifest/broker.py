@@ -199,6 +199,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             args,
             kwargs,
         )
+        api_version = api_version or SmarterApiVersions.V1
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(
                 message=f"Unsupported apiVersion: {api_version}",

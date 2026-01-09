@@ -206,7 +206,15 @@ class SmarterRequestMixin(AccountMixin):
                 self.request_mixin_logger_prefix,
                 account,
             )
-        AccountMixin.__init__(self, account=account, user=self._smarter_request_user, user_profile=user_profile)
+        self._smarter_request = request
+        AccountMixin.__init__(
+            self,
+            request=request,
+            account=account,
+            user=self._smarter_request_user,
+            user_profile=user_profile,
+            api_token=self.api_token,
+        )
         if request:
             self.smarter_request = request
         else:
@@ -368,9 +376,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         return (
             self._smarter_request.headers.get("Authorization")
-            if self._smarter_request
-            and hasattr(self._smarter_request, "headers")
-            and self._smarter_request.headers is not None
+            if self._smarter_request and hasattr(self._smarter_request, "headers")
             else None
         )
 
@@ -389,7 +395,18 @@ class SmarterRequestMixin(AccountMixin):
         :return: The API token as bytes, or None if not present.
         """
         if isinstance(self.auth_header, str) and self.auth_header.startswith("Token "):
+            logger.debug(
+                "%s.api_token() - found Token auth header.",
+                self.request_mixin_logger_prefix,
+            )
             return self.auth_header.split("Token ")[1].encode()
+
+        if isinstance(self.auth_header, str) and self.auth_header.startswith("Bearer "):
+            logger.debug(
+                "%s.api_token() - found Bearer auth header.",
+                self.request_mixin_logger_prefix,
+            )
+            return self.auth_header.split("Bearer ")[1].encode()
         return None
 
     @cached_property
