@@ -884,8 +884,9 @@ class TestSmarterRequestMixin(TestAccountMixin):
         )
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
-        mixin.auth_header = "Token abc123"
-        self.assertEqual(mixin.api_token, b"abc123")
+
+        with patch.object(SmarterRequestMixin, "auth_header", new="Token abc123"):
+            self.assertEqual(mixin.api_token, b"abc123")
 
     def test_qualified_request_static_asset(self):
         """qualified_request returns False for static asset extension."""
