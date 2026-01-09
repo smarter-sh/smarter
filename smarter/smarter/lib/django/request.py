@@ -20,7 +20,7 @@ from datetime import datetime
 from functools import cached_property
 from typing import Any, Optional, Union
 from unittest.mock import MagicMock
-from urllib.parse import ParseResult, unquote, urlparse, urlunsplit
+from urllib.parse import ParseResult, urlparse
 
 import tldextract
 import yaml
@@ -156,7 +156,7 @@ class SmarterRequestMixin(AccountMixin):
     # pylint: disable=W0613
     def __init__(self, request: Optional[HttpRequest], *args, **kwargs):
         self._instance_id = id(self)
-        self._smarter_request: Optional[HttpRequest] = request
+        self._smarter_request: Optional[HttpRequest] = None
         self._timestamp = datetime.now()
         self._url: Optional[str] = None
         self._url_orig: Optional[str] = None
@@ -167,39 +167,35 @@ class SmarterRequestMixin(AccountMixin):
         self._data: Optional[dict] = None
         self._cache_key: Optional[str] = None
 
+        if request:
+            self.smarter_request = request
+
+        stack = inspect.stack()
+        caller = stack[1]
+        module_name = caller.frame.f_globals["__name__"]
         logger.debug(
-            "%s.__init__() - called with request=%s, args=%s, kwargs=%s",
+            "%s.__init__() - called by %s with request=%s, args=%s, kwargs=%s",
             self.request_mixin_logger_prefix,
-            request,
+            module_name,
+            self.smarter_request,
             args,
             kwargs,
         )
-        if not request:
+        if not self.smarter_request:
             for arg in args:
                 if isinstance(arg, (RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock)):
-                    request = arg
-                    logger.debug(
-                        "%s.__init__() - extracted request from args: %s",
-                        self.request_mixin_logger_prefix,
-                        request,
-                    )
+                    self.smarter_request = arg
                     break
-        if not request:
+        if not self.smarter_request:
+            self.smarter_request = kwargs.get("request")
+        if not self.smarter_request:
             for value in kwargs.values():
                 if isinstance(value, (RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock)):
-                    request = value
-                    logger.debug(
-                        "%s.__init__() - extracted request from kwargs: %s",
-                        self.request_mixin_logger_prefix,
-                        request,
-                    )
+                    self.smarter_request = value
                     break
-        if request:
-            self.smarter_request = request
-        else:
-            logger.warning(
-                "%s.__init__() - did not find a request object. SmarterRequestMixin will be partially initialized. This might affect request processing.",
-                self.request_mixin_logger_prefix,
+        if not self.smarter_request:
+            raise SmarterValueError(
+                f"{self.request_mixin_logger_prefix}.__init__() - did not find a request object. SmarterRequestMixin cannot be initialized."
             )
 
         # ---------------------------------------------------------------------
@@ -285,20 +281,16 @@ class SmarterRequestMixin(AccountMixin):
 
     @smarter_request.setter
     def smarter_request(self, request: SmarterRequestType):
+        if self._smarter_request is not None:
+            raise SmarterValueError(
+                f"{self.request_mixin_logger_prefix}.smarter_request setter - request object is read-only and has already been set."
+            )
         self._smarter_request = request
         logger.debug(
             "%s.smarter_request setter - request set to: %s",
             self.request_mixin_logger_prefix,
             request,
         )
-        self._url = None
-        self._url_orig = None
-        self._url_account_number = None
-        self._parse_result = None
-        self._params = None
-        self._session_key = None
-        self._data = None
-        self._cache_key = None
         if request is not None:
             self._url = smarter_build_absolute_uri(request) if request else None
             logger.debug(
@@ -547,6 +539,8 @@ class SmarterRequestMixin(AccountMixin):
         if not self._params:
             try:
                 self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", ""))  # type: ignore
+                if not self._params:
+                    raise AttributeError("No query string parameters found.")
             except AttributeError as e:
                 logger.error(
                     "%s.params() internal error. Could not parse query string parameters: %s",
@@ -599,6 +593,11 @@ class SmarterRequestMixin(AccountMixin):
 
         """
         if self._cache_key:
+            logger.debug(
+                "%s.cache_key() - returning cached cache key: %s",
+                self.request_mixin_logger_prefix,
+                self._cache_key,
+            )
             return self._cache_key
 
         if not self.smarter_request:
@@ -610,11 +609,18 @@ class SmarterRequestMixin(AccountMixin):
 
         uid = self.uid or "unknown_uid"
         username = getattr(self.smarter_request, "user", "Anonymous") if self.smarter_request else "Anonymous"
-        raw_string = f"{self.__class__.__name__}_{str(username)}_cache_key()_{str(uid)}"
+        timestamp = datetime.now().isoformat()
+        raw_string = f"{self.__class__.__name__}_{str(username)}_{timestamp}_cache_key()_{str(uid)}"
         hash_object = hashlib.sha256()
         hash_object.update(raw_string.encode())
         hash_string = hash_object.hexdigest()
         self._cache_key = hash_string
+
+        logger.debug(
+            "%s.cache_key() - generated cache key: %s",
+            self.request_mixin_logger_prefix,
+            self._cache_key,
+        )
 
         return self._cache_key
 
@@ -1771,6 +1777,66 @@ class SmarterRequestMixin(AccountMixin):
             )
             return session_key
 
+    def eval_chatbot_url(self):
+        """
+        If we are a chatbot, based on analysis of the URL format
+        then we need to make a follow up check of the user and account.
+
+        Examples:
+
+            - http://example.3141-5926-5359.api.localhost:8000/
+            - https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
+            - http://localhost:8000/api/v1/cli/chat/example/
+
+        1.) For named urls, we extract the account number from the url,
+            then we load the account and admin user for that account.
+
+        2.) For smarter api urls, we would extract the chatbot id from the url,
+            then we would load the chatbot, account, and admin user for that account.
+
+        3.) For cli api urls, we would extract the chatbot name from the url,
+            then we would load the chatbot, account, and admin user for that account.
+
+
+        """
+        if not self.is_chatbot:
+            return
+        if self.is_chatbot_named_url:
+            # http://example.3141-5926-5359.api.localhost:8000/
+            if not self.account:
+                account_number = self.url_account_number
+                if account_number:
+                    self.account = get_cached_account(account_number=account_number)  # type: ignore
+            if self.account and not self.user:
+                self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
+        if self.is_chatbot_smarter_api_url:
+            # https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
+            pass
+        if self.is_chatbot_cli_api_url:
+            # http://localhost:8000/api/v1/cli/chat/example/
+            pass
+
+    def clear_cached(self):
+        """
+        Clears all cached properties in this mixin.
+        """
+        self._smarter_request = None
+        self._url = None
+        self._url_orig = None
+        self._url_account_number = None
+        self._parse_result = None
+        self._params = None
+        self._session_key = None
+        self._data = None
+        self._cache_key = None
+
+        # Clear cached_property values
+        for cls in self.__class__.__mro__:
+            for name, value in inspect.getmembers(cls):
+                if isinstance(value, cached_property):
+                    # name is the property name decorated with @cached_property
+                    self.__dict__.pop(name, None)
+
     def to_json(self) -> dict[str, Any]:
         """
         serializes the object.
@@ -1817,42 +1883,3 @@ class SmarterRequestMixin(AccountMixin):
             **super().to_json(),
         }
         return self.sorted_dict(retval)
-
-    def eval_chatbot_url(self):
-        """
-        If we are a chatbot, based on analysis of the URL format
-        then we need to make a follow up check of the user and account.
-
-        Examples:
-
-            - http://example.3141-5926-5359.api.localhost:8000/
-            - https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
-            - http://localhost:8000/api/v1/cli/chat/example/
-
-        1.) For named urls, we extract the account number from the url,
-            then we load the account and admin user for that account.
-
-        2.) For smarter api urls, we would extract the chatbot id from the url,
-            then we would load the chatbot, account, and admin user for that account.
-
-        3.) For cli api urls, we would extract the chatbot name from the url,
-            then we would load the chatbot, account, and admin user for that account.
-
-
-        """
-        if not self.is_chatbot:
-            return
-        if self.is_chatbot_named_url:
-            # http://example.3141-5926-5359.api.localhost:8000/
-            if not self.account:
-                account_number = self.url_account_number
-                if account_number:
-                    self.account = get_cached_account(account_number=account_number)  # type: ignore
-            if self.account and not self.user:
-                self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
-        if self.is_chatbot_smarter_api_url:
-            # https://alpha.platform.smarter.sh/api/v1/workbench/1/chatbot/
-            pass
-        if self.is_chatbot_cli_api_url:
-            # http://localhost:8000/api/v1/cli/chat/example/
-            pass
