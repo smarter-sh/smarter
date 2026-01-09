@@ -61,7 +61,7 @@ class ApiV1CliApplyApiView(CliBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliApplyApiView.__name__}()"
+        return f"{inherited_class}.{ApiV1CliApplyApiView.__name__}[{id(self)}]"
 
     @swagger_auto_schema(
         operation_description="""
@@ -79,16 +79,21 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         request_body=ManifestSerializer,
     )
     def post(self, request: WSGIRequest, *args, **kwargs):
+        """
+        Handles POST requests to apply a Smarter manifest.
+        """
+
+        logger.debug(f"{self.formatted_class_name}.post() called with request={request}, args={args}, kwargs={kwargs}")
 
         if not self.manifest_data:
             raise APIV1CLIViewManifestNotFoundError("No YAML manifest provided.")
 
-        logger.info(
+        logger.debug(
             f"{self.formatted_class_name}.post(): Applying {self.manifest_kind} manifest for {self.manifest_name}"
         )
-        response = self.broker.apply(request=request, kwargs=kwargs)
+        response = self.broker.apply(request, args=args, kwargs=kwargs)
         if response and response.status_code == HTTPStatus.OK:
-            logger.info(
+            logger.debug(
                 f"{self.formatted_class_name}.post(): Applied {self.manifest_kind} manifest for {self.manifest_name}"
             )
         return response

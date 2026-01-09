@@ -93,7 +93,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         """
         retval = super().ready
         if not retval:
-            logger.warning("%s.ready() base class indicates not ready for %s", logger_prefix, self.kind)
+            logger.warning("%s.ready() AbstractBroker is not ready for %s", logger_prefix, self.kind)
             return False
         retval = self.manifest is not None or self.plugin is not None
         logger.debug(

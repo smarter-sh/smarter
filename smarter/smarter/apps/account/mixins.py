@@ -92,6 +92,7 @@ class AccountMixin(SmarterHelperMixin):
         account_number: AccountNumberType = None,
         account: Optional[Account] = None,
         user: UserType = None,
+        user_profile: Optional[UserProfile] = None,
         api_token: ApiTokenType = None,
         **kwargs,
     ):
@@ -108,12 +109,27 @@ class AccountMixin(SmarterHelperMixin):
 
         self._account: Optional[Account] = None
         self._user: UserType = None
+        self._user_profile: Optional[UserProfile] = None
 
         # initialize these in reverse order, such that self.user is the last
         # setter to be called.
-        self._user_profile: Optional[UserProfile] = kwargs.get("user_profile", None)
-        self.account = account or kwargs.get("account", None)
-        self.user = user or kwargs.get("user", None)
+        user_profile = (
+            user_profile
+            or kwargs.get("user_profile", None)
+            or next((arg for arg in args if isinstance(arg, UserProfile)), None)
+        )
+        if user_profile:
+            self.user_profile = user_profile
+
+        account = (
+            account or kwargs.get("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
+        )
+        if account:
+            self.account = account
+
+        user = user or kwargs.get("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
+        if user:
+            self.user = user
 
         super().__init__(*args, **kwargs)
 
@@ -227,7 +243,7 @@ class AccountMixin(SmarterHelperMixin):
                     "%s.__init__(): failed to authenticate user from API token", self.account_mixin_logger_prefix
                 )
 
-        msg = f"{formatted_text(__name__ + '.AccountMixin')}.__init__() is {self.accountmixin_ready_state} - {self.user_profile}"
+        msg = f"{self.account_mixin_logger_prefix}.__init__() is {self.accountmixin_ready_state} - {self.user_profile}"
         if self.is_accountmixin_ready:
             logger.debug(msg)
         else:
@@ -253,7 +269,7 @@ class AccountMixin(SmarterHelperMixin):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class} {AccountMixin.__name__}()"
+        return f"{inherited_class} {AccountMixin.__name__}[{id(self)}]"
 
     @property
     def account(self) -> Optional[Account]:
@@ -426,16 +442,19 @@ class AccountMixin(SmarterHelperMixin):
         then set the user and account as well.
         """
         self._user_profile = user_profile
+        logger.debug(
+            "%s.user_profile.setter: set _user_profile to %s", self.account_mixin_logger_prefix, self._user_profile
+        )
         if not self._user_profile:
             self._user = None
             logger.debug("%s.user_profile.setter: unset _user", self.account_mixin_logger_prefix)
             self._account = None
             logger.debug("%s.user_profile.setter: unset _account", self.account_mixin_logger_prefix)
-            return
-        self._user = self._user_profile.user
-        logger.debug("%s.user_profile.setter: set _user to %s", self.account_mixin_logger_prefix, self._user)
-        self._account = self._user_profile.account
-        logger.debug("%s.user_profile.setter: set _account to %s", self.account_mixin_logger_prefix, self._account)
+        else:
+            self._user = self._user_profile.user
+            logger.debug("%s.user_profile.setter: set _user to %s", self.account_mixin_logger_prefix, self._user)
+            self._account = self._user_profile.account
+            logger.debug("%s.user_profile.setter: set _account to %s", self.account_mixin_logger_prefix, self._account)
 
     @property
     def is_accountmixin_ready(self) -> bool:

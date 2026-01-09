@@ -1442,7 +1442,7 @@ class ChatBotHelper(SmarterRequestMixin):
         >>> helper.formatted_class_name
         'smarter.apps.chatbot.models.ChatBotHelper()'
         """
-        return formatted_text(f"{__name__}.{ChatBotHelper.__name__}[{id(self)}]")
+        return formatted_text(f"{__name__}.{ChatBotHelper.__name__}()")
 
     @cached_property
     def account(self) -> Optional[Account]:

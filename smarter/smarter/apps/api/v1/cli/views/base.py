@@ -141,6 +141,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     def __init__(self, *args, **kwargs):
         logger.debug("%s.__init__() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
+        SmarterRequestMixin.__init__(self, request=None, *args, **kwargs)
 
     @property
     def logger_prefix(self) -> str:
@@ -162,7 +163,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :rtype: str
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.CliBaseApiView()"
+        return f"{parent_class}.{CliBaseApiView.__name__}()"
 
     @property
     def loader(self) -> Optional[SAMLoader]:
@@ -207,9 +208,14 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         if not self._BrokerClass:
             if self.manifest_kind:
                 self._BrokerClass = Brokers.get_broker(self.manifest_kind)
+                logger.debug(
+                    "%s.BrokerClass() - found broker class for manifest kind: %s",
+                    self.logger_prefix,
+                    self._BrokerClass.__name__ if self._BrokerClass else "<None>",
+                )
             if not self._BrokerClass:
                 raise APIV1CLIViewError(
-                    f"Could not find broker for {self.manifest_kind or "<-- Missing -->"} manifest."
+                    f"Could not find broker for {self.manifest_kind or '<-- Missing -->'} manifest."
                 )
         return self._BrokerClass
 
@@ -234,6 +240,12 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 account=self.user_profile.account if self.user_profile else None,
                 loader=self.loader,
                 manifest=self.loader.json_data if self.loader else None,
+            )
+            logger.debug(
+                "%s.broker() - instantiated broker for manifest: %s %s",
+                self.logger_prefix,
+                self._broker.kind if self._broker else "<None>",
+                self._broker.name if self._broker else "<None>",
             )
             if not self._broker:
                 raise APIV1CLIViewError("Could not load manifest.")
@@ -348,7 +360,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             args,
             kwargs,
         )
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        self.smarter_request = request
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
@@ -361,7 +373,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             self.user_profile,
             is_authenticated_request(request),
         )
-        if self.is_cli_base_api_view_ready:
+        if self.ready:
             logger.debug("%s.setup() - is %s", self.logger_prefix, self.is_cli_base_api_view_ready_state)
         else:
             logger.error("%s.setup() - is %s", self.logger_prefix, self.is_cli_base_api_view_ready_state)

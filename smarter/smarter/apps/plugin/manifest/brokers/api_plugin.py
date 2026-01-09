@@ -225,7 +225,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{self.__class__.__name__}()"
+        return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:

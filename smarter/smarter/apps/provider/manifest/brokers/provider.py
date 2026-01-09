@@ -274,7 +274,7 @@ class SAMProviderBroker(AbstractBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMProviderBroker()"
+        return f"{parent_class}.{SAMProviderBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:

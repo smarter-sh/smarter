@@ -963,12 +963,12 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         # clear the cache key and smarter_request to force recomputation
         logger.debug("2. Clearing cached cache_key.")
-        mixin.clear_cached()
+        mixin.clear_cached_properties()
         self.assertIsNone(mixin.cache_key)
 
         # restore the smarter_request and recompute cache key
         logger.debug("3. Restoring smarter_request and recomputing cache_key.")
-        mixin.clear_cached()
+        mixin.clear_cached_properties()
         mixin.smarter_request = saved_smarter_request
         new_key = mixin.cache_key
 
@@ -976,7 +976,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         self.assertEqual(new_key, saved_mixin_cache_key)
 
         logger.debug("4. Restoring original cache_key.")
-        mixin.clear_cached()
+        mixin.clear_cached_properties()
         mixin._cache_key = saved_mixin_cache_key
         mixin.smarter_request = saved_smarter_request
         self.assertEqual(mixin.cache_key, saved_mixin_cache_key)

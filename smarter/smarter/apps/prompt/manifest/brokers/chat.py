@@ -146,10 +146,10 @@ class SAMChatBroker(AbstractBroker):
         This is used to provide a more readable class name in logs.
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMChatBroker()"
+        return f"{parent_class}.{SAMChatBroker.__name__}[{id(self)}]"
 
     @property
-    def model_class(self) -> Chat:
+    def model_class(self) -> typing.Type[Chat]:
         return Chat
 
     @property

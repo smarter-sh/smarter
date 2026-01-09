@@ -28,10 +28,11 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest, QueryDict
 from rest_framework.request import Request as RestFrameworkRequest
 
-from smarter.apps.account.mixins import AccountMixin
+from smarter.apps.account.mixins import AccountMixin, UserType
 from smarter.apps.account.utils import (
     account_number_from_url,
     get_cached_account,
+    get_cached_account_for_user,
     get_cached_admin_user_for_account,
 )
 from smarter.common.conf import settings as smarter_settings
@@ -142,6 +143,7 @@ class SmarterRequestMixin(AccountMixin):
     __slots__ = (
         "_instance_id",
         "_smarter_request",
+        "_smarter_request_user",
         "_timestamp",
         "_url",
         "_url_orig",
@@ -157,6 +159,7 @@ class SmarterRequestMixin(AccountMixin):
     def __init__(self, request: Optional[HttpRequest], *args, **kwargs):
         self._instance_id = id(self)
         self._smarter_request: Optional[HttpRequest] = None
+        self._smarter_request_user: Optional[UserType] = None
         self._timestamp = datetime.now()
         self._url: Optional[str] = None
         self._url_orig: Optional[str] = None
@@ -166,6 +169,27 @@ class SmarterRequestMixin(AccountMixin):
         self._session_key: Optional[str] = kwargs.pop("session_key") if "session_key" in kwargs else None
         self._data: Optional[dict] = None
         self._cache_key: Optional[str] = None
+
+        stack = inspect.stack()
+        caller = stack[1]
+        module_name = caller.frame.f_globals["__name__"]
+        logger.debug(
+            "%s.__init__() - called by %s with request=%s, args=%s, kwargs=%s",
+            self.request_mixin_logger_prefix,
+            module_name,
+            request,
+            args,
+            kwargs,
+        )
+        user = kwargs.pop("user", None)
+        if user:
+            logger.debug(
+                "%s.__init__() - found a user argument: %s",
+                self.request_mixin_logger_prefix,
+                user,
+            )
+            self._smarter_request_user = user
+        super().__init__(request, *args, user=self.smarter_request_user, **kwargs)
 
         if request:
             self.smarter_request = request
@@ -179,17 +203,6 @@ class SmarterRequestMixin(AccountMixin):
             super().__init__(*args, **kwargs)
             return None
 
-        stack = inspect.stack()
-        caller = stack[1]
-        module_name = caller.frame.f_globals["__name__"]
-        logger.debug(
-            "%s.__init__() - called by %s with request=%s, args=%s, kwargs=%s",
-            self.request_mixin_logger_prefix,
-            module_name,
-            self.smarter_request,
-            args,
-            kwargs,
-        )
         if not self.smarter_request:
             raise SmarterValueError(
                 f"{self.request_mixin_logger_prefix}.__init__() - did not find a request object. SmarterRequestMixin cannot be initialized."
@@ -199,7 +212,7 @@ class SmarterRequestMixin(AccountMixin):
         # call to super has to wait until we've finished setting up self.url
         # because this is how we extract the api_token, if it exists.
         # ---------------------------------------------------------------------
-        super().__init__(request, *args, api_token=self.api_token, **kwargs)
+        super().__init__(request, *args, user=self.smarter_request_user, api_token=self.api_token, **kwargs)
 
         if self.parsed_url and self.is_chatbot_named_url:
             account_number = self.url_account_number
@@ -278,10 +291,7 @@ class SmarterRequestMixin(AccountMixin):
 
     @smarter_request.setter
     def smarter_request(self, request: SmarterRequestType):
-        if self._smarter_request is not None:
-            raise SmarterValueError(
-                f"{self.request_mixin_logger_prefix}.smarter_request setter - request object is read-only and has already been set."
-            )
+        self.clear_cached_properties()
         self._smarter_request = request
         logger.debug(
             "%s.smarter_request setter - request set to: %s",
@@ -296,12 +306,32 @@ class SmarterRequestMixin(AccountMixin):
                 self._url,
             )
             if hasattr(request, "user"):
-                self.user = request.user  # type: ignore
+                self._smarter_request_user = request.user  # type: ignore
                 logger.debug(
                     "%s.smarter_request setter - user set to: %s",
                     self.request_mixin_logger_prefix,
-                    self.user,
+                    self.smarter_request_user,
                 )
+                if not super().ready:
+                    account = get_cached_account_for_user(user=self.smarter_request_user)
+                    AccountMixin.__init__(self, account=account, user=self.smarter_request_user)
+
+    @property
+    def smarter_request_user(self) -> Optional[UserType]:
+        """
+        Returns the user associated with the request
+
+        This property is named to avoid potential name collisions in child classes.
+        It retrieves the user from the request object if available.
+
+        Example::
+
+            request_mixin = SmarterRequestMixin(request)
+            user = request_mixin.smarter_request_user
+
+        :return: The user associated with the request, or None if not available.
+        """
+        return self._smarter_request_user
 
     @cached_property
     def auth_header(self) -> Optional[str]:
@@ -1625,7 +1655,7 @@ class SmarterRequestMixin(AccountMixin):
         :return: Formatted class name string.
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SmarterRequestMixin()"
+        return f"{parent_class}.{SmarterRequestMixin.__name__}()"
 
     @cached_property
     def is_requestmixin_ready(self) -> bool:
@@ -1812,7 +1842,7 @@ class SmarterRequestMixin(AccountMixin):
             # http://localhost:8000/api/v1/cli/chat/example/
             pass
 
-    def clear_cached(self):
+    def clear_cached_properties(self):
         """
         Clears all cached properties in this mixin.
         """

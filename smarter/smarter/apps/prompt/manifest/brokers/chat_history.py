@@ -148,10 +148,10 @@ class SAMChatHistoryBroker(AbstractBroker):
         This is used to provide a more readable class name in logs.
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMChatHistoryBroker()"
+        return f"{parent_class}.SAMChatHistoryBroker[{id(self)}]"
 
     @property
-    def model_class(self) -> ChatHistory:
+    def model_class(self) -> typing.Type[ChatHistory]:
         return ChatHistory
 
     @property

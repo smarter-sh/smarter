@@ -33,7 +33,7 @@ class ApiV1CliDeployApiView(CliBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.{ApiV1CliDeployApiView}()"
+        return f"{inherited_class}.{ApiV1CliDeployApiView.__name__}[{id(self)}]"
 
     @swagger_auto_schema(
         operation_description="""

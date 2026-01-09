@@ -151,6 +151,12 @@ class SAMChatbotBroker(AbstractBroker):
             - `SAMPluginBaseBroker.__init__`
         """
         super().__init__(*args, **kwargs)
+        logger.debug(
+            "%s.__init__() called with args=%s, kwargs=%s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
         if not self.ready:
             if not self.loader and not self.manifest and not self.chatbot:
                 logger.error(
@@ -200,7 +206,7 @@ class SAMChatbotBroker(AbstractBroker):
         """
         retval = super().ready
         if not retval:
-            logger.warning("%s.ready() base class indicates not ready for %s", self.formatted_class_name, self.kind)
+            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
             return False
         retval = self.manifest is not None or self.account is not None
         logger.debug(
@@ -509,7 +515,7 @@ class SAMChatbotBroker(AbstractBroker):
         :rtype: str
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMChatbotBroker()"
+        return f"{parent_class}.{SAMChatbotBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:
@@ -571,9 +577,8 @@ class SAMChatbotBroker(AbstractBroker):
             )
         else:
             logger.warning(
-                "%s.manifest property could not initialize manifest for kind=%s",
+                "%s.manifest() could not initialize",
                 self.formatted_class_name,
-                self.kind,
             )
         return self._manifest
 

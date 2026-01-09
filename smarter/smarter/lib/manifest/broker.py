@@ -186,19 +186,19 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         url: Optional[str] = None,
         **kwargs,
     ):
+        logger.debug(
+            "%s.__init__() called with: %s, args: %s, kwargs: %s",
+            logger_prefix,
+            request,
+            args,
+            kwargs,
+        )
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(
                 message=f"Unsupported apiVersion: {api_version}",
                 thing=SmarterJournalThings.ACCOUNT,
             )
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
-        logger.debug(
-            "%s.__init__() initializing request: %s, args: %s, kwargs: %s",
-            logger_prefix,
-            self.request,
-            args,
-            kwargs,
-        )
         self._api_version = api_version
         if "name" in kwargs and isinstance(kwargs["name"], str):
             self.name_cached_property_setter(kwargs["name"])
@@ -321,7 +321,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         retval = super().ready
         if not retval:
             logger.warning(
-                "%s.ready() parent class indicates not ready for kind=%s",
+                "%s.ready() SmarterRequestMixin is not ready for kind=%s",
                 logger_prefix,
                 self.kind,
             )
@@ -349,7 +349,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: str
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.AbstractBroker()"
+        return f"{parent_class}.{AbstractBroker.__name__}()"
 
     @property
     def request(self) -> Optional[HttpRequest]:

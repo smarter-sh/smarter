@@ -87,7 +87,7 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
         super().setup(request, *args, **kwargs)
 
         # go through our own request and account mixin setup logic
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        self.smarter_request = request
 
         # overwrite the request object with our smarter_request object
         if not self.smarter_request:
@@ -136,7 +136,7 @@ class SmarterAuthenticatedListAPIView(ListAPIView, SmarterRequestMixin):
             args,
             kwargs,
         )
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        self.smarter_request = request
         super().initial(self.request, *args, **kwargs)
 
 
@@ -172,7 +172,7 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
 
         # experiment: we want to ensure that the request object is
         # initialized before we call the SmarterRequestMixin.
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        self.smarter_request = request
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
@@ -255,7 +255,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
             request (Request): The incoming HTTP request.
         """
         super().setup(request, *args, **kwargs)
-        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
