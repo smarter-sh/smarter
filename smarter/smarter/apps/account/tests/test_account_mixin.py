@@ -246,19 +246,8 @@ class TestAccountMixin(SmarterTestBase):
 
     def test_invalid_account_assignment(self) -> None:
         """Test setting an invalid account."""
-        instance = AccountMixin(user=self.mortal_user)
-
-        # verify that the user and account are what we think they are
-        self.assertEqual(instance.user, self.mortal_user)
-        self.assertEqual(instance.account, self.account)
-
-        # ensure that the other account is not the same as the base account
-        self.assertNotEqual(self.account, self.other_account)
-
-        # try to set the account to the other account which
-        # should raise an exception.
         with self.assertRaises(SmarterBusinessRuleViolation):
-            instance.account = self.other_account
+            AccountMixin(user=self.mortal_user, account=self.other_account)
 
     def test_account_number(self) -> None:
         """Test account_number."""
