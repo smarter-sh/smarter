@@ -69,7 +69,7 @@ analyze:
 
 # docker exec smarter-app bash -c "coverage run manage.py test smarter.apps.plugin && coverage report -m && coverage html"
 coverage:
-	docker exec smarter-app bash -c "coverage run --omit='*/tests/*,*/test_*.py' manage.py test smarter.apps.plugin && coverage report -m && coverage html"
+	docker exec smarter-app bash -c "coverage run --source=smarter.lib.django.request manage.py test smarter.lib.django.tests.test_request_mixin && coverage report -m"
 
 pre-commit-init:
 	pre-commit install
@@ -132,7 +132,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.apps.api.v1.cli.tests.test_account.TestApiCliV1Account.test_apply"
+	docker exec smarter-app bash -c "python manage.py test smarter"
 
 docker-prune:
 	make docker-check && \
