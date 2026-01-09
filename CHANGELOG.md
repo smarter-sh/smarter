@@ -1,3 +1,10 @@
+## [0.13.58](https://github.com/smarter-sh/smarter/compare/v0.13.57...v0.13.58) (2026-01-09)
+
+
+### Bug Fixes
+
+* force a new release ([66c16aa](https://github.com/smarter-sh/smarter/commit/66c16aaebdd679fffeb21a63714eebeb52910458))
+
 ## [0.13.57](https://github.com/smarter-sh/smarter/compare/v0.13.56...v0.13.57) (2025-12-26)
 
 
