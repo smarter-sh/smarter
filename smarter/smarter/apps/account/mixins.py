@@ -180,7 +180,7 @@ class AccountMixin(SmarterHelperMixin):
                         self.account_mixin_logger_prefix,
                         mask_string(api_token.decode()),
                     )
-            if hasattr(request, "user") and not isinstance(request.user, AnonymousUser):
+            if not api_token and hasattr(request, "user") and not isinstance(request.user, AnonymousUser):
                 user = request.user  # type: ignore[union-attr]
                 if not isinstance(user, User):
                     logger.warning(
@@ -213,7 +213,7 @@ class AccountMixin(SmarterHelperMixin):
                 self.account_mixin_logger_prefix,
                 mask_string(api_token.decode()),
             )
-            self.authenticate(api_token)
+            AccountMixin.authenticate(self, api_token)
         else:
             if user_profile:
                 self.user_profile = user_profile
@@ -504,11 +504,11 @@ class AccountMixin(SmarterHelperMixin):
         """
         return self.sorted_dict(
             {
-                "ready": self.ready,
+                "ready": self.is_accountmixin_ready,
                 "account": AccountMiniSerializer(self.account).data if self.account else None,
                 "user": UserMiniSerializer(self.user).data if self.user else None,
                 "user_profile": UserProfileSerializer(self.user_profile).data if self.user_profile else None,
-                **super().to_json(),
+                **SmarterHelperMixin(self).to_json(),
             }
         )
 
@@ -538,7 +538,7 @@ class AccountMixin(SmarterHelperMixin):
         except AuthenticationFailed:
             self.user = SmarterAnonymousUser()
             logger.warning(
-                "%s.__init__(): failed to authenticate user from API token", self.account_mixin_logger_prefix
+                "%s.authenticate(): failed to authenticate user from API token", self.account_mixin_logger_prefix
             )
         return False
 

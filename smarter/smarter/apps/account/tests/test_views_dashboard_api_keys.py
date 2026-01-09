@@ -9,12 +9,11 @@ from http import HTTPStatus
 from django.contrib.auth import authenticate
 from django.test import RequestFactory
 
-# our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.drf.models import SmarterAuthToken
 
-from ..views.dashboard.api_keys import APIKeysView, APIKeyView
+# our stuff
+from smarter.apps.account.views.dashboard.api_keys import APIKeysView, APIKeyView
+from smarter.lib.drf.models import SmarterAuthToken
 
 
 logger = logging.getLogger(__name__)

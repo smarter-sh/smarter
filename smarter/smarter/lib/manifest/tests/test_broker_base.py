@@ -11,7 +11,9 @@ from django.http import HttpRequest
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import mask_string
 from smarter.lib import json
+from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import (
@@ -44,6 +46,19 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
     def setUpClass(cls):
         """class-level setup."""
         super().setUpClass()
+        cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
+            name="testAPIKey",
+            user=cls.admin_user,
+            description="Test API Key",
+            is_active=True,
+        )  # type: ignore
+        logger.debug(
+            "%s.setUpClass() Created test API token for user %s - %s",
+            logger_prefix,
+            cls.admin_user.username,
+            mask_string(cls.token_key),
+        )
+
         title = f" {logger_prefix}.setUpClass() "
         msg = "*" * ((120 - len(title)) // 2) + title + "*" * ((120 - len(title)) // 2)
         logger.debug(msg)
@@ -54,6 +69,11 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         title = f" {logger_prefix}.tearDownClass() "
         msg = "*" * ((120 - len(title)) // 2) + title + "*" * ((120 - len(title)) // 2)
         logger.debug(msg)
+        try:
+            cls.token_record.delete()
+        # pylint: disable=broad-except
+        except Exception:
+            pass
         super().tearDownClass()
 
     def setUp(self):
@@ -85,7 +105,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         if not self.ready:
             raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before ready state")
         return {
-            SAMMetadataKeys.NAME.value: self.request.user.username,
+            SAMMetadataKeys.NAME.value: self.admin_user.username,
         }
 
     @property
@@ -138,16 +158,18 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
             return self._request
 
         self._request = HttpRequest()
-        self._request.user = self.admin_user
+        self._request.headers = {"Authorization": f"Token {self.token_key}"}
+        logger.debug("%s.request() Set Authorization header: %s", self.formatted_class_name, self._request.headers)
+        # self._request.user = self.admin_user
 
-        # Ensure user.is_authenticated is True (for mock users)
-        if not getattr(self._request.user, "is_authenticated", True):
-            logger.warning(
-                "%s.request() Request user is not authenticated; setting is_authenticated to True",
-                self.formatted_class_name,
-            )
-            self._request.user.is_authenticated = lambda: True
-        self.assertTrue(self._request.user.is_authenticated)
+        # # Ensure user.is_authenticated is True (for mock users)
+        # if not getattr(self._request.user, "is_authenticated", True):
+        #     logger.warning(
+        #         "%s.request() Request user is not authenticated; setting is_authenticated to True",
+        #         self.formatted_class_name,
+        #     )
+        #     self._request.user.is_authenticated = lambda: True
+        # self.assertTrue(self._request.user.is_authenticated)
 
         # add a SAM manifest to the body
         yaml_data = self.loader.yaml_data
@@ -192,9 +214,13 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
             raise RuntimeError("Loader not initialized in ready() check.")
         if self.request is None:
             raise RuntimeError("Request not initialized in ready() check.")
-        if self.request.user is None:
+        if hasattr(self.request, "user") and self.request.user is None:
             raise RuntimeError("Request user not initialized in ready() check.")
-        if not self.request.user.is_authenticated:
+        if (
+            hasattr(self.request, "user")
+            and hasattr(self.request.user, "is_authenticated")
+            and not self.request.user.is_authenticated
+        ):
             raise RuntimeError("Request user is not authenticated in ready() check.")
         if self.broker is None:
             raise RuntimeError("Broker not initialized in ready() check.")
