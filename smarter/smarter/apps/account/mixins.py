@@ -92,10 +92,10 @@ class AccountMixin(SmarterHelperMixin):
     def __init__(
         self,
         *args,
-        account_number: AccountNumberType = None,
-        account: Optional[Account] = None,
         user: UserType = None,
+        account: Optional[Account] = None,
         user_profile: Optional[UserProfile] = None,
+        account_number: AccountNumberType = None,
         api_token: ApiTokenType = None,
         **kwargs,
     ):
@@ -106,12 +106,13 @@ class AccountMixin(SmarterHelperMixin):
         super().__init__(*args, **kwargs)
 
         logger.debug(
-            "%s.__init__() called with args=%s, account_number=%s, account=%s, user=%s, api_token=%s, kwargs=%s",
+            "%s.__init__() called with args=%s, user=%s, account=%s, user_profile=%s, account_number=%s, api_token=%s, kwargs=%s",
             self.account_mixin_logger_prefix,
             args,
-            account_number,
-            account,
             user,
+            account,
+            user_profile,
+            account_number,
             mask_string(api_token.decode()) if api_token else None,
             kwargs,
         )
@@ -228,7 +229,7 @@ class AccountMixin(SmarterHelperMixin):
             json.dumps(AccountMixin.to_json(self), indent=4),
         )
 
-        self.log_ready_status()
+        self.log_account_mixin_ready_status()
 
     def __str__(self):
         """
@@ -454,6 +455,7 @@ class AccountMixin(SmarterHelperMixin):
                 self.account_mixin_logger_prefix,
             )
             return False
+        logger.debug("%s.is_accountmixin_ready() returning true.", self.account_mixin_logger_prefix)
         return True
 
     @property
@@ -461,7 +463,7 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns a string representation of the AccountMixin ready state.
         """
-        if self.ready:
+        if self.is_accountmixin_ready:
             return formatted_text_green("READY")
         else:
             return formatted_text_red("NOT_READY")
@@ -471,7 +473,7 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns True if the account and user are set.
         """
-        retval = super().ready
+        retval = SmarterHelperMixin(self).ready
         if not retval:
             logger.warning(
                 "%s: ready() returning false because super().ready returned false. This might cause problems with other initializations.",
@@ -540,7 +542,7 @@ class AccountMixin(SmarterHelperMixin):
             )
         return False
 
-    def log_ready_status(self):
+    def log_account_mixin_ready_status(self):
         """
         Logs the ready status of the AccountMixin.
         """

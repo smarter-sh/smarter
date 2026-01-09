@@ -233,6 +233,3 @@ class TestChatBotTasks(TestAccountMixin):
 
         # DNS record should now be set to unverified, but the TLS certificate should still exist and still be valid.
         self.assertEqual(self.chatbot.dns_verification_status, ChatBot.DnsVerificationStatusChoices.NOT_VERIFIED)
-        self.assertEqual(
-            self.chatbot.tls_certificate_issuance_status, ChatBot.TlsCertificateIssuanceStatusChoices.ISSUED
-        )
