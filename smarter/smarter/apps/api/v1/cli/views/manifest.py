@@ -1,6 +1,8 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'example_manifest' view"""
 
+import logging
+
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -10,6 +12,9 @@ from .swagger import (
     COMMON_SWAGGER_RESPONSES,
     EXAMPLE_MANIFEST_PLUGIN,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ApiV1CliManifestApiView(CliBaseApiView):
@@ -84,5 +89,8 @@ The response from this endpoint is a JSON object containing an example manifest 
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def get(self, request, kind, *args, **kwargs):
+        logger.debug(
+            "%s.get() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+        )
         response = self.broker.example_manifest(request=request, kwargs=kwargs)
         return response

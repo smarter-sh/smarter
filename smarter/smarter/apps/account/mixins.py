@@ -15,6 +15,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_red,
 )
 from smarter.common.utils import mask_string
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.token_authentication import (
@@ -96,6 +97,12 @@ class AccountMixin(SmarterHelperMixin):
         api_token: ApiTokenType = None,
         **kwargs,
     ):
+
+        self._account: Optional[Account] = None
+        self._user: UserType = None
+        self._user_profile: Optional[UserProfile] = None
+        super().__init__(*args, **kwargs)
+
         logger.debug(
             "%s.__init__() called with args=%s, account_number=%s, account=%s, user=%s, api_token=%s, kwargs=%s",
             self.account_mixin_logger_prefix,
@@ -106,10 +113,6 @@ class AccountMixin(SmarterHelperMixin):
             mask_string(api_token.decode()) if api_token else None,
             kwargs,
         )
-
-        self._account: Optional[Account] = None
-        self._user: UserType = None
-        self._user_profile: Optional[UserProfile] = None
 
         # initialize these in reverse order, such that self.user is the last
         # setter to be called.
@@ -130,8 +133,6 @@ class AccountMixin(SmarterHelperMixin):
         user = user or kwargs.get("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
         if user:
             self.user = user
-
-        super().__init__(*args, **kwargs)
 
         request: OptionalRequestType = kwargs.get("request")
         if not request and args:
@@ -234,20 +235,15 @@ class AccountMixin(SmarterHelperMixin):
                 self.account_mixin_logger_prefix,
                 mask_string(api_token.decode()),
             )
-            try:
-                user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
-                self.user = user
-            except AuthenticationFailed:
-                self.user = SmarterAnonymousUser()
-                logger.warning(
-                    "%s.__init__(): failed to authenticate user from API token", self.account_mixin_logger_prefix
-                )
+            self.authenticate(api_token)
 
-        msg = f"{self.account_mixin_logger_prefix}.__init__() is {self.accountmixin_ready_state} - {self.user_profile}"
-        if self.is_accountmixin_ready:
-            logger.debug(msg)
-        else:
-            logger.error(msg)
+        logger.debug(
+            "%s.__init__() - finished %s",
+            self.account_mixin_logger_prefix,
+            json.dumps(AccountMixin.to_json(self), indent=4),
+        )
+
+        self.log_ready_status()
 
     def __str__(self):
         """
@@ -395,6 +391,12 @@ class AccountMixin(SmarterHelperMixin):
         Set the user.
         """
         self._user = user
+        if not user:
+            self._account = None
+            logger.debug("%s.user.setter: unset _account", self.account_mixin_logger_prefix)
+            self._user_profile = None
+            logger.debug("%s.user.setter: unset _user_profile", self.account_mixin_logger_prefix)
+            return
         logger.debug("%s.user.setter: set _user to %s", self.account_mixin_logger_prefix, self._user)
         self._account = get_cached_account_for_user(user) if isinstance(user, User) else None
         logger.debug("%s.user.setter: set _account to %s", self.account_mixin_logger_prefix, self._account)
@@ -404,6 +406,7 @@ class AccountMixin(SmarterHelperMixin):
             else None
         )
         logger.debug("%s.user.setter: set _user_profile to %s", self.account_mixin_logger_prefix, self._user_profile)
+        self.log_ready_status()
 
     @property
     def user_profile(self) -> Optional[UserProfile]:
@@ -488,7 +491,7 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns a string representation of the AccountMixin ready state.
         """
-        if self.is_accountmixin_ready:
+        if self.ready:
             return formatted_text_green("READY")
         else:
             return formatted_text_red("NOT_READY")
@@ -511,7 +514,7 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns a string representation of the ready state.
         """
-        if self.ready:
+        if self.is_accountmixin_ready:
             return formatted_text_green("READY")
         else:
             return formatted_text_red("NOT_READY")
@@ -536,3 +539,38 @@ class AccountMixin(SmarterHelperMixin):
                 **super().to_json(),
             }
         )
+
+    def authenticate(self, api_token: bytes) -> bool:
+        """
+        Authenticate the user using the provided API token.
+
+        :param api_token: The API token to authenticate with.
+        :type api_token: bytes
+        :return: True if authentication was successful, False otherwise.
+        :rtype: bool
+        """
+        logger.debug(
+            "%s.authenticate() called with api_token=%s",
+            self.account_mixin_logger_prefix,
+            mask_string(api_token.decode()),
+        )
+        try:
+            user, _ = SmarterTokenAuthentication().authenticate_credentials(api_token)
+            self.user = user
+            return True
+        except AuthenticationFailed:
+            self.user = SmarterAnonymousUser()
+            logger.warning(
+                "%s.__init__(): failed to authenticate user from API token", self.account_mixin_logger_prefix
+            )
+        return False
+
+    def log_ready_status(self):
+        """
+        Logs the ready status of the AccountMixin.
+        """
+        msg = f"{self.account_mixin_logger_prefix} is {self.accountmixin_ready_state} - {self.user_profile}"
+        if self.is_accountmixin_ready:
+            logger.info(msg)
+        else:
+            logger.error(msg)

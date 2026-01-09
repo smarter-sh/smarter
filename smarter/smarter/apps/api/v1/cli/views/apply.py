@@ -83,14 +83,13 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         Handles POST requests to apply a Smarter manifest.
         """
 
-        logger.debug(f"{self.formatted_class_name}.post() called with request={request}, args={args}, kwargs={kwargs}")
+        logger.debug(
+            "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+        )
 
         if not self.manifest_data:
             raise APIV1CLIViewManifestNotFoundError("No YAML manifest provided.")
 
-        logger.debug(
-            f"{self.formatted_class_name}.post(): Applying {self.manifest_kind} manifest for {self.manifest_name}"
-        )
         response = self.broker.apply(request, args=args, kwargs=kwargs)
         if response and response.status_code == HTTPStatus.OK:
             logger.debug(

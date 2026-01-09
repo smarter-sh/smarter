@@ -28,7 +28,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest, QueryDict
 from rest_framework.request import Request as RestFrameworkRequest
 
-from smarter.apps.account.mixins import AccountMixin, UserType
+from smarter.apps.account.mixins import AccountMixin, User, UserType
 from smarter.apps.account.utils import (
     account_number_from_url,
     get_cached_account,
@@ -146,9 +146,8 @@ class SmarterRequestMixin(AccountMixin):
         "_smarter_request_user",
         "_timestamp",
         "_url",
-        "_url_orig",
         "_url_account_number",
-        "_parse_result",
+        "_parsed_url",
         "_params",
         "_session_key",
         "_data",
@@ -162,9 +161,8 @@ class SmarterRequestMixin(AccountMixin):
         self._smarter_request_user: Optional[UserType] = None
         self._timestamp = datetime.now()
         self._url: Optional[str] = None
-        self._url_orig: Optional[str] = None
         self._url_account_number: Optional[str] = None
-        self._parse_result: ParseResult = None
+        self._parsed_url: ParseResult = None
         self._params: Optional[QueryDict] = None
         self._session_key: Optional[str] = kwargs.pop("session_key") if "session_key" in kwargs else None
         self._data: Optional[dict] = None
@@ -207,12 +205,6 @@ class SmarterRequestMixin(AccountMixin):
             raise SmarterValueError(
                 f"{self.request_mixin_logger_prefix}.__init__() - did not find a request object. SmarterRequestMixin cannot be initialized."
             )
-
-        # ---------------------------------------------------------------------
-        # call to super has to wait until we've finished setting up self.url
-        # because this is how we extract the api_token, if it exists.
-        # ---------------------------------------------------------------------
-        super().__init__(request, *args, user=self.smarter_request_user, api_token=self.api_token, **kwargs)
 
         if self.parsed_url and self.is_chatbot_named_url:
             account_number = self.url_account_number
@@ -292,6 +284,7 @@ class SmarterRequestMixin(AccountMixin):
     @smarter_request.setter
     def smarter_request(self, request: SmarterRequestType):
         self.clear_cached_properties()
+        self.user = None
         self._smarter_request = request
         logger.debug(
             "%s.smarter_request setter - request set to: %s",
@@ -305,16 +298,18 @@ class SmarterRequestMixin(AccountMixin):
                 self.request_mixin_logger_prefix,
                 self._url,
             )
-            if hasattr(request, "user"):
+            if hasattr(request, "user") and isinstance(request.user, (User, MagicMock)):
                 self._smarter_request_user = request.user  # type: ignore
                 logger.debug(
                     "%s.smarter_request setter - user set to: %s",
                     self.request_mixin_logger_prefix,
                     self.smarter_request_user,
                 )
-                if not super().ready:
-                    account = get_cached_account_for_user(user=self.smarter_request_user)
+                account = get_cached_account_for_user(user=self.smarter_request_user)
+                if not super().ready and self.smarter_request_user and account:
                     AccountMixin.__init__(self, account=account, user=self.smarter_request_user)
+            else:
+                self.authenticate()
 
     @property
     def smarter_request_user(self) -> Optional[UserType]:
@@ -333,7 +328,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         return self._smarter_request_user
 
-    @cached_property
+    @property
     def auth_header(self) -> Optional[str]:
         """Get the Authorization header from the request.
 
@@ -345,12 +340,14 @@ class SmarterRequestMixin(AccountMixin):
             print(request_mixin.auth_header)
 
         :return: The Authorization header as a string, or None if not present.
+        request.headers.get("Authorization")
+        self._smarter_request.META.get("HTTP_AUTHORIZATION")
         """
         return (
-            self._smarter_request.META.get("HTTP_AUTHORIZATION")
+            self._smarter_request.headers.get("Authorization")
             if self._smarter_request
-            and hasattr(self._smarter_request, "META")
-            and self._smarter_request.META is not None
+            and hasattr(self._smarter_request, "headers")
+            and self._smarter_request.headers is not None
             else None
         )
 
@@ -480,7 +477,7 @@ class SmarterRequestMixin(AccountMixin):
     @property
     def url(self) -> str:
         """
-        The string representation of the ParseResult object stored in _parse_result.
+        The string representation of the ParseResult object stored in _parsed_url.
 
         :return: The URL as a string.
 
@@ -515,15 +512,14 @@ class SmarterRequestMixin(AccountMixin):
             print(parsed.netloc)  # e.g., 'example.com'
 
         """
-        if self._parse_result is None:
-            self._parse_result = urlparse(self.url)
-            if not self._parse_result.scheme or not self._parse_result.netloc:
-                logger.warning(
-                    "%s.parsed_url() - request url is not a valid URL. url=%s",
-                    self.request_mixin_logger_prefix,
-                    self.url,
-                )
-        return self._parse_result
+        if self._parsed_url is None:
+            self._parsed_url = urlparse(self.url)
+            logger.debug(
+                "%s.parsed_url() - parsed URL: %s",
+                self.request_mixin_logger_prefix,
+                self._parsed_url,
+            )
+        return self._parsed_url
 
     @cached_property
     def url_path_parts(self) -> list[str]:
@@ -1666,25 +1662,25 @@ class SmarterRequestMixin(AccountMixin):
         :return: True if the request mixin is ready, False otherwise.
         """
         # cheap and easy way to fail.
-        if not isinstance(self._smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
+        if not isinstance(self.smarter_request, Union[HttpRequest, RestFrameworkRequest, WSGIRequest, MagicMock]):
             logger.warning(
                 "%s.is_requestmixin_ready() - request is not a HttpRequest. Received %s. Cannot process request.",
                 self.request_mixin_logger_prefix,
                 type(self._smarter_request).__name__,
             )
             return False
-        if not isinstance(self._parse_result, ParseResult):
+        if not isinstance(self.parsed_url, ParseResult):
             logger.warning(
-                "%s.is_requestmixin_ready() - _parse_result is not a ParseResult. Received %s. Cannot process request.",
+                "%s.is_requestmixin_ready() - _parsed_url is not a ParseResult. Received %s. Cannot process request.",
                 self.request_mixin_logger_prefix,
-                type(self._parse_result).__name__,
+                type(self._parsed_url).__name__,
             )
             return False
-        if not isinstance(self._url, str):
+        if not isinstance(self.url, str):
             logger.warning(
                 "%s.is_requestmixin_ready() - _url is not a string. Received %s. Cannot process request.",
                 self.request_mixin_logger_prefix,
-                type(self._url).__name__,
+                type(self.url).__name__,
             )
             return False
         return True
@@ -1842,15 +1838,24 @@ class SmarterRequestMixin(AccountMixin):
             # http://localhost:8000/api/v1/cli/chat/example/
             pass
 
+    # pylint: disable=W0221
+    def authenticate(self) -> bool:
+        """
+        Authenticates the request using the provided API token.
+        """
+        if self.api_token:
+            logger.debug("%s.authenticate() - authenticating with api_token.", self.request_mixin_logger_prefix)
+            return super().authenticate(api_token=self.api_token)
+        return False
+
     def clear_cached_properties(self):
         """
         Clears all cached properties in this mixin.
         """
         self._smarter_request = None
         self._url = None
-        self._url_orig = None
         self._url_account_number = None
-        self._parse_result = None
+        self._parsed_url = None
         self._params = None
         self._session_key = None
         self._data = None
@@ -1872,7 +1877,6 @@ class SmarterRequestMixin(AccountMixin):
         retval = {
             "ready": self.ready,
             "url": self.url,
-            "url_original": self._url_orig,
             "session_key": self.session_key,
             "auth_header": self.auth_header[:10] + "****" if self.auth_header else None,
             "api_token": mask_string(self.api_token.decode()) if self.api_token else None,

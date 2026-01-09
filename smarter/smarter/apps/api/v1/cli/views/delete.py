@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'delete' view"""
 
+import logging
 from http import HTTPStatus
 
 from drf_yasg.utils import swagger_auto_schema
@@ -11,6 +12,9 @@ from .swagger import (
     COMMON_SWAGGER_RESPONSES,
     openai_success_response,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ApiV1CliDeleteApiView(CliBaseApiView):
@@ -51,5 +55,8 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"], COMMON_SWAGGER_PARAMETERS["name_query_param"]],
     )
     def post(self, request, kind: str, *args, **kwargs):
+        logger.debug(
+            "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+        )
         response = self.broker.delete(request=request, kwargs=kwargs)
         return response

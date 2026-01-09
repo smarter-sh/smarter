@@ -159,6 +159,11 @@ class SmarterAdminAPIView(APIView, SmarterRequestMixin):
     permission_classes = [SmarterAuthenticatedPermissionClass]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
+    def __init__(self, *args, **kwargs):
+        """Initialize the SmarterAdminAPIView."""
+        super().__init__(*args, **kwargs)
+        SmarterRequestMixin.__init__(self, request=None, *args, **kwargs)
+
     def setup(self, request: Request, *args, **kwargs):
         """Extend DRF setup() the view. This is called by Django before dispatch() and is used to
         set up the view for the request.

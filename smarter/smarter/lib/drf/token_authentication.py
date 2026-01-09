@@ -166,7 +166,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         Returns:
             User or SmarterAnonymousUser: The authenticated user if the token is valid, otherwise SmarterAnonymousUser.
         """
-        logger_prefix = formatted_text(f"{__name__}.{SmarterTokenAuthentication}.get_user_from_request()")
+        logger_prefix = formatted_text(f"{__name__}.{SmarterTokenAuthentication.__name__}.get_user_from_request()")
 
         auth_header = request.META.get("HTTP_AUTHORIZATION")
         if not auth_header or not auth_header.startswith("Token "):
