@@ -28,7 +28,7 @@ from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
 from smarter.__version__ import __version__ as smarter_version
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
 from smarter.common.helpers.console_helpers import formatted_text_green
 from smarter.lib import json

@@ -6,7 +6,7 @@ from http import HTTPStatus
 from django.http import JsonResponse
 
 from smarter.apps.account.serializers import AccountSerializer, UserSerializer
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,

@@ -19,7 +19,7 @@ from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.prompt.models import ChatHelper
 from smarter.apps.prompt.providers.providers import chat_providers
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView

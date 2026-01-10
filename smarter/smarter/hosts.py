@@ -65,7 +65,7 @@ development, staging, and production.
 
 from django_hosts import host, patterns
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.urls import api as smarter_api_urls
 from smarter.urls import chatbots as smarter_chatbots_urls

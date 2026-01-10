@@ -36,7 +36,7 @@ from smarter.apps.prompt.manifest.brokers.chat_plugin_usage import (
 )
 from smarter.apps.prompt.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

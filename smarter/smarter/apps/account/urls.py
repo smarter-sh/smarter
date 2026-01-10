@@ -3,7 +3,7 @@
 from django.urls import include, path
 from django.views.generic.base import RedirectView
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 
 from .const import namespace

@@ -14,7 +14,7 @@ from smarter.apps.plugin.manifest.models.common import (
     UrlParam,
 )
 from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginCommonSpec
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator

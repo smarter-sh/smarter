@@ -9,7 +9,7 @@ import botocore
 import botocore.exceptions
 import dns.resolver
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 
 from .aws import AWSBase, SmarterAWSException

@@ -17,7 +17,7 @@ from smarter.apps.account.utils import (
     get_cached_smarter_admin_user_profile,
 )
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,

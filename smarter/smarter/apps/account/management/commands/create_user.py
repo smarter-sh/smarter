@@ -5,7 +5,7 @@ import string
 from urllib.parse import urljoin
 
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.management.base import SmarterCommand
 

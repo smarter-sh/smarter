@@ -18,7 +18,7 @@ from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.prompt.models import Chat, ChatHistory
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.apps.prompt.views import ChatConfigView
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib import json

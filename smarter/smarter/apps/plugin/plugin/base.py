@@ -22,7 +22,7 @@ from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCom
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterException,

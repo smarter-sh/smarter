@@ -60,7 +60,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
 )
 from retry_requests import retry
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib import json
 from smarter.lib.django import waffle

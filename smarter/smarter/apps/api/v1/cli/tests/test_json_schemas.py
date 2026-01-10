@@ -4,7 +4,7 @@ import logging
 from http import HTTPStatus
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 from .base_class import ApiV1CliTestBase

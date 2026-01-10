@@ -20,7 +20,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.serializers import PaymentMethodSerializer
 from smarter.apps.account.utils import get_cached_account, get_cached_account_for_user
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

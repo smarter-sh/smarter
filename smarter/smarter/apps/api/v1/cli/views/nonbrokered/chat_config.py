@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 
 from smarter.apps.prompt.views import ChatConfigView
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import json
 from smarter.lib.cache import lazy_cache as cache

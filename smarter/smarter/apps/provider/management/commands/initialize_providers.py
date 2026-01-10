@@ -16,7 +16,7 @@ from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.common.classes import json
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.lib.django.management.base import SmarterCommand
 

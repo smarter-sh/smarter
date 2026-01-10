@@ -35,7 +35,7 @@ from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
 )
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (

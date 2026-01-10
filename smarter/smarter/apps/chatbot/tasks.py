@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 import dns.resolver
 
 from smarter.apps.account.models import Account, AccountContact
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,

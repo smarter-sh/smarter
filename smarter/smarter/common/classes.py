@@ -10,7 +10,7 @@ from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
 from django.utils.deprecation import MiddlewareMixin
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
     formatted_text,

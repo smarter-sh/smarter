@@ -15,7 +15,7 @@ from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Sum
 
 from smarter.apps.account.utils import get_cached_account
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle

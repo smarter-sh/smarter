@@ -16,7 +16,7 @@ from django.urls import reverse
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST, SmarterEnvironments
 from smarter.common.exceptions import SmarterException
 from smarter.common.utils import is_authenticated_request
