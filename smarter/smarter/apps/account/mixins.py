@@ -219,8 +219,111 @@ class AccountMixin(SmarterHelperMixin):
     def __str__(self):
         """
         Returns a string representation of the class.
+
+        :return: String representation of the class.
+        :rtype: str
         """
-        return f"{self.__class__.__name__}(user={self.user_profile}, account={self._account})"
+        return f"{formatted_text(self.__class__.__name__)}[{id(self)}](user={self.user_profile})"
+
+    def __repr__(self) -> str:
+        """
+        Returns a JSON representation of the class.
+
+        :return: JSON representation of the class.
+        :rtype: str
+        """
+        return json.dumps(self.to_json(), indent=4)
+
+    def __bool__(self) -> bool:
+        """
+        Returns True if the AccountMixin is ready to be used.
+
+        :return: True if the AccountMixin is ready to be used.
+        :rtype: bool
+        """
+        return self.is_accountmixin_ready
+
+    def __hash__(self) -> int:
+        """
+        Returns the hash of the user_profile.
+
+        :return: Hash of the user_profile.
+        :rtype: int
+        """
+        return hash(self.user_profile)
+
+    def __eq__(self, value: object) -> bool:
+        """
+        Returns True if the user_profile is the same.
+
+        :param value: The value to compare to.
+        :type value: object
+        :return: True if the user_profile is the same.
+        :rtype: bool
+        """
+        return isinstance(value, AccountMixin) and self.user_profile == value.user_profile
+
+    def __lt__(self, value: object) -> bool:
+        """
+        Returns True if the user_profile is less than the other user_profile.
+
+        :param value: The value to compare to.
+        :type value: object
+        :return: True if the user_profile is less than the other user_profile.
+        :rtype: bool
+        """
+        if not isinstance(value, AccountMixin):
+            return NotImplemented
+        # Compare by user_profile id if both exist, else handle None
+        self_profile = self.user_profile
+        other_profile = value.user_profile
+        if self_profile is None and other_profile is None:
+            return False
+        if self_profile is None:
+            return True  # None is considered less than any profile
+        if other_profile is None:
+            return False
+
+        return str(self_profile) < str(other_profile)
+
+    def __le__(self, value: object) -> bool:
+        """
+        Returns True if the user_profile is less than or equal to the other user_profile.
+
+        :param value: The value to compare to.
+        :type value: object
+        :return: True if the user_profile is less than or equal to the other user_profile.
+        :rtype: bool
+        """
+        if not isinstance(value, AccountMixin):
+            return NotImplemented
+        return self == value or self < value
+
+    def __gt__(self, value: object) -> bool:
+        """
+        Returns True if the user_profile is greater than the other user_profile.
+
+        :param value: The value to compare to.
+        :type value: object
+        :return: True if the user_profile is greater than the other user_profile.
+        :rtype: bool
+        """
+        if not isinstance(value, AccountMixin):
+            return NotImplemented
+        return not self <= value
+
+    def __ge__(self, value: object) -> bool:
+        """
+        Returns True if the user_profile is greater than or equal to the other user_profile.
+
+        :param value: The value to compare to.
+        :type value: object
+        :return: True if the user_profile is greater than or equal to the other user_profile
+        :rtype: bool
+        """
+        if not isinstance(value, AccountMixin):
+            return NotImplemented
+        return not self < value
 
     @property
     def account_mixin_logger_prefix(self) -> str:
