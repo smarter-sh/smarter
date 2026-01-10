@@ -52,7 +52,9 @@ class AccountMixin(SmarterHelperMixin):
     """
     Provides consistent initialization and short-lived caching of the
     ``account``, ``user``, and ``user_profile`` properties using various sources,
-    such as direct arguments, request objects, or API tokens.
+    such as direct arguments, request objects, or API tokens. Also handles
+    API token authentication when a request object with an Authorization
+    header is provided.
 
     Initialization priority:
 
