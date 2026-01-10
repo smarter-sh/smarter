@@ -12,7 +12,6 @@ notes:
 
 import ast
 import hashlib
-import json
 import logging
 import logging.config
 import math
@@ -26,13 +25,13 @@ import urllib.parse
 from pathlib import Path
 
 from corsheaders.defaults import default_headers
-from django import get_version
 from dotenv import load_dotenv
 
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
 from smarter.common.helpers.console_helpers import formatted_text_green
+from smarter.lib import json
 
 
 logger = logging.getLogger(__name__)
@@ -1290,39 +1289,39 @@ LOGGING = {
     },
     "handlers": {
         "default": {
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "class": "logging.StreamHandler",
             "formatter": "timestamped",
         },
     },
     "root": {
         "handlers": ["default"],
-        "level": "INFO",
+        "level": smarter_settings.log_level_name,
     },
     "loggers": {
         "django": {
             "handlers": ["default"],
-            "level": "DEBUG",
+            "level": smarter_settings.log_level_name,
             "propagate": True,
         },
         "django.security.DisallowedHost": {
             "handlers": ["default"],
-            "level": "ERROR",
+            "level": smarter_settings.log_level_name,
             "propagate": False,
         },
         "celery": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "propagate": False,
         },
         "celery.task": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "propagate": True,
         },
         "celery.beat": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "propagate": True,
         },
     },
@@ -1458,6 +1457,16 @@ See:
     - https://docs.djangoproject.com/en/5.0/topics/email/
     - https://github.com/smarter-sh/smarter-infrastructure
     - smarter_settings.smtp_username
+"""
+
+TAGGIT_CASE_INSENSITIVE = True
+"""
+If True, makes taggit tags case insensitive.
+"""
+
+TAGGIT_STRIP_UNICODE_WHEN_SLUGIFYING = True
+"""
+If True, strips unicode characters when slugifying tags.
 """
 
 WAFFLE_CREATE_MISSING_SWITCHES = True
@@ -1653,6 +1662,8 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
         logger.error("Error reading Debian version: %s", e)
 
     logger.info("Python v%s", sys.version)
+    from django import get_version
+
     logger.info("Django v%s", get_version())
     logger.info("Smarter v%s", smarter_version)
     logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)

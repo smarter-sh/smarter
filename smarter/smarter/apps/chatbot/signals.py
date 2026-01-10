@@ -423,3 +423,15 @@ Example::
 
     post_deploy_custom_api.send(sender=deploy_custom_api, chatbot_id=chatbot_id)
 """
+
+broker_ready = Signal()
+"""
+Signal sent when a broker achieves a ready state.
+
+Arguments:
+    broker: The broker instance that is ready.
+
+Example::
+
+    broker_ready.send(sender=self.__class__, broker=self)
+"""

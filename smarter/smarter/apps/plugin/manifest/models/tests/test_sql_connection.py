@@ -1,40 +1,261 @@
-"""Test SqlConnection Django ORM and Manifest Loader."""
+"""
+Test SqlConnection Django ORM and Manifest Loader.
+
+mcdaniel jan-2026: TestSqlConnectionLegacy should be refactored. it contains a mix
+of Pydantic model tests combined with Django ORM model tests,
+which really should be (or might already be) in the broker test bank.
+"""
 
 # pylint: disable=W0104
 
 import logging
+import os
 from typing import Optional
 
-from pydantic_core import ValidationError
+from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import Secret
+from smarter.apps.plugin.const import DATA_PATH as PLUGIN_DATA_PATH
+from smarter.apps.plugin.manifest.models.common.connection.metadata import (
+    SAMConnectionCommonMetadata,
+)
 from smarter.apps.plugin.manifest.models.sql_connection.enum import (
     DbEngines,
     DBMSAuthenticationMethods,
 )
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
+from smarter.apps.plugin.manifest.models.sql_connection.spec import SAMSqlConnectionSpec
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.tests.base_classes import TestConnectionBase
 from smarter.apps.plugin.tests.factories import secret_factory
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake, camel_to_snake_dict
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
+logger = logging.getLogger(__name__)
+MANIFEST_PATH_SQL_CONNECTION = os.path.abspath(
+    os.path.join(PLUGIN_DATA_PATH, "manifest", "brokers", "tests", "data", "sql-connection.yaml")
+)
+"""
+Path to the Sql plugin manifest file 'sql-connection.yaml' which
+contains the actual connection parameters for the remote test database.
+
+Note that we're borrowing the sql-connection.yaml file from the
+broker tests.
+"""
+HERE = __name__
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+class TestSAMSqlConnection(TestSAMBrokerBaseClass):
+    """
+    Test SAMSqlConnection Pydantic model.
+
+    .. note::
+
+        TestSAMBrokerBaseClass is generically useful for testing SAM-based
+        Pydantic models.
+    """
+
+    test_sam_sql_plugin_logger_prefix = formatted_text(f"{HERE}.TestSAMSqlPlugin()")
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        logger.debug("%s.setUpClass()", cls.test_sam_sql_plugin_logger_prefix)
+        cls.loader = SAMLoader(file_path=MANIFEST_PATH_SQL_CONNECTION)
+
+    @classmethod
+    def tearDownClass(cls):
+        logger.debug("%s.tearDownClass()", cls.test_sam_sql_plugin_logger_prefix)
+        super().tearDownClass()
+
+    def setUp(self):
+        super().setUp()
+        self._manifest_filespec = MANIFEST_PATH_SQL_CONNECTION
+
+    def test_model_initialization(self):
+        """Test that the SAMSqlConnection model can be initialized with valid data."""
+        SAMSqlConnection(
+            apiVersion=self.loader.manifest_api_version,
+            kind=self.loader.manifest_kind,
+            metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+            spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
+        )
+
+    def test_missing_required_fields(self):
+        """Test that missing required fields raises ValidationError."""
+        with self.assertRaises(PydanticValidationError):
+            SAMSqlConnection()  # type: ignore
+
+    def test_invalid_field_types(self):
+        """Test that wrong types for fields raises ValidationError."""
+        with self.assertRaises(PydanticValidationError):
+            SAMSqlConnection(
+                apiVersion=123,  # type: ignore
+                kind=456,  # type: ignore
+                metadata=self.loader.manifest_metadata,  # type: ignore
+                spec=self.loader.manifest_spec,  # type: ignore
+            )
+
+    def test_alternative_initialization(self):
+        """
+        Test that the SAMSqlConnection model can be initialized using a single dict.
+        """
+        data = {
+            "apiVersion": self.loader.manifest_api_version,
+            "kind": self.loader.manifest_kind,
+            "metadata": self.loader.manifest_metadata,
+            "spec": self.loader.manifest_spec,
+        }
+        SAMSqlConnection(**data)
+
+    def test_immutability(self):
+        """Test that the SAMSqlConnection model is immutable after creation."""
+        model = SAMSqlConnection(
+            apiVersion=self.loader.manifest_api_version,
+            kind=self.loader.manifest_kind,
+            metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+            spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
+        )
+        with self.assertRaises(PydanticValidationError):
+            model.kind = "NewKind"
+
+    def test_invalid_spec_structure(self):
+        """Test that invalid spec structure raises ValidationError."""
+        with self.assertRaises(PydanticValidationError):
+            SAMSqlConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec={"not": "a valid spec"},  # type: ignore
+            )
+
+    def test_invalid_metadata_structure(self):
+        """Test that invalid metadata structure raises ValidationError."""
+        with self.assertRaises(PydanticValidationError):
+            SAMSqlConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata={"not": "a valid metadata"},  # type: ignore
+                spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
+            )
+
+    def test_repr_and_str(self):
+        """Test that model __repr__ and __str__ do not raise and include class name."""
+        model = SAMSqlConnection(
+            apiVersion=self.loader.manifest_api_version,
+            kind=self.loader.manifest_kind,
+            metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+            spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
+        )
+        self.assertIn("SAMSqlConnection", repr(model))
+        self.assertIn("SAMSqlConnection", str(model))
+
+    def test_connection_required_fields(self):
+        """Test that required fields in spec.connection are enforced."""
+        manifest_spec = dict(self.loader.manifest_spec)
+        # Remove a required field, e.g., dbEngine
+        if "connection" in manifest_spec:
+            manifest_spec["connection"] = dict(manifest_spec["connection"])
+            if "dbEngine" in manifest_spec["connection"]:
+                del manifest_spec["connection"]["dbEngine"]
+        with self.assertRaises(PydanticValidationError):
+            SAMSqlConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMSqlConnectionSpec(**manifest_spec),
+            )
+
+    def test_connection_wrong_type(self):
+        """Test that wrong type for a connection field raises ValidationError."""
+        manifest_spec = dict(self.loader.manifest_spec)
+        if "connection" in manifest_spec:
+            manifest_spec["connection"] = dict(manifest_spec["connection"])
+            manifest_spec["connection"]["port"] = "notanint"
+        with self.assertRaises(PydanticValidationError):
+            SAMSqlConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMSqlConnectionSpec(**manifest_spec),
+            )
+
+    def test_connection_optional_fields(self):
+        """Test that optional fields in spec.connection can be omitted or set to None."""
+        manifest_spec = dict(self.loader.manifest_spec)
+        if "connection" in manifest_spec:
+            manifest_spec["connection"] = dict(manifest_spec["connection"])
+            manifest_spec["connection"]["proxyHost"] = None
+            manifest_spec["connection"]["proxyPort"] = None
+        model = SAMSqlConnection(
+            apiVersion=self.loader.manifest_api_version,
+            kind=self.loader.manifest_kind,
+            metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+            spec=SAMSqlConnectionSpec(**manifest_spec),
+        )
+        self.assertIsNone(model.spec.connection.proxyHost)
+        self.assertIsNone(model.spec.connection.proxyPort)
+
+    def test_connection_boolean_fields(self):
+        """Test that boolean fields in spec.connection are validated."""
+        manifest_spec = dict(self.loader.manifest_spec)
+        if "connection" in manifest_spec:
+            manifest_spec["connection"] = dict(manifest_spec["connection"])
+            manifest_spec["connection"]["useSsl"] = "notabool"
+        with self.assertRaises(PydanticValidationError):
+            SAMSqlConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMSqlConnectionSpec(**manifest_spec),
+            )
+
+    def test_connection_enum_fields(self):
+        """Test that enum fields in spec.connection only accept valid values."""
+        manifest_spec = dict(self.loader.manifest_spec)
+        if "connection" in manifest_spec:
+            manifest_spec["connection"] = dict(manifest_spec["connection"])
+            manifest_spec["connection"]["authenticationMethod"] = "notavalidmethod"
+        with self.assertRaises(Exception):
+            SAMSqlConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMSqlConnectionSpec(**manifest_spec),
+            )
+
+    def test_connection_numeric_constraints(self):
+        """Test that numeric fields in spec.connection respect constraints (e.g., port range)."""
+        manifest_spec = dict(self.loader.manifest_spec)
+        if "connection" in manifest_spec:
+            manifest_spec["connection"] = dict(manifest_spec["connection"])
+            manifest_spec["connection"]["port"] = 70000  # invalid port
+        with self.assertRaises(Exception):
+            SAMSqlConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMSqlConnectionSpec(**manifest_spec),
+            )
+
+    def test_connection_repr_and_str(self):
+        """Test that connection __repr__ and __str__ do not raise and include class name."""
+        model = SAMSqlConnection(
+            apiVersion=self.loader.manifest_api_version,
+            kind=self.loader.manifest_kind,
+            metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+            spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
+        )
+        self.assertIn("SAMSqlConnection", repr(model))
+        self.assertIn("SAMSqlConnection", str(model))
 
 
-class TestSqlConnection(TestConnectionBase):
+class TestSqlConnectionLegacy(TestConnectionBase):
     """Test SqlConnection Django ORM and Manifest Loader"""
 
     _model: Optional[SAMSqlConnection] = None
@@ -43,7 +264,7 @@ class TestSqlConnection(TestConnectionBase):
     def model(self) -> Optional[SAMSqlConnection]:
         # create a SAMSqlConnection pydantic model from the loader
         if not self._model and self.loader:
-            logger.info("Creating SAMSqlConnection pydantic model from loader data")
+            logger.debug("Creating SAMSqlConnection pydantic model from loader data")
             self._model = SAMSqlConnection(**self.loader.pydantic_model_dump())
             self.assertIsNotNone(self._model)
         return self._model
@@ -63,7 +284,7 @@ class TestSqlConnection(TestConnectionBase):
     def test_validate_db_engine_invalid_value(self):
         """Test that the dbEngine validator raises an error for invalid values."""
         self.load_manifest(filename="sql-connection-ssh.yaml")
-        logger.info("Testing dbEngine validator:\n%s", self.manifest)
+        logger.debug("Testing dbEngine validator:\n%s", self.manifest)
         if not self._manifest:
             self.fail("Manifest should not be None after loading the file")
 
@@ -121,7 +342,7 @@ class TestSqlConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["database"] = invalid_database
         self._loader = None
         self._model = None  # type: ignore[assignment]
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(PydanticValidationError) as context:
             print(self.model)
         self.assertIn("Input should be a valid string", str(context.exception))
 
@@ -136,9 +357,9 @@ class TestSqlConnection(TestConnectionBase):
         self._loader = None
         self._model = None  # type: ignore[assignment]
 
-        with self.assertRaises(ValidationError) as context:
-            logger.info("Creating SAMSqlConnection pydantic model from bad loader data, %s", self.model.model_dump())
-        self.assertIn(f"Input should be a valid string", str(context.exception))
+        with self.assertRaises(PydanticValidationError) as context:
+            logger.debug("Creating SAMSqlConnection pydantic model from bad loader data, %s", self.model.model_dump())
+        self.assertIn("Input should be a valid string", str(context.exception))
 
     def test_validate_timeout_invalid_value(self):
         """Test that the timeout validator raises an error for invalid values."""
@@ -289,7 +510,7 @@ class TestSqlConnection(TestConnectionBase):
             self.fail("Model should not be None after loading the manifest")
 
         valid_max_overflow = 5
-        self._manifest["spec"]["connection"]["maxOverflow"] = valid_max_overflow
+        self.manifest["spec"]["connection"]["maxOverflow"] = valid_max_overflow
         self._loader = None
         self._model = None  # type: ignore[assignment]
         self.model
@@ -337,7 +558,7 @@ class TestSqlConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["useSsl"] = invalid_use_ssl
         self._loader = None
         self._model = None  # type: ignore[assignment]
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(PydanticValidationError) as context:
             print(self.model)
         self.assertIn("Input should be a valid boolean, unable to interpret input", str(context.exception))
 
@@ -400,7 +621,7 @@ class TestSqlConnection(TestConnectionBase):
             model_dump["password"] = secret
 
         model_dump = camel_to_snake_dict(model_dump)
-        logger.info("test_django_orm_tcpip model_dump: %s", model_dump)
+        logger.debug("test_django_orm_tcpip model_dump: %s", model_dump)
 
         django_model = SqlConnection(**model_dump)
         django_model.save()
@@ -487,7 +708,7 @@ class TestSqlConnection(TestConnectionBase):
 
         model_dump = camel_to_snake_dict(model_dump)
 
-        logger.info("test_django_orm_tcpip_ssl model_dump: %s", model_dump)
+        logger.debug("test_django_orm_tcpip_ssl model_dump: %s", model_dump)
 
         django_model = SqlConnection(**model_dump)
         # with self.assertRaises(SmarterValueError):
@@ -589,7 +810,7 @@ class TestSqlConnection(TestConnectionBase):
 
         model_dump = camel_to_snake_dict(model_dump)
 
-        logger.info("test_django_orm_tcpip_ssh model_dump: %s", model_dump)
+        logger.debug("test_django_orm_tcpip_ssh model_dump: %s", model_dump)
 
         # pylint: disable=W0612
         example_output = {

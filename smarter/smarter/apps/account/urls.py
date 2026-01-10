@@ -16,6 +16,7 @@ from .views.authentication import (
     LogoutView,
 )
 from .views.dashboard.api_keys import APIKeyListView
+from .views.dashboard.users import UsersView, UserView
 from .views.password_management import (
     PasswordConfirmView,
     PasswordResetRequestView,
@@ -47,6 +48,8 @@ class AccountNamedUrls:
     ACCOUNT_DEACTIVATE = "account_deactivate"
     ACCOUNT_PASSWORD_RESET_REQUEST = "account_password_reset_request"
     ACCOUNT_PASSWORD_CONFIRM = "account_password_confirm"
+    ACCOUNT_USER = "account_user"
+    ACCOUNT_USERS = "account_users"
     PASSWORD_RESET_LINK = "password_reset_link"
 
 
@@ -77,6 +80,8 @@ urlpatterns = [
     path(
         "password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name=AccountNamedUrls.PASSWORD_RESET_LINK
     ),
+    path("users/", UsersView.as_view(), name=AccountNamedUrls.ACCOUNT_USERS),
+    path("user/<int:user_id>/", UserView.as_view(), name=AccountNamedUrls.ACCOUNT_USER),
 ]
 
 if smarter_settings.environment == SmarterEnvironments.LOCAL:

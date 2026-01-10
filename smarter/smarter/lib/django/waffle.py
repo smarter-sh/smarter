@@ -63,7 +63,7 @@ from smarter.common.helpers.console_helpers import formatted_text_green
 
 logger = logging.getLogger(__name__)
 prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")
-logger.info(formatted_text_green("smarter.lib.django.waffle module loaded"))
+logger.debug(formatted_text_green("smarter.lib.django.waffle module loaded"))
 
 
 # pylint: disable=C0115
@@ -162,6 +162,9 @@ class SmarterWaffleSwitches:
     TASK_LOGGING = "log_tasks"
     """Enables logging in all Celery tasks throughout the Smarter codebase."""
 
+    VALIDATOR_LOGGING = "log_validators"
+    """Enables logging in all Django model field validators throughout the Smarter codebase."""
+
     VIEW_LOGGING = "log_views"
     """Enables logging in all Django views throughout the Smarter codebase."""
 
@@ -186,6 +189,7 @@ class SmarterWaffleSwitches:
             self.REQUEST_MIXIN_LOGGING,
             self.RECEIVER_LOGGING,
             self.TASK_LOGGING,
+            self.VALIDATOR_LOGGING,
             self.VIEW_LOGGING,
         ]
 
@@ -260,8 +264,4 @@ def switch_is_active(switch_name: str) -> bool:
         logger.error(
             "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True
         )
-        return False
-    # pylint: disable=broad-except
-    except Exception as e:
-        logger.error("%s An error occurred while checking switch %s: %s", prefix, switch_name, e, exc_info=True)
         return False

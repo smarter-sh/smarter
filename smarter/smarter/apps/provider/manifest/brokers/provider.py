@@ -42,10 +42,9 @@ from smarter.lib.manifest.enum import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) and waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
@@ -210,7 +209,10 @@ class SAMProviderBroker(AbstractBroker):
             description=self.provider.description,
             version="1.0.0",
             tags=["example", "provider", "smarter-api"],
-            annotations=["example-annotation-key", "example-annotation-value"],
+            annotations=[
+                {"smarter.sh/provider": self.provider.name},
+                {"smarter.sh/created_by": "smarter_provider_broker"},
+            ],
         )
         spec_provider = SAMProviderSpecProvider(
             name=self.provider.name,
@@ -218,7 +220,7 @@ class SAMProviderBroker(AbstractBroker):
             base_url=self.provider.base_url,
             api_key="*****" if self.provider.api_key else None,
             connectivity_test_path=self.provider.connectivity_test_path,
-            logo="https://example.com/logo.png",
+            logo=self.provider.logo.url if self.provider.logo else None,
             website_url=self.provider.website_url,
             contact_email=self.provider.contact_email,
             support_email=self.provider.support_email,
@@ -272,7 +274,7 @@ class SAMProviderBroker(AbstractBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMProviderBroker()"
+        return f"{parent_class}.{SAMProviderBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:
@@ -378,7 +380,10 @@ class SAMProviderBroker(AbstractBroker):
             description="an example provider manifest for the Smarter API Provider",
             version="1.0.0",
             tags=["example", "provider", "smarter-api"],
-            annotations=["example-annotation-key", "example-annotation-value"],
+            annotations=[
+                {"smarter.sh/provider": "example_provider"},
+                {"smarter.sh/created_by": "smarter_provider_broker"},
+            ],
         )
         spec_provider = SAMProviderSpecProvider(
             name="Acme Corp.",

@@ -7,8 +7,16 @@ metadata:
     founder.
   name: everlasting_gobstopper
   pluginClass: static
-  tags: []
   version: 0.2.0
+  tags:
+    - marketing
+    - product-info
+    - everlasting-gobstopper
+  annotations:
+    - smarter.sh/everlasting-gobstopper/owner: Willy Wonka Chocolate Factory
+    - smarter.sh/everlasting-gobstopper/purpose: Provide additional information about the Everlasting Gobstopper product, including sales promotions, coupon codes, company contact information, and biographical background on the company founder.
+    - smarter.sh/everlasting-gobstopper/last-updated: 2024-06-01
+    - smarter.sh/everlasting-gobstopper/documentation: https://wwcf.com/everlasting-gobstopper-info
 spec:
   data:
     description: Get additional information about the Everlasting Gobstopper product
@@ -53,7 +61,7 @@ spec:
           price: $1.00
   prompt:
     maxTokens: 256
-    model: gpt-4-turbo
+    model: gpt-4o-mini
     provider: openai
     systemRole: You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).
       Whenever possible you should defer to the tool calls provided for additional

@@ -11,8 +11,11 @@ import requests
 from django.conf import settings
 from django.db import models
 
-from smarter.apps.account.models import Account, Secret, User
-from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.account.models import MetaDataWithOwnershipModel, Secret, User
+from smarter.apps.account.utils import (
+    get_cached_account_for_user,
+    get_cached_smarter_admin_user_profile,
+)
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import (
@@ -44,10 +47,8 @@ from .signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) and waffle.switch_is_active(
+        SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
 
@@ -121,25 +122,20 @@ class ProviderModelVerificationTypes(models.TextChoices):
     SUMMARIZATION = "summarization", "Summarization"
 
 
-class Provider(TimestampedModel, SmarterHelperMixin):
+class Provider(MetaDataWithOwnershipModel, SmarterHelperMixin):
     """Chat model."""
 
     class Meta:
         verbose_name = "Provider"
         verbose_name_plural = "Providers"
 
-    account = models.ForeignKey(
-        Account, on_delete=models.CASCADE, blank=False, null=False, help_text="The account that owns the provider."
-    )
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        User,
         on_delete=models.CASCADE,
         blank=False,
         null=False,
         help_text="The users that owns the provider.",
     )
-    name = models.CharField(max_length=255, blank=False, null=False, unique=True, help_text="The name of the provider.")
-    description = models.TextField(blank=True, null=True)
     status = models.CharField(
         max_length=32,
         choices=ProviderStatus.choices,
@@ -227,6 +223,14 @@ class Provider(TimestampedModel, SmarterHelperMixin):
         related_name="tos_accepted_by",
         help_text="The user who accepted the terms of service.",
     )
+
+    @property
+    def is_official_provider(self) -> bool:
+        """Check if the provider is an official provider."""
+        if not self.owner:
+            return False
+        smarter_admin = get_cached_smarter_admin_user_profile()
+        return self.owner == smarter_admin.user
 
     @property
     def tos_accepted(self) -> bool:
@@ -507,6 +511,13 @@ class Provider(TimestampedModel, SmarterHelperMixin):
             return None
         return cls.get_cached_provider_by_account_id_and_name(account.id, name)
 
+    def validate(self) -> None:
+        """Validate the provider before saving."""
+        if self.owner and self.account:
+            owner_account = get_cached_account_for_user(self.owner)
+            if owner_account != self.account:
+                raise SmarterValueError("Provider owner must belong to the same Account as the provider.")
+
     def __str__(self):
         """String representation of the provider."""
         return f"{self.name} ({self.account.account_number}) - {self.status}"
@@ -586,6 +597,8 @@ class ProviderVerification(TimestampedModel):
     @property
     def is_valid(self) -> bool:
         """Check if the verification is valid."""
+        if not self.elapsed_updated:
+            return False
         return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
 
     @property
@@ -620,6 +633,8 @@ class ProviderModelVerification(TimestampedModel):
     @property
     def is_valid(self) -> bool:
         """Check if the verification is valid."""
+        if not self.elapsed_updated:
+            return False
         return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
 
     @property

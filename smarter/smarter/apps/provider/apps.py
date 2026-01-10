@@ -21,4 +21,4 @@ class ProviderConfig(AppConfig):
         from . import receivers  # noqa
         from . import signals  # noqa
 
-        logger.info("Provider app ready: signals and receivers imported")
+        logger.debug("Provider app ready: signals and receivers imported")

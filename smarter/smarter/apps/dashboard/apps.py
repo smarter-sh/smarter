@@ -23,4 +23,4 @@ class WebPlatformConfig(AppConfig):
         from . import receivers  # noqa: F401
         from . import signals  # noqa: F401
 
-        logger.info("Dashboard app ready: signals and receivers imported")
+        logger.debug("Dashboard app ready: signals and receivers imported")

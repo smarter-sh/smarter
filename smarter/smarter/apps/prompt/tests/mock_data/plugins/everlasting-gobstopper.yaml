@@ -12,6 +12,15 @@ metadata:
     - chocolate
     - Gobstoppers
     - Willy Wonka
+  annotations:
+    - smarter.sh/everlasting-gobstopper/display-name: Everlasting Gobstopper Info
+    - smarter.sh/everlasting-gobstopper/icon: https://example.com/everlasting-gobstopper-icon.png
+    - smarter.sh/everlasting-gobstopper/documentation-url: https://docs.wwcf.com/everlasting-gobstopper
+    - smarter.sh/everlasting-gobstopper/contact-email: support@gobbstoppers.edu
+    - smarter.sh/everlasting-gobstopper/pricing-plans: |
+        - free
+        - community supported
+        - open source
 spec:
   selector:
     directive: search_terms
@@ -27,7 +36,7 @@ spec:
       You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).
       You should only use data from tool calls for any inquiries about everlasting gobstoppers.
       Otherwise you should respond that you cannot assist with the request.
-    model: gpt-4-turbo
+    model: gpt-4o-mini
     temperature: 1.0
     maxTokens: 256
   data:

@@ -27,7 +27,7 @@ retry-requests==2.0.0                   # HTTP requests retry
 tldextract==5.3.0                       # Extracts the top-level domain from a URL
 validators==0.35.0                      # Data validation library
 mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to the mailing list
-
+pycountry==24.6.1                       # ISO country, subdivision, language, currency and their translations
 
 # Django
 # ------------

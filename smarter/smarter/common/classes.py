@@ -2,11 +2,12 @@
 
 import ipaddress
 import logging
-from typing import Any, Optional, Union
+import re
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import yaml
+from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
-from django.http import HttpRequest
 from django.utils.deprecation import MiddlewareMixin
 
 from smarter.common.conf import settings as smarter_settings
@@ -22,20 +23,28 @@ from smarter.lib import json
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-try:
-    # this resolves an import issue in collect static assets where Django apps are not yet importable
-    from smarter.lib.django import waffle
-    from smarter.lib.django.waffle import SmarterWaffleSwitches
+if TYPE_CHECKING:
+    from django.http import HttpRequest
+MOCK_REGEX = re.compile(r"<MagicMock|<Mock|mock\\.MagicMock|mock\\.Mock", re.IGNORECASE)
 
-    mixin_logging_is_active: bool = waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
-# pylint: disable=broad-except
-except AppRegistryNotReady as e:
-    mixin_logging_is_active: bool = False
+# guard against Sphinx doc build circular import errors
+mixin_logging_is_active: bool = False
+if apps.ready:
+    try:
+        # this resolves an import issue in collect static assets where Django apps are not yet importable
+        # pylint: disable=import-outside-toplevel,C0412
+        from smarter.lib.django import waffle
+        from smarter.lib.django.waffle import SmarterWaffleSwitches
+
+        mixin_logging_is_active = waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
+    # pylint: disable=broad-except
+    except (AppRegistryNotReady, ImportError):
+        pass
 
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return mixin_logging_is_active and level >= smarter_settings.log_level
+    return mixin_logging_is_active
 
 
 base_logger = logging.getLogger(__name__)
@@ -68,7 +77,7 @@ class SmarterHelperMixin:
     """
 
     def __init__(self, *args, **kwargs):
-        pass
+        logger.debug("%s.__init__() - initializing with args=%s, kwargs=%s", self.formatted_class_name, args, kwargs)
 
     @property
     def formatted_class_name(self) -> str:
@@ -130,7 +139,7 @@ class SmarterHelperMixin:
             "class_name": self.unformatted_class_name,
         }
 
-    def smarter_build_absolute_uri(self, request: HttpRequest) -> str:
+    def smarter_build_absolute_uri(self, request: "HttpRequest") -> Optional[str]:
         """
         Attempts to get the absolute URI from a request object.
 
@@ -140,18 +149,12 @@ class SmarterHelperMixin:
         ``build_absolute_uri()``.
 
         :param request: The request object.
-        :type request: HttpRequest
+        :type request: Optional[HttpRequest]
         :return: The absolute request URL.
-        :rtype: str
+        :rtype: Optional[str]
         :raises SmarterValueError: If the URI cannot be built from the request.
         """
-        retval = utils_smarter_build_absolute_uri(request)
-        if not retval:
-            raise SmarterValueError(
-                "Failed to build absolute URI from request. "
-                "Ensure the request object is valid and has the necessary attributes."
-            )
-        return retval
+        return utils_smarter_build_absolute_uri(request)
 
     def data_to_dict(self, data: Union[dict, str]) -> dict:
         """
@@ -179,6 +182,17 @@ class SmarterHelperMixin:
                     raise SmarterValueError("String data is neither valid JSON nor YAML.") from yaml_error
         else:
             raise SmarterValueError("Unsupported data type for conversion to dict.")
+
+    def sorted_dict(self, data: dict) -> dict:
+        """
+        Returns a new dictionary with keys sorted.
+
+        :param data: The dictionary to sort.
+        :type data: dict
+        :return: A new dictionary with sorted keys.
+        :rtype: dict
+        """
+        return {k: data[k] for k in sorted(data.keys())}
 
 
 class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
@@ -278,7 +292,16 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             ip_obj = ipaddress.ip_address(ip)
             return ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local
         except ValueError as e:
-            logger.warning("%s._is_private_ip() - Invalid IP address: %s, error: %s", self.formatted_class_name, ip, e)
+            # Regex to match MagicMock or mock object string representations
+            ip_str = str(ip)
+            if MOCK_REGEX.search(ip_str) or "Mock" in getattr(ip, "__class__", type(ip)).__name__:
+                logger.warning(
+                    "%s._is_private_ip() - Mock object detected as IP: %s", self.formatted_class_name, ip_str
+                )
+            else:
+                logger.warning(
+                    "%s._is_private_ip() - Invalid IP address: %s, error: %s", self.formatted_class_name, ip_str, e
+                )
             return True
 
     def has_auth_indicators(self, request):

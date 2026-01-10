@@ -1,13 +1,16 @@
 """AWS IAM helper class."""
 
 # python stuff
+import logging
+
+import botocore.exceptions
 
 from smarter.common.conf import settings as smarter_settings
 
-from .aws import AWSBase, SmarterAWSException
+from .aws import AWSBase
 
 
-# our stuff
+logger = logging.getLogger(__name__)
 
 
 class AWSIdentifyAccessManagement(AWSBase):
@@ -25,20 +28,7 @@ class AWSIdentifyAccessManagement(AWSBase):
     """
 
     _client = None
-
-    @property
-    def client(self):
-        """
-        Return the AWS IAM client.
-
-        :return: boto3 IAM client
-        :rtype: boto3.client
-        """
-        if not self.aws_session:
-            raise SmarterAWSException("AWS session is not initialized.")
-        if not self._client:
-            self._client = self.aws_session.client("iam")
-        return self._client
+    _client_type: str = "iam"
 
     def get_iam_policies(self):
         """

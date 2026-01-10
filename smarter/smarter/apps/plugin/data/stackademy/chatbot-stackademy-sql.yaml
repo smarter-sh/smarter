@@ -4,11 +4,24 @@ metadata:
   name: stackademy_sql
   description: Stackademy University course catalogue inquiries using the Stackademy SQL plugin.
   version: 1.0.0
+  tags:
+    - stackademy
+    - sql
+    - chatbot
+  annotations:
+    - smarter.sh/chatbot/stackademy-sql/creator: QA Team
+    - smarter.sh/chatbot/stackademy-sql/purpose: chatbot for Stackademy course catalogue inquiries
+    - smarter.sh/chatbot/stackademy-sql/release-date: 2024-06-15
+    - smarter.sh/chatbot/stackademy-sql/backward-compatibility: true
+    - smarter.sh/chatbot/stackademy-sql/note: |
+        Uses SQL plugin to answer course catalogue questions.
+        Very fast and accurate when the database is well-structured.
+        Leverages cache for improved performance.
 spec:
   config:
     deployed: false
     provider: openai
-    defaultModel: gpt-4-turbo
+    defaultModel: gpt-4o-mini
     defaultSystemRole: >
       You are a helpful assistant. When given the opportunity to utilize
       function calling, you should always do so. This will allow you to

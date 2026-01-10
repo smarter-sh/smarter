@@ -23,4 +23,4 @@ class ApiConfig(AppConfig):
         from . import receivers  # noqa
         from . import signals  # noqa
 
-        logger.info("API app ready: signals and receivers imported")
+        logger.debug("API app ready: signals and receivers imported")

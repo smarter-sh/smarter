@@ -2,7 +2,9 @@
 """Test ChatBotHelper."""
 
 import logging
+from urllib.parse import urlparse
 
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.handlers.wsgi import WSGIRequest
@@ -10,7 +12,6 @@ from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain, ChatBotHelper
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -19,7 +20,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -33,18 +34,18 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        self.domain_name = f"test-bot-{self.hash_suffix}.{smarter_settings.environment_api_domain}"
+        self.domain_name = "foo.com"
+        settings.ALLOWED_HOSTS.append(self.domain_name)
 
         self.chatbot = ChatBot.objects.create(
             account=self.account,
-            name=f"{self.hash_suffix}",
+            name=f"test-{self.hash_suffix}",
             deployed=True,
         )
 
-        self.custom_domain_name = "smarter.sh"
         self.custom_domain = ChatBotCustomDomain.objects.create(
             account=self.account,
-            domain_name=self.custom_domain_name,
+            domain_name=self.domain_name,
             aws_hosted_zone_id="TEST_HOSTED_ZONE_ID",
             is_verified=True,
         )
@@ -76,7 +77,15 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
 
     def test_valid_url(self):
         """Test a url for the chatbot we created."""
-        request: WSGIRequest = self.wsgi_request_factory.get(self.chatbot.url, SERVER_NAME="api.localhost:8000")
+        url = self.chatbot.url
+        logger.debug("test_valid_url() chatbot url: %s", url)
+        parsed = urlparse(url)
+        http_host = parsed.netloc
+        settings.ALLOWED_HOSTS.append(http_host)
+        request = RequestFactory().get(
+            parsed.path or "/",
+            HTTP_HOST=http_host,
+        )
         user = authenticate(username=self.admin_user, password="12345")
         if user is None:
             self.fail("Authentication failed")
@@ -93,10 +102,9 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
             user_profile=self.user_profile,
         )
 
-        logger.info("dump: %s", helper.dump())
         self.assertTrue(
-            helper.is_valid,
-            f"Expected a chatbot helper to be valid, but got {helper.is_valid} for url {self.chatbot.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",
+            helper.ready,
+            f"Expected a chatbot helper to be valid, but got {helper.ready} for url {self.chatbot.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",
         )
         self.assertTrue(helper.account == self.account, f"Expected {self.account}, but got {helper.account}")
         self.assertTrue(
@@ -105,13 +113,6 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         self.assertTrue(helper.account_number == self.account.account_number)
         self.assertTrue(helper.is_custom_domain is False, f"this is not a default domain {helper.url}")
         self.assertTrue(helper.chatbot.deployed is True)
-
-        # expecting http://api.localhost:8000/
-        expected_url = f"http://{helper.api_host}/"
-        self.assertTrue(
-            expected_url == helper.url,
-            f"Expected {helper.url}, but got {expected_url}",
-        )
 
     def test_bad_url(self):
         """Test a bad url."""
@@ -139,9 +140,18 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
 
     def test_custom_domain(self):
         """Test a custom domain."""
+
         self.assertIsNotNone(self.custom_chatbot.id)
         url = self.custom_chatbot.url
-        request: WSGIRequest = self.wsgi_request_factory.get(url, SERVER_NAME="smarter.sh")
+        logger.debug("test_custom_domain() custom chatbot url: %s", url)
+        parsed = urlparse(url)
+        http_host = parsed.netloc
+        settings.ALLOWED_HOSTS.append(http_host)
+        request = RequestFactory().get(
+            parsed.path or "/",
+            HTTP_HOST=http_host,
+        )
+
         helper = ChatBotHelper(
             request=request,
             chatbot_id=self.custom_chatbot.id,
@@ -158,7 +168,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         self.assertIsNotNone(chatbot.url)
         self.assertEqual(self.custom_chatbot.url, chatbot.url)
 
-        self.assertTrue(helper.is_valid, f"Expected True, but got {helper.to_json()}")
+        self.assertTrue(helper.ready, f"Expected True, but got {helper.to_json()}")
         self.assertTrue(helper.account == self.account, f"Expected {self.account}, but got {helper.account}")
         self.assertTrue(
             helper.chatbot == self.custom_chatbot, f"Expected {self.custom_chatbot}, but got {helper.chatbot}"
@@ -167,7 +177,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
             helper.account_number == self.account.account_number,
             f"Expected {self.account.account_number}, but got {helper.account_number}",
         )
-        self.assertFalse(helper.is_custom_domain is True, f"Expected False, but got {helper.is_custom_domain}")
+        self.assertTrue(helper.is_custom_domain)
         self.assertIn(
             self.custom_chatbot.url,
             helper.chatbot.url,

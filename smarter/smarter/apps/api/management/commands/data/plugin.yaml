@@ -9,6 +9,12 @@ metadata:
     - system
     - test
     - verification
+  annotations:
+    - smarter.sh/owner: system-admin
+    - smarter.sh/purpose: plugin verification for API CLI end points
+    - smarter.sh/usage: This plugin is used to verify the functionality of /api/v1/cli/ end points.
+    - smarter.sh/last-updated: 2025-12-31
+    - smarter.sh/documentation: https://docs.smarter.sh/
 spec:
   selector:
     directive: search_terms
@@ -20,7 +26,7 @@ spec:
     systemRole: >
       Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response:
       "This is a verification of /api/v1/cli/ end points. Here is the additional information that you requested:"
-    model: gpt-4-turbo
+    model: gpt-4o-mini
     temperature: 0.0
     maxTokens: 256
 

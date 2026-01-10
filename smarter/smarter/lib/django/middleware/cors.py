@@ -7,7 +7,7 @@ import logging
 import re
 from collections.abc import Awaitable
 from functools import cached_property, lru_cache
-from typing import Optional, Pattern, Sequence
+from typing import Optional, Pattern, Sequence, Union
 from urllib.parse import SplitResult, urlsplit
 
 from corsheaders.conf import conf
@@ -18,6 +18,7 @@ from django.http.response import HttpResponseBase
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -26,13 +27,13 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
-logger.info("Loading smarter.lib.django.middleware.cors.SmarterCorsMiddleware")
+logger.debug("Loading %s", formatted_text(__name__ + ".SmarterCorsMiddleware"))
 
 
 class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
@@ -86,7 +87,12 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     _chatbot: Optional[ChatBot] = None
     request: Optional[HttpRequest] = None
 
-    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+    @property
+    def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging purposes."""
+        return formatted_text(f"{__name__}.{SmarterCorsMiddleware.__name__}")
+
+    def __call__(self, request: HttpRequest) -> Union[HttpResponseBase, Awaitable[HttpResponseBase]]:
 
         host = request.get_host()
         if not host:
@@ -102,7 +108,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
         # Short-circuit for any requests born from internal IP address hosts
         # This is unlikely, but not impossible.
         if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
-            logger.info(
+            logger.debug(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
                 self.smarter_build_absolute_uri(request),
@@ -110,7 +116,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             return super().__call__(request)
 
         url = self.smarter_build_absolute_uri(request)
-        logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
+        logger.debug("%s.__call__() - url=%s", self.formatted_class_name, url)
         self._url = None
         self._chatbot = None
         self.request = request
@@ -130,14 +136,14 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
 
         url_string = url.geturl() if isinstance(url, SplitResult) else None
         if url_string in conf.CORS_ALLOWED_ORIGINS:
-            logger.info(
+            logger.debug(
                 "%s url: %s is an allowed origin",
                 self.formatted_class_name,
                 url.geturl() if isinstance(url, SplitResult) else "(Missing URL)",
             )
             return None
 
-        logger.info(
+        logger.debug(
             "%s instantiating ChatBotHelper() for url: %s",
             self.formatted_class_name,
             url.geturl() if isinstance(url, SplitResult) else "(Missing URL)",
@@ -154,7 +160,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
         else:
             self._url = url
 
-        logger.info(
+        logger.debug(
             "%s.url() set url: %s", self.formatted_class_name, self._url.geturl() if self._url else "(Missing URL)"
         )
 
@@ -173,7 +179,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
             url = self.url.geturl() if isinstance(self.url, SplitResult) else None
             if url is not None and url not in retval:
                 retval.append(url)
-            logger.info("%s.CORS_ALLOWED_ORIGINS() added origin: %s", self.formatted_class_name, url)
+            logger.debug("%s.CORS_ALLOWED_ORIGINS() added origin: %s", self.formatted_class_name, url)
         return retval
 
     @cached_property
@@ -185,7 +191,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     def origin_found_in_white_lists(self, origin: str, url: SplitResult) -> bool:
         self.url = url
         if self.chatbot is not None:
-            logger.info("%s.origin_found_in_white_lists() returning True: %s", self.formatted_class_name, url)
+            logger.debug("%s.origin_found_in_white_lists() returning True: %s", self.formatted_class_name, url)
             return True
         return (
             (origin == "null" and origin in self.CORS_ALLOWED_ORIGINS)
@@ -196,7 +202,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     @lru_cache(maxsize=128)
     def regex_domain_match(self, origin: str) -> bool:
         if self.chatbot is not None:
-            logger.info("%s.regex_domain_match() returning True: %s", self.formatted_class_name, self.url)
+            logger.debug("%s.regex_domain_match() returning True: %s", self.formatted_class_name, self.url)
             return True
         return any(re.match(domain_pattern, origin) for domain_pattern in self.CORS_ALLOWED_ORIGIN_REGEXES)
 
@@ -204,7 +210,7 @@ class SmarterCorsMiddleware(CorsMiddleware, SmarterHelperMixin):
     def _url_in_whitelist(self, url: SplitResult) -> bool:
         self.url = url
         if self.chatbot is not None:
-            logger.info("%s._url_in_whitelist() returning True: %s", self.formatted_class_name, url)
+            logger.debug("%s._url_in_whitelist() returning True: %s", self.formatted_class_name, url)
             return True
         origins = [urlsplit(o) for o in self.CORS_ALLOWED_ORIGINS]
         return any(origin.scheme == url.scheme and origin.netloc == url.netloc for origin in origins)

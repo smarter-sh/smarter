@@ -9,7 +9,6 @@ from http import HTTPStatus
 from django.core.handlers.wsgi import WSGIRequest
 from drf_yasg.utils import swagger_auto_schema
 
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -24,10 +23,9 @@ from .swagger import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-        or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
@@ -62,7 +60,7 @@ class ApiV1CliApplyApiView(CliBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliApplyApiView()"
+        return f"{inherited_class}.{ApiV1CliApplyApiView.__name__}[{id(self)}]"
 
     @swagger_auto_schema(
         operation_description="""
@@ -80,16 +78,25 @@ This is a brokered operation, so the actual work is delegated to the appropriate
         request_body=ManifestSerializer,
     )
     def post(self, request: WSGIRequest, *args, **kwargs):
+        """
+        Handles POST requests to apply a Smarter manifest.
+        """
+
+        logger.debug(
+            "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+        )
 
         if not self.manifest_data:
             raise APIV1CLIViewManifestNotFoundError("No YAML manifest provided.")
 
-        logger.info(
-            f"{self.formatted_class_name}.post(): Applying {self.manifest_kind} manifest for {self.manifest_name}"
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        response = self.broker.apply(
+            request, user=user, account=account, user_profile=user_profile, args=args, kwargs=kwargs
         )
-        response = self.broker.apply(request=request, kwargs=kwargs)
         if response and response.status_code == HTTPStatus.OK:
-            logger.info(
+            logger.debug(
                 f"{self.formatted_class_name}.post(): Applied {self.manifest_kind} manifest for {self.manifest_name}"
             )
         return response

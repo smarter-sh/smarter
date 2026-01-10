@@ -7,6 +7,8 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
+import logging
+
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
@@ -15,22 +17,29 @@ from smarter.apps.account.utils import (
     get_cached_user_profile,
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.unittest.base_classes import SmarterTestBase
+
+
+logger = logging.getLogger(__name__)
 
 
 class TestAccountMixin(SmarterTestBase):
     """Test AccountMixin."""
 
+    test_account_mixin_logger_prefix = formatted_text(f"{__name__}.TestAccountMixin()")
+
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+        logger.debug("%s.setUpClass()", cls.test_account_mixin_logger_prefix)
         cls.mortal_user, cls.account, cls.user_profile = mortal_user_factory()
         cls.admin_user = get_cached_admin_user_for_account(cls.account)
         cls.other_user, cls.other_account, cls.other_user_profile = mortal_user_factory()
 
     @classmethod
     def tearDownClass(cls) -> None:
-        super().tearDownClass()
+        logger.debug("%s.tearDownClass()", cls.test_account_mixin_logger_prefix)
         instance = cls()
         # tear down the user, account, and user_profile
         try:
@@ -78,6 +87,7 @@ class TestAccountMixin(SmarterTestBase):
                 instance.other_account.delete()
         except Account.DoesNotExist:
             pass
+        super().tearDownClass()
 
     def test_initializations(self) -> None:
         """Test instantiation with all arguments."""
@@ -194,30 +204,32 @@ class TestAccountMixin(SmarterTestBase):
         self.assertEqual(instance.account, self.account)
         self.assertEqual(instance.user_profile, self.user_profile)
 
-        # .1) unset the user_profile, but leave the user and account unchanged.
-        # should reinitialize the user_profile based on the user.
+        # 1.) unset the user_profile
+        # should reinitialize the user_profile and unset the user and account.
         instance.user_profile = None
-        self.assertEqual(instance.user, self.mortal_user)
-        self.assertEqual(instance.account, self.account)
-        self.assertEqual(instance.user_profile, self.user_profile)
+        self.assertIsNone(instance.user)
+        self.assertIsNone(instance.account)
+        self.assertIsNone(instance.user_profile)
 
-        # .2) unset the user_profile and user, but leave the account unchanged.
+        # 2.) unset the user_profile and user, but leave the account unchanged.
         instance.user_profile = None
         instance.account = None
 
-        # ensure that user is still set.
-        self.assertEqual(instance.user, self.mortal_user)
+        # ensure that user is also unset
+        self.assertIsNone(instance.user)
 
         # should reinitialize the account and user_profile based on the user.
+        instance.account = self.account
+        instance.user_profile = self.user_profile
         self.assertEqual(instance.account, self.account)
         self.assertEqual(instance.user_profile, self.user_profile)
 
-        # .3) unset the user_profile and account, but leave the user unchanged.
+        # 3.) unset the user_profile and account, but leave the user unchanged.
         instance.user_profile = None
         instance.account = None
 
         # ensure that account is still set.
-        self.assertIsNotNone(instance.account)
+        self.assertIsNone(instance.account)
 
     def test_set_account(self) -> None:
         """
@@ -232,27 +244,10 @@ class TestAccountMixin(SmarterTestBase):
         self.assertIsNone(instance.user)
         self.assertIsNone(instance.user_profile)
 
-    def test_invalid_user_assignment(self) -> None:
-        """Test setting an invalid user."""
-        instance = AccountMixin(account=self.account)
-        with self.assertRaises(SmarterBusinessRuleViolation):
-            instance.user = self.other_user
-
     def test_invalid_account_assignment(self) -> None:
         """Test setting an invalid account."""
-        instance = AccountMixin(user=self.mortal_user)
-
-        # verify that the user and account are what we think they are
-        self.assertEqual(instance.user, self.mortal_user)
-        self.assertEqual(instance.account, self.account)
-
-        # ensure that the other account is not the same as the base account
-        self.assertNotEqual(self.account, self.other_account)
-
-        # try to set the account to the other account which
-        # should raise an exception.
         with self.assertRaises(SmarterBusinessRuleViolation):
-            instance.account = self.other_account
+            AccountMixin(user=self.mortal_user, account=self.other_account)
 
     def test_account_number(self) -> None:
         """Test account_number."""

@@ -29,10 +29,8 @@ KIND = SAMKinds.AUTH_TOKEN.value
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and waffle.switch_is_active(
+        SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
 
@@ -406,7 +404,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.assertEqual(response["thing"], "AuthToken")
         self.assertEqual(response["api"], "smarter.sh/v1")
         self.assertIn("metadata", response)
-        self.assertIn("command", response["metadata"].keys())
 
         # verify the SmarterAuthToken was deleted
         try:

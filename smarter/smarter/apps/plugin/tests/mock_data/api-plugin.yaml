@@ -8,6 +8,11 @@ metadata:
   tags:
     - api
     - test
+  annotations:
+    - smarter.sh/api-test/display-name: API Test Plugin
+    - smarter.sh/api-test/icon: https://example.com/api-test-icon.png
+    - smarter.sh/api-test/documentation-url: https://docs.example.com/api-test
+    - smarter.sh/api-test/contact-email: support@pound-sand.com
 spec:
   selector:
     directive: always
@@ -15,7 +20,7 @@ spec:
     provider: openai
     systemRole: >
       You are a helpful assistant for the Smarter platform. You can provide information about the test api.
-    model: gpt-4-turbo
+    model: gpt-4o-mini
     temperature: 0.5
     maxTokens: 256
   connection: test_api_connection
@@ -63,7 +68,7 @@ spec:
         description: The second test to run.
         required: false
         default: test2
-    test_values:
+    testValues:
       - name: username
         value: admin
       - name: limit

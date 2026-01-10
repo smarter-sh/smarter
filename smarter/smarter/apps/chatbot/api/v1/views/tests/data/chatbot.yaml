@@ -5,11 +5,21 @@ metadata:
   name: test_chatbot
   description: chatbot for running unit test
   version: 1.0.0
+  tags:
+    - red
+    - green
+    - blue
+  annotations:
+    - smarter.sh/tests/owner: test bank
+    - smarter.sh/tests/host: none
+    - smarter.sh/tests/purpose: Provide an example configuration for OpenAI API Function Calling.
+    - smarter.sh/tests/last-updated: 2025-12-31
+    - smarter.sh/tests/documentation: https://docs.tests.edu/example-function-calling
 spec:
   config:
     deployed: true
     provider: openai
-    defaultModel: gpt-4-turbo
+    defaultModel: gpt-4o-mini
     defaultSystemRole: >
       You are a helpful assistant. When given the opportunity to utilize
       function calling, you should always do so. This will allow you to

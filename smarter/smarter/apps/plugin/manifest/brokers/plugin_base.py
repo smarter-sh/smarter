@@ -8,6 +8,7 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.models import User
+from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
@@ -15,6 +16,9 @@ from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
 from smarter.apps.plugin.manifest.models.common.plugin.spec import (
     SAMPluginCommonSpecPrompt,
     SAMPluginCommonSpecSelector,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.status import (
+    SAMPluginCommonStatus,
 )
 from smarter.apps.plugin.manifest.models.enum import SAMPluginSpecCommonData
 from smarter.apps.plugin.models import (
@@ -24,28 +28,35 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.common.conf import settings as smarter_settings
-from smarter.lib.cache import cache_results
+from smarter.apps.plugin.signals import broker_ready
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
+from smarter.lib.manifest.enum import (
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
 
-from . import SAMPluginBrokerError
+from . import PluginSerializer, SAMPluginBrokerError
 
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(__name__ + ".SAMPluginBaseBroker")
 
 
 class SAMPluginBaseBroker(AbstractBroker):
@@ -56,6 +67,44 @@ class SAMPluginBaseBroker(AbstractBroker):
 
     _plugin: Optional[PluginBase] = None
     _plugin_meta: Optional[PluginMeta] = None
+    _plugin_prompt: Optional[PluginPrompt] = None
+    _plugin_status: Optional[SAMPluginCommonStatus] = None
+
+    def plugin_init(self) -> None:
+        """Initialize the plugin model instance."""
+        self._plugin = None
+        self._plugin_meta = None
+        self._plugin_prompt = None
+        self._plugin_status = None
+        self._manifest = None
+
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the broker is ready for operations.
+
+        This property determines whether the broker has been properly initialized
+        and is ready to perform its functions. A broker is considered ready if
+        it has a valid manifest loaded, either from raw data, a loader, or
+        existing Django ORM models.
+
+        :returns: ``True`` if the broker is ready, ``False`` otherwise.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning("%s.ready() AbstractBroker is not ready for %s", logger_prefix, self.kind)
+            return False
+        retval = self.manifest is not None or self.plugin is not None
+        logger.debug(
+            "%s.ready() manifest presence indicates ready=%s for %s",
+            logger_prefix,
+            retval,
+            self.kind,
+        )
+        if retval:
+            broker_ready.send(sender=self.__class__, broker=self)
+        return retval
 
     @property
     def plugin(self) -> Optional[PluginBase]:
@@ -122,12 +171,16 @@ class SAMPluginBaseBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.CHAT,
             )
+        if not self._manifest:
+            if self.loader:
+                self._manifest = self.loader.json_data
+
         controller = PluginController(
             request=self.smarter_request,
             user=self.user,
             account=self.account,
-            manifest=self.manifest,  # type: ignore
-            plugin_meta=self.plugin_meta if not self.manifest else None,
+            manifest=self._manifest,  # type: ignore
+            plugin_meta=self.plugin_meta if not self._manifest else None,
             name=self.name,
         )
         self._plugin = controller.obj
@@ -172,8 +225,27 @@ class SAMPluginBaseBroker(AbstractBroker):
             try:
                 self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
             except PluginMeta.DoesNotExist:
-                pass
+                logger.warning(
+                    "PluginMeta does not exist for name %s and account %s",
+                    self.name,
+                    self.account,
+                )
         return self._plugin_meta
+
+    @plugin_meta.setter
+    def plugin_meta(self, value: PluginMeta) -> None:
+        self._plugin_meta = value
+        self._plugin = None
+        self._plugin_meta = None
+        self._plugin_prompt = None
+        self._plugin_status = None
+        if not value:
+            return
+        self.user_profile = None
+        self.account = None
+        self.user = None
+        self.account = value.account
+        self.user = get_cached_admin_user_for_account(value.account)
 
     @property
     def plugin_data(self) -> Optional[PluginDataBase]:
@@ -209,6 +281,45 @@ class SAMPluginBaseBroker(AbstractBroker):
     # --------------------------------------------------------------------------
     # ORM to Pydantic conversion methods
     # --------------------------------------------------------------------------
+    def plugin_status_pydantic(self) -> Optional[SAMPluginCommonStatus]:
+        """
+        Get the plugin status as a Pydantic model.
+
+        This method retrieves the plugin status from the Django ORM model and converts it into a Pydantic model (`SAMPluginCommonStatus`). It ensures that the status information is properly formatted for use in manifest serialization and API responses.
+
+        :return: The plugin status as a Pydantic model.
+        :rtype: SAMPluginCommonStatus
+
+        .. seealso::
+
+            :class:`SAMPluginCommonStatus`
+            :meth:`SAMPluginBaseBroker.plugin_meta`
+            :meth:`SAMPluginBaseBroker.plugin`
+
+        **Example usage**::
+
+            status = broker.plugin_status_pydantic()
+            print(status.active, status.last_updated)
+
+        """
+        if self._plugin_status:
+            return self._plugin_status
+        if not self.plugin_meta:
+            return None
+        admin = get_cached_admin_user_for_account(self.plugin_meta.account)
+        if not admin:
+            raise SAMPluginBrokerError(
+                f"No admin user found for account {self.plugin_meta.account.account_number}",
+                thing=self.kind,
+                command=SmarterJournalCliCommands("describe"),
+            )
+        self._plugin_status = SAMPluginCommonStatus(
+            account_number=self.plugin_meta.account.account_number,
+            username=admin.username,
+            created=self.plugin_meta.created_at,
+            modified=self.plugin_meta.updated_at,
+        )
+        return self._plugin_status
 
     def plugin_metadata_orm2pydantic(self) -> SAMPluginCommonMetadata:
         """
@@ -240,7 +351,7 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         """
         command = SmarterJournalCliCommands("describe")
-        if not self.plugin_meta:
+        if not self._plugin_meta:
             raise SAMPluginBrokerError(
                 f"PluginMeta {self.name} not found",
                 thing=self.kind,
@@ -254,6 +365,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             )
         try:
             metadata = model_to_dict(self.plugin_meta)  # type: ignore[no-any-return]
+            metadata = json.loads(json.dumps(metadata))
             metadata = self.snake_to_camel(metadata)
             if not isinstance(metadata, dict):
                 raise SAMPluginBrokerError(
@@ -263,7 +375,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 )
             logger.info(
                 "%s.describe() PluginMeta %s %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self.kind,
                 metadata,
             )
@@ -271,7 +383,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             return metadata
         except PluginMeta.DoesNotExist as e:
             raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} PluginMeta does not exist for {self.plugin.name}",
+                f"{logger_prefix} {self.kind} PluginMeta does not exist for {self.plugin.name}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -408,6 +520,35 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         return plugin_data
 
+    @property
+    def plugin_prompt_orm(self) -> Optional[PluginPrompt]:
+        """
+        Retrieve the `PluginPrompt` ORM instance associated with this broker.
+
+        This property returns the plugin prompt object for the current plugin metadata. If the prompt cannot be found, `None` is returned.
+
+        :return: The `PluginPrompt` instance for this broker, or `None` if unavailable.
+        :rtype: Optional[PluginPrompt]
+
+        .. note::
+
+            The prompt is retrieved based on the associated `PluginMeta`.
+
+        """
+        if self._plugin_prompt:
+            return self._plugin_prompt
+        if self.plugin_meta is None:
+            return None
+        try:
+            self._plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
+        except PluginPrompt.DoesNotExist:
+            logger.warning(
+                "PluginPrompt does not exist for PluginMeta %s",
+                self.plugin_meta.name,
+            )
+            return None
+        return self._plugin_prompt
+
     def plugin_prompt_orm2pydantic(self) -> SAMPluginCommonSpecPrompt:
         """
         Convert plugin prompt data from the Django ORM model format to the Pydantic manifest format.
@@ -448,32 +589,20 @@ class SAMPluginBaseBroker(AbstractBroker):
                 thing=self.kind,
                 command=command,
             )
-        try:
-            plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
-            plugin_prompt = model_to_dict(plugin_prompt)  # type: ignore[no-any-return]
-            plugin_prompt = self.snake_to_camel(plugin_prompt)
-            if not isinstance(plugin_prompt, dict):
-                raise SAMPluginBrokerError(
-                    f"Model dump failed for {self.kind} {self.plugin.name}",
-                    thing=self.kind,
-                    command=command,
-                )
-            logger.info(
-                "%s.describe() PluginPrompt %s %s",
-                self.formatted_class_name,
-                self.kind,
-                plugin_prompt,
-            )
-            plugin_prompt = SAMPluginCommonSpecPrompt(**plugin_prompt)
-            return plugin_prompt
-        except PluginPrompt.DoesNotExist as e:
+        if self.plugin_prompt_orm is None:
             raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} PluginPrompt does not exist for {self.plugin_meta.name}",
+                f"PluginPrompt not found for {self.kind} {self.plugin_meta.name}",
                 thing=self.kind,
                 command=command,
-            ) from e
-        except Exception as e:
-            raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
+            )
+        plugin_prompt = SAMPluginCommonSpecPrompt(
+            provider=self.plugin_prompt_orm.provider,
+            systemRole=self.plugin_prompt_orm.system_role,
+            model=self.plugin_prompt_orm.model,
+            temperature=self.plugin_prompt_orm.temperature,
+            maxTokens=self.plugin_prompt_orm.max_completion_tokens,
+        )
+        return plugin_prompt
 
     def plugin_selector_orm2pydantic(self) -> SAMPluginCommonSpecSelector:
         """
@@ -528,7 +657,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 )
             logger.info(
                 "%s.describe() PluginSelector %s %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self.kind,
                 plugin_selector,
             )
@@ -536,7 +665,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             return plugin_selector
         except PluginSelector.DoesNotExist as e:
             raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
+                f"{logger_prefix} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -577,4 +706,93 @@ class SAMPluginBaseBroker(AbstractBroker):
                 print(response.status, response.data)
         """
         super().apply(request, kwargs)
-        logger.info("SAMPluginBaseBroker.apply() called %s with args: %s, kwargs: %s", request, args, kwargs)
+        logger.info("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
+
+    def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return a JSON response with a list of SQL plugins for this account.
+
+        This method queries the database for all SQL plugins associated with the current account,
+        optionally filtered by name, and returns a structured JSON response containing their serialized
+        representations. Each plugin is validated by round-tripping through the Pydantic model.
+
+        :param request: The HTTP request object.
+        :type request: "HttpRequest"
+        :param args: Additional positional arguments (unused).
+        :param kwargs: Additional keyword arguments, such as filter criteria (e.g., ``name``).
+        :return: A `SmarterJournaledJsonResponse` containing a list of SQL plugin manifests and metadata.
+        :rtype: SmarterJournaledJsonResponse
+
+        **Example:**
+
+        .. code-block:: python
+
+            response = broker.get(request, name="my_plugin")
+            print(response.data)
+
+        :raises SAMPluginBrokerError:
+            If a plugin cannot be serialized or validated
+            during the retrieval process.
+
+        .. seealso::
+            :class:`PluginMeta`
+            :class:`PluginSerializer`
+            :class:`SAMSqlPlugin`
+            :class:`SmarterJournaledJsonResponse`
+            :class:`SmarterJournalCliCommands`
+            :class:`SAMKeys`
+            :class:`SAMMetadataKeys`
+            :class:`SCLIResponseGet`
+            :class:`SCLIResponseGetData`
+        """
+        command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
+
+        data = []
+        name = kwargs.get(SAMMetadataKeys.NAME.value)
+        name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
+
+        # generate a QuerySet of PluginMeta objects that match our search criteria
+        if name:
+            plugins = PluginMeta.objects.filter(account=self.account, name=name)
+        else:
+            plugins = PluginMeta.objects.filter(account=self.account)
+        logger.info(
+            "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
+        )
+
+        model_titles = self.get_model_titles(serializer=PluginSerializer())
+
+        # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
+        for plugin in plugins:
+            try:
+                self.plugin_init()
+                self.plugin_meta = plugin
+
+                model_dump = PluginSerializer(plugin).data
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
+
+            except Exception as e:
+                logger.error(
+                    "%s.get() failed to serialize %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    plugin.name,
+                    exc_info=True,
+                )
+                raise SAMPluginBrokerError(
+                    f"Failed to serialize {self.kind} {plugin.name}", thing=self.kind, command=command
+                ) from e
+        data = {
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMMetadataKeys.NAME.value: name,
+            SAMKeys.METADATA.value: {"count": len(data)},
+            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.DATA.value: {
+                SCLIResponseGetData.TITLES.value: model_titles,
+                SCLIResponseGetData.ITEMS.value: data,
+            },
+        }
+        return self.json_response_ok(command=command, data=data)

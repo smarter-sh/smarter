@@ -2,20 +2,29 @@
 """Test Account."""
 
 # our stuff
+import logging
+
 from smarter.apps.account.models import User
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import hash_factory
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..models import Account, UserProfile
 
 
+logger = logging.getLogger(__name__)
+
+
 class TestAccount(SmarterTestBase):
     """Test Account model"""
+
+    test_account_logger_prefix = formatted_text(f"{__name__}.TestAccount()")
 
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
+        logger.debug("%s.setUpClass()", cls.test_account_logger_prefix)
         hashed_slug = hash_factory()
         username = cls.name
         email = f"test-{hashed_slug}@mail.com"
@@ -29,12 +38,15 @@ class TestAccount(SmarterTestBase):
     @classmethod
     def tearDownClass(cls):
         """Clean up test fixtures."""
-        super().tearDownClass()
+        logger.debug("%s.tearDownClass()", cls.test_account_logger_prefix)
         cls.user.delete()
+        super().tearDownClass()
 
     def test_create(self):
         """Test that we can create an account."""
         account = Account.objects.create(
+            name=self.hash_suffix + self.company_name.lower().replace(" ", "_").replace("-", "_")
+            or "default_account_name",
             company_name=self.company_name,
             phone_number="1234567890",
             address1="123 Test St",
@@ -49,6 +61,8 @@ class TestAccount(SmarterTestBase):
     def test_update(self):
         """Test that we can update an account."""
         account = Account.objects.create(
+            name=self.hash_suffix + self.company_name.lower().replace(" ", "_").replace("-", "_")
+            or "default_account_name",
             company_name=self.company_name,
             phone_number="1234567890",
             address1="123 Test St",
@@ -72,6 +86,8 @@ class TestAccount(SmarterTestBase):
     def test_account_with_profile(self):
         """Test that we can create an account and associate a user_profile."""
         account = Account.objects.create(
+            name=self.hash_suffix + self.company_name.lower().replace(" ", "_").replace("-", "_")
+            or "default_account_name",
             company_name=self.company_name,
             phone_number="1234567890",
             address1="123 Test St",
@@ -82,6 +98,7 @@ class TestAccount(SmarterTestBase):
         )
 
         profile = UserProfile.objects.create(
+            name=self.user.username,
             user=self.user,
             account=account,
             is_test=True,

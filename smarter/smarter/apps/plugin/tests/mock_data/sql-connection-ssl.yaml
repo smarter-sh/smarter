@@ -5,6 +5,15 @@ metadata:
   name: test_sql_connection
   description: points to the Django mysql database
   version: 0.1.0
+  tags:
+    - sql
+    - connection
+    - test
+    - ssl
+  annotations:
+    - smarter.sh/test-sql-connection/display-name: Test SQL Connection with SSL
+    - smarter.sh/test-sql-connection/icon: https://example.com/test-sql-connection-ssl-icon.png
+    - smarter.sh/test-sql-connection/documentation-url: https://docs.example.com/test-sql-connection-ssl
 spec:
   connection:
     dbEngine: django.db.backends.mysql

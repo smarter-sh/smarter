@@ -24,7 +24,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class APIKeyView(APIKeyBase):
             name="New API Key", user=request.user, description=f"New API key created by {request.user}"
         )
         url = reverse(
-            "account:account_new_api_key",
+            "account:dashboard_account_api_key_new",
             kwargs={
                 "key_id": new_api_key.key_id,
                 "new_api_key": token,

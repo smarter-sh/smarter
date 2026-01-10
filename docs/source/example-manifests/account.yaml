@@ -5,6 +5,15 @@ metadata:
   description: an example Account manifest
   name: Example_account
   version: 1.0.0
+  tags:
+    - example
+    - demo
+    - test
+  annotations:
+    - smarter.sh/contact/usage: for testing and demonstration purposes only
+    - smarter.sh/contact/creator: Lawrence McDaniel
+    - smarter.sh/contact/priority: low
+
 spec:
   config:
     address1: 1 Main St

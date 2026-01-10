@@ -4,11 +4,20 @@ metadata:
   name: stackademy_api
   description: Stackademy University course catalogue inquiries using the Stackademy API plugin.
   version: 1.0.0
+  tags:
+    - stackademy
+    - api
+    - chatbot
+  annotations:
+    - smarter.sh/chatbot/stackademy-api/creator: QA Team
+    - smarter.sh/chatbot/stackademy-api/purpose: chatbot for Stackademy course1 catalogue inquiries
+    - smarter.sh/chatbot/stackademy-api/release-date: 2024-06-15
+    - smarter.sh/chatbot/stackademy-api/backward-compatibility: true
 spec:
   config:
     deployed: true
     provider: openai
-    defaultModel: gpt-4-turbo
+    defaultModel: gpt-4o-mini
     defaultSystemRole: >
       You are a helpful assistant. When given the opportunity to utilize
       function calling, you should always do so. This will allow you to

@@ -2,6 +2,7 @@
 
 # python stuff
 import logging
+from datetime import datetime
 from typing import Any, Optional, Union
 
 import yaml
@@ -9,19 +10,31 @@ import yaml
 # 3rd party stuff
 from rest_framework import serializers
 
-from smarter.apps.account.manifest.enum import SAMSecretSpecKeys, SAMSecretStatusKeys
+from smarter.apps.account.manifest.enum import SAMSecretSpecKeys
 from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
+from smarter.apps.account.manifest.models.secret.metadata import SAMSecretMetadata
 
 # smarter stuff
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
+from smarter.apps.account.manifest.models.secret.spec import (
+    SAMSecretSpec,
+    SAMSecretSpecConfig,
+)
+from smarter.apps.account.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.signals import (
     secret_created,
     secret_deleted,
     secret_inializing,
     secret_ready,
+    secret_saved,
+    secret_updated,
 )
-from smarter.apps.account.utils import get_user_profiles_for_account
+from smarter.apps.account.utils import (
+    get_cached_secret,
+    get_cached_secret_by_pk,
+    get_user_profiles_for_account,
+)
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
@@ -37,7 +50,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -92,6 +105,19 @@ class SecretTransformer(SmarterHelperMixin):
         - yaml manifest or json representation of a yaml manifest
         see ./tests/data/secret-good.yaml for an example.
         """
+        logger.debug(
+            "%s.__init__() called with args=%s, user_profile=%s, name=%s, api_version=%s, manifest=%s, secret_id=%s, secret=%s, data=%s, kwargs=%s",
+            self.formatted_class_name,
+            args,
+            user_profile,
+            name,
+            api_version,
+            manifest,
+            secret_id,
+            secret,
+            data,
+            kwargs,
+        )
         super().__init__(*args, **kwargs)
         if sum([bool(name), bool(data), bool(manifest), bool(secret_id), bool(secret)]) == 0:
             raise SmarterSecretTransformerError(
@@ -228,7 +254,31 @@ class SecretTransformer(SmarterHelperMixin):
         if not self._manifest and self.secret:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMSecret(**self.to_json())  # type: ignore[call-arg]
+            metadata = SAMSecretMetadata(
+                name=self.secret.name,
+                description=self.secret.description,
+                version=self.secret.version,
+                tags=self.secret.tags.names() if self.secret.tags else [],
+                annotations=self.secret.annotations if self.secret.annotations else [],
+            )
+            spec_config = SAMSecretSpecConfig(
+                value=self.secret.get_secret(update_last_accessed=False) or "",
+                expiration_date=self.secret.expires_at if self.secret.expires_at else None,
+            )
+            status = SAMSecretStatus(
+                accountNumber=self.secret.account.account_number if self.secret.account else "missing",
+                username=self.secret.user_profile.user.username if self.secret.user_profile else "missing",
+                created=self.secret.created_at,
+                modified=self.secret.updated_at,
+                last_accessed=self.secret.last_accessed,
+            )
+            self._manifest = SAMSecret(
+                apiVersion=self.api_version,
+                kind=self.kind,
+                metadata=metadata,
+                spec=SAMSecretSpec(config=spec_config),
+                status=status,
+            )
         return self._manifest
 
     @property
@@ -266,14 +316,18 @@ class SecretTransformer(SmarterHelperMixin):
         return "1.0.0"
 
     @property
-    def tags(self) -> list[str]:
+    def tags(self) -> set[str]:
         """Return the secret tags."""
         if self._manifest and self._manifest.metadata and self._manifest.metadata.tags:
-            return self._manifest.metadata.tags
-        return []
+            # Convert tags (list[str]) to set for TaggableManager compatibility
+            tags = self._manifest.metadata.tags
+            tags = set(tags) if tags else set()
+
+            return tags
+        return set()
 
     @property
-    def annotations(self) -> list:
+    def annotations(self) -> list[dict[str, str]]:
         """Return the secret annotations."""
         if self._manifest and self._manifest.metadata and self._manifest.metadata.annotations:
             return self._manifest.metadata.annotations
@@ -308,7 +362,7 @@ class SecretTransformer(SmarterHelperMixin):
         return retval
 
     @property
-    def expires_at(self) -> Optional[str]:
+    def expires_at(self) -> Optional[datetime]:
         """Return the expiration date in the format, YYYY-MM-DD"""
         if (
             self._manifest
@@ -316,13 +370,9 @@ class SecretTransformer(SmarterHelperMixin):
             and self._manifest.spec.config
             and self._manifest.spec.config.expiration_date
         ):
-            return (
-                self._manifest.spec.config.expiration_date.isoformat()
-                if self._manifest.spec.config.expiration_date
-                else None
-            )
+            return self._manifest.spec.config.expiration_date if self._manifest.spec.config.expiration_date else None
         if self.secret:
-            return self.secret.expires_at.date().isoformat() if self.secret.expires_at else None
+            return self.secret.expires_at if self.secret.expires_at else None
         return None
 
     @property
@@ -335,44 +385,87 @@ class SecretTransformer(SmarterHelperMixin):
     @id.setter
     def id(self, value: int):
         """Set the id of the secret."""
+        if not self.user_profile:
+            raise SmarterSecretTransformerError("User profile is not set. Cannot set secret by id.")
+
         self._name = None
         self._secret_serializer = None
         if not value:
             self._secret = None
             return
-        try:
-            self._secret = Secret.objects.get(pk=value, user_profile=self.user_profile)
-        except Secret.DoesNotExist as e:
-            raise SmarterSecretTransformerError("Secret.DoesNotExist") from e
+
+        self._secret = get_cached_secret_by_pk(secret_pk=value, user_profile=self.user_profile)
+        if not self._secret:
+            raise SmarterSecretTransformerError(
+                "Secret.DoesNotExist: pk={} for user_profile={}".format(value, self.user_profile)
+            )
 
     @property
     def secret(self) -> Optional[Secret]:
         """Return the secret meta."""
         if self._secret:
             return self._secret
-        try:
-            self._secret = Secret.objects.get(user_profile=self.user_profile, name=self.name)
-        except Secret.DoesNotExist as e:
-            # if the secret does not exist for the user profile, then we still need to check
-            # if the secret exists for the account, and if so, whether self.user_profile
-            # is at least a staff user. otherwise, we raise an error.
-            other_user_profiles = (
-                get_user_profiles_for_account(self.user_profile.account) if self.user_profile else None
-            )
-            secret = Secret.objects.filter(user_profile__in=other_user_profiles, name=self.name).first()
-            if secret:
-                if (
-                    self.user_profile
-                    and not self.user_profile.user.is_staff
-                    and not self.user_profile.user.is_superuser
-                ):
-                    raise SmarterSecretTransformerError(
-                        f"Secret {self.name} exists for user profile {secret.user_profile.user.username} "
-                        f"but not for user profile {self.user_profile.user.username}."
-                    ) from e
-                self._secret = secret
+        if not self.name:
+            logger.warning("%s.secret() Secret name is not set.", self.formatted_class_name)
+            return None
+        if not self.user_profile:
+            logger.warning("%s.secret() User profile is not set.", self.formatted_class_name)
+            return None
 
+        self._secret = get_cached_secret(name=self.name, user_profile=self.user_profile)
+        if self._secret:
+            logger.info(
+                "%s.secret() initialized Django ORM Secret %s for user profile %s.",
+                self.formatted_class_name,
+                self.name,
+                self.user_profile,
+            )
+            return self._secret
+
+        logger.warning(
+            "%s.secret() Django ORM Secret %s does not exist for user profile %s.",
+            self.formatted_class_name,
+            self.name,
+            self.user_profile,
+        )
+        # if the secret does not exist for the user profile, then we still need to check
+        # if the secret exists for the account, and if so, whether self.user_profile
+        # is at least a staff user. otherwise, we raise an error.
+        other_user_profiles = get_user_profiles_for_account(self.user_profile.account) if self.user_profile else None
+        secret = Secret.objects.filter(user_profile__in=other_user_profiles, name=self.name).first()
+        if secret:
+            if self.user_profile and not self.user_profile.user.is_staff and not self.user_profile.user.is_superuser:
+                raise SmarterSecretTransformerError(
+                    f"Secret {self.name} exists for user profile {secret.user_profile.user.username} "
+                    f"but not for user profile {self.user_profile.user.username}."
+                )
+            self._secret = secret
+            logger.info(
+                "%s.secret() initialized Django ORM Secret %s for user profile %s from account-level access.",
+                self.formatted_class_name,
+                self.name,
+                self.user_profile,
+            )
+
+        if not self._secret:
+            logger.warning(
+                "%s.secret() could not initialize Django ORM Secret %s for user_profile %s.",
+                self.formatted_class_name,
+                self.name,
+                self.user_profile,
+            )
         return self._secret
+
+    @secret.setter
+    def secret(self, value: Secret):
+        """Set the secret meta."""
+        self._secret = value
+        self._secret_serializer = None
+        if self._secret:
+            self._name = self._secret.name
+            # Only set _user_profile if it exists. This will be missing on new secrets.
+            if hasattr(self._secret, "user_profile") and self._secret.user_profile_id is not None:
+                self._user_profile = self._secret.user_profile
 
     @property
     def secret_serializer(self) -> Optional[SecretSerializer]:
@@ -382,8 +475,7 @@ class SecretTransformer(SmarterHelperMixin):
             self._secret_serializer = SecretSerializer(self.secret)
         return self._secret_serializer
 
-    @property
-    def secret_django_model(self) -> Optional[dict[str, Any]]:
+    def manifest_to_django_orm(self) -> Optional[dict[str, Any]]:
         """Return a dict for loading the secret Django ORM model."""
         if not self.manifest:
             return None
@@ -393,6 +485,8 @@ class SecretTransformer(SmarterHelperMixin):
             "user_profile": self.user_profile,
             "name": self.name,
             "description": self.description,
+            "version": self.version,
+            "annotations": self.annotations,
             "last_accessed": self.last_accessed,
             "expires_at": self.expires_at,
             "encrypted_value": self.encrypted_value,
@@ -505,28 +599,28 @@ class SecretTransformer(SmarterHelperMixin):
         """Create a secret from either yaml or a dictionary."""
 
         if not self._manifest:
-            logger.warning("%s.create() Secret manifest is not set.", self.formatted_class_name)
+            logger.warning("%s.create() Secret manifest is not set. Cannot create secret.", self.formatted_class_name)
             return False
 
-        secret_data = self.secret_django_model
-        if not secret_data:
-            logger.warning("%s.create() Secret data is not set.", self.formatted_class_name)
-            return False
-
-        if self.secret:
+        if self._secret and self._secret.id:
             self.id = self.secret.id  # type: ignore[assignment]
             logger.info(
                 "%s.create() Secret %s already exists. Updating secret %s instead.",
                 self.formatted_class_name,
-                secret_data["name"],
+                self.name,
                 self.secret.id,  # type: ignore[union-attr]
             )
             return self.update()
 
+        secret_data = self.manifest_to_django_orm()
+        if not secret_data:
+            raise SmarterSecretTransformerError(
+                f"{self.formatted_class_name}.create() self.manifest_to_django_orm() returned None."
+            )
+
         secret = Secret.objects.create(**secret_data)
         self.id = secret.id  # type: ignore[assignment]
         secret_created.send(sender=self.__class__, secret=self)
-        logger.info("%s.create() secret %s: %s.", self.formatted_class_name, self.name, self.id)
 
         return True
 
@@ -541,17 +635,18 @@ class SecretTransformer(SmarterHelperMixin):
             logger.warning("%s.update() Secret does not exist.", self.formatted_class_name)
             return False
 
-        secret_django_model = self.secret_django_model
-        if not secret_django_model:
+        manifest_to_django_orm = self.manifest_to_django_orm()
+        if not manifest_to_django_orm:
             logger.warning("%s.update() Secret Django model is not set.", self.formatted_class_name)
             return False
 
-        for attr, value in secret_django_model.items():
+        for attr, value in manifest_to_django_orm.items():
             if attr not in READ_ONLY_FIELDS:
                 setattr(self._secret, attr, value)
         self.secret.save()
-        self.id = self.secret.id  # type: ignore[assignment]
+        self.secret.tags.set(self.tags)
         logger.info("%s.update() secret %s: %s.", self.formatted_class_name, self.name, self.id)
+        secret_updated.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
 
         return True
 
@@ -563,7 +658,10 @@ class SecretTransformer(SmarterHelperMixin):
 
         if isinstance(self.secret, Secret):
             self.secret.save()
-        logger.info("%s.save()) secret %s: %s.", self.formatted_class_name, self.name, self.id)
+            self.secret.tags.set(self.tags)
+            self.id = self.secret.id  # type: ignore[assignment]
+            secret_saved.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
+
         return True
 
     def delete(self) -> bool:
@@ -590,33 +688,5 @@ class SecretTransformer(SmarterHelperMixin):
             return None
 
         if version == "v1":
-            retval = {
-                SAMKeys.APIVERSION.value: self.api_version,
-                SAMKeys.KIND.value: self.kind,
-                SAMKeys.METADATA.value: {
-                    SAMMetadataKeys.NAME.value: self.name,
-                    SAMMetadataKeys.DESCRIPTION.value: self.description,
-                    SAMMetadataKeys.VERSION.value: self.version,
-                    SAMMetadataKeys.TAGS.value: self.tags,
-                    SAMMetadataKeys.ANNOTATIONS.value: self.annotations,
-                },
-                SAMKeys.SPEC.value: {
-                    SAMSecretSpecKeys.CONFIG.value: {
-                        SAMSecretSpecKeys.VALUE.value: "<-************->" if self.encrypted_value else None,
-                        SAMSecretSpecKeys.EXPIRATION_DATE.value: self.expires_at,
-                    },
-                },
-                SAMKeys.STATUS.value: {
-                    SAMSecretStatusKeys.ACCOUNT_NUMBER.value: (
-                        self.user_profile.account.account_number if self.user_profile else None
-                    ),
-                    SAMSecretStatusKeys.USERNAME.value: (
-                        self.user_profile.user.get_username() if self.user_profile else None
-                    ),
-                    SAMSecretStatusKeys.CREATED.value: self.created_at,
-                    SAMSecretStatusKeys.UPDATED.value: self.updated_at,
-                    SAMSecretStatusKeys.LAST_ACCESSED.value: self.last_accessed,
-                },
-            }
-            return json.loads(json.dumps(retval))
+            return self.manifest.model_dump()
         raise SmarterSecretTransformerError(f"Invalid version: {version}")

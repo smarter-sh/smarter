@@ -168,7 +168,7 @@ class Command(SmarterCommand):
             self.stdout.write(self.style.NOTICE(f"headers: {headers}"))
 
         self.stdout.write(self.style.NOTICE("Applying manifest ..."))
-        httpx_response = httpx.post(url, data=self.data, headers=headers)  # type: ignore[call-arg]
+        httpx_response = httpx.post(url, content=self.data, headers=headers)
         token_record.delete()
 
         # wrap up the request

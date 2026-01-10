@@ -26,7 +26,7 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliWhoamiApiView()"
+        return f"{inherited_class}.{ApiV1CliWhoamiApiView.__name__}[{id(self)}]"
 
     def whoami(self):
         try:

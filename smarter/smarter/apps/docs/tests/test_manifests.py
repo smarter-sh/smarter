@@ -7,8 +7,8 @@ from django.urls import reverse
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-
-from ..const import namespace
+from smarter.apps.docs.const import namespace
+from smarter.apps.docs.utils import manifest_name
 
 
 ALL_KINDS = SAMKinds.singular_slugs()
@@ -38,7 +38,7 @@ class TestApiDocsManifests(TestAccountMixin):
         """
 
         for kind in ALL_KINDS:
-            reverse_name = f"{namespace}:manifest_{kind}".lower()
+            reverse_name = f"{namespace}:{manifest_name(kind)}"
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
@@ -50,7 +50,7 @@ class TestApiDocsManifests(TestAccountMixin):
         """
         self.client.force_login(self.non_admin_user)
         for kind in ALL_KINDS:
-            reverse_name = f"{namespace}:manifest_{kind}".lower()
+            reverse_name = f"{namespace}:{manifest_name(kind)}"
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)

@@ -62,12 +62,19 @@ from pydantic import (
     SecretStr,
     ValidationError,
     ValidationInfo,
+)
+from pydantic import __version__ as pydantic_version
+from pydantic import (
     field_validator,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from smarter.common.api import SmarterApiVersions
-from smarter.common.helpers.console_helpers import formatted_text_green
+from smarter.common.helpers.console_helpers import (
+    formatted_text,
+    formatted_text_green,
+    formatted_text_red,
+)
 from smarter.lib import json
 
 from ..lib.django.validators import SmarterValidator
@@ -87,7 +94,18 @@ from .utils import bool_environment_variable
 
 logger = logging.getLogger(__name__)
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
+DEFAULT_ROOT_DOMAIN = "example.com"
 DOT_ENV_LOADED = load_dotenv()
+"""
+True if .env file was loaded successfully.
+"""
+
+SERVICE_TYPE = str(os.environ.get("SERVICE_TYPE")).lower() if os.environ.get("SERVICE_TYPE") else None
+"""
+Describes the type of service this instance is running as. valid values are: app, worker, beat.
+This value can be set in .env or docker-compose.yml or set as an environment variable.
+"""
+
 VERBOSE_CONSOLE_OUTPUT = bool_environment_variable("SMARTER_SETTINGS_OUTPUT", False)
 
 
@@ -99,7 +117,7 @@ def before_field_validator(*args, **kwargs):
     return field_validator(*args, **kwargs)
 
 
-def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = False) -> Any:
+def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = False, is_required: bool = False) -> Any:
     """
     Retrieve a configuration value from the environment, with  prefix fallback and type conversion.
 
@@ -200,6 +218,9 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         key = f"SMARTER_{var_name}"
         retval = os.environ.get(key)
     if retval is None:
+        if is_required:
+            logger.error("smarter.common.conf - Required environment variable %s is missing.", key)
+            print(formatted_text_red(f"[ERROR] Required environment variable {key} is missing."))
         return default
 
     cast_val = cast_value(retval, default)
@@ -326,6 +347,21 @@ class Services:
         ]
 
 
+DOT_ENV_LOADED = DOT_ENV_LOADED or get_env("ENV_LOADED", False)
+if not DOT_ENV_LOADED and get_env("ENVIRONMENT", SmarterEnvironments.LOCAL) == SmarterEnvironments.LOCAL:
+    print(
+        formatted_text_red(
+            "\n"
+            + "=" * 80
+            + "\n[WARNING] .env file was NOT loaded! Environment variables may be missing.\n"
+            + "Look for .env.example in the project root and follow the instructions that begin at the top of the file.\n"
+            + "Settings values that are required (there are many) will be noted in this file.\n"
+            + "=" * 80
+            + "\n"
+        )
+    )
+
+
 # pylint: disable=too-few-public-methods
 class SettingsDefaults:
     """
@@ -352,9 +388,9 @@ class SettingsDefaults:
         Do not add application logic or side effects to this class. It should only define static default values and simple logic for fallback selection.
     """
 
-    ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", "example.com")
+    ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", DEFAULT_ROOT_DOMAIN, is_required=True)
     ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", [])
-    ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY", is_secret=True))
+    ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY", is_secret=True, is_required=True))
 
     API_DESCRIPTION: str = get_env(
         "API_DESCRIPTION", "A declarative AI resource management platform and developer framework"
@@ -421,20 +457,20 @@ class SettingsDefaults:
         )
 
     DUMP_DEFAULTS: bool = bool(get_env("DUMP_DEFAULTS", False))
-    EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com")
+    EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com", is_required=True)
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
-    FERNET_ENCRYPTION_KEY: SecretStr = SecretStr(get_env("FERNET_ENCRYPTION_KEY", is_secret=True))
+    FERNET_ENCRYPTION_KEY: SecretStr = SecretStr(get_env("FERNET_ENCRYPTION_KEY", is_secret=True, is_required=True))
     if FERNET_ENCRYPTION_KEY.get_secret_value() == DEFAULT_MISSING_VALUE:
         # pylint: disable=C0415
         from smarter.common.utils import generate_fernet_encryption_key
 
         FERNET_ENCRYPTION_KEY = SecretStr(generate_fernet_encryption_key())
 
-    GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY", is_secret=True))
+    GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY", is_secret=True, is_required=True))
 
     try:
-        GOOGLE_SERVICE_ACCOUNT_B64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True)
+        GOOGLE_SERVICE_ACCOUNT_B64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True, is_required=True)
         GOOGLE_SERVICE_ACCOUNT: SecretStr = SecretStr(
             json.loads(base64.b64decode(GOOGLE_SERVICE_ACCOUNT_B64).decode("utf-8"))
         )
@@ -445,11 +481,11 @@ class SettingsDefaults:
         )
         GOOGLE_SERVICE_ACCOUNT = SecretStr(json.dumps({}))
 
-    GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY", is_secret=True))
+    GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY", is_secret=True, is_required=True))
     INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
     LANGCHAIN_MEMORY_KEY = get_env("LANGCHAIN_MEMORY_KEY", "chat_history")
 
-    LLAMA_API_KEY: SecretStr = SecretStr(get_env("LLAMA_API_KEY", is_secret=True))
+    LLAMA_API_KEY: SecretStr = SecretStr(get_env("LLAMA_API_KEY", is_secret=True, is_required=True))
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4o-mini"
     LLM_DEFAULT_SYSTEM_ROLE = (
@@ -467,40 +503,50 @@ class SettingsDefaults:
     LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
     LOCAL_HOSTS.append("testserver")
 
-    LOG_LEVEL: int = logging.DEBUG if DEBUG_MODE else logging.INFO
+    LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
 
-    LOGO: HttpUrl = get_env("LOGO", "https://cdn.example.com/images/logo/logo.png")
+    LOGO: HttpUrl = get_env("LOGO", "https://cdn.example.com/images/logo/logo.png", is_required=True)
     MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY", is_secret=True))
     MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 
-    MARKETING_SITE_URL: HttpUrl = get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}")
+    MARKETING_SITE_URL: HttpUrl = get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}", is_required=True)
 
     MYSQL_TEST_DATABASE_SECRET_NAME = get_env(
         "MYSQL_TEST_DATABASE_SECRET_NAME",
         "smarter_test_db",
+        is_required=True,
     )
-    MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(get_env("MYSQL_TEST_DATABASE_PASSWORD", is_secret=True))
+    MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(
+        get_env("MYSQL_TEST_DATABASE_PASSWORD", is_secret=True, is_required=True)
+    )
 
     OPENAI_API_ORGANIZATION = get_env("OPENAI_API_ORGANIZATION")
-    OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY", is_secret=True))
+    OPENAI_API_KEY: SecretStr = SecretStr(get_env("OPENAI_API_KEY", is_secret=True, is_required=True))
     OPENAI_ENDPOINT_IMAGE_N = get_env("OPENAI_ENDPOINT_IMAGE_N", 4)
     OPENAI_ENDPOINT_IMAGE_SIZE = get_env("OPENAI_ENDPOINT_IMAGE_SIZE", "1024x768")
     PINECONE_API_KEY: SecretStr = SecretStr(get_env("PINECONE_API_KEY", is_secret=True))
 
     REACTJS_APP_LOADER_PATH = get_env("REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
 
-    SECRET_KEY: SecretStr = SecretStr(get_env("SECRET_KEY", is_secret=True))
+    SECRET_KEY: SecretStr = SecretStr(get_env("SECRET_KEY", is_secret=True, is_required=True))
     SETTINGS_OUTPUT: bool = bool_environment_variable("SETTINGS_OUTPUT", False)
 
     SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
 
-    SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}")
-    SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}")
+    SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME = get_env(
+        "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME", "smarter_test_db", is_required=True
+    )
+    SMARTER_MYSQL_TEST_DATABASE_PASSWORD: SecretStr = SecretStr(
+        get_env("SMARTER_MYSQL_TEST_DATABASE_PASSWORD", is_secret=True, is_required=True)
+    )
+
+    SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}", is_required=True)
+    SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", f"no-reply@{ROOT_DOMAIN}", is_required=True)
     SMTP_HOST = get_env("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(get_env("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
     SMTP_USE_TLS = bool(get_env("SMTP_USE_TLS", True))
-    SMTP_PASSWORD: SecretStr = SecretStr(get_env("SMTP_PASSWORD", is_secret=True))
+    SMTP_PASSWORD: SecretStr = SecretStr(get_env("SMTP_PASSWORD", is_secret=True, is_required=True))
     SMTP_USERNAME: SecretStr = SecretStr(get_env("SMTP_USERNAME", is_secret=True))
 
     # -------------------------------------------------------------------------
@@ -628,12 +674,19 @@ class Settings(BaseSettings):
     """
 
     _dump: dict
+    _ready: bool = False
 
     def __init__(self, **data: Any):
         super().__init__(**data)
-
-        logger.setLevel(SettingsDefaults.LOG_LEVEL)
-        logger.debug("Pydantic v2 Settings initialized")
+        # need to be mindful that __init__ is called before Django startup has begun.
+        # one consequence is that logging is not yet configured, so have have to
+        # use janky logging levels in order to ensure that these log messages are seen.
+        msg = f"{formatted_text(__name__)} Pydantic version: {pydantic_version} pydantic_settings.BaseSettings."
+        if self.ready():
+            ready_msg = formatted_text_green("READY")
+        else:
+            ready_msg = formatted_text_red("NOT_READY")
+        logger.warning("%s Settings are %s.", msg, ready_msg)
 
     init_info: Optional[str] = Field(
         None,
@@ -988,6 +1041,62 @@ class Settings(BaseSettings):
         if v not in valid_regions:
             raise SmarterValueError(f"aws_region {v} not in aws_regions: {valid_regions}")
         return v
+
+    def ready(self) -> bool:
+        """
+        Returns True if the settings instance has been fully initialized and is ready for use.
+        This method can be used to check if the settings instance is fully configured
+        and ready to be used by the application.
+
+        - is the root domain set?
+        - is AWS configured?
+        - is SMTP configured?
+
+        :type: bool
+        """
+        retval = True
+        if self.root_domain == DEFAULT_ROOT_DOMAIN:
+            print(
+                formatted_text_red(
+                    "\n"
+                    + "=" * 80
+                    + "\n[WARNING] ROOT_DOMAIN is set to the default value 'example.com'.\n"
+                    + "This is not recommended for production deployments. Please set ROOT_DOMAIN to your actual domain.\n"
+                    + "=" * 80
+                    + "\n"
+                )
+            )
+            logger.warning(
+                "ROOT_DOMAIN is set to the default value 'example.com'. This is not recommended for production deployments."
+            )
+            retval = False
+        if not self.aws_is_configured:
+            print(
+                formatted_text_red(
+                    "\n"
+                    + "=" * 80
+                    + "\n[WARNING] AWS is not configured properly. Some features may not work as expected.\n"
+                    + "Ensure that AWS credentials are set in environment variables, .env file, or AWS config files.\n"
+                    + "=" * 80
+                    + "\n"
+                )
+            )
+            logger.warning("AWS is not configured properly. Some features may not work as expected.")
+            retval = False
+        if not self.smtp_is_configured:
+            print(
+                formatted_text_red(
+                    "\n"
+                    + "=" * 80
+                    + "\n[WARNING] SMTP is not configured properly. Email features may not work as expected.\n"
+                    + "Ensure that SMTP settings are set in environment variables or .env file.\n"
+                    + "=" * 80
+                    + "\n"
+                )
+            )
+            logger.warning("SMTP is not configured properly. Email features may not work as expected.")
+            retval = False
+        return retval
 
     @property
     def aws_is_configured(self) -> bool:
@@ -2758,6 +2867,12 @@ class Settings(BaseSettings):
             return v
         if str(v) in [None, ""] and SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N is not None:
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N
+        if isinstance(v, str):
+            try:
+                v = int(v)
+                return v
+            except (TypeError, ValueError) as e:
+                raise SmarterConfigurationError(f"openai_endpoint_image_n of type {type(v)} is not an int: {v}") from e
         if not isinstance(v, int):
             raise SmarterConfigurationError(f"openai_endpoint_image_n of type {type(v)} is not an int: {v}")
 
@@ -3283,6 +3398,37 @@ class Settings(BaseSettings):
     :raises SmarterConfigurationError: If the value is not a valid email address.
     """
 
+    smarter_mysql_test_database_secret_name: Optional[str] = Field(
+        SettingsDefaults.MYSQL_TEST_DATABASE_SECRET_NAME,
+        description="The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        examples=["smarter_test_db"],
+        title="Smarter MySQL Test Database Secret Name",
+    )
+    """
+    The secret name for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.
+    This setting specifies the name of the secret in AWS Secrets Manager
+    that contains the credentials for the Smarter MySQL test database.
+    It is used by example Smarter Plugins that require access to a test database.
+    :type: Optional[str]
+    :default: Value from ``SettingsDefaults.MYSQL_TEST_DATABASE_SECRET_NAME``
+    :raises SmarterConfigurationError: If the value is not a string. SMARTER_MYSQL_TEST_DATABASE_PASSWORD
+    """
+
+    smarter_mysql_test_database_password: Optional[SecretStr] = Field(
+        SettingsDefaults.MYSQL_TEST_DATABASE_PASSWORD,
+        description="The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.",
+        examples=["smarter_test_user"],
+        title="Smarter MySQL Test Database Password",
+    )
+    """
+    The password for the Smarter MySQL test database. Used for example Smarter Plugins that are pre-installed on new installations.
+    This setting provides the password used to connect to the Smarter MySQL test database.
+    It is used by example Smarter Plugins that require access to a test database.
+    :type: Optional[SecretStr]
+    :default: Value from ``SettingsDefaults.MYSQL_TEST_DATABASE_PASSWORD``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
     @before_field_validator("smtp_sender")
     def validate_smtp_sender(cls, v: Optional[str]) -> str:
         """Validates the `smtp_sender` field.
@@ -3658,6 +3804,20 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return "https"
         return "http"
+
+    @property
+    def log_level_name(self) -> str:
+        """
+        Return the log level name.
+
+        Example:
+            >>> print(smarter_settings.log_level_name)
+            'INFO'
+
+        See Also:
+            - smarter_settings.log_level
+        """
+        return logging.getLevelName(self.log_level)
 
     @property
     def data_directory(self) -> str:
@@ -4239,7 +4399,7 @@ class Settings(BaseSettings):
             dict: A dictionary containing all settings and their values.
 
         Example:
-            >>> import json
+            >>> from smarter.lib import json
             >>> print(json.dumps(smarter_settings.dump(), indent=2))
             {
               "environment": {
@@ -4322,4 +4482,4 @@ def get_settings() -> Settings:
 
 settings = get_settings()
 
-__all__ = ["settings", "SettingsDefaults"]
+__all__ = ["settings"]

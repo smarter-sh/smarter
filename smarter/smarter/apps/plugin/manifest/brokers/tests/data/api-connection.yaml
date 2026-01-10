@@ -1,0 +1,27 @@
+---
+apiVersion: smarter.sh/v1
+kind: ApiConnection
+metadata:
+  name: test_api_connection
+  description: points to smarter api localhost
+  version: 0.1.1
+  tags:
+    - api
+    - connection
+    - test
+  annotations:
+    - smarter.sh/test-api-connection/display-name: Test API Connection
+    - smarter.sh/test-api-connection/icon: https://example.com/test-api-connection-icon.png
+    - smarter.sh/test-api-connection/documentation-url: https://docs.example.com/test-api-connection
+    - smarter.sh/test-api-connection/contact-email: lawrence@stackademy.com
+spec:
+  connection:
+    baseUrl: http://localhost:8000/
+    apiKey: test_api_key
+    authMethod: token
+    timeout: 10
+    proxyProtocol: http
+    proxyHost: proxy.example.com
+    proxyPort: 8080
+    proxyUsername: proxyUser
+    proxyPassword: test-proxy-password

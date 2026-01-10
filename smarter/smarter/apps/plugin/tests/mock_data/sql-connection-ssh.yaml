@@ -5,6 +5,23 @@ metadata:
   name: test_sql_connection
   description: points to the Django mysql database
   version: 0.1.0
+  tags:
+    - sql
+    - connection
+    - test
+    - ssh
+  annotations:
+    - smarter.sh/test-sql-connection/display-name: Test SQL Connection with SSH
+    - smarter.sh/test-sql-connection/icon: https://example.com/test-sql-connection-ssh-icon.png
+    - smarter.sh/test-sql-connection/documentation-url: https://docs.example.com/test-sql-connection-ssh
+    - smarter.sh/test-sql-connection/security-scheme: ssh-tunnel
+    - smarter.sh/test-sql-connection/credential-requirements: |
+        - sshKnownHosts
+        - proxyHost
+        - proxyPort
+        - proxyUsername
+        - proxyPassword
+    - smarter.sh/test-sql-connection/contact-email: support@it.io
 spec:
   connection:
     dbEngine: django.db.backends.mysql

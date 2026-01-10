@@ -71,11 +71,8 @@ class Command(SmarterCommand):
         try:
             plugin_meta = PluginMeta.objects.get(name=options["name"], account_id=account.id)  # type: ignore
         except PluginMeta.DoesNotExist as e:
-            self.handle_completed_failure(
-                e,
-                f"Plugin {name} does not exist.",
-            )
-            raise
+            self.stdout.write(f"manage.py delete_plugin: Did not find a plugin named {name} for account {account}")
+            return
 
         controller = PluginController(account=account, user=user, user_profile=user_profile, plugin_meta=plugin_meta)  # type: ignore
         plugin = controller.obj
