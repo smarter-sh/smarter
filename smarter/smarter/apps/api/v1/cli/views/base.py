@@ -384,8 +384,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :rtype: str
         """
         if self.is_cli_base_api_view_ready:
-            return formatted_text_green("READY")
-        return formatted_text_red("NOT_READY")
+            return self.formatted_state_ready
+        return self.formatted_state_not_ready
 
     @property
     def ready(self) -> bool:
