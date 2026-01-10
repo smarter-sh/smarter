@@ -1,8 +1,14 @@
 """AWS Rekognition helper class."""
 
+import logging
 from typing import Optional
 
-from .aws import AWSBase, SmarterAWSException
+import botocore.exceptions
+
+from .aws import AWSBase
+
+
+logger = logging.getLogger(__name__)
 
 
 class AWSRekognition(AWSBase):
@@ -10,20 +16,12 @@ class AWSRekognition(AWSBase):
 
     _client = None
     _collection_id = None
+    _client_type: str = "rekognition"
 
     def __init__(self, collection_id=None):
         """Initialize the AWS Rekognition helper class."""
         super().__init__()
         self._collection_id = collection_id
-
-    @property
-    def client(self):
-        """Return the AWS Rekognition client."""
-        if not self.aws_session:
-            raise SmarterAWSException("AWS session is not initialized.")
-        if not self._client:
-            self._client = self.aws_session.client("rekognition")
-        return self._client
 
     @property
     def collection_id(self):

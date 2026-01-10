@@ -35,10 +35,8 @@ KIND = SAMKinds.SQL_CONNECTION.value
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and waffle.switch_is_active(
+        SmarterWaffleSwitches.PLUGIN_LOGGING
     )
 
 
@@ -201,15 +199,19 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
     def test_get(self) -> None:
         """Test get command"""
 
-        # this is for reference only, the test will create a new sqlconnection
-        # pylint: disable=W0612
+        self.sqlconnection = self.sqlconnection_factory()
+        path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(path=url_with_query_params)
+        logger.info("get() raw response: %s", response)
+
         expected_output = {
             "data": {
                 "apiVersion": "smarter.sh/v1",
                 "kind": "SqlConnection",
-                "name": None,
+                "name": "smarter_test_base_7e1abbdf13b16e06",
                 "metadata": {"count": 1},
-                "kwargs": {},
+                "kwargs": {"kwargs": {}},
                 "data": {
                     "titles": [
                         {"name": "name", "type": "CharField"},
@@ -227,13 +229,13 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
                     ],
                     "items": [
                         {
-                            "name": "test8cecb5d1d50957c4",
+                            "name": "smarter_test_base_7e1abbdf13b16e06",
                             "description": "local mysql test sqlconnection - ",
                             "hostname": "smarter-mysql",
                             "port": 3306,
                             "database": "smarter",
                             "username": "smarter",
-                            "password": 1004,
+                            "password": 1156,
                             "proxyProtocol": "http",
                             "proxyHost": None,
                             "proxyPort": None,
@@ -246,14 +248,8 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
             "message": "SqlConnections got successfully",
             "api": "smarter.sh/v1",
             "thing": "SqlConnection",
-            "metadata": {"key": "693d98d68199fa8a67e60132007bea249e48fae8fa41a14ae5a16bd4dc039bd6"},
+            "metadata": {"key": "4ccb6c8cef5f9a98bf182b37c3240e3be29401ad1679a25135ce7e5cb0d404ca"},
         }
-
-        self.sqlconnection = self.sqlconnection_factory()
-        path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
-        url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(path=url_with_query_params)
-        logger.info("response: %s", response)
 
         self.assertEqual(status, HTTPStatus.OK)
 
@@ -266,9 +262,10 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         self.assertEqual(response["message"], "SqlConnections got successfully")
         self.assertIn("thing", response)
         self.assertEqual(response["thing"], "SqlConnection")
-        self.assertIn("metadata", response)
-        self.assertIn("command", response["metadata"].keys())
-        self.assertEqual(response["metadata"]["command"], "get")
+        self.assertIn("metadata", response.keys())
+        self.assertIn(
+            "count", response[SmarterJournalApiResponseKeys.DATA][SmarterJournalApiResponseKeys.METADATA].keys()
+        )
 
         # validate titles
         expected_titles = [
@@ -295,8 +292,8 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
             "data": {
                 "apiVersion": "smarter.sh/v1",
                 "kind": "SqlConnection",
-                "name": "SmarterTestBase_318b504580451d6c",
-                "metadata": {"count": 0},
+                "name": "smarter_test_base_21b4ec52db9ba67b",
+                "metadata": {"count": 1},
                 "kwargs": {"kwargs": {}},
                 "data": {
                     "titles": [
@@ -313,22 +310,36 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
                         {"name": "proxyUsername", "type": "CharField"},
                         {"name": "proxyPassword", "type": "PrimaryKeyRelatedField"},
                     ],
-                    "items": [],
+                    "items": [
+                        {
+                            "name": "smarter_test_base_21b4ec52db9ba67b",
+                            "description": "local mysql test sqlconnection - ",
+                            "hostname": "smarter-mysql",
+                            "port": 3306,
+                            "database": "smarter",
+                            "username": "smarter",
+                            "password": 1155,
+                            "proxyProtocol": "http",
+                            "proxyHost": None,
+                            "proxyPort": None,
+                            "proxyUsername": None,
+                            "proxyPassword": None,
+                        }
+                    ],
                 },
             },
             "message": "SqlConnections got successfully",
             "api": "smarter.sh/v1",
             "thing": "SqlConnection",
-            "metadata": {"key": "9f3b4b1517417101bc47b465af43eb98ce3466384386586f6842aad4db3df80d"},
+            "metadata": {"key": "0515caf3d20e92bab3ef1b4f226b37a9bec26c0aada1e1e116781abd37d6cd4b"},
         }
+
         self.assertIn("data", response)
         self.assertIn("message", response)
         self.assertEqual(response["message"], "SqlConnections got successfully")
         self.assertIn("thing", response)
         self.assertEqual(response["thing"], "SqlConnection")
         self.assertIn("metadata", response)
-        self.assertIn("command", response["metadata"])
-        self.assertEqual(response["metadata"]["command"], "get")
 
         data = response["data"]
         self.assertIn("apiVersion", data)

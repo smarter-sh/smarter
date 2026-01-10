@@ -10,12 +10,12 @@ from rest_framework.test import APIClient
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.manifest.loader import SAMLoader
 
 from ..base import ChatBotApiBaseViewSet
 
@@ -25,7 +25,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -62,17 +62,21 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         super().setUpClass()
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
-        cls.broker = SAMChatbotBroker(
-            request=cls.create_generic_request("/anywhere/"),
-            account=cls.account,
-            manifest=json.dumps(cls.manifest),
-        )
-        cls.request = cls.create_generic_request(url=cls.broker.chatbot.url_chatbot)
+        cls.loader = SAMLoader(manifest=cls.manifest)
+
+        cls.request = cls.create_generic_request("/anywhere/")
 
         cls.request.user = cls.admin_user
         cls.client = APIClient()
         cls.client.force_login(cls.admin_user)
         cls.kwargs = {}
+
+        # name: test_chatbot
+        cls.broker = SAMChatbotBroker(
+            request=cls.request,
+            account=cls.account,
+            loader=cls.loader,
+        )
 
         # Add example plugins to the user profile
         add_example_plugins(user_profile=cls.user_profile)
@@ -96,4 +100,4 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         # invoke dispatch method in order to set our class properties
         base_class.dispatch(self.request, name=self.broker.chatbot.name)
 
-        logger.info(f"test_base_class_properties() request={self.request} name={self.broker.chatbot.name}")
+        logger.debug(f"test_base_class_properties() request={self.request} name={self.broker.chatbot.name}")

@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'logs' view"""
 
+import logging
 from http import HTTPStatus
 
 from drf_yasg.utils import swagger_auto_schema
@@ -11,6 +12,9 @@ from .swagger import (
     COMMON_SWAGGER_RESPONSES,
     openai_success_response,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ApiV1CliLogsApiView(CliBaseApiView):
@@ -33,7 +37,7 @@ class ApiV1CliLogsApiView(CliBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliLogsApiView()"
+        return f"{inherited_class}.{ApiV1CliLogsApiView.__name__}[{id(self)}]"
 
     @swagger_auto_schema(
         operation_description="""
@@ -49,5 +53,8 @@ The response from this endpoint is a JSON object.
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def post(self, request, kind, *args, **kwargs):
+        logger.debug(
+            "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+        )
         response = self.broker.logs(request=request, kwargs=kwargs)
         return response

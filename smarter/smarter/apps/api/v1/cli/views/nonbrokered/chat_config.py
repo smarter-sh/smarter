@@ -3,9 +3,8 @@
 
 import logging
 from http import HTTPStatus
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from django.http import HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 
@@ -28,9 +27,13 @@ from ..swagger import (
 from .chat import CACHE_EXPIRATION, ApiV1CliChatBaseApiView
 
 
+if TYPE_CHECKING:
+    from django.http import HttpRequest
+
+
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -66,7 +69,7 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliChatConfigApiView()"
+        return f"{inherited_class}.{ApiV1CliChatConfigApiView.__name__}[{id(self)}]"
 
     @swagger_auto_schema(
         operation_description="""
@@ -85,11 +88,22 @@ This is a Non-brokered operation.
         request_body=ChatConfigSerializer,
     )
     @csrf_exempt
-    def post(self, request: HttpRequest, name: str, *args, **kwargs):
+    def post(self, request: "HttpRequest", name: str, *args, **kwargs):
+        """Handle POST requests for chat config"""
+
+        logger.debug(
+            "%s.post() called for chat %s with %s, args %s, kwargs %s",
+            self.formatted_class_name,
+            name,
+            request.POST,
+            args,
+            kwargs,
+        )
+
         uid: Optional[str] = request.POST.get("uid")
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        logger.info(
-            "%s Chat config view for chat %s and client %s and session_key %s request user %s self.user %s account %s",
+        logger.debug(
+            "%s.post() view for chat %s and client %s and session_key %s request user %s self.user %s account %s",
             self.formatted_class_name,
             name,
             uid,
@@ -116,7 +130,13 @@ This is a Non-brokered operation.
                 )
             session_key = content.get(SMARTER_CHAT_SESSION_KEY_NAME)
             cache.set(key=self.cache_key, value=session_key, timeout=CACHE_EXPIRATION)
+            logger.debug(
+                "%s.post() cached session key for chat config view with key %s",
+                self.formatted_class_name,
+                self.cache_key,
+            )
         except json.JSONDecodeError as e:
             raise APIV1CLIViewError("Misconfigured. Failed to cache session key for chat config view.") from e
 
+        logger.debug("%s.post() completed for chat config view: %s", self.formatted_class_name, response)
         return response

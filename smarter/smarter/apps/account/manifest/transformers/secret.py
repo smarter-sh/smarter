@@ -50,7 +50,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -105,6 +105,19 @@ class SecretTransformer(SmarterHelperMixin):
         - yaml manifest or json representation of a yaml manifest
         see ./tests/data/secret-good.yaml for an example.
         """
+        logger.debug(
+            "%s.__init__() called with args=%s, user_profile=%s, name=%s, api_version=%s, manifest=%s, secret_id=%s, secret=%s, data=%s, kwargs=%s",
+            self.formatted_class_name,
+            args,
+            user_profile,
+            name,
+            api_version,
+            manifest,
+            secret_id,
+            secret,
+            data,
+            kwargs,
+        )
         super().__init__(*args, **kwargs)
         if sum([bool(name), bool(data), bool(manifest), bool(secret_id), bool(secret)]) == 0:
             raise SmarterSecretTransformerError(

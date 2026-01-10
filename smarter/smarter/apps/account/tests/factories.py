@@ -14,8 +14,7 @@ from smarter.apps.account.models import (
     UserProfile,
 )
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text_red
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -23,12 +22,13 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-HERE = formatted_text_red(__name__)
+HERE = formatted_text(__name__)
+COMMON_VERSION = "0.0.1"
 
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -43,6 +43,9 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
     last_name = f"TestAdminLastName_{hashed_slug}"
 
     account = account or Account.objects.create(
+        name=f"test_account_admin_user_{hashed_slug}",
+        description="Account for admin user testing purposes",
+        version=COMMON_VERSION,
         is_default_account=True,
         is_active=True,
         company_name=f"TestAccount_AdminUser_{hashed_slug}",
@@ -77,11 +80,11 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
 
     user_profile = UserProfile.objects.create(
         name=user.username,
+        description="Admin user profile for testing purposes",
+        version=COMMON_VERSION,
         user=user,
         account=account,
         is_test=True,
-        description="Admin user profile for testing purposes",
-        version="1.0.0",
         annotations=[{"smarter.sh/role": "admin"}, {"smarter.sh/environment": "test"}],
     )
     user_profile.tags.set(["admin", "test"])
@@ -97,6 +100,9 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
     last_name = f"TestMortalLastName_{hashed_slug}"
 
     account = account or Account.objects.create(
+        name=f"test_account_mortal_user_{hashed_slug}",
+        description="Account for mortal user testing purposes",
+        version=COMMON_VERSION,
         is_default_account=True,
         is_active=True,
         company_name=f"TestAccount_MortalUser_{hashed_slug}",
@@ -131,11 +137,11 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
 
     user_profile = UserProfile.objects.create(
         name=user.username,
+        description="Mortal user profile for testing purposes",
+        version=COMMON_VERSION,
         user=user,
         account=account,
         is_test=True,
-        description="Mortal user profile for testing purposes",
-        version="1.0.0",
         annotations=[{"smarter.sh/role": "mortal"}, {"smarter.sh/environment": "test"}],
     )
     user_profile.tags.set(["mortal", "test"])
@@ -152,7 +158,7 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         if user_profile:
             lbl = str(user_profile)
             user_profile.delete()
-            logger.info("%s.factory_account_teardown() Deleted user profile for %s", HERE, lbl)
+            logger.debug("%s.factory_account_teardown() Deleted user profile for %s", HERE, lbl)
 
     except UserProfile.DoesNotExist:
         pass
@@ -160,14 +166,14 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         if user:
             lbl = str(user)
             user.delete()
-            logger.info("%s.factory_account_teardown() Deleted user: %s", HERE, lbl)
+            logger.debug("%s.factory_account_teardown() Deleted user: %s", HERE, lbl)
     except User.DoesNotExist:
         pass
     try:
         if account:
             lbl = str(account)
             account.delete()
-            logger.info("%s.factory_account_teardown() Deleted account: %s", HERE, lbl)
+            logger.debug("%s.factory_account_teardown() Deleted account: %s", HERE, lbl)
     except Account.DoesNotExist:
         pass
 
@@ -202,7 +208,7 @@ def payment_method_factory(account: Account):
         card_exp_year=random.randint(datetime.now().year, datetime.now().year + 7),
         is_default=True,
     )
-    logger.info("%s.payment_method_factory() Created payment method: %s", HERE, payment_method.name)
+    logger.debug("%s.payment_method_factory() Created payment method: %s", HERE, payment_method.name)
     return payment_method
 
 
@@ -211,7 +217,7 @@ def payment_method_factory_teardown(payment_method: PaymentMethod):
         if payment_method:
             lbl = str(payment_method)
             payment_method.delete()
-            logger.info("%s.payment_method_factory_teardown() Deleted payment method: %s", HERE, lbl)
+            logger.debug("%s.payment_method_factory_teardown() Deleted payment method: %s", HERE, lbl)
     except PaymentMethod.DoesNotExist:
         pass
     except Exception as e:
@@ -242,7 +248,7 @@ def secret_factory(
         encrypted_value=encrypted_value,
         expires_at=expiration,
     )
-    logger.info("%s.secret_factory() Created secret: %s", HERE, secret)
+    logger.debug("%s.secret_factory() Created secret: %s", HERE, secret)
     return secret
 
 
@@ -251,7 +257,7 @@ def factory_secret_teardown(secret: Secret):
         if secret:
             lbl = str(secret)
             secret.delete()
-            logger.info("%s.factory_secret_teardown() Deleted secret: %s", HERE, lbl)
+            logger.debug("%s.factory_secret_teardown() Deleted secret: %s", HERE, lbl)
     except Secret.DoesNotExist:
         pass
     except Exception as e:

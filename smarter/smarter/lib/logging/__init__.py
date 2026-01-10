@@ -30,7 +30,7 @@ class WaffleSwitchedLoggerWrapper:
     """
 
     # log entries will be forced at this level and above
-    REQUIRED_LOG_LEVEL = 30
+    REQUIRED_LOG_LEVEL = logging.WARNING
 
     def __init__(self, logger: logging.Logger, condition_func: Optional[Callable] = None):
         self._logger = logger

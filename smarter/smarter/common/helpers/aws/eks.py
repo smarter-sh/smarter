@@ -1,8 +1,13 @@
 """AWS EKS helper class."""
 
+import logging
+
 from smarter.common.conf import settings as smarter_settings
 
-from .aws import AWSBase, SmarterAWSException
+from .aws import AWSBase
+
+
+logger = logging.getLogger(__name__)
 
 
 class AWSEks(AWSBase):
@@ -21,20 +26,7 @@ class AWSEks(AWSBase):
     """
 
     _client = None
-
-    @property
-    def client(self):
-        """
-        Return the AWS EKS client.
-
-        :return: boto3 EKS client
-        :rtype: boto3.client
-        """
-        if not self.aws_session:
-            raise SmarterAWSException("AWS session is not initialized.")
-        if not self._client:
-            self._client = self.aws_session.client("eks")
-        return self._client
+    _client_type: str = "eks"
 
     def get_kubernetes_info(self) -> dict:
         """
@@ -43,6 +35,7 @@ class AWSEks(AWSBase):
         :return: Kubernetes cluster information
         :rtype: dict
         """
+        logger.debug("%s.get_kubernetes_info() called", self.formatted_class_name)
         response = self.client.describe_cluster(name=smarter_settings.aws_eks_cluster_name)
         response = response["cluster"]
         retval = {

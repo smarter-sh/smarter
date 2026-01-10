@@ -77,7 +77,7 @@ from .mixins import ProviderDbMixin
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -355,7 +355,7 @@ class ChatProviderBase(ProviderDbMixin):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class} ChatProviderBase()"
+        return f"{inherited_class} {ChatProviderBase.__name__}[{id(self)}]"
 
     @property
     def provider(self) -> Optional[str]:

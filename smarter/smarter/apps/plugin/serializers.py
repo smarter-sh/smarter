@@ -1,7 +1,8 @@
 """PluginMeta serializers."""
 
+import sys
+
 from rest_framework import serializers
-from taggit.models import Tag
 
 from smarter.apps.account.serializers import (
     AccountMiniSerializer,
@@ -24,6 +25,10 @@ from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 from .manifest.enum import (
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
 )
+
+
+def is_sphinx_build():
+    return "sphinx" in sys.modules
 
 
 class PluginMetaSerializer(MetaDataWithOwnershipModelSerializer):
@@ -381,7 +386,12 @@ class PluginSqlSerializer(SmarterCamelCaseSerializer):
 
     """
 
-    connection = serializers.SlugRelatedField(slug_field="name", queryset=SqlConnection.objects.all())
+    if is_sphinx_build():
+        queryset = []
+    else:
+        queryset = SqlConnection.objects.all()
+
+    connection = serializers.SlugRelatedField(slug_field="name", queryset=queryset)
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -470,9 +480,9 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
 
     """
 
-    account = AccountMiniSerializer(read_only=True)
-    api_key = SecretSerializer(read_only=True)
-    proxy_password = SecretSerializer(read_only=True)
+    account = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    api_key = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    proxy_password = serializers.SlugRelatedField(slug_field="name", read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -549,7 +559,12 @@ class PluginApiSerializer(SmarterCamelCaseSerializer):
         # }
     """
 
-    connection = serializers.SlugRelatedField(slug_field="name", queryset=ApiConnection.objects.all())
+    if is_sphinx_build():
+        queryset = []
+    else:
+        queryset = ApiConnection.objects.all()
+
+    connection = serializers.SlugRelatedField(slug_field="name", queryset=queryset)
 
     # pylint: disable=missing-class-docstring
     class Meta:

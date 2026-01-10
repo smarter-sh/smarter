@@ -28,27 +28,35 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.common.conf import settings as smarter_settings
+from smarter.apps.plugin.signals import broker_ready
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
+from smarter.lib.manifest.enum import (
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
 
-from . import SAMPluginBrokerError
+from . import PluginSerializer, SAMPluginBrokerError
 
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(__name__ + ".SAMPluginBaseBroker")
 
 
 class SAMPluginBaseBroker(AbstractBroker):
@@ -69,6 +77,34 @@ class SAMPluginBaseBroker(AbstractBroker):
         self._plugin_prompt = None
         self._plugin_status = None
         self._manifest = None
+
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the broker is ready for operations.
+
+        This property determines whether the broker has been properly initialized
+        and is ready to perform its functions. A broker is considered ready if
+        it has a valid manifest loaded, either from raw data, a loader, or
+        existing Django ORM models.
+
+        :returns: ``True`` if the broker is ready, ``False`` otherwise.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning("%s.ready() AbstractBroker is not ready for %s", logger_prefix, self.kind)
+            return False
+        retval = self.manifest is not None or self.plugin is not None
+        logger.debug(
+            "%s.ready() manifest presence indicates ready=%s for %s",
+            logger_prefix,
+            retval,
+            self.kind,
+        )
+        if retval:
+            broker_ready.send(sender=self.__class__, broker=self)
+        return retval
 
     @property
     def plugin(self) -> Optional[PluginBase]:
@@ -135,12 +171,16 @@ class SAMPluginBaseBroker(AbstractBroker):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.CHAT,
             )
+        if not self._manifest:
+            if self.loader:
+                self._manifest = self.loader.json_data
+
         controller = PluginController(
             request=self.smarter_request,
             user=self.user,
             account=self.account,
-            manifest=self.manifest,  # type: ignore
-            plugin_meta=self.plugin_meta if not self.manifest else None,
+            manifest=self._manifest,  # type: ignore
+            plugin_meta=self.plugin_meta if not self._manifest else None,
             name=self.name,
         )
         self._plugin = controller.obj
@@ -185,7 +225,11 @@ class SAMPluginBaseBroker(AbstractBroker):
             try:
                 self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
             except PluginMeta.DoesNotExist:
-                pass
+                logger.warning(
+                    "PluginMeta does not exist for name %s and account %s",
+                    self.name,
+                    self.account,
+                )
         return self._plugin_meta
 
     @plugin_meta.setter
@@ -280,7 +324,7 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         """
         command = SmarterJournalCliCommands("describe")
-        if not self.plugin_meta:
+        if not self._plugin_meta:
             raise SAMPluginBrokerError(
                 f"PluginMeta {self.name} not found",
                 thing=self.kind,
@@ -294,6 +338,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             )
         try:
             metadata = model_to_dict(self.plugin_meta)  # type: ignore[no-any-return]
+            metadata = json.loads(json.dumps(metadata))
             metadata = self.snake_to_camel(metadata)
             if not isinstance(metadata, dict):
                 raise SAMPluginBrokerError(
@@ -303,7 +348,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 )
             logger.info(
                 "%s.describe() PluginMeta %s %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self.kind,
                 metadata,
             )
@@ -311,7 +356,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             return metadata
         except PluginMeta.DoesNotExist as e:
             raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} PluginMeta does not exist for {self.plugin.name}",
+                f"{logger_prefix} {self.kind} PluginMeta does not exist for {self.plugin.name}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -585,7 +630,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 )
             logger.info(
                 "%s.describe() PluginSelector %s %s",
-                self.formatted_class_name,
+                logger_prefix,
                 self.kind,
                 plugin_selector,
             )
@@ -593,7 +638,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             return plugin_selector
         except PluginSelector.DoesNotExist as e:
             raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
+                f"{logger_prefix} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -634,4 +679,93 @@ class SAMPluginBaseBroker(AbstractBroker):
                 print(response.status, response.data)
         """
         super().apply(request, kwargs)
-        logger.info("%s.apply() called %s with args: %s, kwargs: %s", self.formatted_class_name, request, args, kwargs)
+        logger.info("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
+
+    def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Return a JSON response with a list of SQL plugins for this account.
+
+        This method queries the database for all SQL plugins associated with the current account,
+        optionally filtered by name, and returns a structured JSON response containing their serialized
+        representations. Each plugin is validated by round-tripping through the Pydantic model.
+
+        :param request: The HTTP request object.
+        :type request: "HttpRequest"
+        :param args: Additional positional arguments (unused).
+        :param kwargs: Additional keyword arguments, such as filter criteria (e.g., ``name``).
+        :return: A `SmarterJournaledJsonResponse` containing a list of SQL plugin manifests and metadata.
+        :rtype: SmarterJournaledJsonResponse
+
+        **Example:**
+
+        .. code-block:: python
+
+            response = broker.get(request, name="my_plugin")
+            print(response.data)
+
+        :raises SAMPluginBrokerError:
+            If a plugin cannot be serialized or validated
+            during the retrieval process.
+
+        .. seealso::
+            :class:`PluginMeta`
+            :class:`PluginSerializer`
+            :class:`SAMSqlPlugin`
+            :class:`SmarterJournaledJsonResponse`
+            :class:`SmarterJournalCliCommands`
+            :class:`SAMKeys`
+            :class:`SAMMetadataKeys`
+            :class:`SCLIResponseGet`
+            :class:`SCLIResponseGetData`
+        """
+        command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
+
+        data = []
+        name = kwargs.get(SAMMetadataKeys.NAME.value)
+        name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
+
+        # generate a QuerySet of PluginMeta objects that match our search criteria
+        if name:
+            plugins = PluginMeta.objects.filter(account=self.account, name=name)
+        else:
+            plugins = PluginMeta.objects.filter(account=self.account)
+        logger.info(
+            "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
+        )
+
+        model_titles = self.get_model_titles(serializer=PluginSerializer())
+
+        # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
+        for plugin in plugins:
+            try:
+                self.plugin_init()
+                self.plugin_meta = plugin
+
+                model_dump = PluginSerializer(plugin).data
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
+
+            except Exception as e:
+                logger.error(
+                    "%s.get() failed to serialize %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    plugin.name,
+                    exc_info=True,
+                )
+                raise SAMPluginBrokerError(
+                    f"Failed to serialize {self.kind} {plugin.name}", thing=self.kind, command=command
+                ) from e
+        data = {
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMMetadataKeys.NAME.value: name,
+            SAMKeys.METADATA.value: {"count": len(data)},
+            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.DATA.value: {
+                SCLIResponseGetData.TITLES.value: model_titles,
+                SCLIResponseGetData.ITEMS.value: data,
+            },
+        }
+        return self.json_response_ok(command=command, data=data)

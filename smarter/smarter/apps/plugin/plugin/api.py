@@ -84,7 +84,7 @@ from .base import PluginBase, SmarterPluginError
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -256,14 +256,19 @@ class ApiPlugin(PluginBase):
         # to conform to openai's function calling schema.
         recasted_parameters = {"type": "object", "properties": {}, "required": [], "additionalProperties": False}
         parameters = self.manifest.spec.apiData.parameters if self.manifest and self.manifest.spec else None
-        logger.info("plugin_data_django_model() recasting parameters: %s", parameters)
+        logger.info("%s.plugin_data_django_model() recasting parameters: %s", self.formatted_class_name, parameters)
         if isinstance(parameters, list):
             for parameter in parameters:
                 if isinstance(parameter, Parameter):
                     # if the parameter is a Pydantic model, we need to convert it to a
                     # standard json dict.
                     parameter = parameter.model_dump()
-                logger.info("plugin_data_django_model() processing parameter: %s %s", type(parameter), parameter)
+                logger.info(
+                    "%s.plugin_data_django_model() processing parameter: %s %s",
+                    self.formatted_class_name,
+                    type(parameter),
+                    parameter,
+                )
                 if not isinstance(parameter, dict):
                     raise SmarterConfigurationError(
                         f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a valid json dict. Received: {parameter} {type(parameter)}"
@@ -432,7 +437,7 @@ class ApiPlugin(PluginBase):
         """
         super().create()
 
-        logger.info("PluginDataApi.create() called.")
+        logger.info("%s.create() called.", self.formatted_class_name)
 
     def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[str]:
         """

@@ -24,13 +24,6 @@ class SAMPluginStaticSpecData(SmarterBasePydanticModel):
 
     class_identifier: ClassVar[str] = f"{MODULE_IDENTIFIER}.{SAMPluginSpecKeys.DATA.value}"
 
-    description: str = Field(
-        ...,
-        description=(
-            f"{class_identifier}.description[str]: A narrative description of the {MANIFEST_KIND} features "
-            "that is provided to the LLM as part of a tool_chain dict"
-        ),
-    )
     staticData: Optional[dict] = Field(
         None,
         description=(

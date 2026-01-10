@@ -1,10 +1,11 @@
-# pylint: disable=W0613
+# pylint: disable=W0613,C0302
 """Smarter API Manifest Abstract Broker class."""
 
 import logging
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
+from functools import cached_property
 from http import HTTPStatus
 from typing import Any, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
@@ -16,8 +17,11 @@ from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import (
+    formatted_text,
+    formatted_text_green,
+    formatted_text_red,
+)
 from smarter.common.utils import camel_to_snake as util_camel_to_snake
 from smarter.common.utils import snake_to_camel as util_snake_to_camel
 from smarter.lib.cache import cache_results
@@ -54,7 +58,7 @@ SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -161,8 +165,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     _loader: Optional[SAMLoader] = None
     _manifest: Optional[Union[AbstractSAMBase, dict]] = None
     _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
-    _name: Optional[str]
-    _kind: Optional[str]
+    _name: Optional[str] = None
+    _kind: Optional[str] = None
     _validated: bool = False
     _thing: Optional[SmarterJournalThings] = None
     _created: bool = False
@@ -181,59 +185,232 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         url: Optional[str] = None,
         **kwargs,
     ):
+        logger.debug(
+            "%s.__init__() called with request=%s, name=%s, kind=%s, loader=%s, api_version=%s, manifest=%s, file_path=%s, url=%s, args=%s, kwargs=%s",
+            self.abstract_broker_logger_prefix,
+            request,
+            name,
+            kind,
+            loader,
+            api_version,
+            manifest,
+            file_path,
+            url,
+            args,
+            kwargs,
+        )
+        api_version = api_version or SmarterApiVersions.V1
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMBrokerError(
                 message=f"Unsupported apiVersion: {api_version}",
                 thing=SmarterJournalThings.ACCOUNT,
             )
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
-        logger.info(
-            "AbstractBroker.__init__() initializing request: %s, args: %s, kwargs: %s", self.request, args, kwargs
-        )
+        user = kwargs.pop("user", None)
+        account = kwargs.pop("account", None)
+        user_profile = kwargs.pop("user_profile", None)
+        SmarterRequestMixin.__init__(self, request, user=user, account=account, user_profile=user_profile, **kwargs)
         self._api_version = api_version
-        self._name = name  # i suspect that this is always None bc DRF sets name later in the process
+        if isinstance(name, str):
+            self.name_cached_property_setter(name)
         self._kind = kind
-        if isinstance(manifest, AbstractSAMBase):
+        if "name" in kwargs and isinstance(kwargs["name"], str):
+            self.name_cached_property_setter(kwargs["name"])
+            if self._name:
+                logger.debug(
+                    "%s.__init__() set name to %s %s from kwargs",
+                    self.abstract_broker_logger_prefix,
+                    self._name,
+                    type(self._name),
+                )
+
+        for arg in args:
+            if isinstance(arg, SAMLoader):
+                logger.debug(
+                    "%s.__init__() found SAMLoader in args, assigning to loader", self.abstract_broker_logger_prefix
+                )
+                loader = arg
+                self._loader = arg
+                break
+            if isinstance(arg, AbstractSAMBase):
+                logger.debug(
+                    "%s.__init__() found AbstractSAMBase in args, assigning to manifest",
+                    self.abstract_broker_logger_prefix,
+                )
+                manifest = arg
+                self._manifest = arg
+                break
+        if not isinstance(loader, SAMLoader):
+            for value in kwargs.values():
+                if isinstance(value, SAMLoader):
+                    logger.debug(
+                        "%s.__init__() found SAMLoader in kwargs, assigning to loader",
+                        self.abstract_broker_logger_prefix,
+                    )
+                    loader = value
+                    self._loader = value
+                    break
+                if isinstance(value, AbstractSAMBase):
+                    logger.debug(
+                        "%s.__init__() found AbstractSAMBase in kwargs, assigning to manifest",
+                        self.abstract_broker_logger_prefix,
+                    )
+                    manifest = value
+                    self._manifest = value
+                    break
+
+        if isinstance(file_path, str) and file_path:
+            self._loader = SAMLoader(file_path=file_path)
+            logger.debug(
+                "%s.__init__() initialized loader from file_path: %s", self.abstract_broker_logger_prefix, file_path
+            )
+            self._kind = self._loader.manifest_kind if self._loader.manifest_kind else self._kind
+            if isinstance(self._kind, str):
+                logger.debug("%s.__init__() set kind to %s from loader", self.abstract_broker_logger_prefix, self._kind)
+            self._name = self._loader.manifest_metadata.get("name") if self._loader.manifest_metadata else self._name
+            if self._name:
+                logger.debug(
+                    "%s.__init__() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
+                )
+
+        if isinstance(manifest, AbstractSAMBase) and not self._manifest:
             self._manifest = manifest
-            logger.info("%s.__init__() successfully initialized manifest: %s", self.formatted_class_name, self.manifest)
-        if isinstance(manifest, dict):
+            logger.debug(
+                "%s.__init__() successfully initialized manifest: %s", self.abstract_broker_logger_prefix, self.manifest
+            )
+        if isinstance(manifest, dict) and not self._manifest:
             if not isinstance(loader, SAMLoader):
                 self._loader = SAMLoader(manifest=manifest)
-                logger.info(
-                    "%s.__init__() initialized loader from manifest data: %s", self.formatted_class_name, self.manifest
+                logger.debug(
+                    "%s.__init__() initialized loader from manifest data: %s",
+                    self.abstract_broker_logger_prefix,
+                    self.manifest,
                 )
-        if isinstance(loader, SAMLoader):
+        if isinstance(loader, SAMLoader) and not self._loader:
             self._loader = loader
-            logger.info("%s.__init__() received %s loader", self.formatted_class_name, self._loader.manifest_kind)
-            logger.info(
+            logger.debug(
+                "%s.__init__() received %s loader", self.abstract_broker_logger_prefix, self._loader.manifest_kind
+            )
+            logger.debug(
                 "%s.__init__() loader initialized with manifest kind: %s",
-                self.formatted_class_name,
+                self.abstract_broker_logger_prefix,
                 self._loader.manifest_kind,
             )
+            self._kind = self._loader.manifest_kind if self._loader.manifest_kind else self._kind
+            if isinstance(self._kind, str):
+                logger.debug("%s.__init__() set kind to %s from loader", self.abstract_broker_logger_prefix, self._kind)
+            self._name = self._loader.manifest_metadata.get("name") if self._loader.manifest_metadata else self._name
+            if self._name:
+                logger.debug(
+                    "%s.__init__() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
+                )
 
-        if self.user:
-            logger.info("%s.__init__() received user: %s", self.formatted_class_name, self.user_profile)
-
-        if self._name:
-            logger.info("%s.__init__() set name to %s", self.formatted_class_name, self._name)
-
-        self._kind = self._kind or self.loader.manifest_kind if self.loader else None
         self._created = False
         self._validated = bool(manifest) or bool(self.loader and self.loader.ready)
-        logger.info(
-            "AbstractBroker.__init__() finished initializing %s with api_version: %s, user: %s, name: %s, validated: %s, manifest: %s, loader: %s",
-            self.kind,
-            self.api_version,
-            self.user_profile,
-            self.name,
-            self._validated,
-            bool(self.manifest),
-            bool(self.loader),
-        )
+
+        msg = f"{self.abstract_broker_logger_prefix}.__init__() {self.kind} broker is {self.abstract_broker_ready_state} with user: {self.user_profile}, name: {self._name}, manifest: {bool(self._manifest)}, loader: {bool(self._loader)}"
+        if self.is_ready_abstract_broker:
+            logger.info(msg)
+        else:
+            logger.warning(msg)
 
     ###########################################################################
     # Class Instance Properties
     ###########################################################################
+    @property
+    def abstract_broker_logger_prefix(self) -> str:
+        """Return the logger prefix for the AbstractBroker.
+
+        :return: The logger prefix for the AbstractBroker.
+        :rtype: str
+        """
+        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+
+    @property
+    def is_ready_abstract_broker(self) -> bool:
+        """Return True if the AbstractBroker is ready for operations.
+
+        An AbstractBroker is considered ready if it has a valid manifest loaded.
+
+        :return: True if the AbstractBroker is ready for operations.
+        :rtype: bool
+        """
+        if not self.is_accountmixin_ready:
+            logger.warning(
+                "%s.is_ready_abstract_broker() - AccountMixin is not ready. Cannot process broker.",
+                self.abstract_broker_logger_prefix,
+            )
+            return False
+        if not self.is_requestmixin_ready:
+            logger.warning(
+                "%s.is_ready_abstract_broker() - RequestMixin is not ready. Cannot process broker.",
+                self.abstract_broker_logger_prefix,
+            )
+            return False
+        if bool(self._manifest):
+            logger.debug(
+                "%s.is_ready_abstract_broker() returning true because manifest is loaded.",
+                self.abstract_broker_logger_prefix,
+            )
+            return True
+        if bool(self.loader) and self.loader.ready:
+            logger.debug(
+                "%s.is_ready_abstract_broker() returning true because loader is ready.",
+                self.abstract_broker_logger_prefix,
+            )
+            return True
+        if not bool(self._manifest):
+            logger.warning(
+                "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
+                self.abstract_broker_logger_prefix,
+            )
+        if not bool(self.loader) or not self.loader.ready:
+            logger.warning(
+                "%s.is_ready_abstract_broker() returning false because loader is not ready.",
+                self.abstract_broker_logger_prefix,
+            )
+        return False
+
+    @property
+    def abstract_broker_ready_state(self) -> str:
+        """Return a string representation of the AbstractBroker's ready state.
+
+        :return: "READY" if the AbstractBroker is ready, otherwise "NOT_READY".
+        :rtype: str
+        """
+        if self.is_ready_abstract_broker:
+            return formatted_text_green("READY")
+        return formatted_text_red("NOT_READY")
+
+    @property
+    def ready(self) -> bool:
+        """Return True if the broker is ready for operations.
+
+        A broker is considered ready if it has a valid manifest loaded.
+
+        :return: True if the broker is ready for operations.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning(
+                "%s.ready() SmarterRequestMixin is not ready for kind=%s",
+                self.abstract_broker_logger_prefix,
+                self.kind,
+            )
+            return False
+        return retval and self.is_ready_abstract_broker
+
+    @property
+    def ready_state(self) -> str:
+        """Return a string representation of the broker's ready state.
+
+        :return: "READY" if the broker is ready, otherwise "NOT_READY".
+        :rtype: str
+        """
+        if self.ready:
+            return formatted_text_green("READY")
+        return formatted_text_red("NOT_READY")
+
     @property
     def formatted_class_name(self) -> str:
         """
@@ -244,7 +421,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: str
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.AbstractBroker()"
+        return f"{parent_class}.{AbstractBroker.__name__}()"
 
     @property
     def request(self) -> Optional[HttpRequest]:
@@ -335,33 +512,91 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         return self._kind
 
-    @property
+    @cached_property
     def name(self) -> Optional[str]:
         """
-        The name of the manifest.
+        Retrieve the unique name identifier for the ChatBot instance managed by this broker.
 
-        :return: The name of the manifest.
+        This property accesses the name used to distinguish the ChatBot within the database and across
+        the Smarter platform. The name is first returned from an internal cache if available. If not cached,
+        and if a manifest is present, the name is extracted from the manifest's metadata and stored for
+        subsequent access.
+
+        The name is essential for database queries, model lookups, and for associating related resources
+        such as API keys, plugins, and functions with the correct ChatBot instance.
+
+        :returns: The name of the ChatBot as a string, or ``None`` if the name is not set or cannot be determined.
         :rtype: Optional[str]
+
+        .. note::
+
+            The name property is a critical identifier used throughout the broker to ensure correct
+            mapping between manifest data and persistent application state.
         """
         if self._name:
             return self._name
-        if (
-            isinstance(
-                self._manifest, AbstractSAMBase
-            )  # note: do not access .metadata on initialization to avoid recursion
-            and self._manifest.metadata
-            and self._manifest.metadata.name
-        ):
-            # assign from the manifest metadata, if we have it
-            self._name = self._manifest.metadata.name
-            logger.info("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
+        if self._manifest:
+            self._name = self.manifest.metadata.name
+            logger.debug(
+                "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
+            )
+            return self._name
+        else:
+            logger.debug("%s.name() manifest is not set.", self.abstract_broker_logger_prefix)
+        if self.loader:
+            logger.debug(
+                "%s.name() found a SAMLoader. Attempting to initialize the manifest.",
+                self.abstract_broker_logger_prefix,
+            )
+            if self.manifest:
+                self._name = self.manifest.metadata.name
+                logger.debug(
+                    "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
+                )
+                return self._name
+            else:
+                self._name = self.loader.manifest_metadata.get("name")
+                if self._name:
+                    logger.debug(
+                        "%s.name() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
+                    )
+                    return self._name
+                logger.debug("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
             if name_param:
                 self._name = name_param
-                logger.info("%s.__init__() set name to %s from name url param", self.formatted_class_name, self._name)
-
+                logger.debug(
+                    "%s.name() set name to %s from name url param", self.abstract_broker_logger_prefix, self._name
+                )
+            else:
+                logger.debug("%s.name() url params do not contain a name", self.abstract_broker_logger_prefix)
+        if not self._name:
+            logger.warning("%s.name() could not determine name, returning None", self.abstract_broker_logger_prefix)
         return self._name
+
+    def name_cached_property_setter(self, value: str):
+        """
+        A workaround to the limitation that you cannot use both @cached_property and
+        a setter for the same attribute name (name). In Python, you cannot have a
+        property (or cached_property) and a setter with the same name unless you use the
+        @property decorator (not @cached_property).
+
+        We need the cached_property so that the lazy evaluation of the name only happens
+        once, and subsequent accesses return the cached value for performance.
+        However, we also need to be able to set the name explicitly in some cases,
+
+        :param value: The name to set for the manifest.
+        :type value: str
+        """
+        self._name = value
+        # Delete cached_property value if present
+        try:
+            del self.__dict__["name"]
+            logger.debug("%s.name() setter cleared cached_property", self.abstract_broker_logger_prefix)
+        except KeyError:
+            pass
+        logger.debug("%s.name() setter set name to %s", self.abstract_broker_logger_prefix, self._name)
 
     @property
     def api_version(self) -> str:
@@ -385,10 +620,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return self._loader
 
     def __str__(self):
-        if isinstance(self.manifest, AbstractSAMBase):
-            return f"{self.manifest.apiVersion if self.manifest else "Unknown Version"} {self.kind} Broker"
-        if isinstance(self.manifest, dict):
-            return f"{self.manifest.get("apiVersion", "Unknown Version")} {self.kind} Broker"
+        if isinstance(self._manifest, AbstractSAMBase):
+            return f"{self._manifest.apiVersion if self._manifest else "Unknown Version"} {self.kind} Broker"
+        if isinstance(self._manifest, dict):
+            return f"{self._manifest.get("apiVersion", "Unknown Version")} {self.kind} Broker"
         return f"Unknown Version {self.kind} Broker"
 
     ###########################################################################
@@ -443,11 +678,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 spec=AbstractSAMSpecBase(**self.loader.manifest_spec),
                 status=AbstractSAMStatusBase(**self.loader.manifest_status),
             )
-            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
+            logger.debug("%s.manifest() initialized manifest from loader", self.abstract_broker_logger_prefix)
         else:
             logger.warning(
                 "%s.manifest() returning None: expected loader.manifest_kind of %s but received %s",
-                self.formatted_class_name,
+                self.abstract_broker_logger_prefix,
                 self.kind,
                 self.loader.manifest_kind if self.loader else None,
             )
@@ -481,9 +716,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         .. todo:: Research why this is not an abstract method.
         """
-        logger.info(
+        logger.debug(
             "%s.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
-            self.formatted_class_name,
+            self.abstract_broker_logger_prefix,
             request,
             args,
             kwargs,
@@ -674,9 +909,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         try:
             secret = cached_secret_by_name_and_profile_id(name=name, profile_id=user_profile.id)
         except Secret.DoesNotExist as e:
-            logger.info(
+            logger.debug(
                 "%s.get_or_create_secret() Secret %s not found for user %s",
-                self.formatted_class_name,
+                self.abstract_broker_logger_prefix,
                 name,
                 user_profile.user.username,
             )
@@ -707,6 +942,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 expires_at=expiration,
             )
 
+        if not secret:
+            raise SAMBrokerError(
+                message=f"Failed to create or retrieve Secret {name}",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.GET,
+            )
         return secret
 
     ###########################################################################
@@ -928,13 +1169,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :raises SAMBrokerErrorNotReady: If neither a manifest nor a name param is provided.
         :return: None
         """
-        self._name = kwargs.get("name", None) or self._name
-        if not self.manifest and not self.name:
-            raise SAMBrokerErrorNotReady(
-                f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",
-                thing=self.kind,
-                command=command,
-            )
+        name = kwargs.get("name")
+        if name:
+            self.name_cached_property_setter(name)
 
     # pylint: disable=W0212
     def get_model_titles(self, serializer: ModelSerializer) -> Optional[list[dict[str, str]]]:
@@ -952,6 +1189,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             item = self.snake_to_camel({"name": field_name, "type": type(field).__name__}, convert_values=True)
             if isinstance(item, dict) and all(isinstance(k, str) and isinstance(v, str) for k, v in item.items()):
                 fields_and_types.append(item)
+            else:
+                logger.warning(
+                    "%s.get_model_titles() skipping field %s: expected dict with str keys and str values but got: %s",
+                    self.abstract_broker_logger_prefix,
+                    field_name,
+                    item,
+                )
         return fields_and_types
 
     def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:

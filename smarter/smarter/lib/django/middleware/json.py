@@ -3,13 +3,33 @@ Middleware to ensure that all requests for 'application/JSON' return responses
 that are also in JSON format.
 """
 
+import logging
+from collections.abc import Awaitable
 from http import HTTPStatus
 
 from django.http import JsonResponse
-from django.utils.deprecation import MiddlewareMixin
+from django.http.request import HttpRequest
+from django.http.response import HttpResponseBase
+
+from smarter.common.classes import SmarterMiddlewareMixin
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django import waffle
+from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-class SmarterJsonErrorMiddleware(MiddlewareMixin):
+def should_log(level):
+    """Check if logging should be done based on the waffle switch."""
+    return (waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)) or level >= logging.WARNING
+
+
+base_logger = logging.getLogger(__name__)
+logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+
+logger.debug("Loading %s", formatted_text(__name__ + ".SmarterJsonErrorMiddleware"))
+
+
+class SmarterJsonErrorMiddleware(SmarterMiddlewareMixin):
     """
     Middleware to ensure that all requests for ``application/json`` return responses
     that are also in JSON format.
@@ -52,6 +72,15 @@ class SmarterJsonErrorMiddleware(MiddlewareMixin):
     :rtype: django.http.HttpResponse or django.http.JsonResponse
 
     """
+
+    @property
+    def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging purposes."""
+        return formatted_text(f"{__name__}.{SmarterJsonErrorMiddleware.__name__}")
+
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        logger.debug("%s.__call__(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
+        return super().__call__(request)
 
     def process_response(self, request, response):
         if request.headers.get("Accept") == "application/json" and response.status_code >= HTTPStatus.BAD_REQUEST:

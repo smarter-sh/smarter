@@ -24,7 +24,7 @@ class TestSmarterAuthTokenSerializer(SmarterTestBase):
     def setUp(self):
         super().setUp()
         self.admin_user, self.account, self.user_profile = admin_user_factory()
-        logger.info("%s Setting up test class with name: %s", self.formatted_class_name, self.name)
+        logger.debug("%s Setting up test class with name: %s", self.formatted_class_name, self.name)
         self.auth_token, self.token_key = SmarterAuthToken.objects.create(
             name=self.admin_user.username,
             user=self.admin_user,
@@ -37,7 +37,7 @@ class TestSmarterAuthTokenSerializer(SmarterTestBase):
             self.auth_token.delete()
         except SmarterAuthToken.DoesNotExist:
             pass
-        super().tearDownClass()
+        super().tearDown()
 
     def test_serializer_with_naive_datetime(self):
         # last_used_at is a naive datetime (no tzinfo)

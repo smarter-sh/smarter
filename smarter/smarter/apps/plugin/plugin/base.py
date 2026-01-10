@@ -71,7 +71,7 @@ from ..signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -710,7 +710,7 @@ class PluginBase(ABC, SmarterHelperMixin):
                     "plugin_class": self.manifest.metadata.pluginClass,
                     "version": self.manifest.metadata.version,
                     "author": self.user_profile,
-                    "annotations": self.manifest.metadata.annotations,
+                    "annotations": json.loads(json.dumps(self.manifest.metadata.annotations)),
                 }
             else:
                 logger.warning(
@@ -1203,6 +1203,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         """
         if not self._manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
+
         logger.info("%s.create() creating plugin %s", self.formatted_class_name, self.manifest.metadata.name)
 
         def committed(plugin: PluginMeta):
@@ -1220,8 +1221,8 @@ class PluginBase(ABC, SmarterHelperMixin):
         if self.plugin_meta:
             logger.info(
                 "%s.create() Plugin %s already exists. Updating plugin %s.",
-                self.plugin_meta.name,
                 self.formatted_class_name,
+                self.plugin_meta.name,
                 self.plugin_meta.id,  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
             )
             return self.update()
@@ -1291,8 +1292,10 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         with transaction.atomic():
             if isinstance(self.plugin_meta, PluginMeta):
+                read_only_attrs = ["id", "account", "name", "author", "created_at", "updated_at"]
                 for attr, value in plugin_meta_django_model.items():
-                    setattr(self.plugin_meta, attr, value)
+                    if attr not in read_only_attrs:
+                        setattr(self.plugin_meta, attr, value)
                 self.plugin_meta.save()
             else:
                 raise SmarterPluginError("PluginMeta is not set or is not a PluginMeta instance.")

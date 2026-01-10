@@ -2,9 +2,7 @@
 """Smarter API SqlPlugin Manifest handler"""
 
 import logging
-from typing import Optional, Type
-
-from django.http import HttpRequest
+from typing import TYPE_CHECKING, Optional, Type
 
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
@@ -22,6 +20,7 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
 )
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta
 from smarter.apps.plugin.plugin.sql import SqlPlugin
+from smarter.apps.plugin.signals import broker_ready
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -45,12 +44,15 @@ from . import PluginSerializer, SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
 
 
+if TYPE_CHECKING:
+    from django.http import HttpRequest
+
+
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
@@ -102,9 +104,81 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     _sql_plugin_spec: Optional[SAMSqlPluginSpec] = None
     _sql_data: Optional[SqlData] = None
 
-    def __init__(self, *args, manifest: Optional[SAMSqlPlugin], **kwargs):
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the SAMSqlPluginBroker instance.
+
+        This constructor initializes the broker by calling the parent class's
+        constructor, which will attempt to bootstrap the class instance
+        with any combination of raw manifest data (in JSON or YAML format),
+        a manifest loader, or existing Django ORM models. If a manifest
+        loader is provided and its kind matches the expected kind for this broker,
+        the manifest is initialized using the loader's data.
+
+        This class can bootstrap itself in any of the following ways:
+
+        - request.body (yaml or json string)
+        - name + account (determined via authentication of the request object)
+        - SAMLoader instance
+        - manifest instance
+        - filepath to a manifest file
+
+        If raw manifest data is provided, whether as a string or a dictionary,
+        or a SAMLoader instance, the base class constructor will only goes as
+        far as initializing the loader. The actual manifest model initialization
+        is deferred to this constructor, which checks the loader's kind.
+
+        :param args: Positional arguments passed to the parent constructor.
+        :param kwargs: Keyword arguments passed to the parent constructor.
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMSqlPluginBroker(loader=loader, plugin_meta=plugin_meta)
+
+        .. seealso::
+            - `SAMPluginBaseBroker.__init__`
+        """
         super().__init__(*args, **kwargs)
-        self._manifest = manifest
+        if not self.ready:
+            if not self.loader and not self.manifest and not self.plugin:
+                logger.error(
+                    "%s.__init__() No loader nor existing Plugin provided for %s broker. Cannot initialize.",
+                    self.formatted_class_name,
+                    self.kind,
+                )
+                return
+            if self.loader and self.loader.manifest_kind != self.kind:
+                raise SAMBrokerErrorNotReady(
+                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
+                    thing=self.kind,
+                )
+
+            if self.loader:
+                self._manifest = SAMSqlPlugin(
+                    apiVersion=self.loader.manifest_api_version,
+                    kind=self.loader.manifest_kind,
+                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
+                    status=(
+                        SAMPluginCommonStatus(**self.loader.manifest_status)
+                        if self.loader and self.loader.manifest_status
+                        else None
+                    ),
+                )
+            if self._manifest:
+                logger.info(
+                    "%s.__init__() initialized manifest from loader for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.manifest.metadata.name,
+                )
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        if self.ready:
+            logger.info(msg)
+        else:
+            logger.error(msg)
 
     def plugin_init(self) -> None:
         """
@@ -159,7 +233,17 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{self.__class__.__name__}()"
+        return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
+
+    @property
+    def model_class(self) -> Type[PluginDataSql]:
+        """
+        Return the Django ORM model class for the broker.
+
+        :return: The Django ORM model class definition for the broker.
+        :rtype: Type[PluginDataSql]
+        """
+        return PluginDataSql
 
     @property
     def kind(self) -> str:
@@ -223,11 +307,23 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         """
         if self._manifest:
             return self._manifest
-
-        # If the Plugin has previously been persisted then
-        # we can build the manifest components by mapping
-        # Django ORM models to Pydantic models.
-        if self.plugin_meta:
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMSqlPlugin(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
+                status=(
+                    SAMPluginCommonStatus(**self.loader.manifest_status)
+                    if self.loader and self.loader.manifest_status
+                    else None
+                ),
+            )
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self._plugin_meta:
             metadata = self.plugin_metadata_orm2pydantic()
             sql_data = self.plugin_data_orm2pydantic()
             if not sql_data:
@@ -252,21 +348,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                 status=status,
             )
             return self._manifest
-        # Otherwise, if we received a manifest via the loader,
-        # then use that to build the manifest.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSqlPlugin(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
-                status=(
-                    SAMPluginCommonStatus(**self.loader.manifest_status)
-                    if self.loader and self.loader.manifest_status
-                    else None
-                ),
-            )
-        if not self._manifest:
+        else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
@@ -303,7 +385,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         self._plugin = SqlPlugin(
             plugin_meta=self.plugin_meta,
             user_profile=self.user_profile,
-            manifest=self.manifest,
+            manifest=self._manifest,
             name=self.name,
         )
         return self._plugin
@@ -342,13 +424,16 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             return self._plugin_data
 
         if self.plugin_meta is None:
+            logger.warning(
+                "%s.plugin_data could not be retrieved because plugin_meta is None",
+                self.formatted_class_name,
+            )
             return None
 
-        try:
-            self._plugin_data = PluginDataSql.get_cached_data_by_plugin(plugin=self.plugin_meta)
-        except PluginDataSql.DoesNotExist:
+        self._plugin_data = PluginDataSql.get_cached_data_by_plugin(plugin=self.plugin_meta)
+        if not self._plugin_data:
             logger.warning(
-                "%s.plugin_data() PluginDataSql object does not exist for %s %s",
+                "%s.plugin_data could not be found for %s %s",
                 self.formatted_class_name,
                 self.kind,
                 self.plugin_meta.name,
@@ -388,6 +473,12 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         if self._sql_plugin_spec:
             return self._sql_plugin_spec
         if not self.plugin_meta:
+            logger.warning(
+                "%s.plugin_sql_spec_orm2pydantic could not be built for %s %s because plugin_meta is None",
+                self.formatted_class_name,
+                self.kind,
+                self.manifest.metadata.name if self.manifest and self.manifest.metadata else "<-- Missing Name -->",
+            )
             return None
         selector = self.plugin_selector_orm2pydantic()
         prompt = self.plugin_prompt_orm2pydantic()
@@ -417,6 +508,26 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         This method constructs a `SqlData` Pydantic model using the data associated with the current
         `plugin_meta`. It retrieves the data using the ORM-to-Pydantic conversion method.
 
+        parameters: an OpenAI Api compliant dictionary of parameters to pass to the API call.
+            {
+                'type': 'object',
+                'required': ['username'],
+                'properties': {
+                    'unit': {
+                        'enum': ['Celsius', 'Fahrenheit'],
+                        'type': 'string',
+                        'default': 'Celsius',
+                        'description': 'The temperature unit to use.'
+                    },
+                    'username': {
+                        'type': 'string',
+                        'default': 'admin',
+                        'description': 'The username to query.'
+                    }
+                },
+                'additionalProperties': False
+            }
+
         :return: The plugin data as a Pydantic model.
         :rtype: SqlData
 
@@ -440,27 +551,61 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             return None
 
         parameters: list[Parameter] = []
-        for parameter in self.plugin_data.parameters.all() if self.plugin_data else []:
+        orm_parameters: dict = self.plugin_data.parameters if self.plugin_data else {}
+        if not isinstance(orm_parameters, dict):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} plugin_data_orm2pydantic() expected parameters to be a dict for {self.kind} {self.plugin_meta.name} but got {type(orm_parameters)}: {orm_parameters}",
+                thing=self.kind,
+            )
+
+        # Handle OpenAPI-style parameter schema
+        # Example: {
+        #   'type': 'object',
+        #   'required': ['username'],
+        #   'properties': { ... }
+        # }
+        required_fields = orm_parameters.get("required", [])
+        properties = orm_parameters.get("properties", {})
+        for name, prop in properties.items():
             parameters.append(
                 Parameter(
-                    name=parameter.name,
-                    type=parameter.type,
-                    description=parameter.description,
-                    required=parameter.required,
-                    enum=parameter.enum,
-                    default=parameter.default,
+                    name=name,
+                    type=prop.get("type", "string"),
+                    description=prop.get("description"),
+                    required=name in required_fields,
+                    enum=prop.get("enum"),
+                    default=prop.get("default"),
                 )
             )
         test_values: list[TestValue] = []
-        for test_value in self.plugin_data.test_values.all() if self.plugin_data else []:
+        orm_test_values: list = self.plugin_data.test_values if self.plugin_data else []
+        if not isinstance(orm_test_values, list):
+            raise SAMPluginBrokerError(
+                f"{self.formatted_class_name} plugin_data_orm2pydantic() expected test_values to be a list for {self.kind} {self.plugin_meta.name} but got {type(orm_test_values)}: {orm_test_values}",
+                thing=self.kind,
+            )
+        for test_value in orm_test_values:
+            logger.info(
+                "%s.plugin_data_orm2pydantic() processing test_value: %s", self.formatted_class_name, test_value
+            )
+            # example:  {'name': 'username', 'value': 'admin'}
+            if not isinstance(test_value, dict):
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name} plugin_data_orm2pydantic() expected each test_value to be a dict for {self.kind} {self.plugin_meta.name} but got {type(test_value)}: {test_value}",
+                    thing=self.kind,
+                )
+            if not "name" in test_value or not "value" in test_value:
+                raise SAMPluginBrokerError(
+                    f"{self.formatted_class_name} plugin_data_orm2pydantic() expected each test_value to have 'name' and 'value' keys for {self.kind} {self.plugin_meta.name} but got: {test_value}",
+                    thing=self.kind,
+                )
             test_values.append(
                 TestValue(
-                    name=test_value.name,
-                    value=test_value.value,
+                    name=test_value.get("name"),  # type: ignore
+                    value=test_value.get("value"),  # type: ignore
                 )
             )
         self._sql_data = SqlData(
-            description=self.plugin_data.description if self.plugin_data else "",
             sqlQuery=self.plugin_data.sql_query if self.plugin_data else "",
             parameters=parameters,
             testValues=test_values,
@@ -471,7 +616,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Returns an example SQL plugin manifest as a JSON response.
 
@@ -481,7 +626,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         response conventions.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments passed to the example manifest generator.
         :return: A JSON response containing the example SQL plugin manifest.
@@ -505,7 +650,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         data = SqlPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
-    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response with the manifest data for this SQL plugin.
 
@@ -514,7 +659,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         manifest by round-tripping the data through the Pydantic model to ensure schema compliance.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments for customization.
         :return: A `SmarterJournaledJsonResponse` containing the manifest data.
@@ -557,96 +702,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         data = json.loads(self.manifest.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Return a JSON response with a list of SQL plugins for this account.
-
-        This method queries the database for all SQL plugins associated with the current account,
-        optionally filtered by name, and returns a structured JSON response containing their serialized
-        representations. Each plugin is validated by round-tripping through the Pydantic model.
-
-        :param request: The HTTP request object.
-        :type request: HttpRequest
-        :param args: Additional positional arguments (unused).
-        :param kwargs: Additional keyword arguments, such as filter criteria (e.g., ``name``).
-        :return: A `SmarterJournaledJsonResponse` containing a list of SQL plugin manifests and metadata.
-        :rtype: SmarterJournaledJsonResponse
-
-        **Example:**
-
-        .. code-block:: python
-
-            response = broker.get(request, name="my_plugin")
-            print(response.data)
-
-        :raises SAMPluginBrokerError:
-            If a plugin cannot be serialized or validated
-            during the retrieval process.
-
-        .. seealso::
-            :class:`PluginMeta`
-            :class:`PluginSerializer`
-            :class:`SAMSqlPlugin`
-            :class:`SmarterJournaledJsonResponse`
-            :class:`SmarterJournalCliCommands`
-            :class:`SAMKeys`
-            :class:`SAMMetadataKeys`
-            :class:`SCLIResponseGet`
-            :class:`SCLIResponseGetData`
-        """
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
-
-        data = []
-        name = kwargs.get(SAMMetadataKeys.NAME.value)
-        name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
-
-        # generate a QuerySet of PluginMeta objects that match our search criteria
-        if name:
-            plugins = PluginMeta.objects.filter(account=self.account, name=name)
-        else:
-            plugins = PluginMeta.objects.filter(account=self.account)
-        logger.info(
-            "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
-        )
-
-        # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
-        for plugin in plugins:
-            try:
-                self.plugin_init()
-                self.plugin_meta = plugin
-
-                model_dump = json.loads(self.manifest.model_dump_json())
-                if not model_dump:
-                    raise SAMPluginBrokerError(
-                        f"Model dump failed for {self.kind} {plugin.name}", thing=self.kind, command=command
-                    )
-                data.append(model_dump)
-            except Exception as e:
-                logger.error(
-                    "%s.get() failed to serialize %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    plugin.name,
-                    exc_info=True,
-                )
-                raise SAMPluginBrokerError(
-                    f"Failed to serialize {self.kind} {plugin.name}", thing=self.kind, command=command
-                ) from e
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
-            SCLIResponseGet.KWARGS.value: kwargs,
-            SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=PluginSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
-            },
-        }
-        return self.json_response_ok(command=command, data=data)
-
-    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Apply the manifest: copy manifest data to the Django ORM model and save it to the database.
 
@@ -655,7 +711,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         includes the serialized plugin data or an error message if the operation fails.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments for customization.
         :return: A `SmarterJournaledJsonResponse` indicating success or failure.
@@ -720,7 +776,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Chat with the SQL plugin (not implemented).
         This is not implemented for SQL plugins.
@@ -728,7 +784,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
@@ -738,7 +794,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the SQL plugin.
         This method deletes the SQL plugin associated with this broker. It verifies that the plugin
@@ -749,7 +805,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :raises: SAMBrokerErrorNotReady: If the plugin is not ready for deletion.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :return: A `SmarterJournaledJsonResponse` indicating success or failure of the deletion.
@@ -793,14 +849,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                 command=command,
             ) from e
 
-    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Deploy the SQL plugin (not implemented).
         This is not implemented for SQL plugins.
 
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
@@ -810,7 +866,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Undeploy the SQL plugin (not implemented).
         This is not implemented for SQL plugins.
@@ -818,7 +874,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
 
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
@@ -828,14 +884,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve logs for the SQL plugin (not implemented).
         This is not implemented for SQL plugins.
 
         :raises: SAMBrokerErrorNotImplemented: Always raised to indicate that this method is not implemented.
         :param request: The HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.

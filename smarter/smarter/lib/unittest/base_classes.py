@@ -8,38 +8,73 @@ import unittest
 from typing import Union
 
 import yaml
+from django.core.cache import cache
 from django.http import HttpRequest
 from django.test import RequestFactory
 
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib import json
 
 
 logger = logging.getLogger(__name__)
+HERE = __name__
+logger_prefix = formatted_text(f"{HERE}.SmarterTestBase()")
 
 
 class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     """Base class for all unit tests."""
 
     name: str
+    smarter_test_base_logger_prefix = formatted_text(f"{HERE}.SmarterTestBase()")
+    line_width = 150
 
     @classmethod
     def setUpClass(cls) -> None:
         """Set up the test class."""
         super().setUpClass()
+        title = f" {logger_prefix}.setUpClass() "
+        msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
+        logger.debug(msg)
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
         cls.name = camel_to_snake("smarterTestBase_" + cls.hash_suffix)
         cls.uid = SmarterTestBase.generate_uid()
+        cache.clear()
 
-        logger.info("%s.setUpClass() Setting up test class with hash suffix: %s", "SmarterTestBase", cls.hash_suffix)
-        logger.info("%s.setUpClass() Setting up test class with name: %s", "SmarterTestBase", cls.name)
-        logger.info("%s.setUpClass() Setting up test class with uid: %s", "SmarterTestBase", cls.uid)
+        logger.debug(
+            "%s.setUpClass() Setting up test class with hash suffix: %s",
+            cls.smarter_test_base_logger_prefix,
+            cls.hash_suffix,
+        )
+        logger.debug(
+            "%s.setUpClass() Setting up test class with name: %s", cls.smarter_test_base_logger_prefix, cls.name
+        )
+        logger.debug("%s.setUpClass() Setting up test class with uid: %s", cls.smarter_test_base_logger_prefix, cls.uid)
+        logger.debug(
+            "%s.setUpClass() %s",
+            cls.smarter_test_base_logger_prefix,
+            formatted_text_red("Django cache has been cleared"),
+        )
 
     @classmethod
     def tearDownClass(cls) -> None:
         """Tear down the test class."""
         super().tearDownClass()
+
+    def setUp(self) -> None:
+        """SetUp the test case."""
+        super().setUp()
+        title = f" {logger_prefix}.{self._testMethodName}() "
+        msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
+        logger.debug(msg)
+
+    def tearDown(self) -> None:
+        """Tear down the test case."""
+        title = f" {logger_prefix}.tearDown() {self._testMethodName} "
+        msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
+        logger.debug(msg)
+        super().tearDown()
 
     @classmethod
     def generate_uid(cls) -> str:

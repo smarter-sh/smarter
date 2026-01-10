@@ -39,7 +39,7 @@ from .views import ChatConfigView, SmarterChatSession
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -56,24 +56,6 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
     """Handle plugin deleting signal."""
     logger.info(
         "%s %s is being deleted. Pruning its usage records.",
-        formatted_text(f"{prefix}.plugin_deleting"),
-        plugin_meta.name,
-    )
-
-    ChatPluginUsage.objects.filter(plugin=plugin_meta).delete()
-    logger.info(
-        "%s %s ChatPluginUsage records deleted.",
-        formatted_text(f"{prefix}.plugin_deleting"),
-        plugin_meta.name,
-    )
-    ChatToolCall.objects.filter(plugin=plugin_meta).delete()
-    logger.info(
-        "%s %s ChatToolCall records deleted.",
-        formatted_text(f"{prefix}.plugin_deleting"),
-        plugin_meta.name,
-    )
-    logger.info(
-        "%s %s has been pruned from all prompt usage records.",
         formatted_text(f"{prefix}.plugin_deleting"),
         plugin_meta.name,
     )

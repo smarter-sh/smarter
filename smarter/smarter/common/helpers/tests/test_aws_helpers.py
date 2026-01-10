@@ -113,11 +113,3 @@ class TestAWSInfrastructureConfig(SmarterTestBase):
         result = config.s3
         self.assertEqual(result, s3_instance)
         self.assertIs(config._s3, s3_instance)
-
-    @patch("smarter.common.helpers.aws_helpers.AWSBase")
-    def test_get_botocore_version(self, mock_awsbase):
-        config = AWSInfrastructureConfig()
-        aws_instance = mock_awsbase.return_value
-        aws_instance.get_botocore_version.return_value = "1.34.0"
-        version = config.get_botocore_version
-        self.assertEqual(version, "1.34.0")

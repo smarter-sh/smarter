@@ -1,6 +1,7 @@
 """Base command class for custom management commands."""
 
 import sys
+import traceback
 from typing import Optional
 
 from django.core.management.base import BaseCommand
@@ -99,6 +100,9 @@ class SmarterCommand(BaseCommand):
             self.stdout.write(self.style.ERROR(msg))
         msg = f"{self.__module__} failed" + f" with error: {err}" if err else "."
         self.stdout.write(self.style.ERROR(msg))
+        if err:
+            tb = traceback.format_exc()
+            self.stdout.write(self.style.ERROR(tb))
         self.stdout.write(self.style.ERROR("-" * 80))
         if err:
             sys.exit(1)

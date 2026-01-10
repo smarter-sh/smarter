@@ -20,7 +20,7 @@ from smarter.apps.plugin.models import (
     PluginMeta,
 )
 from smarter.apps.plugin.plugin.static import StaticPlugin
-from smarter.common.conf import settings as smarter_settings
+from smarter.apps.plugin.signals import broker_ready
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -45,10 +45,9 @@ from .plugin_base import SAMPluginBaseBroker
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
@@ -120,6 +119,76 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
     _plugin_static_spec_data: Optional[SAMPluginStaticSpecData] = None
     _plugin_static_spec: Optional[SAMPluginStaticSpec] = None
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the SAMStaticPluginBroker instance.
+
+        This constructor initializes the broker by calling the parent class's
+        constructor, which will attempt to bootstrap the class instance
+        with any combination of raw manifest data (in JSON or YAML format),
+        a manifest loader, or existing Django ORM models. If a manifest
+        loader is provided and its kind matches the expected kind for this broker,
+        the manifest is initialized using the loader's data.
+
+        This class can bootstrap itself in any of the following ways:
+
+        - request.body (yaml or json string)
+        - name + account (determined via authentication of the request object)
+        - SAMLoader instance
+        - manifest instance
+        - filepath to a manifest file
+
+        If raw manifest data is provided, whether as a string or a dictionary,
+        or a SAMLoader instance, the base class constructor will only goes as
+        far as initializing the loader. The actual manifest model initialization
+        is deferred to this constructor, which checks the loader's kind.
+
+        :param args: Positional arguments passed to the parent constructor.
+        :param kwargs: Keyword arguments passed to the parent constructor.
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMStaticPluginBroker(loader=loader, plugin_meta=plugin_meta)
+        .. seealso::
+            - `SAMPluginBaseBroker.__init__`
+        """
+        super().__init__(*args, **kwargs)
+        if not self.ready:
+            if not self.loader and not self.manifest and not self.plugin:
+                logger.error(
+                    "%s.__init__() No loader nor existing Plugin provided for %s broker. Cannot initialize.",
+                    self.formatted_class_name,
+                    self.kind,
+                )
+                return
+            if self.loader and self.loader.manifest_kind != self.kind:
+                raise SAMBrokerErrorNotReady(
+                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
+                    thing=self.kind,
+                )
+
+            if self.loader:
+                self._manifest = SAMStaticPlugin(
+                    apiVersion=self.loader.manifest_api_version,
+                    kind=self.loader.manifest_kind,
+                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
+                )
+            if self._manifest:
+                logger.debug(
+                    "%s.__init__() initialized manifest from loader for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.manifest.metadata.name,
+                )
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        if self.ready:
+            logger.info(msg)
+        else:
+            logger.error(msg)
+
     def plugin_init(self):
         """
         Initialize the SAMStaticPluginBroker instance.
@@ -176,7 +245,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{self.__class__.__name__}()"
+        return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:
@@ -266,11 +335,29 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         if self._manifest:
             return self._manifest
 
-        # If the Plugin has previously been persisted then
-        # we can build the manifest components by mapping
-        # Django ORM models to Pydantic models.
-        if self.plugin_meta:
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMStaticPlugin(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
+            )
+            logger.debug(
+                "%s.manifest initialized from loader for %s %s", self.formatted_class_name, self.kind, self.name
+            )
+            return self._manifest
 
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self.plugin_meta:
+            logger.debug(
+                "%s.manifest building from ORM models for %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin_meta.name,
+            )
             metadata = self.plugin_metadata_orm2pydantic()
             data = self.plugin_static_spec_data_orm2pydantic()
             if not data:
@@ -294,17 +381,14 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 spec=spec,
                 status=status,
             )
-            return self._manifest
-        # Otherwise, if we received a manifest via the loader,
-        # then use that to build the manifest.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMStaticPlugin(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
+            logger.debug(
+                "%s.manifest initialized from ORM models for %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin_meta.name,
             )
-        if not self._manifest:
+            return self._manifest
+        else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
@@ -339,7 +423,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         self._plugin = StaticPlugin(
             plugin_meta=self.plugin_meta,
             user_profile=self.user_profile,
-            manifest=self.manifest,
+            manifest=self._manifest,
             name=self.name,
         )
         return self._plugin
@@ -397,6 +481,45 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             )
         return self._plugin_data
 
+    @property
+    def ready(self) -> bool:
+        """
+        Check if the broker is ready for operations.
+
+        This property determines whether the broker has been properly initialized and is ready to perform operations such as applying manifests or querying connections. It checks the presence of the manifest and connection properties.
+
+        :return: True if the broker is ready, False otherwise.
+        :rtype: bool
+
+        .. seealso::
+
+            :meth:`SAMApiConnectionBroker.manifest`
+            :meth:`SAMApiConnectionBroker.connection`
+
+        **Example usage**::
+            if broker.ready:
+                print("Broker is ready for operations.")
+        """
+        if not super().ready:
+            logger.debug(
+                "%s.ready retturning False because SAMPluginBaseBroker is not ready", self.formatted_class_name
+            )
+            return False
+        if self._manifest or self._plugin:
+            logger.debug(
+                "%s.ready returning True because manifest %s and/or plugin %s has been initialized",
+                self.formatted_class_name,
+                self._manifest,
+                self._plugin,
+            )
+            broker_ready.send(sender=self.__class__, broker=self)
+            return True
+        logger.debug(
+            "%s.ready returning False because neither manifest nor plugin could be initialized",
+            self.formatted_class_name,
+        )
+        return False
+
     def plugin_static_spec_data_orm2pydantic(self) -> Optional[SAMPluginStaticSpecData]:
         """
         Convert plugin static data from the Django ORM model format to the Pydantic manifest format.
@@ -425,10 +548,10 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             - `PluginDataStatic`
             - `SAMPluginStaticSpecData`
         """
-        if not self.plugin_meta:
-            return None
         if self._plugin_static_spec_data:
             return self._plugin_static_spec_data
+        if not self.plugin_meta:
+            return None
         self._plugin_static_spec_data = SAMPluginStaticSpecData(
             description=self.plugin_meta.description,
             staticData=self.plugin_data.static_data if self.plugin_data else {},
@@ -591,87 +714,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             )
 
         data = json.loads(self.manifest.model_dump_json())
-        return self.json_response_ok(command=command, data=data)
-
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """
-        Retrieve static plugins based on search criteria.
-
-        This method queries the database for static plugins associated with the current account.
-        If a plugin name is provided in `kwargs`, only plugins matching that name are returned.
-        The results are serialized and returned in a `SmarterJournaledJsonResponse`, including metadata
-        such as count and titles.
-
-        :param request: Django HTTP request object.
-        :type request: HttpRequest
-        :param args: Additional positional arguments.
-        :param kwargs: Search criteria, e.g. plugin name.
-        :return: JSON response containing serialized plugin data and metadata.
-        :rtype: SmarterJournaledJsonResponse
-
-        **Example:**
-
-        .. code-block:: python
-
-            response = broker.get(request, name="cli_test_plugin")
-            print(response.data)
-
-        .. seealso::
-
-            - `PluginMeta`
-            - `PluginSerializer`
-            - `SmarterJournaledJsonResponse`
-        """
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
-
-        data = []
-        name = kwargs.get(SAMMetadataKeys.NAME.value)
-        name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
-
-        # generate a QuerySet of PluginMeta objects that match our search criteria
-        if name:
-            plugins = PluginMeta.objects.filter(account=self.account, name=name)
-        else:
-            plugins = PluginMeta.objects.filter(account=self.account)
-        logger.info(
-            "%s.get() found %s Plugins for account %s", self.formatted_class_name, plugins.count(), self.account
-        )
-
-        # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
-        for plugin in plugins:
-            try:
-                self.plugin_init()
-                self.plugin_meta = plugin
-
-                model_dump = json.loads(self.manifest.model_dump_json())
-                if not model_dump:
-                    raise SAMPluginBrokerError(
-                        f"Model dump failed for {self.kind} {plugin.name}", thing=self.kind, command=command
-                    )
-                data.append(model_dump)
-            except Exception as e:
-                logger.error(
-                    "%s.get() failed to serialize %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    plugin.name,
-                    exc_info=True,
-                )
-                raise SAMPluginBrokerError(
-                    f"Failed to serialize {self.kind} {plugin.name}", thing=self.kind, command=command
-                ) from e
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
-            SCLIResponseGet.KWARGS.value: kwargs,
-            SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=PluginSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
-            },
-        }
         return self.json_response_ok(command=command, data=data)
 
     def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

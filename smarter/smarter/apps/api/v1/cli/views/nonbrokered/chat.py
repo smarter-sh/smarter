@@ -54,7 +54,7 @@ CACHE_EXPIRATION = 24 * 60 * 60  # 24 hours
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliChatBaseApiView()"
+        return f"{inherited_class}.{ApiV1CliChatBaseApiView.__name__}[{id(self)}]"
 
     @property
     def prompt(self) -> Optional[str]:
@@ -251,7 +251,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliChatApiView()"
+        return f"{inherited_class}.{ApiV1CliChatApiView.__name__}[{id(self)}]"
 
     @property
     def chat_config(self) -> dict:

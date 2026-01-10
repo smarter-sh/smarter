@@ -35,10 +35,9 @@ from smarter.lib.manifest.enum import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
@@ -149,10 +148,10 @@ class SAMChatToolCallBroker(AbstractBroker):
         This is used to provide a more readable class name in logs.
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMChatToolCallBroker()"
+        return f"{parent_class}.{SAMChatToolCallBroker.__name__}[{id(self)}]"
 
     @property
-    def model_class(self) -> ChatToolCall:
+    def model_class(self) -> typing.Type[ChatToolCall]:
         return ChatToolCall
 
     @property

@@ -6,17 +6,20 @@ trusted origins for CSRF protection.
 
 import logging
 from collections import defaultdict
+from collections.abc import Awaitable
 from typing import Optional
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.http import HttpResponseForbidden
+from django.http import HttpRequest, HttpResponseForbidden
+from django.http.response import HttpResponseBase
 from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.functional import cached_property
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
@@ -27,14 +30,14 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-logger.info("Loading smarter.apps.chatbot.middleware.csrf.SmarterCsrfViewMiddleware")
+logger.debug("Loading %s", formatted_text(__name__ + ".SmarterCsrfViewMiddleware"))
 
 
 class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
@@ -85,6 +88,15 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
     smarter_request: Optional[SmarterRequestMixin] = None
 
     @property
+    def formatted_class_name(self) -> str:
+        """Return the formatted class name for logging purposes."""
+        return formatted_text(f"{__name__}.{SmarterCsrfViewMiddleware.__name__}")
+
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        logger.debug("%s.__call__(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
+        return super().__call__(request)
+
+    @property
     def CSRF_TRUSTED_ORIGINS(self) -> list[str]:
         """
         Return the list of trusted origins for CSRF.
@@ -93,7 +105,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
         retval = settings.CSRF_TRUSTED_ORIGINS
         if self.smarter_request and (self.smarter_request.is_chatbot or self.smarter_request.is_config):
             retval += [self.smarter_request.url]
-        logger.info("%s.CSRF_TRUSTED_ORIGINS: %s", self.formatted_class_name, retval)
+        logger.debug("%s.CSRF_TRUSTED_ORIGINS: %s", self.formatted_class_name, retval)
         return retval
 
     @cached_property
@@ -136,7 +148,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
         # Short-circuit for any requests born from internal IP address hosts.
         # This is unlikely, but not impossible.
         if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
-            logger.info(
+            logger.debug(
                 "%s %s identified as an internal IP address, exiting.",
                 self.formatted_class_name,
                 self.smarter_build_absolute_uri(request),
@@ -145,10 +157,11 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
 
         # this is a workaround to not being able to inherit from
         # SmarterRequestMixin inside of middleware.
-        logger.info("%s.process_request - initializing SmarterRequestMixin", self.formatted_class_name)
-        self.smarter_request = SmarterRequestMixin(request)
-        if self.smarter_request and hasattr(self.smarter_request, "user") and self.smarter_request.user is not None:
-            request.user = self.smarter_request.user
+        if request is not None:
+            logger.debug("%s.process_request - initializing SmarterRequestMixin", self.formatted_class_name)
+            self.smarter_request = SmarterRequestMixin(request)
+            if self.smarter_request and hasattr(self.smarter_request, "user") and self.smarter_request.user is not None:
+                request.user = self.smarter_request.user
 
         if not is_authenticated_request(request):
             # this would only happen if the url routes to DRF but no
@@ -163,34 +176,34 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
                 admin_user_profile,
             )
 
-        logger.info("%s.__call__(): %s", self.formatted_class_name, url)
+        logger.debug("%s.__call__(): %s", self.formatted_class_name, url)
 
         if self.smarter_request.is_chatbot:
-            logger.info("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, url)
+            logger.debug("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, url)
             return None
 
         if self.smarter_request.is_chatbot:
-            logger.info("%s.process_request(): csrf_middleware_logging is active", self.formatted_class_name)
-            logger.info("=" * 80)
-            logger.info("%s ChatBot: %s", self.formatted_class_name, url)
+            logger.debug("%s.process_request(): csrf_middleware_logging is active", self.formatted_class_name)
+            logger.debug("=" * 80)
+            logger.debug("%s ChatBot: %s", self.formatted_class_name, url)
             for cookie in request.COOKIES:
-                logger.info("SmarterCsrfViewMiddleware request.COOKIES: %s", cookie)
-            logger.info("%s cookie settings", self.formatted_class_name)
-            logger.info("%s settings.CSRF_COOKIE_NAME: %s", self.formatted_class_name, settings.CSRF_COOKIE_NAME)
-            logger.info(
+                logger.debug("SmarterCsrfViewMiddleware request.COOKIES: %s", cookie)
+            logger.debug("%s cookie settings", self.formatted_class_name)
+            logger.debug("%s settings.CSRF_COOKIE_NAME: %s", self.formatted_class_name, settings.CSRF_COOKIE_NAME)
+            logger.debug(
                 "%s request.META['CSRF_COOKIE']: %s", self.formatted_class_name, request.META.get("CSRF_COOKIE")
             )
-            logger.info("%s settings.CSRF_COOKIE_AGE: %s", self.formatted_class_name, settings.CSRF_COOKIE_AGE)
-            logger.info("%s settings.CSRF_COOKIE_DOMAIN: %s", self.formatted_class_name, settings.CSRF_COOKIE_DOMAIN)
-            logger.info("%s settings.CSRF_COOKIE_PATH: %s", self.formatted_class_name, settings.CSRF_COOKIE_PATH)
-            logger.info("%s settings.CSRF_COOKIE_SECURE: %s", self.formatted_class_name, settings.CSRF_COOKIE_SECURE)
-            logger.info(
+            logger.debug("%s settings.CSRF_COOKIE_AGE: %s", self.formatted_class_name, settings.CSRF_COOKIE_AGE)
+            logger.debug("%s settings.CSRF_COOKIE_DOMAIN: %s", self.formatted_class_name, settings.CSRF_COOKIE_DOMAIN)
+            logger.debug("%s settings.CSRF_COOKIE_PATH: %s", self.formatted_class_name, settings.CSRF_COOKIE_PATH)
+            logger.debug("%s settings.CSRF_COOKIE_SECURE: %s", self.formatted_class_name, settings.CSRF_COOKIE_SECURE)
+            logger.debug(
                 "%s settings.CSRF_COOKIE_HTTPONLY: %s", self.formatted_class_name, settings.CSRF_COOKIE_HTTPONLY
             )
-            logger.info(
+            logger.debug(
                 "%s settings.CSRF_COOKIE_SAMESITE: %s", self.formatted_class_name, settings.CSRF_COOKIE_SAMESITE
             )
-            logger.info("=" * 80)
+            logger.debug("=" * 80)
 
         # ------------------------------------------------------
         return super().process_request(request)
@@ -204,7 +217,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
             and self.smarter_request.is_chatbot
             and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS)
         ):
-            logger.info(
+            logger.debug(
                 "%s.process_view() %s waffle switch is active",
                 self.formatted_class_name,
                 SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS,
