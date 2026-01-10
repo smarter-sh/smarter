@@ -17,7 +17,7 @@ else
     $(shell cp .env.example .env)
 endif
 
-.PHONY: init activate build run test clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test docker-compose-install docker-init docker-build docker-run docker-test python-init python-lint python-clean keen-init keen-build keen-server change-log help
+.PHONY: init activate build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release docker-init docker-build docker-run docker-test python-init python-lint python-clean python-requirements keen-init keen-build keen-server helm change-log help
 
 # Default target executed when no arguments are given to make.
 all: help
@@ -25,7 +25,7 @@ all: help
 # initialize local development environment.
 # takes around 5 minutes to complete
 init:
-	make check-python		# verify Python 3.11 is installed
+	make check-python		# verify Python 3.12 is installed
 	make docker-check		# verify Docker is installed and running
 	make python-init		# create/replace Python virtual environment and install dependencies
 	make docker-init		# initialize MySQL and create the smarter database
@@ -67,8 +67,9 @@ lint:
 analyze:
 	cloc . --exclude-ext=svg,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
+# docker exec smarter-app bash -c "coverage run manage.py test smarter.apps.plugin && coverage report -m && coverage html"
 coverage:
-	docker exec smarter-app bash -c "coverage run manage.py test && coverage report -m && coverage html"
+	docker exec smarter-app bash -c "coverage run --source=smarter.lib.django.request manage.py test smarter.lib.django.tests.test_request_mixin && coverage report -m"
 
 pre-commit-init:
 	pre-commit install
@@ -87,11 +88,6 @@ release:
 docker-check:
 	@docker ps >/dev/null 2>&1 || { echo >&2 "This project requires Docker but it's not running.  Aborting."; exit 1; }
 
-docker-shell:
-	make docker-check && \
-	docker exec -it smarter-app /bin/bash
-
-
 docker-init:
 	make docker-check && \
 	echo "Building Docker images..." && \
@@ -105,7 +101,7 @@ docker-init:
 		python manage.py create_smarter_admin --username admin --email admin@smarter.sh --password smarter && \
 		python manage.py create_user --account_number 3141-5926-5359 --username staff_user --email staff@smarter.sh --password smarter --first_name Smarter --last_name User --admin && \
 		python manage.py create_user --account_number 3141-5926-5359 --username customer_user --email customer@smarter.sh --password smarter --first_name Customer --last_name User && \
-		python manage.py add_plugin_examples --username admin && \
+		python manage.py add_plugin_examples --username admin --verbose && \
 		python manage.py verify_dns_configuration && \
 		python manage.py deploy_example_chatbot && \
 		python manage.py seed_chat_history && \
@@ -113,13 +109,17 @@ docker-init:
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2 && \
 		python manage.py initialize_wagtail && \
 		python manage.py initialize_providers && \
-		python manage.py apply_manifest --filespec 'smarter/apps/account/data/sample-secrets/smarter-test-db.yaml' --username admin && \
-		python manage.py update_secret --name smarter_test_db --username admin --value smarter_test_user && \
+		python manage.py apply_manifest --filespec 'smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml' --username admin && \
+		python manage.py update_secret --name smarter_test_user --username admin --value smarter_test_user && \
 		python manage.py apply_manifest --filespec 'smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml' --username admin && \
 		python manage.py create_stackademy_sql_plugin --db_host sql.lawrencemcdaniel.com --db_name smarter_test_db --db_username smarter_test_user && \
 		python manage.py create_stackademy_sql_chatbot" && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
+
+docker-shell:
+	make docker-check && \
+	docker exec -it smarter-app /bin/bash
 
 docker-build:
 	make docker-check && \
@@ -130,10 +130,9 @@ docker-run:
 	make docker-check && \
 	docker-compose up
 
-
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.apps.plugin"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.plugin.manifest.brokers.tests"
 
 docker-prune:
 	make docker-check && \
@@ -221,7 +220,6 @@ help:
 	@echo 'build                  - Build Docker containers'
 	@echo 'run                    - run web application from Docker'
 	@echo 'test                   - run Python-Django unit tests in Docker'
-	@echo 'requirements           - compile and update Python dependency files'
 	@echo 'clean                  - delete all local artifacts, virtual environment, node_modules, and Docker containers'
 	@echo 'tear-down              - destroy all docker build and local artifacts'
 	@echo '<************************** Code Management **************************>'
@@ -231,21 +229,23 @@ help:
 	@echo 'pre-commit-init        - install and configure pre-commit'
 	@echo 'pre-commit-run         - runs all pre-commit hooks on all files'
 	@echo 'release                - Force a new Github release'
-	@echo '<************************** AWS **************************>'
-	@echo 'helm-update            - Update Helm chart dependencies'
+	@echo '<************************** Docker **************************>'
+	@echo 'docker-init            - Initialize MySQL and create the smarter database'
+	@echo 'docker-shell           - Open a shell in the smarter-app Docker container'
+	@echo 'docker-build           - Build all Docker containers using docker-compose'
+	@echo 'docker-run             - Start all Docker containers using docker-compose'
+	@echo 'docker-test            - Run Python-Django unit tests in Docker'
+	@echo 'docker-prune           - Remove unused Docker objects'
 	@echo '<************************** Python **************************>'
 	@echo 'python-init            - Create a Python virtual environment and install dependencies'
 	@echo 'python-lint            - Run Python linting using pre-commit'
 	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'
-	@echo '<************************** Docker **************************>'
-	@echo 'docker-init            - Initialize MySQL and create the smarter database'
-	@echo 'docker-build           - Build all Docker containers using docker-compose'
-	@echo 'docker-run             - Start all Docker containers using docker-compose'
-	@echo 'docker-compose-install - Install Docker Compose'
-	@echo 'docker-test            - Run Python-Django unit tests in Docker'
+	@echo 'python-requirements    - compile and update Python dependency files'
 	@echo '<************************** Keen **************************>'
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
 	@echo 'keen-build             - Build Keen app using gulp'
 	@echo 'keen-server            - Start local Keen web server using gulp'
+	@echo '<************************** AWS **************************>'
+	@echo 'helm-update            - Update Helm chart dependencies'
 	@echo '===================================================================='
 	@echo 'change-log             - update CHANGELOG.md file'

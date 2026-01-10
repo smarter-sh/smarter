@@ -420,7 +420,7 @@ class SAMChatbotBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self) -> Type[ChatBot]:
+    def ORMModelClass(self) -> Type[ChatBot]:
         """
         The Django ORM model class for the ChatBot.
 

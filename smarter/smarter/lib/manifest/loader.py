@@ -268,11 +268,13 @@ class SAMLoader(SmarterHelperMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        *args,
         api_version: str = SmarterApiVersions.V1,
         kind: Optional[str] = None,
         manifest: Optional[Union[str, dict]] = None,
         file_path: Optional[str] = None,
         url: Optional[str] = None,
+        **kwargs,
     ):
         """
         Initialize a new instance of the :class:`SAMLoader`.
@@ -304,6 +306,7 @@ class SAMLoader(SmarterHelperMixin):
 
         Child classes may override the specification and validation logic to support custom manifest structures.
         """
+        super().__init__(*args, **kwargs)
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMLoaderError(f"Unsupported API version: {api_version}")
 
@@ -345,7 +348,10 @@ class SAMLoader(SmarterHelperMixin):
         self.validate_manifest()
 
     def __str__(self):
-        return self.formatted_class_name + f"({self.manifest_api_version}, {self.manifest_kind})"
+        return f"{self.formatted_class_name}(version={self.manifest_api_version}, kind={self.manifest_kind}, name={self.manifest_metadata.get(SAMMetadataKeys.NAME.value)})"
+
+    def __repr__(self):
+        return json.dumps(self.json_data, indent=4)
 
     # -------------------------------------------------------------------------
     # data setters and getters. Sort out whether we received JSON or YAML data

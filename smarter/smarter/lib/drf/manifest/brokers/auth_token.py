@@ -253,7 +253,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self) -> Type[SAMSmarterAuthToken]:
+    def ORMModelClass(self) -> Type[SAMSmarterAuthToken]:
         return SAMSmarterAuthToken
 
     def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

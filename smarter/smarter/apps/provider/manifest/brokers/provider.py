@@ -83,7 +83,7 @@ class SAMProviderBroker(AbstractBroker):
     **Parameters:**
       - `manifest`: Optional[`SAMProvider`]
         The Pydantic model instance representing the manifest.
-      - `pydantic_model`: Type[`SAMProvider`]
+      - `SAMModelClass`: Type[`SAMProvider`]
         The Pydantic model class used for manifest validation.
       - `provider`: Optional[`AccountContact`]
         The associated account contact, if available.
@@ -328,7 +328,7 @@ class SAMProviderBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self) -> Type[Provider]:
+    def ORMModelClass(self) -> Type[Provider]:
         """
         Return the model class associated with the Smarter API Provider.
 
@@ -338,7 +338,7 @@ class SAMProviderBroker(AbstractBroker):
 
         .. code-block:: python
 
-           model_cls = broker.model_class
+           model_cls = broker.ORMModelClass
            provider_instance = model_cls.objects.get(name="example_provider")
 
         .. seealso::
@@ -357,7 +357,7 @@ class SAMProviderBroker(AbstractBroker):
 
         .. code-block:: python
 
-           user_cls = broker.model_class
+           user_cls = broker.ORMModelClass
            user = user_cls.objects.get(username="example_user")
 
         .. seealso::

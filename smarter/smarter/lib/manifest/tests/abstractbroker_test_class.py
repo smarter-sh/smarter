@@ -5,6 +5,7 @@ from typing import Optional, Type
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
+from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.models import User
@@ -14,6 +15,7 @@ from smarter.apps.plugin.manifest.models.common.plugin.model import (
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.apps.plugin.manifest.models.static_plugin.spec import SAMPluginStaticSpec
+from smarter.apps.plugin.models import PluginDataStatic
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
@@ -85,6 +87,14 @@ class SAMTestBroker(AbstractBroker):
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################
+    @property
+    def SerializerClass(self) -> Optional[Type[ModelSerializer]]:
+        return ModelSerializer
+
+    @property
+    def ORMModelClass(self) -> Type[PluginDataStatic]:
+        return PluginDataStatic
+
     @property
     def formatted_class_name(self) -> str:
         """

@@ -82,7 +82,7 @@ class SAMUserBroker(AbstractBroker):
     **Parameters:**
       - `manifest`: Optional[`SAMUser`]
         The Pydantic model instance representing the manifest.
-      - `pydantic_model`: Type[`SAMUser`]
+      - `SAMModelClass`: Type[`SAMUser`]
         The Pydantic model class used for manifest validation.
       - `account_contact`: Optional[`AccountContact`]
         The associated account contact, if available.
@@ -175,6 +175,26 @@ class SAMUserBroker(AbstractBroker):
            - :class:`smarter.apps.account.models.User`
         """
         return self.user.username if self.user else None
+
+    @property
+    def SerializerClass(self) -> Type[UserSerializer]:
+        """
+        Return the serializer class associated with the Smarter API User.
+
+        :returns: The `UserSerializer` class.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           serializer_cls = broker.SerializerClass
+           serializer = serializer_cls(instance=user_instance)
+
+        .. seealso::
+
+           - :class:`smarter.apps.account.serializers.UserSerializer`
+        """
+        return UserSerializer
 
     def manifest_to_django_orm(self) -> dict:
         """
@@ -338,7 +358,7 @@ class SAMUserBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self) -> Type[User]:
+    def ORMModelClass(self) -> Type[User]:
         """
         Return the model class associated with the Smarter API User.
 
@@ -348,7 +368,7 @@ class SAMUserBroker(AbstractBroker):
 
         .. code-block:: python
 
-           model_cls = broker.model_class
+           model_cls = broker.ORMModelClass
            user_instance = model_cls.objects.get(username="example_user")
 
         .. seealso::
