@@ -33,7 +33,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: mysql.enabled
   - name: mariadb
-    version: 23.2.4
+    version: 24.0.2
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
   - name: prometheus
@@ -41,7 +41,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
-    version: 23.2.12
+    version: 24.1.0
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
 icon: https://cdn.platform.smarter.sh/images/logo/smarter-crop.png
