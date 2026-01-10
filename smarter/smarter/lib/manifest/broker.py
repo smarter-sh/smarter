@@ -1,25 +1,32 @@
-# pylint: disable=W0613
+# pylint: disable=W0613,C0302
 """Smarter API Manifest Abstract Broker class."""
 
 import logging
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
+from functools import cached_property
 from http import HTTPStatus
 from typing import Any, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
+from django.db import models
 from django.http import HttpRequest, QueryDict
 from requests import PreparedRequest
 from rest_framework.serializers import ModelSerializer
 
-from smarter.apps.account.models import Secret, UserProfile
+from smarter.apps.account.models import Account, Secret, User, UserProfile
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.console_helpers import (
+    formatted_text,
+    formatted_text_green,
+    formatted_text_red,
+)
 from smarter.common.utils import camel_to_snake as util_camel_to_snake
 from smarter.common.utils import snake_to_camel as util_snake_to_camel
+from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -37,12 +44,7 @@ from smarter.lib.journal.http import (
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.loader import SAMLoader
-from smarter.lib.manifest.models import (
-    AbstractSAMBase,
-    AbstractSAMMetadataBase,
-    AbstractSAMSpecBase,
-    AbstractSAMStatusBase,
-)
+from smarter.lib.manifest.models import AbstractSAMBase
 
 from .exceptions import SAMExceptionBase
 
@@ -54,7 +56,7 @@ SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -157,12 +159,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     ``deploy``, ``example_manifest``, ``get``, ``logs``, and ``undeploy``.
     """
 
-    _api_version: str
+    _api_version: str = SmarterApiVersions.V1
     _loader: Optional[SAMLoader] = None
     _manifest: Optional[Union[AbstractSAMBase, dict]] = None
     _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
-    _name: Optional[str]
-    _kind: Optional[str]
+    _name: Optional[str] = None
+    _kind: Optional[str] = None
     _validated: bool = False
     _thing: Optional[SmarterJournalThings] = None
     _created: bool = False
@@ -172,7 +174,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         self,
         request: HttpRequest,
         *args,
-        name: Optional[str] = None,  # i suspect that this is always None bc DRF sets name later in the process
+        name: Optional[str] = None,
         kind: Optional[str] = None,
         loader: Optional[SAMLoader] = None,
         api_version: str = SmarterApiVersions.V1,
@@ -181,59 +183,293 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         url: Optional[str] = None,
         **kwargs,
     ):
-        if api_version not in SUPPORTED_API_VERSIONS:
-            raise SAMBrokerError(
-                message=f"Unsupported apiVersion: {api_version}",
-                thing=SmarterJournalThings.ACCOUNT,
-            )
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
-        logger.info(
-            "AbstractBroker.__init__() initializing request: %s, args: %s, kwargs: %s", self.request, args, kwargs
+        logger.debug(
+            (
+                "%s.__init__() called with request=%s, name=%s, kind=%s, "
+                "loader=%s, api_version=%s, manifest=%s, file_path=%s, url=%s, "
+                "args=%s, kwargs=%s"
+            ),
+            self.abstract_broker_logger_prefix,
+            request,
+            name,
+            kind,
+            loader,
+            api_version,
+            manifest,
+            file_path,
+            url,
+            args,
+            kwargs,
         )
-        self._api_version = api_version
-        self._name = name  # i suspect that this is always None bc DRF sets name later in the process
-        self._kind = kind
-        if isinstance(manifest, AbstractSAMBase):
-            self._manifest = manifest
-            logger.info("%s.__init__() successfully initialized manifest: %s", self.formatted_class_name, self.manifest)
-        if isinstance(manifest, dict):
-            if not isinstance(loader, SAMLoader):
-                loader = SAMLoader(manifest=manifest)
-                logger.info(
-                    "%s.__init__() initialized loader from manifest data: %s", self.formatted_class_name, self.manifest
-                )
-        if isinstance(loader, SAMLoader):
-            self._loader = loader
-            logger.info("%s.__init__() received %s loader", self.formatted_class_name, self._loader.manifest_kind)
-            logger.info(
-                "%s.__init__() loader initialized with manifest kind: %s",
-                self.formatted_class_name,
-                self._loader.manifest_kind,
-            )
-
-        if self.user:
-            logger.info("%s.__init__() received user: %s", self.formatted_class_name, self.user_profile)
-
-        if self._name:
-            logger.info("%s.__init__() set name to %s", self.formatted_class_name, self._name)
-
-        self._kind = self._kind or self.loader.manifest_kind if self.loader else None
-        self._created = False
-        self._validated = bool(manifest) or bool(self.loader and self.loader.ready)
-        logger.info(
-            "AbstractBroker.__init__() finished initializing %s with api_version: %s, user: %s, name: %s, validated: %s, manifest: %s, loader: %s",
-            self.kind,
-            self.api_version,
-            self.user_profile,
-            self.name,
-            self._validated,
-            bool(self.manifest),
-            bool(self.loader),
+        # ----------------------------------------------------------------------
+        # Initial resolution of parameters, taking into consideration that
+        # they may be passed in via args or kwargs.
+        # ----------------------------------------------------------------------
+        user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
+        account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
+        user_profile = kwargs.pop("user_profile", None) or next(
+            (arg for arg in args if isinstance(arg, UserProfile)), None
         )
+        SmarterRequestMixin.__init__(
+            self, request, *args, user=user, account=account, user_profile=user_profile, **kwargs
+        )
+
+        # ----------------------------------------------------------------------
+        # Set API version, name, and kind.
+        # These will presumably be overridden once a manifest or loader
+        # is provided.
+        # ----------------------------------------------------------------------
+        self.api_version = api_version or SmarterApiVersions.V1
+        name = name or kwargs.pop("name", None)
+        self.name_cached_property_setter(name)
+        self.kind_setter(kind or kwargs.pop("kind", None))
+
+        # ----------------------------------------------------------------------
+        # Manifest and SAMLoader resolution logic. Prioritize the manifest
+        # if provided, otherwise attempt to initialize the SAMLoader from
+        # the params, which in turn will lazily load the manifest if/when needed.
+        # ----------------------------------------------------------------------
+        manifest = (
+            manifest
+            or kwargs.pop("manifest", manifest)
+            or next((arg for arg in args if isinstance(arg, AbstractSAMBase)), None)
+        )
+        if manifest:
+            self.manifest_setter(manifest)
+        else:
+            loader = (
+                loader or kwargs.pop("loader", None) or next((arg for arg in args if isinstance(arg, SAMLoader)), None)
+            )
+            if loader:
+                self.loader = loader
+            else:
+                if isinstance(file_path, str):
+                    if self._loader:
+                        logger.warning(
+                            f"{self.abstract_broker_logger_prefix}.__init__() - Both loader and file_path provided. "
+                            f"file_path will override loader."
+                        )
+                    self.loader = SAMLoader(file_path=file_path)
+                    if self._loader.ready:
+                        self.kind_setter(self._loader.manifest_kind)
+                        name = self._loader.manifest_metadata.get("name")
+                        self.name_cached_property_setter(name)  # type: ignore
+
+        self._validated = bool(self._manifest) or bool(self._loader and self.loader.ready)
+
+        # ----------------------------------------------------------------------
+        # log initialization state.
+        # ----------------------------------------------------------------------
+        self.log_abstract_broker_state()
+
+    def __str__(self):
+        """
+        Returns the string representation of the broker, expresssed as
+        "{apiVersion} {kind} Broker".
+
+        example: "smarter.sh/v1 ChatBot Broker"
+
+        :return: The string representation of the broker.
+        :rtype: str
+        """
+        account = self.account.name or "Anonymous"
+        name = self.name or "Unknown"
+
+        return f"{formatted_text(self.__class__.__name__)}(version={self.api_version}, account={account}, name={name})"
+
+    def __repr__(self) -> str:
+        """
+        Returns the JSON representation of the broker.
+
+        :return: The JSON representation of the broker.
+        :rtype: str
+        """
+        return json.dumps(self.to_json(), indent=4)
+
+    def __bool__(self) -> bool:
+        """
+        Return True if the broker is ready for operations.
+
+        :return: True if the broker is ready for operations.
+        :rtype: bool
+        """
+        return self.ready
+
+    def __hash__(self) -> int:
+        """
+        Return the hash of the broker based on account, kind, and name.
+
+        :return: The hash of the broker.
+        :rtype: int
+        """
+        return hash((self.account, self.kind, self.name))
+
+    def __eq__(self, other: object) -> bool:
+        """
+        Check if two brokers are equal based on account, kind, and name.
+
+        :param other: The other broker to compare.
+        :type other: object
+        :return: True if the brokers are equal, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.account == other.account and self.kind == other.kind and self.name == other.name
+
+    def __lt__(self, other: object) -> bool:
+        """
+        Less than comparison based on account, kind, and name.
+
+        :param other: The other broker to compare.
+        :type other: object
+        :return: True if this broker is less than the other broker, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return (self.account, self.kind, self.name) < (other.account, other.kind, other.name)
+
+    def __le__(self, other: object) -> bool:
+        """
+        Less than or equal comparison based on account, kind, and name.
+
+        :param other: The other broker to compare.
+        :type other: object
+        :return: True if this broker is less than or equal to the other broker, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return (self.account, self.kind, self.name) <= (other.account, other.kind, other.name)
+
+    def __gt__(self, other: object) -> bool:
+        """
+        Greater than comparison based on account, kind, and name.
+
+        :param other: The other broker to compare.
+        :type other: object
+        :return: True if this broker is greater than the other broker, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return (self.account, self.kind, self.name) > (other.account, other.kind, other.name)
+
+    def __ge__(self, other: object) -> bool:
+        """
+        Greater than or equal comparison based on account, kind, and name.
+
+        :param other: The other broker to compare.
+        :type other: object
+        :return: True if this broker is greater than or equal to the other broker, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return (self.account, self.kind, self.name) >= (other.account, other.kind, other.name)
 
     ###########################################################################
     # Class Instance Properties
     ###########################################################################
+    @property
+    def abstract_broker_logger_prefix(self) -> str:
+        """Return the logger prefix for the AbstractBroker.
+
+        :return: The logger prefix for the AbstractBroker.
+        :rtype: str
+        """
+        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
+
+    @property
+    def is_ready_abstract_broker(self) -> bool:
+        """Return True if the AbstractBroker is ready for operations.
+
+        An AbstractBroker is considered ready if:
+        - The AccountMixin is ready.
+        - The RequestMixin is ready.
+        - either a valid manifest is loaded or a ready SAMLoader is present.
+
+        :return: True if the AbstractBroker is ready for operations.
+        :rtype: bool
+        """
+        if not self.is_accountmixin_ready:
+            logger.warning(
+                "%s.is_ready_abstract_broker() - AccountMixin is not ready. Cannot process broker.",
+                self.abstract_broker_logger_prefix,
+            )
+            return False
+        if not self.is_requestmixin_ready:
+            logger.warning(
+                "%s.is_ready_abstract_broker() - RequestMixin is not ready. Cannot process broker.",
+                self.abstract_broker_logger_prefix,
+            )
+            return False
+        if bool(self._manifest):
+            logger.debug(
+                "%s.is_ready_abstract_broker() returning true because manifest is loaded.",
+                self.abstract_broker_logger_prefix,
+            )
+            return True
+        if bool(self.loader) and self.loader.ready:
+            logger.debug(
+                "%s.is_ready_abstract_broker() returning true because loader is ready.",
+                self.abstract_broker_logger_prefix,
+            )
+            return True
+        if not bool(self._manifest):
+            logger.warning(
+                "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
+                self.abstract_broker_logger_prefix,
+            )
+        if not bool(self.loader) or not self.loader.ready:
+            logger.warning(
+                "%s.is_ready_abstract_broker() returning false because loader is not ready.",
+                self.abstract_broker_logger_prefix,
+            )
+        return False
+
+    @property
+    def abstract_broker_ready_state(self) -> str:
+        """Return a string representation of the AbstractBroker's ready state.
+
+        :return: "READY" if the AbstractBroker is ready, otherwise "NOT_READY".
+        :rtype: str
+        """
+        if self.is_ready_abstract_broker:
+            return formatted_text_green("READY")
+        return formatted_text_red("NOT_READY")
+
+    @property
+    def ready(self) -> bool:
+        """Return True if the broker is ready for operations.
+
+        A broker is considered ready if it has a valid manifest loaded.
+
+        :return: True if the broker is ready for operations.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning(
+                "%s.ready() SmarterRequestMixin is not ready for kind=%s",
+                self.abstract_broker_logger_prefix,
+                self.kind,
+            )
+            return False
+        return retval and self.is_ready_abstract_broker
+
+    @property
+    def ready_state(self) -> str:
+        """Return a string representation of the broker's ready state.
+
+        :return: "READY" if the broker is ready, otherwise "NOT_READY".
+        :rtype: str
+        """
+        if self.ready:
+            return formatted_text_green("READY")
+        return formatted_text_red("NOT_READY")
+
     @property
     def formatted_class_name(self) -> str:
         """
@@ -244,7 +480,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: str
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.AbstractBroker()"
+        return f"{parent_class}.{AbstractBroker.__name__}()"
 
     @property
     def request(self) -> Optional[HttpRequest]:
@@ -335,32 +571,120 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         return self._kind
 
-    @property
+    def kind_setter(self, value: str):
+        """
+        Set the kind of manifest. Validates that the kind is a
+        valid SmarterJournalThings value.
+
+        :raises SmarterValueError: If the kind is not valid.
+
+        :param value: The kind of manifest to set.
+        :type value: str
+        """
+        if value is None:
+            logger.warning(
+                "%s.kind() setter - cannot unset kind. Ignoring this operation.",
+                self.abstract_broker_logger_prefix,
+            )
+            return
+        if not isinstance(value, str):
+            raise SmarterValueError(f"kind must be a string. Got: {type(value)} {value}")
+        if not value in SmarterJournalThings.all_values():
+            raise SmarterValueError(
+                f"kind '{value}' is not a valid SmarterJournalThings value. Expected one of: {SmarterJournalThings.all_values()}"
+            )
+
+        self._kind = value
+        logger.debug("%s.kind() setter set kind to %s", self.abstract_broker_logger_prefix, self._kind)
+
+    @cached_property
     def name(self) -> Optional[str]:
         """
-        The name of the manifest.
+        Retrieve the unique name identifier for the ChatBot instance managed by this broker.
 
-        :return: The name of the manifest.
+        This property accesses the name used to distinguish the ChatBot within the database and across
+        the Smarter platform. The name is first returned from an internal cache if available. If not cached,
+        and if a manifest is present, the name is extracted from the manifest's metadata and stored for
+        subsequent access.
+
+        The name is essential for database queries, model lookups, and for associating related resources
+        such as API keys, plugins, and functions with the correct ChatBot instance.
+
+        :returns: The name of the ChatBot as a string, or ``None`` if the name is not set or cannot be determined.
         :rtype: Optional[str]
+
+        .. note::
+
+            The name property is a critical identifier used throughout the broker to ensure correct
+            mapping between manifest data and persistent application state.
         """
         if self._name:
             return self._name
-        if (
-            not self._name
-            and isinstance(self.manifest, AbstractSAMBase)
-            and self.manifest.metadata
-            and self.manifest.metadata.name
-        ):
-            # assign from the manifest metadata, if we have it
+        if self._manifest:
             self._name = self.manifest.metadata.name
-            logger.info("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
+            logger.debug(
+                "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
+            )
+            return self._name
+        else:
+            logger.debug("%s.name() manifest is not set.", self.abstract_broker_logger_prefix)
+        if self.loader:
+            logger.debug(
+                "%s.name() found a SAMLoader. Attempting to initialize the manifest.",
+                self.abstract_broker_logger_prefix,
+            )
+            if self.manifest:
+                self._name = self.manifest.metadata.name
+                logger.debug(
+                    "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
+                )
+                return self._name
+            else:
+                self._name = self.loader.manifest_metadata.get("name")
+                if self._name:
+                    logger.debug(
+                        "%s.name() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
+                    )
+                    return self._name
+                logger.debug("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
             if name_param:
                 self._name = name_param
-                logger.info("%s.__init__() set name to %s from name url param", self.formatted_class_name, self._name)
-
+                logger.debug(
+                    "%s.name() set name to %s from name url param", self.abstract_broker_logger_prefix, self._name
+                )
+            else:
+                logger.debug("%s.name() url params do not contain a name", self.abstract_broker_logger_prefix)
+        if not self._name:
+            logger.warning("%s.name() could not determine name, returning None", self.abstract_broker_logger_prefix)
         return self._name
+
+    def name_cached_property_setter(self, value: str):
+        """
+        A workaround to the limitation that you cannot use both @cached_property and
+        a setter for the same attribute name (name). In Python, you cannot have a
+        property (or cached_property) and a setter with the same name unless you use the
+        @property decorator (not @cached_property).
+
+        We need the cached_property so that the lazy evaluation of the name only happens
+        once, and subsequent accesses return the cached value for performance.
+        However, we also need to be able to set the name explicitly in some cases,
+
+        :param value: The name to set for the manifest.
+        :type value: str
+        """
+        if not type(value) in [str, type(None)]:
+            raise SmarterValueError("name must be a string or None")
+
+        self._name = value
+        # Delete cached_property value if present
+        try:
+            del self.__dict__["name"]
+            logger.debug("%s.name() setter cleared cached_property", self.abstract_broker_logger_prefix)
+        except KeyError:
+            pass
+        logger.debug("%s.name() setter set name to %s", self.abstract_broker_logger_prefix, self._name)
 
     @property
     def api_version(self) -> str:
@@ -371,6 +695,21 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :rtype: Optional[str]
         """
         return self._api_version
+
+    @api_version.setter
+    def api_version(self, value: str):
+        """
+        Set the API version of the manifest.
+
+        :param value: The API version to set.
+        :type value: str
+        """
+        if not isinstance(value, str):
+            raise SmarterValueError("api_version must be a string")
+        self._api_version = value
+        logger.debug(
+            "%s.api_version() setter set api_version to %s", self.abstract_broker_logger_prefix, self._api_version
+        )
 
     @property
     def loader(self) -> Optional[SAMLoader]:
@@ -383,40 +722,61 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if self._loader and self._loader.ready:
             return self._loader
 
-    def __str__(self):
-        if isinstance(self.manifest, AbstractSAMBase):
-            return f"{self.manifest.apiVersion if self.manifest else "Unknown Version"} {self.kind} Broker"
-        if isinstance(self.manifest, dict):
-            return f"{self.manifest.get("apiVersion", "Unknown Version")} {self.kind} Broker"
-        return f"Unknown Version {self.kind} Broker"
+    @loader.setter
+    def loader(self, value: SAMLoader):
+        """
+        Set the SAMLoader instance for this broker.
+
+        :param value: The SAMLoader instance to set.
+        :type value: SAMLoader
+        """
+        if not value:
+            self._loader = None
+            logger.debug(
+                "%s.loader() setter - unset loader.",
+                self.abstract_broker_logger_prefix,
+            )
+            return
+        if not isinstance(value, SAMLoader):
+            raise SmarterValueError("loader must be a SAMLoader instance")
+        self._loader = value
+        if self._loader.ready:
+            # initialize the manifest from the loader
+            assert self.manifest is not None
+
+        logger.debug("%s.loader() setter set loader to %s", self.abstract_broker_logger_prefix, self._loader)
 
     ###########################################################################
     # Abstract Properties
     ###########################################################################
     @property
-    def serializer(self) -> Optional[ModelSerializer]:
+    @abstractmethod
+    def SerializerClass(self) -> Type[ModelSerializer]:
         """
-        Return the serializer for the broker.
+        Return the serializer class for the broker.
 
         :return: The serializer class definition for the broker.
-        :rtype: Optional[ModelSerializer]
+        :rtype: Type[ModelSerializer]
         """
         raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
 
     @property
-    def model_class(self) -> Type[TimestampedModel]:
+    @abstractmethod
+    def ORMModelClass(self) -> Type[TimestampedModel]:
         """
         Return the Django ORM model class for the broker.
 
         :return: The Django ORM model class definition for the broker.
         :rtype: Type[TimestampedModel]
         """
-        raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
+        raise SAMBrokerErrorNotImplemented(
+            message="Subclasses must implement the ModelClass", thing=self.thing, command=None
+        )
 
     @property
-    def pydantic_model(self) -> Type[AbstractSAMBase]:
+    def SAMModelClass(self) -> Type[AbstractSAMBase]:
         """
-        Return the Pydantic model for the broker.
+        Return the SAM (Smarter Api Manifest) model class for the broker.
 
         :return: The Pydantic model class definition for the broker.
         :rtype: Type[AbstractSAMBase]
@@ -424,33 +784,65 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return self._pydantic_model
 
     @property
+    @abstractmethod
     def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
         """
-        The Pydantic model representing the manifest. This is a reference
-        implementation of the abstract property, for documentation purposes
-        to illustrate the correct way to initialize a AbstractSAMBase Pydantic model.
-        The actual property must be implemented by the concrete broker class.
+        The Pydantic model representing the manifest. If the manifest
+        has not been initialized yet, this property will attempt to
+        initialize it using the SAMLoader.
 
         :return: The Pydantic model representing the manifest.
         :rtype: Optional[AbstractSAMBase]
         """
-        if not self._manifest and self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = AbstractSAMBase(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=AbstractSAMMetadataBase(**self.loader.manifest_metadata),
-                spec=AbstractSAMSpecBase(**self.loader.manifest_spec),
-                status=AbstractSAMStatusBase(**self.loader.manifest_status),
+        raise SAMBrokerErrorNotImplemented("Subclasses must implement the manifest property.")
+
+    def manifest_setter(self, value: Optional[Union[AbstractSAMBase, dict[str, Any]]]):
+        """
+        Set the manifest for the broker and override all AbstractBroker
+        model properties based on the manifest data.
+
+        :param value: The manifest to set, either as a Pydantic model or a dictionary.
+        :type value: Optional[Union[AbstractSAMBase, dict]]
+        """
+        if value is None:
+            self._manifest = None
+            logger.debug(
+                "%s.manifest() setter - unset manifest.",
+                self.abstract_broker_logger_prefix,
             )
-            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
+            return
+        if isinstance(value, AbstractSAMBase):
+            self._manifest = value
+            self._api_version = self._manifest.apiVersion
+            self.name_cached_property_setter(self._manifest.metadata.name)
+            self.kind_setter(self._manifest.kind)
+            self.loader = SAMLoader(manifest=self._manifest.model_dump())
+            logger.debug(
+                "%s.manifest() setter set manifest from Pydantic model: %s",
+                self.abstract_broker_logger_prefix,
+                self._manifest,
+            )
+        elif isinstance(value, dict):
+            self._manifest = value
+            self.api_version = self._manifest.get("apiVersion")
+            name = self._manifest.get("metadata", {}).get("name")
+            self.name_cached_property_setter(name)
+            kind = self._manifest.get("kind")
+            if not isinstance(kind, str):
+                raise SmarterValueError("manifest kind must be a string")
+            self.kind_setter(kind)
+            self.loader = SAMLoader(manifest=self._manifest)
+
+            logger.debug(
+                "%s.manifest() setter set manifest from dict: %s",
+                self.abstract_broker_logger_prefix,
+                self._manifest,
+            )
+        if self._manifest:
+            self._validated = True
+            self._created = True
         else:
-            logger.warning(
-                "%s.manifest() returning None: expected loader.manifest_kind of %s but received %s",
-                self.formatted_class_name,
-                self.kind,
-                self.loader.manifest_kind if self.loader else None,
-            )
-        return self._manifest
+            raise SmarterValueError("manifest must be a SAM model (ie Pydantic model) or a dict")
 
     ###########################################################################
     # Abstract Methods
@@ -480,8 +872,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         .. todo:: Research why this is not an abstract method.
         """
-        logger.info(
-            "AbstractBroker.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
+        logger.debug(
+            "%s.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
+            self.abstract_broker_logger_prefix,
             request,
             args,
             kwargs,
@@ -508,6 +901,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
         )
 
+    @abstractmethod
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """describe a resource.
 
@@ -627,7 +1021,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
 
-        model = self.pydantic_model
+        model = self.SAMModelClass
         data = model.model_json_schema()
 
         return self.json_response_ok(command=command, data=data)
@@ -672,9 +1066,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         try:
             secret = cached_secret_by_name_and_profile_id(name=name, profile_id=user_profile.id)
         except Secret.DoesNotExist as e:
-            logger.info(
+            logger.debug(
                 "%s.get_or_create_secret() Secret %s not found for user %s",
-                self.formatted_class_name,
+                self.abstract_broker_logger_prefix,
                 name,
                 user_profile.user.username,
             )
@@ -705,6 +1099,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 expires_at=expiration,
             )
 
+        if not secret:
+            raise SAMBrokerError(
+                message=f"Failed to create or retrieve Secret {name}",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.GET,
+            )
         return secret
 
     ###########################################################################
@@ -926,13 +1326,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :raises SAMBrokerErrorNotReady: If neither a manifest nor a name param is provided.
         :return: None
         """
-        self._name = kwargs.get("name", None) or self._name
-        if not self.manifest and not self.name:
-            raise SAMBrokerErrorNotReady(
-                f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",
-                thing=self.kind,
-                command=command,
-            )
+        name = kwargs.get("name")
+        if name:
+            self.name_cached_property_setter(name)
 
     # pylint: disable=W0212
     def get_model_titles(self, serializer: ModelSerializer) -> Optional[list[dict[str, str]]]:
@@ -950,6 +1346,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             item = self.snake_to_camel({"name": field_name, "type": type(field).__name__}, convert_values=True)
             if isinstance(item, dict) and all(isinstance(k, str) and isinstance(v, str) for k, v in item.items()):
                 fields_and_types.append(item)
+            else:
+                logger.warning(
+                    "%s.get_model_titles() skipping field %s: expected dict with str keys and str values but got: %s",
+                    self.abstract_broker_logger_prefix,
+                    field_name,
+                    item,
+                )
         return fields_and_types
 
     def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
@@ -983,8 +1386,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         - :func:`smarter.common.utils.camel_to_snake`
         """
-
-        return util_camel_to_snake(data)
+        return util_camel_to_snake(data) if data else None
 
     def snake_to_camel(
         self, data: Union[str, dict, list], convert_values: bool = False
@@ -1066,6 +1468,44 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         return retval
 
+    def to_json(self) -> dict[str, Any]:
+        """
+        Serialize the broker instance to a JSON string.
+
+        :return: A JSON string representation of the broker instance.
+        :rtype: str
+        """
+        return self.sorted_dict(
+            {
+                "api_version": self.api_version,
+                "kind": self.kind,
+                "name": self.name,
+                "manifest": self.manifest.model_dump() if isinstance(self.manifest, AbstractSAMBase) else self.manifest,
+                "loader": self.loader.to_json() if self.loader else None,
+                **super().to_json(),
+            }
+        )
+
+    def log_abstract_broker_state(self):
+        """
+        Log the current state of the AbstractBroker instance for debugging purposes.
+
+        :return: None
+        """
+        msg = (
+            f"{self.abstract_broker_logger_prefix}.__init__() - finished initializing {self.kind} "
+            f"broker is {self.abstract_broker_ready_state} with "
+            f"name: {self._name}, "
+            f"manifest: {bool(self._manifest)}, "
+            f"loader: {bool(self._loader)}, "
+            f"request: {self.url}, "
+            f"user_profile: {self.user_profile} "
+        )
+        if self.is_ready_abstract_broker:
+            logger.info(msg)
+        else:
+            logger.warning(msg)
+
 
 # pylint: disable=W0246
 class BrokerNotImplemented(AbstractBroker):
@@ -1084,11 +1524,28 @@ class BrokerNotImplemented(AbstractBroker):
         file_path=None,
         url=None,
     ):
+
         raise SAMBrokerErrorNotImplemented(
             message="No broker class has been implemented for this kind of manifest.",
             thing=None,
             command=None,
         )
+
+    @property
+    def ORMModelClass(self) -> Type[models.Model]:
+        raise SAMBrokerErrorNotImplemented(
+            message="Subclasses must implement the ORMModelClass", thing=self.thing, command=None
+        )
+
+    @property
+    def SerializerClass(self) -> Type[ModelSerializer]:
+        raise SAMBrokerErrorNotImplemented(
+            message="Subclasses must implement the SerializerClass", thing=self.thing, command=None
+        )
+
+    @property
+    def manifest(self) -> Optional[Union[AbstractSAMBase, dict]]:
+        raise SAMBrokerErrorNotImplemented("Subclasses must implement the manifest property.")
 
     def chat(self, request, *args, **kwargs):
         super().chat(request, args, kwargs)

@@ -2,7 +2,7 @@
 """Smarter API SqlPlugin Manifest handler"""
 
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, Type
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
@@ -178,6 +178,33 @@ class SAMPluginBaseBroker(AbstractBroker):
     @property
     def plugin_data(self) -> Optional[PluginDataBase]:
         raise NotImplementedError("plugin_data property must be implemented in the subclass of SAMPluginBaseBroker")
+
+    @property
+    def SerializerClass(self) -> Type[PluginSerializer]:
+        """
+        Returns the serializer class for the broker.
+
+        This property provides the serializer class definition used by the broker
+        for serializing and deserializing plugin data. It returns the `PluginSerializer`
+        class, which is specifically designed to handle static plugin data serialization.
+
+        :return: The serializer class definition for the broker.
+        :rtype: Type[PluginSerializer]
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMStaticPluginBroker()
+            serializer_class = broker.SerializerClass
+            print(serializer_class.__name__)
+            # Output: "PluginSerializer"
+
+        .. seealso::
+
+            - `PluginSerializer` for static plugin data serialization.
+        """
+        return PluginSerializer
 
     # --------------------------------------------------------------------------
     # ORM to Pydantic conversion methods
