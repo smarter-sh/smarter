@@ -256,6 +256,113 @@ class SmarterRequestMixin(AccountMixin):
 
         self.log_request_mixin_ready_status()
 
+    def __str__(self) -> str:
+        """
+        String representation of the SmarterRequestMixin instance.
+
+        :return: A string describing the instance.
+        :rtype: str
+        """
+        return (
+            f"{formatted_text(SmarterRequestMixin.__name__)}[{id(self)}]"
+            f"("
+            f"request={self.smarter_request}, "
+            f"user={self.user_profile}"
+            f")"
+        )
+
+    def __repr__(self) -> str:
+        """
+        Official string representation of the SmarterRequestMixin instance.
+
+        :return: A string representation suitable for debugging.
+        :rtype: str
+        """
+        return json.dumps(self.to_json(), indent=4)
+
+    def __bool__(self) -> bool:
+        """
+        Boolean representation of the SmarterRequestMixin instance.
+
+        :return: True if the instance is ready, False otherwise.
+        :rtype: bool
+        """
+        return self.is_requestmixin_ready
+
+    def __hash__(self) -> int:
+        """
+        Hash representation of the SmarterRequestMixin instance.
+
+        :return: An integer hash of the instance.
+        :rtype: int
+        """
+        return hash(
+            (
+                self.url,
+                self.user_profile,
+            )
+        )
+
+    def __eq__(self, other: Any) -> bool:
+        """
+        Equality comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instances are equal, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return False
+        return self.url == other.url and self.user_profile == other.user_profile
+
+    def __lt__(self, other: Any) -> bool:
+        """
+        Less-than comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is less than the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) < (other.url, other.user_profile)
+
+    def __le__(self, other: Any) -> bool:
+        """
+        Less-than-or-equal comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is less than or equal to the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) <= (other.url, other.user_profile)
+
+    def __gt__(self, other: Any) -> bool:
+        """
+        Greater-than comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is greater than the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) > (other.url, other.user_profile)
+
+    def __ge__(self, other: Any) -> bool:
+        """
+        Greater-than-or-equal comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is greater than or equal to the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) >= (other.url, other.user_profile)
+
     def invalidate_cached_properties(self):
         """
         Invalidates all cached properties on the instance to force re-evaluation.
