@@ -7,7 +7,7 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from smarter.apps.api import urls as api_urls
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 
 
 api_info = openapi.Info(

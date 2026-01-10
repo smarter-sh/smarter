@@ -30,7 +30,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.spec import (
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
 from smarter.apps.plugin.signals import broker_ready
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

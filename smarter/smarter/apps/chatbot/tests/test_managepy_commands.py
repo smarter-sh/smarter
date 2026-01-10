@@ -15,7 +15,7 @@ from smarter.apps.chatbot.signals import (
     chatbot_dns_verification_status_changed,
     chatbot_dns_verified,
 )
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib.django import waffle

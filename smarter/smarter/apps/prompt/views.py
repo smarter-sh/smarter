@@ -35,7 +35,7 @@ from smarter.apps.plugin.models import (
 )
 from smarter.apps.prompt.models import Chat, ChatHelper
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import (
     SmarterConfigurationError,

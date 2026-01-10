@@ -17,7 +17,7 @@ from smarter.apps.prompt.tasks import (
     create_chat_tool_call_history,
     update_chat,
 )
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.cache import cache_results

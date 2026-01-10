@@ -7,7 +7,7 @@ import sys  # libraries for error management
 import traceback  # libraries for error management
 from typing import Any, Optional, Union
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import (

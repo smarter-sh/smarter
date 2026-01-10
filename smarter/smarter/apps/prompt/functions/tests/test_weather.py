@@ -9,7 +9,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
     Function,
 )
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

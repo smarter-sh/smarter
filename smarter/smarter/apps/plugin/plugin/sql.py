@@ -62,8 +62,7 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import SettingsDefaults, smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake

@@ -6,7 +6,7 @@ import logging
 
 # smarter stuff
 from smarter.apps.prompt.providers.base_classes import OpenAICompatibleChatProvider
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

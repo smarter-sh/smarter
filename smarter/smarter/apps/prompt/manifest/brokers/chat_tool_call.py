@@ -11,7 +11,7 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.prompt.manifest.models.chat_tool_call.const import MANIFEST_KIND
 from smarter.apps.prompt.manifest.models.chat_tool_call.model import SAMChatToolCall
 from smarter.apps.prompt.models import Chat, ChatToolCall
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

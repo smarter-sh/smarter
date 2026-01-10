@@ -14,7 +14,7 @@ from smarter.apps.account.utils import (
     get_cached_user_profile,
 )
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_ACCOUNT_NUMBER,
     SMARTER_ADMIN_USERNAME,

@@ -4480,6 +4480,6 @@ def get_settings() -> Settings:
         raise SmarterConfigurationError("Invalid configuration: " + str(e)) from e
 
 
-settings = get_settings()
+smarter_settings = get_settings()
 
-__all__ = ["settings"]
+__all__ = ["smarter_settings"]

@@ -11,8 +11,7 @@ import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/
 import botocore.exceptions
 
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import Services
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import Services, smarter_settings
 
 # our stuff
 from smarter.common.const import (

@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.wsgi import get_wsgi_application
 from whitenoise import WhiteNoise
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment

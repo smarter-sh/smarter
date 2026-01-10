@@ -5,7 +5,7 @@ import logging
 import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 
 
 logger = logging.getLogger(__name__)

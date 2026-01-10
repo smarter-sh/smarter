@@ -50,7 +50,7 @@ from smarter.apps.account.utils import (
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.plugin.models import ApiConnection, PluginMeta, SqlConnection
 from smarter.apps.provider.models import Provider
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.lib.cache import cache_results
 
 

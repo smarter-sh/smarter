@@ -2,7 +2,7 @@
 """A helper class that provides setters/getters for account and user."""
 
 import logging
-from typing import TYPE_CHECKING, Optional, Union
+from typing import Optional, Union
 
 from django.contrib.auth.models import AnonymousUser
 from rest_framework.exceptions import AuthenticationFailed
@@ -33,11 +33,6 @@ from .utils import (
     get_cached_user_profile,
 )
 
-
-if TYPE_CHECKING:
-    from django.core.handlers.wsgi import WSGIRequest
-    from django.http import HttpRequest
-    from rest_framework.request import Request
 
 UserType = Union["AnonymousUser", User, None]
 AccountNumberType = Optional[str]

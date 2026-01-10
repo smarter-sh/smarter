@@ -19,7 +19,7 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import mask_string
 from smarter.lib.django import waffle

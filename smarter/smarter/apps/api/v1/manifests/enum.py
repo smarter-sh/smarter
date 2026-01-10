@@ -45,7 +45,7 @@ from smarter.apps.prompt.manifest.models.chat_tool_call.const import (
 from smarter.apps.provider.manifest.models.provider.const import (
     MANIFEST_KIND as PROVIDER_MANIFEST_KIND,
 )
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

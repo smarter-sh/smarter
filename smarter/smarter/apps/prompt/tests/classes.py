@@ -25,7 +25,7 @@ from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
