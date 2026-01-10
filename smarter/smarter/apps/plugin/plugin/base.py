@@ -28,10 +28,9 @@ from smarter.common.exceptions import (
     SmarterException,
     SmarterValueError,
 )
-from smarter.common.utils import camel_to_snake as util_camel_to_snake
-from smarter.common.utils import snake_to_camel as util_snake_to_camel
 from smarter.lib import json
 from smarter.lib.django import waffle
+from smarter.lib.django.mixins import SmarterConverterMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
@@ -87,7 +86,7 @@ class SmarterPluginError(SmarterException):
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class PluginBase(ABC, SmarterHelperMixin):
+class PluginBase(ABC, SmarterHelperMixin, SmarterConverterMixin):
     """
     Abstract base class for Smarter plugins.
 
@@ -1533,79 +1532,6 @@ class PluginBase(ABC, SmarterHelperMixin):
                 )
             retval["enum"] = enum
         return retval
-
-    def snake_to_camel(
-        self, data: Union[str, dict, list], convert_values: bool = False
-    ) -> Optional[Union[str, dict, list]]:
-        """
-        Convert snake_case to camelCase.
-
-        :param data: The data to convert.
-        :type data: Union[str, dict, list]
-        :param convert_values: Whether to convert values as well as keys. Default is False.
-        :type convert_values: bool
-
-        :examples:
-
-            .. code-block:: python
-
-                # Convert a snake_case string to camelCase
-                result = self.snake_to_camel("my_variable_name")
-                # result: "myVariableName"
-
-                # Convert a dictionary with snake_case keys
-                data = {"user_name": "alice", "account_number": 123}
-                result = self.snake_to_camel(data)
-                # result: {"userName": "alice", "accountNumber": 123}
-
-                # Convert a list of snake_case strings
-                result = self.snake_to_camel(["first_name", "last_name"])
-                # result: ["firstName", "lastName"]
-
-
-        return: The converted data.
-        :rtype: Optional[Union[str, dict, list]]
-
-        .. seealso::
-
-            - :func:`smarter.common.utils.snake_to_camel`
-
-        """
-        return util_snake_to_camel(data, convert_values)
-
-    def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
-        """
-        Convert camelCase to snake_case.
-
-        :param data: The data to convert.
-        :type data: Union[str, dict, list]
-
-        :examples:
-
-            .. code-block:: python
-
-                # Convert a camelCase string to snake_case
-                result = self.camel_to_snake("myVariableName")
-                # result: "my_variable_name"
-
-                # Convert a dictionary with camelCase keys
-                data = {"userName": "alice", "accountNumber": 123}
-                result = self.camel_to_snake(data)
-                # result: {"user_name": "alice", "account_number": 123}
-
-                # Convert a list of camelCase strings
-                result = self.camel_to_snake(["firstName", "lastName"])
-                # result: ["first_name", "last_name"]
-                #         return: The converted data.
-
-        :rtype: Optional[Union[str, dict, list]]
-
-        .. seealso::
-
-            - :func:`smarter.common.utils.camel_to_snake`
-
-        """
-        return util_camel_to_snake(data)
 
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:
         """
