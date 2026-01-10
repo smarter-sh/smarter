@@ -1,3 +1,4 @@
+# pylint: disable=C0302
 """Account models."""
 
 # pylint: disable=missing-class-docstring
@@ -12,8 +13,7 @@ from cryptography.fernet import Fernet
 
 # django stuff
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, AnonymousUser, User
-from django.core.handlers.wsgi import WSGIRequest
+from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.loader import render_to_string
@@ -24,9 +24,10 @@ from django.utils.functional import SimpleLazyObject
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
-from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.model_helpers import MetaDataModel, TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -40,12 +41,20 @@ from .signals import (
 )
 
 
+if TYPE_CHECKING:
+    try:
+        from django.contrib.auth.models import AbstractUser, AnonymousUser, _AnyUser
+        from django.core.handlers.wsgi import WSGIRequest
+
+    except ImportError:
+        _AnyUser = Union[object]  # fallback for Sphinx/type checkers
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -95,16 +104,9 @@ def welcome_email_context(first_name: str) -> dict:
     }
 
 
-if TYPE_CHECKING:
-    try:
-        from django.contrib.auth.models import _AnyUser
-    except ImportError:
-        _AnyUser = object  # fallback for Sphinx/type checkers
-
-
 def get_resolved_user(
-    user: "Union[User, AbstractUser, AnonymousUser, SimpleLazyObject, _AnyUser]",
-) -> Optional[Union[User, AbstractUser, AnonymousUser]]:
+    user: Union[User, "AbstractUser", "AnonymousUser", SimpleLazyObject, "_AnyUser"],
+) -> Optional[Union[User, "AbstractUser", "AnonymousUser"]]:
     """
     Resolve and return a Django user object from a user-like instance.
 
@@ -138,9 +140,14 @@ def get_resolved_user(
             :class:`django.utils.functional.SimpleLazyObject`
 
     """
-    logger.info("get_resolved_user() called for user type: %s", type(user))
+    logger.info(
+        "%s.get_resolved_user() called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user)
+    )
     if user is None:
         return None
+
+    # pylint: disable=import-outside-toplevel
+    from django.contrib.auth.models import AbstractUser, AnonymousUser
 
     # this is the expected case
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
@@ -160,7 +167,7 @@ def get_resolved_user(
     )
 
 
-class Account(TimestampedModel):
+class Account(MetaDataModel):
     """
     Model representing a Smarter account.
 
@@ -212,10 +219,16 @@ class Account(TimestampedModel):
     city = models.CharField(max_length=255, blank=True, null=True)
     state = models.CharField(max_length=255, blank=True, null=True)
     postal_code = models.CharField(max_length=20, blank=True, null=True)
-    country = models.CharField(max_length=255, default="USA", blank=True, null=True)
-    language = models.CharField(max_length=255, default="EN", blank=True, null=True)
-    timezone = models.CharField(max_length=255, blank=True, null=True)
-    currency = models.CharField(max_length=255, default="USD", blank=True, null=True)
+    country = models.CharField(max_length=255, default="USA", blank=True, null=True, help_text="ISO 3166 country code.")
+    language = models.CharField(
+        max_length=255, default="EN", blank=True, null=True, help_text="BCP 47 language tag, e.g., 'en-US'."
+    )
+    timezone = models.CharField(
+        max_length=255, blank=True, null=True, help_text=" IANA timezone name, e.g., 'America/New_York'."
+    )
+    currency = models.CharField(
+        max_length=255, default="USD", blank=True, null=True, help_text="ISO 4217 currency code."
+    )
     is_active = models.BooleanField(
         default=True,
         help_text="Indicates whether the account is active. Inactive accounts cannot be used for billing or resource management, nor hosting Provider apis.",
@@ -281,6 +294,7 @@ class Account(TimestampedModel):
         """
         if self.account_number == "9999-9999-9999":
             self.account_number = self.randomized_account_number()
+
         SmarterValidator.validate_account_number(self.account_number)
         super().save(*args, **kwargs)
 
@@ -307,6 +321,34 @@ class Account(TimestampedModel):
 
     def __str__(self):
         return str(self.account_number) + " - " + str(self.company_name)
+
+
+class MetaDataWithOwnershipModel(MetaDataModel):
+    """
+    Abstract Django ORM base model that adds Account ownership
+    to a SAM Metadata model.
+
+    This model extends `MetaDataModel` to include a foreign key
+    relationship to the `Account` model, establishing ownership of resources
+    by a specific account. It also enforces uniqueness constraints on
+    the combination of `account` and `name` fields,
+
+    :param account: ForeignKey to :class:`Account`. The account that owns this resource.
+
+    .. note::
+
+        This is an abstract base class and should not be instantiated directly.
+    """
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        abstract = True
+        unique_together = (
+            "account",
+            "name",
+        )
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="%(class)ss")
 
 
 class AccountContact(TimestampedModel):
@@ -541,7 +583,11 @@ class AccountContact(TimestampedModel):
         if contact:
             contact.send_email(subject=subject, body=body, html=html, from_email=from_email)
         else:
-            logger.error("No primary contact found for account %s", account)
+            logger.error(
+                "%s.send_email_to_primary_contact() No primary contact found for account %s",
+                formatted_text(__name__ + ".AccountContact()"),
+                account,
+            )
 
     def save(self, *args, **kwargs):
         """
@@ -587,7 +633,7 @@ class AccountContact(TimestampedModel):
         return self.first_name + " " + self.last_name
 
 
-class UserProfile(TimestampedModel):
+class UserProfile(MetaDataWithOwnershipModel):
     """
     UserProfile model for associating Django users with Smarter accounts.
 
@@ -618,11 +664,10 @@ class UserProfile(TimestampedModel):
 
     # Add more fields here as needed
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        User,
         on_delete=models.CASCADE,
         related_name="user_profile",
     )
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
     is_test = models.BooleanField(
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )
@@ -689,7 +734,10 @@ class UserProfile(TimestampedModel):
             self.add_to_account_contacts(is_primary=is_primary)
 
             logger.debug(
-                "New user profile created for %s %s. Sending signal.", self.account.company_name, self.user.email
+                "%s.save() New user profile created for %s %s. Sending signal.",
+                formatted_text(__name__ + ".UserProfile()"),
+                self.account.company_name,
+                self.user.email,
             )
             new_user_created.send(sender=self.__class__, user_profile=self)
 
@@ -725,17 +773,25 @@ class UserProfile(TimestampedModel):
         if admins.exists():
             return admins.first().user  # type: ignore[return-value]
 
-        logger.error("No admin found for account %s", account)
+        logger.error(
+            "%s.admin_for_account() No admin found for account %s", formatted_text(__name__ + ".UserProfile()"), account
+        )
 
         users = cls.objects.filter(account=account).order_by("user__id")
         if users.exists():
             user = users.first().user  # type: ignore[return-value]
             return user
 
-        logger.error("No user for account %s", account)
+        logger.error(
+            "%s.admin_for_account() No user for account %s", formatted_text(__name__ + ".UserProfile()"), account
+        )
         admin_user = cls.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
         user_profile = cls.objects.create(user=admin_user, account=account)
-        logger.warning("Created admin user for account %s. Use manage.py to set the password", account)
+        logger.warning(
+            "%s.admin_for_account() Created admin user for account %s. Use manage.py to set the password",
+            formatted_text(__name__ + ".UserProfile()"),
+            account,
+        )
         return user_profile.user
 
     def __str__(self):
@@ -873,7 +929,10 @@ class Charge(TimestampedModel):
         super().save(*args, **kwargs)
         if is_new:
             logger.debug(
-                "New user charge created for %s %s. Sending signal.", self.account.company_name, self.user.email
+                "%s.save() New user charge created for %s %s. Sending signal.",
+                formatted_text(__name__ + ".Charge()"),
+                self.account.company_name,
+                self.user.email,
             )
             new_charge_created.send(sender=self.__class__, charge=self)
 
@@ -938,7 +997,7 @@ class DailyBillingRecord(TimestampedModel):
         )
 
 
-class Secret(TimestampedModel):
+class Secret(MetaDataWithOwnershipModel):
     """
     Secret model for securely storing and managing sensitive account-level information.
 
@@ -984,11 +1043,13 @@ class Secret(TimestampedModel):
         related_name="secrets",
         help_text="Reference to the UserProfile associated with this secret.",
     )
-    name = models.CharField(
-        max_length=255, help_text="Name of the secret in camelCase, e.g., 'apiKey', no special characters."
-    )
-    description = models.TextField(blank=True, null=True, help_text="Optional description of the secret.")
     encrypted_value = models.BinaryField(help_text="Read-only encrypted representation of the secret's value.")
+
+    def validate(self):
+        super().validate()
+        if hasattr(self, "user_profile") and hasattr(self, "account"):
+            if self.user_profile.account != self.account:
+                raise SmarterValueError("UserProfile's account does not match the Secret's account.")
 
     def save(self, *args, **kwargs):
         """
@@ -1026,6 +1087,7 @@ class Secret(TimestampedModel):
             raise SmarterValueError(
                 f"Name and encrypted_value are required fields. Got name: {self.name}, encrypted_value: {self.encrypted_value}"
             )
+        self.account = self.user_profile.account
         super().save(*args, **kwargs)
         if is_new:
             secret_created.send(sender=self.__class__, secret=self)
@@ -1087,7 +1149,7 @@ class Secret(TimestampedModel):
         expiration = timezone.make_aware(self.expires_at) if timezone.is_naive(self.expires_at) else self.expires_at
         return timezone.now() > expiration
 
-    def has_permissions(self, request: WSGIRequest) -> bool:
+    def has_permissions(self, request: "WSGIRequest") -> bool:
         """
         Check if the authenticated user in the given request has permission to manage this secret.
 

@@ -105,3 +105,41 @@ Example::
 
     secret_accessed.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
 """
+
+secret_saved = Signal()
+"""
+Signal sent when a secret is saved.
+
+Arguments:
+    secret (Secret): The saved secret instance.
+    user_profile (UserProfile): The profile of the user who saved the secret.
+
+Example::
+
+    secret_saved.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
+"""
+
+secret_updated = Signal()
+"""
+Signal sent when a secret is updated.
+
+Arguments:
+    secret (Secret): The updated secret instance.
+    user_profile (UserProfile): The profile of the user who updated the secret.
+
+Example::
+
+    secret_updated.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
+"""
+
+broker_ready = Signal()
+"""
+Signal sent when a broker achieves a ready state.
+
+Arguments:
+    broker: The broker instance that is ready.
+
+Example::
+
+    broker_ready.send(sender=self.__class__, broker=self)
+"""

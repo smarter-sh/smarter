@@ -51,6 +51,7 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseServerError,
 )
 from smarter.lib.django.view_helpers import (
+    SmarterAuthenticatedCachedWebView,
     SmarterAuthenticatedNeverCachedWebView,
     SmarterNeverCachedWebView,
 )
@@ -71,7 +72,7 @@ MAX_RETURNED_PLUGINS = 10
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -165,7 +166,7 @@ class SmarterChatSession(SmarterHelperMixin):
 
 # pylint: disable=R0902
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatConfigView(SmarterNeverCachedWebView):
+class ChatConfigView(SmarterAuthenticatedCachedWebView):
     """
     Chat configuration view for the Smarter web application.
 

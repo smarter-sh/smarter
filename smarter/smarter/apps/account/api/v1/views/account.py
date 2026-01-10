@@ -25,7 +25,7 @@ from .base import AccountListViewBase, AccountViewBase
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -46,9 +46,11 @@ class AccountView(AccountViewBase):
     def post(self, request: WSGIRequest):
         try:
             data = json.loads(request.body.decode("utf-8"))
+            name = data.get("name", data.get("account_number", "company_name")) or "Default_Account_Name"
+            data["name"] = name.replace(" ", "_").replace("-", "_").lower()
             with transaction.atomic():
                 self.account = Account.objects.create(**data)
-                UserProfile.objects.create(user=request.user, account=self.account)
+                UserProfile.objects.create(name=request.user.username, user=request.user, account=self.account)
         except Exception as e:
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
         return HttpResponseRedirect(request.path_info + str(self.account.id) + "/")

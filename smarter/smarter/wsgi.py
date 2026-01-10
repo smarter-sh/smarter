@@ -16,7 +16,7 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.en
 application = get_wsgi_application()
 application = WhiteNoise(application, root=settings.STATIC_ROOT)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=smarter_settings.log_level)
 logger = logging.getLogger(__name__)
 logger.debug("WSGI config for smarter.")
 logger.debug("WSGI application: %s", application)

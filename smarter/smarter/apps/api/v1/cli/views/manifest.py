@@ -1,5 +1,7 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'manifest' view"""
+"""Smarter API command-line interface 'example_manifest' view"""
+
+import logging
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -12,13 +14,18 @@ from .swagger import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 class ApiV1CliManifestApiView(CliBaseApiView):
     """
-    This is the API endpoint for the 'manifest' command in the Smarter command-line interface (CLI).
+    This is the API endpoint for the 'example_manifest' command in the Smarter command-line interface (CLI).
+    It generates an example manifest for a specified Smarter resource.
 
-    The 'manifest' command is a Smarter Brokered and Journaled operation that is used with some Smarter resources.
+    The 'example_manifest' command is a Smarter Brokered and Journaled operation that is used with some Smarter resources.
 
-    The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
+    The client making the HTTP request to this endpoint is expected to be the Smarter CLI,
+    which is written in Golang and available on Windows, macOS, and Linux.
 
     The response from this endpoint is a JSON object containing an example manifest of the resource.
 
@@ -36,13 +43,13 @@ class ApiV1CliManifestApiView(CliBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliManifestApiView()"
+        return f"{inherited_class}.{ApiV1CliManifestApiView.__name__}[{id(self)}]"
 
     @swagger_auto_schema(
         operation_description="""
-Executes the 'manifest' command for Smarter resources. The resource name is passed in the url query parameters.
+Executes the 'example_manifest' command for Smarter resources. The resource name is passed in the url query parameters.
 
-This is the API endpoint for the 'manifest' command in the Smarter command-line interface (CLI). The 'manifest' command is a Smarter Brokered and Journaled operation that is used with all Smarter resources. It expects a YAML manifest in smarter.sh/v1 format.
+This is the API endpoint for the 'example_manifest' command in the Smarter command-line interface (CLI). The 'example_manifest' command is a Smarter Brokered and Journaled operation that is used with all Smarter resources. It expects a YAML manifest in smarter.sh/v1 format.
 
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
 
@@ -64,9 +71,9 @@ This is a brokered operation, so the actual work is delegated to the appropriate
 
     @swagger_auto_schema(
         operation_description="""
-Executes the 'manifest' command for Smarter resources. The resource name is passed in the url query parameters.
+Executes the 'example_manifest' command for Smarter resources. The resource name is passed in the url query parameters.
 
-This is the API endpoint for the 'manifest' command in the Smarter command-line interface (CLI). The 'manifest' command is a Smarter Brokered and Journaled operation that is used with all Smarter resources. It expects a YAML manifest in smarter.sh/v1 format.
+This is the API endpoint for the 'example_manifest' command in the Smarter command-line interface (CLI). The 'example_manifest' command is a Smarter Brokered and Journaled operation that is used with all Smarter resources. It expects a YAML manifest in smarter.sh/v1 format.
 
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
 
@@ -82,5 +89,8 @@ The response from this endpoint is a JSON object containing an example manifest 
         manual_parameters=[COMMON_SWAGGER_PARAMETERS["kind"]],
     )
     def get(self, request, kind, *args, **kwargs):
+        logger.debug(
+            "%s.get() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+        )
         response = self.broker.example_manifest(request=request, kwargs=kwargs)
         return response

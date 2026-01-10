@@ -14,7 +14,6 @@ from rest_framework.response import Response
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.api.signals import api_request_completed
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -26,7 +25,7 @@ from .base import AccountListViewBase, AccountViewBase
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -285,7 +284,7 @@ def create_user(request: Request):
     try:
         with transaction.atomic():
             user = User.objects.create_user(**data)
-            UserProfile.objects.create(user=request.user, account=account)
+            UserProfile.objects.create(name=user.username, user=user, account=account)
     except Exception as e:
         logger.info("UserListView.get_queryset() - error creating user: %s", e)
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)

@@ -2,7 +2,6 @@
 # pylint: disable=E1101
 """Utility functions for the OpenAI Lambda functions"""
 import base64
-import json  # library for interacting with JSON data https://www.json.org/json-en.html
 import logging
 import sys  # libraries for error management
 import traceback  # libraries for error management
@@ -11,6 +10,9 @@ from typing import Any, Optional, Union
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import (
+    json,  # library for interacting with JSON data https://www.json.org/json-en.html
+)
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -28,7 +30,7 @@ from .validators import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)

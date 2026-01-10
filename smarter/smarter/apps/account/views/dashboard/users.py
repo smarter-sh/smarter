@@ -19,7 +19,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -77,7 +77,9 @@ class UserView(SmarterAdminWebView):
         user_form = UserForm(data=data)
         if user_form.is_valid():
             target_user = user_form.save()
-            target_user_profile = UserProfile.objects.create(user=target_user, account=user_profile.account)
+            target_user_profile = UserProfile.objects.create(
+                name=target_user.username, user=target_user, account=user_profile.account
+            )
             target_user_profile.save()
             return redirect("account:account_user", user_id=target_user.id)
         return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data=user_form.errors)

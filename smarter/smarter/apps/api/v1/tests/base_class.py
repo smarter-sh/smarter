@@ -13,7 +13,6 @@ from typing import Any, Optional
 from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -23,7 +22,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -35,25 +34,22 @@ class ApiV1TestBase(TestAccountMixin):
 
     namespace = "api:v1:"
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        instance = cls()
+    def setUp(self):
+        super().setUp()
 
-        cls.token_record, cls.token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
-            name=instance.admin_user.username,
-            user=instance.admin_user,
-            description=instance.admin_user.username,
+        self.token_record, self.token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
+            name=self.admin_user.username,
+            user=self.admin_user,
+            description=self.admin_user.username,
         )
 
-    @classmethod
-    def tearDownClass(cls) -> None:
-        instance = cls()
+    def tearDown(self):
         try:
-            instance.token_record.delete()
+            self.token_record.delete()
         except SmarterAuthToken.DoesNotExist:
             pass
-        super().tearDownClass()
+
+        return super().tearDown()
 
     def get_response(
         self, path, manifest: Optional[str] = None, data: Optional[dict] = None
@@ -66,7 +62,8 @@ class ApiV1TestBase(TestAccountMixin):
         headers = {"Authorization": f"Token {self.token_key}"}
 
         logger.info(
-            "ApiV1TestBase.get_response() with path: %s headers: %s manifest: %s, data: %s",
+            "%s.get_response() with path: %s headers: %s manifest: %s, data: %s",
+            self.formatted_class_name,
             path,
             headers,
             manifest,
@@ -75,20 +72,34 @@ class ApiV1TestBase(TestAccountMixin):
 
         if manifest:
             logger.info(
-                "ApiV1TestBase.get_response() with path: %s, headers: %s, manifest: %s", path, headers, manifest
+                "%s.get_response() with path: %s, headers: %s, manifest: %s",
+                self.formatted_class_name,
+                path,
+                headers,
+                manifest,
             )
             response = client.post(path=path, data=manifest, content_type="application/json", headers=headers)
         elif data:
-            logger.info("ApiV1TestBase.get_response() with data: %s", data)
+            logger.info("%s.get_response() with data: %s", self.formatted_class_name, data)
             response = client.post(path=path, data=data, content_type="application/json", headers=headers)
         else:
-            logger.info("ApiV1TestBase.get_response() with no data or manifest. headers: %s", headers)
+            logger.info("%s.get_response() with no data or manifest. headers: %s", self.formatted_class_name, headers)
             response = client.post(path=path, content_type="application/json", data=None, headers=headers)
         response_content = response.content.decode("utf-8")
-        response_json = json.loads(response_content)
+
+        try:
+            response_json = json.loads(response_content)
+        except json.JSONDecodeError as e:
+            logger.warning(
+                "ApiV1TestBase.get_response() could not decode JSON response for path: %s error: %s",
+                path,
+                str(e),
+            )
+            response_json = {"raw_response": response_content}
 
         logger.info(
-            "ApiV1TestBase.get_response() %s with status code: %d response: %s",
+            "%s.get_response() %s with status code: %d response: %s",
+            self.formatted_class_name,
             path,
             response.status_code,
             response_json,

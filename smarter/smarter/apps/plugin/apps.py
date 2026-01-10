@@ -23,4 +23,4 @@ class PluginConfig(AppConfig):
         from . import receivers  # noqa
         from . import signals  # noqa
 
-        logger.info("Plugin app ready: signals and receivers imported")
+        logger.debug("Plugin app ready: signals and receivers imported")

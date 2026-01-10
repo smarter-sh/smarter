@@ -59,6 +59,10 @@ class TestJsonDictView(SmarterUnauthenticatedAPIView):
         """Handle GET requests and return a faux JSON dictionary."""
         return Response(faux_dict, status=status.HTTP_200_OK)
 
+    def post(self, request: Request, *args, **kwargs):
+        """Handle POST requests and return the received data."""
+        return Response(request.data, status=status.HTTP_200_OK)
+
 
 class TestJsonListView(SmarterUnauthenticatedAPIListView):
     """Returns a list of JSON dicts for testing purposes."""
@@ -74,6 +78,10 @@ class TestJsonListView(SmarterUnauthenticatedAPIListView):
         queryset = self.get_queryset()
         return Response(queryset, status=status.HTTP_200_OK)
 
+    def post(self, request: Request, *args, **kwargs):
+        """Handle POST requests and return the received data."""
+        return Response(request.data, status=status.HTTP_200_OK)
+
 
 class TestJsonDictViewAuthenticated(SmarterAuthenticatedAPIView):
     """Returns a JSON dict for testing purposes."""
@@ -81,6 +89,10 @@ class TestJsonDictViewAuthenticated(SmarterAuthenticatedAPIView):
     def get(self, request, *args, **kwargs):
         """Handle GET requests and return a faux JSON dictionary."""
         return Response(faux_dict, status=status.HTTP_200_OK)
+
+    def post(self, request: Request, *args, **kwargs):
+        """Handle POST requests and return the received data."""
+        return Response(request.data, status=status.HTTP_200_OK)
 
 
 class TestJsonListViewAuthenticated(SmarterAuthenticatedListAPIView):
@@ -96,6 +108,10 @@ class TestJsonListViewAuthenticated(SmarterAuthenticatedListAPIView):
         """Handle GET requests and return a faux JSON list."""
         queryset = self.get_queryset()
         return Response(queryset, status=status.HTTP_200_OK)
+
+    def post(self, request: Request, *args, **kwargs):
+        """Handle POST requests and return the received data."""
+        return Response(request.data, status=status.HTTP_200_OK)
 
 
 class TestStackademyCourseCatalogueView(SmarterUnauthenticatedAPIView):
@@ -142,3 +158,7 @@ class TestStackademyCourseCatalogueView(SmarterUnauthenticatedAPIView):
             filtered = [c for c in filtered if description.lower() in c["description"].lower()]
 
         return Response(filtered, status=status.HTTP_200_OK)
+
+    def post(self, request: Request, *args, **kwargs):
+        """Handle POST requests and return the received data."""
+        return Response(request.data, status=status.HTTP_200_OK)

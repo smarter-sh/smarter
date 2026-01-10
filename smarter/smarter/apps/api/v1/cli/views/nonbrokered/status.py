@@ -1,7 +1,9 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'apply' view"""
 
+import logging
 import platform
+import traceback
 from http import HTTPStatus
 
 import boto3
@@ -9,6 +11,7 @@ from botocore.exceptions import ClientError
 from django.http import JsonResponse
 from django_redis import get_redis_connection
 
+from smarter.apps.api.v1.cli.views.base import CliBaseApiView
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -16,11 +19,12 @@ from smarter.lib.journal.enum import (
 )
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
-from ..base import CliBaseApiView
+
+logger = logging.getLogger(__name__)
 
 
 class ApiV1CliStatusApiView(CliBaseApiView):
-    """Smarter API command-line interface 'apply' view"""
+    """Smarter API command-line interface 'status' view"""
 
     @property
     def formatted_class_name(self) -> str:
@@ -29,7 +33,7 @@ class ApiV1CliStatusApiView(CliBaseApiView):
         along with the name of this mixin.
         """
         inherited_class = super().formatted_class_name
-        return f"{inherited_class}.ApiV1CliStatusApiView()"
+        return f"{inherited_class}.{ApiV1CliStatusApiView.__name__}[{id(self)}]"
 
     def get_service_status(self, region_name):
         try:
@@ -47,6 +51,13 @@ class ApiV1CliStatusApiView(CliBaseApiView):
             return {"error": str(e)}
 
     def get_redis_info(self):
+        """
+        Return Redis server information.
+        :return: Redis server information
+        :rtype: dict
+        """
+        logger.debug("%s.get_redis_info() called", self.formatted_class_name)
+
         client = get_redis_connection("default")
         info = client.info()
         retval = {
@@ -58,6 +69,10 @@ class ApiV1CliStatusApiView(CliBaseApiView):
         return retval
 
     def status(self):
+        """Get status information about the Smarter platform."""
+
+        logger.debug("%s.status() called", self.formatted_class_name)
+
         try:
             data = {
                 SmarterJournalApiResponseKeys.DATA: {
@@ -84,7 +99,13 @@ class ApiV1CliStatusApiView(CliBaseApiView):
             )
         # pylint: disable=W0718
         except Exception as e:
-            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
+            return JsonResponse(
+                data={
+                    "error": str(e),
+                    "trace": traceback.format_exc(),
+                },
+                status=HTTPStatus.BAD_REQUEST.value,
+            )
 
     def post(self, request):
         """Get method for PluginManifestView."""

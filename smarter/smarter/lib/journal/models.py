@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 
 from smarter.common.utils import hash_factory
+from smarter.lib.json import SmarterJSONEncoder
 
 from .enum import SmarterJournalCliCommands, SmarterJournalThings
 
@@ -53,8 +54,12 @@ class SAMJournal(models.Model):
         blank=True,
         default=SmarterJournalCliCommands.CHAT.value,
     )
-    request = models.JSONField()
-    response = models.JSONField()
+    request = models.JSONField(
+        encoder=SmarterJSONEncoder,
+    )
+    response = models.JSONField(
+        encoder=SmarterJSONEncoder,
+    )
     status_code = models.PositiveSmallIntegerField(default=200)
 
     def save(self, *args, **kwargs):

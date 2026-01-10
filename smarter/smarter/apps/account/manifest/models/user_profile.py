@@ -1,11 +1,10 @@
 """Pydantic models for the account app."""
 
-from pydantic import BaseModel
-
 from smarter.apps.account.serializers import UserProfileSerializer
+from smarter.lib.manifest.models import SmarterBasePydanticModel
 
 
-class UserProfileModel(BaseModel):
+class UserProfileModel(SmarterBasePydanticModel):
     """Convert Django ORM UserProfile model to a simplified Pydantic model that only tracks the pk."""
 
     id: int

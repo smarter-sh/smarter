@@ -5,7 +5,6 @@ import logging
 from http import HTTPStatus
 from typing import Optional, Union
 
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
@@ -18,6 +17,8 @@ from smarter.lib.django.http.serializers import (
     HttpAuthenticatedRequestSerializer,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.token_authentication import SmarterAnonymousUser
+from smarter.lib.json import SmarterJSONEncoder
 
 from .enum import (
     SCLIResponseMetadata,
@@ -75,7 +76,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         self,
         request: HttpRequest,
         data,
-        encoder=DjangoJSONEncoder,
+        encoder=SmarterJSONEncoder,
         safe=True,
         thing: Optional[Union[SmarterJournalThings, str]] = None,
         command: Optional[SmarterJournalCliCommands] = None,
@@ -143,9 +144,9 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 request_data = anonymous_serialized_request(request)
 
             try:
-                serializable_data = json.loads(json.dumps(data, cls=DjangoJSONEncoder))
+                serializable_data = json.loads(json.dumps(data, cls=SmarterJSONEncoder))
                 journal = SAMJournal.objects.create(
-                    user=user,
+                    user=user or (SmarterAnonymousUser() if user is None else user),
                     thing=thing,
                     command=command,
                     request=request_data,
@@ -184,7 +185,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     :type request: django.http.HttpRequest
     :param e: The Python exception object that was raised.
     :type e: Exception
-    :param encoder: JSON encoder class. Defaults to ``django.core.serializers.json.DjangoJSONEncoder``.
+    :param encoder: JSON encoder class. Defaults to ``django.core.serializers.json.SmarterJSONEncoder``.
     :type encoder: type
     :param safe: Controls if only ``dict`` objects may be serialized. Defaults to ``True``.
     :type safe: bool
@@ -221,7 +222,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         self,
         request: HttpRequest,
         e: Exception,
-        encoder=DjangoJSONEncoder,
+        encoder=SmarterJSONEncoder,
         safe: bool = True,
         thing: Optional[Union[SmarterJournalThings, str]] = None,
         command: Optional[SmarterJournalCliCommands] = None,

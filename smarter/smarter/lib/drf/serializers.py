@@ -1,9 +1,16 @@
 """Account serializers for smarter api"""
 
+import sys
 from typing import Optional
 
 from django.http import HttpRequest
 from rest_framework import serializers
+
+
+def is_sphinx_build():
+    """Determine if the current execution context is a Sphinx documentation build."""
+
+    return "sphinx" in sys.modules
 
 
 class SmarterCamelCaseSerializer(serializers.ModelSerializer):
@@ -14,7 +21,17 @@ class SmarterCamelCaseSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         """Initialize the serializer and set the request context."""
         super().__init__(*args, **kwargs)
-        self.request = self.context.get("request", None)
+
+        # Get the request from the context if available, while
+        # guarding against Sphinx autodoc generation issues.
+        if is_sphinx_build():
+            self.request = None
+        else:
+            context = getattr(self, "context", None)
+            if isinstance(context, dict):
+                self.request = context.get("request", None)
+            else:
+                self.request = None
 
     def to_representation(self, instance):
         """Convert field names to camelCase."""

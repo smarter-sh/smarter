@@ -273,11 +273,11 @@ class TestAbstractBrokerClass(TestAccountMixin):
         # 300,
         if not self.broker:
             raise ValueError("Broker is not initialized")
-        logger.info("Testing describe method of SAMTestBroker")
-        logger.info("Broker: %s", self.broker)
-        logger.info("User: %s %s", self.broker.request.user, self.non_admin_user)
-        logger.info("Account: %s %s", self.broker.account, self.account)
-        logger.info("UserProfile: %s %s", self.broker.user_profile, self.non_admin_user_profile)
+        logger.debug("Testing describe method of SAMTestBroker")
+        logger.debug("Broker: %s", self.broker)
+        logger.debug("User: %s %s", self.broker.request.user, self.non_admin_user)
+        logger.debug("Account: %s %s", self.broker.account, self.account)
+        logger.debug("UserProfile: %s %s", self.broker.user_profile, self.non_admin_user_profile)
 
         try:
             self.broker.describe(request=self.broker.request, kwargs=None)  # type: ignore[arg-type]

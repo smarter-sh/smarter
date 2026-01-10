@@ -5,11 +5,20 @@ metadata:
   name: test_chatbot
   description: chatbot for running unit test
   version: 1.0.0
+  tags:
+    - test
+    - chatbot
+    - unittests
+  annotations:
+    - smarter.sh/chatbot/test-chatbot/creator: QA Team
+    - smarter.sh/chatbot/test-chatbot/purpose: unit testing
+    - smarter.sh/chatbot/test-chatbot/release-date: 2024-06-15
+    - smarter.sh/chatbot/test-chatbot/backward-compatibility: true
 spec:
   config:
     deployed: true
     provider: openai
-    defaultModel: gpt-4-turbo
+    defaultModel: gpt-4o-mini
     defaultTemperature: 0.5
     defaultMaxTokens: 512
     defaultSystemRole: >

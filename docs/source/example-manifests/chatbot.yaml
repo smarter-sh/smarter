@@ -4,10 +4,10 @@ metadata:
   description:
     To create and deploy an example Smarter chatbot. Prompt with example
     function calling to trigger the example Static Plugin
-  name: ExampleChatbot
+  name: example_chatbot
   version: 0.1.0
 spec:
-  apiKey: camelCaseNameOfApiKey
+  apiKey: snake_case_api_key_name
   config:
     appAssistant: Elle
     appBackgroundImageUrl: https://example.com/background-image.jpg
@@ -24,7 +24,7 @@ spec:
     appWelcomeMessage: Welcome to the Example Chatbot! How can I help you today?
     customDomain: null
     defaultMaxTokens: 2048
-    defaultModel: gpt-4-turbo
+    defaultModel: gpt-4o-mini
     defaultSystemRole:
       You are a helpful chatbot. When given the opportunity to utilize
       function calling, you should always do so. This will allow you to provide the

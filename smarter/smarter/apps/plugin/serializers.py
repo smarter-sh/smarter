@@ -1,10 +1,12 @@
 """PluginMeta serializers."""
 
+import sys
+
 from rest_framework import serializers
-from taggit.models import Tag
 
 from smarter.apps.account.serializers import (
     AccountMiniSerializer,
+    MetaDataWithOwnershipModelSerializer,
     SecretSerializer,
     UserProfileSerializer,
 )
@@ -25,62 +27,11 @@ from .manifest.enum import (
 )
 
 
-class TagListSerializerField(serializers.ListField):
-    """
-    Serializer for a list of tags.
-
-    This field serializes a list of tag names to strings and deserializes them to `Tag` model instances.
-    It supports both direct lists and Django taggable manager objects.
-
-    :param child: The serializer field used for each tag (defaults to `CharField`).
-    :type child: serializers.CharField
-
-    :return: A list of tag names (for serialization) or a list of `Tag` objects (for deserialization).
-    :rtype: list[str] or list[Tag]
-
-    .. important::
-
-        When deserializing, tags are created if they do not already exist.
-
-    .. seealso::
-
-        - :class:`taggit.models.Tag`
-        - :class:`rest_framework.serializers.ListField`
-
-    .. versionadded:: 3.0.0
-
-    **Example usage**:
-
-    .. code-block:: python
-
-        class MySerializer(serializers.Serializer):
-            tags = TagListSerializerField()
-
-        # Serializing
-        serializer = MySerializer({'tags': ['foo', 'bar']})
-        print(serializer.data)  # {'tags': ['foo', 'bar']}
-
-        # Deserializing
-        serializer = MySerializer(data={'tags': ['foo', 'bar']})
-        serializer.is_valid()
-        print(serializer.validated_data['tags'])  # [<Tag: foo>, <Tag: bar>]
-
-    """
-
-    child = serializers.CharField()
-
-    def to_representation(self, data):
-        if hasattr(data, "all"):
-            tags = data.all()
-        else:
-            tags = data
-        return [str(tag) for tag in tags]
-
-    def to_internal_value(self, data):
-        return [Tag.objects.get_or_create(name=name)[0] for name in data]
+def is_sphinx_build():
+    return "sphinx" in sys.modules
 
 
-class PluginMetaSerializer(SmarterCamelCaseSerializer):
+class PluginMetaSerializer(MetaDataWithOwnershipModelSerializer):
     """
     Serializer for the PluginMeta model.
 
@@ -131,7 +82,6 @@ class PluginMetaSerializer(SmarterCamelCaseSerializer):
 
     """
 
-    tags = TagListSerializerField()
     author = UserProfileSerializer(read_only=True)
     account = AccountMiniSerializer(read_only=True)
 
@@ -139,6 +89,7 @@ class PluginMetaSerializer(SmarterCamelCaseSerializer):
     class Meta:
         model = PluginMeta
         fields = ["name", "account", "description", "plugin_class", "version", "author", "tags"]
+        read_only_fields = ["author", "account"]
 
 
 class PluginSelectorSerializer(SmarterCamelCaseSerializer):
@@ -290,7 +241,7 @@ class PluginStaticSerializer(SmarterCamelCaseSerializer):
         fields = ["description", "static_data"]
 
 
-class SqlConnectionSerializer(SmarterCamelCaseSerializer):
+class SqlConnectionSerializer(MetaDataWithOwnershipModelSerializer):
     """
     Serializer for the SqlConnection model.
 
@@ -435,7 +386,12 @@ class PluginSqlSerializer(SmarterCamelCaseSerializer):
 
     """
 
-    connection = serializers.SlugRelatedField(slug_field="name", queryset=SqlConnection.objects.all())
+    if is_sphinx_build():
+        queryset = []
+    else:
+        queryset = SqlConnection.objects.all()
+
+    connection = serializers.SlugRelatedField(slug_field="name", queryset=queryset)
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -450,7 +406,7 @@ class PluginSqlSerializer(SmarterCamelCaseSerializer):
         ]
 
 
-class ApiConnectionSerializer(SmarterCamelCaseSerializer):
+class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
     """
     Serializer for the ApiConnection model.
 
@@ -524,9 +480,9 @@ class ApiConnectionSerializer(SmarterCamelCaseSerializer):
 
     """
 
-    account = AccountMiniSerializer(read_only=True)
-    api_key = SecretSerializer(read_only=True)
-    proxy_password = SecretSerializer(read_only=True)
+    account = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    api_key = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    proxy_password = serializers.SlugRelatedField(slug_field="name", read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -603,7 +559,12 @@ class PluginApiSerializer(SmarterCamelCaseSerializer):
         # }
     """
 
-    connection = serializers.SlugRelatedField(slug_field="name", queryset=ApiConnection.objects.all())
+    if is_sphinx_build():
+        queryset = []
+    else:
+        queryset = ApiConnection.objects.all()
+
+    connection = serializers.SlugRelatedField(slug_field="name", queryset=queryset)
 
     # pylint: disable=missing-class-docstring
     class Meta:

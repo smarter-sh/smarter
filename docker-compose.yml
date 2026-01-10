@@ -44,6 +44,7 @@ services:
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: ${ENVIRONMENT}
+        COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
     image: smarter
     command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000 --timeout 120
     volumes:
@@ -60,6 +61,7 @@ services:
       - ./.env
     environment:
       - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=app
 
   smarter-worker:
     container_name: smarter-worker
@@ -73,6 +75,7 @@ services:
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: ${ENVIRONMENT}
+        COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
     image: smarter
     command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
     depends_on:
@@ -83,6 +86,7 @@ services:
       - ./.env
     environment:
       - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=worker
     volumes:
       - type: bind
         source: ./smarter
@@ -107,6 +111,7 @@ services:
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: ${ENVIRONMENT}
+        COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
     image: smarter
     command: celery -A smarter.workers.celerybeat.app beat --loglevel=info
     depends_on:
@@ -117,6 +122,7 @@ services:
       - ./.env
     environment:
       - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=beat
     volumes:
       - type: bind
         source: ./smarter

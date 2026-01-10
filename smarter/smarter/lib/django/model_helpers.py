@@ -7,9 +7,20 @@ from typing import Optional
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import is_aware, make_aware
+from taggit.managers import TaggableManager
+
+from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.json import SmarterJSONEncoder
 
 
 logger = getLogger(__name__)
+
+
+def validate_no_spaces(value) -> None:
+    """Validate that the string does not contain spaces."""
+    if " " in value:
+        raise SmarterValueError(f"Value must not contain spaces: {value}")
 
 
 class TimestampedModel(models.Model):
@@ -80,12 +91,9 @@ class TimestampedModel(models.Model):
 
         .. attention::
 
-            Currently a stub method; does not perform any validation.
-            This breaks on SmarterAuthToken.objects.create()
+            Intended to be overridden in subclasses to provide custom validation logic.
 
         """
-        # self.full_clean()
-        # logger.warning("TimestampedModel().validate() called but not applied on %s", self.__class__.__name__)
 
     def save(self, *args, **kwargs):
         """
@@ -124,8 +132,8 @@ class TimestampedModel(models.Model):
         """
         try:
             self.validate()
-        except ValidationError as e:
-            raise ValidationError(
+        except (ValidationError, SmarterValueError) as e:
+            raise SmarterValueError(
                 f"TimestampedModel().save() validation error: {e} | args={args} kwargs={kwargs} | model={self.__class__.__name__} | field_values={self.__dict__}"
             ) from e
         super().save(*args, **kwargs)
@@ -194,6 +202,64 @@ class TimestampedModel(models.Model):
 
         delta = int(abs((updated - dt).total_seconds()))
         return delta
+
+    def __str__(self):
+        return f"{self.__class__.__name__}(id={getattr(self, 'id', None)})"
+
+
+class MetaDataModel(TimestampedModel):
+    """
+    Abstract base model that adds SAM metadata fields to a
+    TimestampedModel Django ORM model. These are the
+    the common fields that makeup the Pydantic SAM metadata model,
+    along with timestamp fields for create/modify tracking.
+
+    **Example Usage:**
+
+    .. code-block:: python
+
+        from smarter.smarter.lib.django.model_helpers import MetaDataModel
+        from smarter.apps.account.models import User
+
+        class MyModel(MetaDataModel):
+            name = models.CharField(max_length=100)
+
+    """
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        abstract = True
+
+    name = models.CharField(
+        max_length=255,
+        help_text="Name in camelCase, e.g., 'apiKey', no special characters.",
+        validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
+    )
+    description = models.TextField(
+        help_text="A brief description of this resource. Be verbose, but not too verbose.",
+        blank=True,
+        default="",
+    )
+    version = models.CharField(max_length=255, default="1.0.0")
+    tags = TaggableManager(
+        blank=True,
+        help_text="Tags for categorizing and organizing this resource.",
+    )
+    annotations = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Key-value pairs for annotating this resource.",
+        encoder=SmarterJSONEncoder,
+    )
+
+    def validate(self):
+        """
+        Validate the model.
+        """
+        super().validate()
+        # version should be a semantic version: MAJOR.MINOR.PATCH
+        if self.version and not SmarterValidator.is_valid_semantic_version(self.version):
+            raise SmarterValueError(f"Version '{self.version}' is not a valid semantic version (MAJOR.MINOR.PATCH).")
 
     def __str__(self):
         return f"{self.__class__.__name__}(id={getattr(self, 'id', None)})"

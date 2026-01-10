@@ -4,7 +4,7 @@ import os
 import re
 from typing import ClassVar, List, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonSpecPromptKeys,
@@ -15,7 +15,7 @@ from smarter.apps.prompt.providers.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import AbstractSAMSpecBase
+from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
 
 from .const import MANIFEST_KIND
 
@@ -25,7 +25,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 8192  # this is actually the overall max token count for OpenAI chatGPT-4
 
 
-class SAMPluginCommonSpecSelector(BaseModel):
+class SAMPluginCommonSpecSelector(SmarterBasePydanticModel):
     """Smarter API Plugin Manifest - Spec - Selector class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".selector"
@@ -94,7 +94,7 @@ class SAMPluginCommonSpecSelector(BaseModel):
         return self
 
 
-class SAMPluginCommonSpecPrompt(BaseModel):
+class SAMPluginCommonSpecPrompt(SmarterBasePydanticModel):
     """Smarter API Plugin Manifest - Spec - Prompt class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".prompt"

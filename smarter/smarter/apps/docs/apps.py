@@ -20,4 +20,4 @@ class ApiConfig(AppConfig):
     def ready(self):
         """Import signals."""
 
-        logger.info("Docs app ready: signals and receivers imported")
+        logger.debug("Docs app ready: signals and receivers imported")

@@ -14,6 +14,7 @@ from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
 )
+from smarter.apps.api.utils import apply_manifest
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
@@ -137,23 +138,6 @@ class Command(SmarterCommand):
         plugin = controller.obj
         return plugin
 
-    def apply_manifest(self, manifest_data: str) -> None:
-        """
-        Apply a manifest to the Smarter API.
-        """
-        if not manifest_data:
-            raise SmarterValueError("Manifest data is missing.")
-
-        result = subprocess.call(
-            ["python", "manage.py", "apply_manifest", "--username", self.user.username, "--manifest", manifest_data]
-        )
-        if result != 0:
-            raise subprocess.CalledProcessError(
-                returncode=result,
-                cmd=f"python manage.py apply_manifest --username {self.user.username} --manifest {manifest_data}",
-                output="Failed to apply manifest",
-            )
-
     def process_repo_v2(self):
         """
         Process a GitHub repository containing yaml manifest files.
@@ -167,20 +151,7 @@ class Command(SmarterCommand):
                 for file in files:
                     if file.endswith(".yaml") or file.endswith(".yml"):
                         filespec = os.path.join(directory_path, file)
-                        filename = os.path.basename(filespec)
-                        with open(filespec, encoding="utf-8") as file:
-                            try:
-                                manifest_data = file.read()
-                                self.apply_manifest(manifest_data=manifest_data)
-                                self.stdout.write(
-                                    f"Applied manifest: {directory}/{filename} for account {self.account.account_number}."
-                                )
-                            # pylint: disable=broad-except
-                            except Exception as e:
-                                self.stderr.write(
-                                    f"Error applying manifest: {filename} for account {self.account.account_number}: {e}"
-                                )
-                                raise e
+                        apply_manifest(filespec=filespec, username=self.user.username, verbose=True)
 
         if not self.user_profile:
             raise SmarterValueError("User profile is required.")

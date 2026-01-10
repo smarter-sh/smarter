@@ -20,16 +20,13 @@ class SAMAccountStatus(AbstractSAMStatusBase):
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
     adminAccount: str = Field(
-        None,
         description=f"{class_identifier}.adminAccount: The designated Smarter admin user for this {MANIFEST_KIND}. Read only.",
     )
 
     created: datetime = Field(
-        None,
         description=f"{class_identifier}.created: The date in which this {MANIFEST_KIND} was created. Read only.",
     )
 
     modified: datetime = Field(
-        None,
         description=f"{class_identifier}.modified: The date in which this {MANIFEST_KIND} was most recently changed. Read only.",
     )

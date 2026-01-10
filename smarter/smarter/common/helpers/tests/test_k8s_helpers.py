@@ -7,6 +7,7 @@ WARNINGS:
 - leaving the DNS resources in place permanently as it takes 15+ minutes to propagate
 """
 
+import logging
 import os
 
 # python stuff
@@ -18,6 +19,7 @@ from unittest.mock import MagicMock, patch
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.common.helpers.console_helpers import formatted_text_red
 from smarter.common.helpers.k8s_helpers import (
     KubernetesHelper,
     KubernetesHelperException,
@@ -26,11 +28,26 @@ from smarter.common.helpers.k8s_helpers import (
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
+logger = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class Testk8sHelpers(SmarterTestBase):
     """Test Account model"""
+
+    @classmethod
+    def setUpClass(cls):
+        """Set up class-level test fixtures."""
+        super().setUpClass()
+        if not aws_helper.ready:
+            logger.warning("*" * 80)
+            logger.warning(formatted_text_red("AWS and Kubernetes are unavailable. Some tests will be skipped."))
+            logger.warning("*" * 80)
+
+        elif not kubernetes_helper.ready:
+            logger.warning("*" * 80)
+            logger.warning(formatted_text_red("Kubernetes is unavailable. Some tests will be skipped."))
+            logger.warning("*" * 80)
 
     def setUp(self):
         """Set up test fixtures."""
@@ -49,6 +66,14 @@ class Testk8sHelpers(SmarterTestBase):
         # verify the DNS records. First time usage takes 15+ minutes to propagate
         # assuming you're not inside the aws vpc. Subsequent runs are near-immediate.
         aws_helper.route53.verify_dns_record(self.hostname)
+        msg = "-" * 35 + f" Begin Test: {self._testMethodName} " + "-" * 35
+        logger.info(msg)
+
+    def tearDown(self):
+        """Tear down test fixtures."""
+        msg = "-" * 35 + f" End Test: {self._testMethodName} " + "-" * 35
+        logger.info(msg)
+        super().tearDown()
 
     @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
     @patch("smarter.common.helpers.k8s_helpers.formatted_text")
@@ -142,6 +167,9 @@ class Testk8sHelpers(SmarterTestBase):
         Test verify_ingress method.
         verifying an existing ingress.
         """
+        if not kubernetes_helper.ready:
+            self.skipTest("KubernetesHelper not ready, skipping test_verify_ingress")
+
         name = "smarter.3141-5926-5359.alpha.api.smarter.sh"
         output = kubernetes_helper.verify_ingress(name, self.namespace)
         self.assertTrue(output)
@@ -151,6 +179,9 @@ class Testk8sHelpers(SmarterTestBase):
         Test verify_certificate method.
         verifying an existing certificate
         """
+        if not kubernetes_helper.ready:
+            self.skipTest("KubernetesHelper not ready, skipping test_verify_certificate")
+
         name = "smarter.3141-5926-5359.alpha.api.smarter.sh-tls"
         output = kubernetes_helper.verify_certificate(name, self.namespace)
         self.assertTrue(output)
@@ -160,6 +191,9 @@ class Testk8sHelpers(SmarterTestBase):
         Test verify_secret method
         verifying an existing secret
         """
+        if not kubernetes_helper.ready:
+            self.skipTest("KubernetesHelper not ready, skipping test_verify_secret")
+
         name = "smarter.3141-5926-5359.alpha.api.smarter.sh-tls"
         output = kubernetes_helper.verify_secret(name, self.namespace)
         self.assertTrue(output)
@@ -169,6 +203,9 @@ class Testk8sHelpers(SmarterTestBase):
         Test that we can apply a manifest that creates
         a new ingress with a certificate and secret.
         """
+        if not kubernetes_helper.ready:
+            self.skipTest("KubernetesHelper not ready, skipping test_apply_manifest")
+
         ingress_values = {
             "cluster_issuer": self.cluster_issuer,
             "environment_namespace": self.namespace,

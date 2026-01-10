@@ -27,9 +27,14 @@ from django.db.utils import ConnectionHandler
 # 3rd party stuff
 from pydantic import ValidationError
 from rest_framework import serializers
-from taggit.managers import TaggableManager
 
-from smarter.apps.account.models import Account, Secret, User, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    MetaDataWithOwnershipModel,
+    Secret,
+    User,
+    UserProfile,
+)
 from smarter.apps.account.utils import get_cached_account_for_user
 
 # smarter stuff
@@ -74,7 +79,7 @@ from .signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -319,7 +324,7 @@ def list_of_dicts_to_dict(data: list[dict]) -> Optional[dict]:
     return retval
 
 
-class PluginMeta(TimestampedModel, SmarterHelperMixin):
+class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     """
     Represents the core metadata for a Smarter plugin, serving as the central registry for all plugin types.
 
@@ -343,12 +348,9 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        unique_together = (
-            "account",
-            "name",
-        )
         verbose_name = "Plugin"
         verbose_name_plural = "Plugins"
+        unique_together = ("account", "name")
 
     PLUGIN_CLASSES = [
         (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
@@ -358,13 +360,6 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
     """
     The classes of plugins supported by Smarter.
     """
-
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_meta_account")
-    name = models.CharField(
-        help_text="The name of the plugin. Example: 'HR Policy Update' or 'Public Relation Talking Points'.",
-        max_length=255,
-        validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
-    )
 
     @property
     def rfc1034_compliant_name(self) -> Optional[str]:
@@ -387,15 +382,10 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
             return rfc1034_compliant_str(self.name)
         return None
 
-    description = models.TextField(
-        help_text="A brief description of the plugin. Be verbose, but not too verbose.",
-    )
     plugin_class = models.CharField(
         choices=PLUGIN_CLASSES, help_text="The class name of the plugin", max_length=255, default="PluginMeta"
     )
-    version = models.CharField(max_length=255, default="1.0.0")
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugin_meta_author")
-    tags = TaggableManager(blank=True)
 
     def __str__(self):
         return str(self.name) or ""
@@ -502,10 +492,10 @@ class PluginMeta(TimestampedModel, SmarterHelperMixin):
             plugins = cls.objects.filter(account_id=account_id).order_by("name")
             return list(plugins) or []
 
+        account = get_cached_account_for_user(user)
         if invalidate:
             cached_plugins_by_account_id.invalidate(account.id)
 
-        account = get_cached_account_for_user(user)
         if not account:
             return []
         plugins = cached_plugins_by_account_id(account.id)
@@ -658,6 +648,7 @@ class PluginSelector(TimestampedModel, SmarterHelperMixin):
         default=list,
         blank=True,
         null=True,
+        encoder=json.SmarterJSONEncoder,
     )
 
     def __str__(self) -> str:
@@ -728,7 +719,9 @@ class PluginSelectorHistory(TimestampedModel, SmarterHelperMixin):
         PluginSelector, on_delete=models.CASCADE, related_name="plugin_selector_history_plugin_selector"
     )
     search_term = models.CharField(max_length=255, blank=True, null=True, default="")
-    messages = models.JSONField(help_text="The user prompt messages.", default=list, blank=True, null=True)
+    messages = models.JSONField(
+        help_text="The user prompt messages.", default=list, blank=True, null=True, encoder=json.SmarterJSONEncoder
+    )
     session_key = models.CharField(max_length=255, blank=True, null=True, default="")
 
     def __str__(self) -> str:
@@ -883,6 +876,7 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
         blank=True,
         null=True,
         validators=[validate_openai_parameters_dict],
+        encoder=json.SmarterJSONEncoder,
     )
     """
     A JSON dict containing parameter names and data types. Example: {'required': [], 'properties': {'max_cost': {'type': 'float', 'description': 'the maximum cost that a student is willing to pay for a course.'}, 'description': {'enum': ['AI', 'mobile', 'web', 'database', 'network', 'neural networks'], 'type': 'string', 'description': 'areas of specialization for courses in the catalogue.'}}}
@@ -892,6 +886,7 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
         help_text="A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}",
         blank=True,
         null=True,
+        encoder=json.SmarterJSONEncoder,
     )
     """
     A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}
@@ -1014,7 +1009,9 @@ class PluginDataStatic(PluginDataBase):
     """
 
     static_data = models.JSONField(
-        help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.", default=dict
+        help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.",
+        default=dict,
+        encoder=json.SmarterJSONEncoder,
     )
     """
     The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.
@@ -1163,7 +1160,7 @@ class PluginDataStatic(PluginDataBase):
         verbose_name_plural = "Plugin Static Data"
 
 
-class ConnectionBase(TimestampedModel, SmarterHelperMixin):
+class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
     """
     Abstract base class for all connection models in the Smarter platform.
 
@@ -1202,36 +1199,11 @@ class ConnectionBase(TimestampedModel, SmarterHelperMixin):
         (SAMKinds.API_CONNECTION.value, SAMKinds.API_CONNECTION.value),
     ]
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    name = models.CharField(
-        help_text="The name of the connection, without spaces. Example: 'hr_database', 'sales_db', 'inventory_api'.",
-        max_length=255,
-        validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
-    )
-    """
-    The name of the connection, without spaces. Example: 'hr_database', 'sales_db', 'inventory_api'.
-    """
     kind = models.CharField(
         help_text="The kind of connection. Example: 'SQL', 'API'.",
         max_length=50,
         choices=CONNECTION_KIND_CHOICES,
     )
-    description = models.TextField(
-        help_text="A brief description of the connection. Be verbose, but not too verbose.", blank=True, null=True
-    )
-    """
-    A brief description of the connection. Be verbose, but not too verbose.
-    """
-    version = models.CharField(
-        help_text="The version of the connection. Example: '1.0.0'.",
-        max_length=255,
-        default="1.0.0",
-        blank=True,
-        null=True,
-    )
-    """
-    The semantic version of the connection. Example: '1.0.0'.
-    """
 
     @property
     @abstractmethod
@@ -1434,7 +1406,6 @@ class SqlConnection(ConnectionBase):
     """
     The supported authentication methods for SQL connections.
     """
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="sql_connections")
     db_engine = models.CharField(
         help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
         default=DbEngines.MYSQL.value,
@@ -2360,7 +2331,6 @@ class ApiConnection(ConnectionBase):
     ]
     PROXY_PROTOCOL_CHOICES = [("http", "HTTP"), ("https", "HTTPS"), ("socks", "SOCKS")]
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="api_connections")
     base_url = models.URLField(
         help_text="The root domain of the API. Example: 'https://api.example.com'.",
     )
@@ -2588,16 +2558,19 @@ class PluginDataApi(PluginDataBase):
         help_text="A JSON dict containing URL parameters. Example: {'city': 'San Francisco', 'state': 'CA'}",
         blank=True,
         null=True,
+        encoder=json.SmarterJSONEncoder,
     )
     headers = models.JSONField(
         help_text="A JSON dict containing headers to be sent with the API request. Example: {'Authorization': 'Bearer <token>'}",
         blank=True,
         null=True,
+        encoder=json.SmarterJSONEncoder,
     )
     body = models.JSONField(
         help_text="A JSON dict containing the body of the API request, if applicable.",
         blank=True,
         null=True,
+        encoder=json.SmarterJSONEncoder,
     )
     limit = models.IntegerField(
         help_text="The maximum number of rows to return from the API response.",

@@ -5,8 +5,23 @@ metadata:
     for managing AI resources in the enterprise.
   name: about_smarter
   pluginClass: static
-  tags: []
   version: 1.0.0
+  tags:
+    - smarter
+    - about
+    - information
+    - sales
+  annotations:
+    - smarter.sh/about-smarter/plugin-display-name: About Smarter Plugin
+    - smarter.sh/about-smarter/plugin-category: Information Plugins
+    - smarter.sh/about-smarter/usefulness: provides detailed information about the Smarter platform for managing AI resources
+    - smarter.sh/about-smarter/plugin-purpose: |
+        useful for all inquiries about the Smarter platform, including technical capabilities,
+        installation options, pricing information, training and onboarding,
+        technical documentation, and more.
+    - smarter.sh/about-smarter/target-audience: |
+        developers, system administrators, prompt engineers, sales teams, and potential customers
+        interested in learning more about the Smarter platform.
 spec:
   data:
     description: This tool provides detailed information about the Smarter platform. Use this for all inquiries about Smarter.
@@ -314,7 +329,7 @@ spec:
 
   prompt:
     maxTokens: 4096
-    model: gpt-4-turbo
+    model: gpt-4o-mini
     provider: openai
     systemRole: |
       Refer to the tools provided in this prompt for detailed, factual information about the Smarter platform,

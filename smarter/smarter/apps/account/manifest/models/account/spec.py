@@ -1,11 +1,14 @@
 """Smarter API Manifest - Plugin.spec"""
 
 import os
+import zoneinfo
 from typing import ClassVar, Optional
 
-from pydantic import Field
+import pycountry
+from pydantic import Field, field_validator
 
 from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 
@@ -49,21 +52,65 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
         description=(f"{class_identifier}.postalCode[str]. The postal code for the {MANIFEST_KIND}."),
     )
     country: str = Field(
-        ...,
-        description=(f"{class_identifier}.country[str]. The country for the {MANIFEST_KIND}."),
+        "US",
+        description=(
+            f"{class_identifier}.country[str]. The ISO 3166 country code for the {MANIFEST_KIND}. Default: USA."
+        ),
     )
     language: str = Field(
-        ...,
-        description=(f"{class_identifier}.language[str]. The primary language for the {MANIFEST_KIND}."),
+        "en-US",
+        description=(
+            f"{class_identifier}.language[str]. The primary BCP 47 language tag for the {MANIFEST_KIND}. Default: en-US."
+        ),
     )
     timezone: str = Field(
-        ...,
-        description=(f"{class_identifier}.timezone[str]. The primary timezone for the {MANIFEST_KIND}."),
+        "America/New_York",
+        description=(
+            f"{class_identifier}.timezone[str]. The primary IANA timezone for the {MANIFEST_KIND}. Default: America/New_York."
+        ),
     )
     currency: str = Field(
-        ...,
-        description=(f"{class_identifier}.currency[str]. The primary currency for the {MANIFEST_KIND}."),
+        "USD",
+        description=(
+            f"{class_identifier}.currency[str]. The primary ISO 4217 currency for the {MANIFEST_KIND}. Default: USD."
+        ),
     )
+
+    @field_validator("currency")
+    def validate_currency(cls, v):
+        if not pycountry.currencies.get(alpha_3=v):
+            raise SmarterValueError("Invalid ISO 4217 currency code. Use 3-letter code. Example: 'USD'")
+        return v
+
+    @field_validator("country")
+    def validate_country(cls, v):
+        if not pycountry.countries.get(alpha_2=v) and not pycountry.countries.get(alpha_3=v):
+            raise SmarterValueError(
+                "Invalid ISO 3166 country code. Use 2-letter or 3-letter code. Example: 'US' or 'USA'"
+            )
+        return v
+
+    @field_validator("language")
+    def validate_language(cls, v):
+        # Accept BCP 47 like 'en' or 'en-US', validate language and region (country) if present
+        parts = v.split("-")
+        lang_code = parts[0]
+        lang = pycountry.languages.get(alpha_2=lang_code) or pycountry.languages.get(alpha_3=lang_code)
+        if not lang:
+            raise SmarterValueError("Invalid language code")
+        if len(parts) > 1:
+            region_code = parts[1]
+            if not pycountry.countries.get(alpha_2=region_code):
+                raise SmarterValueError("Invalid BCP 47 language tag. Example: 'en' or 'en-US'")
+        return v
+
+    @field_validator("timezone")
+    def validate_timezone(cls, v):
+        try:
+            zoneinfo.ZoneInfo(v)
+        except Exception as e:
+            raise SmarterValueError("Invalid IANA timezone. Example: 'America/New_York'") from e
+        return v
 
 
 class SAMAccountSpec(AbstractSAMSpecBase):

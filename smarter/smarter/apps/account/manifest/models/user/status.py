@@ -2,7 +2,7 @@
 
 import os
 from datetime import datetime
-from typing import ClassVar
+from typing import ClassVar, Optional
 
 from pydantic import Field
 
@@ -20,21 +20,19 @@ class SAMUserStatus(AbstractSAMStatusBase):
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
     account_number: str = Field(
-        None,
         description=f"{class_identifier}.account_number: The account owner of this {MANIFEST_KIND}. Read only.",
     )
 
     username: str = Field(
-        None,
         description=f"{class_identifier}.account_number: The Smarter user who created this {MANIFEST_KIND}. Read only.",
     )
 
-    created: datetime = Field(
+    created: Optional[datetime] = Field(
         None,
         description=f"{class_identifier}.created: The date in which this {MANIFEST_KIND} was created. Read only.",
     )
 
-    modified: datetime = Field(
+    modified: Optional[datetime] = Field(
         None,
         description=f"{class_identifier}.modified: The date in which this {MANIFEST_KIND} was most recently changed. Read only.",
     )

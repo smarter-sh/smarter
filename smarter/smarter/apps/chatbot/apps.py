@@ -23,4 +23,4 @@ class ChatbotConfig(AppConfig):
         from . import receivers  # noqa
         from . import signals  # noqa
 
-        logger.info("ChatBot app ready: signals and receivers imported")
+        logger.debug("ChatBot app ready: signals and receivers imported")
