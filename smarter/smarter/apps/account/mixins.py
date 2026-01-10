@@ -9,11 +9,7 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-    formatted_text_green,
-    formatted_text_red,
-)
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import mask_string
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -346,6 +342,9 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns the account for the current user. Handle
         lazy instantiation from user or user_profile.
+
+        :return: The account for the current user.
+        :rtype: Account or None
         """
         if self._account:
             return self._account
@@ -411,6 +410,9 @@ class AccountMixin(SmarterHelperMixin):
     def account_number(self) -> AccountNumberType:
         """
         A helper function to get the account number from the account.
+
+        :return: The account number for the current account.
+        :rtype: str or None
         """
         return self._account.account_number if self._account else None
 
@@ -418,6 +420,11 @@ class AccountMixin(SmarterHelperMixin):
     def account_number(self, account_number: AccountNumberType):
         """
         A helper function to set the account from the account_number.
+
+        :param account_number: The account number to set the account from.
+        :type account_number: str or None
+        :return: None
+        :rtype: None
         """
         if not account_number:
             self._account = None
@@ -440,6 +447,9 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns the user for the current user. Handle
         lazy instantiation from user_profile or account.
+
+        :return: The user for the current user.
+        :rtype: User or None
         """
         if self._user:
             return self._user
@@ -458,6 +468,11 @@ class AccountMixin(SmarterHelperMixin):
     def user(self, user: UserType):
         """
         Set the user.
+
+        :param user: The user to set.
+        :type user: User or None
+        :return: None
+        :rtype: None
         """
         self._user = user
         if not user:
@@ -472,6 +487,9 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns the user_profile for the current user. Handle
         lazy instantiation from user or account.
+
+        :return: The user_profile for the current user.
+        :rtype: UserProfile or None
         """
         if self._user_profile:
             return self._user_profile
@@ -502,6 +520,11 @@ class AccountMixin(SmarterHelperMixin):
         Set the user_profile for the current user. If we're unsetting the user_profile,
         then leave the user and account as they are. But if we're setting the user_profile,
         then set the user and account as well.
+
+        :param user_profile: The user_profile to set.
+        :type user_profile: UserProfile or None
+        :return: None
+        :rtype: None
         """
         self._user_profile = user_profile
         logger.debug(
@@ -523,7 +546,13 @@ class AccountMixin(SmarterHelperMixin):
         """
         Returns True if the AccountMixin is ready to be used.
         This is a convenience property that checks if the account and user
-        are initialized.
+        are initialized. AccountMixin is considered ready if:
+        - self.user is an instance of User
+        - self.user_profile is an instance of UserProfile
+        - self.account is an instance of Account
+
+        :return: True if the AccountMixin is ready to be used.
+        :rtype: bool
         """
         if not isinstance(self.user, User):
             logger.warning(
@@ -550,11 +579,14 @@ class AccountMixin(SmarterHelperMixin):
     def accountmixin_ready_state(self) -> str:
         """
         Returns a string representation of the AccountMixin ready state.
+
+        :return: String representation of the AccountMixin ready state.
+        :rtype: str
         """
         if self.is_accountmixin_ready:
-            return formatted_text_green("READY")
+            return self.formatted_state_ready
         else:
-            return formatted_text_red("NOT_READY")
+            return self.formatted_state_not_ready
 
     @property
     def ready(self) -> bool:
@@ -575,9 +607,9 @@ class AccountMixin(SmarterHelperMixin):
         Returns a string representation of the ready state.
         """
         if self.is_accountmixin_ready:
-            return formatted_text_green("READY")
+            return self.formatted_state_ready
         else:
-            return formatted_text_red("NOT_READY")
+            return self.formatted_state_not_ready
 
     @property
     def is_authenticated(self) -> bool:

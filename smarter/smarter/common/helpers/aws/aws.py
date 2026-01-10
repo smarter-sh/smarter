@@ -613,6 +613,6 @@ class AWSBase(SmarterHelperMixin):
         :rtype: str
         """
         if self.authentication_credentials_are_initialized:
-            return formatted_text_green("READY")
+            return self.formatted_state_ready
         else:
-            return formatted_text_red("NOT_READY")
+            return self.formatted_state_not_ready
