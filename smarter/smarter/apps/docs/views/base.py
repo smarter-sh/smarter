@@ -5,11 +5,10 @@ manifest and schema.
 """
 import os
 from logging import getLogger
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlparse
 
 import markdown
-from django.http import HttpRequest
 from django.http.response import HttpResponse
 from django.shortcuts import render
 from django.test import RequestFactory
@@ -26,10 +25,13 @@ from smarter.lib.django.view_helpers import SmarterWebHtmlView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 
+if TYPE_CHECKING:
+    from django.http import HttpRequest
+
 logger = getLogger(__name__)
 
 # note: this is the path from the Docker container, not the GitHub repo.
-DOCS_PATH = "/home/smarter_user/data/docs/legacy/"
+DOCS_PATH = "/home/smarter_user/data/docs/"
 
 
 class DocsError(SmarterException):
@@ -50,7 +52,7 @@ class DocsBaseView(SmarterWebHtmlView):
     kind: Optional[SAMKinds] = None
     context: dict = {}
 
-    def get_brokered_json_response(self, reverse_name: str, view, request: HttpRequest, *args, **kwargs):
+    def get_brokered_json_response(self, reverse_name: str, view, request: "HttpRequest", *args, **kwargs):
         """Get the JSON response from the brokered smarter.sh/api endpoint."""
         if not hasattr(request, "user") or request.user is None:
             logger.warning(
@@ -106,7 +108,7 @@ class DocsBaseView(SmarterWebHtmlView):
         )
         return json_response
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+    def dispatch(self, request: "HttpRequest", *args, **kwargs) -> HttpResponse:
         self.context = {
             "og_url": self.smarter_build_absolute_uri(request),
             "canonical": request.path,

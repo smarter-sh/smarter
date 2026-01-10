@@ -38,8 +38,8 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
 
     def setUp(self):
         super().setUp()
-        self._broker_class = SAMSqlConnectionBroker
         self._here = os.path.abspath(os.path.dirname(__file__))
+        self._broker_class = SAMSqlConnectionBroker
         self._manifest_filespec = self.get_data_full_filepath("sql-connection.yaml")
 
     @property
@@ -289,8 +289,12 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
             django_orm_tags = set(self.broker.connection.tags.names()) if self.broker.connection.tags else set()
         elif isinstance(self.broker.connection.tags, set):
             django_orm_tags = self.broker.connection.tags
+        elif isinstance(self.broker.connection.tags, list):
+            django_orm_tags = set(self.broker.connection.tags)
         else:
-            self.fail(f"connection.tags is of unexpected type: {type(self.broker.connection.tags)}")
+            self.fail(
+                f"connection.tags is of unexpected type: {type(self.broker.connection.tags)}. Value: {self.broker.connection.tags}"
+            )
         self.assertEqual(manifest_tags, django_orm_tags)
 
         # self.broker.manifest.metadata.annotations is a list of key-value pairs or None.
@@ -308,7 +312,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
 
         self.assertEqual(
             self.broker.manifest.metadata.name,
-            getattr(self.broker.orm, "name", None),
+            getattr(self.broker.connection, "name", None),
             f"SqlConnection name does not match manifest name. manifest: {self.broker.manifest.metadata.name}, orm: {self.broker.connection.name}",
         )
         self.assertEqual(
@@ -331,7 +335,10 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         self.assertEqual(self.broker.manifest.spec.connection.hostname, self.broker.connection.hostname)
         self.assertEqual(self.broker.manifest.spec.connection.port, self.broker.connection.port)
         self.assertEqual(self.broker.manifest.spec.connection.username, self.broker.connection.username)
-        self.assertEqual(self.broker.manifest.spec.connection.password, self.broker.connection.password)
+        self.assertEqual(
+            self.broker.manifest.spec.connection.password,
+            self.broker.connection.password.name if self.broker.connection.password else None,
+        )
         self.assertEqual(self.broker.manifest.spec.connection.timeout, self.broker.connection.timeout)
         self.assertEqual(self.broker.manifest.spec.connection.useSsl, self.broker.connection.use_ssl)
         self.assertEqual(self.broker.manifest.spec.connection.sslCert, self.broker.connection.ssl_cert)
@@ -340,7 +347,10 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         self.assertEqual(self.broker.manifest.spec.connection.proxyHost, self.broker.connection.proxy_host)
         self.assertEqual(self.broker.manifest.spec.connection.proxyPort, self.broker.connection.proxy_port)
         self.assertEqual(self.broker.manifest.spec.connection.proxyUsername, self.broker.connection.proxy_username)
-        self.assertEqual(self.broker.manifest.spec.connection.proxyPassword, self.broker.connection.proxy_password)
+        self.assertEqual(
+            self.broker.manifest.spec.connection.proxyPassword,
+            self.broker.connection.proxy_password.name if self.broker.connection.proxy_password else None,
+        )
         self.assertEqual(self.broker.manifest.spec.connection.sshKnownHosts, self.broker.connection.ssh_known_hosts)
         self.assertEqual(self.broker.manifest.spec.connection.poolSize, self.broker.connection.pool_size)
         self.assertEqual(self.broker.manifest.spec.connection.maxOverflow, self.broker.connection.max_overflow)

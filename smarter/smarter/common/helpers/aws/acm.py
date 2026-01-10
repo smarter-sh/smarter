@@ -7,7 +7,7 @@ import time
 from typing import Optional
 
 # our stuff
-from .aws import AWSBase, SmarterAWSException
+from .aws import AWSBase
 from .exceptions import AWSACMVerificationFailed
 
 
@@ -35,21 +35,7 @@ class AWSCertificateManager(AWSBase):
 
     _client = None
     _route53 = None
-
-    @property
-    def client(self):
-        """
-        Return the AWS ACM client
-
-        :return: boto3 ACM client
-        :rtype: boto3.client
-        """
-        if self._client:
-            return self._client
-        if not self.aws_session:
-            raise SmarterAWSException("AWS session is not initialized.")
-        self._client = self.aws_session.client("acm")
-        return self._client
+    _client_type: str = "acm"
 
     @property
     def route53(self):

@@ -18,42 +18,29 @@ import os
 import random
 import re
 import warnings
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import yaml
-from django.core.handlers.wsgi import WSGIRequest
-from django.http import HttpRequest
-from rest_framework.request import Request
 
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
 from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
-RequestType = Union[HttpRequest, Request, WSGIRequest]
+if TYPE_CHECKING:
+    from django.core.handlers.wsgi import WSGIRequest
+    from django.http import HttpRequest
+    from rest_framework.request import Request
+RequestType = Union["HttpRequest", "Request", "WSGIRequest"]
 
 
-def should_log(level):
-    """
-    Check if logging should be done based on the waffle switch.
-
-    .. note::
-
-        we're too far down the call stack to use Django nor smarter_settings.
-        Therefore, we cannot leverage the WaffleSwitch class directly here.
-
-    """
-    return False
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(__name__)
 
 
 def is_authenticated_request(request: Optional[RequestType]) -> bool:
     """
-    Determines whether the provided request is authenticated.
+    Determines whether the provided request is authenticated. Provides extensive logging for debugging purposes.
 
     :param request: The request object to check. This can be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, or :class:`django.core.handlers.wsgi.WSGIRequest`. If ``None`` is provided, the function will return ``False``.
 
@@ -91,16 +78,74 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         authenticated = is_authenticated_request(drf_request)
         print(authenticated)
     """
+    logger.debug("%s.is_authenticated_request()", logger_prefix)
     try:
-        return (
-            isinstance(request, (HttpRequest, Request, WSGIRequest))
-            and hasattr(request, "user")
-            and hasattr(request.user, "is_authenticated")
-            and request.user.is_authenticated
-        )
+        # pylint: disable=import-outside-toplevel
+        from django.core.handlers.wsgi import WSGIRequest
+        from django.http import HttpRequest
+        from rest_framework.request import Request
+
+        is_valid_request_object = isinstance(request, (HttpRequest, Request, WSGIRequest))
+        if is_valid_request_object:
+            logger.debug(
+                "%s.is_authenticated_request() Valid request object of type %s",
+                logger_prefix,
+                type(request),
+            )
+        else:
+            # suggests buggy code, hence the warning
+            logger.warning(
+                "%s.is_authenticated_request() Invalid request object of type %s - returning False",
+                logger_prefix,
+                type(request),
+            )
+            return False
+
+        has_user = hasattr(request, "user")
+        if has_user:
+            logger.debug(
+                "%s.is_authenticated_request() Request has 'user' attribute of type %s",
+                logger_prefix,
+                type(request.user),
+            )
+        else:
+            logger.debug(
+                "%s.is_authenticated_request() Request does not have 'user' attribute - returning False",
+                logger_prefix,
+            )
+
+        has_is_authenticated = has_user and hasattr(request.user, "is_authenticated")
+        if has_is_authenticated:
+            logger.debug(
+                "%s.is_authenticated_request() Request.user has 'is_authenticated' attribute",
+                logger_prefix,
+            )
+        else:
+            # this should not happen in normal code, hence the warning
+            logger.warning(
+                "%s.is_authenticated_request() Request.user of type %s does not have 'is_authenticated' attribute - returning False",
+                logger_prefix,
+                type(request.user),
+            )
+
+        if is_valid_request_object and has_user and has_is_authenticated:
+            retval = request.user.is_authenticated
+            logger.debug(
+                "%s.is_authenticated_request() Request is_authenticated: %s",
+                logger_prefix,
+                retval,
+            )
+        else:
+            retval = False
+            logger.debug(
+                "%s.is_authenticated_request() Request is not authenticated - returning False",
+                logger_prefix,
+            )
+        return retval
+
     # pylint: disable=W0718
     except Exception as e:
-        logger.debug("is_authenticated_request() failed: %s", formatted_text(str(e)))
+        logger.debug("%s.is_authenticated_request() failed: %s", logger_prefix, formatted_text(str(e)))
         return False
 
 
@@ -135,6 +180,7 @@ def hash_factory(length: int = 16) -> str:
         print(long_token)  # e.g., 'a3f9c1e2b4d5f6a7c8e9d0b1a2c3d4e5'
 
     """
+    logger.debug("%s.hash_factory()", logger_prefix)
     return hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:length]
 
 
@@ -164,6 +210,7 @@ def get_readonly_yaml_file(file_path) -> dict:
         print(config)  # {'key': 'value', ...}
 
     """
+    logger.debug("%s.get_readonly_yaml_file()", logger_prefix)
     with open(file_path, encoding="utf-8") as file:
         return yaml.safe_load(file)
 
@@ -194,6 +241,7 @@ def get_readonly_csv_file(file_path):
         for row in rows:
             print(row)  # {'column1': 'value1', 'column2': 'value2', ...}
     """
+    logger.debug("%s.get_readonly_csv_file()", logger_prefix)
     with open(file_path, encoding="utf-8") as file:
         reader = csv.DictReader(file)
         return list(reader)
@@ -234,6 +282,7 @@ def camel_to_snake_dict(dictionary: dict) -> dict:
         # Output: {'user_name': 'alice', 'user_profile': {'first_name': 'Alice', 'last_name': 'Smith'}}
 
     """
+    logger.debug("%s.camel_to_snake_dict()", logger_prefix)
 
     def convert(name: str):
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
@@ -283,6 +332,7 @@ def recursive_sort_dict(d):
         # Output: {'a': {'c': 3, 'd': 4}, 'b': 2}
 
     """
+    logger.debug("%s.recursive_sort_dict()", logger_prefix)
     return {k: recursive_sort_dict(v) if isinstance(v, dict) else v for k, v in sorted(d.items())}
 
 
@@ -339,6 +389,7 @@ def dict_is_contained_in(dict1, dict2):
         print(result)  # False
 
     """
+    logger.debug("%s.dict_is_contained_in()", logger_prefix)
     for key, value in dict1.items():
         if key not in dict2:
             print(f"the key {key} is not present in the model dict: ")
@@ -410,6 +461,7 @@ def dict_is_subset(small, big) -> bool:
         print(result)  # False
 
     """
+    logger.debug("%s.dict_is_subset()", logger_prefix)
     if isinstance(small, dict) and isinstance(big, dict):
         for k, v in small.items():
             if k not in big:
@@ -482,6 +534,7 @@ def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_
         print(masked)  # Output: abc
 
     """
+    logger.debug("%s.mask_string()", logger_prefix)
     warnings.warn(
         "mask_string is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2
     )
@@ -511,12 +564,12 @@ def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_
     return masked_string
 
 
-def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
+def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
     """
     Attempts to construct the absolute URI for a given request object.
 
     :param request: The request object, which may be an instance of :class:`django.http.HttpRequest`, :class:`rest_framework.request.Request`, :class:`django.core.handlers.wsgi.WSGIRequest`, or a mock object for testing.
-    :type request: HttpRequest or compatible type
+    :type request: "HttpRequest" or compatible type
 
     :return: The absolute URI as a string, or a fallback test URL if the request is invalid or cannot be resolved.
     :rtype: Optional[str]
@@ -554,55 +607,134 @@ def smarter_build_absolute_uri(request: HttpRequest) -> Optional[str]:
         print(url)  # Output: http://testserver/unknown/
 
     """
-    if request is None:
-        logger.debug("smarter_build_absolute_uri() called with None request")
-        return "http://testserver/unknown/"
 
-    if isinstance(request, Request):
-        # recast DRF Request to Django HttpRequest
-        # pylint: disable=W0212
-        request = request._request
+    def get_host(request: "HttpRequest") -> str:
+        """
+        Helper function to extract the host from the request object.
+        """
+        try:
+            # Try Django's get_host method first. works well except that
+            # it can raise KeyError on certain edge cases.
+            if hasattr(request, "get_host"):
+                retval = request.get_host()
+                logger.debug(
+                    "%s.smarter_build_absolute_uri() obtained host from %s request.get_host(): %s",
+                    logger_prefix,
+                    type(request).__name__,
+                    retval,
+                )
+                return retval
+        except KeyError:
+            pass
+        if hasattr(request, "META") and "HTTP_HOST" in request.META:
+            retval = request.META["HTTP_HOST"]
+            logger.debug(
+                "%s.smarter_build_absolute_uri() obtained host from %s request.META['HTTP_HOST']: %s",
+                logger_prefix,
+                type(request).__name__,
+                retval,
+            )
+            return retval
+        if hasattr(request, "META") and "SERVER_NAME" in request.META:
+            retval = request.META["SERVER_NAME"]
+            logger.debug(
+                "%s.smarter_build_absolute_uri() obtained host from %s request.META['SERVER_NAME']: %s",
+                logger_prefix,
+                type(request).__name__,
+                retval,
+            )
+            return retval
+        logger.warning(
+            "%s.smarter_build_absolute_uri() could not determine host from %s request; returning 'testserver'",
+            logger_prefix,
+            type(request).__name__,
+        )
+        return "testserver"
+
+    if request is None:
+        retval = "http://testserver/unknown/"
+        logger.warning(
+            "%s.smarter_build_absolute_uri() called with None request. Returning fallback URL: %s",
+            logger_prefix,
+            retval,
+        )
+        return retval
 
     # If it's a unittest.mock.Mock, synthesize a fake URL for testing
     if hasattr(request, "__class__") and request.__class__.__name__ == "Mock":
-        logger.debug("smarter_build_absolute_uri() called with Mock request; returning fake test URL")
-        return "http://testserver/mockpath/"
+        retval = "http://testserver/mockpath/"
+        logger.debug(
+            "%s.smarter_build_absolute_uri() called with Mock request; returning fake test URL: %s",
+            logger_prefix,
+            retval,
+        )
+        return retval
 
     # Try to use Django's build_absolute_uri if available
-    if hasattr(request, "build_absolute_uri"):
+    if hasattr(request, "build_absolute_uri") and getattr(request, "META", {}).get("SERVER_NAME") is not None:
         try:
             url = request.build_absolute_uri()
             if url:
+                logger.debug(
+                    "%s.smarter_build_absolute_uri() obtained URL from request.build_absolute_uri(): %s",
+                    logger_prefix,
+                    url,
+                )
                 return url
         # pylint: disable=W0718
         except Exception as e:
             logger.debug(
-                "smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
-                formatted_text(str(e)),
+                "%s.smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
+                logger_prefix,
+                formatted_text_red(str(e)),
             )
 
     # Try to build from scheme, host, and path
     try:
         scheme = getattr(request, "scheme", None) or getattr(request, "META", {}).get("wsgi.url_scheme", "http")
-        host = (
-            getattr(request, "get_host", lambda: None)()
-            or getattr(request, "META", {}).get("HTTP_HOST")
-            or getattr(request, "META", {}).get("SERVER_NAME")
-            or "testserver"
-        )
+        host = get_host(request)
         path = getattr(request, "get_full_path", lambda: None)() or "/"
         url = f"{scheme}://{host}{path}"
         if SmarterValidator.is_valid_url(url):
+            logger.debug("%s.smarter_build_absolute_uri() built URL from request attributes: %s", logger_prefix, url)
             return url
+    except KeyError as e:
+        logger.debug(
+            "%s.smarter_build_absolute_uri() could not build url from request attributes due to a KeyError: %s",
+            logger_prefix,
+            formatted_text_red(str(e)),
+        )
     # pylint: disable=W0718
     except Exception as e:
         logger.debug(
-            "smarter_build_absolute_uri() failed to build URL from request attributes: %s",
-            formatted_text(str(e)),
+            "%s.smarter_build_absolute_uri() failed to build URL from request attributes: %s (%s)",
+            logger_prefix,
+            formatted_text_red(str(e)),
+            type(e),
         )
 
+    # do this last since we have to import
+    # pylint: disable=import-outside-toplevel
+    from rest_framework.request import Request
+
+    if isinstance(request, Request):
+        # recast DRF Request to Django HttpRequest
+        # pylint: disable=W0212
+        if hasattr(request, "_request"):
+            logger.debug(
+                "%s.smarter_build_absolute_uri() recasting DRF Request to Django HttpRequest",
+                logger_prefix,
+            )
+            request = request._request  # type: ignore
+        if hasattr(request, "build_absolute_uri"):
+            logger.debug(
+                "%s.smarter_build_absolute_uri() obtaining URL from recast DRF request.build_absolute_uri()",
+                logger_prefix,
+            )
+            return request.build_absolute_uri()
+
     # Fallback: synthesize a generic test URL
-    logger.debug("smarter_build_absolute_uri() could not determine URL, returning fallback test URL")
+    logger.debug("%s.smarter_build_absolute_uri() could not determine URL, returning fallback test URL", logger_prefix)
     return "http://testserver/unknown/"
 
 
@@ -656,6 +788,7 @@ def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -
         # Output: {'userName': 'firstName'}
 
     """
+    logger.debug("%s.snake_to_camel()", logger_prefix)
 
     def convert(name: str) -> str:
         components = name.split("_")
@@ -708,6 +841,7 @@ def pascal_to_snake(name: str) -> str:
         print(pascal_to_snake("FirstName LastName"))  # Output: first_name_last_name
 
     """
+    logger.debug("%s.pascal_to_snake()", logger_prefix)
     pattern = re.compile(r"(?<!^)(?=[A-Z])")
     return pattern.sub("_", name).lower()
 
@@ -755,9 +889,11 @@ def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, li
         print(camel_to_snake(["firstName", "lastName"]))
         # Output: ['first_name', 'last_name']
     """
+    logger.debug("%s.camel_to_snake()", logger_prefix)
 
     def convert(name: str):
         name = name.replace(" ", "_")
+        name = name[0].lower() + name[1:] if name and len(name) > 1 and name[0].isupper() else name
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
         result = re.sub("_+", "_", result)
@@ -821,6 +957,7 @@ def rfc1034_compliant_str(val) -> str:
         print(rfc1034_compliant_str(long_name))  # Output: thisisareallylongchatbotnamethatshouldbetruncatedtosixtythreecharacters
 
     """
+    logger.debug("%s.rfc1034_compliant_str()", logger_prefix)
     if not isinstance(val, str):
         raise SmarterValueError(f"Could not generate RFC 1034 compliant name from {type(val)}")
     # Replace underscores with hyphens
@@ -882,6 +1019,7 @@ def rfc1034_compliant_to_snake(val) -> str:
             print(e)
         # Output: Could not convert RFC 1034 compliant name from <class 'int'>
     """
+    logger.debug("%s.rfc1034_compliant_to_snake()", logger_prefix)
     if not isinstance(val, str):
         raise SmarterValueError(f"Could not convert RFC 1034 compliant name from {type(val)}")
     # Replace hyphens with underscores
@@ -911,19 +1049,17 @@ def generate_fernet_encryption_key() -> str:
         print(key)  # e.g., 'gAAAAABh...'
 
     """
+    logger.debug("%s.generate_fernet_encryption_key()", logger_prefix)
     # pylint: disable=C0415
     from cryptography.fernet import Fernet
 
-    logger.debug(
-        formatted_text_red(
-            "smarter.common.utils.generate_fernet_encryption_key() Generating new Fernet encryption key."
-        )
-    )
+    logger.debug("%s.generate_fernet_encryption_key() Generating new Fernet encryption key.", logger_prefix)
     return Fernet.generate_key().decode("utf-8")
 
 
 def bool_environment_variable(var_name: str, default: bool) -> bool:
     """Get a boolean environment variable"""
+    logger.debug("%s.bool_environment_variable()", logger_prefix)
     value = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
     if value is None:
         return default

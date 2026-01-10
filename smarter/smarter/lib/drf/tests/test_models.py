@@ -107,5 +107,5 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
 
     def test_str_returns_identifier(self):
         self.auth_token.digest = "digestvalue"
-        logger.info(str(self.auth_token))
+        logger.debug(str(self.auth_token))
         self.assertTrue(str(self.auth_token).endswith("******alue"))

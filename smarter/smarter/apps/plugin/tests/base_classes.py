@@ -12,13 +12,9 @@ from smarter.apps.plugin.manifest.models.common.connection.model import (
 )
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
-from smarter.lib.django import waffle
-from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -26,14 +22,7 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-
-def should_log(level):
-    """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
-
-
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getLogger(__name__)
 
 
 class ManifestTestsMixin(SmarterTestBase):
@@ -76,7 +65,7 @@ class TestPluginClassBase(TestAccountMixin):
     @property
     def manifest(self) -> Optional[dict]:
         if not self._manifest and self.manifest_path:
-            logger.info("Loading manifest from %s", self.manifest_path)
+            logger.info("%s.manifest Loading manifest from %s", self.formatted_class_name, self.manifest_path)
             self._manifest = get_readonly_yaml_file(self.manifest_path)
             self.assertIsNotNone(self._manifest)
         return self._manifest
@@ -87,7 +76,7 @@ class TestPluginClassBase(TestAccountMixin):
         if not self._loader:
             if not self.manifest:
                 raise SmarterValueError(f"{self.__class__.__name__}.loader() called but manifest is None")
-            logger.info("initializing SAMLoader from manifest data")
+            logger.info("%s.loader initializing SAMLoader from manifest data", self.formatted_class_name)
             self._loader = SAMLoader(manifest=json.dumps(self.manifest))
             self.assertIsNotNone(self._loader)
         return self._loader

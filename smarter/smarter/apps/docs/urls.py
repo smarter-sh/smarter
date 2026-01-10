@@ -8,21 +8,13 @@ from .const import namespace
 from .openapi import schema_view
 from .utils import json_schema_name, json_schema_path, manifest_name, manifest_path
 from .views.developer import (
-    DeveloperDocsArchitectureView,
     DeveloperDocsChangelog,
-    DeveloperDocsChatBotApiView,
-    DeveloperDocsCliView,
     DeveloperDocsCodeOfConduct,
-    DeveloperDocsDjangoReactView,
     DeveloperDocsDockerComposeView,
     DeveloperDocsDockerfileView,
-    DeveloperDocsGoodCodoingPracticeView,
     DeveloperDocsMakefileView,
-    DeveloperDocsOpenAIGettingStartedView,
     DeveloperDocsReadme,
     DeveloperDocsRequirementsView,
-    DeveloperDocsSemanticVersioningView,
-    DeveloperDocsTwelveFactorView,
     DeveloperDocsWeatherFunctionView,
 )
 from .views.json_schema import (
@@ -36,6 +28,7 @@ from .views.json_schema import (
     DocsJsonSchemaChatToolCallView,
     DocsJsonSchemaChatView,
     DocsJsonSchemaPluginView,
+    DocsJsonSchemaProviderView,
     DocsJsonSchemaSecretView,
     DocsJsonSchemaSqlConnectionView,
     DocsJsonSchemaSqlView,
@@ -52,6 +45,7 @@ from .views.manifest import (
     DocsExampleManifestChatToolCallView,
     DocsExampleManifestChatView,
     DocsExampleManifestPluginView,
+    DocsExampleManifestProviderView,
     DocsExampleManifestSecretView,
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestSqlView,
@@ -73,26 +67,6 @@ urlpatterns = [
     path("developer/requirements/", DeveloperDocsRequirementsView.as_view(), name="developer-requirements"),
     path("developer/dockerfile/", DeveloperDocsDockerfileView.as_view(), name="developer-dockerfile"),
     path("developer/docker-compose/", DeveloperDocsDockerComposeView.as_view(), name="developer-docker-compose"),
-    path("developer/12-factor/", DeveloperDocsTwelveFactorView.as_view(), name="developer-12-factor"),
-    path("developer/architecture/", DeveloperDocsArchitectureView.as_view(), name="developer-architecture"),
-    path("developer/chatbot-api/", DeveloperDocsChatBotApiView.as_view(), name="developer-chatbot-api"),
-    path("developer/cli/", DeveloperDocsCliView.as_view(), name="developer-cli"),
-    path("developer/django-react/", DeveloperDocsDjangoReactView.as_view(), name="developer-django-react"),
-    path(
-        "developer/good-coding-practice/",
-        DeveloperDocsGoodCodoingPracticeView.as_view(),
-        name="developer-good-coding-practice",
-    ),
-    path(
-        "developer/openai-getting-started/",
-        DeveloperDocsOpenAIGettingStartedView.as_view(),
-        name="developer-openai-getting-started",
-    ),
-    path(
-        "developer/semantic-versioning/",
-        DeveloperDocsSemanticVersioningView.as_view(),
-        name="developer-semantic-versioning",
-    ),
     # -------------------------------------------------------------------------
     # Documentation generators
     # -------------------------------------------------------------------------
@@ -172,6 +146,11 @@ urlpatterns = [
         DocsJsonSchemaSecretView.as_view(),
         name=json_schema_name(SAMKinds.SECRET.value),
     ),
+    path(
+        json_schema_path(SAMKinds.PROVIDER.value),
+        DocsJsonSchemaProviderView.as_view(),
+        name=json_schema_name(SAMKinds.PROVIDER.value),
+    ),
     # -------------------------------------------------------------------------
     # example manifests
     # -------------------------------------------------------------------------
@@ -244,6 +223,11 @@ urlpatterns = [
         manifest_path(SAMKinds.SECRET.value),
         DocsExampleManifestSecretView.as_view(),
         name=manifest_name(SAMKinds.SECRET.value),
+    ),
+    path(
+        manifest_path(SAMKinds.PROVIDER.value),
+        DocsExampleManifestProviderView.as_view(),
+        name=manifest_name(SAMKinds.PROVIDER.value),
     ),
     # -------------------------------------------------------------------------
     # manifests landing page

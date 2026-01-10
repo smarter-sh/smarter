@@ -33,9 +33,7 @@ This module does not document individual function signatures or arguments, as th
 """
 import time
 from datetime import datetime
-from typing import Optional
-
-from django.http import HttpRequest
+from typing import TYPE_CHECKING, Optional
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
@@ -54,6 +52,10 @@ from smarter.apps.plugin.models import ApiConnection, PluginMeta, SqlConnection
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.cache import cache_results
+
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 
 CACHE_TIMEOUT = 60  # 1 minute
@@ -201,7 +203,7 @@ def get_providers(user_profile: UserProfile) -> int:
     return user_owned + official
 
 
-def base(request: HttpRequest) -> dict:
+def base(request: "HttpRequest") -> dict:
     """
     Provides the base context for all templates inheriting from ``base.html`` in the Smarter dashboard.
 
@@ -210,7 +212,7 @@ def base(request: HttpRequest) -> dict:
     The resource counts are cached for performance, and the context is dynamically constructed based on the authenticated user's account and profile.
 
     :param request: The HTTP request object.
-    :type request: HttpRequest
+    :type request: "HttpRequest"
     :return: A dictionary containing the dashboard context variables.
     :rtype: dict
     """
@@ -278,7 +280,7 @@ def base(request: HttpRequest) -> dict:
     return context
 
 
-def branding(request: HttpRequest) -> dict:
+def branding(request: "HttpRequest") -> dict:
     """
     Provides organization-specific branding context for dashboard templates.
 

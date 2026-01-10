@@ -1,21 +1,18 @@
 """AWS Lambda helper class."""
 
-from .aws import AWSBase, SmarterAWSException
+import logging
+
+from .aws import AWSBase
+
+
+logger = logging.getLogger(__name__)
 
 
 class AWSLambdaFunction(AWSBase):
     """AWS Lambda helper class."""
 
     _client = None
-
-    @property
-    def client(self):
-        """Return the AWS Lambda client."""
-        if not self.aws_session:
-            raise SmarterAWSException("AWS session is not initialized.")
-        if not self._client:
-            self._client = self.aws_session.client("lambda")
-        return self._client
+    _client_type: str = "lambda"
 
     def get_lambdas(self):
         """Return a dict of the AWS Lambdas."""

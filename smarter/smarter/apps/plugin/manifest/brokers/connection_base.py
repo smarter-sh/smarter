@@ -14,7 +14,9 @@ from smarter.apps.plugin.manifest.models.common.connection.status import (
     SAMConnectionCommonStatus,
 )
 from smarter.apps.plugin.models import ConnectionBase
-from smarter.common.conf import settings as smarter_settings
+from smarter.apps.plugin.signals import broker_ready
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -25,14 +27,14 @@ from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerErrorNotReady
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(__name__ + ".SAMConnectionBaseBroker")
 
 
 class SAMConnectionBaseBroker(AbstractBroker):
@@ -85,13 +87,41 @@ class SAMConnectionBaseBroker(AbstractBroker):
         self._sam_connection_status = None
 
     @property
+    def ready(self) -> bool:
+        """
+        Check if the broker is ready for operations.
+
+        This property determines whether the broker has been properly initialized
+        and is ready to perform its functions. A broker is considered ready if
+        it has a valid manifest loaded, either from raw data, a loader, or
+        existing Django ORM models.
+
+        :returns: ``True`` if the broker is ready, ``False`` otherwise.
+        :rtype: bool
+        """
+        retval = super().ready
+        if not retval:
+            logger.warning("%s.ready() AbstractBroker is not ready for %s", logger_prefix, self.kind)
+            return False
+        retval = self.manifest is not None or self.plugin is not None
+        logger.debug(
+            "%s.ready() manifest presence indicates ready=%s for %s",
+            logger_prefix,
+            retval,
+            self.kind,
+        )
+        if retval:
+            broker_ready.send(sender=self.__class__, broker=self)
+        return retval
+
+    @property
     def model_class(self) -> Type[ConnectionBase]:
-        raise NotImplementedError(f"{self.formatted_class_name}.model_class must be implemented in the subclass.")
+        raise NotImplementedError(f"{logger_prefix}.model_class must be implemented in the subclass.")
 
     @property
     def connection(self) -> Optional[ConnectionBase]:
         """Return the connection model instance."""
-        raise NotImplementedError(f"{self.formatted_class_name}.connection must be implemented in the subclass.")
+        raise NotImplementedError(f"{logger_prefix}.connection must be implemented in the subclass.")
 
     @connection.setter
     def connection(self, value: ConnectionBase) -> None:
@@ -181,7 +211,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
             broker.apply(request, manifest_data=manifest_dict)
 
         """
-        logger.info("%s.apply() called with request: %s", self.formatted_class_name, request.build_absolute_uri())
+        logger.info("%s.apply() called with request: %s", logger_prefix, smarter_build_absolute_uri(request=request))
         super().apply(request, kwargs)
 
         # update the common meta fields
@@ -208,7 +238,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
             if hasattr(self.connection, key):
                 if getattr(self.connection, key) != value:
                     setattr(self.connection, key, value)
-                    logger.info("%s.apply() updating %s to %s", self.formatted_class_name, key, value)
+                    logger.info("%s.apply() updating %s to %s", logger_prefix, key, value)
                     updated = True
         if updated:
             self.connection.save()

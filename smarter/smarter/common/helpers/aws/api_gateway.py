@@ -3,6 +3,7 @@
 import logging
 from typing import Any, Optional
 
+import botocore.exceptions
 from botocore.config import Config
 
 from smarter.common.conf import SettingsDefaults
@@ -18,6 +19,7 @@ class AWSAPIGateway(AWSBase):
 
     _client: Optional[Any] = None
     _name: Optional[str] = None
+    _client_type: str = "apigateway"
 
     def __init__(self, name=None):
         """Initialize the AWS API Gateway helper class."""
@@ -27,17 +29,24 @@ class AWSAPIGateway(AWSBase):
     @property
     def client(self):
         """Return the AWS API Gateway client."""
-        if self._client:
-            return self._client
-        if not self.aws_session:
-            raise SmarterAWSException("AWS session is not initialized.")
-        config = Config(
-            read_timeout=SettingsDefaults.AWS_APIGATEWAY_READ_TIMEOUT,
-            connect_timeout=SettingsDefaults.AWS_APIGATEWAY_CONNECT_TIMEOUT,
-            retries={"max_attempts": SettingsDefaults.AWS_APIGATEWAY_MAX_ATTEMPTS},
-        )
-        self._client = self.aws_session.client("apigateway", config=config)
-        return self._client
+        if self.client:
+            return self.client
+
+        if not self.ready:
+            logger.error("%s.client() AWS session is not ready", self.formatted_class_name)
+            return None
+        try:
+            config = Config(
+                read_timeout=SettingsDefaults.AWS_APIGATEWAY_READ_TIMEOUT,
+                connect_timeout=SettingsDefaults.AWS_APIGATEWAY_CONNECT_TIMEOUT,
+                retries={"max_attempts": SettingsDefaults.AWS_APIGATEWAY_MAX_ATTEMPTS},
+            )
+            self.client = self.aws_session.client(self._client_type, config=config)
+            logger.info("%s.client() AWS API Gateway client created successfully", self.formatted_class_name)
+        except botocore.exceptions.BotoCoreError as e:
+            logger.error("%s.client() Failed to create AWS API Gateway client: %s", self.formatted_class_name, str(e))
+            return None
+        return self.client
 
     @property
     def name(self) -> Optional[str]:

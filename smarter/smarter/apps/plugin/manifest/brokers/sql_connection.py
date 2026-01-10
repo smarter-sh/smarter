@@ -3,9 +3,7 @@
 
 import logging
 from datetime import datetime
-from typing import Optional, Type
-
-from django.http import HttpRequest
+from typing import TYPE_CHECKING, Optional, Type
 
 from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.enum import (
@@ -31,6 +29,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.spec import (
 )
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
+from smarter.apps.plugin.signals import broker_ready
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -53,12 +52,15 @@ from . import SAMConnectionBrokerError
 from .connection_base import SAMConnectionBaseBroker
 
 
+if TYPE_CHECKING:
+    from django.http import HttpRequest
+
+
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
@@ -105,6 +107,42 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         This broker caches loaded manifests and connections for efficiency. Always check for existence before accessing properties.
 
     """
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        if not self.ready:
+            if not self.loader and not self.manifest and not self.connection:
+                logger.error(
+                    "%s.__init__() No loader nor existing Connection provided for %s broker. Cannot initialize.",
+                    self.formatted_class_name,
+                    self.kind,
+                )
+                return
+            if self.loader and self.loader.manifest_kind != self.kind:
+                raise SAMBrokerErrorNotReady(
+                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
+                    thing=self.kind,
+                )
+
+            if self.loader:
+                self._manifest = SAMSqlConnection(
+                    apiVersion=self.loader.manifest_api_version,
+                    kind=self.loader.manifest_kind,
+                    metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                    spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
+                )
+            if self._manifest:
+                logger.info(
+                    "%s.__init__() initialized manifest from loader for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.manifest.metadata.name,
+                )
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        if self.ready:
+            logger.info(msg)
+        else:
+            logger.error(msg)
 
     # override the base abstract manifest model with the SqlConnection model
     _manifest: Optional[SAMSqlConnection] = None
@@ -186,7 +224,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{self.__class__.__name__}()"
+        return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
 
     @property
     def model_class(self) -> Type[SqlConnection]:
@@ -279,10 +317,18 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         """
         if self._manifest:
             return self._manifest
-        # If the Connection has previously been persisted then
-        # we can build the manifest components by mapping
-        # Django ORM models to Pydantic models.
-        if self.connection:
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMSqlConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
+            )
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self._connection:
             metadata = self.sam_connection_metadata()
             if not metadata:
                 raise SAMBrokerErrorNotImplemented(
@@ -331,17 +377,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 status=status,
             )
             return self._manifest
-
-        # Otherwise, if we received a manifest via the loader,
-        # then use that to build the manifest.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSqlConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
-            )
-        if not self._manifest:
+        else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
@@ -656,10 +692,30 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                     print("Connection is missing or invalid.")
         """
         if self.connection is None:
+            logger.warning(
+                "%s is_valid() failed: connection is None for %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.name or "(name is missing)",
+            )
             return False
         try:
             if self.connection.validate():
-                return self.manifest is not None
+                logger.info(
+                    "%s is_valid() succeeded for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.name or "(name is missing)",
+                )
+                if self.manifest is not None:
+                    return True
+                logger.warning(
+                    "%s is_valid() failed for %s %s: manifest is missing",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.name or "(name is missing)",
+                )
+
         except Exception as e:
             logger.warning("%s is_valid() failed for %s %s", self.formatted_class_name, self.kind, str(e))
         return False
@@ -668,7 +724,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
 
-    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example manifest for the `SqlConnection` model.
 
@@ -677,7 +733,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         as a JSON object suitable for use in API documentation, testing, or as a template for user submissions.
 
         :param request: The Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :returns: A `SmarterJournaledJsonResponse` containing the example manifest.
@@ -751,7 +807,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         data = json.loads(pydantic_model.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve SqlConnection manifests based on search criteria.
         This method fetches SqlConnection objects from the database that match the provided
@@ -763,7 +819,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             If there is an error during data retrieval or serialization.
 
         :param request: The Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments for search criteria (e.g., name).
         :returns: A `SmarterJournaledJsonResponse` containing the serialized SqlConnection data
@@ -797,14 +853,18 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         else:
             sql_connections = SqlConnection.objects.filter(account=self.account)
 
+        model_titles = self.get_model_titles(serializer=self.serializer())
+
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each SqlConnection
         for sql_connection in sql_connections:
             try:
                 self.connection_init()
-                self.connection = sql_connection
+                self._connection = sql_connection
 
-                model_dump = self.manifest.model_dump()
-                data.append(model_dump)
+                model_dump = self.serializer(sql_connection).data
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
+
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         data = {
@@ -814,13 +874,13 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=self.serializer()),
+                SCLIResponseGetData.TITLES.value: model_titles,
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Apply the manifest: copy manifest data to the Django ORM model and save to the database.
 
@@ -830,7 +890,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         ``apply()`` to ensure manifest validation before proceeding.
 
         :param request: The Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :returns: A `SmarterJournaledJsonResponse` with the result of the apply operation.
@@ -888,7 +948,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response for chat interactions.
         This is not implemented for SQL connections.
@@ -897,7 +957,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             Always, as chat functionality is not supported for SQL connections.
 
         :param request: The Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :returns: Never returns; always raises an error.
@@ -907,7 +967,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response with the manifest data for the current SQL connection.
 
@@ -916,7 +976,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         such as the connection string and validation result.
 
         :param request: The Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (e.g., name).
         :returns: A `SmarterJournaledJsonResponse` containing the manifest and connection status.
@@ -963,7 +1023,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         pydantic_model = self.manifest.model_dump()
         return self.json_response_ok(command=command, data=pydantic_model)
 
-    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the current SQL connection from the database.
 
@@ -972,7 +1032,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         is found, an error is raised.
 
         :param request: The Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :returns: A `SmarterJournaledJsonResponse` indicating the result of the delete operation.
@@ -1009,7 +1069,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Deploy the SQL connection.
         This is not implemented for SQL connections.
@@ -1018,7 +1078,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             Always, as deploy functionality is not supported for SQL connections.
 
         :param request: The Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :returns: Never returns; always raises an error.
@@ -1028,7 +1088,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Undeploy the SQL connection.
         This is not implemented for SQL connections.
@@ -1037,7 +1097,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             Always, as undeploy functionality is not supported for SQL connections.
 
         :param request: The Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :returns: Never returns; always raises an error.
@@ -1047,7 +1107,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve logs for the SQL connection.
         This is not implemented for SQL connections.
@@ -1056,7 +1116,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             Always, as log retrieval is not supported for SQL connections.
 
         :param request: The Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments (unused).
         :param kwargs: Additional keyword arguments (unused).
         :returns: Never returns; always raises an error.

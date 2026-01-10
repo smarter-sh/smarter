@@ -17,6 +17,7 @@ from smarter.lib.django.http.serializers import (
     HttpAuthenticatedRequestSerializer,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.token_authentication import SmarterAnonymousUser
 from smarter.lib.json import SmarterJSONEncoder
 
 from .enum import (
@@ -145,7 +146,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
             try:
                 serializable_data = json.loads(json.dumps(data, cls=SmarterJSONEncoder))
                 journal = SAMJournal.objects.create(
-                    user=user,
+                    user=user or (SmarterAnonymousUser() if user is None else user),
                     thing=thing,
                     command=command,
                     request=request_data,

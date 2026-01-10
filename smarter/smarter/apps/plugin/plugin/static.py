@@ -62,7 +62,7 @@ from .base import PluginBase, SmarterPluginError
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -318,11 +318,6 @@ class StaticPlugin(PluginBase):
         if self._manifest:
             return {
                 "plugin": self.plugin_meta,
-                "description": (
-                    self.manifest.spec.data.description
-                    if self.manifest and self.manifest.spec and self.manifest.spec.data
-                    else None
-                ),
                 "static_data": (
                     self.manifest.spec.data.staticData
                     if self.manifest and self.manifest.spec and self.manifest.spec.data

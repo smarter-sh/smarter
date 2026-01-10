@@ -6,10 +6,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List, Union
 
-from django.conf import settings
-
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterException
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.validators import SmarterValidator
 
 from ..classes import Singleton
@@ -20,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 class EmailHelperException(SmarterException):
     """Base class for Email helper exceptions."""
+
+
+HERE = __name__
 
 
 class EmailHelper(metaclass=Singleton):
@@ -33,6 +35,8 @@ class EmailHelper(metaclass=Singleton):
     The class is implemented as a singleton to ensure a single instance is used throughout
     the application.
     """
+
+    logger_prefix = formatted_text(f"{HERE}.{__qualname__}()")
 
     @staticmethod
     def validate_mail_list(emails: Union[str, List[str]], quiet: bool = False) -> Union[List[str], None]:
@@ -67,7 +71,7 @@ class EmailHelper(metaclass=Singleton):
         elif isinstance(emails, list):
             mailto_list = emails
         else:
-            logger.warning("invalid email address list provided: %s", emails)
+            logger.warning("%s invalid email address list provided: %s", EmailHelper.logger_prefix, emails)
             return None
 
         valid_emails = [email for email in mailto_list if SmarterValidator.is_valid_email(email)]
@@ -76,11 +80,13 @@ class EmailHelper(metaclass=Singleton):
             diff = set(mailto_list) != set(valid_emails)
             if diff != [""]:
                 logger.warning(
-                    "invalid email addresses were found in send list: %s", set(mailto_list) - set(valid_emails)
+                    "%s invalid email addresses were found in send list: %s",
+                    EmailHelper.logger_prefix,
+                    set(mailto_list) - set(valid_emails),
                 )
 
         if len(valid_emails) == 0 and not quiet:
-            logger.warning("no valid email addresses found in send list")
+            logger.warning("%s no valid email addresses found in send list", EmailHelper.logger_prefix)
             return None
 
         return valid_emails
@@ -125,7 +131,8 @@ class EmailHelper(metaclass=Singleton):
         if not smarter_settings.smtp_is_configured:
             if not quiet:
                 logger.warning(
-                    "EmailHelper.send_email() quiet mode. SMTP not configured, would have sent subject '%s' to: %s",
+                    "%s quiet mode. SMTP not configured, would have sent subject '%s' to: %s",
+                    EmailHelper.logger_prefix,
                     subject,
                     to,
                 )
@@ -136,7 +143,12 @@ class EmailHelper(metaclass=Singleton):
             return
 
         if quiet:
-            logger.info("EmailHelper.send_email() quiet mode. would have sent subject '%s' to: %s", subject, mail_to)
+            logger.info(
+                "%s EmailHelper.send_email() quiet mode. would have sent subject '%s' to: %s",
+                EmailHelper.logger_prefix,
+                subject,
+                mail_to,
+            )
             return
 
         if not mail_to:
@@ -166,7 +178,7 @@ class EmailHelper(metaclass=Singleton):
                     smarter_settings.smtp_username.get_secret_value(), smarter_settings.smtp_password.get_secret_value()
                 )
                 server.sendmail(msg["From"], [msg["To"]], msg.as_string())
-                logger.info("smtp email sent to %s: %s", to, subject)
+                logger.info("%s smtp email sent to %s: %s", EmailHelper.logger_prefix, to, subject)
         except (
             smtplib.SMTPDataError,
             smtplib.SMTPAuthenticationError,
@@ -178,14 +190,22 @@ class EmailHelper(metaclass=Singleton):
             smtplib.SMTPNotSupportedError,
         ) as e:
             logger.error(
-                "smtp error while attempting to send email. error: %s from: %s to. %s", e, msg["From"], msg["To"]
+                "%s smtp error while attempting to send email. error: %s from: %s to. %s",
+                EmailHelper.logger_prefix,
+                e,
+                msg["From"],
+                msg["To"],
             )
             if smarter_settings.developer_mode:
                 raise EmailHelperException(f"Error sending email: {e}") from e
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "unexpected error while attempting to send email. error: %s from: %s to. %s", e, msg["From"], msg["To"]
+                "%s unexpected error while attempting to send email. error: %s from: %s to. %s",
+                EmailHelper.logger_prefix,
+                e,
+                msg["From"],
+                msg["To"],
             )
             if smarter_settings.developer_mode:
                 raise EmailHelperException(f"Error sending email: {e}") from e

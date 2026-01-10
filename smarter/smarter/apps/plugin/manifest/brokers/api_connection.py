@@ -3,9 +3,7 @@
 
 import logging
 from datetime import datetime
-from typing import Optional, Type
-
-from django.http import HttpRequest
+from typing import TYPE_CHECKING, Optional, Type
 
 from smarter.apps.account.models import Secret
 from smarter.apps.account.utils import get_cached_admin_user_for_account
@@ -50,12 +48,15 @@ from . import SAMConnectionBrokerError
 from .connection_base import SAMConnectionBaseBroker
 
 
+if TYPE_CHECKING:
+    from django.http import HttpRequest
+
+
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
-        or waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
@@ -89,6 +90,47 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         orm_data = broker.manifest_to_django_orm()
 
     """
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        if not self.ready:
+            if not self.loader and not self.manifest and not self.connection:
+                logger.error(
+                    "%s.__init__() No loader nor existing Connection provided for %s broker. Cannot initialize.",
+                    self.formatted_class_name,
+                    self.kind,
+                )
+                return
+            if self.loader and self.loader.manifest_kind != self.kind:
+                raise SAMBrokerErrorNotReady(
+                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
+                    thing=self.kind,
+                )
+
+            if self.loader:
+                self._manifest = SAMApiConnection(
+                    apiVersion=self.loader.manifest_api_version,
+                    kind=self.loader.manifest_kind,
+                    metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                    spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
+                    status=(
+                        SAMConnectionCommonStatus(**self.loader.manifest_status)
+                        if self.loader and self.loader.manifest_status
+                        else None
+                    ),
+                )
+            if self._manifest:
+                logger.info(
+                    "%s.__init__() initialized manifest from loader for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.manifest.metadata.name,
+                )
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        if self.ready:
+            logger.info(msg)
+        else:
+            logger.error(msg)
 
     # override the base abstract manifest model with the ApiConnection model
     _manifest: Optional[SAMApiConnection] = None
@@ -179,7 +221,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{self.__class__.__name__}()"
+        return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
 
     @property
     def model_class(self) -> Type[ApiConnection]:
@@ -231,7 +273,24 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if self._manifest:
             return self._manifest
 
-        if self.connection:
+        # 1.) prioritize manifest loader data if available. if it was provided
+        #     in the request body then this is the authoritative source.
+        if self.loader and self.loader.manifest_kind == self.kind:
+            self._manifest = SAMApiConnection(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
+                spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
+                status=(
+                    SAMConnectionCommonStatus(**self.loader.manifest_status)
+                    if self.loader and self.loader.manifest_status
+                    else None
+                ),
+            )
+            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
+        # 2.) next, (and only if a loader is not available) try to initialize
+        #     from existing Account model if available
+        elif self.connection:
             metadata = self.sam_connection_metadata()
             if not metadata:
                 raise SAMBrokerErrorNotReady(
@@ -268,20 +327,6 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 status=status,
             )
             return self._manifest
-
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
-                status=(
-                    SAMConnectionCommonStatus(**self.loader.manifest_status)
-                    if self.loader and self.loader.manifest_status
-                    else None
-                ),
-            )
-            logger.info("%s.manifest() initialized manifest from loader", self.formatted_class_name)
         else:
             logger.warning(
                 "%s.manifest() could not initialize manifest. Expected %s but got %s",
@@ -561,14 +606,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         return self._connection
 
-    def example_manifest(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example ApiConnection manifest.
 
         This method generates and returns a sample manifest for an ApiConnection, including all required fields and example values for authentication, connection, and metadata. The manifest is validated using the Pydantic model and returned as a JSON response.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: JSON response containing the example manifest.
@@ -639,14 +684,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Retrieve a list of ApiConnection objects as a journaled JSON response.
 
         This method queries the database for `ApiConnection` instances matching the current account and optional name filter, serializes each result, and returns a structured JSON response including metadata, item count, and model titles.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Optional keyword arguments, such as `name` to filter connections.
         :type kwargs: dict
@@ -682,18 +727,18 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         else:
             api_connections = ApiConnection.objects.filter(account=self.account)
 
+        model_titles = self.get_model_titles(serializer=self.serializer())
+
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each ApiConnection
         for api_connection in api_connections:
             try:
                 self.connection_init()
-                self.connection = api_connection
+                self._connection = api_connection
 
-                model_dump = self.manifest.model_dump()
-                if not model_dump:
-                    raise SAMConnectionBrokerError(
-                        f"Model dump failed for {self.kind} {api_connection.name}", thing=self.kind, command=command
-                    )
-                data.append(model_dump)
+                model_dump = self.serializer(api_connection).data
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
+
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         data = {
@@ -703,13 +748,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=self.serializer()),
+                SCLIResponseGetData.TITLES.value: model_titles,
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def apply(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Apply the manifest. Copy the manifest data to the Django ORM model and
         save the model to the database.
@@ -754,7 +799,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             }
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: JSON response indicating success and the updated manifest data.
@@ -807,7 +852,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data=self.to_json())
 
-    def chat(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def chat(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Handle chat operations for the API connection broker.
 
@@ -815,7 +860,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         This method is not implemented. Any invocation will result in an error.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
@@ -840,14 +885,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response containing the manifest data for the current API connection.
 
         This method serializes the manifest and connection details, including metadata, specification, and status, into a structured JSON response. It validates the connection and includes relevant fields such as connection string and validity status.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: JSON response with manifest data.
@@ -885,14 +930,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
 
-    def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Delete the current API connection and return a JSON response indicating the result.
 
         This method attempts to delete the associated `ApiConnection` object from the database. If successful, it returns an empty JSON response. If no connection exists, or if an error occurs during deletion, an appropriate exception is raised.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: JSON response indicating deletion success.
@@ -929,13 +974,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Handle deploy operations for the API connection broker.
         This is not implemented and will always raise a `SAMBrokerErrorNotImplemented` exception.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
@@ -945,13 +990,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Handle undeploy operations for the API connection broker.
         This is not implemented and will always raise a `SAMBrokerErrorNotImplemented` exception.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
@@ -961,13 +1006,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+    def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Handle logs operations for the API connection broker.
         This is not implemented and will always raise a `SAMBrokerErrorNotImplemented` exception.
 
         :param request: Django HTTP request object.
-        :type request: HttpRequest
+        :type request: "HttpRequest"
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         :return: SAMBrokerErrorNotImplemented. This method always raises an exception.

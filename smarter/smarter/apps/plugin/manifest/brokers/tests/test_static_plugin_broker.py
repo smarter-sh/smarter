@@ -235,6 +235,8 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
             django_orm_tags = set(self.broker.plugin_meta.tags.names()) if self.broker.plugin_meta.tags else set()
         elif isinstance(self.broker.plugin_meta.tags, set):
             django_orm_tags = self.broker.plugin_meta.tags
+        elif isinstance(self.broker.plugin_meta.tags, list):
+            django_orm_tags = set(self.broker.plugin_meta.tags)
         else:
             self.fail(f"plugin_meta.tags is of unexpected type: {type(self.broker.plugin_meta.tags)}")
         self.assertEqual(manifest_tags, django_orm_tags)
@@ -277,7 +279,6 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         self.assertEqual(self.broker.manifest.spec.prompt.systemRole, self.broker.plugin.plugin_prompt.system_role)
         self.assertEqual(self.broker.manifest.spec.prompt.model, self.broker.plugin.plugin_prompt.model)
         self.assertEqual(self.broker.manifest.spec.prompt.temperature, self.broker.plugin.plugin_prompt.temperature)
-        self.assertEqual(self.broker.manifest.spec.data.description, self.broker.plugin.plugin_data.description)
         self.assertEqual(self.broker.manifest.spec.data.staticData, self.broker.plugin.plugin_data.static_data)
 
     def test_plugin(self):
@@ -295,11 +296,6 @@ class TestSmarterStaticPluginBroker(TestSAMBrokerBaseClass):
         """
         plugin_data = self.broker.plugin_data
         self.assertIsInstance(plugin_data, PluginDataStatic)
-        self.assertEqual(
-            plugin_data.description or "",
-            self.broker.manifest.spec.data.description or "",
-            "Plugin data description does not match manifest spec description.",
-        )
         self.assertEqual(
             plugin_data.static_data or {},
             self.broker.manifest.spec.data.staticData or {},

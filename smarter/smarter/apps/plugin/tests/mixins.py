@@ -14,6 +14,7 @@ from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConne
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import ApiConnection, SqlConnection
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake_dict, get_readonly_yaml_file
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -29,7 +30,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -50,12 +51,13 @@ class AuthenticatedRequestMixin(ConnectionTextMixinBase):
 
     client: Client
     request: HttpRequest
+    test_sam_api_plugin_logger_prefix = formatted_text(f"{__name__}.AuthenticatedRequestMixin()")
 
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
-        logger.info("Setting up AuthenticatedRequestMixin")
+        logger.debug("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
         cls.client = Client()
         cls.client.force_login(cls.admin_user)
         response = cls.client.get("/some-url/")
@@ -64,7 +66,7 @@ class AuthenticatedRequestMixin(ConnectionTextMixinBase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        logger.info("Tearing down AuthenticatedRequestMixin")
+        logger.debug("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
         super().tearDownClass()
 
 
@@ -78,12 +80,13 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
     connection_manifest: Optional[dict] = None
     connection_model: Optional[SAMApiConnection]
     connection_django_model: Optional[ApiConnection] = None
+    test_sam_api_plugin_logger_prefix = formatted_text(f"{__name__}.ApiConnectionTestMixin()")
 
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
-        logger.info("Setting up ApiConnectionTestMixin")
+        logger.debug("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
 
         # setup an instance of ApiConnection() - a Django model
         # ---------------------------------------------------------------------
@@ -134,16 +137,16 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_django_model = ApiConnection(**connection_model_dump)
         cls.connection_django_model.save()
 
-        logger.info("connection_manifest_path initialized: %s", str(connection_manifest_path))
-        logger.info("connection_manifest initialized: %s", str(connection_manifest))
-        logger.info("connection_loader initialized: %s", str(connection_loader))
-        logger.info("connection_model initialized: %s", str(connection_model))
-        logger.info("connection_django_model initialized: %s", str(cls.connection_django_model))
+        logger.debug("connection_manifest_path initialized: %s", str(connection_manifest_path))
+        logger.debug("connection_manifest initialized: %s", str(connection_manifest))
+        logger.debug("connection_loader initialized: %s", str(connection_loader))
+        logger.debug("connection_model initialized: %s", str(connection_model))
+        logger.debug("connection_django_model initialized: %s", str(cls.connection_django_model))
 
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        logger.info("Tearing down ApiConnectionTestMixin")
+        logger.debug("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
 
         cls.connection_manifest_path = None
         cls.connection_manifest = None
@@ -171,11 +174,13 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
     connection_manifest: Optional[dict] = None
     connection_model: Optional[SAMSqlConnection]
     connection_django_model: Optional[SqlConnection] = None
+    test_sam_api_plugin_logger_prefix = formatted_text(f"{__name__}.SqlConnectionTestMixin()")
 
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
+        logger.debug("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
 
         # setup an instance of SqlConnection() - a Django model
         # ---------------------------------------------------------------------
@@ -220,16 +225,16 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_django_model = SqlConnection(**connection_model_dump)
         cls.connection_django_model.save()
 
-        logger.info("connection_manifest_path initialized: %s", str(connection_manifest_path))
-        logger.info("connection_manifest initialized: %s", str(connection_manifest))
-        logger.info("connection_loader initialized: %s", str(connection_loader))
-        logger.info("connection_model initialized: %s", str(connection_model))
-        logger.info("connection_django_model initialized: %s", str(cls.connection_django_model))
+        logger.debug("connection_manifest_path initialized: %s", str(connection_manifest_path))
+        logger.debug("connection_manifest initialized: %s", str(connection_manifest))
+        logger.debug("connection_loader initialized: %s", str(connection_loader))
+        logger.debug("connection_model initialized: %s", str(connection_model))
+        logger.debug("connection_django_model initialized: %s", str(cls.connection_django_model))
 
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        logger.info("Tearing down ApiConnectionTestMixin")
+        logger.debug("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
 
         cls.connection_manifest_path = None
         cls.connection_manifest = None

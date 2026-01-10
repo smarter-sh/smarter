@@ -42,10 +42,9 @@ from smarter.lib.manifest.enum import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PROVIDER_LOGGING) and waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
@@ -275,7 +274,7 @@ class SAMProviderBroker(AbstractBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMProviderBroker()"
+        return f"{parent_class}.{SAMProviderBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:

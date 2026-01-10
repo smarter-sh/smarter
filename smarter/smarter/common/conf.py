@@ -62,12 +62,16 @@ from pydantic import (
     SecretStr,
     ValidationError,
     ValidationInfo,
+)
+from pydantic import __version__ as pydantic_version
+from pydantic import (
     field_validator,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.helpers.console_helpers import (
+    formatted_text,
     formatted_text_green,
     formatted_text_red,
 )
@@ -90,6 +94,7 @@ from .utils import bool_environment_variable
 
 logger = logging.getLogger(__name__)
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
+DEFAULT_ROOT_DOMAIN = "example.com"
 DOT_ENV_LOADED = load_dotenv()
 """
 True if .env file was loaded successfully.
@@ -383,7 +388,7 @@ class SettingsDefaults:
         Do not add application logic or side effects to this class. It should only define static default values and simple logic for fallback selection.
     """
 
-    ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", "example.com", is_required=True)
+    ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", DEFAULT_ROOT_DOMAIN, is_required=True)
     ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", [])
     ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY", is_secret=True, is_required=True))
 
@@ -498,7 +503,7 @@ class SettingsDefaults:
     LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
     LOCAL_HOSTS.append("testserver")
 
-    LOG_LEVEL: int = logging.DEBUG if DEBUG_MODE else logging.INFO
+    LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
 
     LOGO: HttpUrl = get_env("LOGO", "https://cdn.example.com/images/logo/logo.png", is_required=True)
     MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY", is_secret=True))
@@ -669,12 +674,19 @@ class Settings(BaseSettings):
     """
 
     _dump: dict
+    _ready: bool = False
 
     def __init__(self, **data: Any):
         super().__init__(**data)
-
-        logger.setLevel(SettingsDefaults.LOG_LEVEL)
-        logger.debug("Pydantic v2 Settings initialized")
+        # need to be mindful that __init__ is called before Django startup has begun.
+        # one consequence is that logging is not yet configured, so have have to
+        # use janky logging levels in order to ensure that these log messages are seen.
+        msg = f"{formatted_text(__name__)} Pydantic version: {pydantic_version} pydantic_settings.BaseSettings."
+        if self.ready():
+            ready_msg = formatted_text_green("READY")
+        else:
+            ready_msg = formatted_text_red("NOT_READY")
+        logger.warning("%s Settings are %s.", msg, ready_msg)
 
     init_info: Optional[str] = Field(
         None,
@@ -1029,6 +1041,62 @@ class Settings(BaseSettings):
         if v not in valid_regions:
             raise SmarterValueError(f"aws_region {v} not in aws_regions: {valid_regions}")
         return v
+
+    def ready(self) -> bool:
+        """
+        Returns True if the settings instance has been fully initialized and is ready for use.
+        This method can be used to check if the settings instance is fully configured
+        and ready to be used by the application.
+
+        - is the root domain set?
+        - is AWS configured?
+        - is SMTP configured?
+
+        :type: bool
+        """
+        retval = True
+        if self.root_domain == DEFAULT_ROOT_DOMAIN:
+            print(
+                formatted_text_red(
+                    "\n"
+                    + "=" * 80
+                    + "\n[WARNING] ROOT_DOMAIN is set to the default value 'example.com'.\n"
+                    + "This is not recommended for production deployments. Please set ROOT_DOMAIN to your actual domain.\n"
+                    + "=" * 80
+                    + "\n"
+                )
+            )
+            logger.warning(
+                "ROOT_DOMAIN is set to the default value 'example.com'. This is not recommended for production deployments."
+            )
+            retval = False
+        if not self.aws_is_configured:
+            print(
+                formatted_text_red(
+                    "\n"
+                    + "=" * 80
+                    + "\n[WARNING] AWS is not configured properly. Some features may not work as expected.\n"
+                    + "Ensure that AWS credentials are set in environment variables, .env file, or AWS config files.\n"
+                    + "=" * 80
+                    + "\n"
+                )
+            )
+            logger.warning("AWS is not configured properly. Some features may not work as expected.")
+            retval = False
+        if not self.smtp_is_configured:
+            print(
+                formatted_text_red(
+                    "\n"
+                    + "=" * 80
+                    + "\n[WARNING] SMTP is not configured properly. Email features may not work as expected.\n"
+                    + "Ensure that SMTP settings are set in environment variables or .env file.\n"
+                    + "=" * 80
+                    + "\n"
+                )
+            )
+            logger.warning("SMTP is not configured properly. Email features may not work as expected.")
+            retval = False
+        return retval
 
     @property
     def aws_is_configured(self) -> bool:
@@ -2799,6 +2867,12 @@ class Settings(BaseSettings):
             return v
         if str(v) in [None, ""] and SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N is not None:
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N
+        if isinstance(v, str):
+            try:
+                v = int(v)
+                return v
+            except (TypeError, ValueError) as e:
+                raise SmarterConfigurationError(f"openai_endpoint_image_n of type {type(v)} is not an int: {v}") from e
         if not isinstance(v, int):
             raise SmarterConfigurationError(f"openai_endpoint_image_n of type {type(v)} is not an int: {v}")
 
@@ -3730,6 +3804,20 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return "https"
         return "http"
+
+    @property
+    def log_level_name(self) -> str:
+        """
+        Return the log level name.
+
+        Example:
+            >>> print(smarter_settings.log_level_name)
+            'INFO'
+
+        See Also:
+            - smarter_settings.log_level
+        """
+        return logging.getLevelName(self.log_level)
 
     @property
     def data_directory(self) -> str:

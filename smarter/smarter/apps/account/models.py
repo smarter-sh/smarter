@@ -13,8 +13,7 @@ from cryptography.fernet import Fernet
 
 # django stuff
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, AnonymousUser, User
-from django.core.handlers.wsgi import WSGIRequest
+from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.loader import render_to_string
@@ -25,6 +24,7 @@ from django.utils.functional import SimpleLazyObject
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import MetaDataModel, TimestampedModel
@@ -41,12 +41,20 @@ from .signals import (
 )
 
 
+if TYPE_CHECKING:
+    try:
+        from django.contrib.auth.models import AbstractUser, AnonymousUser, _AnyUser
+        from django.core.handlers.wsgi import WSGIRequest
+
+    except ImportError:
+        _AnyUser = Union[object]  # fallback for Sphinx/type checkers
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -96,16 +104,9 @@ def welcome_email_context(first_name: str) -> dict:
     }
 
 
-if TYPE_CHECKING:
-    try:
-        from django.contrib.auth.models import _AnyUser
-    except ImportError:
-        _AnyUser = object  # fallback for Sphinx/type checkers
-
-
 def get_resolved_user(
-    user: "Union[User, AbstractUser, AnonymousUser, SimpleLazyObject, _AnyUser]",
-) -> Optional[Union[User, AbstractUser, AnonymousUser]]:
+    user: Union[User, "AbstractUser", "AnonymousUser", SimpleLazyObject, "_AnyUser"],
+) -> Optional[Union[User, "AbstractUser", "AnonymousUser"]]:
     """
     Resolve and return a Django user object from a user-like instance.
 
@@ -139,9 +140,14 @@ def get_resolved_user(
             :class:`django.utils.functional.SimpleLazyObject`
 
     """
-    logger.info("get_resolved_user() called for user type: %s", type(user))
+    logger.info(
+        "%s.get_resolved_user() called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user)
+    )
     if user is None:
         return None
+
+    # pylint: disable=import-outside-toplevel
+    from django.contrib.auth.models import AbstractUser, AnonymousUser
 
     # this is the expected case
     if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
@@ -289,7 +295,6 @@ class Account(MetaDataModel):
         if self.account_number == "9999-9999-9999":
             self.account_number = self.randomized_account_number()
 
-        self.name = self.account_number.replace("-", "_") or self.name
         SmarterValidator.validate_account_number(self.account_number)
         super().save(*args, **kwargs)
 
@@ -578,7 +583,11 @@ class AccountContact(TimestampedModel):
         if contact:
             contact.send_email(subject=subject, body=body, html=html, from_email=from_email)
         else:
-            logger.error("No primary contact found for account %s", account)
+            logger.error(
+                "%s.send_email_to_primary_contact() No primary contact found for account %s",
+                formatted_text(__name__ + ".AccountContact()"),
+                account,
+            )
 
     def save(self, *args, **kwargs):
         """
@@ -715,7 +724,6 @@ class UserProfile(MetaDataWithOwnershipModel):
 
         """
         is_new = self.pk is None
-        self.name = self.user.username or self.name
 
         if self.user is None or self.account is None:
             raise SmarterValueError("User and Account cannot be null")
@@ -726,7 +734,10 @@ class UserProfile(MetaDataWithOwnershipModel):
             self.add_to_account_contacts(is_primary=is_primary)
 
             logger.debug(
-                "New user profile created for %s %s. Sending signal.", self.account.company_name, self.user.email
+                "%s.save() New user profile created for %s %s. Sending signal.",
+                formatted_text(__name__ + ".UserProfile()"),
+                self.account.company_name,
+                self.user.email,
             )
             new_user_created.send(sender=self.__class__, user_profile=self)
 
@@ -762,17 +773,25 @@ class UserProfile(MetaDataWithOwnershipModel):
         if admins.exists():
             return admins.first().user  # type: ignore[return-value]
 
-        logger.error("No admin found for account %s", account)
+        logger.error(
+            "%s.admin_for_account() No admin found for account %s", formatted_text(__name__ + ".UserProfile()"), account
+        )
 
         users = cls.objects.filter(account=account).order_by("user__id")
         if users.exists():
             user = users.first().user  # type: ignore[return-value]
             return user
 
-        logger.error("No user for account %s", account)
+        logger.error(
+            "%s.admin_for_account() No user for account %s", formatted_text(__name__ + ".UserProfile()"), account
+        )
         admin_user = cls.objects.get_or_create(username=SMARTER_ADMIN_USERNAME)
         user_profile = cls.objects.create(user=admin_user, account=account)
-        logger.warning("Created admin user for account %s. Use manage.py to set the password", account)
+        logger.warning(
+            "%s.admin_for_account() Created admin user for account %s. Use manage.py to set the password",
+            formatted_text(__name__ + ".UserProfile()"),
+            account,
+        )
         return user_profile.user
 
     def __str__(self):
@@ -910,7 +929,10 @@ class Charge(TimestampedModel):
         super().save(*args, **kwargs)
         if is_new:
             logger.debug(
-                "New user charge created for %s %s. Sending signal.", self.account.company_name, self.user.email
+                "%s.save() New user charge created for %s %s. Sending signal.",
+                formatted_text(__name__ + ".Charge()"),
+                self.account.company_name,
+                self.user.email,
             )
             new_charge_created.send(sender=self.__class__, charge=self)
 
@@ -1127,7 +1149,7 @@ class Secret(MetaDataWithOwnershipModel):
         expiration = timezone.make_aware(self.expires_at) if timezone.is_naive(self.expires_at) else self.expires_at
         return timezone.now() > expiration
 
-    def has_permissions(self, request: WSGIRequest) -> bool:
+    def has_permissions(self, request: "WSGIRequest") -> bool:
         """
         Check if the authenticated user in the given request has permission to manage this secret.
 

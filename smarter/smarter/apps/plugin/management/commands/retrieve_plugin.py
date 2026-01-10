@@ -56,7 +56,6 @@ class Command(SmarterCommand):
                 e,
                 f"manage.py retrieve_plugin: Account {account_number} does not exist.",
             )
-            raise
 
         try:
             user_profile = get_cached_user_profile(user=user, account=account)  # type: ignore
@@ -65,7 +64,6 @@ class Command(SmarterCommand):
                 e,
                 f"manage.py retrieve_plugin: UserProfile for {user} and {account} does not exist.",
             )
-            raise
 
         self.stdout.write(f"manage.py retrieve_plugin: Retrieving plugin {name} for account {account}")
 
@@ -76,7 +74,6 @@ class Command(SmarterCommand):
                 e,
                 f"manage.py retrieve_plugin: Plugin {name} does not exist.",
             )
-            raise
 
         controller = PluginController(account=account, user=user, user_profile=user_profile, plugin_meta=plugin_meta)  # type: ignore
         plugin = controller.obj

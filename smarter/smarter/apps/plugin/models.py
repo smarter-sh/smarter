@@ -79,7 +79,7 @@ from .signals import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -648,6 +648,7 @@ class PluginSelector(TimestampedModel, SmarterHelperMixin):
         default=list,
         blank=True,
         null=True,
+        encoder=json.SmarterJSONEncoder,
     )
 
     def __str__(self) -> str:
@@ -718,7 +719,9 @@ class PluginSelectorHistory(TimestampedModel, SmarterHelperMixin):
         PluginSelector, on_delete=models.CASCADE, related_name="plugin_selector_history_plugin_selector"
     )
     search_term = models.CharField(max_length=255, blank=True, null=True, default="")
-    messages = models.JSONField(help_text="The user prompt messages.", default=list, blank=True, null=True)
+    messages = models.JSONField(
+        help_text="The user prompt messages.", default=list, blank=True, null=True, encoder=json.SmarterJSONEncoder
+    )
     session_key = models.CharField(max_length=255, blank=True, null=True, default="")
 
     def __str__(self) -> str:
@@ -873,6 +876,7 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
         blank=True,
         null=True,
         validators=[validate_openai_parameters_dict],
+        encoder=json.SmarterJSONEncoder,
     )
     """
     A JSON dict containing parameter names and data types. Example: {'required': [], 'properties': {'max_cost': {'type': 'float', 'description': 'the maximum cost that a student is willing to pay for a course.'}, 'description': {'enum': ['AI', 'mobile', 'web', 'database', 'network', 'neural networks'], 'type': 'string', 'description': 'areas of specialization for courses in the catalogue.'}}}
@@ -882,6 +886,7 @@ class PluginDataBase(TimestampedModel, SmarterHelperMixin):
         help_text="A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}",
         blank=True,
         null=True,
+        encoder=json.SmarterJSONEncoder,
     )
     """
     A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}
@@ -1004,7 +1009,9 @@ class PluginDataStatic(PluginDataBase):
     """
 
     static_data = models.JSONField(
-        help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.", default=dict
+        help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.",
+        default=dict,
+        encoder=json.SmarterJSONEncoder,
     )
     """
     The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.
@@ -1197,22 +1204,6 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         max_length=50,
         choices=CONNECTION_KIND_CHOICES,
     )
-    description = models.TextField(
-        help_text="A brief description of the connection. Be verbose, but not too verbose.", blank=True, null=True
-    )
-    """
-    A brief description of the connection. Be verbose, but not too verbose.
-    """
-    version = models.CharField(
-        help_text="The version of the connection. Example: '1.0.0'.",
-        max_length=255,
-        default="1.0.0",
-        blank=True,
-        null=True,
-    )
-    """
-    The semantic version of the connection. Example: '1.0.0'.
-    """
 
     @property
     @abstractmethod
@@ -2567,16 +2558,19 @@ class PluginDataApi(PluginDataBase):
         help_text="A JSON dict containing URL parameters. Example: {'city': 'San Francisco', 'state': 'CA'}",
         blank=True,
         null=True,
+        encoder=json.SmarterJSONEncoder,
     )
     headers = models.JSONField(
         help_text="A JSON dict containing headers to be sent with the API request. Example: {'Authorization': 'Bearer <token>'}",
         blank=True,
         null=True,
+        encoder=json.SmarterJSONEncoder,
     )
     body = models.JSONField(
         help_text="A JSON dict containing the body of the API request, if applicable.",
         blank=True,
         null=True,
+        encoder=json.SmarterJSONEncoder,
     )
     limit = models.IntegerField(
         help_text="The maximum number of rows to return from the API response.",

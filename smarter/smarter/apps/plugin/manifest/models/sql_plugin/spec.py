@@ -26,7 +26,7 @@ SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -36,10 +36,6 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 class SqlData(SmarterBasePydanticModel):
     """Smarter API - generic API Connection class."""
 
-    description: Optional[str] = Field(
-        default=None,
-        description="A brief description what the Sql query returns.",
-    )
     sqlQuery: str = Field(
         ...,
         description="The SQL query that this plugin will execute when invoked by the user prompt.",

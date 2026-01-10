@@ -79,7 +79,7 @@ from .base import PluginBase, SmarterPluginError
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -387,9 +387,61 @@ class SqlPlugin(PluginBase):
                     "default": None
                 }
             ]
+
+        .. code-block:: yaml
+
+            spec:
+                selector:
+                    directive: search_terms
+                    searchTerms:
+                    - admin
+                    - Smarter platform
+                    - admin account
+                prompt:
+                    provider: openai
+                    systemRole: >
+                    You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.
+                    model: gpt-4o-mini
+                    temperature: 0.0
+                    maxTokens: 256
+                connection: test_sql_connection
+                sqlData:
+                    sqlQuery: >
+                    SELECT * FROM auth_user WHERE username = '{username}';
+                    parameters:
+                    - name: username
+                        type: string
+                        description: The username to query.
+                        required: true
+                        default: admin
+                    - name: unit
+                        type: string
+                        enum:
+                        - Celsius
+                        - Fahrenheit
+                        description: The temperature unit to use.
+                        required: false
+                        default: Celsius
+                    testValues:
+                    - name: username
+                        value: admin
+                    - name: unit
+                        value: Celsius
+                    limit: 10
+
         """
         if not self._manifest:
             return None
+
+        if not isinstance(self.plugin_meta, PluginMeta):
+            raise SmarterSqlPluginError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} plugin metadata is not available."
+            )
+
+        if not isinstance(self.manifest, SAMSqlPlugin):
+            raise SmarterSqlPluginError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} plugin manifest is not available."
+            )
 
         sql_data = self.manifest.spec.sqlData.model_dump() if self.manifest else None
         if not sql_data:
@@ -397,6 +449,7 @@ class SqlPlugin(PluginBase):
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} missing required SQL data."
             )
         sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
+
         connection_name = self._manifest.spec.connection if self._manifest else None
         if connection_name:
             # recast the Pydantic model to the PluginDataSql Django ORM model
@@ -416,14 +469,25 @@ class SqlPlugin(PluginBase):
         # to conform to openai's function calling schema.
         recasted_parameters = {"type": "object", "properties": {}, "required": [], "additionalProperties": False}
         parameters = self.manifest.spec.sqlData.parameters if self.manifest and self.manifest.spec else None
-        logger.info("plugin_data_django_model() recasting parameters: %s", parameters)
-        if isinstance(parameters, list):
+        if parameters and not isinstance(parameters, list):
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
+            )
+        if parameters:
+            logger.info("%s.plugin_data_django_model() recasting parameters", self.formatted_class_name)
             for parameter in parameters:
-                if isinstance(parameter, Parameter):
-                    # if the parameter is a Pydantic model, we need to convert it to a
-                    # standard json dict.
-                    parameter = parameter.model_dump()
-                logger.info("plugin_data_django_model() processing parameter: %s %s", type(parameter), parameter)
+                if not isinstance(parameter, Parameter):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a Pydantic Parameter model. Received: {parameter} {type(parameter)}"
+                    )
+                # if the parameter is a Pydantic model, we need to convert it to a
+                # standard json dict.
+                parameter = parameter.model_dump()
+                logger.info(
+                    "%s.plugin_data_django_model() processing parameter: %s",
+                    self.formatted_class_name,
+                    parameter,
+                )
                 if not isinstance(parameter, dict):
                     raise SmarterConfigurationError(
                         f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a valid json dict. Received: {parameter} {type(parameter)}"
@@ -444,33 +508,17 @@ class SqlPlugin(PluginBase):
                     recasted_parameters["properties"][parameter["name"]]["enum"] = parameter["enum"]
                 if parameter.get("required", False):
                     recasted_parameters["required"].append(parameter["name"])
+                if "default" in parameter and parameter["default"] is not None:
+                    recasted_parameters["properties"][parameter["name"]]["default"] = parameter["default"]
 
             sql_data["parameters"] = recasted_parameters
-        else:
-            raise SmarterConfigurationError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
-            )
-
-        if not isinstance(self.plugin_meta, PluginMeta):
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} plugin metadata is not available."
-            )
-
-        if not isinstance(self.manifest, SAMSqlPlugin):
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} plugin manifest is not available."
-            )
-        if not isinstance(sql_data, dict):
-            raise SmarterSqlPluginError(
-                f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} plugin SQL data is not a valid dictionary."
-            )
 
         return {
             "plugin": self.plugin_meta,
             "description": (
                 self.manifest.metadata.description
                 if self.manifest and self.manifest.metadata
-                else self.plugin_meta.description if self.plugin_meta else None
+                else self.plugin_meta.description if self.plugin_meta else "no description"
             ),
             **sql_data,
         }  # type: ignore[call-arg]
@@ -600,7 +648,7 @@ class SqlPlugin(PluginBase):
         :returns: None
         :rtype: None
         """
-        logger.info("PluginDataSql.create() called.")
+        logger.info("%s.create() called.", self.formatted_class_name)
         super().create()
 
     def tool_call_fetch_plugin_response(self, function_args: Union[dict[str, Any], list]) -> Optional[str]:

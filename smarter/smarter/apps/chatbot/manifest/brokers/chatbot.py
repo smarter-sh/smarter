@@ -2,7 +2,7 @@
 """Smarter API Chatbot Manifest handler"""
 
 import logging
-from typing import Optional, Type
+from typing import List, Optional, Type
 
 from django.db import transaction
 from django.forms.models import model_to_dict
@@ -21,9 +21,9 @@ from smarter.apps.chatbot.models import (
     ChatBotPlugin,
 )
 from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.signals import broker_ready
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import SettingsDefaults
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -47,10 +47,9 @@ from smarter.lib.manifest.enum import (
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
-    ) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and waffle.switch_is_active(
+        SmarterWaffleSwitches.MANIFEST_LOGGING
+    )
 
 
 base_logger = logging.getLogger(__name__)
@@ -111,35 +110,114 @@ class SAMChatbotBroker(AbstractBroker):
     _manifest: Optional[SAMChatbot] = None
     _pydantic_model: Type[SAMChatbot] = SAMChatbot
     _chatbot: Optional[ChatBot] = None
+    _functions: Optional[List[str]] = None
+    _plugins: Optional[List[str]] = None
     _chatbot_api_key: Optional[ChatBotAPIKey] = None
     _name: Optional[str] = None
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the SAMChatbotBroker instance.
+
+        This constructor initializes the broker by calling the parent class's
+        constructor, which will attempt to bootstrap the class instance
+        with any combination of raw manifest data (in JSON or YAML format),
+        a manifest loader, or existing Django ORM models. If a manifest
+        loader is provided and its kind matches the expected kind for this broker,
+        the manifest is initialized using the loader's data.
+
+        This class can bootstrap itself in any of the following ways:
+
+        - request.body (yaml or json string)
+        - name + account (determined via authentication of the request object)
+        - SAMLoader instance
+        - manifest instance
+        - filepath to a manifest file
+
+        If raw manifest data is provided, whether as a string or a dictionary,
+        or a SAMLoader instance, the base class constructor will only goes as
+        far as initializing the loader. The actual manifest model initialization
+        is deferred to this constructor, which checks the loader's kind.
+
+        :param args: Positional arguments passed to the parent constructor.
+        :param kwargs: Keyword arguments passed to the parent constructor.
+
+        **Example:**
+
+        .. code-block:: python
+
+            broker = SAMChatbotBroker(loader=loader, plugin_meta=plugin_meta)
+        .. seealso::
+            - `SAMPluginBaseBroker.__init__`
+        """
+        super().__init__(*args, **kwargs)
+        logger.debug(
+            "%s.__init__() called with args=%s, kwargs=%s",
+            self.formatted_class_name,
+            args,
+            kwargs,
+        )
+        if not self.ready:
+            if not self.loader and not self.manifest and not self.chatbot:
+                logger.error(
+                    "%s.__init__() No loader nor existing ChatBot provided for %s broker. Cannot initialize.",
+                    self.formatted_class_name,
+                    self.kind,
+                )
+                return
+            if self.loader and self.loader.manifest_kind != self.kind:
+                raise SAMBrokerErrorNotReady(
+                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
+                    thing=self.kind,
+                )
+
+            if self.loader:
+                self._manifest = SAMChatbot(
+                    apiVersion=self.loader.manifest_api_version,
+                    kind=self.loader.manifest_kind,
+                    metadata=SAMChatbotMetadata(**self.loader.manifest_metadata),
+                    spec=SAMChatbotSpec(**self.loader.manifest_spec),
+                )
+            if self._manifest:
+                logger.info(
+                    "%s.__init__() initialized manifest from loader for %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.manifest.metadata.name,
+                )
+        msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
+        if self.ready:
+            logger.info(msg)
+        else:
+            logger.error(msg)
+
     @property
-    def name(self) -> Optional[str]:
+    def ready(self) -> bool:
         """
-        Retrieve the unique name identifier for the ChatBot instance managed by this broker.
+        Check if the broker is ready for operations.
 
-        This property accesses the name used to distinguish the ChatBot within the database and across
-        the Smarter platform. The name is first returned from an internal cache if available. If not cached,
-        and if a manifest is present, the name is extracted from the manifest's metadata and stored for
-        subsequent access.
+        This property determines whether the broker has been properly initialized
+        and is ready to perform its functions. A broker is considered ready if
+        it has a valid manifest loaded, either from raw data, a loader, or
+        existing Django ORM models.
 
-        The name is essential for database queries, model lookups, and for associating related resources
-        such as API keys, plugins, and functions with the correct ChatBot instance.
-
-        :returns: The name of the ChatBot as a string, or ``None`` if the name is not set or cannot be determined.
-        :rtype: Optional[str]
-
-        .. note::
-
-            The name property is a critical identifier used throughout the broker to ensure correct
-            mapping between manifest data and persistent application state.
+        :returns: ``True`` if the broker is ready, ``False`` otherwise.
+        :rtype: bool
         """
-        if self._name:
-            return self._name
-        if self.manifest:
-            self._name = self.manifest.metadata.name
-        return self._name
+        retval = super().ready
+        if not retval:
+            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
+            return False
+        retval = self.manifest is not None or self.account is not None
+        logger.debug(
+            "%s.ready() manifest presence indicates ready=%s for %s",
+            self.formatted_class_name,
+            retval,
+            self.kind,
+        )
+        if retval:
+            broker_ready.send(sender=self.__class__, broker=self)
+        return retval
 
     @property
     def chatbot(self) -> Optional[ChatBot]:
@@ -171,7 +249,39 @@ class SAMChatbotBroker(AbstractBroker):
             except ChatBot.DoesNotExist:
                 if self.manifest:
                     data = self.manifest_to_django_orm()
+                    data["account"] = self.account
+                    logger.info("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
+                    example_data = {
+                        "account": "<Account: 9595-3980-5981 - TestAccount_AdminUser_f5b5c15e8e8f1568>",
+                        "name": "example_chatbot",
+                        "description": "To create and deploy an example Smarter chatbot. Prompt with example function calling to trigger the example Static Plugin",
+                        "version": "0.1.0",
+                        "subdomain": "example-chatbot",
+                        "custom_domain": None,
+                        "deployed": True,
+                        "provider": "openai",
+                        "default_model": "gpt-4o-mini",
+                        "default_system_role": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+                        "default_temperature": 0.5,
+                        "default_max_tokens": 2048,
+                        "app_name": "Example Chatbot",
+                        "app_assistant": "Elle",
+                        "app_welcome_message": "Welcome to the Example Chatbot! How can I help you today?",
+                        "app_example_prompts": [
+                            "What is the weather in New York?",
+                            "Tell me a joke",
+                            "what's the current price of Apple stock?",
+                            "How many days ago was 29-Feb-1972?",
+                        ],
+                        "app_placeholder": "Ask me anything...",
+                        "app_info_url": "https://example.com",
+                        "app_background_image_url": "https://example.com/background-image.jpg",
+                        "app_logo_url": "https://example.com/logo.png",
+                        "app_file_attachment": False,
+                    }
+                    logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
                     self._chatbot = ChatBot.objects.create(**data)
+
                     self._created = True
                 else:
                     logger.warning(
@@ -179,6 +289,60 @@ class SAMChatbotBroker(AbstractBroker):
                     )
 
         return self._chatbot
+
+    @property
+    def functions(self) -> Optional[List[str]]:
+        """
+        Provides access to the Django ORM model class representing ChatBot functions.
+
+        This property retrieves a list of the names of the ``ChatBotFunctions`` Django ORM model
+        objects that are linked to the ChatBot managed by this broker.
+        The functions define the capabilities and operations
+        that the ChatBot can perform, as specified in the manifest.
+
+        If the functions have already been retrieved and cached, they are returned immediately.
+        Otherwise, the property attempts to fetch the functions from the database using the
+        current ChatBot instance. If no functions are found, ``None`` is returned.
+
+        :returns: A list of names of ``ChatBotFunctions`` instances associated with the ChatBot, or ``None`` if no functions exist.
+        :rtype: Optional[List[str]]
+        """
+        if self._functions:
+            return self._functions
+        if not self.chatbot:
+            return None
+
+        queryset = ChatBotFunctions.objects.filter(chatbot=self.chatbot)
+        self._functions = list(queryset.values_list("name", flat=True))
+
+        return self._functions
+
+    @property
+    def plugins(self) -> Optional[List[str]]:
+        """
+        Provides access to the Django ORM model class representing ChatBot plugins.
+
+        This property retrieves a list of the names of the ``ChatBotPlugin`` Django ORM model
+        objects that are linked to the ChatBot managed by this broker.
+        The plugins extend the functionality of the ChatBot,
+        as specified in the manifest.
+
+        If the plugins have already been retrieved and cached, they are returned immediately.
+        Otherwise, the property attempts to fetch the plugins from the database using the
+        current ChatBot instance. If no plugins are found, ``None`` is returned.
+
+        :returns: A list of names of ``ChatBotPlugin`` instances associated with the ChatBot, or ``None`` if no plugins exist.
+        :rtype: Optional[List[str]]
+        """
+        if self._plugins:
+            return self._plugins
+        if not self.chatbot:
+            return None
+
+        queryset = ChatBotPlugin.objects.filter(chatbot=self.chatbot)
+        self._plugins = list(queryset.values_list("plugin_meta__name", flat=True))
+
+        return self._plugins
 
     @property
     def chatbot_api_key(self) -> Optional[ChatBotAPIKey]:
@@ -354,7 +518,7 @@ class SAMChatbotBroker(AbstractBroker):
         :rtype: str
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.SAMChatbotBroker()"
+        return f"{parent_class}.{SAMChatbotBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:
@@ -414,6 +578,11 @@ class SAMChatbotBroker(AbstractBroker):
                 metadata=SAMChatbotMetadata(**self.loader.manifest_metadata),
                 spec=SAMChatbotSpec(**self.loader.manifest_spec),
             )
+        else:
+            logger.warning(
+                "%s.manifest() could not initialize",
+                self.formatted_class_name,
+            )
         return self._manifest
 
     ###########################################################################
@@ -452,7 +621,7 @@ class SAMChatbotBroker(AbstractBroker):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "ExampleChatbot",
+                SAMMetadataKeys.NAME.value: "example_chatbot",
                 SAMMetadataKeys.DESCRIPTION.value: "To create and deploy an example Smarter chatbot. Prompt with 'example function calling' to trigger the example Static Plugin",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
             },
@@ -491,7 +660,7 @@ class SAMChatbotBroker(AbstractBroker):
                 },
                 SAMChatbotSpecKeys.PLUGINS.value: get_plugin_examples_by_name(),
                 SAMChatbotSpecKeys.FUNCTIONS.value: ["weather", "datemath", "stockprice"],
-                SAMChatbotSpecKeys.AUTH_TOKEN.value: "camelCaseNameOfApiKey",
+                SAMChatbotSpecKeys.AUTH_TOKEN.value: "snake_case_api_key_name",
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -580,6 +749,7 @@ class SAMChatbotBroker(AbstractBroker):
                 for key, value in data.items():
                     setattr(self.chatbot, key, value)
                 self.chatbot.save()
+                self.chatbot.refresh_from_db()
             except Exception as e:
                 logger.error(
                     "%s.apply() failed to save %s %s",
@@ -610,11 +780,14 @@ class SAMChatbotBroker(AbstractBroker):
                 for key in ChatBotAPIKey.objects.filter(chatbot=self.chatbot):
                     if key.api_key != api_key:
                         key.delete()
-                        logger.info("Detached SmarterAuthToken %s from ChatBot %s", key.name, self.chatbot.name)  # type: ignore[union-attr]
+                        logger.info("%s.apply() Detached SmarterAuthToken %s from ChatBot %s", self.formatted_class_name, key.name, self.chatbot.name)  # type: ignore[union-attr]
                 _, created = ChatBotAPIKey.objects.get_or_create(chatbot=self.chatbot, api_key=api_key)
                 if created:
                     logger.info(
-                        "SmarterAuthToken %s attached to ChatBot %s", self.manifest.spec.apiKey, self.chatbot.name
+                        "%s.apply() SmarterAuthToken %s attached to ChatBot %s",
+                        self.formatted_class_name,
+                        self.manifest.spec.apiKey,
+                        self.chatbot.name,
                     )
 
             # ChatBotPlugin: add what's missing, remove what is in the model but is not in the manifest
@@ -622,7 +795,12 @@ class SAMChatbotBroker(AbstractBroker):
             for plugin in ChatBotPlugin.objects.filter(chatbot=self.chatbot):
                 if self.manifest and plugin.plugin_meta.name not in self.manifest.spec.plugins:
                     plugin.delete()
-                    logger.info("Detached Plugin %s from ChatBot %s", plugin.plugin_meta.name, self.chatbot.name)
+                    logger.info(
+                        "%s.apply() Detached Plugin %s from ChatBot %s",
+                        self.formatted_class_name,
+                        plugin.plugin_meta.name,
+                        self.chatbot.name,
+                    )
             if self.manifest.spec.plugins:
                 for plugin_name in self.manifest.spec.plugins:
                     plugin_name = self.camel_to_snake(plugin_name)
@@ -643,7 +821,7 @@ class SAMChatbotBroker(AbstractBroker):
                     _, created = ChatBotPlugin.objects.get_or_create(chatbot=self.chatbot, plugin_meta=plugin)
                     if created:
                         logger.info(
-                            "%s attached Plugin %s to ChatBot %s",
+                            "%s.apply() attached Plugin %s to ChatBot %s",
                             self.formatted_class_name,
                             plugin.name,
                             self.chatbot.name,
@@ -654,7 +832,12 @@ class SAMChatbotBroker(AbstractBroker):
             for function in ChatBotFunctions.objects.filter(chatbot=self.chatbot):
                 if function.name not in self.manifest.spec.functions:
                     function.delete()
-                    logger.info("Detached Function %s from ChatBot %s", function.name, self.chatbot.name)
+                    logger.info(
+                        "%s.apply() Detached Function %s from ChatBot %s",
+                        self.formatted_class_name,
+                        function.name,
+                        self.chatbot.name,
+                    )
             if self.manifest.spec.functions:
                 for function in self.manifest.spec.functions:
                     if function not in ChatBotFunctions.choices_list():
@@ -665,7 +848,7 @@ class SAMChatbotBroker(AbstractBroker):
                     _, created = ChatBotFunctions.objects.get_or_create(chatbot=self.chatbot, name=function)
                     if created:
                         logger.info(
-                            "%s attached Function %s to ChatBot %s",
+                            "%s.apply() attached Function %s to ChatBot %s",
                             self.formatted_class_name,
                             function,
                             self.chatbot.name,
@@ -732,6 +915,7 @@ class SAMChatbotBroker(AbstractBroker):
             try:
                 self.chatbot.deployed = True
                 self.chatbot.save()
+                self.chatbot.refresh_from_db()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(
@@ -755,6 +939,7 @@ class SAMChatbotBroker(AbstractBroker):
             try:
                 self.chatbot.deployed = False
                 self.chatbot.save()
+                self.chatbot.refresh_from_db()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(

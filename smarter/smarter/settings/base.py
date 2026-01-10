@@ -25,7 +25,6 @@ import urllib.parse
 from pathlib import Path
 
 from corsheaders.defaults import default_headers
-from django import get_version
 from dotenv import load_dotenv
 
 from smarter.__version__ import __version__ as smarter_version
@@ -1290,39 +1289,39 @@ LOGGING = {
     },
     "handlers": {
         "default": {
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "class": "logging.StreamHandler",
             "formatter": "timestamped",
         },
     },
     "root": {
         "handlers": ["default"],
-        "level": "INFO",
+        "level": smarter_settings.log_level_name,
     },
     "loggers": {
         "django": {
             "handlers": ["default"],
-            "level": "DEBUG",
+            "level": smarter_settings.log_level_name,
             "propagate": True,
         },
         "django.security.DisallowedHost": {
             "handlers": ["default"],
-            "level": "ERROR",
+            "level": smarter_settings.log_level_name,
             "propagate": False,
         },
         "celery": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "propagate": False,
         },
         "celery.task": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "propagate": True,
         },
         "celery.beat": {
             "handlers": ["default"],
-            "level": "INFO",
+            "level": smarter_settings.log_level_name,
             "propagate": True,
         },
     },
@@ -1663,6 +1662,8 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
         logger.error("Error reading Debian version: %s", e)
 
     logger.info("Python v%s", sys.version)
+    from django import get_version
+
     logger.info("Django v%s", get_version())
     logger.info("Smarter v%s", smarter_version)
     logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)

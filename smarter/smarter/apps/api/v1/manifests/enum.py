@@ -58,7 +58,7 @@ from smarter.lib.manifest.enum import SmarterEnumAbstract
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING) and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.API_LOGGING)
 
 
 base_logger = logging.getLogger(__name__)
@@ -66,7 +66,47 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
 class SAMKinds(SmarterEnumAbstract):
-    """Smarter manifest kinds enumeration."""
+    """
+    Smarter manifest kinds enumeration. This is the comprehensive list of all
+    manifest kinds supported by the Smarter platform.
+
+    Each manifest kind corresponds to a specific resource type within the
+    Smarter ecosystem, such as plugins, connections, account resources, chat
+    resources, and provider resources.
+
+    Attributes:
+        STATIC_PLUGIN: Represents a static plugin manifest kind.
+        API_PLUGIN: Represents an API plugin manifest kind.
+        SQL_PLUGIN: Represents an SQL plugin manifest kind.
+        API_CONNECTION: Represents an API connection manifest kind.
+        SQL_CONNECTION: Represents an SQL connection manifest kind.
+        ACCOUNT: Represents an account manifest kind.
+        AUTH_TOKEN: Represents an authentication token manifest kind.
+        USER: Represents a user manifest kind.
+        SECRET: Represents a secret manifest kind.
+        CHAT: Represents a chat manifest kind.
+        CHAT_HISTORY: Represents a chat history manifest kind.
+        CHAT_PLUGIN_USAGE: Represents a chat plugin usage manifest kind.
+        CHAT_TOOL_CALL: Represents a chat tool call manifest kind.
+        CHATBOT: Represents a chatbot manifest kind.
+        PROVIDER: Represents a provider manifest kind.
+
+    Methods:
+        str_to_kind(cls, kind_str: str) -> "SAMKinds":
+            Convert a string to a SAMKinds enumeration value.
+        all_plugins(cls) -> list:
+            Return a list of all plugin manifest kinds.
+        all_connections(cls) -> list:
+            Return a list of all connection manifest kinds.
+        all_slugs(cls) -> list:
+            Return a list of all manifest kind slugs (singular and plural).
+        singular_slugs(cls) -> list:
+            Return a list of singular manifest kind slugs.
+        plural_slugs(cls) -> list:
+            Return a list of plural manifest kind slugs.
+        from_url(cls, url) -> str:
+            Extract the manifest kind from a URL.
+    """
 
     # plugins
     STATIC_PLUGIN = STATICPLUGIN_MANIFEST_KIND

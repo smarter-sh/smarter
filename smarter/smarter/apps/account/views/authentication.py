@@ -1,7 +1,7 @@
 # pylint: disable=W0613
 """Django Authentication views."""
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from django import forms
 from django.contrib.auth import authenticate, login, logout
@@ -36,10 +36,8 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
-    return (
-        waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
-        and waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
-        and level >= smarter_settings.log_level
+    return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING) and waffle.switch_is_active(
+        SmarterWaffleSwitches.VIEW_LOGGING
     )
 
 
@@ -61,7 +59,7 @@ class LoginView(SmarterNeverCachedWebView):
 
     template_path = "account/authentication/sign-in.html"
 
-    def get(self, request, *args, **kwargs) -> HttpResponseRedirect | HttpResponse:
+    def get(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
         logger.info(
             "%s.LoginView.get() called with request type: %s %s", self.formatted_class_name, type(request), request
         )
@@ -76,14 +74,12 @@ class LoginView(SmarterNeverCachedWebView):
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(
-        self, request, *args, **kwargs
-    ) -> (
-        HttpResponseRedirect
-        | SmarterHttpResponseBadRequest
-        | SmarterHttpResponseForbidden
-        | SmarterHttpResponseServerError
-    ):
+    def post(self, request, *args, **kwargs) -> Union[
+        HttpResponseRedirect,
+        SmarterHttpResponseBadRequest,
+        SmarterHttpResponseForbidden,
+        SmarterHttpResponseServerError,
+    ]:
         form = LoginView.LoginForm(request.POST)
         authenticated_user: Optional[User] = None
         if form.is_valid():
@@ -131,7 +127,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
 
     template_path = "account/authentication/sign-up.html"
 
-    def get(self, request, *args, **kwargs) -> HttpResponseRedirect | HttpResponse:
+    def get(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
         user = get_resolved_user(request.user)
         if user and hasattr(user, "is_authenticated") and user.is_authenticated:
             return redirect_and_expire_cache(path="/")
@@ -140,7 +136,7 @@ class AccountRegisterView(SmarterNeverCachedWebView):
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request, *args, **kwargs) -> HttpResponseRedirect | HttpResponse:
+    def post(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
         form = AccountRegisterView.SignUpForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data["email"]
