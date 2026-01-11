@@ -92,7 +92,7 @@ class SmarterHelperMixin:
         :rtype: str
 
         """
-        return formatted_text(self.__class__.__name__)
+        return formatted_text(__name__ + "." + self.__class__.__name__)
 
     @property
     def unformatted_class_name(self) -> str:

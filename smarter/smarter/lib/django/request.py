@@ -251,7 +251,7 @@ class SmarterRequestMixin(AccountMixin):
         logger.debug(
             "%s.__init__() - finished %s",
             self.request_mixin_logger_prefix,
-            json.dumps(self.to_json(), indent=4),
+            SmarterRequestMixin.__repr__(self),
         )
 
         self.log_request_mixin_ready_status()
@@ -654,12 +654,11 @@ class SmarterRequestMixin(AccountMixin):
                 )
                 return None
 
-        logger.error(
+        logger.warning(
             "%s.url() property was accessed before it was initialized. request: %s",
             self.request_mixin_logger_prefix,
             self.smarter_request,
         )
-        raise SmarterValueError("The URL has not been initialized. Please check the request object.")
 
     @property
     def parsed_url(self) -> Optional[ParseResult]:

@@ -11,19 +11,17 @@ from typing import Any, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
+from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
 from django.http import HttpRequest, QueryDict
 from requests import PreparedRequest
+from rest_framework.request import Request
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import Account, Secret, User, UserProfile
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-    formatted_text_green,
-    formatted_text_red,
-)
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
@@ -204,6 +202,13 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         # Initial resolution of parameters, taking into consideration that
         # they may be passed in via args or kwargs.
         # ----------------------------------------------------------------------
+        request = (
+            request
+            or kwargs.pop("request", None)
+            or next(
+                (arg for arg in args if isinstance(arg, (Request, HttpRequest, WSGIRequest, PreparedRequest))), None
+            )
+        )
         user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
         account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
         user_profile = kwargs.pop("user_profile", None) or next(
@@ -1422,7 +1427,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: None
         """
         msg = (
-            f"{self.abstract_broker_logger_prefix}.__init__() - finished initializing {self.kind} "
+            f"{self.abstract_broker_logger_prefix}[{id(self)}] {self.kind} "
             f"broker is {self.abstract_broker_ready_state} with "
             f"name: {self._name}, "
             f"manifest: {bool(self._manifest)}, "

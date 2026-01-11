@@ -337,7 +337,7 @@ class SAMAccountBroker(AbstractBroker):
             logger.debug(
                 "%s.manifest() initialized from loader: %s",
                 self.formatted_class_name,
-                self._manifest.model_dump(),
+                json.dumps(self._manifest.model_dump(), indent=4),
             )
             return self._manifest
         # 2.) next, (and only if a loader is not available) try to initialize
@@ -710,7 +710,12 @@ class SAMAccountBroker(AbstractBroker):
 
         try:
             data = self.django_orm_to_manifest_dict()
-            logger.debug("%s.describe() returning manifest for %s: %s", self.formatted_class_name, self.name, data)
+            logger.debug(
+                "%s.describe() returning manifest for %s: %s",
+                self.formatted_class_name,
+                self.name,
+                json.dumps(data, indent=4),
+            )
             return self.json_response_ok(command=command, data=data)
         except Exception as e:
             raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e

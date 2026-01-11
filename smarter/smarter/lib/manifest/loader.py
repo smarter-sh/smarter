@@ -9,6 +9,7 @@ import yaml
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 
 from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
@@ -245,6 +246,12 @@ class SAMLoader(SmarterHelperMixin):
 
     """
 
+    _api_version: str = SmarterApiVersions.V1
+    _kind: Optional[str] = None
+    _manifest: Optional[Union[str, dict]] = None
+    _file_path: Optional[str] = None
+    _url: Optional[str] = None
+
     _raw_data: Optional[str] = None
     _dict_data: Optional[dict] = None
     _data_format: Optional[SAMDataFormats] = None
@@ -306,7 +313,23 @@ class SAMLoader(SmarterHelperMixin):
 
         Child classes may override the specification and validation logic to support custom manifest structures.
         """
+        self._api_version = api_version
+        self._kind = kind
+        self._manifest = manifest
+        self._file_path = file_path
+        self._url = url
         super().__init__(*args, **kwargs)
+        logger.debug(
+            "%s.__init__() - called with *args %s, api_version=%s, kind=%s, manifest=%s, file_path=%s, url=%s, **kwargs %s",
+            self.formatted_class_name,
+            args,
+            api_version,
+            kind,
+            manifest,
+            file_path,
+            url,
+            kwargs,
+        )
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMLoaderError(f"Unsupported API version: {api_version}")
 
@@ -346,16 +369,52 @@ class SAMLoader(SmarterHelperMixin):
         # Therefore, this call will only validate the top-level keys and values
         # of the manifest.
         self.validate_manifest()
+        logger.debug("%s.__init__() - %r", super().formatted_class_name, self)
+        self.log_loader_state()
 
     def __str__(self):
-        return f"{self.formatted_class_name}(version={self.manifest_api_version}, kind={self.manifest_kind}, name={self.manifest_metadata.get(SAMMetadataKeys.NAME.value)})"
+        return f"{self.formatted_class_name}(version={self.api_version}, kind={self.kind}, name={self.name}, source={self.source})"
 
     def __repr__(self):
-        return json.dumps(self.json_data, indent=4)
+        return json.dumps(self.to_json(), indent=4)
 
     # -------------------------------------------------------------------------
     # data setters and getters. Sort out whether we received JSON or YAML data
     # -------------------------------------------------------------------------
+    @property
+    def api_version(self) -> str:
+        return self.manifest_api_version or self._api_version
+
+    @property
+    def kind(self) -> str:
+        return self.manifest_kind or self._kind or "unknown-kind"
+
+    @property
+    def manifest(self) -> Optional[Union[str, dict[str, Any]]]:
+        return self._manifest
+
+    @property
+    def file_path(self) -> Optional[str]:
+        return self._file_path
+
+    @property
+    def url(self) -> Optional[str]:
+        return self._url
+
+    @property
+    def name(self) -> str:
+        return self.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown-name")
+
+    @property
+    def source(self) -> str:
+        if self.manifest is not None:
+            return "manifest " + type(self.manifest).__name__
+        if self.file_path:
+            return "file_path " + self.file_path
+        if self.url:
+            return "url " + self.url
+        return "unknown-source"
+
     @property
     def specification(self) -> dict:
         return self._specification
@@ -625,3 +684,49 @@ class SAMLoader(SmarterHelperMixin):
             and bool(self.manifest_metadata)
             and bool(self.manifest_spec)
         )
+
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name formatted for logging.
+
+        :return: The formatted class name as a string.
+        :rtype: str
+
+        """
+        return formatted_text(self.__class__.__name__)
+
+    def loader_ready_state(self) -> str:
+        """
+        Returns a string representation of the loader's readiness state.
+
+        :return: "ready" if the loader is ready, otherwise "not ready".
+        :rtype: str
+        """
+        if self.ready:
+            return self.formatted_state_ready
+        return self.formatted_state_not_ready
+
+    def log_loader_state(self):
+        """
+        Log the current state of the SAMLoader instance for debugging purposes.
+
+        :return: None
+        """
+        msg = (
+            f"{super().formatted_class_name}[{id(self)}] {self.manifest_kind} {self.name} "
+            f"loader is {self.loader_ready_state()}. source={self.source}"
+        )
+        if self.ready:
+            logger.info(msg)
+        else:
+            logger.warning(msg)
+
+    def to_json(self) -> dict[str, Any]:
+        """
+        Return the manifest data as a JSON string.
+
+        :return: The manifest data in JSON format.
+        :rtype: str
+        """
+        return self.sorted_dict(self.json_data)  # type: ignore

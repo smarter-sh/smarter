@@ -76,8 +76,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_red,
 )
 from smarter.lib import json
-
-from ..lib.django.validators import SmarterValidator
+from smarter.lib.django.validators import SmarterValidator
 
 # our stuff
 from .const import (

@@ -125,10 +125,10 @@ class SmarterChatSession(SmarterHelperMixin):
         chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
 
     def __str__(self):
-        return self.__repr__()
+        return f"{self.__class__.__name__}(chatbot={self.chatbot}, session_key={self.session_key})"
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(chatbot={self.chatbot}, session_key={self.session_key})"
+        return self.__str__()
 
     @property
     def session_key(self) -> str:
