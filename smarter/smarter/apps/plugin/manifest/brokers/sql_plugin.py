@@ -238,6 +238,16 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         return PluginDataSql
 
     @property
+    def SAMModelClass(self) -> Type[SAMSqlPlugin]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMSqlPlugin]
+        """
+        return SAMSqlPlugin
+
+    @property
     def kind(self) -> str:
         """
         Returns the manifest kind for this plugin broker.
@@ -297,6 +307,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SAMPluginCommonStatus`
 
         """
+
         if self._manifest:
             if not isinstance(self._manifest, SAMSqlPlugin):
                 raise SAMPluginBrokerError(

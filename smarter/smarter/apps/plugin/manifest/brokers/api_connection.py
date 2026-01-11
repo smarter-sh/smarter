@@ -247,6 +247,16 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         return ApiConnection
 
     @property
+    def SAMModelClass(self) -> Type[SAMApiConnection]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMApiConnection]
+        """
+        return SAMApiConnection
+
+    @property
     def kind(self) -> str:
         return MANIFEST_KIND
 

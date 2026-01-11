@@ -246,6 +246,16 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         return SqlConnection
 
     @property
+    def SAMModelClass(self) -> Type[SAMSqlConnection]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMSqlConnection]
+        """
+        return SAMSqlConnection
+
+    @property
     def kind(self) -> str:
         """
         Returns the manifest kind string for this broker.
