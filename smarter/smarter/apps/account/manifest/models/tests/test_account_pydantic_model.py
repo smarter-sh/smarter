@@ -100,11 +100,11 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
         filespec = self.get_data_full_filepath("account-good.yaml")
         loader = SAMLoader(file_path=filespec)
         self.assertTrue(loader.ready, msg="loader is not ready")
-        SAMModelClass = SAMAccount(**loader.pydantic_model_dump())
+        sam_account = SAMAccount(**loader.pydantic_model_dump())
 
         # dump the pydantic model to a dictionary
-        # round_trip_dict = SAMModelClass.model_dump()
-        SAMModelClass.model_dump_json()
+        # round_trip_dict = sam_account.model_dump()
+        sam_account.model_dump_json()
 
     def test_account_model_required_fields(self):
         """Test that required fields are enforced."""
@@ -149,9 +149,9 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
         """Test model serialization to dict and JSON."""
         filespec = self.get_data_full_filepath("account-good.yaml")
         loader = SAMLoader(file_path=filespec)
-        SAMModelClass = SAMAccount(**loader.pydantic_model_dump())
-        model_dict = SAMModelClass.model_dump()
-        model_json = SAMModelClass.model_dump_json()
+        sam_account = SAMAccount(**loader.pydantic_model_dump())
+        model_dict = sam_account.model_dump()
+        model_json = sam_account.model_dump_json()
         self.assertIsInstance(model_dict, dict)
         self.assertIsInstance(model_json, str)
 
@@ -159,9 +159,9 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
         """Test model can be reconstructed from dict/JSON."""
         filespec = self.get_data_full_filepath("account-good.yaml")
         loader = SAMLoader(file_path=filespec)
-        SAMModelClass = SAMAccount(**loader.pydantic_model_dump())
-        model_dict = SAMModelClass.model_dump()
-        model_json = SAMModelClass.model_dump_json()
+        sam_account = SAMAccount(**loader.pydantic_model_dump())
+        model_dict = sam_account.model_dump()
+        model_json = sam_account.model_dump_json()
         # From dict
         model2 = SAMAccount(**model_dict)
         self.assertEqual(model2.model_dump(), model_dict)

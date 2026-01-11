@@ -27,12 +27,11 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
         self.assertTrue(loader.ready, msg="loader is not ready")
-        SAMModelClass = SAMSecret(**loader.pydantic_model_dump())
+        sam_secret = SAMSecret(**loader.pydantic_model_dump())
 
         # dump the pydantic model to a dictionary
-        # round_trip_dict = SAMModelClass.model_dump()
-        SAMModelClass.model_dump_json()
-
+        # round_trip_dict = sam_secret.model_dump()
+        sam_secret.model_dump_json()
         # assert that everything in content is in round_trip_dict
         # self.assertTrue(dict_is_contained_in(content, round_trip_dict))
 

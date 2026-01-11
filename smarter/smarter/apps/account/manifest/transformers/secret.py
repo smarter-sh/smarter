@@ -250,7 +250,12 @@ class SecretTransformer(SmarterHelperMixin):
     @property
     def manifest(self) -> Optional[SAMSecret]:
         """Return the Pydandic model of the secret."""
-        if not self._manifest and self.secret:
+        if self._manifest:
+            if not isinstance(self._manifest, SAMSecret):
+                raise SAMValidationError(f"Expected SAMSecret, but got {type(self._manifest)}.")
+            return self._manifest
+
+        if self.secret:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
             metadata = SAMSecretMetadata(

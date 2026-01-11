@@ -323,6 +323,12 @@ class SAMAccountBroker(AbstractBroker):
                 print(manifest.apiVersion, manifest.kind)
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMAccount):
+                raise SAMAccountBrokerError(
+                    message=f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
             return self._manifest
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
@@ -335,8 +341,9 @@ class SAMAccountBroker(AbstractBroker):
                 status=None,
             )
             logger.debug(
-                "%s.manifest() initialized from loader: %s",
+                "%s.manifest() initialized %s from loader: %s",
                 self.formatted_class_name,
+                type(self._manifest).__name__,
                 json.dumps(self._manifest.model_dump(), indent=4),
             )
             return self._manifest
@@ -378,8 +385,9 @@ class SAMAccountBroker(AbstractBroker):
                 status=status,
             )
             logger.debug(
-                "%s.manifest() initialized from Account %s: %s",
+                "%s.manifest() initialized %s from Account ORM model %s: %s",
                 self.formatted_class_name,
+                type(self._manifest).__name__,
                 self.brokered_account,
                 serializers.serialize("json", [self.brokered_account]),
             )

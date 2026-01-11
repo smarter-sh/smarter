@@ -495,6 +495,11 @@ class SAMSecretBroker(AbstractBroker):
             :meth:`SAMLoader`
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMSecret):
+                raise SAMSecretBrokerError(
+                    f"Manifest must be of type {SAMSecret.__name__}, got {type(self._manifest)}: {self._manifest}",
+                    thing=self.kind,
+                )
             return self._manifest
         logger.debug("%s.manifest() called", self.formatted_class_name)
         if not self.account:
@@ -512,7 +517,9 @@ class SAMSecretBroker(AbstractBroker):
                 metadata=SAMSecretMetadata(**self.loader.manifest_metadata),
                 spec=SAMSecretSpec(**self.loader.manifest_spec),
             )
-            logger.debug("%s.manifest() initialized from SAMLoader", self.formatted_class_name)
+            logger.debug(
+                "%s.manifest() initialized %s from SAMLoader", self.formatted_class_name, type(self._manifest).__name__
+            )
         # 2.) next, (and only if a loader is not available) try to initialize
         #     from existing Account model if available
         elif self._secret_transformer and self.secret:
@@ -540,7 +547,11 @@ class SAMSecretBroker(AbstractBroker):
                     last_accessed=self.secret.last_accessed,
                 ),
             )
-            logger.debug("%s.manifest() initialized from existing Secret model", self.formatted_class_name)
+            logger.debug(
+                "%s.manifest() initialized %s from existing Secret model",
+                self.formatted_class_name,
+                type(self._manifest).__name__,
+            )
             return self._manifest
         if not self._manifest:
             logger.warning("%s.manifest() could not be initialized", self.formatted_class_name)
@@ -609,14 +620,14 @@ class SAMSecretBroker(AbstractBroker):
             modified=current_date,
             last_accessed=current_date,
         )
-        SAMModelClass = SAMSecret(
+        sam_secret = SAMSecret(
             apiVersion=self.api_version,
             kind=self.kind,
             metadata=metadata,
             spec=spec,
             status=status,
         )
-        return self.json_response_ok(command=command, data=SAMModelClass.model_dump())
+        return self.json_response_ok(command=command, data=sam_secret.model_dump())
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

@@ -221,6 +221,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         passing **data to each child's constructor.
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMSmarterAuthToken):
+                raise SAMSmarterAuthTokenBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             try:

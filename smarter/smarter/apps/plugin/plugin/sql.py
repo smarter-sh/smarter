@@ -621,7 +621,7 @@ class SqlPlugin(PluginBase):
         )
 
         # build the full Pydantic model from the sub-models
-        SAMModelClass = SAMSqlPlugin(
+        sam_sql_plugin = SAMSqlPlugin(
             apiVersion=SmarterApiVersions.V1,
             kind=MANIFEST_KIND,
             metadata=metadata,
@@ -629,7 +629,7 @@ class SqlPlugin(PluginBase):
             status=status,
         )
 
-        return json.loads(SAMModelClass.model_dump_json())
+        return json.loads(sam_sql_plugin.model_dump_json())
 
     def create(self):
         """
