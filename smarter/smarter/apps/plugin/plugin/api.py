@@ -151,7 +151,13 @@ class ApiPlugin(PluginBase):
         :return: The Pydantic model of the plugin.
         :rtype: Optional[SAMApiPlugin]
         """
-        if not self._manifest and self.ready:
+        if self._manifest:
+            if not isinstance(self._manifest, SAMApiPlugin):
+                raise SmarterApiPluginError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                )
+            return self._manifest
+        if self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
             self._manifest = self.SAMPluginType(**self.to_json())  # type: ignore[call-arg]
@@ -416,14 +422,14 @@ class ApiPlugin(PluginBase):
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )
-        SAMModelClass = SAMApiPlugin(
+        sam_api_plugin = SAMApiPlugin(
             apiVersion=SmarterApiVersions.V1,
             kind=MANIFEST_KIND,
             metadata=metadata,
             spec=spec,
             status=status,
         )
-        return json.loads(SAMModelClass.model_dump_json())
+        return json.loads(sam_api_plugin.model_dump_json())
 
     def create(self):
         """

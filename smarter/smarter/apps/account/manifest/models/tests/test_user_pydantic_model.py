@@ -102,8 +102,8 @@ class TestSmarterUserPydanticModel(TestAccountMixin):
         filespec = self.get_data_full_filepath("user-good.yaml")
         loader = SAMLoader(file_path=filespec)
         self.assertTrue(loader.ready, msg="loader is not ready")
-        SAMModelClass = SAMUser(**loader.pydantic_model_dump())
-        SAMModelClass.model_dump_json()
+        sam_user = SAMUser(**loader.pydantic_model_dump())
+        sam_user.model_dump_json()
 
     def test_user_model_required_fields(self):
         """Test that required fields are enforced."""
@@ -147,9 +147,9 @@ class TestSmarterUserPydanticModel(TestAccountMixin):
         """Test model serialization to dict and JSON."""
         filespec = self.get_data_full_filepath("user-good.yaml")
         loader = SAMLoader(file_path=filespec)
-        SAMModelClass = SAMUser(**loader.pydantic_model_dump())
-        model_dict = SAMModelClass.model_dump()
-        model_json = SAMModelClass.model_dump_json()
+        sam_user = SAMUser(**loader.pydantic_model_dump())
+        model_dict = sam_user.model_dump()
+        model_json = sam_user.model_dump_json()
         self.assertIsInstance(model_dict, dict)
         self.assertIsInstance(model_json, str)
 
@@ -157,10 +157,10 @@ class TestSmarterUserPydanticModel(TestAccountMixin):
         """Test model can be reconstructed from dict/JSON."""
         filespec = self.get_data_full_filepath("user-good.yaml")
         loader = SAMLoader(file_path=filespec)
-        SAMModelClass = SAMUser(**loader.pydantic_model_dump())
+        sam_user = SAMUser(**loader.pydantic_model_dump())
         # Use JSON serialization for both models to avoid datetime vs string mismatches
-        model_dict_json = SAMModelClass.model_dump(mode="json")
-        model_json = SAMModelClass.model_dump_json()
+        model_dict_json = sam_user.model_dump(mode="json")
+        model_json = sam_user.model_dump_json()
         # From dict
         model2 = SAMUser(**json.loads(model_json))
         self.assertEqual(model2.model_dump(mode="json"), model_dict_json)

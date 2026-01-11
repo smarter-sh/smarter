@@ -87,14 +87,6 @@ class SAMUserBroker(AbstractBroker):
       - Create, update, delete, and query Django ORM models.
       - Transform Django ORM models into Pydantic models for serialization/deserialization.
 
-    **Parameters:**
-      - `manifest`: Optional[`SAMUser`]
-        The Pydantic model instance representing the manifest.
-      - `SAMModelClass`: Type[`SAMUser`]
-        The Pydantic model class used for manifest validation.
-      - `account_contact`: Optional[`AccountContact`]
-        The associated account contact, if available.
-
     **Example Usage:**
 
       .. code-block:: python
@@ -582,6 +574,12 @@ class SAMUserBroker(AbstractBroker):
                 print(manifest.apiVersion, manifest.kind)
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMUser):
+                raise SAMUserBrokerError(
+                    message=f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
             return self._manifest
         if not self.account:
             logger.warning("%s.manifest called with no account", self.formatted_class_name)

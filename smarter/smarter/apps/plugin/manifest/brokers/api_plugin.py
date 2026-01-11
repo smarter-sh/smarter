@@ -253,6 +253,11 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
 
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMApiPlugin):
+                raise SAMPluginBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
 
         # 1.) prioritize manifest loader data if available. if it was provided
@@ -563,8 +568,8 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         if not self.manifest:
             raise SAMBrokerErrorNotReady(message="No manifest found", thing=self.kind, command=command)
 
-        SAMModelClass = json.loads(self.manifest.model_dump_json())
-        return self.json_response_ok(command=command, data=SAMModelClass)
+        model = json.loads(self.manifest.model_dump_json())
+        return self.json_response_ok(command=command, data=model)
 
     def apply(self, request: "HttpRequest", *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """

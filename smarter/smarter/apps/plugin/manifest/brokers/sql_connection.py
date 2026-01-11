@@ -30,7 +30,6 @@ from smarter.apps.plugin.manifest.models.sql_connection.spec import (
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
 from smarter.apps.plugin.signals import broker_ready
-from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -74,14 +73,6 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     This class is responsible for loading, validating, and parsing Smarter API YAML SqlConnection manifests,
     and initializing the corresponding Pydantic model. It provides generic services for SQL connections,
     such as instantiation, creation, update, and deletion.
-
-    **Parameters:**
-
-        - manifest (SAMSqlConnection, optional): The loaded manifest model.
-        - SAMModelClass (Type[SAMSqlConnection]): The Pydantic model class for validation.
-        - connection (SqlConnection, optional): The Django ORM model instance.
-        - password_secret (Secret, optional): Secret for the database password.
-        - proxy_password_secret (Secret, optional): Secret for the proxy password.
 
     **Example Usage:**
 
@@ -316,6 +307,11 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMSqlConnection):
+                raise SAMConnectionBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
@@ -796,7 +792,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )
-        SAMModelClass = SAMSqlConnection(
+        sam_sql_connection = SAMSqlConnection(
             apiVersion=self.api_version,
             kind=self.kind,
             metadata=metadata,
@@ -804,7 +800,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             status=status,
         )
 
-        data = json.loads(SAMModelClass.model_dump_json())
+        data = json.loads(sam_sql_connection.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1020,8 +1016,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 command=command,
             )
 
-        SAMModelClass = self.manifest.model_dump()
-        return self.json_response_ok(command=command, data=SAMModelClass)
+        model = self.manifest.model_dump()
+        return self.json_response_ok(command=command, data=model)
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

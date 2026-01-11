@@ -474,7 +474,7 @@ class StaticPlugin(PluginBase):
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )
 
-        SAMModelClass = SAMStaticPlugin(
+        sam_static_plugin = SAMStaticPlugin(
             apiVersion=SmarterApiVersions.V1,
             kind=MANIFEST_KIND,
             metadata=metadata,
@@ -482,7 +482,7 @@ class StaticPlugin(PluginBase):
             status=status,
         )
 
-        return json.loads(SAMModelClass.model_dump_json())
+        return json.loads(sam_static_plugin.model_dump_json())
 
     def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> str:
         """

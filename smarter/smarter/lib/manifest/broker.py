@@ -808,6 +808,11 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :param value: The manifest to set, either as a Pydantic model or a dictionary.
         :type value: Optional[Union[AbstractSAMBase, dict]]
         """
+        logger.debug(
+            "%s.manifest() setter called with value: %s",
+            self.abstract_broker_logger_prefix,
+            value,
+        )
         if value is None:
             self._manifest = None
             logger.debug(
@@ -827,19 +832,30 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self._manifest,
             )
         elif isinstance(value, dict):
-            self._manifest = value
-            self.api_version = self._manifest.get("apiVersion")
-            name = self._manifest.get("metadata", {}).get("name")
-            self.name_cached_property_setter(name)
-            kind = self._manifest.get("kind")
-            if not isinstance(kind, str):
-                raise SmarterValueError("manifest kind must be a string")
-            self.kind_setter(kind)
-            self.loader = SAMLoader(manifest=self._manifest)
+            logger.debug(
+                "%s.manifest() setter - dict detected. Initializing SAMLoader from dict representation of manifest.",
+                self.abstract_broker_logger_prefix,
+            )
+            self.loader = SAMLoader(manifest=value)
+            if not self.loader.ready:
+                raise SmarterValueError("cannot set manifest from dict: SAMLoader could not load manifest")
+            if self.loader.kind != self.kind:
+                raise SmarterValueError(
+                    f"cannot set manifest from dict: manifest kind '{self.loader.kind}' does not match broker kind '{self.kind}'"
+                )
+            if self.api_version != self.loader.api_version:
+                raise SmarterValueError(
+                    f"cannot set manifest from dict: manifest apiVersion '{self.loader.api_version}' does not match broker apiVersion '{self.api_version}'"
+                )
+            if not isinstance(self.loader.json_data, dict):
+                raise SmarterValueError("cannot set manifest from dict: loader json_data is not a dict")
+
+            self._manifest = self.SAMModelClass(**self.loader.json_data)
 
             logger.debug(
-                "%s.manifest() setter set manifest from dict: %s",
+                "%s.manifest() setter set manifest %s from dict: %s",
                 self.abstract_broker_logger_prefix,
+                type(self._manifest).__name__,
                 self._manifest,
             )
         if self._manifest:

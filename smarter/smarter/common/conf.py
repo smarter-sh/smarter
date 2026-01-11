@@ -3930,7 +3930,7 @@ class Settings(BaseSettings):
             'platform.example.com'
 
         See Also:
-            - smarter.settings.platform_subdomain
+            - smarter_settings.platform_subdomain
             - smarter_settings.root_domain
         """
         return f"{self.platform_subdomain}.{self.root_domain}"
@@ -4110,7 +4110,7 @@ class Settings(BaseSettings):
             - smarter_settings.platform_name
             - smarter_settings.environment
         """
-        return f"{self.platform_name}-{self.platform_subdomain}-{settings.environment}"
+        return f"{self.platform_name}-{self.platform_subdomain}-{self.environment}"
 
     @property
     def api_subdomain(self) -> str:

@@ -270,6 +270,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :rtype: Optional[SAMApiConnection]
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMApiConnection):
+                raise SAMConnectionBrokerError(
+                    message=f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
 
         # 1.) prioritize manifest loader data if available. if it was provided
@@ -669,7 +674,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             created=datetime.now(),
             modified=datetime.now(),
         )
-        SAMModelClass = SAMApiConnection(
+        sam_api_connection = SAMApiConnection(
             apiVersion=self.api_version,
             kind=self.kind,
             metadata=metadata,
@@ -677,7 +682,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             status=status,
         )
         # validate our results by round-tripping the data through the Pydantic model
-        data = json.loads(SAMModelClass.model_dump_json())
+        data = json.loads(sam_api_connection.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
     ###########################################################################

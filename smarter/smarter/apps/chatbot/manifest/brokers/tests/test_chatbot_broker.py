@@ -17,10 +17,7 @@ from smarter.apps.chatbot.manifest.models.chatbot.spec import (
 )
 from smarter.apps.chatbot.models import ChatBot
 from smarter.lib import json
-from smarter.lib.manifest.broker import (
-    SAMBrokerErrorNotFound,
-    SAMBrokerErrorNotImplemented,
-)
+from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 

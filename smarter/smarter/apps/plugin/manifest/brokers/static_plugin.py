@@ -328,6 +328,11 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMStaticPlugin):
+                raise SAMPluginBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
 
         # 1.) prioritize manifest loader data if available. if it was provided

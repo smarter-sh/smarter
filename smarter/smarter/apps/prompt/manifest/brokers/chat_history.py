@@ -2,7 +2,7 @@
 """Smarter API Chat Manifest handler"""
 
 import logging
-import typing
+from typing import Optional, Type
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.forms.models import model_to_dict
@@ -11,7 +11,6 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.prompt.manifest.models.chat_history.const import MANIFEST_KIND
 from smarter.apps.prompt.manifest.models.chat_history.model import SAMChatHistory
 from smarter.apps.prompt.models import Chat, ChatHistory
-from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -77,17 +76,17 @@ class SAMChatHistoryBroker(AbstractBroker):
     """
 
     # override the base abstract manifest model with the SAMChatHistory model
-    _manifest: SAMChatHistory = None
-    _pydantic_model: typing.Type[SAMChatHistory] = SAMChatHistory
-    _chat_history: ChatHistory = None
-    _session_key: str = None
+    _manifest: Optional[SAMChatHistory] = None
+    _pydantic_model: Type[SAMChatHistory] = SAMChatHistory
+    _chat_history: Optional[ChatHistory] = None
+    _session_key: Optional[str] = None
 
     @property
-    def session_key(self) -> str:
+    def session_key(self) -> Optional[str]:
         return self._session_key
 
     @property
-    def chat_history(self) -> ChatHistory:
+    def chat_history(self) -> Optional[ChatHistory]:
         """
         The Chat object is a Django ORM model subclass from knox.AuthToken
         that represents a Chat api key. The Chat object is
@@ -151,7 +150,7 @@ class SAMChatHistoryBroker(AbstractBroker):
         return f"{parent_class}.SAMChatHistoryBroker[{id(self)}]"
 
     @property
-    def ORMModelClass(self) -> typing.Type[ChatHistory]:
+    def ORMModelClass(self) -> Type[ChatHistory]:
         return ChatHistory
 
     @property
@@ -170,6 +169,11 @@ class SAMChatHistoryBroker(AbstractBroker):
         passing **data to each child's constructor.
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMChatHistory):
+                raise SAMChatHistoryBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMChatHistory(
@@ -203,7 +207,7 @@ class SAMChatHistoryBroker(AbstractBroker):
 
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        self._session_key: str = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
+        self._session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
         self._session_key = self.clean_cli_param(
             param=self._session_key,
             param_name=SMARTER_CHAT_SESSION_KEY_NAME,
@@ -267,7 +271,7 @@ class SAMChatHistoryBroker(AbstractBroker):
     def describe(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
-        self._session_key: str = kwargs.get("session_id", None)
+        self._session_key = kwargs.get("session_id", None)
         if self.chat_history:
             try:
                 data = self.django_orm_to_manifest_dict()
@@ -300,7 +304,7 @@ class SAMChatHistoryBroker(AbstractBroker):
     def logs(self, request: WSGIRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
-        self._session_key: str = kwargs.get("session_id", None)
+        self._session_key = kwargs.get("session_id", None)
         if self.chat_history:
             data = {}
             return self.json_response_ok(command=command, data=data)

@@ -79,14 +79,6 @@ class SAMProviderBroker(AbstractBroker):
       - Create, update, delete, and query Django ORM models.
       - Transform Django ORM models into Pydantic models for serialization/deserialization.
 
-    **Parameters:**
-      - `manifest`: Optional[`SAMProvider`]
-        The Pydantic model instance representing the manifest.
-      - `SAMModelClass`: Type[`SAMProvider`]
-        The Pydantic model class used for manifest validation.
-      - `provider`: Optional[`AccountContact`]
-        The associated account contact, if available.
-
     **Example Usage:**
 
       .. code-block:: python
@@ -316,6 +308,11 @@ class SAMProviderBroker(AbstractBroker):
                 print(manifest.apiVersion, manifest.kind)
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMProvider):
+                raise SAMProviderBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMProvider(

@@ -391,6 +391,13 @@ class SAMLoader(SmarterHelperMixin):
 
     @property
     def manifest(self) -> Optional[Union[str, dict[str, Any]]]:
+        if self._manifest is not None and not isinstance(self._manifest, (str, dict)):
+            logger.error(
+                "%s.manifest - integrity error. Invalid manifest type: %s",
+                self.formatted_class_name,
+                type(self._manifest),
+            )
+            return None
         return self._manifest
 
     @property
