@@ -721,6 +721,25 @@ class SmarterRequestMixin(AccountMixin):
             print(params)  # e.g., {'session_key': 'abc123', 'uid': 'xyz'}
 
         """
+        if not self.smarter_request:
+            logger.warning(
+                "%s.params() - request is None or not set. Cannot extract query string parameters.",
+                self.request_mixin_logger_prefix,
+            )
+            return QueryDict("")
+        if not hasattr(self.smarter_request, "META"):
+            logger.error(
+                "%s.params() - request does not have META attribute. Cannot extract query string parameters.",
+                self.request_mixin_logger_prefix,
+            )
+            return QueryDict("")
+        if not self.smarter_request.META.get("QUERY_STRING"):
+            logger.debug(
+                "%s.params() - request has no query string parameters.",
+                self.request_mixin_logger_prefix,
+            )
+            return QueryDict("")
+
         if not self._params:
             try:
                 self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", ""))  # type: ignore

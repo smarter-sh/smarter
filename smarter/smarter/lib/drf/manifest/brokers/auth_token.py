@@ -1,21 +1,29 @@
 # pylint: disable=W0718
 """Smarter API SmarterAuthToken Manifest handler"""
 
+import traceback
 from logging import getLogger
 from typing import Any, Optional, Type
 
+from django.core import serializers
 from django.core.handlers.wsgi import WSGIRequest
-from django.forms.models import model_to_dict
 from pydantic_core import ValidationError as PydanticValidationError
 from rest_framework.serializers import ModelSerializer
 
+from smarter.apps.account.models import User
+from smarter.apps.account.utils import cache_invalidate
+from smarter.lib import json
 from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
 from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
 from smarter.lib.drf.manifest.models.auth_token.metadata import (
     SAMSmarterAuthTokenMetadata,
 )
 from smarter.lib.drf.manifest.models.auth_token.model import SAMSmarterAuthToken
-from smarter.lib.drf.manifest.models.auth_token.spec import SAMSmarterAuthTokenSpec
+from smarter.lib.drf.manifest.models.auth_token.spec import (
+    SAMSmarterAuthTokenSpec,
+    SAMSmarterAuthTokenSpecConfig,
+)
+from smarter.lib.drf.manifest.models.auth_token.status import SAMSmarterAuthTokenStatus
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -108,29 +116,26 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
 
         try:
             self._smarter_auth_token = SmarterAuthToken.objects.get(user=self.user, name=self.name)
-        except SmarterAuthToken.DoesNotExist as e:
-            if self.manifest and self.manifest.metadata and self.user:
-                self._smarter_auth_token, self._token_key = SmarterAuthToken.objects.create(  # type: ignore[return-value]
-                    name=self.manifest.metadata.name, user=self.user, description=self.manifest.metadata.description
-                )
-                self._created = True
-            else:
-                raise SAMBrokerErrorNotFound(
-                    f"{self.kind} {self.name} does not exist and it could not be created because manifest is None",
-                    thing=self.kind,
-                    command=None,
-                ) from e
-
+        except SmarterAuthToken.DoesNotExist:
+            logger.debug(
+                "%s.smarter_auth_token() SmarterAuthToken for user %s with name %s does not exist.",
+                self.formatted_class_name,
+                self.user,
+                self.name,
+            )
         return self._smarter_auth_token
 
-    def to_json(self) -> Optional[dict[str, Any]]:
+    @smarter_auth_token.setter
+    def smarter_auth_token(self, value: SmarterAuthToken) -> None:
         """
-        A dictionary representation of the SmarterAuthToken object.
-        This is used to serialize the object to JSON for the API response.
+        Set the SmarterAuthToken object.
         """
-        if self._smarter_auth_token:
-            return self.sorted_dict(SmarterAuthTokenSerializer(self.smarter_auth_token).data)
-        return None
+        self._smarter_auth_token = value
+        logger.debug(
+            "%s.smarter_auth_token() set to %s",
+            self.formatted_class_name,
+            self._smarter_auth_token,
+        )
 
     @property
     def token_key(self) -> Optional[str]:
@@ -142,23 +147,39 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         if self.created and self._token_key:
             return self._token_key
 
-    def manifest_to_django_orm(self) -> Optional[dict[str, Any]]:
+    def manifest_to_django_orm(self) -> dict[str, Any]:
         """
         Transform the Smarter API SAMSmarterAuthToken manifest into a Django ORM model.
         """
-        config_dump = self.manifest.spec.config.model_dump() if self.manifest and self.manifest.spec else None
-        if not config_dump:
-            raise SAMSmarterAuthTokenBrokerError(
-                f"Manifest spec config is None for {self.kind} {self.name}",
-                thing=self.kind,
-                command=None,
-            )
+        config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
-        if isinstance(config_dump, dict):
-            config_dump["description"] = (
-                self.manifest.metadata.description if self.manifest and self.manifest.metadata else None
+        if not isinstance(config_dump, dict):
+            raise SAMSmarterAuthTokenBrokerError(
+                message=f"Invalid config dump for {self.kind} manifest: {config_dump}",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
             )
-        return config_dump if isinstance(config_dump, dict) else None
+        if self.smarter_auth_token is None:
+            raise SAMBrokerErrorNotReady(
+                f"SmarterAuthToken not set for {self.kind} broker. Cannot apply.",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+        if self.manifest is None:
+            raise SAMBrokerErrorNotReady(
+                f"Manifest not set for {self.kind} broker. Cannot apply.",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+
+        return {
+            "account": self.account,
+            "name": self.manifest.metadata.name,
+            "description": self.manifest.metadata.description,
+            "version": self.manifest.metadata.version,
+            "annotations": json.loads(json.dumps(self.manifest.metadata.annotations)),
+            **config_dump,
+        }
 
     def django_orm_to_manifest_dict(self) -> dict:
         """
@@ -171,35 +192,14 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 thing=self.kind,
                 command=None,
             )
-        smarter_auth_token_dict = model_to_dict(self.smarter_auth_token)
-        smarter_auth_token_dict = self.snake_to_camel(smarter_auth_token_dict)
+        if self.manifest is None:
+            raise SAMBrokerErrorNotFound(
+                f"Manifest not set for {self.kind} broker. Cannot describe.",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.DESCRIBE,
+            )
 
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: self.smarter_auth_token.name,
-                SAMMetadataKeys.DESCRIPTION.value: self.smarter_auth_token.description,
-                SAMMetadataKeys.VERSION.value: "1.0.0",
-            },
-            SAMKeys.SPEC.value: {
-                SAMSmarterAuthTokenSpecKeys.CONFIG.value: {
-                    "isActive": self.smarter_auth_token.is_active,
-                    "username": self.smarter_auth_token.user.username,
-                },
-            },
-            SAMKeys.STATUS.value: {
-                "created": (
-                    self.smarter_auth_token.created_at.isoformat() if self.smarter_auth_token.created_at else None
-                ),
-                "modified": (
-                    self.smarter_auth_token.updated_at.isoformat() if self.smarter_auth_token.updated_at else None
-                ),
-                "lastUsedAt": (
-                    self.smarter_auth_token.last_used_at.isoformat() if self.smarter_auth_token.last_used_at else None
-                ),
-            },
-        }
+        data = self.manifest.model_dump()
         return data
 
     ###########################################################################
@@ -244,6 +244,40 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                     self.kind,
                     str(e),
                 )
+        elif self.smarter_auth_token:
+            status = SAMSmarterAuthTokenStatus(
+                created=self.brokered_account.created_at,
+                modified=self.brokered_account.updated_at,
+                lastUsedAt=self.brokered_account.last_used_at,
+            )
+            metadata = SAMSmarterAuthTokenMetadata(
+                name=str(self.brokered_account.name) or self.brokered_account.account_number.replace(" ", "_"),
+                description=self.brokered_account.company_name,
+                version=self.brokered_account.version,
+                tags=self.brokered_account.tags.names(),
+                annotations=self.brokered_account.annotations,
+            )
+            spec = SAMSmarterAuthTokenSpec(
+                config=SAMSmarterAuthTokenSpecConfig(
+                    isActive=self.brokered_account.is_active,
+                    username=self.brokered_account.user.username,
+                )
+            )
+            self._manifest = SAMSmarterAuthToken(
+                apiVersion=self.api_version,
+                kind=self.kind,
+                metadata=metadata,
+                spec=spec,
+                status=status,
+            )
+            logger.debug(
+                "%s.manifest() initialized %s from SmarterAuthToken ORM model %s: %s",
+                self.formatted_class_name,
+                type(self._manifest).__name__,
+                self.brokered_account,
+                serializers.serialize("json", [self.brokered_account]),
+            )
+            return self._manifest
         else:
             logger.warning(
                 "%s.manifest() %s could not be initialized. self.loader is %s.",
@@ -256,6 +290,15 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    @property
+    def SerializerClass(self) -> Type[ModelSerializer]:
+        """
+        Return the Serializer class for the SmarterAuthToken model.
+        This is used to serialize and deserialize the SmarterAuthToken
+        model for API responses and requests.
+        """
+        return SmarterAuthTokenSerializer
+
     @property
     def ORMModelClass(self) -> Type[SAMSmarterAuthToken]:
         return SAMSmarterAuthToken
@@ -331,29 +374,108 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         and are therefore removed from the Django ORM model dict prior to attempting
         the save() command. These fields are defined in the readonly_fields list.
         """
+        logger.debug("%s.apply() called", self.formatted_class_name)
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
-        readonly_fields = ["id", "created_at", "updated_at", "last_used_at", "key_id", "user", "digest", "token_key"]
-        self._smarter_auth_token = None
-        self._name = self.params.get("name", "MissingName") if self.params else "MissingName"
-        message: Optional[str] = None
-        if isinstance(self.smarter_auth_token, SmarterAuthToken):
+        readonly_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "last_used_at",
+            "key_id",
+            "user",
+            "username",
+            "digest",
+            "token_key",
+        ]
+
+        if not self.manifest:
+            raise SAMBrokerErrorNotReady(
+                f"Manifest not set for {self.kind} broker. Cannot apply.",
+                thing=self.thing,
+                command=command,
+            )
+        if self.smarter_auth_token is None:
+            self.smarter_auth_token = SmarterAuthToken(
+                user=self.user,
+                account=self.account,
+            )
+        try:
+            data = self.manifest_to_django_orm()
+            for field in readonly_fields:
+                logger.debug(
+                    "%s.apply() Removing readonly field %s from data for %s",
+                    self.formatted_class_name,
+                    field,
+                    self.kind,
+                )
+                data.pop(field, None)
+            for key, value in data.items():
+                setattr(self.smarter_auth_token, key, value)
+                logger.debug("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
+
+            # handle the username
             try:
-                data = self.manifest_to_django_orm()
-                if isinstance(data, dict):
-                    for field in readonly_fields:
-                        data.pop(field, None)
-                    for key, value in data.items():
-                        setattr(self.smarter_auth_token, key, value)
-                    self.smarter_auth_token.save()
-            except Exception as e:
+                manifest_spec_config_user = User.objects.get(username=self.manifest.spec.config.username)
+            except User.DoesNotExist as e:
                 raise SAMSmarterAuthTokenBrokerError(
-                    f"Failed to apply {self.kind} {self.smarter_auth_token.name}", thing=self.kind, command=command
+                    f"User {self.manifest.spec.config.username} does not exist for {self.kind} {self.name}",
+                    thing=self.kind,
+                    command=command,
                 ) from e
-        if self.created and isinstance(self.smarter_auth_token, SmarterAuthToken):
-            message = f"Successfully created {self.kind} {self.smarter_auth_token.name} with secret token {self.token_key}. Please store this token securely. It will not be shown again."
-        return self.json_response_ok(command=command, data=self.to_json(), message=message)
+
+            # ensure that the role of the user is equal to or less than the role of the owner
+            # of this process.
+            if not self.user.is_staff and not self.user.is_superuser:
+                raise SAMSmarterAuthTokenBrokerError(
+                    f"User {self.user.username} does not have permission to create or modify API keys.",
+                    thing=self.kind,
+                    command=command,
+                )
+            if not self.user.is_superuser:
+                if manifest_spec_config_user.is_superuser:
+                    raise SAMSmarterAuthTokenBrokerError(
+                        f"User {self.user.username} does not have permission to create or modify API keys for users with higher administrative roles.",
+                        thing=self.kind,
+                        command=command,
+                    )
+
+            self.smarter_auth_token.user = manifest_spec_config_user
+            logger.debug(
+                "%s.apply() Setting smarter_auth_token.user to %s",
+                self.formatted_class_name,
+                manifest_spec_config_user,
+            )
+
+            logger.debug(
+                "%s.apply() Saving %s: %s",
+                self.formatted_class_name,
+                self.smarter_auth_token,
+                serializers.serialize("json", [self.smarter_auth_token]),
+            )
+            self.smarter_auth_token.save()
+            tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
+            logger.debug(
+                "%s.apply() Setting tags for %s to %s",
+                self.formatted_class_name,
+                self.smarter_auth_token,
+                tags,
+            )
+            self.smarter_auth_token.tags = list(tags)
+            self.smarter_auth_token.save()
+            self.smarter_auth_token.refresh_from_db()
+            cache_invalidate(user=self.user, account=self.smarter_auth_token)  # type: ignore
+            logger.debug(
+                "%s.apply() Saved %s: %s",
+                self.formatted_class_name,
+                self.smarter_auth_token,
+                serializers.serialize("json", [self.smarter_auth_token]),
+            )
+        except Exception as e:
+            tb = traceback.format_exc()
+            raise SAMBrokerError(message=f"Error in {command}: {e}\n{tb}", thing=self.kind, command=command) from e
+        return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__

@@ -360,7 +360,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             return self._manifest
 
         # 2.) next, (and only if a loader is not available) try to initialize
-        #     from existing Account model if available
+        #     from existing ORM model if available
         elif self.plugin_meta:
             logger.debug(
                 "%s.manifest building from ORM models for %s %s",
