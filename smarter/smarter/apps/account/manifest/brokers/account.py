@@ -160,19 +160,6 @@ class SAMAccountBroker(AbstractBroker):
             broker = SAMAccountBroker(loader=loader, plugin_meta=plugin_meta)
         """
         super().__init__(*args, **kwargs)
-        if not self.ready:
-            if not self.loader and not self.manifest and not self.brokered_account:
-                logger.error(
-                    "%s.__init__() No loader nor existing Account provided for %s broker. Cannot initialize.",
-                    self.formatted_class_name,
-                    self.kind,
-                )
-                return
-            if self.loader and self.loader.manifest_kind != self.kind:
-                raise SAMBrokerErrorNotReady(
-                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
-                    thing=self.kind,
-                )
 
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:

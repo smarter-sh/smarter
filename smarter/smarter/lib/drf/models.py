@@ -11,10 +11,9 @@ from knox import crypto
 from knox.models import AuthToken, AuthTokenManager
 from knox.settings import CONSTANTS
 
-from smarter.apps.account.models import User
+from smarter.apps.account.models import MetaDataWithOwnershipModel, User
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.django.model_helpers import TimestampedModel
 
 
 logger = getLogger(__name__)
@@ -23,7 +22,7 @@ logger = getLogger(__name__)
 ###############################################################################
 # API Key Management
 ###############################################################################
-class SmarterAuthTokenManager(AuthTokenManager):
+class SmarterAuthTokenManager(AuthTokenManager, models.Manager):
     """API Key manager."""
 
     def create(
@@ -64,7 +63,7 @@ class SmarterAuthTokenManager(AuthTokenManager):
         return auth_token, token
 
 
-class SmarterAuthToken(AuthToken, TimestampedModel):
+class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     """
     Represents a Smarter API Key used for authenticating and authorizing access to the Smarter platform.
 
@@ -115,7 +114,7 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
     --------------
 
     - ``User``: The owner of the API key.
-    - ``TimestampedModel``: Provides created/modified timestamps.
+    - ``MetaDataModel``: Provides created/modified timestamps and SAM metadata.
 
     """
 
@@ -129,6 +128,7 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
     key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=255)
     description = models.CharField(max_length=255, blank=True, null=True)
+    tags = models.JSONField(default=list, blank=True)
     last_used_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
