@@ -17,17 +17,45 @@ from django.db.models.query import QuerySet
 from rest_framework import serializers
 
 # smarter stuff
-from smarter.apps.account.models import User, UserProfile
+from smarter.apps.account.mixins import AccountMixin
+from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.plugin.manifest.enum import (
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+    SAMPluginSpecKeys,
+)
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
+from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.models import (
+    PluginDataBase,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+    PluginSelectorHistory,
+)
+from smarter.apps.plugin.nlp import does_refer_to
+from smarter.apps.plugin.serializers import (
+    PluginMetaSerializer,
+    PluginPromptSerializer,
+    PluginSelectorSerializer,
+)
+from smarter.apps.plugin.signals import (
+    plugin_cloned,
+    plugin_created,
+    plugin_deleted,
+    plugin_deleting,
+    plugin_ready,
+    plugin_selected,
+    plugin_updated,
+)
 from smarter.apps.prompt.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterException,
     SmarterValueError,
 )
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.mixins import SmarterConverterMixin
@@ -37,35 +65,6 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.openai.enum import OpenAIToolCall, OpenAIToolTypes
-
-# plugin stuff
-from ..manifest.enum import (
-    SAMPluginCommonSpecSelectorKeyDirectiveValues,
-    SAMPluginSpecKeys,
-)
-from ..manifest.models.static_plugin.const import MANIFEST_KIND
-from ..models import (
-    PluginDataBase,
-    PluginMeta,
-    PluginPrompt,
-    PluginSelector,
-    PluginSelectorHistory,
-)
-from ..nlp import does_refer_to
-from ..serializers import (
-    PluginMetaSerializer,
-    PluginPromptSerializer,
-    PluginSelectorSerializer,
-)
-from ..signals import (
-    plugin_cloned,
-    plugin_created,
-    plugin_deleted,
-    plugin_deleting,
-    plugin_ready,
-    plugin_selected,
-    plugin_updated,
-)
 
 
 def should_log(level):
@@ -86,7 +85,7 @@ class SmarterPluginError(SmarterException):
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class PluginBase(ABC, SmarterHelperMixin, SmarterConverterMixin):
+class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
     """
     Abstract base class for Smarter plugins.
 
@@ -221,7 +220,16 @@ class PluginBase(ABC, SmarterHelperMixin, SmarterConverterMixin):
         :type name: Optional[str]
         :param kwargs: Additional keyword arguments.
         """
-        super().__init__(*args, **kwargs)
+        user = kwargs.pop("user", None) or next((user for user in args if isinstance(user, User)), None)
+        user_profile = (
+            user_profile
+            or kwargs.pop("user_profile", None)
+            or next((user_profile for user_profile in args if isinstance(user_profile, UserProfile)), None)
+        )
+        account = kwargs.pop("account", None) or next(
+            (account for account in args if isinstance(account, Account)), None
+        )
+        AccountMixin.__init__(self, *args, user=user, user_profile=user_profile, account=account, **kwargs)
         sources = [
             key
             for key, present in [
@@ -296,14 +304,119 @@ class PluginBase(ABC, SmarterHelperMixin, SmarterConverterMixin):
 
         if self.ready:
             return None  # plugin is ready, no further action needed.
+        else:
+            logger.warning("%s.__init__() Plugin is not ready. %r", self.formatted_class_name, self)
 
     def __str__(self) -> str:
-        """Return the name of the plugin."""
-        return str(self.name)
+        """
+        Returns a string representation of the class.
+
+        :return: String representation of the class.
+        :rtype: str
+        """
+        return f"{formatted_text(self.__class__.__name__)}[{id(self)}](name={self.name}, kind={self.kind})"
 
     def __repr__(self) -> str:
-        """Return the name of the plugin."""
-        return self.__str__()
+        """
+        Returns a JSON representation of the class.
+
+        :return: JSON representation of the class.
+        :rtype: str
+        """
+        return json.dumps(self.to_json(), indent=4)
+
+    def __bool__(self) -> bool:
+        """
+        Returns True if the plugin instance is considered valid.
+
+        :return: True if the plugin instance is valid, False otherwise.
+        :rtype: bool
+        """
+        return self.ready
+
+    def __hash__(self) -> int:
+        """
+        Returns the hash of the plugin instance.
+
+        :return: Hash of the plugin instance.
+        :rtype: int
+        """
+        return hash((self.user_profile, self.kind, self.name))
+
+    def __eq__(self, other: Any) -> bool:
+        """
+        Compares two plugin instances for equality.
+
+        :param other: The other plugin instance to compare.
+        :type other: Any
+        :return: True if the plugin instances are equal, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, PluginBase):
+            return False
+        return self.user_profile == other.user_profile and self.kind == other.kind and self.name == other.name
+
+    def __lt__(self, other: Any) -> bool:
+        """
+        Compares if this plugin instance is less than another.
+
+        :param other: The other plugin instance to compare.
+        :type other: Any
+        :return: True if this plugin instance is less than the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, PluginBase):
+            return NotImplemented
+        # Compare by user_profile id if both exist, else handle None
+        self_string = str(self.user_profile) + str(self.kind) + str(self.name)
+        other_string = str(other.user_profile) + str(other.kind) + str(other.name)
+        if self_string is None and other_string is None:
+            return False
+        if self_string is None:
+            return True  # None is considered less than any profile
+        if other_string is None:
+            return False
+
+        return str(self_string) < str(other_string)
+
+    def __le__(self, other: Any) -> bool:
+        """
+        Compares if this plugin instance is less than or equal to another.
+
+        :param other: The other plugin instance to compare.
+        :type other: Any
+        :return: True if this plugin instance is less than or equal to the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, PluginBase):
+            return NotImplemented
+        return self == other or self < other
+
+    def __gt__(self, other: Any) -> bool:
+        """
+        Compares if this plugin instance is greater than another.
+
+        :param other: The other plugin instance to compare.
+        :type other: Any
+        :return: True if this plugin instance is greater than the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, PluginBase):
+            return NotImplemented
+        return not self <= other
+
+    def __ge__(self, other: Any) -> bool:
+        """
+        Compares if this plugin instance is greater than or equal to another.
+
+        :param other: The other plugin instance to compare.
+        :type other: Any
+        :return: True if this plugin instance is greater than or equal to the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, PluginBase):
+            return NotImplemented
+        return not self < other
 
     def reinitialize_plugin(self):
         """
@@ -841,26 +954,6 @@ class PluginBase(ABC, SmarterHelperMixin, SmarterConverterMixin):
         return self._plugin_prompt_django_model
 
     @property
-    def user_profile(self) -> Optional[UserProfile]:
-        """
-        Return the user profile.
-
-        :return: The user profile.
-        :rtype: Optional[UserProfile]
-
-        .. note::
-
-            A warning is logged if this property is accessed before being set.
-
-        """
-        if not self._user_profile:
-            logger.warning(
-                "%s.user_profile() was accessed prior to being set.",
-                self.formatted_class_name,
-            )
-        return self._user_profile
-
-    @property
     def name(self) -> Optional[str]:
         """
         Return the name of the plugin.
@@ -894,13 +987,6 @@ class PluginBase(ABC, SmarterHelperMixin, SmarterConverterMixin):
         if not self.user_profile:
             logger.warning(
                 "%s.ready() UserProfile is not set.",
-                self.formatted_class_name,
-            )
-            return False
-
-        if not isinstance(self.user_profile, UserProfile):
-            logger.warning(
-                "%s.ready() UserProfile is not of type UserProfile.",
                 self.formatted_class_name,
             )
             return False
@@ -1582,55 +1668,50 @@ class PluginBase(ABC, SmarterHelperMixin, SmarterConverterMixin):
         # pylint: disable=W0104
         {**self.plugin_data_serializer.data, "id": self.plugin_data.id if self.plugin_data else None}  # type: ignore[reportOptionalMemberAccess]
 
-        if self.ready:
-            if version == "v1":
-                retval = {
-                    SAMKeys.APIVERSION.value: self.api_version,
-                    SAMKeys.KIND.value: self.kind,
-                    SAMKeys.METADATA.value: self.plugin_meta_serializer.data if self.plugin_meta_serializer else None,
-                    SAMKeys.SPEC.value: {
-                        SAMPluginSpecKeys.SELECTOR.value: (
-                            self.plugin_selector_serializer.data if self.plugin_selector_serializer else None
-                        ),
-                        SAMPluginSpecKeys.PROMPT.value: (
-                            self.plugin_prompt_serializer.data if self.plugin_prompt_serializer else None
-                        ),
-                        SAMPluginSpecKeys.DATA.value: self.plugin_data_serializer.data,
-                    },
-                    SAMKeys.STATUS.value: {
-                        "id": self.plugin_meta.id if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
-                        "accountNumber": (
-                            self.user_profile.account.account_number
-                            if isinstance(self.user_profile, UserProfile)
-                            else None
-                        ),
-                        "username": (
-                            self.user_profile.user.get_username()
-                            if isinstance(self.user_profile, UserProfile)
-                            else None
-                        ),
-                        "created": (
-                            self.plugin_meta.created_at.isoformat()
-                            if self.plugin_meta
-                            and self.plugin_meta.created_at
-                            and isinstance(self.plugin_meta.created_at, datetime.datetime)
-                            else None
-                        ),
-                        "updated": (
-                            self.plugin_meta.updated_at.isoformat()
-                            if self.plugin_meta
-                            and self.plugin_meta.updated_at
-                            and isinstance(self.plugin_meta.updated_at, datetime.datetime)
-                            else None
-                        ),
-                    },
-                }
-                if not isinstance(retval, dict):
-                    raise SmarterConfigurationError(f"{self.formatted_class_name}.to_json() error: {self.name}.")
-                if not isinstance(self.plugin_data_serializer.data, dict):
-                    raise SmarterConfigurationError(
-                        f"{self.formatted_class_name}.to_json() error: {self.name} plugin_data_serializer.data is not a dict."
-                    )
-                return json.loads(json.dumps(retval))
-            raise SmarterPluginError(f"Invalid version: {version}")
+        if version == "v1":
+            retval = {
+                SAMKeys.APIVERSION.value: self.api_version,
+                SAMKeys.KIND.value: self.kind,
+                SAMKeys.METADATA.value: self.plugin_meta_serializer.data if self.plugin_meta_serializer else None,
+                SAMKeys.SPEC.value: {
+                    SAMPluginSpecKeys.SELECTOR.value: (
+                        self.plugin_selector_serializer.data if self.plugin_selector_serializer else None
+                    ),
+                    SAMPluginSpecKeys.PROMPT.value: (
+                        self.plugin_prompt_serializer.data if self.plugin_prompt_serializer else None
+                    ),
+                    SAMPluginSpecKeys.DATA.value: self.plugin_data_serializer.data,
+                },
+                SAMKeys.STATUS.value: {
+                    "id": self.plugin_meta.id if self.plugin_meta else None,  # type: ignore[reportOptionalMemberAccess]
+                    "accountNumber": (
+                        self.user_profile.account.account_number if isinstance(self.user_profile, UserProfile) else None
+                    ),
+                    "username": (
+                        self.user_profile.user.get_username() if isinstance(self.user_profile, UserProfile) else None
+                    ),
+                    "created": (
+                        self.plugin_meta.created_at.isoformat()
+                        if self.plugin_meta
+                        and self.plugin_meta.created_at
+                        and isinstance(self.plugin_meta.created_at, datetime.datetime)
+                        else None
+                    ),
+                    "updated": (
+                        self.plugin_meta.updated_at.isoformat()
+                        if self.plugin_meta
+                        and self.plugin_meta.updated_at
+                        and isinstance(self.plugin_meta.updated_at, datetime.datetime)
+                        else None
+                    ),
+                },
+            }
+            if not isinstance(retval, dict):
+                raise SmarterConfigurationError(f"{self.formatted_class_name}.to_json() error: {self.name}.")
+            if not isinstance(self.plugin_data_serializer.data, dict):
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name}.to_json() error: {self.name} plugin_data_serializer.data is not a dict."
+                )
+            return json.loads(json.dumps(retval))
+        raise SmarterPluginError(f"Invalid version: {version}")
         return None

@@ -370,10 +370,11 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         """
         Test describe method raises not found for missing account.
         """
-        self.request._body = None  # pylint: disable=protected-access
-        self._broker = self.SAMBrokerClass(self.request)
+        request = self.request
+        request._body = None  # pylint: disable=protected-access
+        self._broker = self.SAMBrokerClass(request)
         with self.assertRaises(SAMBrokerErrorNotFound):
-            self.broker.describe(self.request, {"name": "nonexistent-account"})
+            self.broker.describe(request, {"name": "nonexistent-account"})
 
     def test_logs_returns_ok(self):
         """Stub: test logs method returns ok response."""

@@ -204,7 +204,7 @@ class AccountMixin(SmarterHelperMixin):
         logger.debug(
             "%s.__init__() - finished %s",
             self.account_mixin_logger_prefix,
-            json.dumps(AccountMixin.to_json(self), indent=4),
+            AccountMixin.__repr__(self),
         )
 
         self.log_account_mixin_ready_status()
@@ -225,7 +225,7 @@ class AccountMixin(SmarterHelperMixin):
         :return: JSON representation of the class.
         :rtype: str
         """
-        return json.dumps(self.to_json(), indent=4)
+        return json.dumps(AccountMixin.to_json(self), indent=4)
 
     def __bool__(self) -> bool:
         """

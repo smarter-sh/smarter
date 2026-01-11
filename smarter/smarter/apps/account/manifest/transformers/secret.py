@@ -37,7 +37,6 @@ from smarter.apps.account.utils import (
 )
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterException
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -199,7 +198,7 @@ class SecretTransformer(SmarterHelperMixin):
 
     def __repr__(self) -> str:
         """Return the name of the secret."""
-        return self.__str__()
+        return json.dumps(SecretTransformer.to_json(self), indent=4)  # type: ignore[return-value]
 
     ###########################################################################
     # class methods
