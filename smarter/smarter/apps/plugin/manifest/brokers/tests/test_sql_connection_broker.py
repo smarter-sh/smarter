@@ -218,7 +218,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         """
         Test that the serializer property returns a valid serializer instance.
         """
-        self.assertEqual(self.broker.serializer.__name__, "SqlConnectionSerializer")
+        self.assertEqual(self.broker.SerializerClass.__name__, "SqlConnectionSerializer")
 
     def test_password_secret(self):
         """

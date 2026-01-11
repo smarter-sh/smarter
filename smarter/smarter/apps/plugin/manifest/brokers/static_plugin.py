@@ -296,6 +296,16 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         return PluginDataStatic
 
     @property
+    def SAMModelClass(self) -> Type[SAMStaticPlugin]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMStaticPlugin]
+        """
+        return SAMStaticPlugin
+
+    @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
         """
         Returns the manifest for the static plugin as a Pydantic model instance.

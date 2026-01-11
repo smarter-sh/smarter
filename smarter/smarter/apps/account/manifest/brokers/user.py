@@ -653,6 +653,16 @@ class SAMUserBroker(AbstractBroker):
         """
         return User
 
+    @property
+    def SAMModelClass(self) -> Type[SAMUser]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMUser]
+        """
+        return SAMUser
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return the SAM `User` model associated with the Smarter API User manifest.

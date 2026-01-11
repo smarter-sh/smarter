@@ -576,6 +576,16 @@ class SAMSecretBroker(AbstractBroker):
         """
         return Secret
 
+    @property
+    def SAMModelClass(self) -> Type[SAMSecret]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMSecret]
+        """
+        return SAMSecret
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example Smarter API Secret manifest.

@@ -199,6 +199,26 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def ORMModelClass(self) -> Type[PluginMeta]:
+        """
+        Return the Django ORM model class for the broker.
+
+        :return: The Django ORM model class definition for the broker.
+        :rtype: Type[PluginMeta]
+        """
+        return PluginMeta
+
+    @property
+    def SAMModelClass(self) -> Type[SAMApiPlugin]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMApiPlugin]
+        """
+        return SAMApiPlugin
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Return a human-readable, fully qualified class name for logging.

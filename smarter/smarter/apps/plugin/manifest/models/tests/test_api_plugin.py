@@ -698,7 +698,7 @@ class TestApiPluginLegacy(TestPluginBase, ManifestTestsMixin, ApiConnectionTestM
         BC THE FUNCTION CALL PARAMETERS HAVE TO BE REFORMATTED
         FROM LIST TO DICT.
         """
-        # 1.) create a secret for the Api connection
+        logger.debug("test_django_orm: 1.) create a secret for the Api connection")
         self._loader = None
         self._manifest = None
         self.load_manifest(filename="secret-smarter.yaml")
@@ -719,7 +719,7 @@ class TestApiPluginLegacy(TestPluginBase, ManifestTestsMixin, ApiConnectionTestM
         if not isinstance(secret_broker.secret, Secret):
             self.fail("secret is not an instance of SAMSecret")
 
-        # 2.) create an Api connection
+        logger.debug("test_django_orm: 2.) create an Api connection")
         self._loader = None
         self._manifest = None
         self.load_manifest(filename="api-connection.yaml")
@@ -731,14 +731,16 @@ class TestApiPluginLegacy(TestPluginBase, ManifestTestsMixin, ApiConnectionTestM
         if self.api_connection_model is None:
             self.fail("ApiConnection model is None, did you load the manifest?")
 
+        logger.debug("test_django_orm: 2.) create a SAMApiConnectionBroker")
         connection_broker = SAMApiConnectionBroker(
             self.request,
             loader=self.connection_loader,
             manifest=self.connection_model,
         )
+        logger.debug("test_django_orm: 2.) apply the manifest")
         connection_broker.apply(self.request)
 
-        # 3.) create an Api plugin
+        logger.debug("test_django_orm: 3.) create an Api plugin")
         self._loader = None
         self._manifest = None
         self.load_manifest(filename="api-plugin.yaml")
@@ -756,7 +758,7 @@ class TestApiPluginLegacy(TestPluginBase, ManifestTestsMixin, ApiConnectionTestM
         if self.api_plugin_model is None:
             self.fail("ApiPlugin model is None, did you load the manifest?")
 
-        # 4.) try to save it
+        logger.debug("test_django_orm: 4.) save the Api plugin Django model")
         self.plugin_meta.save()
 
         response = api_plugin_broker.describe(self.request)

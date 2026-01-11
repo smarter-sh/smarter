@@ -182,7 +182,7 @@ class SmarterConverterMixin:
             print(camel_to_snake(["firstName", "lastName"]))
             # Output: ['first_name', 'last_name']
         """
-        logger.debug("%s.camel_to_snake()", logger_prefix)
+        logger.debug("%s.camel_to_snake() - data: %s", logger_prefix, data)
 
         def convert(name: str):
             name = name.replace(" ", "_")
@@ -192,6 +192,9 @@ class SmarterConverterMixin:
             result = re.sub("_+", "_", result)
             return result
 
+        if data is None:
+            logger.warning("%s.camel_to_snake() - data is None, returning None", logger_prefix)
+            return None
         if isinstance(data, str):
             return convert(data)
         if isinstance(data, list):

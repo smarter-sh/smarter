@@ -499,6 +499,16 @@ class SAMAccountBroker(AbstractBroker):
         """
         return Account
 
+    @property
+    def SAMModelClass(self) -> Type[SAMAccount]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMAccount]
+        """
+        return SAMAccount
+
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return an example manifest for the Smarter API Account.
