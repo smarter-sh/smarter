@@ -162,4 +162,4 @@ Please report bugs to the [GitHub Issues Page](https://github.com/smarter-sh/sma
 
 ## Contributing
 
-Please see the [CONTRIBUTING](https://docs.smarter.sh/en/latest/developers/contributing.html).
+Please see the [CONTRIBUTING](https://docs.smarter.sh/en/latest/smarter-framework/guides/contributing.html).
