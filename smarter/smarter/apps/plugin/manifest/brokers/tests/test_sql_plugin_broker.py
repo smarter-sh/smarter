@@ -147,13 +147,13 @@ class TestSmarterSqlPluginBroker(TestSmarterPluginBrokerBase):
         Test that the SAMSqlPluginBroker can be initialized from the request and loader.
         1. broker is an instance of SAMSqlPluginBroker.
         2. broker.kind is "SqlPlugin".
-        3. broker.model_class is SAMSqlPlugin.
+        3. broker.ORMModelClass is SAMSqlPlugin.
         """
         broker: SAMSqlPluginBroker = self.SAMBrokerClass(self.request, self.loader)
         self.assertIsInstance(broker, SAMSqlPluginBroker)
         self.assertEqual(broker.kind, "SqlPlugin")
-        self.assertIsNotNone(broker.model_class)
-        self.assertEqual(broker.model_class.__name__, "PluginDataSql")
+        self.assertIsNotNone(broker.ORMModelClass)
+        self.assertEqual(broker.ORMModelClass.__name__, "PluginDataSql")
 
     def test_initialization_from_class(self):
         """

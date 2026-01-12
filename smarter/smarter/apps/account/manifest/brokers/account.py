@@ -125,6 +125,7 @@ class SAMAccountBroker(AbstractBroker):
     _manifest: Optional[SAMAccount] = None
     _pydantic_model: Type[SAMAccount] = SAMAccount
     _brokered_account: Optional[Account] = None
+    _orm_instance: Optional[Account] = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -160,19 +161,6 @@ class SAMAccountBroker(AbstractBroker):
             broker = SAMAccountBroker(loader=loader, plugin_meta=plugin_meta)
         """
         super().__init__(*args, **kwargs)
-        if not self.ready:
-            if not self.loader and not self.manifest and not self.brokered_account:
-                logger.error(
-                    "%s.__init__() No loader nor existing Account provided for %s broker. Cannot initialize.",
-                    self.formatted_class_name,
-                    self.kind,
-                )
-                return
-            if self.loader and self.loader.manifest_kind != self.kind:
-                raise SAMBrokerErrorNotReady(
-                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
-                    thing=self.kind,
-                )
 
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
@@ -323,6 +311,12 @@ class SAMAccountBroker(AbstractBroker):
                 print(manifest.apiVersion, manifest.kind)
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMAccount):
+                raise SAMAccountBrokerError(
+                    message=f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
             return self._manifest
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
@@ -335,9 +329,10 @@ class SAMAccountBroker(AbstractBroker):
                 status=None,
             )
             logger.debug(
-                "%s.manifest() initialized from loader: %s",
+                "%s.manifest() initialized %s from loader: %s",
                 self.formatted_class_name,
-                self._manifest.model_dump(),
+                type(self._manifest).__name__,
+                json.dumps(self._manifest.model_dump(), indent=4),
             )
             return self._manifest
         # 2.) next, (and only if a loader is not available) try to initialize
@@ -378,8 +373,9 @@ class SAMAccountBroker(AbstractBroker):
                 status=status,
             )
             logger.debug(
-                "%s.manifest() initialized from Account %s: %s",
+                "%s.manifest() initialized %s from Account ORM model %s: %s",
                 self.formatted_class_name,
+                type(self._manifest).__name__,
                 self.brokered_account,
                 serializers.serialize("json", [self.brokered_account]),
             )
@@ -387,6 +383,16 @@ class SAMAccountBroker(AbstractBroker):
         else:
             logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
+
+    @property
+    def SerializerClass(self) -> Type[AccountSerializer]:
+        """
+        Get the Django REST Framework serializer class for the Smarter API Account.
+
+        :returns: The `AccountSerializer` class.
+        :rtype: Type[ModelSerializer]
+        """
+        return AccountSerializer
 
     ###########################################################################
     # Transformation methods
@@ -472,7 +478,7 @@ class SAMAccountBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self) -> Type[Account]:
+    def ORMModelClass(self) -> Type[Account]:
         """
         Get the Django ORM model class for the Smarter API Account.
 
@@ -480,6 +486,57 @@ class SAMAccountBroker(AbstractBroker):
         :rtype: Type[Account]
         """
         return Account
+
+    @property
+    def orm_instance(self) -> Optional[Account]:
+        """
+        Return the Django ORM model instance for the broker.
+
+        :return: The Django ORM model instance for the broker.
+        :rtype: Optional[TimestampedModel]
+        """
+        if self._orm_instance:
+            return self._orm_instance
+
+        if not self.ready:
+            logger.warning(
+                "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
+                self.abstract_broker_logger_prefix,
+            )
+            return None
+        try:
+            logger.debug(
+                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                Account.__name__,
+                self.user,
+                self.name,
+            )
+            instance = Account.objects.get(name=self.name)
+            logger.debug(
+                "%s.orm_instance() - retrieved ORM instance: %s",
+                self.abstract_broker_logger_prefix,
+                serializers.serialize("json", [instance]),
+            )
+            return instance
+        except Account.DoesNotExist:
+            logger.warning(
+                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+            )
+            return None
+
+    @property
+    def SAMModelClass(self) -> Type[SAMAccount]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMAccount]
+        """
+        return SAMAccount
 
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -700,7 +757,12 @@ class SAMAccountBroker(AbstractBroker):
 
         try:
             data = self.django_orm_to_manifest_dict()
-            logger.debug("%s.describe() returning manifest for %s: %s", self.formatted_class_name, self.name, data)
+            logger.debug(
+                "%s.describe() returning manifest for %s: %s",
+                self.formatted_class_name,
+                self.name,
+                json.dumps(data, indent=4),
+            )
             return self.json_response_ok(command=command, data=data)
         except Exception as e:
             raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e

@@ -11,8 +11,7 @@ import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/
 import botocore.exceptions
 
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import Services
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import Services, smarter_settings
 
 # our stuff
 from smarter.common.const import (
@@ -613,6 +612,6 @@ class AWSBase(SmarterHelperMixin):
         :rtype: str
         """
         if self.authentication_credentials_are_initialized:
-            return formatted_text_green("READY")
+            return self.formatted_state_ready
         else:
-            return formatted_text_red("NOT_READY")
+            return self.formatted_state_not_ready

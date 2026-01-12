@@ -10,7 +10,7 @@ import re
 from pydantic import SecretStr
 
 # our stuff
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.unittest.base_classes import SmarterTestBase
 

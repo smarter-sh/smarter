@@ -3,6 +3,7 @@
 
 import logging
 
+from django.core import serializers
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from rest_framework.exceptions import AuthenticationFailed
@@ -33,18 +34,19 @@ module_prefix = "smarter.lib.drf.receivers"
 @receiver(post_save, sender=SmarterAuthToken)
 def handle_auth_token_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of SmarterAuthToken model."""
+    json_data = serializers.serialize("json", [instance])
     if created:
         logger.debug(
             "%s SmarterAuthToken: %s, created: %s",
             formatted_text(f"{module_prefix}.smarter_auth_token_save()"),
-            instance,
+            json_data,
             created,
         )
     else:
         logger.debug(
             "%s SmarterAuthToken: %s, created: %s",
             formatted_text(f"{module_prefix}.smarter_auth_token_save()"),
-            instance,
+            json_data,
             created,
         )
 

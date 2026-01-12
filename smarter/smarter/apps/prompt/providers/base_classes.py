@@ -58,7 +58,7 @@ from smarter.apps.prompt.signals import (
     chat_response_failure,
     chat_started,
 )
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,

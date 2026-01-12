@@ -10,7 +10,7 @@ from functools import cached_property
 from typing import Optional, Tuple
 
 from smarter.common.classes import Singleton, SmarterHelperMixin
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import (

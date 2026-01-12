@@ -12,7 +12,7 @@ from smarter.apps.account.const import DATA_PATH as ACCOUNT_DATA_PATH
 from smarter.apps.account.models import UserProfile
 from smarter.apps.api.utils import apply_manifest
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

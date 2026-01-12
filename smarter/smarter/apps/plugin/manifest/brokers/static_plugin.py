@@ -2,12 +2,25 @@
 """Smarter API StaticPlugin Manifest handler"""
 
 import logging
+from datetime import datetime, timezone
 from typing import Optional, Type
 
 from django.http import HttpRequest
 
+from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.plugin.manifest.enum import (
+    SAMPluginCommonMetadataClassValues,
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+)
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.spec import (
+    SAMPluginCommonSpecPrompt,
+    SAMPluginCommonSpecSelector,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.status import (
+    SAMPluginCommonStatus,
 )
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
@@ -21,6 +34,8 @@ from smarter.apps.plugin.models import (
 )
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.signals import broker_ready
+from smarter.common.api import SmarterApiVersions
+from smarter.common.conf import SettingsDefaults
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -32,17 +47,12 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
-from smarter.lib.manifest.enum import (
-    SAMKeys,
-    SAMMetadataKeys,
-    SCLIResponseGet,
-    SCLIResponseGetData,
-)
 
-from . import PluginSerializer, SAMPluginBrokerError
+from . import SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING) or waffle.switch_is_active(
@@ -276,7 +286,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         return MANIFEST_KIND
 
     @property
-    def model_class(self) -> Type[PluginDataStatic]:
+    def ORMModelClass(self) -> Type[PluginDataStatic]:
         """
         Returns the Django ORM model class for static plugin data.
 
@@ -291,14 +301,24 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         .. code-block:: python
 
             broker = SAMStaticPluginBroker()
-            model_class = broker.model_class
-            print(model_class.__name__)
+            ORMModelClass = broker.ORMModelClass
+            print(ORMModelClass.__name__)
             # Output: "PluginDataStatic"
         .. seealso::
             - `PluginDataStatic` Django ORM model.
             - `SAMStaticPluginBroker.plugin_data`
         """
         return PluginDataStatic
+
+    @property
+    def SAMModelClass(self) -> Type[SAMStaticPlugin]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMStaticPlugin]
+        """
+        return SAMStaticPlugin
 
     @property
     def manifest(self) -> Optional[SAMStaticPlugin]:
@@ -333,6 +353,11 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMStaticPlugin):
+                raise SAMPluginBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
 
         # 1.) prioritize manifest loader data if available. if it was provided
@@ -350,7 +375,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             return self._manifest
 
         # 2.) next, (and only if a loader is not available) try to initialize
-        #     from existing Account model if available
+        #     from existing ORM model if available
         elif self.plugin_meta:
             logger.debug(
                 "%s.manifest building from ORM models for %s %s",
@@ -553,7 +578,6 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         if not self.plugin_meta:
             return None
         self._plugin_static_spec_data = SAMPluginStaticSpecData(
-            description=self.plugin_meta.description,
             staticData=self.plugin_data.static_data if self.plugin_data else {},
         )
         return self._plugin_static_spec_data
@@ -643,14 +667,82 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         """
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        data = StaticPlugin.example_manifest(kwargs=kwargs)
-        if not data:
-            raise SAMPluginBrokerError(
-                f"{self.formatted_class_name} example_manifest() failed to generate example for {self.kind}",
-                thing=self.kind,
-                command=command,
-            )
-        return self.json_response_ok(command=command, data=data)
+
+        manifest_meta = SAMPluginCommonMetadata(
+            name="everlasting_gobstopper",
+            description="Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+            version="0.1.0",
+            tags=["candy", "treats", "chocolate", "Gobstoppers", "Willy Wonka"],
+            annotations=[
+                {"smarter.sh/created_by": "smarter_static_plugin_broker"},
+                {"smarter.sh/plugin": "everlasting_gobstopper"},
+            ],
+            pluginClass=SAMPluginCommonMetadataClassValues.STATIC.value,
+        )
+        manifest_spec = SAMPluginStaticSpec(
+            selector=SAMPluginCommonSpecSelector(
+                directive=SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value,
+                searchTerms=[
+                    "Gobstopper",
+                    "Gobstoppers",
+                    "Gobbstopper",
+                    "Gobbstoppers",
+                ],
+            ),
+            prompt=SAMPluginCommonSpecPrompt(
+                provider=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+                systemRole="You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.",
+                model=SettingsDefaults.LLM_DEFAULT_MODEL,
+                temperature=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+                maxTokens=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+            ),
+            data=SAMPluginStaticSpecData(
+                staticData={
+                    "contact": [
+                        {"name": "Willy Wonka"},
+                        {"title": "Founder and CEO"},
+                        {"location": "1234 Chocolate Factory Way, Chocolate City, Chocolate State, USA"},
+                        {"phone": "+1 123-456-7890"},
+                        {"website_url": "https://wwcf.com"},
+                        {"whatsapp": 11234567890},
+                        {"email": "ww@wwcf.com"},
+                    ],
+                    "biographical": "Willy Wonka is a fictional character appearing in British author Roald Dahl's 1964 children's novel Charlie and the Chocolate Factory, its 1972 sequel Charlie and the Great Glass Elevator and several films based on those books. He is the eccentric founder and proprietor of the Wonka Chocolate Factory\n",
+                    "sales_promotions": [
+                        {
+                            "name": "Everlasting Gobstopper",
+                            "description": 'The Everlasting Gobstopper is a candy that, according to Willy Wonka, "Never Gets Smaller Or Ever Gets Eaten". It is the main focus of Charlie and the Chocolate Factory, both the 1971 film and the 2005 film, and Willy Wonka and the Chocolate Factory, the 1971 film adaptation of the novel.\n',
+                            "price": "$1.00",
+                            "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Everlasting_Gobstopper.jpg/220px-Everlasting_Gobstopper.jpg",
+                        },
+                        {
+                            "name": "Wonka Bar",
+                            "description": "Wonka Bars are a fictional brand of chocolate made by Willy Wonka, and also a chocolate bar inspired by the Willy Wonka Bar from the novel and the films Willy Wonka & the Chocolate Factory and Charlie and the Chocolate Factory.\n",
+                            "price": "$1.00",
+                            "image": "https://m.media-amazon.com/images/I/81E-734cMzL._AC_UF894,1000_QL80_.jpg",
+                        },
+                    ],
+                    "coupon_codes": [
+                        {"name": "10% off", "code": "10OFF", "description": "10% off your next purchase\n"},
+                        {"name": "20% off", "code": "20OFF", "description": "20% off your next purchase\n"},
+                    ],
+                }
+            ),
+        )
+        manifest_status = SAMPluginCommonStatus(
+            accountNumber="1234-5678-9012",
+            username="example_user",
+            created=datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+            modified=datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        )
+        example_manifest = SAMStaticPlugin(
+            apiVersion=SmarterApiVersions.V1,
+            kind=SAMKinds.STATIC_PLUGIN.value,
+            metadata=manifest_meta,
+            spec=manifest_spec,
+            status=manifest_status,
+        )
+        return self.json_response_ok(command=command, data=example_manifest.model_dump())
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

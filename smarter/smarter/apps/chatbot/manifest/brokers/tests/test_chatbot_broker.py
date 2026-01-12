@@ -17,10 +17,7 @@ from smarter.apps.chatbot.manifest.models.chatbot.spec import (
 )
 from smarter.apps.chatbot.models import ChatBot
 from smarter.lib import json
-from smarter.lib.manifest.broker import (
-    SAMBrokerErrorNotFound,
-    SAMBrokerErrorNotImplemented,
-)
+from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
@@ -140,8 +137,8 @@ class TestSmarterChatBotBroker(TestSAMBrokerBaseClass):
         broker: SAMChatbotBroker = self.SAMBrokerClass(self.request, self.loader)
         self.assertIsInstance(broker, SAMChatbotBroker)
         self.assertEqual(broker.kind, "Chatbot")
-        self.assertIsNotNone(broker.model_class)
-        self.assertEqual(broker.model_class.__name__, "ChatBot")
+        self.assertIsNotNone(broker.ORMModelClass)
+        self.assertEqual(broker.ORMModelClass.__name__, "ChatBot")
 
     def test_initialization_from_class(self):
         """Test initialization of SAMChatbotBroker from class."""

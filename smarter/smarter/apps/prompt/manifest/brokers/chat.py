@@ -11,7 +11,7 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.prompt.manifest.models.chat.const import MANIFEST_KIND
 from smarter.apps.prompt.manifest.models.chat.model import SAMChat
 from smarter.apps.prompt.models import Chat
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -140,6 +140,16 @@ class SAMChatBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def SerializerClass(self) -> typing.Type[ChatSerializer]:
+        """
+        Get the Django REST Framework serializer class for the Smarter API Chat.
+
+        :returns: The `ChatSerializer` class.
+        :rtype: Type[ChatSerializer]
+        """
+        return ChatSerializer
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
@@ -149,7 +159,7 @@ class SAMChatBroker(AbstractBroker):
         return f"{parent_class}.{SAMChatBroker.__name__}[{id(self)}]"
 
     @property
-    def model_class(self) -> typing.Type[Chat]:
+    def ORMModelClass(self) -> typing.Type[Chat]:
         return Chat
 
     @property
@@ -168,6 +178,11 @@ class SAMChatBroker(AbstractBroker):
         passing **data to each child's constructor.
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMChat):
+                raise SAMChatBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMChat(

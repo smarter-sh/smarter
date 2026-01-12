@@ -11,7 +11,7 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.prompt.manifest.models.chat_tool_call.const import MANIFEST_KIND
 from smarter.apps.prompt.manifest.models.chat_tool_call.model import SAMChatToolCall
 from smarter.apps.prompt.models import Chat, ChatToolCall
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -142,6 +142,16 @@ class SAMChatToolCallBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def SerializerClass(self) -> typing.Type[ChatToolCallSerializer]:
+        """
+        Get the Django REST Framework serializer class for the Smarter API ChatToolCall.
+
+        :returns: The `ChatToolCallSerializer` class.
+        :rtype: Type[ChatToolCallSerializer]
+        """
+        return ChatToolCallSerializer
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
@@ -151,7 +161,7 @@ class SAMChatToolCallBroker(AbstractBroker):
         return f"{parent_class}.{SAMChatToolCallBroker.__name__}[{id(self)}]"
 
     @property
-    def model_class(self) -> typing.Type[ChatToolCall]:
+    def ORMModelClass(self) -> typing.Type[ChatToolCall]:
         return ChatToolCall
 
     @property
@@ -170,6 +180,11 @@ class SAMChatToolCallBroker(AbstractBroker):
         passing **data to each child's constructor.
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMChatToolCall):
+                raise SAMChatToolCallBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMChatToolCall(

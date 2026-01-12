@@ -1,6 +1,6 @@
 """This module is used to initialize the environment."""
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.aws.route53 import AWSRoute53
 from smarter.common.helpers.aws_helpers import aws_helper

@@ -12,7 +12,7 @@ from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

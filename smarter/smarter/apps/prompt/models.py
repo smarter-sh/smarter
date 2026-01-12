@@ -13,7 +13,7 @@ from rest_framework import serializers
 from smarter.apps.account.models import MetaDataWithOwnershipModel
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import json

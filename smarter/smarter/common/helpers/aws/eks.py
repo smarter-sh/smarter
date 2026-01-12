@@ -2,7 +2,7 @@
 
 import logging
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 
 from .aws import AWSBase
 

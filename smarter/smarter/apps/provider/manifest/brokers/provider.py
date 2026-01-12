@@ -19,7 +19,7 @@ from smarter.apps.provider.manifest.models.provider.spec import (
 from smarter.apps.provider.manifest.models.provider.status import SAMProviderStatus
 from smarter.apps.provider.models import Provider, ProviderStatus
 from smarter.apps.provider.serializers import ProviderSerializer
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -78,14 +78,6 @@ class SAMProviderBroker(AbstractBroker):
       - Interact with Django ORM models representing provider manifests.
       - Create, update, delete, and query Django ORM models.
       - Transform Django ORM models into Pydantic models for serialization/deserialization.
-
-    **Parameters:**
-      - `manifest`: Optional[`SAMProvider`]
-        The Pydantic model instance representing the manifest.
-      - `pydantic_model`: Type[`SAMProvider`]
-        The Pydantic model class used for manifest validation.
-      - `provider`: Optional[`AccountContact`]
-        The associated account contact, if available.
 
     **Example Usage:**
 
@@ -260,6 +252,16 @@ class SAMProviderBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def SerializerClass(self) -> Type[ProviderSerializer]:
+        """
+        Get the Django REST Framework serializer class for the Smarter API Provider.
+
+        :returns: The `ProviderSerializer` class.
+        :rtype: Type[ModelSerializer]
+        """
+        return ProviderSerializer
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Return a formatted class name string for logging and diagnostics.
@@ -316,6 +318,11 @@ class SAMProviderBroker(AbstractBroker):
                 print(manifest.apiVersion, manifest.kind)
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMProvider):
+                raise SAMProviderBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMProvider(
@@ -330,7 +337,7 @@ class SAMProviderBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self) -> Type[Provider]:
+    def ORMModelClass(self) -> Type[Provider]:
         """
         Return the model class associated with the Smarter API Provider.
 
@@ -340,7 +347,7 @@ class SAMProviderBroker(AbstractBroker):
 
         .. code-block:: python
 
-           model_cls = broker.model_class
+           model_cls = broker.ORMModelClass
            provider_instance = model_cls.objects.get(name="example_provider")
 
         .. seealso::
@@ -359,7 +366,7 @@ class SAMProviderBroker(AbstractBroker):
 
         .. code-block:: python
 
-           user_cls = broker.model_class
+           user_cls = broker.ORMModelClass
            user = user_cls.objects.get(username="example_user")
 
         .. seealso::

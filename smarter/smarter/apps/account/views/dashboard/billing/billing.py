@@ -5,7 +5,7 @@ import logging
 import os
 from pathlib import Path
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.utils import get_readonly_csv_file
 from smarter.lib import json
 from smarter.lib.django import waffle

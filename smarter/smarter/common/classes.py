@@ -10,9 +10,13 @@ from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
 from django.utils.deprecation import MiddlewareMixin
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import (
+    formatted_text,
+    formatted_text_green,
+    formatted_text_red,
+)
 from smarter.common.utils import (
     is_authenticated_request,
 )
@@ -101,6 +105,26 @@ class SmarterHelperMixin:
         This is useful for logging or serialization where the plain class name is needed.
         """
         return self.__class__.__name__
+
+    @property
+    def formatted_state_ready(self) -> str:
+        """
+        Returns the readiness state formatted for logging.
+
+        :return: The formatted readiness state as a string.
+        :rtype: str
+        """
+        return formatted_text_green("READY")
+
+    @property
+    def formatted_state_not_ready(self) -> str:
+        """
+        Returns the not-ready state formatted for logging.
+
+        :return: The formatted not-ready state as a string.
+        :rtype: str
+        """
+        return formatted_text_red("NOT_READY")
 
     @property
     def ready(self) -> bool:

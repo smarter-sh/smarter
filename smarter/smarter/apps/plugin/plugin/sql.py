@@ -62,8 +62,7 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import SettingsDefaults, smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
@@ -615,14 +614,14 @@ class SqlPlugin(PluginBase):
             sqlData=sql_data,
         )
         status = SAMPluginCommonStatus(
-            account_number="0123456789",
+            accountNumber="0123456789",
             username=SMARTER_ADMIN_USERNAME,
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )
 
         # build the full Pydantic model from the sub-models
-        pydantic_model = SAMSqlPlugin(
+        sam_sql_plugin = SAMSqlPlugin(
             apiVersion=SmarterApiVersions.V1,
             kind=MANIFEST_KIND,
             metadata=metadata,
@@ -630,7 +629,7 @@ class SqlPlugin(PluginBase):
             status=status,
         )
 
-        return json.loads(pydantic_model.model_dump_json())
+        return json.loads(sam_sql_plugin.model_dump_json())
 
     def create(self):
         """

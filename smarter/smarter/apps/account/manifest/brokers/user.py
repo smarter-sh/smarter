@@ -4,6 +4,7 @@
 import logging
 from typing import TYPE_CHECKING, Any, Optional, Type
 
+from django.core import serializers
 from django.db import transaction
 
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
@@ -87,14 +88,6 @@ class SAMUserBroker(AbstractBroker):
       - Create, update, delete, and query Django ORM models.
       - Transform Django ORM models into Pydantic models for serialization/deserialization.
 
-    **Parameters:**
-      - `manifest`: Optional[`SAMUser`]
-        The Pydantic model instance representing the manifest.
-      - `pydantic_model`: Type[`SAMUser`]
-        The Pydantic model class used for manifest validation.
-      - `account_contact`: Optional[`AccountContact`]
-        The associated account contact, if available.
-
     **Example Usage:**
 
       .. code-block:: python
@@ -125,6 +118,7 @@ class SAMUserBroker(AbstractBroker):
     _account_contact: Optional[AccountContact] = None
     _brokered_user: Optional[User] = None
     _brokered_user_profile: Optional[UserProfile] = None
+    _orm_instance: Optional[User] = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -417,6 +411,26 @@ class SAMUserBroker(AbstractBroker):
         """
         return self.brokered_user.username if self.brokered_user else None
 
+    @property
+    def SerializerClass(self) -> Type[UserSerializer]:
+        """
+        Return the serializer class associated with the Smarter API User.
+
+        :returns: The `UserSerializer` class.
+
+        **Example usage:**
+
+        .. code-block:: python
+
+           serializer_cls = broker.SerializerClass
+           serializer = serializer_cls(instance=user_instance)
+
+        .. seealso::
+
+           - :class:`smarter.apps.account.serializers.UserSerializer`
+        """
+        return UserSerializer
+
     def manifest_to_django_orm(self) -> dict:
         """
         Convert the Smarter API User manifest (Pydantic model) into a dictionary suitable for Django ORM operations.
@@ -562,6 +576,12 @@ class SAMUserBroker(AbstractBroker):
                 print(manifest.apiVersion, manifest.kind)
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMUser):
+                raise SAMUserBrokerError(
+                    message=f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
             return self._manifest
         if not self.account:
             logger.warning("%s.manifest called with no account", self.formatted_class_name)
@@ -616,7 +636,7 @@ class SAMUserBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self) -> Type[User]:
+    def ORMModelClass(self) -> Type[User]:
         """
         Return the model class associated with the Smarter API User.
 
@@ -626,7 +646,7 @@ class SAMUserBroker(AbstractBroker):
 
         .. code-block:: python
 
-           model_cls = broker.model_class
+           model_cls = broker.ORMModelClass
            user_instance = model_cls.objects.get(username="example_user")
 
         .. seealso::
@@ -634,6 +654,57 @@ class SAMUserBroker(AbstractBroker):
            - :class:`smarter.apps.account.models.User`
         """
         return User
+
+    @property
+    def orm_instance(self) -> Optional[User]:
+        """
+        Return the Django ORM model instance for the broker.
+
+        :return: The Django ORM model instance for the broker.
+        :rtype: Optional[TimestampedModel]
+        """
+        if self._orm_instance:
+            return self._orm_instance
+
+        if not self.ready:
+            logger.warning(
+                "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
+                self.abstract_broker_logger_prefix,
+            )
+            return None
+        try:
+            logger.debug(
+                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                User.__name__,
+                self.user,
+                self.name,
+            )
+            instance = User.objects.get(username=self.name)
+            logger.debug(
+                "%s.orm_instance() - retrieved ORM instance: %s",
+                self.abstract_broker_logger_prefix,
+                serializers.serialize("json", [instance]),
+            )
+            return instance
+        except User.DoesNotExist:
+            logger.warning(
+                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+            )
+            return None
+
+    @property
+    def SAMModelClass(self) -> Type[SAMUser]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMUser]
+        """
+        return SAMUser
 
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

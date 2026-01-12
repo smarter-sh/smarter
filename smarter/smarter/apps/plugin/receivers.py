@@ -9,7 +9,7 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from requests import Response
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib import json

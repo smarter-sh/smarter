@@ -13,7 +13,7 @@ from smarter.apps.account.utils import (
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import SmarterPluginError
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results

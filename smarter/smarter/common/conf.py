@@ -76,8 +76,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_red,
 )
 from smarter.lib import json
-
-from ..lib.django.validators import SmarterValidator
+from smarter.lib.django.validators import SmarterValidator
 
 # our stuff
 from .const import (
@@ -3931,7 +3930,7 @@ class Settings(BaseSettings):
             'platform.example.com'
 
         See Also:
-            - smarter.settings.platform_subdomain
+            - smarter_settings.platform_subdomain
             - smarter_settings.root_domain
         """
         return f"{self.platform_subdomain}.{self.root_domain}"
@@ -4111,7 +4110,7 @@ class Settings(BaseSettings):
             - smarter_settings.platform_name
             - smarter_settings.environment
         """
-        return f"{self.platform_name}-{self.platform_subdomain}-{settings.environment}"
+        return f"{self.platform_name}-{self.platform_subdomain}-{self.environment}"
 
     @property
     def api_subdomain(self) -> str:
@@ -4480,6 +4479,6 @@ def get_settings() -> Settings:
         raise SmarterConfigurationError("Invalid configuration: " + str(e)) from e
 
 
-settings = get_settings()
+smarter_settings = get_settings()
 
-__all__ = ["settings"]
+__all__ = ["smarter_settings"]

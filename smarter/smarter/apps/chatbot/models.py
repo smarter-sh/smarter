@@ -24,7 +24,7 @@ from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (

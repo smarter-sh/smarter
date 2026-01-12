@@ -12,10 +12,10 @@ from smarter.common.helpers.console_helpers import formatted_text
 
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text("smarter.lib.django.converters.SmarterConverters")
+logger_prefix = formatted_text(f"{__name__}.SmarterConverterMixin")
 
 
-class SmarterConverters:
+class SmarterConverterMixin:
     """
     A collection of static methods for converting strings and data structures between different naming conventions
     such as snake_case, camelCase, PascalCase, and RFC 1034-compliant names.
@@ -31,8 +31,9 @@ class SmarterConverters:
     - ``rfc1034_compliant_to_snake(val) -> str``
     """
 
-    @staticmethod
-    def snake_to_camel(data: Union[str, dict, list], convert_values: bool = False) -> Optional[Union[str, dict, list]]:
+    def snake_to_camel(
+        self, data: Union[str, dict, list], convert_values: bool = False
+    ) -> Optional[Union[str, dict, list]]:
         """
         Converts snake_case strings, dictionary keys, or lists of such, to camelCase format.
 
@@ -92,7 +93,7 @@ class SmarterConverters:
             return convert(data)
 
         if isinstance(data, list):
-            return [SmarterConverters.snake_to_camel(item, convert_values=convert_values) for item in data]
+            return [self.snake_to_camel(item, convert_values=convert_values) for item in data]
 
         if not isinstance(data, dict):
             raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
@@ -101,7 +102,7 @@ class SmarterConverters:
         retval = {}
         for key, value in dictionary.items():
             if isinstance(value, dict):
-                value = SmarterConverters.snake_to_camel(data=value, convert_values=convert_values)
+                value = self.snake_to_camel(data=value, convert_values=convert_values)
             new_key = convert(key)
             if convert_values:
                 new_value = convert(value) if isinstance(value, str) else value
@@ -110,8 +111,7 @@ class SmarterConverters:
             retval[new_key] = new_value
         return retval
 
-    @staticmethod
-    def pascal_to_snake(name: str) -> str:
+    def pascal_to_snake(self, name: str) -> str:
         """
         Converts a PascalCase string to pascal_case snake_case format.
 
@@ -139,8 +139,7 @@ class SmarterConverters:
         pattern = re.compile(r"(?<!^)(?=[A-Z])")
         return pattern.sub("_", name).lower()
 
-    @staticmethod
-    def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
+    def camel_to_snake(self, data: Union[str, dict, list]) -> Optional[Union[str, dict, list]]:
         """
         Converts camelCase strings, dictionary keys, or lists of such, to snake_case format.
 
@@ -183,7 +182,7 @@ class SmarterConverters:
             print(camel_to_snake(["firstName", "lastName"]))
             # Output: ['first_name', 'last_name']
         """
-        logger.debug("%s.camel_to_snake()", logger_prefix)
+        logger.debug("%s.camel_to_snake() - data: %s", logger_prefix, data)
 
         def convert(name: str):
             name = name.replace(" ", "_")
@@ -193,23 +192,25 @@ class SmarterConverters:
             result = re.sub("_+", "_", result)
             return result
 
+        if data is None:
+            logger.warning("%s.camel_to_snake() - data is None, returning None", logger_prefix)
+            return None
         if isinstance(data, str):
             return convert(data)
         if isinstance(data, list):
-            return [SmarterConverters.camel_to_snake(item) for item in data]
+            return [self.camel_to_snake(item) for item in data]
         if not isinstance(data, dict):
             raise SmarterValueError(f"Expected data to be a dict or list, got: {type(data)}")
         dictionary: dict = data if isinstance(data, dict) else {}
         retval = {}
         for key, value in dictionary.items():
             if isinstance(value, dict):
-                value = SmarterConverters.camel_to_snake(value)
+                value = self.camel_to_snake(value)
             new_key = convert(key)
             retval[new_key] = value
         return retval
 
-    @staticmethod
-    def rfc1034_compliant_str(val) -> str:
+    def rfc1034_compliant_str(self, val) -> str:
         """
         Generates a RFC 1034-compliant name string suitable for use as a DNS label or resource identifier.
 
@@ -266,7 +267,7 @@ class SmarterConverters:
         else:
             raise SmarterValueError("Could not generate RFC 1034 compliant name from empty string")
 
-    def rfc1034_compliant_to_snake(val) -> str:
+    def rfc1034_compliant_to_snake(self, val) -> str:
         """
         Converts a RFC 1034-compliant name (typically used for DNS labels or resource identifiers) to a more human-readable ``snake_case`` name.
 
@@ -319,7 +320,7 @@ class SmarterConverters:
         name = val.replace("-", "_")
         return name
 
-    def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_length: int = 8) -> str:
+    def mask_string(self, string: str, mask_char: str = "*", mask_length: int = 4, string_length: int = 8) -> str:
         """
         Masks a string by replacing all but the last ``mask_length`` characters with ``mask_char``.
 
@@ -375,7 +376,8 @@ class SmarterConverters:
             "mask_string is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2
         )
         if isinstance(string, bytes):
-            string = string.decode("utf-8")
+            decoded_string = string.decode("utf-8")
+            string = decoded_string
         if not isinstance(string, str):
             raise TypeError("string must be a string")
         if len(string) <= mask_length:

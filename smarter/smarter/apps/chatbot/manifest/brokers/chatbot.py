@@ -192,6 +192,16 @@ class SAMChatbotBroker(AbstractBroker):
             logger.error(msg)
 
     @property
+    def SerializerClass(self) -> Type[ChatBotSerializer]:
+        """
+        The Django ORM model serializer class for the ChatBot.
+
+        :returns: The ChatBot Django ORM model serializer class.
+        :rtype: Type[ModelSerializer]
+        """
+        return ChatBotSerializer
+
+    @property
     def ready(self) -> bool:
         """
         Check if the broker is ready for operations.
@@ -570,6 +580,13 @@ class SAMChatbotBroker(AbstractBroker):
         :rtype: Optional[SAMChatbot]
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMChatbot):
+                logger.error(
+                    "%s.manifest() cached manifest is not a SAMChatbot instance for %s",
+                    self.formatted_class_name,
+                    self.kind,
+                )
+                return None
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMChatbot(
@@ -589,7 +606,7 @@ class SAMChatbotBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self) -> Type[ChatBot]:
+    def ORMModelClass(self) -> Type[ChatBot]:
         """
         The Django ORM model class for the ChatBot.
 

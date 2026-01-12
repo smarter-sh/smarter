@@ -251,25 +251,44 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         if not self._broker:
             BrokerClass = self.BrokerClass
-            self._broker = BrokerClass(
-                request=self.smarter_request,
-                api_version=SMARTER_API_VERSION,
-                name=self.manifest_name,
-                kind=self.manifest_kind,
-                loader=self.loader,
-                manifest=self.loader.json_data if self.loader else None,
-                user=self.user,
-                account=self.user_profile.account if self.user_profile else None,
-                user_profile=self.user_profile,
-            )
-            logger.debug(
-                "%s.broker() - instantiated broker for manifest: %s %s",
-                self.logger_prefix,
-                self._broker.kind if self._broker else "<None>",
-                self._broker.name if self._broker else "<None>",
-            )
-            if not self._broker:
-                raise APIV1CLIViewError("Could not load manifest.")
+
+            try:
+                self._broker = BrokerClass(
+                    request=self.smarter_request,
+                    api_version=SMARTER_API_VERSION,
+                    name=self.manifest_name,
+                    kind=self.manifest_kind,
+                    loader=self.loader,
+                    manifest=self.loader.json_data if self.loader else None,
+                    user=self.user,
+                    account=self.user_profile.account if self.user_profile else None,
+                    user_profile=self.user_profile,
+                )
+                if not self._broker:
+                    raise APIV1CLIViewError(
+                        f"Could not initialize broker {BrokerClass.__name__} {self.manifest_kind} {self.manifest_name} {self.loader}."
+                    )
+                logger.debug(
+                    "%s.broker() - instantiated broker for manifest: %s %s",
+                    self.logger_prefix,
+                    self._broker.kind if self._broker else "<None>",
+                    self._broker.name if self._broker else "<None>",
+                )
+            except APIV1CLIViewError as e:
+                logger.error(
+                    "%s.broker() - failed to instantiate broker: %s",
+                    self.logger_prefix,
+                    e,
+                    exc_info=True,
+                )
+            except Exception as e:
+                logger.error(
+                    "%s.broker() - unexpected error instantiating broker: %s: %s",
+                    self.logger_prefix,
+                    type(e),
+                    e,
+                    exc_info=True,
+                )
 
         return self._broker
 
@@ -384,8 +403,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :rtype: str
         """
         if self.is_cli_base_api_view_ready:
-            return formatted_text_green("READY")
-        return formatted_text_red("NOT_READY")
+            return self.formatted_state_ready
+        return self.formatted_state_not_ready
 
     @property
     def ready(self) -> bool:

@@ -4,7 +4,7 @@
 import logging
 import traceback
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Optional, Type
 
 from dateutil.relativedelta import relativedelta
 from django.forms.models import model_to_dict
@@ -22,7 +22,7 @@ from smarter.apps.account.manifest.models.secret.spec import (
 )
 from smarter.apps.account.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.account.manifest.transformers.secret import SecretTransformer
-from smarter.apps.account.models import Account, Secret, User, UserProfile
+from smarter.apps.account.models import Secret
 from smarter.apps.account.signals import broker_ready
 from smarter.apps.account.utils import cache_invalidate
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
@@ -45,7 +45,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 
 if TYPE_CHECKING:
@@ -129,13 +128,7 @@ class SAMSecretBroker(AbstractBroker):
     _pydantic_model: Type[SAMSecret] = SAMSecret
     _secret_transformer: Optional[SecretTransformer] = None
 
-    def __init__(
-        self,
-        *args,
-        manifest: Optional[Union[SAMSecret, str, dict]] = None,
-        loader: Optional[SAMLoader] = None,
-        **kwargs,
-    ):
+    def __init__(self, *args, **kwargs):
         """
         Initialize the SAMSecretBroker instance.
 
@@ -167,76 +160,14 @@ class SAMSecretBroker(AbstractBroker):
         .. code-block:: python
 
             broker = SAMSecretBroker(loader=loader, plugin_meta=plugin_meta)
-
-        def __init__(
-            self,
-            request: HttpRequest,
-            *args,
-            name: Optional[str] = None,  # i suspect that this is always None bc DRF sets name later in the process
-            kind: Optional[str] = None,
-            loader: Optional[SAMLoader] = None,
-            api_version: str = SmarterApiVersions.V1,
-            manifest: Optional[Union[dict, AbstractSAMBase]] = None,
-            file_path: Optional[str] = None,
-            url: Optional[str] = None,
-            **kwargs,
-        ):
         """
         logger.debug(
-            "%s.__init__() called with manifest=%s, args=%s, kwargs=%s",
+            "%s.__init__() called with args=%s, kwargs=%s",
             self.formatted_class_name,
-            manifest,
             args,
             kwargs,
         )
-        # ---------------------------------------------------------------------
-        # Initial resolution of parameters, taking into consideration that
-        # they may be passed in via args or kwargs.
-        # ---------------------------------------------------------------------
-        request = kwargs.pop("request", None)
-        user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
-        account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
-        user_profile = kwargs.pop("user_profile", None) or next(
-            (arg for arg in args if isinstance(arg, UserProfile)), None
-        )
-        api_token = kwargs.pop("api_token", None)
-        if not request and args:
-            # pylint: disable=import-outside-toplevel
-            from django.core.handlers.wsgi import WSGIRequest
-            from django.http import HttpRequest
-            from rest_framework.request import Request
-
-            request = kwargs.get("request") or next(
-                (arg for arg in args if isinstance(arg, (WSGIRequest, HttpRequest, Request))), None
-            )
-
-        name = kwargs.pop("name", None)
-        kind = kwargs.pop("kind", None)
-        loader = loader or kwargs.pop("loader", None) or next((arg for arg in args if isinstance(arg, SAMLoader)), None)
-        api_version = kwargs.pop("api_version", None)
-        manifest = (
-            manifest
-            or kwargs.pop("manifest", manifest)
-            or next((arg for arg in args if isinstance(arg, (dict, SAMSecret))), None)
-        )
-        file_path = kwargs.pop("file_path", None)
-        url = kwargs.pop("url", None)
-        super().__init__(
-            request=request,  # type: ignore
-            name=name,
-            kind=kind,
-            loader=loader,
-            api_version=api_version,
-            manifest=manifest,  # type: ignore
-            file_path=file_path,
-            url=url,
-            user=user,
-            account=account,
-            user_profile=user_profile,
-            api_token=api_token,
-            **kwargs,
-        )
-
+        super().__init__(*args, **kwargs)
         if self._manifest and not isinstance(self._manifest, SAMSecret):
             raise SAMSecretBrokerError(
                 f"Manifest must be of type {SAMSecret.__name__}, got {type(self._manifest)}: {self._manifest}",
@@ -318,6 +249,23 @@ class SAMSecretBroker(AbstractBroker):
                 manifest=self.manifest,
             )
         return self._secret_transformer
+
+    @property
+    def SerializerClass(self) -> Type[SecretSerializer]:
+        """
+        Return the Django REST Framework serializer class for Smarter API Secret.
+
+        :returns: Type[SecretSerializer]
+            The serializer class.
+
+        **Example usage**::
+
+            broker = SAMSecretBroker(manifest=manifest_data)
+            serializer_cls = broker.SerializerClass
+            serializer = serializer_cls(instance=secret_instance)
+
+        """
+        return SecretSerializer
 
     @property
     def secret(self) -> Optional[Secret]:
@@ -547,6 +495,11 @@ class SAMSecretBroker(AbstractBroker):
             :meth:`SAMLoader`
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMSecret):
+                raise SAMSecretBrokerError(
+                    f"Manifest must be of type {SAMSecret.__name__}, got {type(self._manifest)}: {self._manifest}",
+                    thing=self.kind,
+                )
             return self._manifest
         logger.debug("%s.manifest() called", self.formatted_class_name)
         if not self.account:
@@ -564,7 +517,9 @@ class SAMSecretBroker(AbstractBroker):
                 metadata=SAMSecretMetadata(**self.loader.manifest_metadata),
                 spec=SAMSecretSpec(**self.loader.manifest_spec),
             )
-            logger.debug("%s.manifest() initialized from SAMLoader", self.formatted_class_name)
+            logger.debug(
+                "%s.manifest() initialized %s from SAMLoader", self.formatted_class_name, type(self._manifest).__name__
+            )
         # 2.) next, (and only if a loader is not available) try to initialize
         #     from existing Account model if available
         elif self._secret_transformer and self.secret:
@@ -592,7 +547,11 @@ class SAMSecretBroker(AbstractBroker):
                     last_accessed=self.secret.last_accessed,
                 ),
             )
-            logger.debug("%s.manifest() initialized from existing Secret model", self.formatted_class_name)
+            logger.debug(
+                "%s.manifest() initialized %s from existing Secret model",
+                self.formatted_class_name,
+                type(self._manifest).__name__,
+            )
             return self._manifest
         if not self._manifest:
             logger.warning("%s.manifest() could not be initialized", self.formatted_class_name)
@@ -602,7 +561,7 @@ class SAMSecretBroker(AbstractBroker):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self) -> Type[Secret]:
+    def ORMModelClass(self) -> Type[Secret]:
         """
         Return the Django ORM model class for Smarter API Secret.
 
@@ -612,10 +571,20 @@ class SAMSecretBroker(AbstractBroker):
         **Example usage**::
 
             broker = SAMSecretBroker(manifest=manifest_data)
-            model_cls = broker.model_class
+            model_cls = broker.ORMModelClass
             secret_instance = model_cls.objects.get(name="my_secret")
         """
         return Secret
+
+    @property
+    def SAMModelClass(self) -> Type[SAMSecret]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMSecret]
+        """
+        return SAMSecret
 
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -661,14 +630,14 @@ class SAMSecretBroker(AbstractBroker):
             modified=current_date,
             last_accessed=current_date,
         )
-        pydantic_model = SAMSecret(
+        sam_secret = SAMSecret(
             apiVersion=self.api_version,
             kind=self.kind,
             metadata=metadata,
             spec=spec,
             status=status,
         )
-        return self.json_response_ok(command=command, data=pydantic_model.model_dump())
+        return self.json_response_ok(command=command, data=sam_secret.model_dump())
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

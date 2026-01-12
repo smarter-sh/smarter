@@ -13,7 +13,6 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import ApiConnection, SqlConnection
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import camel_to_snake_dict, get_readonly_yaml_file
 from smarter.lib import json

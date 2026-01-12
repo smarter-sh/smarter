@@ -19,7 +19,7 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator

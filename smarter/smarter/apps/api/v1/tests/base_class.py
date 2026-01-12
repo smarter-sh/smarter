@@ -38,6 +38,7 @@ class ApiV1TestBase(TestAccountMixin):
         super().setUp()
 
         self.token_record, self.token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
+            account=self.account,
             name=self.admin_user.username,
             user=self.admin_user,
             description=self.admin_user.username,

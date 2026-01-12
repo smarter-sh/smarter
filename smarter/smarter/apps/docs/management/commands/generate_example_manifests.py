@@ -22,7 +22,7 @@ from smarter.apps.docs.views.manifest import (
     DocsExampleManifestSqlView,
     DocsExampleManifestUserView,
 )
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.lib.django.management.base import SmarterCommand
 
 

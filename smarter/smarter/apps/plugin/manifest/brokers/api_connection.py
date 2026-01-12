@@ -25,7 +25,6 @@ from smarter.apps.plugin.manifest.models.common.connection.status import (
 )
 from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.serializers import ApiConnectionSerializer
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -170,13 +169,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def serializer(self) -> Type[ApiConnectionSerializer]:
+    def SerializerClass(self) -> Type[ApiConnectionSerializer]:
         """
-        Return the serializer class for the broker.
+        Return the SerializerClass class for the broker.
 
-        This property provides the serializer used to convert ApiConnection model instances to and from native Python datatypes, enabling validation and serialization for API responses and internal processing.
+        This property provides the SerializerClass used to convert ApiConnection model instances to and from native Python datatypes, enabling validation and serialization for API responses and internal processing.
 
-        :return: The serializer class for ApiConnection objects.
+        :return: The SerializerClass class for ApiConnection objects.
         :rtype: Type[ApiConnectionSerializer]
 
         .. seealso::
@@ -188,9 +187,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         **Example usage**::
 
-            serializer_cls = broker.serializer
-            serializer = serializer_cls(api_connection_instance)
-            data = serializer.data
+            serializer_cls = broker.SerializerClass
+            SerializerClass = serializer_cls(api_connection_instance)
+            data = SerializerClass.data
 
         """
         return ApiConnectionSerializer
@@ -211,9 +210,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         .. seealso::
 
-            :meth:`SAMApiConnectionBroker.serializer`
+            :meth:`SAMApiConnectionBroker.SerializerClass`
             :meth:`SAMApiConnectionBroker.manifest`
-            :meth:`SAMApiConnectionBroker.model_class`
+            :meth:`SAMApiConnectionBroker.ORMModelClass`
 
         **Example usage**::
 
@@ -224,7 +223,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
 
     @property
-    def model_class(self) -> Type[ApiConnection]:
+    def ORMModelClass(self) -> Type[ApiConnection]:
         """
         Return the Django ORM model class for ApiConnection.
 
@@ -236,16 +235,26 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         .. seealso::
 
             :class:`ApiConnection`
-            :meth:`SAMApiConnectionBroker.serializer`
+            :meth:`SAMApiConnectionBroker.SerializerClass`
             :meth:`SAMApiConnectionBroker.manifest`
 
         **Example usage**::
 
-            model_cls = broker.model_class
+            model_cls = broker.ORMModelClass
             all_connections = model_cls.objects.all()
 
         """
         return ApiConnection
+
+    @property
+    def SAMModelClass(self) -> Type[SAMApiConnection]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMApiConnection]
+        """
+        return SAMApiConnection
 
     @property
     def kind(self) -> str:
@@ -271,6 +280,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :rtype: Optional[SAMApiConnection]
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMApiConnection):
+                raise SAMConnectionBrokerError(
+                    message=f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
 
         # 1.) prioritize manifest loader data if available. if it was provided
@@ -359,7 +373,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
             :class:`ApiConnection`
             :meth:`SAMApiConnectionBroker.manifest`
-            :meth:`SAMApiConnectionBroker.serializer`
+            :meth:`SAMApiConnectionBroker.SerializerClass`
 
         **Example usage**::
 
@@ -670,7 +684,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             created=datetime.now(),
             modified=datetime.now(),
         )
-        pydantic_model = SAMApiConnection(
+        sam_api_connection = SAMApiConnection(
             apiVersion=self.api_version,
             kind=self.kind,
             metadata=metadata,
@@ -678,7 +692,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             status=status,
         )
         # validate our results by round-tripping the data through the Pydantic model
-        data = json.loads(pydantic_model.model_dump_json())
+        data = json.loads(sam_api_connection.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
     ###########################################################################
@@ -703,7 +717,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             :class:`ApiConnection`
             :class:`ApiConnectionSerializer`
             :class:`SmarterJournaledJsonResponse`
-            :meth:`SAMApiConnectionBroker.serializer`
+            :meth:`SAMApiConnectionBroker.SerializerClass`
 
         **Example usage**::
 
@@ -727,7 +741,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         else:
             api_connections = ApiConnection.objects.filter(account=self.account)
 
-        model_titles = self.get_model_titles(serializer=self.serializer())
+        model_titles = self.get_model_titles(serializer=self.SerializerClass())
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each ApiConnection
         for api_connection in api_connections:
@@ -735,7 +749,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 self.connection_init()
                 self._connection = api_connection
 
-                model_dump = self.serializer(api_connection).data
+                model_dump = self.SerializerClass(api_connection).data
                 camel_cased_model_dump = self.snake_to_camel(model_dump)
                 data.append(camel_cased_model_dump)
 
@@ -846,7 +860,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 logger.info(
                     "%s.apply() updated ApiConnection %s",
                     self.formatted_class_name,
-                    self.serializer(self.connection).data,
+                    self.SerializerClass(self.connection).data,
                 )
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e

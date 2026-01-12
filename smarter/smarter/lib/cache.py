@@ -94,11 +94,11 @@ class CacheSentinel:
     def __init__(self, name):
         self.name = name
 
-    def __repr__(self):
+    def __str__(self):
         return f"<CacheSentinel: {hashlib.sha256(pickle.dumps(self.name)).hexdigest()[:32]}>"
 
-    def __str__(self):
-        return self.name
+    def __repr__(self):
+        return self.__str__()
 
 
 CACHE_NONE_SENTINEL = 'CacheSentinel("CACHE_NONE")'

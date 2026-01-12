@@ -3,7 +3,7 @@
 from django.core.management import call_command
 from waffle.models import Switch
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.waffle import SmarterWaffleSwitches

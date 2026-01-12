@@ -10,7 +10,6 @@ from django.urls import reverse
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -50,8 +49,8 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
     Account.
     """
 
-    test_token_record: SmarterAuthToken = None
-    test_token: str = None
+    test_token_record: SmarterAuthToken
+    test_token: str
 
     def setUp(self) -> None:
         """Set up test fixtures."""
@@ -77,6 +76,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         """Create a SmarterAuthToken record for testing"""
 
         auth_token_record, secret_token = SmarterAuthToken.objects.create(
+            account=self.account,
             name=self.name,
             user=self.admin_user,
             description=f"{self.__class__.__name__} Test API Key",
@@ -214,7 +214,9 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.OK)
 
         try:
-            test_auth_token = SmarterAuthToken.objects.get(name="test_auth_token", user=self.admin_user)
+            test_auth_token = SmarterAuthToken.objects.get(
+                name="test_auth_token", user__username=manifest.spec.config.username
+            )
             test_auth_token.delete()
         except SmarterAuthToken.DoesNotExist:
             self.fail("Test auth test_token was not created")
@@ -334,25 +336,53 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         # pylint: disable=W0612
         exected_output = {
             "data": {
-                "key_id": "e9099b4d-fb44-492a-8e69-3545e0799a79",
-                "name": "test15fc3f69c5db1505",
-                "description": "TestApiCliV1SmarterAuthToken Test API Key",
-                "is_active": True,
-                "last_used_at": None,
-                "created_at": "2025-05-22T15:04:46.143163Z",
-                "updated_at": "2025-05-22T15:04:46.143173Z",
+                "kind": "AuthToken",
+                "loader": None,
+                "manifest": {
+                    "apiVersion": "smarter.sh/v1",
+                    "kind": "AuthToken",
+                    "metadata": {
+                        "name": "smarter_test_base_d25719c916639e90",
+                        "description": "TestApiCliV1SmarterAuthToken Test API Key",
+                        "version": "1.0.0",
+                        "tags": [],
+                        "annotations": [],
+                    },
+                    "spec": {"config": {"isActive": True, "username": "test_admin_user_6ab50f5ccabe46aa"}},
+                },
+                "name": "smarter_test_base_d25719c916639e90",
+                "orm_instance": {
+                    "model": "drf.smarterauthtoken",
+                    "pk": "70c97c159aea40fbfe0413185a5fafafa80dee77cdd6bad14a33b60407168db774022bb8f0d32e7cac3c14fbafae5e77c9992e4e2bd0b7e47cecbb0b4ae8a303",
+                    "fields": {
+                        "created_at": "2026-01-12T01:59:44.781Z",
+                        "updated_at": "2026-01-12T01:59:44.781Z",
+                        "version": "1.0.0",
+                        "annotations": [],
+                        "account": 5231,
+                        "key_id": "7e6988c9-8b1a-44b6-8b09-6299efc0a095",
+                        "name": "smarter_test_base_d25719c916639e90",
+                        "description": "TestApiCliV1SmarterAuthToken Test API Key",
+                        "tags": [],
+                        "last_used_at": None,
+                        "is_active": True,
+                    },
+                },
+                "orm_model_class": "SmarterAuthToken",
+                "params": {"name": "smarter_test_base_d25719c916639e90"},
+                "path": "/api/v1/cli/deploy/AuthToken/",
             },
-            "message": "AuthToken test15fc3f69c5db1505 deployed successfully",
+            "message": "AuthToken smarter_test_base_d25719c916639e90 deployed successfully",
             "api": "smarter.sh/v1",
             "thing": "AuthToken",
-            "metadata": {"key": "62124001b5f517173f5863df0ab44f109f8ae1a8e7f91b9b541d3370f236a95b"},
+            "metadata": {"command": "deploy"},
         }
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.test_token_record.refresh_from_db()
         self.assertTrue(self.test_token_record.is_active)
-        self.assertTrue(response[SmarterJournalApiResponseKeys.DATA]["is_active"])
+        self.assertTrue(response[SmarterJournalApiResponseKeys.DATA]["orm_instance"]["fields"]["is_active"])
 
     def test_undeploy(self) -> None:
         """Test undeploy command"""
@@ -365,25 +395,52 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         # pylint: disable=W0612
         expected_output = {
             "data": {
-                "key_id": "d04f1e2f-8985-43f4-90bf-8e08ca3af50d",
-                "name": "testf4c182d5cc4310ad",
-                "description": "TestApiCliV1SmarterAuthToken Test API Key",
-                "is_active": False,
-                "last_used_at": None,
-                "created_at": "2025-05-22T15:06:17.801931Z",
-                "updated_at": "2025-05-22T15:06:18.028426Z",
+                "kind": "AuthToken",
+                "loader": None,
+                "manifest": {
+                    "apiVersion": "smarter.sh/v1",
+                    "kind": "AuthToken",
+                    "metadata": {
+                        "name": "smarter_test_base_5d8bfeeaa80d6e2b",
+                        "description": "TestApiCliV1SmarterAuthToken Test API Key",
+                        "version": "1.0.0",
+                        "tags": [],
+                        "annotations": [],
+                    },
+                    "spec": {"config": {"isActive": True, "username": "test_admin_user_2df9155cfef65c74"}},
+                },
+                "name": "smarter_test_base_5d8bfeeaa80d6e2b",
+                "orm_instance": {
+                    "model": "drf.smarterauthtoken",
+                    "pk": "1d990eb973882dee9e697af5aa17cccb02e6e77726457780336f65d5d4fc6147f0e283d7faf8e9ff0168d5b7c43dba36c4b87262ac67bfdb4fa1e6bd510d1516",
+                    "fields": {
+                        "created_at": "2026-01-12T01:56:46.584Z",
+                        "updated_at": "2026-01-12T01:56:46.951Z",
+                        "version": "1.0.0",
+                        "annotations": [],
+                        "account": 5229,
+                        "key_id": "276ece08-3628-4123-9306-a71ac4ed36f5",
+                        "name": "smarter_test_base_5d8bfeeaa80d6e2b",
+                        "description": "TestApiCliV1SmarterAuthToken Test API Key",
+                        "tags": [],
+                        "last_used_at": None,
+                        "is_active": False,
+                    },
+                },
+                "orm_model_class": "SmarterAuthToken",
+                "params": {"name": "smarter_test_base_5d8bfeeaa80d6e2b"},
             },
-            "message": "AuthToken testf4c182d5cc4310ad undeployed successfully",
+            "message": "AuthToken smarter_test_base_5d8bfeeaa80d6e2b undeployed successfully",
             "api": "smarter.sh/v1",
             "thing": "AuthToken",
-            "metadata": {"key": "0f62e44b44cc9691f79c7b4ae47e66a52c70dbff54662645c331c6f04736703d"},
+            "metadata": {"command": "undeploy"},
         }
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.test_token_record.refresh_from_db()
         self.assertFalse(self.test_token_record.is_active)
-        self.assertFalse(response[SmarterJournalApiResponseKeys.DATA]["is_active"])
+        self.assertFalse(response[SmarterJournalApiResponseKeys.DATA]["orm_instance"]["fields"]["is_active"])
 
     def test_delete(self) -> None:
         """Test delete command"""
