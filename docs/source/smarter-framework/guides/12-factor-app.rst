@@ -10,7 +10,7 @@ Following are the salient points of how this project adopts these best
 practices.
 
 1. **Codebase**: [✅] One codebase tracked in revision control, many deploys.
-   This project is hosted in `https://github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter`_.
+   This project is hosted at `https://github.com/smarter-sh/smarter <https://github.com/smarter-sh/smarter>`_.
 
 2. **Dependencies**: [✅] Explicitly declare and isolate dependencies.
    We’re using Python’s requirements files, Helm’s Chart.yaml,
