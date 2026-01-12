@@ -125,6 +125,7 @@ class SAMAccountBroker(AbstractBroker):
     _manifest: Optional[SAMAccount] = None
     _pydantic_model: Type[SAMAccount] = SAMAccount
     _brokered_account: Optional[Account] = None
+    _orm_instance: Optional[Account] = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -485,6 +486,47 @@ class SAMAccountBroker(AbstractBroker):
         :rtype: Type[Account]
         """
         return Account
+
+    @property
+    def orm_instance(self) -> Optional[Account]:
+        """
+        Return the Django ORM model instance for the broker.
+
+        :return: The Django ORM model instance for the broker.
+        :rtype: Optional[TimestampedModel]
+        """
+        if self._orm_instance:
+            return self._orm_instance
+
+        if not self.ready:
+            logger.warning(
+                "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
+                self.abstract_broker_logger_prefix,
+            )
+            return None
+        try:
+            logger.debug(
+                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                Account.__name__,
+                self.user,
+                self.name,
+            )
+            instance = Account.objects.get(name=self.name)
+            logger.debug(
+                "%s.orm_instance() - retrieved ORM instance: %s",
+                self.abstract_broker_logger_prefix,
+                serializers.serialize("json", [instance]),
+            )
+            return instance
+        except Account.DoesNotExist:
+            logger.warning(
+                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+            )
+            return None
 
     @property
     def SAMModelClass(self) -> Type[SAMAccount]:

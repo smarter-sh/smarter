@@ -11,6 +11,7 @@ from typing import Any, Optional, Type, Union
 from urllib.parse import parse_qs, urlparse
 
 import inflect
+from django.core import serializers
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
 from django.http import HttpRequest, QueryDict
@@ -165,6 +166,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
     _validated: bool = False
     _thing: Optional[SmarterJournalThings] = None
     _created: bool = False
+    _orm_instance: Optional[TimestampedModel] = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -776,6 +778,48 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         raise SAMBrokerErrorNotImplemented(
             message="Subclasses must implement the ModelClass", thing=self.thing, command=None
         )
+
+    @property
+    def orm_instance(self) -> Optional[TimestampedModel]:
+        """
+        Return the Django ORM model instance for the broker.
+
+        :return: The Django ORM model instance for the broker.
+        :rtype: Optional[TimestampedModel]
+        """
+        if self._orm_instance:
+            return self._orm_instance
+
+        if not self.ready:
+            logger.warning(
+                "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
+                self.abstract_broker_logger_prefix,
+            )
+            return None
+        ModelClass = self.ORMModelClass
+        try:
+            logger.debug(
+                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                ModelClass.__name__,
+                self.user,
+                self.name,
+            )
+            instance = ModelClass.objects.get(account=self.account, name=self.name)
+            logger.debug(
+                "%s.orm_instance() - retrieved ORM instance: %s",
+                self.abstract_broker_logger_prefix,
+                serializers.serialize("json", [instance]),
+            )
+            return instance
+        except ModelClass.DoesNotExist:
+            logger.warning(
+                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+            )
+            return None
 
     @property
     def SAMModelClass(self) -> Type[AbstractSAMBase]:
@@ -1425,6 +1469,21 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: A JSON string representation of the broker instance.
         :rtype: str
         """
+        orm_instance_obj = None
+        if self.orm_instance:
+            serialized = serializers.serialize("json", [self.orm_instance])
+            try:
+                orm_instance_obj = json.loads(serialized)[0] if serialized else None
+            # pylint: disable=W0703
+            except Exception:
+                logger.warning(
+                    "%s.to_json() - failed to serialize orm_instance: %s",
+                    self.abstract_broker_logger_prefix,
+                    serialized,
+                )
+        else:
+            orm_instance_obj = None
+
         return self.sorted_dict(
             {
                 "api_version": self.api_version,
@@ -1432,6 +1491,9 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 "name": self.name,
                 "manifest": self.manifest.model_dump() if isinstance(self.manifest, AbstractSAMBase) else self.manifest,
                 "loader": self.loader.to_json() if self.loader else None,
+                "orm_model_class": self.ORMModelClass.__name__ if self.ORMModelClass else None,
+                "serializer_class": self.SerializerClass.__name__ if self.SerializerClass else None,
+                "orm_instance": orm_instance_obj,
                 **super().to_json(),
             }
         )

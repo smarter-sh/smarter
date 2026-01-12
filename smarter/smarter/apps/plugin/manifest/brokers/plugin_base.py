@@ -4,6 +4,7 @@
 import logging
 from typing import Any, Optional, Type
 
+from django.core import serializers
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
@@ -69,6 +70,7 @@ class SAMPluginBaseBroker(AbstractBroker):
     _plugin_meta: Optional[PluginMeta] = None
     _plugin_prompt: Optional[PluginPrompt] = None
     _plugin_status: Optional[SAMPluginCommonStatus] = None
+    _orm_instance: Optional[PluginDataBase] = None
 
     def plugin_init(self) -> None:
         """Initialize the plugin model instance."""
@@ -77,6 +79,47 @@ class SAMPluginBaseBroker(AbstractBroker):
         self._plugin_prompt = None
         self._plugin_status = None
         self._manifest = None
+
+    @property
+    def orm_instance(self) -> Optional[PluginDataBase]:
+        """
+        Return the Django ORM model instance for the broker.
+
+        :return: The Django ORM model instance for the broker.
+        :rtype: Optional[TimestampedModel]
+        """
+        if self._orm_instance:
+            return self._orm_instance
+
+        if not self.ready:
+            logger.warning(
+                "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
+                self.abstract_broker_logger_prefix,
+            )
+            return None
+        try:
+            logger.debug(
+                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                PluginDataBase.__name__,
+                self.user,
+                self.name,
+            )
+            instance = PluginDataBase.objects.get(plugin=self.plugin_meta)
+            logger.debug(
+                "%s.orm_instance() - retrieved ORM instance: %s",
+                self.abstract_broker_logger_prefix,
+                serializers.serialize("json", [instance]),
+            )
+            return instance
+        except PluginDataBase.DoesNotExist:
+            logger.warning(
+                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+            )
+            return None
 
     @property
     def ready(self) -> bool:
@@ -314,7 +357,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 command=SmarterJournalCliCommands("describe"),
             )
         self._plugin_status = SAMPluginCommonStatus(
-            account_number=self.plugin_meta.account.account_number,
+            accountNumber=self.plugin_meta.account.account_number,
             username=admin.username,
             created=self.plugin_meta.created_at,
             modified=self.plugin_meta.updated_at,

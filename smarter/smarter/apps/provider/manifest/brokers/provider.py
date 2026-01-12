@@ -252,6 +252,16 @@ class SAMProviderBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def SerializerClass(self) -> Type[ProviderSerializer]:
+        """
+        Get the Django REST Framework serializer class for the Smarter API Provider.
+
+        :returns: The `ProviderSerializer` class.
+        :rtype: Type[ModelSerializer]
+        """
+        return ProviderSerializer
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Return a formatted class name string for logging and diagnostics.

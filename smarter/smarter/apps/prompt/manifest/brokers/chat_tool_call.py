@@ -142,6 +142,16 @@ class SAMChatToolCallBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def SerializerClass(self) -> typing.Type[ChatToolCallSerializer]:
+        """
+        Get the Django REST Framework serializer class for the Smarter API ChatToolCall.
+
+        :returns: The `ChatToolCallSerializer` class.
+        :rtype: Type[ChatToolCallSerializer]
+        """
+        return ChatToolCallSerializer
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
