@@ -56,15 +56,15 @@ practices.
 9. **Disposability**: [✅] Maximize robustness with fast startup and
    graceful shutdown. Docker, Kubernetes, and Terraform take care of this for us.
 
-    - Docker containers are designed to start up quickly and shut down gracefully, and
-      can be easily replaced, restarted or deleted entirely.
-    - Kubernetes manages the lifecycle of containers running in the cloud, ensuring that they are
-      started and stopped in a controlled manner, and can automatically restart
-      failed containers.
-    - Running ``terraform destroy`` in `github.com/smarter-sh/smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`_
-      will remove this project's aws resources and any residual data from your AWS account.
-      If you are running locally then simply deleting all
-      Smarter Docker containers and images will achieve the same effect.
+   - Docker containers are designed to start up quickly and shut down gracefully, and
+     can be easily replaced, restarted or deleted entirely.
+   - Kubernetes manages the lifecycle of containers running in the cloud, ensuring that they are
+     started and stopped in a controlled manner, and can automatically restart
+     failed containers.
+   - Running ``terraform destroy`` in `github.com/smarter-sh/smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`_
+     will remove this project's aws resources and any residual data from your AWS account.
+     If you are running locally then simply deleting all
+     Smarter Docker containers and images will achieve the same effect.
 
 10. **Dev/prod parity**: [✅] Keep development, staging, and
     production as similar as possible. The GitHub Action
