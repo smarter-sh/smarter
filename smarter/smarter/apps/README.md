@@ -1,0 +1,3 @@
+# Django apps
+
+This directory contains the Django 'apps' for the project. In Django, an 'app' is a modular component that encapsulates a specific set of related functionality, such as models, views, templates, and static files. Apps are designed to be reusable and self-contained, making it easier to organize and maintain code. By placing all apps in this folder, we keep the project structure clean and ensure that each app's logic is separated, which improves scalability and maintainability. This approach also makes it straightforward to add, remove, or update individual apps as the project evolves.
