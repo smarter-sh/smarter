@@ -246,21 +246,21 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 )
         elif self.smarter_auth_token:
             status = SAMSmarterAuthTokenStatus(
-                created=self.brokered_account.created_at,
-                modified=self.brokered_account.updated_at,
-                lastUsedAt=self.brokered_account.last_used_at,
+                created=self.smarter_auth_token.created_at,
+                modified=self.smarter_auth_token.updated_at,
+                lastUsedAt=self.smarter_auth_token.last_used_at,
             )
             metadata = SAMSmarterAuthTokenMetadata(
-                name=str(self.brokered_account.name) or self.brokered_account.account_number.replace(" ", "_"),
-                description=self.brokered_account.company_name,
-                version=self.brokered_account.version,
-                tags=self.brokered_account.tags.names(),
-                annotations=self.brokered_account.annotations,
+                name=str(self.smarter_auth_token.name),
+                description=self.smarter_auth_token.description,
+                version=self.smarter_auth_token.version,
+                tags=self.smarter_auth_token.tags,
+                annotations=self.smarter_auth_token.annotations,
             )
             spec = SAMSmarterAuthTokenSpec(
                 config=SAMSmarterAuthTokenSpecConfig(
-                    isActive=self.brokered_account.is_active,
-                    username=self.brokered_account.user.username,
+                    isActive=self.smarter_auth_token.is_active,
+                    username=self.smarter_auth_token.user.username,
                 )
             )
             self._manifest = SAMSmarterAuthToken(
@@ -274,8 +274,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                 "%s.manifest() initialized %s from SmarterAuthToken ORM model %s: %s",
                 self.formatted_class_name,
                 type(self._manifest).__name__,
-                self.brokered_account,
-                serializers.serialize("json", [self.brokered_account]),
+                self.smarter_auth_token,
+                serializers.serialize("json", [self.smarter_auth_token]),
             )
             return self._manifest
         else:

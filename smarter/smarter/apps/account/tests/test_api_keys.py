@@ -13,7 +13,8 @@ class TestSmarterAuthToken(TestAccountMixin):
     def test_create_auth_token(self):
         """Test create auth token."""
 
-        token_record, token_key = SmarterAuthToken.objects.create(
+        token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
+            account=self.account,
             user=self.admin_user,
             name="testToken" + self.hash_suffix,
             description="testToken" + self.hash_suffix,
