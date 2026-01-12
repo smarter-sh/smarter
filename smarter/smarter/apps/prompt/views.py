@@ -34,7 +34,6 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistorySerializer,
 )
 from smarter.apps.prompt.models import Chat, ChatHelper
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import (
@@ -44,6 +43,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.helpers.url_helpers import clean_url
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import is_authenticated_request, rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (

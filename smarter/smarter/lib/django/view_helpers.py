@@ -14,9 +14,9 @@ from django.views import View
 from django.views.decorators.cache import cache_control, cache_page, never_cache
 from htmlmin.main import minify
 
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches

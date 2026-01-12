@@ -16,13 +16,13 @@ from smarter.apps.account.utils import (
     get_cached_account_for_user,
     get_cached_smarter_admin_user_profile,
 )
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
     SmarterValueError,
 )
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle

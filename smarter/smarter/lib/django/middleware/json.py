@@ -11,8 +11,8 @@ from django.http import JsonResponse
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseBase
 
-from smarter.common.classes import SmarterMiddlewareMixin
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins import SmarterMiddlewareMixin
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
