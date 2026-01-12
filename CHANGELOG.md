@@ -1,3 +1,12 @@
+## [0.13.59](https://github.com/smarter-sh/smarter/compare/v0.13.58...v0.13.59) (2026-01-12)
+
+
+### Bug Fixes
+
+* camel_to_snake() should return None if it receives None ([61850f3](https://github.com/smarter-sh/smarter/commit/61850f39048b6619cf4d041499d2ac77524e32e7))
+* misc failed tests ([6a14772](https://github.com/smarter-sh/smarter/commit/6a14772ba3387e882f971ea9c95b5ed6a44b925c))
+* misc manifest and broker bug fixes. ([0b6a26b](https://github.com/smarter-sh/smarter/commit/0b6a26b764abc791fcf1b91626cc488cbe4557b1))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
