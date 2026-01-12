@@ -6,7 +6,7 @@
 [![Documentation Status](https://readthedocs.org/projects/smarter/badge/?version=latest)](https://docs.smarter.sh/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/mcdaniel0073/smarter.svg?logo=docker&label=DockerHub)](https://hub.docker.com/r/mcdaniel0073/smarter)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)<br>[![Docs](https://img.shields.io/badge/docs-smarter.sh-blue?logo=readthedocs)](https://docs.smarter.sh/en/latest/)
-[![Website](https://img.shields.io/badge/web%20site-smarter.sh-blue?logo=google-chrome)](https://smarter.sh)
+[![Website](https://img.shields.io/badge/official%20web%20site-smarter.sh-blue?logo=google-chrome)](https://smarter.sh)
 [![License: GNU AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)<br>[![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-5.2-green?logo=django)](https://www.djangoproject.com/)
 [![Pydantic](https://img.shields.io/badge/Pydantic-2.12-blue?logo=pydantic)](https://docs.pydantic.dev/)
