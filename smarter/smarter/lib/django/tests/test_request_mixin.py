@@ -17,7 +17,7 @@ from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.utils import is_authenticated_request
-from smarter.lib.django.request import SmarterRequestMixin, SmarterValueError
+from smarter.lib.django.request import SmarterRequestMixin
 
 
 SMARTER_DEV_ADMIN_PASSWORD = "smarter"
@@ -300,8 +300,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def test_qualified_request_internal_subnet(self):
         """qualified_request returns False if netloc starts with 192.168."""
 
-        from django.conf import settings
-
         settings.ALLOWED_HOSTS.append("192.168.1.1")
         response = self.client.get("/dashboard/", SERVER_NAME="192.168.1.1", SERVER_PORT=80, HTTP_HOST="192.168.1.1")
         request = response.wsgi_request
@@ -377,8 +375,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
         parsed_url property returns None if not ParseResult.
         """
 
-        from django.conf import settings
-
         settings.ALLOWED_HOSTS.append("192.168.1.1")
         response = self.client.get("/dashboard/", SERVER_NAME="192.168.1.1", SERVER_PORT=80, HTTP_HOST="192.168.1.1")
         request = response.wsgi_request
@@ -404,10 +400,8 @@ class TestSmarterRequestMixin(TestAccountMixin):
 
         mixin = SmarterRequestMixin(DummyRequest())
         mixin._params = None
-        with self.assertLogs("smarter.lib.django.request", level="ERROR") as cm:
-            result = mixin.params
-        self.assertIsNone(result)
-        self.assertIn("Could not parse query string parameters", " ".join(cm.output))
+        result = mixin.params
+        self.assertEqual(result, QueryDict(""))
 
     def test_cache_key_logs_and_returns_none(self):
         """cache_key returns None and logs warning if smarter_request is None."""
@@ -908,8 +902,8 @@ class TestSmarterRequestMixin(TestAccountMixin):
         mixin._params = None
         with self.assertLogs("smarter.lib.django.request", level="ERROR"):
             result = mixin.params
-            self.assertIsNone(result)
-        self.assertIsNone(mixin.params)
+            self.assertEqual(result, QueryDict(""))
+        self.assertEqual(mixin.params, QueryDict(""))
 
     def test_cache_key_returns_cached(self):
         """cache_key returns _cache_key if already set."""

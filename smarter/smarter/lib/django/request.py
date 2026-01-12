@@ -705,7 +705,7 @@ class SmarterRequestMixin(AccountMixin):
         return path.strip("/").split("/")
 
     @property
-    def params(self) -> Optional[QueryDict]:
+    def params(self) -> QueryDict:
         """
         The query string parameters from the Django request object.
 
@@ -757,7 +757,7 @@ class SmarterRequestMixin(AccountMixin):
                     self.request_mixin_logger_prefix,
                     e,
                 )
-                return None
+                return QueryDict("")
         return self._params
 
     @property
