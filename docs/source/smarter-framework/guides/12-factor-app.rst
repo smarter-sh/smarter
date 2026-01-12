@@ -23,10 +23,9 @@ practices.
 
 3. **Config**: [✅] Store config in the environment. This project
    is based on the Django web framework which has its own
-   form of configuration management that you'll find in `./smarter/smarter/settings <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`_. But in addition, Smarter
-    implements a special
-   `Settings <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf.py>`_ class,
-   which is designed to read environment variables as source data, and then both
+   form of configuration settings that you'll find in `./smarter/smarter/settings <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`_.
+   Additionally, Smarter implements a special `Settings <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf.py>`_
+   class, which is designed to read environment variables as source data, and then both
    validate and derive all related configuration information for the entire platform.
 
 4. **Backing services**: [✅] Treat backing services as attached
@@ -74,9 +73,9 @@ practices.
     merged to main.
 
 11. **Logs**: [✅] Treat logs as event streams. Smarter takes
-    logging pretty seriously. Logs not only functions as event
-    streams, Smarter takes things to a whole new level by implementing
-    a comprehensive set of logging style guidelines that make logs
+    logging pretty seriously. Smarter's logs not only function as event
+    streams. Smarter takes things to a whole new level by implementing
+    a comprehensive set of logging style guidelines that make log
     entries information-rich, consistent, and easy to read.
 
 12. **Admin processes**: [✅] Run admin/management tasks as one-off
