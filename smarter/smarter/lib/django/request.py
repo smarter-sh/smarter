@@ -733,16 +733,22 @@ class SmarterRequestMixin(AccountMixin):
                 self.request_mixin_logger_prefix,
             )
             return QueryDict("")
-        if not self.smarter_request.META.get("QUERY_STRING"):
+        if self.smarter_request.META is None:
+            logger.error(
+                "%s.params() - request.META is None. Cannot extract query string parameters.",
+                self.request_mixin_logger_prefix,
+            )
+            return QueryDict("")
+        # Always construct QueryDict, even if QUERY_STRING is empty
+        query_string = self.smarter_request.META.get("QUERY_STRING", "")
+        if not query_string:
             logger.debug(
                 "%s.params() - request has no query string parameters.",
                 self.request_mixin_logger_prefix,
             )
-            return QueryDict("")
-
         if not self._params:
             try:
-                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", ""))  # type: ignore
+                self._params = QueryDict(query_string)  # type: ignore
                 if not self._params:
                     raise AttributeError("No query string parameters found.")
             except AttributeError as e:

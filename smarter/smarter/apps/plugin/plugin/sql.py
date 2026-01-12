@@ -614,7 +614,7 @@ class SqlPlugin(PluginBase):
             sqlData=sql_data,
         )
         status = SAMPluginCommonStatus(
-            account_number="0123456789",
+            accountNumber="0123456789",
             username=SMARTER_ADMIN_USERNAME,
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),

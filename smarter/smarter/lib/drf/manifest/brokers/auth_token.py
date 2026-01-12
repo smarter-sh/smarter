@@ -114,13 +114,28 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         if self._smarter_auth_token:
             return self._smarter_auth_token
 
+        if not self._manifest:
+            logger.debug(
+                "%s.smarter_auth_token() Manifest not set. Cannot retrieve SmarterAuthToken.",
+                self.formatted_class_name,
+            )
+            return None
+
         try:
-            self._smarter_auth_token = SmarterAuthToken.objects.get(user=self.user, name=self.name)
+            logger.debug(
+                "%s.smarter_auth_token() Retrieving SmarterAuthToken for user %s with name %s",
+                self.formatted_class_name,
+                self.user,
+                self.name,
+            )
+            self._smarter_auth_token = SmarterAuthToken.objects.get(
+                user__username=self.manifest.spec.config.username, name=self.name
+            )
         except SmarterAuthToken.DoesNotExist:
             logger.debug(
                 "%s.smarter_auth_token() SmarterAuthToken for user %s with name %s does not exist.",
                 self.formatted_class_name,
-                self.user,
+                self.manifest.spec.config.username,
                 self.name,
             )
         return self._smarter_auth_token
@@ -151,6 +166,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         """
         Transform the Smarter API SAMSmarterAuthToken manifest into a Django ORM model.
         """
+        logger.debug("%s.manifest_to_django_orm() called", self.formatted_class_name)
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
         if not isinstance(config_dump, dict):
@@ -186,6 +202,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         Transform the Django ORM model into a Pydantic readable
         Smarter API SAMSmarterAuthToken manifest dict.
         """
+        logger.debug("%s.django_orm_to_manifest_dict() called", self.formatted_class_name)
         if not isinstance(self.smarter_auth_token, SmarterAuthToken):
             raise SAMSmarterAuthTokenBrokerError(
                 f"smarter_auth_token is not a SmarterAuthToken instance: {type(self.smarter_auth_token)}",
@@ -229,6 +246,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             try:
+                logger.debug(
+                    "%s.manifest() initializing SAMSmarterAuthToken() using data from self.loader %s",
+                    self.formatted_class_name,
+                    self.loader,
+                )
                 self._manifest = SAMSmarterAuthToken(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
@@ -236,12 +258,13 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                     spec=SAMSmarterAuthTokenSpec(**self.loader.manifest_spec),
                 )
                 logger.debug(
-                    "%s.manifest() initialized with SAMSmarterAuthToken() using data from self.loader", self.kind
+                    "%s.manifest() initialized with SAMSmarterAuthToken() using data from self.loader",
+                    self.formatted_class_name,
                 )
             except PydanticValidationError as e:
                 logger.error(
                     "%s.manifest() could not be initialized with SAMSmarterAuthToken() using data from self.loader: %s",
-                    self.kind,
+                    self.formatted_class_name,
                     str(e),
                 )
         elif self.smarter_auth_token:
