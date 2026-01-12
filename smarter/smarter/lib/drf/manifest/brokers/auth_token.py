@@ -81,6 +81,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     _pydantic_model: Type[SAMSmarterAuthToken] = SAMSmarterAuthToken
     _smarter_auth_token: Optional[SmarterAuthToken]
     _token_key: Optional[str]
+    _orm_instance: Optional[SmarterAuthToken]
 
     def __init__(self, *args, **kwargs):
         """
@@ -325,6 +326,47 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
     @property
     def ORMModelClass(self) -> Type[SmarterAuthToken]:
         return SmarterAuthToken
+
+    @property
+    def orm_instance(self) -> Optional[SmarterAuthToken]:
+        """
+        Return the Django ORM model instance for the broker.
+
+        :return: The Django ORM model instance for the broker.
+        :rtype: Optional[TimestampedModel]
+        """
+        if self._orm_instance:
+            return self._orm_instance
+
+        if not self._manifest:
+            logger.warning(
+                "%s.orm_instance() - manifest is not set. Cannot retrieve ORM instance.",
+                self.abstract_broker_logger_prefix,
+            )
+            return None
+        try:
+            logger.debug(
+                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                SmarterAuthToken.__name__,
+                self.user,
+                self.name,
+            )
+            instance = SmarterAuthToken.objects.get(user__username=self.manifest.spec.config.username, name=self.name)
+            logger.debug(
+                "%s.orm_instance() - retrieved ORM instance: %s",
+                self.abstract_broker_logger_prefix,
+                serializers.serialize("json", [instance]),
+            )
+            return instance
+        except SmarterAuthToken.DoesNotExist:
+            logger.warning(
+                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+            )
+            return None
 
     def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         logger.debug("%s.example_manifest() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
