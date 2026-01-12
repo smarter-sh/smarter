@@ -4,6 +4,7 @@
 import logging
 from typing import TYPE_CHECKING, Any, Optional, Type
 
+from django.core import serializers
 from django.db import transaction
 
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
@@ -117,6 +118,7 @@ class SAMUserBroker(AbstractBroker):
     _account_contact: Optional[AccountContact] = None
     _brokered_user: Optional[User] = None
     _brokered_user_profile: Optional[UserProfile] = None
+    _orm_instance: Optional[User] = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -652,6 +654,47 @@ class SAMUserBroker(AbstractBroker):
            - :class:`smarter.apps.account.models.User`
         """
         return User
+
+    @property
+    def orm_instance(self) -> Optional[User]:
+        """
+        Return the Django ORM model instance for the broker.
+
+        :return: The Django ORM model instance for the broker.
+        :rtype: Optional[TimestampedModel]
+        """
+        if self._orm_instance:
+            return self._orm_instance
+
+        if not self.ready:
+            logger.warning(
+                "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
+                self.abstract_broker_logger_prefix,
+            )
+            return None
+        try:
+            logger.debug(
+                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                User.__name__,
+                self.user,
+                self.name,
+            )
+            instance = User.objects.get(username=self.name)
+            logger.debug(
+                "%s.orm_instance() - retrieved ORM instance: %s",
+                self.abstract_broker_logger_prefix,
+                serializers.serialize("json", [instance]),
+            )
+            return instance
+        except User.DoesNotExist:
+            logger.warning(
+                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
+                self.abstract_broker_logger_prefix,
+                self.account,
+                self.name,
+            )
+            return None
 
     @property
     def SAMModelClass(self) -> Type[SAMUser]:

@@ -235,7 +235,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
                     metadata=SAMSmarterAuthTokenMetadata(**self.loader.manifest_metadata),
                     spec=SAMSmarterAuthTokenSpec(**self.loader.manifest_spec),
                 )
-                logger.info(
+                logger.debug(
                     "%s.manifest() initialized with SAMSmarterAuthToken() using data from self.loader", self.kind
                 )
             except PydanticValidationError as e:
@@ -300,10 +300,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return SmarterAuthTokenSerializer
 
     @property
-    def ORMModelClass(self) -> Type[SAMSmarterAuthToken]:
-        return SAMSmarterAuthToken
+    def ORMModelClass(self) -> Type[SmarterAuthToken]:
+        return SmarterAuthToken
 
     def example_manifest(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.debug("%s.example_manifest() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = {
@@ -324,6 +325,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.debug("%s.get() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -374,7 +376,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         and are therefore removed from the Django ORM model dict prior to attempting
         the save() command. These fields are defined in the readonly_fields list.
         """
-        logger.debug("%s.apply() called", self.formatted_class_name)
+        logger.debug("%s.apply() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
@@ -478,11 +480,15 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.to_json())
 
     def chat(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.debug("%s.chat() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def describe(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.debug(
+            "%s.describe() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
+        )
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         self._smarter_auth_token = None
@@ -499,6 +505,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
     def delete(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.debug(
+            "%s.delete() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
+        )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -513,6 +522,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
     def deploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.debug(
+            "%s.deploy() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
+        )
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -526,6 +538,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         return self.json_response_ok(command=command, data=self.to_json())
 
     def undeploy(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.debug(
+            "%s.undeploy() called for %s with args: %s, kwargs: %s", self.formatted_class_name, self.name, args, kwargs
+        )
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -534,11 +549,13 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             if self.smarter_auth_token.is_active:
                 self.smarter_auth_token.is_active = False
                 self.smarter_auth_token.save()
+                self.smarter_auth_token.refresh_from_db()
         else:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
         return self.json_response_ok(command=command, data=self.to_json())
 
     def logs(self, request: WSGIRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        logger.debug("%s.logs() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Logs are not implemented", thing=self.kind, command=command)

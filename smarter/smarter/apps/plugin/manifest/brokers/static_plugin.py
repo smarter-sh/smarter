@@ -9,7 +9,6 @@ from django.http import HttpRequest
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.plugin.manifest.enum import (
-    SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
 )

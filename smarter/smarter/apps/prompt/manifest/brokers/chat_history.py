@@ -141,6 +141,16 @@ class SAMChatHistoryBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def SerializerClass(self) -> Type[ChatHistorySerializer]:
+        """
+        Get the Django REST Framework serializer class for the Smarter API ChatHistory.
+
+        :returns: The `ChatHistorySerializer` class.
+        :rtype: Type[ChatHistorySerializer]
+        """
+        return ChatHistorySerializer
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
