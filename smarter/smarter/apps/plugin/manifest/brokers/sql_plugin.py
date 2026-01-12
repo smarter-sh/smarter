@@ -20,8 +20,6 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
 )
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta
 from smarter.apps.plugin.plugin.sql import SqlPlugin
-from smarter.apps.plugin.signals import broker_ready
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -33,14 +31,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
-from smarter.lib.manifest.enum import (
-    SAMKeys,
-    SAMMetadataKeys,
-    SCLIResponseGet,
-    SCLIResponseGetData,
-)
 
-from . import PluginSerializer, SAMPluginBrokerError
+from . import SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
 
 
@@ -236,7 +228,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
 
     @property
-    def model_class(self) -> Type[PluginDataSql]:
+    def ORMModelClass(self) -> Type[PluginDataSql]:
         """
         Return the Django ORM model class for the broker.
 
@@ -244,6 +236,16 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :rtype: Type[PluginDataSql]
         """
         return PluginDataSql
+
+    @property
+    def SAMModelClass(self) -> Type[SAMSqlPlugin]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMSqlPlugin]
+        """
+        return SAMSqlPlugin
 
     @property
     def kind(self) -> str:
@@ -305,7 +307,13 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SAMPluginCommonStatus`
 
         """
+
         if self._manifest:
+            if not isinstance(self._manifest, SAMSqlPlugin):
+                raise SAMPluginBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.

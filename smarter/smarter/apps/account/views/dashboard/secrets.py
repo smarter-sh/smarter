@@ -11,7 +11,7 @@ from django.core.handlers.wsgi import WSGIRequest
 # our stuff
 from smarter.apps.account.admin import SecretAdminForm as SecretForm
 from smarter.apps.account.models import Secret
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (

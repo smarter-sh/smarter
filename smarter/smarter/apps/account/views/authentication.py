@@ -9,7 +9,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 
 from smarter.apps.account.models import User, get_resolved_user
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (

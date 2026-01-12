@@ -11,7 +11,7 @@ from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
     formatted_text,
@@ -134,6 +134,7 @@ def apply_manifest(
 
     try:
         token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
+            account=user_profile.account,
             name="apply_manifest",
             user=user,
             description="DELETE ME: single-use key created by smarter.apps.api.utils.apply_manifest()",

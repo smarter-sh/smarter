@@ -41,7 +41,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
     """
     Smarter API Connection Base Manifest Broker.
 
-    This abstract base class provides common functionality for API connection brokers, including shared logic for applying manifest data to Django ORM models. Subclasses must implement the `model_class` and `connection` properties to specify the concrete connection model and instance.
+    This abstract base class provides common functionality for API connection brokers, including shared logic for applying manifest data to Django ORM models. Subclasses must implement the `ORMModelClass` and `connection` properties to specify the concrete connection model and instance.
 
     Responsibilities include:
 
@@ -49,8 +49,8 @@ class SAMConnectionBaseBroker(AbstractBroker):
       - Providing a standardized `apply()` method to copy manifest data to the database, with validation and logging.
       - Managing read-only fields and ensuring only editable fields are persisted.
 
-    :param model_class: The Django ORM model class for the connection. Must be implemented by subclasses.
-    :type model_class: Type[ConnectionBase]
+    :param ORMModelClass: The Django ORM model class for the connection. Must be implemented by subclasses.
+    :type ORMModelClass: Type[ConnectionBase]
     :param connection: The connection model instance. Must be implemented by subclasses.
     :type connection: Optional[ConnectionBase]
 
@@ -64,7 +64,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
 
         class MyConnectionBroker(SAMConnectionBaseBroker):
             @property
-            def model_class(self):
+            def ORMModelClass(self):
                 return MyConnectionModel
 
             @property
@@ -115,8 +115,8 @@ class SAMConnectionBaseBroker(AbstractBroker):
         return retval
 
     @property
-    def model_class(self) -> Type[ConnectionBase]:
-        raise NotImplementedError(f"{logger_prefix}.model_class must be implemented in the subclass.")
+    def ORMModelClass(self) -> Type[ConnectionBase]:
+        raise NotImplementedError(f"{logger_prefix}.ORMModelClass must be implemented in the subclass.")
 
     @property
     def connection(self) -> Optional[ConnectionBase]:

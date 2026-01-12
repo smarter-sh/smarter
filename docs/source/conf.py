@@ -17,7 +17,7 @@ SMARTER_ROOT = os.path.abspath(os.path.join(HERE, "../../smarter"))
 sys.path.insert(0, SMARTER_ROOT)
 
 from smarter.__version__ import __version__  # noqa: F401
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 
 
 if not smarter_settings.environment:

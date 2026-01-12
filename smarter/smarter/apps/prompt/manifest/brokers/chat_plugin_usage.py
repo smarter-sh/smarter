@@ -13,7 +13,7 @@ from smarter.apps.prompt.manifest.models.chat_plugin_usage.model import (
     SAMChatPluginUsage,
 )
 from smarter.apps.prompt.models import Chat, ChatPluginUsage
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -143,6 +143,16 @@ class SAMChatPluginUsageBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def SerializerClass(self) -> typing.Type[ChatPluginUsageSerializer]:
+        """
+        Get the Django REST Framework serializer class for the Smarter API ChatPluginUsage.
+
+        :returns: The `ChatPluginUsageSerializer` class.
+        :rtype: Type[ChatPluginUsageSerializer]
+        """
+        return ChatPluginUsageSerializer
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Returns the formatted class name for logging purposes.
@@ -152,7 +162,7 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         return f"{parent_class}.SAMPluginUsageBroker[{id(self)}]"
 
     @property
-    def model_class(self) -> typing.Type[ChatPluginUsage]:
+    def ORMModelClass(self) -> typing.Type[ChatPluginUsage]:
         return ChatPluginUsage
 
     @property
@@ -171,6 +181,11 @@ class SAMChatPluginUsageBroker(AbstractBroker):
         passing **data to each child's constructor.
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMChatPluginUsage):
+                raise SAMChatPluginUsageBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMChatPluginUsage(

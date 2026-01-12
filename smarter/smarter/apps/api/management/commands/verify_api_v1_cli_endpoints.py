@@ -14,7 +14,7 @@ from smarter.apps.account.utils import (
     get_cached_user_profile,
 )
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_ACCOUNT_NUMBER,
     SMARTER_ADMIN_USERNAME,
@@ -116,7 +116,8 @@ class Command(SmarterCommand):
                 return
 
         # generate an auth token (api key) for this job.
-        token_record, token_key = SmarterAuthToken.objects.create(
+        token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
+            account=account,
             name="verify_api:v1:cli:endpoints",
             user=user,
             description="DELETE ME: single-use key created by manage.py verify_api:v1:cli:endpoints",

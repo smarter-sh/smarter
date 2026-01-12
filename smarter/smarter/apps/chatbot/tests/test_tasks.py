@@ -17,7 +17,7 @@ from smarter.apps.chatbot.tasks import (
     undeploy_default_api,
     verify_domain,
 )
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib.django.validators import SmarterValidator
 

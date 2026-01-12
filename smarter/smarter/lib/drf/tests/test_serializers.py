@@ -26,6 +26,7 @@ class TestSmarterAuthTokenSerializer(SmarterTestBase):
         self.admin_user, self.account, self.user_profile = admin_user_factory()
         logger.debug("%s Setting up test class with name: %s", self.formatted_class_name, self.name)
         self.auth_token, self.token_key = SmarterAuthToken.objects.create(
+            account=self.account,
             name=self.admin_user.username,
             user=self.admin_user,
             description=self.admin_user.username,

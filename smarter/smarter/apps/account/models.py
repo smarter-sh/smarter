@@ -21,7 +21,7 @@ from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
 
 # our stuff
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text

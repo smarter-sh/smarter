@@ -51,7 +51,6 @@ from smarter.apps.plugin.serializers import PluginStaticSerializer
 from smarter.apps.plugin.signals import plugin_called, plugin_responded
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -127,7 +126,7 @@ class StaticPlugin(PluginBase):
         super().__init__(*args, manifest=manifest, **kwargs)
 
     @property
-    def model_class(self) -> Type[SAMStaticPlugin]:
+    def ORMModelClass(self) -> Type[SAMStaticPlugin]:
         """
         Return the Pydantic model class for the StaticPlugin manifest.
 
@@ -469,13 +468,13 @@ class StaticPlugin(PluginBase):
             data=data,
         )
         status = SAMPluginCommonStatus(
-            account_number="1234567890",
+            accountNumber="1234567890",
             username="example_user",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )
 
-        pydantic_model = SAMStaticPlugin(
+        sam_static_plugin = SAMStaticPlugin(
             apiVersion=SmarterApiVersions.V1,
             kind=MANIFEST_KIND,
             metadata=metadata,
@@ -483,7 +482,7 @@ class StaticPlugin(PluginBase):
             status=status,
         )
 
-        return json.loads(pydantic_model.model_dump_json())
+        return json.loads(sam_static_plugin.model_dump_json())
 
     def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> str:
         """

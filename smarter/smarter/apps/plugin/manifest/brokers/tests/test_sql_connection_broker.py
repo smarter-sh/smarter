@@ -122,13 +122,13 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         Test that the SAMSqlConnectionBroker can be initialized from the request and loader.
         1. broker is an instance of SAMSqlConnectionBroker.
         2. broker.kind is "SqlConnection".
-        3. broker.model_class is SAMSqlConnection.
+        3. broker.ORMModelClass is SAMSqlConnection.
         """
         broker: SAMSqlConnectionBroker = self.SAMBrokerClass(self.request, self.loader)
         self.assertIsInstance(broker, SAMSqlConnectionBroker)
         self.assertEqual(broker.kind, "SqlConnection")
-        self.assertIsNotNone(broker.model_class)
-        self.assertEqual(broker.model_class.__name__, "SqlConnection")
+        self.assertIsNotNone(broker.ORMModelClass)
+        self.assertEqual(broker.ORMModelClass.__name__, "SqlConnection")
 
     def test_initialization_from_class(self):
         """
@@ -218,7 +218,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         """
         Test that the serializer property returns a valid serializer instance.
         """
-        self.assertEqual(self.broker.serializer.__name__, "SqlConnectionSerializer")
+        self.assertEqual(self.broker.SerializerClass.__name__, "SqlConnectionSerializer")
 
     def test_password_secret(self):
         """

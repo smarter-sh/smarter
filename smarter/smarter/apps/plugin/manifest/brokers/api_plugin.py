@@ -22,7 +22,6 @@ from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
 )
 from smarter.apps.plugin.models import PluginDataApi, PluginMeta
 from smarter.apps.plugin.plugin.api import ApiPlugin
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -34,14 +33,8 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
-from smarter.lib.manifest.enum import (
-    SAMKeys,
-    SAMMetadataKeys,
-    SCLIResponseGet,
-    SCLIResponseGetData,
-)
 
-from . import PluginSerializer, SAMPluginBrokerError
+from . import SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
 
 
@@ -206,6 +199,26 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def ORMModelClass(self) -> Type[PluginMeta]:
+        """
+        Return the Django ORM model class for the broker.
+
+        :return: The Django ORM model class definition for the broker.
+        :rtype: Type[PluginMeta]
+        """
+        return PluginMeta
+
+    @property
+    def SAMModelClass(self) -> Type[SAMApiPlugin]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMApiPlugin]
+        """
+        return SAMApiPlugin
+
+    @property
     def formatted_class_name(self) -> str:
         """
         Return a human-readable, fully qualified class name for logging.
@@ -260,6 +273,11 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
 
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMApiPlugin):
+                raise SAMPluginBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
 
         # 1.) prioritize manifest loader data if available. if it was provided
@@ -570,8 +588,8 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         if not self.manifest:
             raise SAMBrokerErrorNotReady(message="No manifest found", thing=self.kind, command=command)
 
-        pydantic_model = json.loads(self.manifest.model_dump_json())
-        return self.json_response_ok(command=command, data=pydantic_model)
+        model = json.loads(self.manifest.model_dump_json())
+        return self.json_response_ok(command=command, data=model)
 
     def apply(self, request: "HttpRequest", *args, **kwargs: dict) -> SmarterJournaledJsonResponse:
         """

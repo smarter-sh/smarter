@@ -23,7 +23,7 @@ from requests.exceptions import HTTPError, RequestException, Timeout, TooManyRed
 from social_core.backends.github import GithubOAuth2
 from social_core.backends.google import GoogleOAuth2
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.cache import cache_results
 

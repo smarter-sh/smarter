@@ -29,12 +29,13 @@ from django.http import HttpRequest, QueryDict
 from rest_framework.request import Request as RestFrameworkRequest
 
 from smarter.apps.account.mixins import AccountMixin, UserType
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     account_number_from_url,
     get_cached_account,
     get_cached_admin_user_for_account,
 )
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
@@ -184,7 +185,7 @@ class SmarterRequestMixin(AccountMixin):
         # the parent AccountMixin class, and this gives us an opportunity to
         # log the values for debugging purposes.
         # ---------------------------------------------------------------------
-        user = kwargs.pop("user", None)
+        user = kwargs.pop("user", None) or next((user for user in args if isinstance(user, User)), None)
         if user:
             logger.debug(
                 "%s.__init__() - found a user argument: %s",
@@ -192,14 +193,18 @@ class SmarterRequestMixin(AccountMixin):
                 user,
             )
             self._smarter_request_user = user
-        user_profile = kwargs.pop("user_profile", None)
+        user_profile = kwargs.pop("user_profile", None) or next(
+            (user_profile for user_profile in args if isinstance(user_profile, UserProfile)), None
+        )
         if user_profile:
             logger.debug(
                 "%s.__init__() - found a user_profile argument: %s",
                 self.request_mixin_logger_prefix,
                 user_profile,
             )
-        account = kwargs.pop("account", None)
+        account = kwargs.pop("account", None) or next(
+            (account for account in args if isinstance(account, Account)), None
+        )
         if account:
             logger.debug(
                 "%s.__init__() - found an account argument: %s",
@@ -246,10 +251,117 @@ class SmarterRequestMixin(AccountMixin):
         logger.debug(
             "%s.__init__() - finished %s",
             self.request_mixin_logger_prefix,
-            json.dumps(self.to_json(), indent=4),
+            SmarterRequestMixin.__repr__(self),
         )
 
         self.log_request_mixin_ready_status()
+
+    def __str__(self) -> str:
+        """
+        String representation of the SmarterRequestMixin instance.
+
+        :return: A string describing the instance.
+        :rtype: str
+        """
+        return (
+            f"{formatted_text(SmarterRequestMixin.__name__)}[{id(self)}]"
+            f"("
+            f"request={self.smarter_request}, "
+            f"user={self.user_profile}"
+            f")"
+        )
+
+    def __repr__(self) -> str:
+        """
+        Official string representation of the SmarterRequestMixin instance.
+
+        :return: A string representation suitable for debugging.
+        :rtype: str
+        """
+        return json.dumps(self.to_json(), indent=4)
+
+    def __bool__(self) -> bool:
+        """
+        Boolean representation of the SmarterRequestMixin instance.
+
+        :return: True if the instance is ready, False otherwise.
+        :rtype: bool
+        """
+        return self.is_requestmixin_ready
+
+    def __hash__(self) -> int:
+        """
+        Hash representation of the SmarterRequestMixin instance.
+
+        :return: An integer hash of the instance.
+        :rtype: int
+        """
+        return hash(
+            (
+                self.url,
+                self.user_profile,
+            )
+        )
+
+    def __eq__(self, other: Any) -> bool:
+        """
+        Equality comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instances are equal, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return False
+        return self.url == other.url and self.user_profile == other.user_profile
+
+    def __lt__(self, other: Any) -> bool:
+        """
+        Less-than comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is less than the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) < (other.url, other.user_profile)
+
+    def __le__(self, other: Any) -> bool:
+        """
+        Less-than-or-equal comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is less than or equal to the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) <= (other.url, other.user_profile)
+
+    def __gt__(self, other: Any) -> bool:
+        """
+        Greater-than comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is greater than the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) > (other.url, other.user_profile)
+
+    def __ge__(self, other: Any) -> bool:
+        """
+        Greater-than-or-equal comparison for SmarterRequestMixin instances.
+
+        :param other: Another object to compare.
+        :return: True if the instance is greater than or equal to the other, False otherwise.
+        :rtype: bool
+        """
+        if not isinstance(other, SmarterRequestMixin):
+            return NotImplemented
+        return (self.url, self.user_profile) >= (other.url, other.user_profile)
 
     def invalidate_cached_properties(self):
         """
@@ -542,12 +654,11 @@ class SmarterRequestMixin(AccountMixin):
                 )
                 return None
 
-        logger.error(
+        logger.warning(
             "%s.url() property was accessed before it was initialized. request: %s",
             self.request_mixin_logger_prefix,
             self.smarter_request,
         )
-        raise SmarterValueError("The URL has not been initialized. Please check the request object.")
 
     @property
     def parsed_url(self) -> Optional[ParseResult]:
@@ -594,7 +705,7 @@ class SmarterRequestMixin(AccountMixin):
         return path.strip("/").split("/")
 
     @property
-    def params(self) -> Optional[QueryDict]:
+    def params(self) -> QueryDict:
         """
         The query string parameters from the Django request object.
 
@@ -610,9 +721,34 @@ class SmarterRequestMixin(AccountMixin):
             print(params)  # e.g., {'session_key': 'abc123', 'uid': 'xyz'}
 
         """
+        if not self.smarter_request:
+            logger.warning(
+                "%s.params() - request is None or not set. Cannot extract query string parameters.",
+                self.request_mixin_logger_prefix,
+            )
+            return QueryDict("")
+        if not hasattr(self.smarter_request, "META"):
+            logger.error(
+                "%s.params() - request does not have META attribute. Cannot extract query string parameters.",
+                self.request_mixin_logger_prefix,
+            )
+            return QueryDict("")
+        if self.smarter_request.META is None:
+            logger.error(
+                "%s.params() - request.META is None. Cannot extract query string parameters.",
+                self.request_mixin_logger_prefix,
+            )
+            return QueryDict("")
+        # Always construct QueryDict, even if QUERY_STRING is empty
+        query_string = self.smarter_request.META.get("QUERY_STRING", "")
+        if not query_string:
+            logger.debug(
+                "%s.params() - request has no query string parameters.",
+                self.request_mixin_logger_prefix,
+            )
         if not self._params:
             try:
-                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", ""))  # type: ignore
+                self._params = QueryDict(query_string)  # type: ignore
                 if not self._params:
                     raise AttributeError("No query string parameters found.")
             except AttributeError as e:
@@ -621,7 +757,7 @@ class SmarterRequestMixin(AccountMixin):
                     self.request_mixin_logger_prefix,
                     e,
                 )
-                return None
+                return QueryDict("")
         return self._params
 
     @property

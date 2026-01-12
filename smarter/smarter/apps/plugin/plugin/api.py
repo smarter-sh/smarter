@@ -68,8 +68,7 @@ from smarter.apps.plugin.manifest.models.common.plugin.status import (
 from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
 from smarter.apps.plugin.serializers import PluginApiSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import SettingsDefaults, smarter_settings
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
@@ -152,7 +151,13 @@ class ApiPlugin(PluginBase):
         :return: The Pydantic model of the plugin.
         :rtype: Optional[SAMApiPlugin]
         """
-        if not self._manifest and self.ready:
+        if self._manifest:
+            if not isinstance(self._manifest, SAMApiPlugin):
+                raise SmarterApiPluginError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                )
+            return self._manifest
+        if self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
             self._manifest = self.SAMPluginType(**self.to_json())  # type: ignore[call-arg]
@@ -412,19 +417,19 @@ class ApiPlugin(PluginBase):
             apiData=api_data,
         )
         status = SAMPluginCommonStatus(
-            account_number="0123456789",
+            accountNumber="0123456789",
             username=SMARTER_ADMIN_USERNAME,
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )
-        pydantic_model = SAMApiPlugin(
+        sam_api_plugin = SAMApiPlugin(
             apiVersion=SmarterApiVersions.V1,
             kind=MANIFEST_KIND,
             metadata=metadata,
             spec=spec,
             status=status,
         )
-        return json.loads(pydantic_model.model_dump_json())
+        return json.loads(sam_api_plugin.model_dump_json())
 
     def create(self):
         """

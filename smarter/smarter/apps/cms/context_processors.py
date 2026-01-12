@@ -1,7 +1,7 @@
 """Django context processors for docs/base.html"""
 
 from smarter.__version__ import __version__
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.utils import is_authenticated_request
 
 

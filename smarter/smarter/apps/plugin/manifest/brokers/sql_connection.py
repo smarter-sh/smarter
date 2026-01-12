@@ -30,7 +30,6 @@ from smarter.apps.plugin.manifest.models.sql_connection.spec import (
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
 from smarter.apps.plugin.signals import broker_ready
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -74,14 +73,6 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     This class is responsible for loading, validating, and parsing Smarter API YAML SqlConnection manifests,
     and initializing the corresponding Pydantic model. It provides generic services for SQL connections,
     such as instantiation, creation, update, and deletion.
-
-    **Parameters:**
-
-        - manifest (SAMSqlConnection, optional): The loaded manifest model.
-        - pydantic_model (Type[SAMSqlConnection]): The Pydantic model class for validation.
-        - connection (SqlConnection, optional): The Django ORM model instance.
-        - password_secret (Secret, optional): Secret for the database password.
-        - proxy_password_secret (Secret, optional): Secret for the proxy password.
 
     **Example Usage:**
 
@@ -176,14 +167,14 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def serializer(self) -> Type[SqlConnectionSerializer]:
+    def SerializerClass(self) -> Type[SqlConnectionSerializer]:
         """
-        Returns the serializer class used by the broker for SQL connection objects.
+        Returns the SerializerClass class used by the broker for SQL connection objects.
 
-        This property provides the appropriate serializer for converting `SqlConnection` ORM instances
+        This property provides the appropriate SerializerClass for converting `SqlConnection` ORM instances
         to and from Python data structures, typically for API responses or internal processing.
 
-        :returns: The serializer class (`SqlConnectionSerializer`) for SQL connection objects.
+        :returns: The SerializerClass class (`SqlConnectionSerializer`) for SQL connection objects.
 
         .. seealso::
 
@@ -194,9 +185,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
             .. code-block:: python
 
-                serializer_cls = broker.serializer
-                serializer = serializer_cls(sql_connection_instance)
-                data = serializer.data
+                serializer_cls = broker.SerializerClass
+                SerializerClass = serializer_cls(sql_connection_instance)
+                data = SerializerClass.data
 
         """
         return SqlConnectionSerializer
@@ -227,7 +218,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
 
     @property
-    def model_class(self) -> Type[SqlConnection]:
+    def ORMModelClass(self) -> Type[SqlConnection]:
         """
         Returns the Django ORM model class associated with this broker.
 
@@ -241,18 +232,28 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         .. seealso::
 
             - :class:`SqlConnection`
-            - :meth:`serializer`
+            - :meth:`SerializerClass`
 
         **Example Usage:**
 
             .. code-block:: python
 
-                model_cls = broker.model_class
+                model_cls = broker.ORMModelClass
                 queryset = model_cls.objects.filter(account=account)
 
 
         """
         return SqlConnection
+
+    @property
+    def SAMModelClass(self) -> Type[SAMSqlConnection]:
+        """
+        Return the Pydantic model class for the broker.
+
+        :return: The Pydantic model class definition for the broker.
+        :rtype: Type[SAMSqlConnection]
+        """
+        return SAMSqlConnection
 
     @property
     def kind(self) -> str:
@@ -316,6 +317,11 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         """
         if self._manifest:
+            if not isinstance(self._manifest, SAMSqlConnection):
+                raise SAMConnectionBrokerError(
+                    f"Invalid manifest type for {self.kind} broker: {type(self._manifest)}",
+                    thing=self.kind,
+                )
             return self._manifest
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
@@ -796,7 +802,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
         )
-        pydantic_model = SAMSqlConnection(
+        sam_sql_connection = SAMSqlConnection(
             apiVersion=self.api_version,
             kind=self.kind,
             metadata=metadata,
@@ -804,7 +810,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             status=status,
         )
 
-        data = json.loads(pydantic_model.model_dump_json())
+        data = json.loads(sam_sql_connection.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -853,7 +859,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         else:
             sql_connections = SqlConnection.objects.filter(account=self.account)
 
-        model_titles = self.get_model_titles(serializer=self.serializer())
+        model_titles = self.get_model_titles(serializer=self.SerializerClass())
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each SqlConnection
         for sql_connection in sql_connections:
@@ -861,7 +867,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 self.connection_init()
                 self._connection = sql_connection
 
-                model_dump = self.serializer(sql_connection).data
+                model_dump = self.SerializerClass(sql_connection).data
                 camel_cased_model_dump = self.snake_to_camel(model_dump)
                 data.append(camel_cased_model_dump)
 
@@ -1020,8 +1026,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 command=command,
             )
 
-        pydantic_model = self.manifest.model_dump()
-        return self.json_response_ok(command=command, data=pydantic_model)
+        model = self.manifest.model_dump()
+        return self.json_response_ok(command=command, data=model)
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
