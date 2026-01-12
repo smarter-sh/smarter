@@ -1,7 +1,7 @@
 # Python Requirements
 
 [![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
-[![PyPI version](https://img.shields.io/pypi/v/<package-name>.svg?logo=pypi)](https://pypi.org/project/<package-name>/)
+[![PyPI](https://img.shields.io/badge/PyPI-website-blue?logo=pypi)](https://pypi.org/)
 
 Python requirements files are managed here. These files are formatted for use with the
 `pip` (Python Install Package) software utility. The packages themselves are distributed
