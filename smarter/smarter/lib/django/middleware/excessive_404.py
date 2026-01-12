@@ -11,8 +11,8 @@ from django.http import HttpResponseForbidden
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseBase
 
-from smarter.common.classes import SmarterMiddlewareMixin
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins import SmarterMiddlewareMixin
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.cache import lazy_cache as cache
 from smarter.lib.django import waffle

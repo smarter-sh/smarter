@@ -10,7 +10,6 @@ from urllib.parse import urlparse
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 import botocore.exceptions
 
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import Services, smarter_settings
 
 # our stuff
@@ -25,6 +24,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_green,
     formatted_text_red,
 )
+from smarter.common.mixins import SmarterHelperMixin
 
 # mcdaniel apr-2024: technically we shouldn't import smarter.libe.django into the aws helpers
 # but the validators don't depend on django initialization, so we're okay here.

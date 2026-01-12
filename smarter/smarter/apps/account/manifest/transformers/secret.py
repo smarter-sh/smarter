@@ -36,8 +36,8 @@ from smarter.apps.account.utils import (
     get_user_profiles_for_account,
 )
 from smarter.common.api import SmarterApiVersions
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterException
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches

@@ -8,8 +8,8 @@ import requests
 import yaml
 
 from smarter.common.api import SmarterApiVersions
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json
 
 from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
