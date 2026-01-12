@@ -22,7 +22,8 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
     def setUp(self):
         super().setUp()
         self.admin_user, self.account, self.user_profile = admin_user_factory()
-        self.auth_token, self.token_key = SmarterAuthToken.objects.create(
+        self.auth_token, self.token_key = SmarterAuthToken.objects.create(  # type: ignore
+            account=self.account,
             user=self.admin_user,
             name=self.admin_user.username,
             description=self.admin_user.username,

@@ -6,7 +6,6 @@ import os
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
-from taggit.managers import TaggableManager, _TaggableManager
 
 from smarter.lib import json
 from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroker
@@ -21,6 +20,7 @@ from smarter.lib.drf.manifest.models.auth_token.spec import (
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
@@ -150,7 +150,7 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
         self.assertIsInstance(broker, SAMSmarterAuthTokenBroker)
         self.assertEqual(broker.kind, "AuthToken")
         self.assertIsNotNone(broker.ORMModelClass)
-        self.assertEqual(broker.ORMModelClass.__name__, "SAMSmarterAuthToken")
+        self.assertEqual(broker.ORMModelClass.__name__, "SmarterAuthToken")
 
     def test_initialization_from_class(self):
         """Test initialization of SAMSmarterAuthTokenBroker from class."""
@@ -329,7 +329,7 @@ class TestSmarterAuthTokenBroker(TestSAMBrokerBaseClass):
         self.request._body = None  # pylint: disable=protected-access
         self._broker = self.SAMBrokerClass(self.request)
 
-        with self.assertRaises(SAMBrokerErrorNotImplemented):
+        with self.assertRaises(SAMBrokerErrorNotReady):
             self.broker.delete(self.request, {"name": "nonexistent-smarter_auth_token"})  # type: ignore
 
     def test_describe_smarter_auth_token_not_found(self):

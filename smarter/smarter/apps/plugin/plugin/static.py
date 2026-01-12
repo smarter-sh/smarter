@@ -468,7 +468,7 @@ class StaticPlugin(PluginBase):
             data=data,
         )
         status = SAMPluginCommonStatus(
-            account_number="1234567890",
+            accountNumber="1234567890",
             username="example_user",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),
