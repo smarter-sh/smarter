@@ -1,17 +1,38 @@
-## [0.13.59](https://github.com/smarter-sh/smarter/compare/v0.13.58...v0.13.59) (2026-01-12)
-
-
-### Bug Fixes
-
-* camel_to_snake() should return None if it receives None ([61850f3](https://github.com/smarter-sh/smarter/commit/61850f39048b6619cf4d041499d2ac77524e32e7))
-* misc failed tests ([6a14772](https://github.com/smarter-sh/smarter/commit/6a14772ba3387e882f971ea9c95b5ed6a44b925c))
-* misc manifest and broker bug fixes. ([0b6a26b](https://github.com/smarter-sh/smarter/commit/0b6a26b764abc791fcf1b91626cc488cbe4557b1))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.13.59](https://github.com/smarter-sh/smarter/compare/v0.13.58...v0.13.59) (2026-01-12)
+
+### Features
+
+- add a 'READY' / 'NOT_READY' logger.info() to top-level class instantiations: Broker, RequestMixin, AccountMixin, ChatBot, Plugin, SmarterAuthToken. This makes complex initialization sequences more auditable, and a lot easier to trouble shoot.
+
+### Refactoring
+
+- Add dunder methods to AbstractBroker, SAMLoader and AccountMixin.
+- Standardize the behavior of to_json() throughout the AbstractBroker class hierarchy and related mixins in order to ensure consistent return objects in all V1 API responses.
+- Refactor SmarterAuthToken and SAMSmarterAuthTokenBroker.
+- Refactor initializations of RequestMixin and AccountMixin to more generically accept request, user, account and user_profile parameters,
+  as positional parameters, args or kwargs. Extend DRF authentication into AccountMixin so that it is capable of 'pre-authentication',
+  ahead of DRF's native lifecycle (something that comes up in certain edge cases).
+- Refactor common conversion functions into SmarterConverterMixin.
+- Standardize `__str__` and `__repr__` dunder methods across the entire class library.
+- Convert nearly all logger.info() to logger.debug()
+- Disable formatted log entries when not running locally.
+- Standardize behavior of ready() across the class hierarchy.
+
+### Bug Fixes
+
+- camel_to_snake() should return None if it receives None ([61850f3](https://github.com/smarter-sh/smarter/commit/61850f39048b6619cf4d041499d2ac77524e32e7))
+- misc failed tests ([6a14772](https://github.com/smarter-sh/smarter/commit/6a14772ba3387e882f971ea9c95b5ed6a44b925c))
+- misc manifest and broker bug fixes. ([0b6a26b](https://github.com/smarter-sh/smarter/commit/0b6a26b764abc791fcf1b91626cc488cbe4557b1))
+
+### Tests
+
+- add common bank of SAM Broker unit tests to SmarterAuthToken and SAMSmarterAuthTokenBroker.
 
 ## [0.13.58](https://github.com/smarter-sh/smarter/compare/v0.13.57...v0.13.58) (2026-01-09)
 
