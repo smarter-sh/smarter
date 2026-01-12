@@ -134,6 +134,7 @@ def apply_manifest(
 
     try:
         token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
+            account=user_profile.account,
             name="apply_manifest",
             user=user,
             description="DELETE ME: single-use key created by smarter.apps.api.utils.apply_manifest()",

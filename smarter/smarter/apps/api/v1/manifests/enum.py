@@ -1,6 +1,7 @@
 """Smarter API V1 Manifests Enumerations."""
 
 import logging
+from typing import Optional
 from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.models.account.const import (
@@ -45,7 +46,6 @@ from smarter.apps.prompt.manifest.models.chat_tool_call.const import (
 from smarter.apps.provider.manifest.models.provider.const import (
     MANIFEST_KIND as PROVIDER_MANIFEST_KIND,
 )
-from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -169,7 +169,7 @@ class SAMKinds(SmarterEnumAbstract):
         return [f"{slug.lower()}s" for slug in cls.all_values()]
 
     @classmethod
-    def from_url(cls, url) -> str:
+    def from_url(cls, url) -> Optional[str]:
         """
         Extract the manifest kind from a URL.
         example: http://localhost:8000/api/v1/cli/example_manifest/Account/

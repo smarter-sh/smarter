@@ -10,7 +10,6 @@ from django.urls import reverse
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -50,8 +49,8 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
     Account.
     """
 
-    test_token_record: SmarterAuthToken = None
-    test_token: str = None
+    test_token_record: SmarterAuthToken
+    test_token: str
 
     def setUp(self) -> None:
         """Set up test fixtures."""
@@ -77,6 +76,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         """Create a SmarterAuthToken record for testing"""
 
         auth_token_record, secret_token = SmarterAuthToken.objects.create(
+            account=self.account,
             name=self.name,
             user=self.admin_user,
             description=f"{self.__class__.__name__} Test API Key",
@@ -214,7 +214,9 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.OK)
 
         try:
-            test_auth_token = SmarterAuthToken.objects.get(name="test_auth_token", user=self.admin_user)
+            test_auth_token = SmarterAuthToken.objects.get(
+                name="test_auth_token", user__username=manifest.spec.config.username
+            )
             test_auth_token.delete()
         except SmarterAuthToken.DoesNotExist:
             self.fail("Test auth test_token was not created")

@@ -9,7 +9,6 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 from smarter.apps.account.utils import get_cached_user_profile
-from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
@@ -75,8 +74,11 @@ class APIKeyView(APIKeyBase):
     template_path = "account/dashboard/api-key.html"
 
     def _handle_create(self, request):
-        new_api_key, token = SmarterAuthToken.objects.create(
-            name="New API Key", user=request.user, description=f"New API key created by {request.user}"
+        new_api_key, token = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
+            account=self.account,
+            name="New API Key",
+            user=request.user,
+            description=f"New API key created by {request.user}",
         )
         url = reverse(
             "account:dashboard_account_api_key_new",

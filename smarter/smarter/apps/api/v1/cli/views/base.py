@@ -279,6 +279,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     "%s.broker() - failed to instantiate broker: %s",
                     self.logger_prefix,
                     e,
+                    exc_info=True,
                 )
             except Exception as e:
                 logger.error(
@@ -286,6 +287,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     self.logger_prefix,
                     type(e),
                     e,
+                    exc_info=True,
                 )
 
         return self._broker
