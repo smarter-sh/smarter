@@ -26,15 +26,8 @@ module.exports = {
               return null;
             }
 
-            if (commit.committerDate) {
-              const date = new Date(commit.committerDate);
-
-              if (isNaN(date.getTime())) {
-                delete commit.committerDate; // safest option
-              } else {
-                commit.committerDate = date; // MUST be a Date object
-              }
-            }
+            // NEVER touch this field
+            delete commit.committerDate;
 
             return commit;
           },
