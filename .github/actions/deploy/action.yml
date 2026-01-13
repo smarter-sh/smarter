@@ -286,7 +286,11 @@ runs:
             "SMARTER_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
             "SMARTER_ANTHROPIC_API_KEY": ${{ inputs.anthropic-api-key && format('"{0}"', inputs.anthropic-api-key) || 'null' }},
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
-            "SMARTER_EMAIL_ADMIN": "lpm0073@gmail.com"
+            "SMARTER_EMAIL_ADMIN": "lpm0073@gmail.com",
+            "SMARTER_FERNET_ENCRYPTION_KEY": ${{ inputs.fernet-encryption-key && format('"{0}"', inputs.fernet-encryption-key) || 'null' }},
+            "SMARTER_GEMINI_API_KEY": ${{ inputs.gemini-api-key && format('"{0}"', inputs.gemini-api-key) || 'null' }},
+            "SMARTER_GOOGLE_MAPS_API_KEY": ${{ inputs.google-maps-api-key && format('"{0}"', inputs.google-maps-api-key) || 'null' }},
+            "SMARTER_GOOGLE_SERVICE_ACCOUNT_B64": ${{ inputs.google-service-account-b64 && format('"{0}"', inputs.google-service-account-b64) || 'null' }}
           }
         }
         EOF
