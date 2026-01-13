@@ -295,17 +295,8 @@ runs:
         helm dependency update
         helm dependency build
 
-    - name: Dump secrets values
-      id: dump-secrets
-      shell: bash
-      run: |-
-        echo "Secrets Values"
-        echo "--------------------------------------------------------------------------------"
-        printenv | grep -i 'SMARTER|MYSQL|AWS'
-
-    # Create a temporary values file with secrets
     - name: Create secrets values file
-      id: create-secrets-values
+      id: create-json
       shell: bash
       run: |
         cat > /tmp/values.json <<EOF
@@ -337,42 +328,12 @@ runs:
             "SMARTER_LLAMA_API_KEY": ${{ inputs.llama-api-key && format('"{0}"', inputs.llama-api-key) || 'null' }},
             "SMARTER_LOGIN_URL": ${{ env.SMARTER_LOGIN_URL && format('"{0}"', env.SMARTER_LOGIN_URL) || 'null' }},
             "SMARTER_LOGO": ${{ inputs.smarter-logo && format('"{0}"', inputs.smarter-logo) || 'null' }},
-            "SMARTER_MAILCHIMP_API_KEY": ${{ inputs.mailchimp-api-key && format('"{0}"', inputs.mailchimp-api-key) || 'null' }},
-            "SMARTER_MAILCHIMP_LIST_ID": ${{ inputs.mailchimp-list-id && format('"{0}"', inputs.mailchimp-list-id) || 'null' }},
-            "SMARTER_MARKETING_SITE_URL": "https://smarter.sh",
-            "SMARTER_MYSQL_DATABASE": ${{ env.SMARTER_MYSQL_DATABASE && format('"{0}"', env.SMARTER_MYSQL_DATABASE) || 'null' }},
-            "SMARTER_MYSQL_HOST": ${{ env.MYSQL_HOST && format('"{0}"', env.MYSQL_HOST) || 'null' }},
-            "SMARTER_MYSQL_PASSWORD": ${{ env.SMARTER_MYSQL_PASSWORD && format('"{0}"', env.SMARTER_MYSQL_PASSWORD) || 'null' }},
-            "SMARTER_MYSQL_PORT": ${{ env.MYSQL_PORT && format('"{0}"', env.MYSQL_PORT) || 'null' }},
-            "SMARTER_MYSQL_ROOT_PASSWORD": ${{ env.MYSQL_ROOT_PASSWORD && format('"{0}"', env.MYSQL_ROOT_PASSWORD) || 'null' }},
-            "SMARTER_MYSQL_ROOT_USERNAME": ${{ env.MYSQL_ROOT_USERNAME && format('"{0}"', env.MYSQL_ROOT_USERNAME) || 'null' }},
-            "SMARTER_MYSQL_TEST_DATABASE_PASSWORD": ${{ inputs.smarter-mysql-test_database_password && format('"{0}"', inputs.smarter-mysql-test_database_password) || 'null' }},
-            "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME": "smarter_test_db",
-            "SMARTER_MYSQL_USER": ${{ env.SMARTER_MYSQL_USERNAME && format('"{0}"', env.SMARTER_MYSQL_USERNAME) || 'null' }},
-            "SMARTER_OPENAI_API_KEY": ${{ inputs.openai-api-key && format('"{0}"', inputs.openai-api-key) || 'null' }},
-            "SMARTER_PINECONE_API_KEY": ${{ inputs.pinecone-api-key && format('"{0}"', inputs.pinecone-api-key) || 'null' }},
-            "SMARTER_PINECONE_ENVIRONMENT": ${{ inputs.pinecone-environment && format('"{0}"', inputs.pinecone-environment) || 'null' }},
-            "SMARTER_ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
-            "SMARTER_SMTP_FROM_EMAIL": "no-reply@platform.smarter.sh",
-            "SMARTER_SMTP_PASSWORD": ${{ env.SMTP_PASSWORD && format('"{0}"', env.SMTP_PASSWORD) || 'null' }},
-            "SMARTER_SMTP_SENDER": "no-reply@smarter.sh",
-            "SMARTER_SMTP_USERNAME": ${{ env.SMTP_USERNAME && format('"{0}"', env.SMTP_USERNAME) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_GITHUB_KEY": ${{ inputs.social-auth-github-key && format('"{0}"', inputs.social-auth-github-key) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_GITHUB_SECRET": ${{ inputs.social-auth-github-secret && format('"{0}"', inputs.social-auth-github-secret) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY": ${{ inputs.social-auth-google-oauth2-key && format('"{0}"', inputs.social-auth-google-oauth2-key) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET": ${{ inputs.social-auth-google-oauth2-secret && format('"{0}"', inputs.social-auth-google-oauth2-secret) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY": ${{ inputs.social-auth-linkedin-oauth2-key && format('"{0}"', inputs.social-auth-linkedin-oauth2-key) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET": ${{ inputs.social-auth-linkedin-oauth2-secret && format('"{0}"', inputs.social-auth-linkedin-oauth2-secret) || 'null' }},
-            "SMTP_HOST": ${{ env.SMTP_HOST && format('"{0}"', env.SMTP_HOST) || 'null' }},
-            "SMTP_PORT": ${{ env.SMTP_PORT && format('"{0}"', env.SMTP_PORT) || 'null' }},
-            "SMTP_USE_SSL": ${{ env.SMTP_USE_SSL && format('"{0}"', env.SMTP_USE_SSL) || 'null' }},
-            "SMTP_USE_TLS": ${{ env.SMTP_USE_TLS && format('"{0}"', env.SMTP_USE_TLS) || 'null' }}
           }
         }
         EOF
 
-    - name: Dump values.yaml
-      id: dump-values
+    - name: Dump values.json
+      id: dump-json
       shell: bash
       run: |-
         echo "values.json"
