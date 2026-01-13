@@ -26,36 +26,31 @@ module.exports = {
               return null;
             }
 
-            // Make a shallow copy (so we don't touch the frozen original)
-            const cleanCommit = { ...commit };
+            // Deep clone commit and committer to avoid mutating frozen objects
+            const cleanCommit = JSON.parse(JSON.stringify(commit));
 
-            // Helper to normalize a date field to ISO string, only if string/number
+            // Helper to normalize a date field to ISO string
             const normalizeDate = (d) => {
-              try {
-                if (!d) return new Date().toISOString();
-                if (typeof d === "string" || typeof d === "number") {
-                  const dateObj = new Date(d);
-                  return isNaN(dateObj.getTime())
-                    ? new Date().toISOString()
-                    : dateObj.toISOString();
-                }
-                // If already a Date or Proxy, just return as is
-                return d;
-              } catch {
-                return new Date().toISOString();
+              if (!d) return new Date().toISOString();
+              if (typeof d === "string" || typeof d === "number") {
+                const dateObj = new Date(d);
+                return isNaN(dateObj.getTime())
+                  ? new Date().toISOString()
+                  : dateObj.toISOString();
               }
+              // If already a Date, Proxy, or object, just return a new ISO string now
+              return new Date().toISOString();
             };
 
-            if (cleanCommit.date)
-              cleanCommit.date = normalizeDate(cleanCommit.date);
-            if (cleanCommit.committerDate)
-              cleanCommit.committerDate = normalizeDate(
-                cleanCommit.committerDate,
-              );
-            if (cleanCommit.committer && cleanCommit.committer.date)
+            cleanCommit.date = normalizeDate(cleanCommit.date);
+            cleanCommit.committerDate = normalizeDate(
+              cleanCommit.committerDate,
+            );
+            if (cleanCommit.committer) {
               cleanCommit.committer.date = normalizeDate(
                 cleanCommit.committer.date,
               );
+            }
 
             return cleanCommit;
           },
