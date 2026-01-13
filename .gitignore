@@ -2,6 +2,9 @@
 # WARNING: everything is in here for a reason. Edit with care.
 # -------------------------------------
 
+helm/charts/smarter/charts/
+helm/charts/smarter/Chart.lock
+
 # Sphinx documentation build artifacts.
 # -------------------------------------
 docs/build/
