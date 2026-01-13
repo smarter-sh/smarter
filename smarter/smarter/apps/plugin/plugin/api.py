@@ -34,7 +34,7 @@ A Plugin that uses a REST API to retrieve its return data
 # python stuff
 import logging
 from datetime import datetime
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Union
 
 # smarter stuff
 from smarter.apps.plugin.manifest.enum import (
@@ -444,7 +444,7 @@ class ApiPlugin(PluginBase):
 
         logger.info("%s.create() called.", self.formatted_class_name)
 
-    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[str]:
+    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[Union[dict, list, str]]:
         """
         Fetch information from a Plugin object.
 

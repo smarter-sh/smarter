@@ -1210,14 +1210,14 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         return messages_copy
 
     @abstractmethod
-    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[str]:
+    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Optional[Union[dict, list, str]]:
         """
         Fetch information from a Plugin object.
 
         :param function_args: The function arguments from the OpenAI function call.
         :type function_args: dict[str, Any]
         :return: The plugin response as a string.
-        :rtype: Optional[str]
+        :rtype: Optional[Union[dict, list, str]]
 
         :raises NotImplementedError: If not implemented in a subclass.
         """
