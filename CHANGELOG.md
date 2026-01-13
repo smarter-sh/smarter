@@ -1,3 +1,9 @@
+## [0.13.60](https://github.com/smarter-sh/smarter/compare/v0.13.59...v0.13.60) (2026-01-13)
+
+### Bug Fixes
+
+* add leading and trailing slashes if necessary in validate_connectivity_test_path() ([c32e895](https://github.com/smarter-sh/smarter/commit/c32e89569ef6fa6ea15f3ed82d470db8cd3f2dc9))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
