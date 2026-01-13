@@ -300,82 +300,85 @@ runs:
       id: create-secrets-values
       shell: bash
       run: |-
-        cat > /tmp/values.yaml <<EOF
-        deployTimestamp: "$(date +%s)"
-        env:
-          AWS_REGION: "${{ inputs.aws-region }}"
-          AWS_ACCESS_KEY_ID: "${{ inputs.aws-access-key-id }}"
-          AWS_SECRET_ACCESS_KEY: "${{ inputs.aws-secret-access-key }}"
-          CACHES_LOCATION: "${{ env.CACHES_LOCATION }}"
-          CELERY_BROKER_URL: "${{ env.CELERY_BROKER_URL }}"
-          CELERY_RESULT_BACKEND: "${{ env.CELERY_RESULT_BACKEND }}"
-          DJANGO_SETTINGS_MODULE: "${{ env.DJANGO_SETTINGS_MODULE }}"
-          DOCKERHUB_USERNAME: "${{ inputs.dockerhub-username }}"
-          DOCKERHUB_PAT: "${{ inputs.dockerhub-pat }}"
-          ENVIRONMENT: "${{ inputs.environment }}"
-          NAMESPACE: "${{ env.NAMESPACE }}"
-          SECRET_KEY: "${{ env.SECRET_KEY }}"
-          SMARTER_ADMIN_PASSWORD: "${{ env.SMARTER_ADMIN_PASSWORD }}"
-          SMARTER_ADMIN_USERNAME: "${{ env.SMARTER_ADMIN_USERNAME }}"
-          SMARTER_ADMIN_EMAIL: "${{ env.SMARTER_ADMIN_EMAIL }}"
-          SMARTER_ANTHROPIC_API_KEY: "${{ inputs.anthropic-api-key }}"
-          SMARTER_DOCKER_IMAGE: "${{ env.SMARTER_DOCKER_IMAGE }}"
-          SMARTER_EMAIL_ADMIN: "lpm0073@gmail.com"
-          SMARTER_FERNET_ENCRYPTION_KEY: "${{ inputs.fernet-encryption-key }}"
-          SMARTER_GEMINI_API_KEY: "${{ inputs.gemini-api-key }}"
-          SMARTER_GOOGLE_SERVICE_ACCOUNT_B64: "${{ inputs.google-service-account-b64 }}"
-          SMARTER_GOOGLE_MAPS_API_KEY: "${{ inputs.google-maps-api-key }}"
-          SMARTER_LLAMA_API_KEY: "${{ inputs.llama-api-key }}"
-          SMARTER_LOGIN_URL: "${{ env.SMARTER_LOGIN_URL }}"
-          SMARTER_LOGO: "${{ inputs.smarter-logo }}"
-          SMARTER_MAILCHIMP_API_KEY: "${{ inputs.mailchimp-api-key }}"
-          SMARTER_MAILCHIMP_LIST_ID: "${{ inputs.mailchimp-list-id }}"
-          SMARTER_MARKETING_SITE_URL: "https://smarter.sh"
-          SMARTER_MYSQL_HOST: "${{ env.MYSQL_HOST }}"
-          SMARTER_MYSQL_PORT: "${{ env.MYSQL_PORT }}"
-          SMARTER_MYSQL_DATABASE: "${{ env.SMARTER_MYSQL_DATABASE }}"
-          SMARTER_MYSQL_USER: "${{ env.SMARTER_MYSQL_USERNAME }}"
-          SMARTER_MYSQL_PASSWORD: "${{ env.SMARTER_MYSQL_PASSWORD }}"
-          SMARTER_MYSQL_ROOT_USERNAME: "${{ env.MYSQL_ROOT_USERNAME }}"
-          SMARTER_MYSQL_ROOT_PASSWORD: "${{ env.MYSQL_ROOT_PASSWORD }}"
-          SMARTER_MYSQL_TEST_DATABASE_PASSWORD: "${{ inputs.smarter-mysql-test_database_password }}"
-          SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: "smarter_test_db"
-          SMARTER_ROOT_DOMAIN: "${{ inputs.root-domain }}"
-          SMARTER_SMTP_SENDER: "no-reply@smarter.sh"
-          SMARTER_SMTP_FROM_EMAIL: "no-reply@platform.smarter.sh"
-          SMARTER_OPENAI_API_KEY: "${{ inputs.openai-api-key }}"
-          SMARTER_PINECONE_API_KEY: "${{ inputs.pinecone-api-key }}"
-          SMARTER_PINECONE_ENVIRONMENT: "${{ inputs.pinecone-environment }}"
-          SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "${{ inputs.social-auth-google-oauth2-key }}"
-          SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "${{ inputs.social-auth-google-oauth2-secret }}"
-          SMARTER_SOCIAL_AUTH_GITHUB_KEY: "${{ inputs.social-auth-github-key }}"
-          SMARTER_SOCIAL_AUTH_GITHUB_SECRET: "${{ inputs.social-auth-github-secret }}"
-          SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "${{ inputs.social-auth-linkedin-oauth2-key }}"
-          SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "${{ inputs.social-auth-linkedin-oauth2-secret }}"
-          SMTP_HOST: "${{ env.SMTP_HOST }}"
-          SMTP_PORT: "${{ env.SMTP_PORT }}"
-          SMTP_USE_SSL: "${{ env.SMTP_USE_SSL }}"
-          SMTP_USE_TLS: "${{ env.SMTP_USE_TLS }}"
-          SMARTER_SMTP_USERNAME: "${{ env.SMTP_USERNAME }}"
-          SMARTER_SMTP_PASSWORD: "${{ env.SMTP_PASSWORD }}"
+        cat > /tmp/values.json <<EOF
+        {
+          "deployTimestamp": "$(date +%s)",
+          "env": {
+            "AWS_ACCESS_KEY_ID": "${{ inputs.aws-access-key-id }}",
+            "AWS_REGION": "${{ inputs.aws-region }}",
+            "AWS_SECRET_ACCESS_KEY": "${{ inputs.aws-secret-access-key }}",
+            "CACHES_LOCATION": "${{ env.CACHES_LOCATION }}",
+            "CELERY_BROKER_URL": "${{ env.CELERY_BROKER_URL }}",
+            "CELERY_RESULT_BACKEND": "${{ env.CELERY_RESULT_BACKEND }}",
+            "DJANGO_SETTINGS_MODULE": "${{ env.DJANGO_SETTINGS_MODULE }}",
+            "DOCKERHUB_PAT": "${{ inputs.dockerhub-pat }}",
+            "DOCKERHUB_USERNAME": "${{ inputs.dockerhub-username }}",
+            "ENVIRONMENT": "${{ inputs.environment }}",
+            "NAMESPACE": "${{ env.NAMESPACE }}",
+            "SECRET_KEY": "${{ env.SECRET_KEY }}",
+            "SMARTER_ADMIN_EMAIL": "${{ env.SMARTER_ADMIN_EMAIL }}",
+            "SMARTER_ADMIN_PASSWORD": "${{ env.SMARTER_ADMIN_PASSWORD }}",
+            "SMARTER_ADMIN_USERNAME": "${{ env.SMARTER_ADMIN_USERNAME }}",
+            "SMARTER_ANTHROPIC_API_KEY": "${{ inputs.anthropic-api-key }}",
+            "SMARTER_DOCKER_IMAGE": "${{ env.SMARTER_DOCKER_IMAGE }}",
+            "SMARTER_EMAIL_ADMIN": "lpm0073@gmail.com",
+            "SMARTER_FERNET_ENCRYPTION_KEY": "${{ inputs.fernet-encryption-key }}",
+            "SMARTER_GEMINI_API_KEY": "${{ inputs.gemini-api-key }}",
+            "SMARTER_GOOGLE_MAPS_API_KEY": "${{ inputs.google-maps-api-key }}",
+            "SMARTER_GOOGLE_SERVICE_ACCOUNT_B64": "${{ inputs.google-service-account-b64 }}",
+            "SMARTER_LLAMA_API_KEY": "${{ inputs.llama-api-key }}",
+            "SMARTER_LOGIN_URL": "${{ env.SMARTER_LOGIN_URL }}",
+            "SMARTER_LOGO": "${{ inputs.smarter-logo }}",
+            "SMARTER_MAILCHIMP_API_KEY": "${{ inputs.mailchimp-api-key }}",
+            "SMARTER_MAILCHIMP_LIST_ID": "${{ inputs.mailchimp-list-id }}",
+            "SMARTER_MARKETING_SITE_URL": "https://smarter.sh",
+            "SMARTER_MYSQL_DATABASE": "${{ env.SMARTER_MYSQL_DATABASE }}",
+            "SMARTER_MYSQL_HOST": "${{ env.MYSQL_HOST }}",
+            "SMARTER_MYSQL_PASSWORD": "${{ env.SMARTER_MYSQL_PASSWORD }}",
+            "SMARTER_MYSQL_PORT": "${{ env.MYSQL_PORT }}",
+            "SMARTER_MYSQL_ROOT_PASSWORD": "${{ env.SMARTER_MYSQL_ROOT_PASSWORD }}",
+            "SMARTER_MYSQL_ROOT_USERNAME": "${{ env.SMARTER_MYSQL_ROOT_USERNAME }}",
+            "SMARTER_MYSQL_TEST_DATABASE_PASSWORD": "${{ inputs.smarter-mysql-test_database_password }}",
+            "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME": "smarter_test_db",
+            "SMARTER_MYSQL_USER": "${{ env.SMARTER_MYSQL_USERNAME }}",
+            "SMARTER_OPENAI_API_KEY": "${{ inputs.openai-api-key }}",
+            "SMARTER_PINECONE_API_KEY": "${{ inputs.pinecone-api-key }}",
+            "SMARTER_PINECONE_ENVIRONMENT": "${{ inputs.pinecone-environment }}",
+            "SMARTER_ROOT_DOMAIN": "${{ inputs.root-domain }}",
+            "SMARTER_SMTP_FROM_EMAIL": "no-reply@platform.smarter.sh",
+            "SMARTER_SMTP_PASSWORD": "${{ env.SMTP_PASSWORD }}",
+            "SMARTER_SMTP_SENDER": "no-reply@smarter.sh",
+            "SMARTER_SMTP_USERNAME": "${{ env.SMTP_USERNAME }}",
+            "SMARTER_SOCIAL_AUTH_GITHUB_KEY": "${{ inputs.social-auth-github-key }}",
+            "SMARTER_SOCIAL_AUTH_GITHUB_SECRET": "${{ inputs.social-auth-github-secret }}",
+            "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY": "${{ inputs.social-auth-google-oauth2-key }}",
+            "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET": "${{ inputs.social-auth-google-oauth2-secret }}",
+            "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY": "${{ inputs.social-auth-linkedin-oauth2-key }}",
+            "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET": "${{ inputs.social-auth-linkedin-oauth2-secret }}",
+            "SMTP_HOST": "${{ env.SMTP_HOST }}",
+            "SMTP_PORT": "${{ env.SMTP_PORT }}",
+            "SMTP_USE_SSL": "${{ env.SMTP_USE_SSL }}",
+            "SMTP_USE_TLS": "${{ env.SMTP_USE_TLS }}"
+          }
+        }
         EOF
 
     - name: Dump values.yaml
       id: dump-values
       shell: bash
       run: |-
-        echo "values.yaml"
-        echo "--------------------------------------------------------------------------------"
-        cat -nA /tmp/values.yaml
-
-    - name: Convert to json
-      id: convert-to-json
-      shell: bash
-      run: |-
         echo "values.json"
         echo "--------------------------------------------------------------------------------"
-        cat /tmp/values.yaml | yq eval -o=json > /tmp/values.json
         cat -nA /tmp/values.json
+
+    - name: Convert to yaml
+      id: convert-to-yaml
+      shell: bash
+      run: |-
+        echo "values.yaml"
+        echo "--------------------------------------------------------------------------------"
+        cat /tmp/values.json | yq eval -P > /tmp/values.yaml
+        cat -nA /tmp/values.yaml
 
     # Deploy the application to Kubernetes using Helm
     - name: Deploy
