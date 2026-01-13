@@ -5,7 +5,7 @@ import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
 
-import smarter.common.classes
+from smarter.common.mixins import SmarterHelperMixin
 
 
 class Migration(migrations.Migration):
@@ -226,7 +226,7 @@ class Migration(migrations.Migration):
                 "verbose_name": "Provider",
                 "verbose_name_plural": "Providers",
             },
-            bases=(models.Model, smarter.common.classes.SmarterHelperMixin),
+            bases=(models.Model, SmarterHelperMixin),
         ),
         migrations.CreateModel(
             name="ProviderModel",

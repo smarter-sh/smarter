@@ -129,7 +129,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
     .. seealso::
 
         - :class:`abc.ABC`
-        - :class:`smarter.common.classes.SmarterHelperMixin`
+        - :class:`smarter.common.mixins.SmarterHelperMixin`
     """
 
     SAMPluginType = SAMPluginCommon
