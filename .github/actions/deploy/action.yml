@@ -331,14 +331,14 @@ runs:
           SMARTER_MARKETING_SITE_URL: "https://smarter.sh"
           SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: smarter_test_db
           SMARTER_SMTP_SENDER: no-reply@smarter.sh
-          SMARTER_SMTP_FROM_EMAIL: no-reply@alpha.platform.smarter.sh
+          SMARTER_SMTP_FROM_EMAIL: no-reply@platform.smarter.sh
           SMARTER_FERNET_ENCRYPTION_KEY: "${{ inputs.fernet-encryption-key }}"
           SECRET_KEY: "${{ env.SECRET_KEY }}"
 
           # Email
           # -------------------------------------------------------------------
-          MAILCHIMP_API_KEY: "${{ inputs.mailchimp-api-key }}"
-          MAILCHIMP_LIST_ID: "${{ inputs.mailchimp-list-id }}"
+          SMARTER_MAILCHIMP_API_KEY: "${{ inputs.mailchimp-api-key }}"
+          SMARTER_MAILCHIMP_LIST_ID: "${{ inputs.mailchimp-list-id }}"
 
           # AI APIs
           # -------------------------------------------------------------------
@@ -398,7 +398,7 @@ runs:
       shell: bash
       run: |-
         echo "values.yaml"
-        echo "-------------------------------"
+        echo "--------------------------------------------------------------------------------"
         cat -nA /tmp/values.yaml
 
     # Deploy the application to Kubernetes using Helm
