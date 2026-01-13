@@ -134,7 +134,9 @@ env:
   ## @param env.ENVIRONMENT Deployment environment (development, staging, production)
   ENVIRONMENT: "prod"
 
-  ## Encryption
+  ## @param env.SMARTER_EMAIL_ADMIN Smarter admin email
+  SMARTER_EMAIL_ADMIN: admin@example.com
+
   ## @param env.FERNET_ENCRYPTION_KEY Fernet encryption key
   SMARTER_FERNET_ENCRYPTION_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
 
@@ -144,8 +146,17 @@ env:
   ## @param env.GOOGLE_MAPS_API_KEY Google Maps API key
   SMARTER_GOOGLE_MAPS_API_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
 
+  ## @param env.GOOGLE_SERVICE_ACCOUNT_B64 Google service account in base64
+  SMARTER_GOOGLE_SERVICE_ACCOUNT_B64: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
   ## @param env.LLAMA_API_KEY Meta Llama API key
   SMARTER_LLAMA_API_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.LOGO URL to the Smarter logo
+  SMARTER_LOGO: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.MARKETING_SITE_URL Smarter marketing site URL
+  SMARTER_MARKETING_SITE_URL: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
 
   ## Email Configuration
   ## @param env.MAILCHIMP_API_KEY Mailchimp API key
@@ -175,6 +186,9 @@ env:
 
   ## @param env.MYSQL_ROOT_PASSWORD MySQL root password
   SMARTER_MYSQL_ROOT_PASSWORD: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.MYSQL_TEST_DATABASE_PASSWORD MySQL test database password
+  SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: "smarter_test_db"
 
   ## @param env.NAMESPACE Kubernetes namespace
   NAMESPACE: "smarter-platform-prod"
@@ -212,7 +226,7 @@ env:
   SMARTER_SOCIAL_AUTH_GITHUB_SECRET: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
 
   ## @param env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY LinkedIn OAuth2 client ID
-  SMARTER_1SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+  SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
 
   ## @param env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET LinkedIn OAuth2 client secret
   SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
@@ -233,6 +247,18 @@ env:
   ## @param env.SMARTER_ADMIN_EMAIL Smarter admin email
   SMARTER_ADMIN_EMAIL: "admin@example.com"
 
+  ## @param env.SMTP_FROM_EMAIL SMTP from email address
+  SMARTER_SMTP_FROM_EMAIL: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SMTP_USERNAME SMTP username
+  SMARTER_SMTP_USERNAME: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SMTP_PASSWORD SMTP password
+  SMARTER_SMTP_PASSWORD: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
+  ## @param env.SMTP_SENDER SMTP sender email address
+  SMARTER_SMTP_SENDER: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
+
   ## SMTP Configuration
   ## @param env.SMTP_HOST SMTP host
   SMTP_HOST: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
@@ -246,11 +272,6 @@ env:
   ## @param env.SMTP_USE_TLS Use TLS for SMTP
   SMTP_USE_TLS: "true"
 
-  ## @param env.SMTP_USERNAME SMTP username
-  SMARTER_SMTP_USERNAME: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
-
-  ## @param env.SMTP_PASSWORD SMTP password
-  SMARTER_SMTP_PASSWORD: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
 
 # Backing Services Configuration
 # ----------------------------------------------------------------------------
