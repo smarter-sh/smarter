@@ -62,7 +62,7 @@ from smarter.apps.plugin.manifest.models.sql_plugin.spec import (
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults, smarter_settings
+from smarter.common.conf import SettingsDefaults
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
@@ -473,7 +473,7 @@ class SqlPlugin(PluginBase):
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
             )
         if parameters:
-            logger.info("%s.plugin_data_django_model() recasting parameters", self.formatted_class_name)
+            logger.debug("%s.plugin_data_django_model() recasting parameters", self.formatted_class_name)
             for parameter in parameters:
                 if not isinstance(parameter, Parameter):
                     raise SmarterConfigurationError(
@@ -482,7 +482,7 @@ class SqlPlugin(PluginBase):
                 # if the parameter is a Pydantic model, we need to convert it to a
                 # standard json dict.
                 parameter = parameter.model_dump()
-                logger.info(
+                logger.debug(
                     "%s.plugin_data_django_model() processing parameter: %s",
                     self.formatted_class_name,
                     parameter,
@@ -647,10 +647,12 @@ class SqlPlugin(PluginBase):
         :returns: None
         :rtype: None
         """
-        logger.info("%s.create() called.", self.formatted_class_name)
+        logger.debug("%s.create() called.", self.formatted_class_name)
         super().create()
 
-    def tool_call_fetch_plugin_response(self, function_args: Union[dict[str, Any], list]) -> Optional[str]:
+    def tool_call_fetch_plugin_response(
+        self, function_args: Union[dict[str, Any], list]
+    ) -> Optional[Union[dict, list, str]]:
         """
         Fetch information from a Plugin object in response to an OpenAI API tool call.
 
@@ -679,6 +681,7 @@ class SqlPlugin(PluginBase):
         :return: The result of the SQL query as a string, or an empty string if no results.
         :raises SmarterSqlPluginError: If plugin data or SQL connection is invalid, or arguments are malformed.
         """
+        logger.debug("%s.tool_call_fetch_plugin_response() called.", self.formatted_class_name)
 
         def sql_value(val):
             if val is None:
@@ -760,7 +763,7 @@ class SqlPlugin(PluginBase):
         if not sql.endswith(";"):
             sql += ";"
 
-        logger.info(
+        logger.debug(
             "%s.tool_call_fetch_plugin_response() executing remote SQL query: %s", self.formatted_class_name, sql
         )
 
@@ -787,10 +790,7 @@ class SqlPlugin(PluginBase):
                 self.formatted_class_name,
             )
             return ""
-        if isinstance(retval, list) or isinstance(retval, dict):
-            # convert the result to a JSON string
-            retval = json.dumps(retval)
-        elif not isinstance(retval, str):
+        if not isinstance(retval, (str, list, dict)):
             raise SmarterSqlPluginError(
                 f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query returned an unexpected type: {type(retval)}. Expected str, list, or dict."
             )

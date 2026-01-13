@@ -169,7 +169,7 @@ class SmarterChatSession(SmarterHelperMixin):
 
 # pylint: disable=R0902
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatConfigView(SmarterAuthenticatedCachedWebView):
+class ChatConfigView(SmarterNeverCachedWebView):
     """
     Chat configuration view for the Smarter web application.
 
@@ -450,7 +450,6 @@ class ChatConfigView(SmarterAuthenticatedCachedWebView):
         ChatBotConfigSerializer, ChatBotPluginSerializer : Serializers for chatbot and plugin data.
         ChatBotHelper : Helper for chatbot-related operations.
         """
-        self.smarter_request = request
         logger.info(
             "%s.dispatch() called with request=%s, chatbot_id=%s, session_key=%s chatbot_name=%s user_profile=%s",
             self.formatted_class_name,
@@ -692,7 +691,6 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
 
-        self.smarter_request = request
         name = kwargs.pop("name", None)
         name = rfc1034_compliant_to_snake(name) if name else None
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
@@ -795,8 +793,6 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code >= 300:
             return response
-
-        self.smarter_request = request
 
         self.chatbot_helpers = []
 

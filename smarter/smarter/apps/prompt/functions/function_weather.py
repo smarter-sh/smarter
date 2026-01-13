@@ -103,7 +103,7 @@ openmeteo = openmeteo_requests.Client(session=WEATHER_API_RETRY_SESSION)
 
 
 # pylint: disable=too-many-locals
-def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit="METRIC") -> str:
+def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit="METRIC") -> list:
     """
     Retrieves the current weather and a 24-hour forecast for a specified location.
 
@@ -141,7 +141,7 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit
         retval = {
             "error": "Google Maps Geolocation service is not initialized. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview, and add your GOOGLE_MAPS_API_KEY to .env"
         }
-        return json.dumps(retval)
+        return retval
 
     unit = unit or "METRIC"
     location = location or "Cambridge, MA, near Kendall Square"
@@ -191,12 +191,13 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit
     hourly_dataframe = pd.DataFrame(data=hourly_data).head(24)  # Only return the first 24 hours
     hourly_dataframe["date"] = hourly_dataframe["date"].dt.strftime("%Y-%m-%d %H:%M")
     hourly_json = hourly_dataframe.to_json(orient="records")
+    hourly_json = json.loads(hourly_json)
     llm_tool_responded.send(
         sender=get_current_weather,
         tool_call=tool_call.model_dump(),
         tool_response=hourly_json,
     )
-    return json.dumps(hourly_json)
+    return hourly_json
 
 
 def weather_tool_factory() -> dict:

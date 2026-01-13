@@ -429,7 +429,9 @@ class ChatProviderBase(ProviderDbMixin):
             raise SmarterValueError(f"{self.formatted_class_name}: input_text must be a string")
         return input_text
 
-    def append_message(self, role: str, content: Optional[str], message: Optional[dict] = None) -> None:
+    def append_message(
+        self, role: str, content: Optional[Union[dict, list, str]], message: Optional[dict] = None
+    ) -> None:
         if role not in OpenAIMessageKeys.all_roles:
             raise SmarterValueError(
                 f"Internal error. Invalid message role: {role} not found in list of valid {self.provider} message roles {OpenAIMessageKeys.all_roles}."
@@ -474,7 +476,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     fully compatible with OpenAI's text completion API.
     """
 
-    @cached_property
+    @property
     def openai_messages(self) -> list[dict[str, Any]]:
         """
         Return a sanitized list of messages compatible with OpenAI's chat completion API.
@@ -553,7 +555,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             retval.append(message_copy)
         return retval
 
-    @cached_property
+    @property
     def new_messages(self) -> list[dict[str, Any]]:
         if self.messages is None:
             return []
@@ -568,7 +570,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         return self.messages
 
     def prep_first_request(self):
-        logger.info("%s %s", self.formatted_class_name, formatted_text("prep_first_request()"))
+        logger.debug("%s %s", self.formatted_class_name, formatted_text("prep_first_request()"))
         # ensure that all message history is marked as not new
         if isinstance(self.messages, list):
             self.messages = self.messages_set_is_new(self.messages, is_new=False)
@@ -619,7 +621,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         Prepare the second request for the chat completion. This is called
         in response to a tool call that requires a second request to the LLM.
         """
-        logger.info("%s %s", self.formatted_class_name, formatted_text("prep_second_request()"))
+        logger.debug("%s.prep_second_request() called.", self.formatted_class_name)
         if not isinstance(self.second_iteration, dict):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
@@ -636,6 +638,15 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
 
     def append_openai_response(self, response: ChatCompletion) -> None:
+        """
+        Append the OpenAI-compatible response message to the internal message list.
+        2025-06-20: updated to use model_dump_json() to ensure compatibility with Pydantic v2.
+        2025-10-02: updated to validate that the response message is indeed a ChatCompletionMessage.
+
+        :param response: The OpenAI-compatible chat completion response.
+        :type response: ChatCompletion
+        """
+        logger.debug("%s.append_openai_response() called.", self.formatted_class_name)
         response_message = response.choices[0].message
         message_json = json.loads(response_message.model_dump_json())
         if not isinstance(response_message, ChatCompletionMessage):
@@ -649,7 +660,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         handle internal billing, and append messages to the response for prompt completion and the billing summary
 
         """
-        logger.info(
+        logger.debug(
             "%s %s", self.formatted_class_name, formatted_text(f"handle_response() iteration: {self.iteration}")
         )
 
@@ -714,7 +725,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         """
         handle a built-in tool call. example: get_current_weather()
         """
-        logger.info("%s %s - %s", self.formatted_class_name, formatted_text("handle_tool_called()"), function_name)
+        logger.debug("%s %s - %s", self.formatted_class_name, formatted_text("handle_tool_called()"), function_name)
         request = (self.first_iteration[InternalKeys.REQUEST_KEY],)
         response = (self.first_iteration[InternalKeys.RESPONSE_KEY],)
         chat_completion_tool_called.send(
@@ -732,7 +743,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
 
     def handle_plugin_called(self, plugin: PluginBase) -> None:
-        logger.info("%s %s - %s", self.formatted_class_name, formatted_text("handle_plugin_called()"), plugin.name)
+        logger.debug("%s %s - %s", self.formatted_class_name, formatted_text("handle_plugin_called()"), plugin.name)
         chat_completion_plugin_called.send(
             sender=self.handler,
             chat=self.chat,
@@ -746,11 +757,11 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         """
         tool_call: List[ChatCompletionMessageToolCallUnion]
         """
+        logger.debug("%s.process_tool_call() called", self.formatted_class_name)
         if not isinstance(tool_call, ChatCompletionMessageToolCall):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: tool_call must be a ChatCompletionMessageToolCall, got {type(tool_call)}. This is a bug."
             )
-        logger.info("%s %s", self.formatted_class_name, formatted_text("process_tool_call()"))
         llm_tool_requested.send(sender=self.process_tool_call, tool_call=tool_call.model_dump())
         if not tool_call:
             raise SmarterValueError(f"{self.formatted_class_name}: tool_call is required")
@@ -826,15 +837,11 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             OpenAIMessageKeys.TOOL_CALL_ID: tool_call.id,
             OpenAIMessageKeys.MESSAGE_NAME_KEY: function_name,
         }
-        if not isinstance(function_response, str):
-            raise SmarterValueError(
-                f"{self.formatted_class_name}: function_response must be a string, got {type(function_response)}"
-            )
-        message_content = (
-            f"{str(plugin.__class__.__name__)} {plugin.name if plugin else function_name} response: "
-            + function_response
+        if isinstance(function_response, (dict, list)):
+            function_response = json.dumps(function_response)
+        self.append_message(
+            role=OpenAIMessageKeys.TOOL_MESSAGE_KEY, content=function_response, message=tool_call_message
         )
-        self.append_message(role=OpenAIMessageKeys.TOOL_MESSAGE_KEY, content=message_content, message=tool_call_message)
         if not isinstance(self.serialized_tool_calls, list):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: serialized_tool_calls must be a list, got {type(self.serialized_tool_calls)}"
@@ -847,7 +854,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     def handle_plugin_selected(self, plugin: PluginBase) -> None:
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # TODO: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_completion_tokens
-        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_plugin_selected()"))
+        logger.debug("%s.handle_plugin_selected() called.", self.formatted_class_name)
         logger.warning(
             "smarter.apps.prompt.providers.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
         )
@@ -868,7 +875,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
 
     def handle_success(self) -> dict:
-        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_success()"))
+        logger.debug("%s.handle_success() called", self.formatted_class_name)
         if not isinstance(self.second_iteration, dict):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
@@ -896,7 +903,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         """
         Return a dictionary of request meta data.
         """
-        logger.info("%s %s", self.formatted_class_name, formatted_text("request_meta_data_factory()"))
+        logger.debug("%s.request_meta_data_factory() called.", self.formatted_class_name)
         return {
             InternalKeys.MODEL_KEY: self.model,
             InternalKeys.TEMPERATURE_KEY: self.temperature,
@@ -969,7 +976,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 user=current_user
             )
         """
-        logger.info("%s %s", self.formatted_class_name, formatted_text("handler()"))
+        logger.debug("%s.handler() called.", self.formatted_class_name)
         self._chat = chat
         if chat:
             self.account = chat.account
@@ -1010,7 +1017,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 self.messages = self.get_message_thread(data=self.data)
 
             for plugin in self.plugins:
-                logger.info(
+                logger.debug(
                     "%s %s - handler() plugin: %s, type: %s",
                     self.formatted_class_name,
                     formatted_text("handler()"),
@@ -1031,7 +1038,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             }
             completions_kwargs = self.prune_empty_values(completions_kwargs)
 
-            logger.info(
+            logger.debug(
                 "%s %s - openai.chat.completions.create() completions_kwargs: %s",
                 self.formatted_class_name,
                 formatted_text("handler()"),
@@ -1053,7 +1060,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
             if response_message.tool_calls is not None:
                 tool_calls: Optional[list[ChatCompletionMessageToolCallUnion]] = response_message.tool_calls
-                logger.info(
+                logger.debug(
                     "%s %s - %s tool calls detected, preparing second request",
                     self.formatted_class_name,
                     formatted_text("handler()"),
