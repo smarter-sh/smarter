@@ -1,7 +1,7 @@
 Smarter Helper Mixin
 ====================
 
-.. autoclass:: smarter.common.classes.SmarterHelperMixin
+.. autoclass:: smarter.common.mixins.SmarterHelperMixin
     :members:
     :undoc-members:
     :show-inheritance:

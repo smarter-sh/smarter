@@ -17,9 +17,9 @@ from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.functional import cached_property
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError

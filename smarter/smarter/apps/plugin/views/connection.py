@@ -17,7 +17,6 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import ConnectionBase
-from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.django import waffle
@@ -78,32 +77,38 @@ class ConnectionDetailView(DocsBaseView):
         self.name = kwargs.pop("name", None)
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
         if self.kind is None:
-            logger.error("Connection kind is required but not provided.")
+            logger.error("%s.setup() Connection kind is required but not provided.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Connection kind is required")
         if self.kind not in SAMKinds.all_connections():
-            logger.error("Connection kind %s is not supported.", self.kind)
+            logger.error("%s.setup() Connection kind %s is not supported.", self.formatted_class_name, self.kind)
             return SmarterHttpResponseNotFound(
                 request=request, error_message=f"Connection kind {self.kind} is not supported"
             )
         if not self.name:
-            logger.error("Connection name is required but not provided.")
+            logger.error("%s.setup() Connection name is required but not provided.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Connection name is required")
-        if not self.user:
-            logger.error("User is not authenticated.")
+        if not request.user:
+            logger.error("%s.setup() User is not authenticated.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         self.connection = ConnectionBase.get_cached_connection_by_name_and_kind(
-            user=self.user, kind=self.kind, name=self.name
+            user=request.user, kind=self.kind, name=self.name
         )
 
     def get(self, request, *args, **kwargs):
-        if self.user is None:
-            logger.error("Request user is None. This should not happen.")
+        if request.user is None:
+            logger.error("%s.get() Request user is None. This should not happen.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         if not self.connection:
-            logger.error("Connection %s of kind %s not found for user %s.", self.name, self.kind, self.user.username)  # type: ignore[union-attr]
+            logger.error("%s.get() Connection %s of kind %s not found for user %s.", self.formatted_class_name, self.name, self.kind, request.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Connection not found")
 
-        logger.info("Rendering connection detail view for %s of kind %s, kwargs=%s.", self.name, self.kind, kwargs)
+        logger.info(
+            "%s.get() Rendering connection detail view for %s of kind %s, kwargs=%s.",
+            self.formatted_class_name,
+            self.name,
+            self.kind,
+            kwargs,
+        )
         # get_brokered_json_response() adds self.kind to kwargs, so we remove it here.
         # TypeError: smarter.apps.api.v1.cli.views.describe.View.as_view.<locals>.view() got multiple values for keyword argument 'kind'
         kwargs.pop("kind", None)
@@ -158,10 +163,10 @@ class ConnectionListView(SmarterAuthenticatedNeverCachedWebView):
     connections: list[ConnectionBase]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
-        if self.user is None:
-            logger.error("Request user is None. This should not happen.")
+        if request.user is None:
+            logger.error("%s.get() Request user is None. This should not happen.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.connections = ConnectionBase.get_cached_connections_for_user(self.user)
+        self.connections = ConnectionBase.get_cached_connections_for_user(request.user)
         context = {
             "connections": self.connections,
         }

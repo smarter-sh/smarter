@@ -1,7 +1,7 @@
 Smarter Middleware Mixin
 ============================
 
-.. autoclass:: smarter.common.classes.SmarterMiddlewareMixin
+.. autoclass:: smarter.common.mixins.SmarterMiddlewareMixin
     :members:
     :undoc-members:
     :show-inheritance:

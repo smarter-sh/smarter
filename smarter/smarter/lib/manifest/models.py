@@ -11,7 +11,7 @@ from typing import List, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from smarter.common.api import SmarterApiVersions
-from smarter.common.classes import SmarterHelperMixin
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
 from smarter.lib.django.validators import SmarterValidator

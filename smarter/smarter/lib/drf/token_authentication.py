@@ -8,9 +8,9 @@ from knox.auth import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.apps.account.models import User
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import mask_string
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
