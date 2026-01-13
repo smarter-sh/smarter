@@ -26,10 +26,13 @@ module.exports = {
               return null;
             }
 
-            // NEVER touch this field
-            delete commit.committerDate;
+            // Make a shallow copy (this is the magic)
+            const cleanCommit = { ...commit };
 
-            return commit;
+            // Remove the problematic field from the copy
+            delete cleanCommit.committerDate;
+
+            return cleanCommit;
           },
         },
       },
