@@ -29,14 +29,25 @@ module.exports = {
             // Make a shallow copy (so we don't touch the frozen original)
             const cleanCommit = { ...commit };
 
-            // Ensure committerDate is a proper Date object
-            if (
-              cleanCommit.committerDate &&
-              !(cleanCommit.committerDate instanceof Date)
-            ) {
-              const d = new Date(cleanCommit.committerDate);
-              cleanCommit.committerDate = isNaN(d.getTime()) ? new Date() : d;
-            }
+            // Helper to normalize a date field to ISO string
+            const normalizeDate = (d) => {
+              if (!d) return new Date().toISOString();
+              const dateObj = d instanceof Date ? d : new Date(d);
+              return isNaN(dateObj.getTime())
+                ? new Date().toISOString()
+                : dateObj.toISOString();
+            };
+
+            if (cleanCommit.date)
+              cleanCommit.date = normalizeDate(cleanCommit.date);
+            if (cleanCommit.committerDate)
+              cleanCommit.committerDate = normalizeDate(
+                cleanCommit.committerDate,
+              );
+            if (cleanCommit.committer && cleanCommit.committer.date)
+              cleanCommit.committer.date = normalizeDate(
+                cleanCommit.committer.date,
+              );
 
             return cleanCommit;
           },
