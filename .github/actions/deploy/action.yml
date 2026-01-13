@@ -375,9 +375,10 @@ runs:
       id: convert-to-yaml
       shell: bash
       run: |-
+        cat /tmp/values.json | jq . > /tmp/values_clean.json && mv /tmp/values_clean.json /tmp/values.json
+        cat /tmp/values.json | yq eval -P --input-format=json > /tmp/values.yaml
         echo "values.yaml"
         echo "--------------------------------------------------------------------------------"
-        cat /tmp/values.json | yq eval -P --input-format=json > /tmp/values.yaml
         cat /tmp/values.yaml
 
     # Deploy the application to Kubernetes using Helm
