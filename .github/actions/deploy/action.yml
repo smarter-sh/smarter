@@ -152,6 +152,7 @@ runs:
       uses: actions-hub/kubectl@master
       env:
         KUBE_CONFIG: /home/runner/.kube/config
+        HOME: /home/runner
 
     # install jq, which k8s-get-secret will use to parse the Kubernetes secret
     # and set the environment variables
