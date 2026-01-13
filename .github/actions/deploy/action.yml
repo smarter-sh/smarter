@@ -393,6 +393,14 @@ runs:
           CELERY_RESULT_BACKEND: "${{ env.CELERY_RESULT_BACKEND }}"
         EOF
 
+    - name: Dump values.yaml
+      id: dump-values
+      shell: bash
+      run: |-
+        echo "values.yaml"
+        echo "-------------------------------"
+        cat /tmp/values.yaml
+
     # Deploy the application to Kubernetes using Helm
     - name: Deploy
       id: deploy
