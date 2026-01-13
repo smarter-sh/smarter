@@ -369,7 +369,7 @@ runs:
       run: |-
         echo "values.json"
         echo "--------------------------------------------------------------------------------"
-        cat -nA /tmp/values.json
+        cat /tmp/values.json
 
     - name: Convert to yaml
       id: convert-to-yaml
@@ -378,7 +378,7 @@ runs:
         echo "values.yaml"
         echo "--------------------------------------------------------------------------------"
         cat /tmp/values.json | yq eval -P > /tmp/values.yaml
-        cat -nA /tmp/values.yaml
+        cat /tmp/values.yaml
 
     # Deploy the application to Kubernetes using Helm
     - name: Deploy
