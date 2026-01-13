@@ -29,27 +29,18 @@ module.exports = {
             // Deep clone commit and committer to avoid mutating frozen objects
             const cleanCommit = JSON.parse(JSON.stringify(commit));
 
-            // Helper to normalize a date field to ISO string
-            const normalizeDate = (d) => {
-              if (!d) return new Date().toISOString();
-              if (typeof d === "string" || typeof d === "number") {
-                const dateObj = new Date(d);
-                return isNaN(dateObj.getTime())
-                  ? new Date().toISOString()
-                  : dateObj.toISOString();
-              }
-              // If already a Date, Proxy, or object, just return a new ISO string now
-              return new Date().toISOString();
+            // Replace any broken or invalid date with a numeric timestamp
+            const fixDate = (d) => {
+              if (!d) return Date.now();
+              if (typeof d === "number") return d;
+              const n = Number(new Date(d));
+              return isNaN(n) ? Date.now() : n;
             };
 
-            cleanCommit.date = normalizeDate(cleanCommit.date);
-            cleanCommit.committerDate = normalizeDate(
-              cleanCommit.committerDate,
-            );
+            cleanCommit.date = fixDate(cleanCommit.date);
+            cleanCommit.committerDate = fixDate(cleanCommit.committerDate);
             if (cleanCommit.committer) {
-              cleanCommit.committer.date = normalizeDate(
-                cleanCommit.committer.date,
-              );
+              cleanCommit.committer.date = fixDate(cleanCommit.committer.date);
             }
 
             return cleanCommit;
