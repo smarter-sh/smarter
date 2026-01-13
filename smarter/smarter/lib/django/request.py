@@ -752,11 +752,6 @@ class SmarterRequestMixin(AccountMixin):
                 if not self._params:
                     raise AttributeError("No query string parameters found.")
             except AttributeError as e:
-                logger.error(
-                    "%s.params() internal error. Could not parse query string parameters: %s",
-                    self.request_mixin_logger_prefix,
-                    e,
-                )
                 return QueryDict("")
         return self._params
 

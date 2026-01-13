@@ -1304,6 +1304,10 @@ LOGGING = {
             "level": smarter_settings.log_level_name,
             "propagate": True,
         },
+        "django_hosts": {
+            "handlers": ["default"],
+            "level": smarter_settings.log_level_name,
+        },
         "django.security.DisallowedHost": {
             "handlers": ["default"],
             "level": smarter_settings.log_level_name,

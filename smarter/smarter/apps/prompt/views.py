@@ -447,7 +447,7 @@ class ChatConfigView(SmarterAuthenticatedCachedWebView):
         ChatBotConfigSerializer, ChatBotPluginSerializer : Serializers for chatbot and plugin data.
         ChatBotHelper : Helper for chatbot-related operations.
         """
-
+        self.smarter_request = request
         logger.info(
             "%s.dispatch() called with request=%s, chatbot_id=%s, session_key=%s chatbot_name=%s user_profile=%s",
             self.formatted_class_name,
@@ -689,6 +689,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
 
+        self.smarter_request = request
         name = kwargs.pop("name", None)
         name = rfc1034_compliant_to_snake(name) if name else None
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
@@ -788,6 +789,8 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
         if response.status_code >= 300:
             return response
 
+        self.smarter_request = request
+
         self.chatbot_helpers = []
 
         def was_already_added(chatbot_helper: ChatBotHelper) -> bool:
@@ -798,7 +801,6 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
                     return True
             return False
 
-        # @cache_results()
         def get_chatbots_for_account(account) -> QuerySet:
             return ChatBot.objects.filter(account=account)
 

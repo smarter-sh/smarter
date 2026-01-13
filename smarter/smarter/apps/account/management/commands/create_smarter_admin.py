@@ -85,7 +85,8 @@ class Command(SmarterCommand):
                 email=SMARTER_CUSTOMER_SUPPORT_EMAIL,
                 phone=SMARTER_CUSTOMER_SUPPORT_PHONE,
                 is_primary=True,
-            ).save()
+            )
+            account_contact.save()
             self.handle_completed_success(
                 msg=f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
             )
