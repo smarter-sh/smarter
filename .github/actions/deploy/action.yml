@@ -399,7 +399,7 @@ runs:
       run: |-
         echo "values.yaml"
         echo "-------------------------------"
-        cat -n /tmp/values.yaml
+        cat -nA /tmp/values.yaml
 
     # Deploy the application to Kubernetes using Helm
     - name: Deploy
