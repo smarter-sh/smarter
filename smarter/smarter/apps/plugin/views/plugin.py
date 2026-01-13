@@ -151,7 +151,7 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
     plugins: list[PluginMeta]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
-        logger.error(
+        logger.debug(
             "%s.get() Rendering plugin list view for user %s with args=%s, kwargs=%s.",
             self.formatted_class_name,
             request.user.username if request.user else "None",

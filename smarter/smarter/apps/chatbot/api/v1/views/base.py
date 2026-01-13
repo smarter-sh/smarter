@@ -321,7 +321,6 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
             args,
             kwargs,
         )
-        self.smarter_request = request
         return super().setup(request, *args, **kwargs)
 
     def dispatch(self, request: WSGIRequest, *args, name: Optional[str] = None, **kwargs):
