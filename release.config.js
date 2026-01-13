@@ -2,8 +2,34 @@ module.exports = {
   branches: ["main", "beta", "alpha"],
   dryRun: false,
   plugins: [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        preset: "conventionalcommits",
+        releaseRules: [
+          { type: "docs", release: false },
+          { type: "test", release: false },
+          { type: "style", release: false },
+        ],
+        parserOpts: {
+          noteKeywords: ["BREAKING CHANGE", "BREAKING CHANGES"],
+        },
+      },
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        preset: "conventionalcommits",
+        writerOpts: {
+          transform: (commit, context) => {
+            if (["docs", "test", "style"].includes(commit.type)) {
+              return;
+            }
+            return commit;
+          },
+        },
+      },
+    ],
     [
       "@semantic-release/changelog",
       {
