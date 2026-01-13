@@ -330,14 +330,6 @@ runs:
         }
         EOF
 
-    - name: Dump values.json
-      id: dump-json
-      shell: bash
-      run: |-
-        echo "values.json"
-        echo "--------------------------------------------------------------------------------"
-        cat /tmp/values.json
-
     - name: Convert to yaml
       id: convert-to-yaml
       shell: bash
