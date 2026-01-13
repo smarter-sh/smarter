@@ -4,8 +4,8 @@ branding:
   icon: "play-circle"
   color: "green"
 inputs:
-  environment:
-    description: "The environment to deploy"
+  anthropic-api-key:
+    description: "The Anthropic API key"
     required: true
   aws-access-key-id:
     description: "The AWS access key ID"
@@ -22,8 +22,29 @@ inputs:
   dockerhub-pat:
     description: "The DockerHub personal access token"
     required: false
+  environment:
+    description: "The environment to deploy"
+    required: true
   fernet-encryption-key:
     description: "The Fernet encryption key"
+    required: true
+  gemini-api-key:
+    description: "The Gemini API key"
+    required: true
+  google-service-account-b64:
+    description: "The Google service account in base64 encoding"
+    required: true
+  google-maps-api-key:
+    description: "The Google Maps API key"
+    required: true
+  llama-api-key:
+    description: "The MetaAI Llama API key"
+    required: true
+  mailchimp-api-key:
+    description: "The Mailchimp API key"
+    required: true
+  mailchimp-list-id:
+    description: "The Mailchimp list ID"
     required: true
   openai-api-key:
     description: "The OpenAI API key"
@@ -37,14 +58,8 @@ inputs:
   root-domain:
     description: "The root domain for the deployment"
     required: true
-  google-maps-api-key:
-    description: "The Google Maps API key"
-    required: true
-  gemini-api-key:
-    description: "The Gemini API key"
-    required: true
-  llama-api-key:
-    description: "The MetaAI Llama API key"
+  smarter-logo:
+    description: "The URL to the Smarter logo image"
     required: true
   smarter-mysql-test_database_password:
     description: "The MySQL test database password"
@@ -66,12 +81,6 @@ inputs:
     required: true
   social-auth-linkedin-oauth2-secret:
     description: "The LinkedIn OAuth2 secret"
-    required: true
-  mailchimp-api-key:
-    description: "The Mailchimp API key"
-    required: true
-  mailchimp-list-id:
-    description: "The Mailchimp list ID"
     required: true
 
 runs:
@@ -296,70 +305,89 @@ runs:
 
         env:
           # Deployment
+          # -------------------------------------------------------------------
           DJANGO_SETTINGS_MODULE: "${{ env.DJANGO_SETTINGS_MODULE }}"
           ENVIRONMENT: "${{ inputs.environment }}"
           NAMESPACE: "${{ env.NAMESPACE }}"
           SMARTER_DOCKER_IMAGE: "${{ env.SMARTER_DOCKER_IMAGE }}"
 
           # AWS
+          # -------------------------------------------------------------------
           AWS_REGION: "${{ inputs.aws-region }}"
           AWS_ACCESS_KEY_ID: "${{ inputs.aws-access-key-id }}"
           AWS_SECRET_ACCESS_KEY: "${{ inputs.aws-secret-access-key }}"
 
           # Docker Hub
+          # -------------------------------------------------------------------
           DOCKERHUB_USERNAME: "${{ inputs.dockerhub-username }}"
           DOCKERHUB_PAT: "${{ inputs.dockerhub-pat }}"
 
-          # Security
-          FERNET_ENCRYPTION_KEY: "${{ inputs.fernet-encryption-key }}"
+          # Required Smarter settings
+          # -------------------------------------------------------------------
+          SMARTER_ROOT_DOMAIN: "${{ inputs.root-domain }}"
+          SMARTER_EMAIL_ADMIN: "lpm0073@gmail.com"
+          SMARTER_GOOGLE_SERVICE_ACCOUNT_B64: "${{ inputs.google-service-account-b64 }}"
+          SMARTER_LOGO: "${{ inputs.smarter-logo }}"
+          SMARTER_MARKETING_SITE_URL: "https://smarter.sh"
+          SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: smarter_test_db
+          SMARTER_SMTP_SENDER: no-reply@smarter.sh
+          SMARTER_SMTP_FROM_EMAIL:no-reply@alpha.platform.smarter.sh
+          SMARTER_FERNET_ENCRYPTION_KEY: "${{ inputs.fernet-encryption-key }}"
           SECRET_KEY: "${{ env.SECRET_KEY }}"
 
           # Email
+          # -------------------------------------------------------------------
           MAILCHIMP_API_KEY: "${{ inputs.mailchimp-api-key }}"
           MAILCHIMP_LIST_ID: "${{ inputs.mailchimp-list-id }}"
 
           # AI APIs
-          OPENAI_API_KEY: "${{ inputs.openai-api-key }}"
-          PINECONE_API_KEY: "${{ inputs.pinecone-api-key }}"
-          PINECONE_ENVIRONMENT: "${{ inputs.pinecone-environment }}"
-          ROOT_DOMAIN: "${{ inputs.root-domain }}"
-          GOOGLE_MAPS_API_KEY: "${{ inputs.google-maps-api-key }}"
-          GEMINI_API_KEY: "${{ inputs.gemini-api-key }}"
-          LLAMA_API_KEY: "${{ inputs.llama-api-key }}"
+          # -------------------------------------------------------------------
+          SMARTER_ANTHROPIC_API_KEY: "${{ inputs.anthropic-api-key }}"
+          SMARTER_OPENAI_API_KEY: "${{ inputs.openai-api-key }}"
+          SMARTER_PINECONE_API_KEY: "${{ inputs.pinecone-api-key }}"
+          SMARTER_PINECONE_ENVIRONMENT: "${{ inputs.pinecone-environment }}"
+          SMARTER_GOOGLE_MAPS_API_KEY: "${{ inputs.google-maps-api-key }}"
+          SMARTER_GEMINI_API_KEY: "${{ inputs.gemini-api-key }}"
+          SMARTER_LLAMA_API_KEY: "${{ inputs.llama-api-key }}"
 
           # OAuth
-          SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "${{ inputs.social-auth-google-oauth2-key }}"
-          SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "${{ inputs.social-auth-google-oauth2-secret }}"
-          SOCIAL_AUTH_GITHUB_KEY: "${{ inputs.social-auth-github-key }}"
-          SOCIAL_AUTH_GITHUB_SECRET: "${{ inputs.social-auth-github-secret }}"
-          SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "${{ inputs.social-auth-linkedin-oauth2-key }}"
-          SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "${{ inputs.social-auth-linkedin-oauth2-secret }}"
+          # -------------------------------------------------------------------
+          SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "${{ inputs.social-auth-google-oauth2-key }}"
+          SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "${{ inputs.social-auth-google-oauth2-secret }}"
+          SMARTER_SOCIAL_AUTH_GITHUB_KEY: "${{ inputs.social-auth-github-key }}"
+          SMARTER_SOCIAL_AUTH_GITHUB_SECRET: "${{ inputs.social-auth-github-secret }}"
+          SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "${{ inputs.social-auth-linkedin-oauth2-key }}"
+          SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "${{ inputs.social-auth-linkedin-oauth2-secret }}"
 
           # Database
-          MYSQL_HOST: "${{ env.MYSQL_HOST }}"
-          MYSQL_PORT: "${{ env.MYSQL_PORT }}"
-          MYSQL_DATABASE: "${{ env.SMARTER_MYSQL_DATABASE }}"
-          MYSQL_USER: "${{ env.SMARTER_MYSQL_USERNAME }}"
-          MYSQL_PASSWORD: "${{ env.SMARTER_MYSQL_PASSWORD }}"
-          MYSQL_ROOT_USERNAME: "${{ env.MYSQL_ROOT_USERNAME }}"
-          MYSQL_ROOT_PASSWORD: "${{ env.MYSQL_ROOT_PASSWORD }}"
+          # -------------------------------------------------------------------
+          SMARTER_MYSQL_HOST: "${{ env.MYSQL_HOST }}"
+          SMARTER_MYSQL_PORT: "${{ env.MYSQL_PORT }}"
+          SMARTER_MYSQL_DATABASE: "${{ env.SMARTER_MYSQL_DATABASE }}"
+          SMARTER_MYSQL_USER: "${{ env.SMARTER_MYSQL_USERNAME }}"
+          SMARTER_MYSQL_PASSWORD: "${{ env.SMARTER_MYSQL_PASSWORD }}"
+          SMARTER_MYSQL_ROOT_USERNAME: "${{ env.MYSQL_ROOT_USERNAME }}"
+          SMARTER_MYSQL_ROOT_PASSWORD: "${{ env.MYSQL_ROOT_PASSWORD }}"
           SMARTER_MYSQL_TEST_DATABASE_PASSWORD: "${{ inputs.smarter-mysql-test_database_password }}"
 
           # Admin
+          # -------------------------------------------------------------------
           SMARTER_LOGIN_URL: "${{ env.SMARTER_LOGIN_URL }}"
           SMARTER_ADMIN_PASSWORD: "${{ env.SMARTER_ADMIN_PASSWORD }}"
           SMARTER_ADMIN_USERNAME: "${{ env.SMARTER_ADMIN_USERNAME }}"
           SMARTER_ADMIN_EMAIL: "${{ env.SMARTER_ADMIN_EMAIL }}"
 
           # SMTP
+          # -------------------------------------------------------------------
           SMTP_HOST: "${{ env.SMTP_HOST }}"
           SMTP_PORT: "${{ env.SMTP_PORT }}"
           SMTP_USE_SSL: "${{ env.SMTP_USE_SSL }}"
           SMTP_USE_TLS: "${{ env.SMTP_USE_TLS }}"
-          SMTP_USERNAME: "${{ env.SMTP_USERNAME }}"
-          SMTP_PASSWORD: "${{ env.SMTP_PASSWORD }}"
+          SMARTER_SMTP_USERNAME: "${{ env.SMTP_USERNAME }}"
+          SMARTER_SMTP_PASSWORD: "${{ env.SMTP_PASSWORD }}"
 
           # Cache/Celery
+          # -------------------------------------------------------------------
           CACHES_LOCATION: "${{ env.CACHES_LOCATION }}"
           CELERY_BROKER_URL: "${{ env.CELERY_BROKER_URL }}"
           CELERY_RESULT_BACKEND: "${{ env.CELERY_RESULT_BACKEND }}"
