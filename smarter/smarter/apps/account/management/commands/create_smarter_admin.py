@@ -85,7 +85,7 @@ class Command(SmarterCommand):
                 email=SMARTER_CUSTOMER_SUPPORT_EMAIL,
                 phone=SMARTER_CUSTOMER_SUPPORT_PHONE,
                 is_primary=True,
-            )
+            ).save()
             self.handle_completed_success(
                 msg=f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
             )
@@ -93,7 +93,7 @@ class Command(SmarterCommand):
         # ensure that the Smarter admin user has at least one auth token (api key)
         if not SmarterAuthToken.objects.filter(user=user).exists():
             _, token_key = SmarterAuthToken.objects.create(
-                name="smarter-admin-key", user=user, description="created by manage.py"
+                account=account, name="smarter-admin-key", user=user, description="created by manage.py"
             )  # type: ignore[assignment]
             self.handle_completed_success(msg=f"created API key: {token_key}")
             return
