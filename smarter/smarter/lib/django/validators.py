@@ -1440,6 +1440,30 @@ class SmarterValidator:
         return url if url.endswith("/") else url + "/"
 
     @staticmethod
+    def leading_slash(path: str) -> Optional[str]:
+        """
+        ensure that URL path starts with a leading slash
+
+        Appends a leading slash to the URL path if it does not already have one.
+
+        :param path: The URL path to process.
+        :type path: str
+        :returns: The URL path with a leading slash, or None if the input is empty.
+        :rtype: Optional[str]
+
+        Example::
+
+            SmarterValidator.leading_slash("api/v1/resource/")   # returns "/api/v1/resource/"
+            SmarterValidator.leading_slash("/api/v1/resource/")  # returns "/api/v1/resource/"
+            SmarterValidator.leading_slash("")                    # returns None
+
+        """
+        logger.debug("%s.leading_slash() %s", logger_prefix, path)
+        if not path:
+            return None
+        return path if path.startswith("/") else "/" + path
+
+    @staticmethod
     def urlify(url: str, scheme: Optional[str] = None, environment: str = SmarterEnvironments.LOCAL) -> str:
         """
         ensure that URL starts with http:// or https://
