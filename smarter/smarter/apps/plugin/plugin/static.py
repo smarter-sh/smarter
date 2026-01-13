@@ -23,7 +23,7 @@ A PLugin that returns a static json object stored in the Plugin itself.
 
 import logging
 from datetime import datetime
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Union
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -484,7 +484,7 @@ class StaticPlugin(PluginBase):
 
         return json.loads(sam_static_plugin.model_dump_json())
 
-    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> str:
+    def tool_call_fetch_plugin_response(self, function_args: dict[str, Any]) -> Union[dict, list, str]:
         """
         Fetch a response from the StaticPlugin based on the provided inquiry type.
 
@@ -563,16 +563,22 @@ class StaticPlugin(PluginBase):
                     f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is None.",
                 )
 
-            try:
-                retval = json.dumps(retval)
-            except (TypeError, ValueError) as e:
-                raise SmarterPluginError(
-                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} could not be serialized to JSON: {e}.",
-                ) from e
+            # try:
+            #     retval = json.dumps(retval)
+            # except (TypeError, ValueError) as e:
+            #     raise SmarterPluginError(
+            #         f"Plugin {self.name} return value for inquiry_type: {inquiry_type} could not be serialized to JSON: {e}.",
+            #     ) from e
 
-            if not isinstance(retval, str):
+            if isinstance(retval, str):
+                try:
+                    retval = json.loads(retval)
+                except json.JSONDecodeError:
+                    # it's just a string, not json
+                    pass
+            if not isinstance(retval, (dict, list, str)):
                 raise SmarterPluginError(
-                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is not a string. Expected a string, got {type(retval)}.",
+                    f"Plugin {self.name} return value for inquiry_type: {inquiry_type} is not a str, dict or list. Expected a str, dict or list, got {type(retval)}.",
                 )
             plugin_responded.send(
                 sender=self.tool_call_fetch_plugin_response,
