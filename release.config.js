@@ -26,11 +26,17 @@ module.exports = {
               return null;
             }
 
-            // Make a shallow copy (this is the magic)
+            // Make a shallow copy (so we don't touch the frozen original)
             const cleanCommit = { ...commit };
 
-            // Remove the problematic field from the copy
-            delete cleanCommit.committerDate;
+            // Ensure committerDate is a proper Date object
+            if (
+              cleanCommit.committerDate &&
+              !(cleanCommit.committerDate instanceof Date)
+            ) {
+              const d = new Date(cleanCommit.committerDate);
+              cleanCommit.committerDate = isNaN(d.getTime()) ? new Date() : d;
+            }
 
             return cleanCommit;
           },
