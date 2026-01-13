@@ -331,7 +331,7 @@ runs:
           SMARTER_MARKETING_SITE_URL: "https://smarter.sh"
           SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: smarter_test_db
           SMARTER_SMTP_SENDER: no-reply@smarter.sh
-          SMARTER_SMTP_FROM_EMAIL:no-reply@alpha.platform.smarter.sh
+          SMARTER_SMTP_FROM_EMAIL: no-reply@alpha.platform.smarter.sh
           SMARTER_FERNET_ENCRYPTION_KEY: "${{ inputs.fernet-encryption-key }}"
           SECRET_KEY: "${{ env.SECRET_KEY }}"
 
