@@ -29,13 +29,21 @@ module.exports = {
             // Make a shallow copy (so we don't touch the frozen original)
             const cleanCommit = { ...commit };
 
-            // Helper to normalize a date field to ISO string
+            // Helper to normalize a date field to ISO string, only if string/number
             const normalizeDate = (d) => {
-              if (!d) return new Date().toISOString();
-              const dateObj = d instanceof Date ? d : new Date(d);
-              return isNaN(dateObj.getTime())
-                ? new Date().toISOString()
-                : dateObj.toISOString();
+              try {
+                if (!d) return new Date().toISOString();
+                if (typeof d === "string" || typeof d === "number") {
+                  const dateObj = new Date(d);
+                  return isNaN(dateObj.getTime())
+                    ? new Date().toISOString()
+                    : dateObj.toISOString();
+                }
+                // If already a Date or Proxy, just return as is
+                return d;
+              } catch {
+                return new Date().toISOString();
+              }
             };
 
             if (cleanCommit.date)
