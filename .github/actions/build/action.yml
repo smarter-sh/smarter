@@ -8,6 +8,7 @@
 #   [Action Required] Upgrade to new version of ECR Basic Scanning before February 2, 2026 [AWS Account: 090511222473]
 #------------------------------------------------------------------------------
 name: Build
+description: "Build and push the Docker image to AWS ECR and Docker Hub"
 branding:
   icon: "gear"
   color: "orange"

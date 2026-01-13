@@ -1,4 +1,5 @@
 name: Deploy to Kubernetes
+description: "Deploy the application to the specified Kubernetes environment"
 branding:
   icon: "play-circle"
   color: "green"
@@ -167,7 +168,7 @@ runs:
       id: set-docker-image
       shell: bash
       run: |-
-        echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:2025-12-12T17-11-29" >> $GITHUB_ENV
+        echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.60" >> $GITHUB_ENV
 
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
@@ -276,6 +277,13 @@ runs:
         cd helm/charts/smarter
         helm repo add bitnami https://charts.bitnami.com/bitnami
         helm repo add grafana https://grafana.github.io/helm-charts
+        helm repo add loki https://grafana.github.io/helm-charts
+        helm repo add mariadb https://charts.bitnami.com/bitnami
+        helm repo add mysql https://charts.bitnami.com/bitnami
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo add redis https://charts.bitnami.com/bitnami
+        helm repo update
+        helm dependency update
         helm dependency build
 
     # Create a temporary values file with secrets
