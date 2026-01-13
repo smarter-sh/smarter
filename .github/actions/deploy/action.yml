@@ -136,12 +136,8 @@ runs:
         echo "-------------"
         aws sts get-caller-identity
 
-    # install kubectl, which Helm will use to deploy the application
     - name: Install kubectl
-      id: kubectl-install
-      shell: bash
-      run: |-
-        sudo snap install kubectl --classic
+      uses: actions-hub/kubectl@master
 
     # setup kubeconfig using the aws eks helper command, 'update-kubeconfig'
     - name: Configure kubectl
@@ -288,7 +284,13 @@ runs:
             "DOCKERHUB_USERNAME": ${{ inputs.dockerhub-username && format('"{0}"', inputs.dockerhub-username) || 'null' }},
             "ENVIRONMENT": ${{ inputs.environment && format('"{0}"', inputs.environment) || 'null' }},
             "NAMESPACE": ${{ env.NAMESPACE && format('"{0}"', env.NAMESPACE) || 'null' }},
-            "SECRET_KEY": ${{ env.SECRET_KEY && format('"{0}"', env.SECRET_KEY) || 'null' }}
+            "SECRET_KEY": ${{ env.SECRET_KEY && format('"{0}"', env.SECRET_KEY) || 'null' }},
+            "SMARTER_ADMIN_EMAIL": ${{ env.SMARTER_ADMIN_EMAIL && format('"{0}"', env.SMARTER_ADMIN_EMAIL) || 'null' }},
+            "SMARTER_ADMIN_PASSWORD": ${{ env.SMARTER_ADMIN_PASSWORD && format('"{0}"', env.SMARTER_ADMIN_PASSWORD) || 'null' }},
+            "SMARTER_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
+            "SMARTER_ANTHROPIC_API_KEY": ${{ inputs.anthropic-api-key && format('"{0}"', inputs.anthropic-api-key) || 'null' }},
+            "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
+            "SMARTER_EMAIL_ADMIN": "lpm0073@gmail.com"
           }
         }
         EOF
