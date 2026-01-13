@@ -444,6 +444,7 @@ class SmarterRequestMixin(AccountMixin):
                     self.smarter_request_user,
                     request.user.is_authenticated,
                 )
+                self.user = self._smarter_request_user
             else:
                 # this duplicates the functionality of the DRF
                 # authentication class. there are a variety of
