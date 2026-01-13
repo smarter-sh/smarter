@@ -25,6 +25,16 @@ module.exports = {
             if (["docs", "test", "style"].includes(commit.type)) {
               return null;
             }
+            // Ensure commit.committerDate is a valid Date object or ISO string
+            if (
+              commit.committerDate &&
+              !(commit.committerDate instanceof Date)
+            ) {
+              const date = new Date(commit.committerDate);
+              commit.committerDate = isNaN(date.getTime())
+                ? new Date().toISOString()
+                : date.toISOString();
+            }
             return commit;
           },
         },
