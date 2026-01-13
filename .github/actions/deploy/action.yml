@@ -136,9 +136,6 @@ runs:
         echo "-------------"
         aws sts get-caller-identity
 
-    - name: Install kubectl
-      uses: actions-hub/kubectl@master
-
     # setup kubeconfig using the aws eks helper command, 'update-kubeconfig'
     - name: Configure kubectl
       id: kubectl-configure
@@ -150,6 +147,9 @@ runs:
         kubectl version
       env:
         EKS_CLUSTER_NAME: apps-hosting-service
+
+    - name: Install kubectl
+      uses: actions-hub/kubectl@master
 
     # install jq, which k8s-get-secret will use to parse the Kubernetes secret
     # and set the environment variables
