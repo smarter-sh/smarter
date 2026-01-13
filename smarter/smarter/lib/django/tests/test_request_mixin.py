@@ -387,15 +387,6 @@ class TestSmarterRequestMixin(TestAccountMixin):
     def test_params_handles_attribute_error(self):
         """
         params property handles AttributeError and logs error.
-            try:
-                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", ""))  # type: ignore
-            except AttributeError as e:
-                logger.error(
-                    "%s.params() internal error. Could not parse query string parameters: %s",
-                    logger_prefix,
-                    e,
-                )
-
         """
 
         mixin = SmarterRequestMixin(DummyRequest())
