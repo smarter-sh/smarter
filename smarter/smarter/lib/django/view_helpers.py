@@ -3,7 +3,6 @@
 import logging
 import re
 from http import HTTPStatus
-from typing import Optional
 
 from django import template
 from django.http import HttpRequest, HttpResponse
@@ -14,9 +13,9 @@ from django.views import View
 from django.views.decorators.cache import cache_control, cache_page, never_cache
 from htmlmin.main import minify
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -46,7 +45,7 @@ def redirect_and_expire_cache(path: str = "/"):
 # ------------------------------------------------------------------------------
 # Web Views
 # ------------------------------------------------------------------------------
-class SmarterView(View, SmarterHelperMixin):
+class SmarterView(View, SmarterRequestMixin):
     """
     The foundational base view for all Smarter platform views.
 
@@ -66,6 +65,30 @@ class SmarterView(View, SmarterHelperMixin):
 
     template_path: str = ""
     context: dict = {}
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the SmarterView with request and other arguments.
+        This method initializes the SmarterRequestMixin with the request.
+
+        :param args: Positional arguments, where the first argument is expected to be the HttpRequest.
+        :param kwargs: Keyword arguments, which may include the HttpRequest under the 'request'
+                          key.
+        :return: None
+        :rtype: None
+        """
+        logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.logger_prefix, args, kwargs)
+        super().__init__(*args, **kwargs)
+
+        request = kwargs.pop("request", None) or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
+        user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
+        account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
+        user_profile = kwargs.pop("user_profile", None) or next(
+            (arg for arg in args if isinstance(arg, UserProfile)), None
+        )
+        SmarterRequestMixin.__init__(
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+        )
 
     @property
     def logger_prefix(self):
@@ -127,6 +150,31 @@ class SmarterView(View, SmarterHelperMixin):
         html_no_comments = self.remove_comments(html=html)
         minified_html = self.minify_html(html=html_no_comments)
         return minified_html
+
+    def setup(self, request: HttpRequest, *args, **kwargs):
+        """
+        Setup the view with the request and any additional arguments.
+        This method initializes the SmarterRequestMixin with the request.
+
+        :param request: The HTTP request object.
+        :type request: HttpRequest
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: The result of the superclass setup method.
+        :rtype: Any
+        """
+        logger.debug(
+            "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
+        )
+        if not self.smarter_request:
+            logger.warning(
+                "%s.setup() - SmarterRequestMixin.smarter_request not initialized. Initializing now. This should not happen.",
+                self.logger_prefix,
+            )
+            self.smarter_request = (
+                request or kwargs["request"] or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
+            )
+        return super().setup(request, *args, **kwargs)
 
 
 class SmarterWebXmlView(SmarterView):
@@ -228,7 +276,7 @@ class SmarterNeverCachedWebView(SmarterWebHtmlView):
         return formatted_text(f"{__name__}.{SmarterNeverCachedWebView.__name__}")
 
 
-class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
+class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     """
     An optimized view that requires authentication.
 
@@ -264,29 +312,6 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
     def logger_prefix(self):
         return formatted_text(f"{__name__}.{SmarterAuthenticatedWebView.__name__}")
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize the SmarterView with request and other arguments.
-        This method initializes the SmarterRequestMixin with the request.
-
-        :param args: Positional arguments, where the first argument is expected to be the HttpRequest.
-        :param kwargs: Keyword arguments, which may include the HttpRequest under the 'request'
-                          key.
-        :return: None
-        :rtype: None
-        """
-        logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.logger_prefix, args, kwargs)
-        super().__init__(*args, **kwargs)
-        # we have to initialize this, but we won't have the request
-        # until later in the DRF lifecycle.
-        request = kwargs.pop("request", None)
-        user = kwargs.pop("user", None)
-        account = kwargs.pop("account", None)
-        user_profile = kwargs.pop("user_profile", None)
-        SmarterRequestMixin.__init__(
-            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
-        )
-
     def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Setup the view with the request and any additional arguments.
@@ -302,20 +327,6 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         logger.debug(
             "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
         )
-        for arg in args:
-            if isinstance(arg, HttpRequest):
-                request = arg
-                break
-        if not request and "request" in kwargs:
-            request = kwargs["request"]
-        if not request:
-            logger.error(
-                "%s.__init__() - No HttpRequest found in args or kwargs: args: %s, kwargs: %s",
-                self.logger_prefix,
-                args,
-                kwargs,
-            )
-        self.smarter_request = request
         return super().setup(request, *args, **kwargs)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
