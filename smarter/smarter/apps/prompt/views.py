@@ -130,6 +130,9 @@ class SmarterChatSession(SmarterHelperMixin):
     def __repr__(self):
         return self.__str__()
 
+    def __eq__(self, value: object) -> bool:
+        return isinstance(value, SmarterChatSession) and self.session_key == value.session_key
+
     @property
     def session_key(self) -> str:
         """
@@ -785,6 +788,10 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
     chatbot_helpers: list[ChatBotHelper] = []
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
+
+        logger.debug(
+            "%s.dispatch() called for %s with args %s, kwargs %s", self.formatted_class_name, request, args, kwargs
+        )
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code >= 300:
             return response
@@ -808,15 +815,19 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
 
         for chatbot in self.chatbots:
             chatbot_helper = ChatBotHelper(
-                request=self.smarter_request,
+                request=request,
                 chatbot=chatbot,
-                user=self.user,
-                account=self.account,
-                user_profile=self.user_profile,
+                user=request.user,
             )
             if not was_already_added(chatbot_helper):
                 self.chatbot_helpers.append(chatbot_helper)
 
         smarter_admin = get_cached_smarter_admin_user_profile()
         context = {"smarter_admin": smarter_admin, "chatbot_helpers": self.chatbot_helpers}
+        logger.debug(
+            "%s.dispatch() rendering template %s with context: %s",
+            self.formatted_class_name,
+            self.template_path,
+            formatted_json(context),
+        )
         return render(request, template_name=self.template_path, context=context)
