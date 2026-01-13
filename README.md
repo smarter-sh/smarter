@@ -5,7 +5,7 @@
 ![Release Status](https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main)
 [![Documentation Status](https://readthedocs.org/projects/smarter/badge/?version=latest)](https://docs.smarter.sh/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/mcdaniel0073/smarter.svg?logo=docker&label=DockerHub)](https://hub.docker.com/r/mcdaniel0073/smarter)
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)<br>[![Docs](https://img.shields.io/badge/docs-smarter.sh-blue?logo=readthedocs)](https://docs.smarter.sh/en/latest/)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)<br>[![Docs](https://img.shields.io/badge/Read%20the%20Docs-smarter.sh-blue?logo=readthedocs)](https://docs.smarter.sh/en/latest/)
 [![Website](https://img.shields.io/badge/official%20web%20site-smarter.sh-blue?logo=google-chrome)](https://smarter.sh)
 [![License: GNU AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)<br>[![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-5.2-green?logo=django)](https://www.djangoproject.com/)
@@ -162,4 +162,4 @@ Please report bugs to the [GitHub Issues Page](https://github.com/smarter-sh/sma
 
 ## Contributing
 
-Please see the [Contributing Guide](https://docs.smarter.sh/en/latest/developers/contributing.html).
+Please see the [CONTRIBUTING](https://docs.smarter.sh/en/latest/smarter-framework/guides/contributing.html).
