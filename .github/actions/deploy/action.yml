@@ -288,9 +288,11 @@ runs:
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
             "SMARTER_EMAIL_ADMIN": "lpm0073@gmail.com",
 
+            "SMARTER_FERNET_ENCRYPTION_KEY": $(jq -Rn --arg v "${{ inputs.fernet-encryption-key }}" '$v'),
+
             "SMARTER_GEMINI_API_KEY": ${{ inputs.gemini-api-key && format('"{0}"', inputs.gemini-api-key) || 'null' }},
             "SMARTER_GOOGLE_MAPS_API_KEY": ${{ inputs.google-maps-api-key && format('"{0}"', inputs.google-maps-api-key) || 'null' }},
-            "SMARTER_GOOGLE_SERVICE_ACCOUNT_B64": ${{ inputs.google-service-account-b64 && format('"{0}"', inputs.google-service-account-b64) || 'null' }}
+            "SMARTER_GOOGLE_SERVICE_ACCOUNT_B64": ${{ inputs.google-service-account-b64 && format('"{0}"', inputs.google-service-account-b64) || 'null' }},
             "SMARTER_LLAMA_API_KEY": ${{ inputs.llama-api-key && format('"{0}"', inputs.llama-api-key) || 'null' }},
             "SMARTER_LOGIN_URL": ${{ env.SMARTER_LOGIN_URL && format('"{0}"', env.SMARTER_LOGIN_URL) || 'null' }},
             "SMARTER_LOGO": ${{ inputs.smarter-logo && format('"{0}"', inputs.smarter-logo) || 'null' }},
