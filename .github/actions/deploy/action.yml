@@ -136,6 +136,14 @@ runs:
         echo "-------------"
         aws sts get-caller-identity
 
+    # install jq, which k8s-get-secret will use to parse the Kubernetes secret
+    # and set the environment variables
+    - name: Install jq and kubectl
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq kubectl
+
     # setup kubeconfig using the aws eks helper command, 'update-kubeconfig'
     - name: Configure kubectl
       id: kubectl-configure
@@ -148,21 +156,6 @@ runs:
       env:
         EKS_CLUSTER_NAME: apps-hosting-service
 
-    - name: Install kubectl
-      uses: actions-hub/kubectl@master
-      env:
-        KUBE_CONFIG: /home/runner/.kube/config
-        HOME: /home/runner
-
-    # install jq, which k8s-get-secret will use to parse the Kubernetes secret
-    # and set the environment variables
-    - name: Install jq
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y jq
-
-    # connect to Amazon ECR so that we can programmatically
     # figure out the Docker image to add to the Helm values for the
     # Kubernetes deployment manifest.
     - name: Login to Amazon ECR
