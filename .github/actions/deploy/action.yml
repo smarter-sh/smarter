@@ -377,7 +377,7 @@ runs:
       run: |-
         echo "values.yaml"
         echo "--------------------------------------------------------------------------------"
-        cat /tmp/values.json | yq eval -P > /tmp/values.yaml
+        cat /tmp/values.json | yq eval -P --input-format=json > /tmp/values.yaml
         cat /tmp/values.yaml
 
     # Deploy the application to Kubernetes using Helm
