@@ -401,6 +401,15 @@ runs:
         echo "--------------------------------------------------------------------------------"
         cat -nA /tmp/values.yaml
 
+    - name: Convert to json
+      id: convert-to-json
+      shell: bash
+      run: |-
+        echo "values.json"
+        echo "--------------------------------------------------------------------------------"
+        cat /tmp/values.yaml | yq eval -o=json > /tmp/values.json
+        cat -nA /tmp/values.json
+
     # Deploy the application to Kubernetes using Helm
     - name: Deploy
       id: deploy
