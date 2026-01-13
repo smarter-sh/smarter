@@ -74,7 +74,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
-          node-version: "20.9.0"
+          node-version: "24.10"
 
       - name: Install npm dependencies
         run: npm install

@@ -23,7 +23,7 @@ module.exports = {
         writerOpts: {
           transform: (commit, context) => {
             if (["docs", "test", "style"].includes(commit.type)) {
-              return;
+              return null;
             }
             return commit;
           },
