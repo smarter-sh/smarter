@@ -299,7 +299,7 @@ runs:
     - name: Create secrets values file
       id: create-secrets-values
       shell: bash
-      run: |-
+      run: |
         cat > /tmp/values.json <<EOF
         {
           "deployTimestamp": "$(date +%s)",
