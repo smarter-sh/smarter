@@ -34,7 +34,6 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistorySerializer,
 )
 from smarter.apps.prompt.models import Chat, ChatHelper
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import (
@@ -44,6 +43,7 @@ from smarter.common.exceptions import (
 )
 from smarter.common.helpers.console_helpers import formatted_json
 from smarter.common.helpers.url_helpers import clean_url
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import is_authenticated_request, rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
@@ -129,6 +129,9 @@ class SmarterChatSession(SmarterHelperMixin):
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, value: object) -> bool:
+        return isinstance(value, SmarterChatSession) and self.session_key == value.session_key
 
     @property
     def session_key(self) -> str:
@@ -447,7 +450,7 @@ class ChatConfigView(SmarterAuthenticatedCachedWebView):
         ChatBotConfigSerializer, ChatBotPluginSerializer : Serializers for chatbot and plugin data.
         ChatBotHelper : Helper for chatbot-related operations.
         """
-
+        self.smarter_request = request
         logger.info(
             "%s.dispatch() called with request=%s, chatbot_id=%s, session_key=%s chatbot_name=%s user_profile=%s",
             self.formatted_class_name,
@@ -689,6 +692,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
 
+        self.smarter_request = request
         name = kwargs.pop("name", None)
         name = rfc1034_compliant_to_snake(name) if name else None
         session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
@@ -784,9 +788,15 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
     chatbot_helpers: list[ChatBotHelper] = []
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
+
+        logger.debug(
+            "%s.dispatch() called for %s with args %s, kwargs %s", self.formatted_class_name, request, args, kwargs
+        )
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code >= 300:
             return response
+
+        self.smarter_request = request
 
         self.chatbot_helpers = []
 
@@ -798,7 +808,6 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
                     return True
             return False
 
-        # @cache_results()
         def get_chatbots_for_account(account) -> QuerySet:
             return ChatBot.objects.filter(account=account)
 
@@ -806,15 +815,19 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
 
         for chatbot in self.chatbots:
             chatbot_helper = ChatBotHelper(
-                request=self.smarter_request,
+                request=request,
                 chatbot=chatbot,
-                user=self.user,
-                account=self.account,
-                user_profile=self.user_profile,
+                user=request.user,
             )
             if not was_already_added(chatbot_helper):
                 self.chatbot_helpers.append(chatbot_helper)
 
         smarter_admin = get_cached_smarter_admin_user_profile()
         context = {"smarter_admin": smarter_admin, "chatbot_helpers": self.chatbot_helpers}
+        logger.debug(
+            "%s.dispatch() rendering template %s with context: %s",
+            self.formatted_class_name,
+            self.template_path,
+            formatted_json(context),
+        )
         return render(request, template_name=self.template_path, context=context)

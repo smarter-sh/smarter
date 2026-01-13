@@ -8,7 +8,7 @@ from typing import Optional, Union
 from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
-from smarter.common.classes import SmarterHelperMixin
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
 from smarter.lib.django import waffle

@@ -17,7 +17,7 @@ Individual services are accessed lazily via properties on the AWSInfrastructureC
 import logging
 from typing import Optional
 
-from ..classes import Singleton
+from ..mixins import Singleton
 from .aws.acm import AWSCertificateManager
 from .aws.api_gateway import AWSAPIGateway
 from .aws.aws import AWSBase

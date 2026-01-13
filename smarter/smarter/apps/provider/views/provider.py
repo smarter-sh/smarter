@@ -68,19 +68,19 @@ class ProviderDetailView(DocsBaseView):
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        if not isinstance(self.user, User):
-            logger.error("Request user instance of type %s is not a User. This should not happen.", type(self.user))
+        if not isinstance(request.user, User):
+            logger.error("Request user instance of type %s is not a User. This should not happen.", type(request.user))
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         name = kwargs.pop("name", None)
         self.name = rfc1034_compliant_to_snake(name) if name else None
         if not isinstance(self.name, str):
             logger.error("Provider name should be type str but received %s. This is a bug.", type(self.name))
             return SmarterHttpResponseNotFound(request=request, error_message="Provider name is required")
-        self.provider = Provider.get_cached_provider_by_user_and_name(user=self.user, name=self.name)
+        self.provider = Provider.get_cached_provider_by_user_and_name(user=request.user, name=self.name)
 
     def get(self, request, *args, **kwargs):
         if not self.provider:
-            logger.error("Provider %s not found for user %s.", self.name, self.user.username)  # type: ignore[union-attr]
+            logger.error("Provider %s not found for user %s.", self.name, request.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
 
         logger.info("Rendering connection detail view for %s of kind %s, kwargs=%s.", self.name, self.kind, kwargs)
@@ -132,10 +132,16 @@ class ProviderListView(SmarterAuthenticatedNeverCachedWebView):
     providers: list[Provider]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
-        if not isinstance(self.user, User):
-            logger.error("Request user is not an instance of User. This is a bug.")
+        self.smarter_request = request
+        if not isinstance(request.user, User):
+            logger.error(
+                "%s.get() Request user %s %sis not an instance of User. This is a bug.",
+                self.formatted_class_name,
+                request.user,
+                type(request.user),
+            )
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.plugins = Provider.get_cached_providers_for_user(self.user)
+        self.plugins = Provider.get_cached_providers_for_user(request.user)
         context = {
             "plugins": self.plugins,
         }

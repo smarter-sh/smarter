@@ -12,8 +12,8 @@ from django.core.cache import cache
 from django.http import HttpRequest
 from django.test import RequestFactory
 
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_red
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib import json
 

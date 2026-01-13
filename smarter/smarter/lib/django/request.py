@@ -444,6 +444,7 @@ class SmarterRequestMixin(AccountMixin):
                     self.smarter_request_user,
                     request.user.is_authenticated,
                 )
+                self.user = self._smarter_request_user
             else:
                 # this duplicates the functionality of the DRF
                 # authentication class. there are a variety of
@@ -626,7 +627,7 @@ class SmarterRequestMixin(AccountMixin):
         )
         return True
 
-    @cached_property
+    @property
     def url(self) -> Optional[str]:
         """
         The string representation of the ParseResult object stored in _parsed_url.
@@ -641,10 +642,14 @@ class SmarterRequestMixin(AccountMixin):
 
         """
         if self._url:
+            if isinstance(self._url, ParseResult):
+                return self._url.geturl()
             try:
                 url = SmarterValidator.urlify(self._url)
                 parsed = urlparse(url)
                 base_url = parsed._replace(query="", fragment="").geturl()
+                if isinstance(base_url, ParseResult):
+                    raise Exception("Unexpected ParseResult type for base_url.")
                 return base_url
             except SmarterValueError as e:
                 logger.error(
@@ -674,8 +679,14 @@ class SmarterRequestMixin(AccountMixin):
             print(parsed.netloc)  # e.g., 'example.com'
 
         """
-        if self._parsed_url is None:
-            self._parsed_url = urlparse(self.url)
+        if self._parsed_url is None and self.url is not None:
+            logger.debug(
+                "%s.parsed_url() - parsing URL: %s %s", self.request_mixin_logger_prefix, self.url, type(self.url)
+            )
+            if isinstance(self.url, ParseResult):
+                self._parsed_url = self.url
+            else:
+                self._parsed_url = urlparse(self.url) if isinstance(self.url, str) else None
             logger.debug(
                 "%s.parsed_url() - parsed URL: %s",
                 self.request_mixin_logger_prefix,
@@ -752,11 +763,6 @@ class SmarterRequestMixin(AccountMixin):
                 if not self._params:
                     raise AttributeError("No query string parameters found.")
             except AttributeError as e:
-                logger.error(
-                    "%s.params() internal error. Could not parse query string parameters: %s",
-                    self.request_mixin_logger_prefix,
-                    e,
-                )
                 return QueryDict("")
         return self._params
 

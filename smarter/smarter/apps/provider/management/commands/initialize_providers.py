@@ -15,9 +15,9 @@ from google.oauth2 import service_account
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
-from smarter.common.classes import json
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
+from smarter.common.mixins import json
 from smarter.lib.django.management.base import SmarterCommand
 
 

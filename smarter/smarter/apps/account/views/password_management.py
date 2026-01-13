@@ -9,9 +9,9 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 
 from smarter.apps.account.models import User
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseBadRequest,

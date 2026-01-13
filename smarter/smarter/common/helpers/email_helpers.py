@@ -11,7 +11,7 @@ from smarter.common.exceptions import SmarterException
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.validators import SmarterValidator
 
-from ..classes import Singleton
+from ..mixins import Singleton
 
 
 logger = logging.getLogger(__name__)

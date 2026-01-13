@@ -8,6 +8,7 @@ import logging
 from typing import Optional
 
 import yaml
+from django.contrib.auth.models import AnonymousUser
 from django.core.handlers.wsgi import WSGIRequest
 from django.shortcuts import render
 
@@ -17,7 +18,6 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.utils import rfc1034_compliant_to_snake
 from smarter.lib.django import waffle
@@ -74,31 +74,37 @@ class PluginDetailView(DocsBaseView):
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        if not isinstance(self.user, User):
-            logger.error("Request user is None. This should not happen.")
+        if not isinstance(request.user, User):
+            logger.error("%s.setup() Request user is None. This should not happen.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         name = kwargs.pop("name", None)
         self.name = rfc1034_compliant_to_snake(name) if name else None
         self.kind = SAMKinds.str_to_kind(kwargs.pop("kind", None))
         if self.kind is None:
-            logger.error("Plugin kind is required but not provided.")
+            logger.error("%s.setup() Plugin kind is required but not provided.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Plugin kind is required")
         if self.kind not in SAMKinds.all_plugins():
-            logger.error("Plugin kind %s is not supported.", self.kind)
+            logger.error("%s.setup() Plugin kind %s is not supported.", self.formatted_class_name, self.kind)
             return SmarterHttpResponseNotFound(
                 request=request, error_message=f"Plugin kind {self.kind} is not supported"
             )
         if not self.name:
-            logger.error("Plugin name is required but not provided.")
+            logger.error("%s.setup() Plugin name is required but not provided.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Plugin name is required")
-        self.plugin = PluginMeta.get_cached_plugin_by_user_and_name(user=self.user, name=self.name)
+        self.plugin = PluginMeta.get_cached_plugin_by_user_and_name(user=request.user, name=self.name)
 
     def get(self, request, *args, **kwargs):
         if not self.plugin:
-            logger.error("Plugin %s not found for user %s.", self.name, self.user.username)  # type: ignore[union-attr]
+            logger.error("%s.get() Plugin %s not found for user %s.", self.formatted_class_name, self.name, request.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Plugin not found")
 
-        logger.info("Rendering connection detail view for %s of kind %s, kwargs=%s.", self.name, self.kind, kwargs)
+        logger.info(
+            "%s.get() Rendering plugin detail view for %s of kind %s, kwargs=%s.",
+            self.formatted_class_name,
+            self.name,
+            self.kind,
+            kwargs,
+        )
         # get_brokered_json_response() adds self.kind to kwargs, so we remove it here.
         # TypeError: smarter.apps.api.v1.cli.views.describe.View.as_view.<locals>.view() got multiple values for keyword argument 'kind'
         kwargs.pop("kind", None)
@@ -119,7 +125,7 @@ class PluginDetailView(DocsBaseView):
             "page_title": self.name,
         }
         if not self.template_path:
-            logger.error("self.template_path is not set.")
+            logger.error("%s.setup() self.template_path is not set.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="Template path not set")
         return render(request, self.template_path, context=context)
 
@@ -139,18 +145,25 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
 
     :returns: Rendered HTML page with a card for each plugin, or a 404 error page if the user is not authenticated.
     :rtype: HttpResponse
-
-
     """
 
     template_path = "plugin/plugin_list.html"
     plugins: list[PluginMeta]
 
     def get(self, request: WSGIRequest, *args, **kwargs):
-        if self.user is None:
-            logger.error("Request user is None. This should not happen.")
+        logger.error(
+            "%s.get() Rendering plugin list view for user %s with args=%s, kwargs=%s.",
+            self.formatted_class_name,
+            request.user.username if request.user else "None",
+            args,
+            kwargs,
+        )
+        if request.user is None or isinstance(request.user, AnonymousUser):
+            logger.error(
+                "%s.get() Request user is None or anonymous. This should not happen.", self.formatted_class_name
+            )
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.plugins = PluginMeta.get_cached_plugins_for_user(self.user)
+        self.plugins = PluginMeta.get_cached_plugins_for_user(request.user)
         context = {
             "plugins": self.plugins,
         }

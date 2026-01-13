@@ -39,9 +39,9 @@ from smarter.apps.account.utils import get_cached_account_for_user
 
 # smarter stuff
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import SettingsDefaults, smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import camel_to_snake, rfc1034_compliant_str
 from smarter.lib import json
 from smarter.lib.cache import cache_results
