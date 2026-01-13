@@ -103,6 +103,8 @@ class SAMProviderSpecProvider(SmarterBasePydanticModel):
 
     @field_validator("connectivity_test_path")
     def validate_connectivity_test_path(cls, v):
+        v = SmarterValidator.leading_slash(v)
+        v = SmarterValidator.trailing_slash(v)  # type: ignore
         if v is None or SmarterValidator.is_valid_url_path(v):
             return v
         raise SAMValidationError(f"Invalid connectivity test path: {v}. Must be a valid URL path.")
