@@ -211,25 +211,26 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 return default
         return val
 
-    key = var_name
-    retval = os.environ.get(key)
-    if retval is None:
-        key = f"SMARTER_{var_name}"
-        retval = os.environ.get(key)
-    if retval is None:
-        if is_required:
-            logger.error("smarter.common.conf - Required environment variable %s is missing.", key)
-            print(formatted_text_red(f"[ERROR] Required environment variable {key} is missing."))
+    retval = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
+    if retval is None and is_required:
+        logger.error("smarter.common.conf - Required environment variable %s is missing.", var_name)
+        print(formatted_text_red(f"[ERROR] Required environment variable {var_name} is missing."))
         return default
-
-    cast_val = cast_value(retval, default)
-    log_value = cast_val if not is_secret else "****"
-    if VERBOSE_CONSOLE_OUTPUT:
-        logger.info(
-            formatted_text_green("Overriding Smarter setting from environment variable: %s=%s"), key, repr(log_value)
-        )
-        print(formatted_text_green(f"Overriding Smarter setting from environment variable: {key}={repr(log_value)}"))
-    return cast_val
+    else:
+        cast_val = cast_value(retval, default)  # type: ignore
+        log_value = cast_val if not is_secret else "****"
+        if VERBOSE_CONSOLE_OUTPUT:
+            logger.info(
+                formatted_text_green("Overriding Smarter setting from environment variable: %s=%s"),
+                cast_val,
+                repr(log_value),
+            )
+            print(
+                formatted_text_green(
+                    f"Overriding Smarter setting from environment variable: {cast_val}={repr(log_value)}"
+                )
+            )
+        return cast_val
 
 
 def recursive_sort_dict(d):
