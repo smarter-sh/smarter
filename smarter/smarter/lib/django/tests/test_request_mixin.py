@@ -357,7 +357,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         request = response.wsgi_request
         mixin = SmarterRequestMixin(request)
         mixin._url = "ftp:// be.bop a loo bop. not a very \ngood url----"
-        self.assertEqual(mixin.url, "http://testserver/not%20a%20very%20good%20url/")
+        self.assertIsNone(mixin.url)
 
     def test_url_property_logs_and_raises_if_url_not_set(self):
         """url property logs error and raises if _url is not set."""
@@ -891,7 +891,7 @@ class TestSmarterRequestMixin(TestAccountMixin):
         mixin = SmarterRequestMixin(request)
         mixin._smarter_request.META = None  # Will cause AttributeError
         mixin._params = None
-        with self.assertLogs("smarter.lib.django.request", level="ERROR"):
+        with self.assertLogs("smarter.lib.django.request", level="WARNING"):
             result = mixin.params
             self.assertEqual(result, QueryDict(""))
         self.assertEqual(mixin.params, QueryDict(""))

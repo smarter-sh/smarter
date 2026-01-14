@@ -217,7 +217,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             (arg for arg in args if isinstance(arg, UserProfile)), None
         )
         SmarterRequestMixin.__init__(
-            self, request, *args, user=user, account=account, user_profile=user_profile, **kwargs
+            self, request=request, *args, user=user, account=account, user_profile=user_profile, **kwargs
         )
 
         # ----------------------------------------------------------------------

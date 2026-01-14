@@ -292,7 +292,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterRequestMixin):
         account = kwargs.pop("account", None)
         user_profile = kwargs.pop("user_profile", None)
         SmarterRequestMixin.__init__(
-            self, request, user=user, account=account, user_profile=user_profile, *args, **kwargs
+            self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
 
         # note: setup() is the earliest point in the request lifecycle where we can
