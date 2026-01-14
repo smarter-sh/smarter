@@ -95,7 +95,7 @@ deployment:
 
 ## @param env Environment variables for the Smarter application
 env:
-  AUTHENTICATION_BACKENDS: "smarter.lib.django.auth.GoogleOAuth2Hosted,smarter.lib.django.auth.GithubOAuth2Hosted,smarter.lib.django.auth.DjangoModelBackendHosted"
+  AUTHENTICATION_BACKENDS: "smarter.lib.django.auth.GoogleOAuth2,smarter.lib.django.auth.GithubOAuth2,smarter.lib.django.auth.DjangoModelBackend"
   AWS_ACCESS_KEY_ID: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"
   AWS_REGION: "us-east-2"
   AWS_SECRET_ACCESS_KEY: "SET-ME-IN-HELM-CHARTS-SMARTER-VALUES-YAML"

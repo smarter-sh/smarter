@@ -897,6 +897,8 @@ SOCIAL_AUTH_PIPELINE = (
     # Populate the extra_data field in the social record with the values
     # specified by settings (and the default ones like access_token, etc).
     "social_core.pipeline.social_auth.load_extra_data",
+    # Custom: Redirect inactive accounts before finalizing login
+    "smarter.apps.account.pipeline.redirect_inactive_account",
     # Update the user record with any changed info from the auth service.
     "social_core.pipeline.user.user_details",
 )

@@ -2,6 +2,8 @@
 
 import logging
 
+from django.test import RequestFactory
+
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -83,3 +85,11 @@ class TestAccountMixin(SmarterTestBase):
         self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in ready() check.")
 
         return True
+
+    def request_factory(self) -> RequestFactory:
+        """
+        Prepare and get a response from an api/v1/ endpoint.
+        """
+
+        factory = RequestFactory()
+        return factory

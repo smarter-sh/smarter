@@ -114,6 +114,9 @@ class SmarterWaffleSwitches:
     ACCOUNT_LOGGING = "log_account"
     """Enables logging throughout the smarter.app.account namespace."""
 
+    MULTITENANT_AUTHENTICATION = "enable_multitenant_authentication"
+    """Enables multi-tenant authentication support for hosted Smarter platforms."""
+
     API_LOGGING = "log_api"
     """Enables logging throughout the smarter.api namespace."""
 
