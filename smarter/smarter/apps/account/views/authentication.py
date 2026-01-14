@@ -111,7 +111,6 @@ class LoginView(SmarterNeverCachedWebView):
 
         google_oauth_backends = [
             "social_core.backends.google.GoogleOAuth2",
-            "smarter.lib.django.auth.GoogleOAuth2",
             "smarter.lib.django.auth.GoogleOAuth2Multitenant",
         ]
         for backend in google_oauth_backends:
@@ -161,7 +160,6 @@ class LoginView(SmarterNeverCachedWebView):
             return False
         github_oauth_backends = [
             "social_core.backends.github.GithubOAuth2",
-            "smarter.lib.django.auth.GithubOAuth2",
             "smarter.lib.django.auth.GithubOAuth2Multitenant",
         ]
         for backend in github_oauth_backends:
