@@ -1,3 +1,9 @@
+## [0.13.68](https://github.com/smarter-sh/smarter/compare/v0.13.67...v0.13.68) (2026-01-14)
+
+### Bug Fixes
+
+* smarter.lib.django.auth.GoogleOAuth2 should be social_core.backends.google.GoogleOAuth2 and so on. ([0210bc6](https://github.com/smarter-sh/smarter/commit/0210bc64578100934fa4c939b2c6c032e420521d))
+
 ## [0.13.67](https://github.com/smarter-sh/smarter/compare/v0.13.66...v0.13.67) (2026-01-14)
 
 ### Bug Fixes
