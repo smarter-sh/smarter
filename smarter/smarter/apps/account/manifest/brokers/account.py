@@ -166,7 +166,7 @@ class SAMAccountBroker(AbstractBroker):
         if self.ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     ###########################################################################
     # Smarter abstract property implementations

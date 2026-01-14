@@ -133,7 +133,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         if self.ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     # override the base abstract manifest model with the SqlConnection model
     _manifest: Optional[SAMSqlConnection] = None

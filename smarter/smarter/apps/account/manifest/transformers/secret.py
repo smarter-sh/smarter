@@ -558,7 +558,7 @@ class SecretTransformer(SmarterHelperMixin):
             if self.secret:
                 return True
 
-        logger.error(
+        logger.warning(
             "%s.ready() Not in a ready state: No manifest nor secret instance found. ", self.formatted_class_name
         )
         return False

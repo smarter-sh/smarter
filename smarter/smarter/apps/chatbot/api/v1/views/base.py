@@ -384,7 +384,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         else:
             self._name = self._name or name
         if not self.chatbot:
-            logger.error(
+            logger.warning(
                 "Could not initialize ChatBotHelper url: %s, name: %s, user: %s, account: %s, id: %s",
                 self.url,
                 self.name,

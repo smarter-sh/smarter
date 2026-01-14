@@ -667,4 +667,4 @@ class AccountMixin(SmarterHelperMixin):
         if self.is_accountmixin_ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)

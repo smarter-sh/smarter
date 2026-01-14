@@ -159,7 +159,7 @@ class SAMChatbotBroker(AbstractBroker):
         )
         if not self.ready:
             if not self.loader and not self.manifest and not self.chatbot:
-                logger.error(
+                logger.warning(
                     "%s.__init__() No loader nor existing ChatBot provided for %s broker. Cannot initialize.",
                     self.formatted_class_name,
                     self.kind,
@@ -189,7 +189,7 @@ class SAMChatbotBroker(AbstractBroker):
         if self.ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     @property
     def SerializerClass(self) -> Type[ChatBotSerializer]:

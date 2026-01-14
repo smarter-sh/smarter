@@ -2080,7 +2080,7 @@ class SmarterRequestMixin(AccountMixin):
         if self.is_requestmixin_ready:
             logger.debug(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     def to_json(self) -> dict[str, Any]:
         """
