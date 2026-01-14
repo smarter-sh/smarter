@@ -1,3 +1,9 @@
+## [0.13.66](https://github.com/smarter-sh/smarter/compare/v0.13.65...v0.13.66) (2026-01-14)
+
+### Bug Fixes
+
+* add smarter.lib.json ([cc91663](https://github.com/smarter-sh/smarter/commit/cc91663363f7005e05ba77546675d44aeb3c6617))
+
 ## [0.13.65](https://github.com/smarter-sh/smarter/compare/v0.13.64...v0.13.65) (2026-01-14)
 
 ### Bug Fixes
