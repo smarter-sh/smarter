@@ -389,7 +389,10 @@ class SettingsDefaults:
     """
 
     ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", DEFAULT_ROOT_DOMAIN, is_required=True)
-    ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", [])
+
+    # for liveness and readiness probes from kubernetes.
+    # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
+    ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", ["localhost"])
     ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY", is_secret=True, is_required=True))
 
     API_DESCRIPTION: str = get_env(
@@ -743,10 +746,6 @@ class Settings(BaseSettings):
                 retval.append(parsed.hostname)
         for host in retval:
             SmarterValidator.validate_hostname(host)
-
-        # for liveness and readiness probes from kubernetes.
-        # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
-        retval.append("localhost")
 
         return list(set(retval))
 
