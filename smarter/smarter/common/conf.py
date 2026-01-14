@@ -743,6 +743,11 @@ class Settings(BaseSettings):
                 retval.append(parsed.hostname)
         for host in retval:
             SmarterValidator.validate_hostname(host)
+
+        # for liveness and readiness probes from kubernetes.
+        # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
+        retval.append("localhost")
+
         return list(set(retval))
 
     anthropic_api_key: SecretStr = Field(
