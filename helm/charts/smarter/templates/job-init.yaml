@@ -184,9 +184,6 @@ spec:
             - name: SMARTER_ROOT_DOMAIN
               value: "{{ .Values.env.SMARTER_ROOT_DOMAIN }}"
 
-            - name: SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS
-              value: "{{ .Values.env.SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS }}"
-
             - name: SMARTER_SETTINGS_OUTPUT_FORMAT
               value: "{{ .Values.env.SMARTER_SETTINGS_OUTPUT_FORMAT }}"
 
