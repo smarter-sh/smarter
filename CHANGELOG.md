@@ -1,3 +1,9 @@
+## [0.13.69](https://github.com/smarter-sh/smarter/compare/v0.13.68...v0.13.69) (2026-01-14)
+
+### Bug Fixes
+
+* ensure that csrf middlware never passes along the authenticated user ([2321f50](https://github.com/smarter-sh/smarter/commit/2321f50fe77d3a5e3a5737979bf893614a0f5cf2))
+
 ## [0.13.68](https://github.com/smarter-sh/smarter/compare/v0.13.67...v0.13.68) (2026-01-14)
 
 ### Bug Fixes
