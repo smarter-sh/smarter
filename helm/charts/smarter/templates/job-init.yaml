@@ -72,72 +72,150 @@ spec:
           env:
             - name: ROOT_DOMAIN
               value: "{{ .Values.env.ROOT_DOMAIN }}"
+
             - name: AWS_REGION
               value: "{{ .Values.env.AWS_REGION }}"
+
             - name: AWS_ACCESS_KEY_ID
               value: "{{ .Values.env.AWS_ACCESS_KEY_ID }}"
+
             - name: AWS_SECRET_ACCESS_KEY
               value: "{{ .Values.env.AWS_SECRET_ACCESS_KEY}}"
-            - name: ENVIRONMENT
-              value: "{{ .Values.env.ENVIRONMENT }}"
+
+            - name: AUTHENTICATION_BACKENDS
+              value: "{{ .Values.env.AUTHENTICATION_BACKENDS }}"
+
             - name: DEBUG_MODE
               value: "{{ .Values.env.DEBUG_MODE }}"
-            - name: DJANGO_SETTINGS_MODULE
-              value: "{{ .Values.env.DJANGO_SETTINGS_MODULE }}"
+
+            - name: DOCKERHUB_PAT
+              value: "{{ .Values.env.DOCKERHUB_PAT }}"
+
+            - name: DOCKERHUB_USERNAME
+              value: "{{ .Values.env.DOCKERHUB_USERNAME }}"
+
             - name: DUMP_DEFAULTS
               value: "{{ .Values.env.DUMP_DEFAULTS }}"
-            - name: FERNET_ENCRYPTION_KEY
-              value: "{{ .Values.env.FERNET_ENCRYPTION_KEY }}"
-            - name: MYSQL_HOST
-              value: "{{ .Values.env.MYSQL_HOST }}"
-            - name: MYSQL_PORT
-              value: "{{ .Values.env.MYSQL_PORT }}"
-            - name: MYSQL_DATABASE
-              value: "{{ .Values.env.MYSQL_DATABASE }}"
-            - name: MYSQL_USER
-              value: "{{ .Values.env.MYSQL_USER }}"
-            - name: MYSQL_PASSWORD
-              value: "{{ .Values.env.MYSQL_PASSWORD }}"
-            - name: MYSQL_ROOT_USERNAME
-              value: "{{ .Values.env.MYSQL_ROOT_USERNAME }}"
-            - name: MYSQL_ROOT_PASSWORD
-              value: "{{ .Values.env.MYSQL_ROOT_PASSWORD }}"
-            - name: OPENAI_API_KEY
-              value: "{{ .Values.env.OPENAI_API_KEY }}"
-            - name: PINECONE_API_KEY
-              value: "{{ .Values.env.PINECONE_API_KEY }}"
-            - name: PINECONE_ENVIRONMENT
-              value: "{{ .Values.env.PINECONE_ENVIRONMENT }}"
-            - name: GOOGLE_MAPS_API_KEY
-              value: "{{ .Values.env.GOOGLE_MAPS_API_KEY }}"
-            - name: GEMINI_API_KEY
-              value: "{{ .Values.env.GEMINI_API_KEY }}"
-            - name: LLAMA_API_KEY
-              value: "{{ .Values.env.LLAMA_API_KEY }}"
-            - name: MAILCHIMP_API_KEY
-              value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
+
             - name: SECRET_KEY
               value: "{{ .Values.env.SECRET_KEY }}"
+
+            - name: SMARTER_ADMIN_EMAIL
+              value: "{{ .Values.env.SMARTER_ADMIN_EMAIL }}"
+
+            - name: SMARTER_ADMIN_PASSWORD
+              value: "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}"
+
+            - name: SMARTER_ADMIN_USERNAME
+              value: "{{ .Values.env.SMARTER_ADMIN_USERNAME }}"
+
+            - name: SMARTER_COHERE_API_KEY
+              value: "{{ .Values.env.SMARTER_COHERE_API_KEY }}"
+
+            - name: SMARTER_EMAIL_ADMINS
+              value: "{{ .Values.env.SMARTER_EMAIL_ADMINS }}"
+
+            - name: SMARTER_FERNET_ENCRYPTION_KEY
+              value: "{{ .Values.env.SMARTER_FERNET_ENCRYPTION_KEY }}"
+
+            - name: SMARTER_FIREWORKS_API_KEY
+              value: "{{ .Values.env.SMARTER_FIREWORKS_API_KEY }}"
+
+            - name: SMARTER_GEMINI_API_KEY
+              value: "{{ .Values.env.SMARTER_GEMINI_API_KEY }}"
+
+            - name: SMARTER_GOOGLE_MAPS_API_KEY
+              value: "{{ .Values.env.SMARTER_GOOGLE_MAPS_API_KEY }}"
+
+            - name: SMARTER_GOOGLE_SERVICE_ACCOUNT_B64
+              value: "{{ .Values.env.SMARTER_GOOGLE_SERVICE_ACCOUNT_B64 }}"
+
+            - name: SMARTER_INTERNAL_IP_PREFIXES
+              value: "{{ .Values.env.SMARTER_INTERNAL_IP_PREFIXES }}"
+
+            - name: SMARTER_LLAMA_API_KEY
+              value: "{{ .Values.env.SMARTER_LLAMA_API_KEY }}"
+
+            - name: SMARTER_LLAMA_API_KEY
+              value: "{{ .Values.env.SMARTER_LLAMA_API_KEY }}"
+
+            - name: SMARTER_MYSQL_DATABASE
+              value: "{{ .Values.env.SMARTER_MYSQL_DATABASE }}"
+
+            - name: SMARTER_MYSQL_HOST
+              value: "{{ .Values.env.SMARTER_MYSQL_HOST }}"
+
+            - name: SMARTER_MYSQL_PASSWORD
+              value: "{{ .Values.env.SMARTER_MYSQL_PASSWORD }}"
+
+            - name: SMARTER_MYSQL_PORT
+              value: "{{ .Values.env.SMARTER_MYSQL_PORT }}"
+
+            - name: SMARTER_MYSQL_ROOT_PASSWORD
+              value: "{{ .Values.env.SMARTER_MYSQL_ROOT_PASSWORD }}"
+
+            - name: SMARTER_MYSQL_ROOT_USERNAME
+              value: "{{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME }}"
+
             - name: SMARTER_MYSQL_TEST_DATABASE_PASSWORD
               value: "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
-            - name: CACHES_LOCATION
-              value: "{{ .Values.env.CACHES_LOCATION }}"
-            - name: CELERY_BROKER_URL
-              value: "{{ .Values.env.CELERY_BROKER_URL }}"
-            - name: CELERY_RESULT_BACKEND
-              value: "{{ .Values.env.CELERY_RESULT_BACKEND }}"
-            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}"
-            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}"
-            - name: SOCIAL_AUTH_GITHUB_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_KEY }}"
-            - name: SOCIAL_AUTH_GITHUB_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_SECRET }}"
-            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}"
-            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}"
+
+            - name: SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME
+              value: "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME }}"
+
+            - name: SMARTER_MYSQL_USER
+              value: "{{ .Values.env.SMARTER_MYSQL_USER }}"
+
+            - name: SMARTER_OPENAI_API_KEY
+              value: "{{ .Values.env.SMARTER_OPENAI_API_KEY }}"
+
+            - name: SMARTER_PINECONE_API_KEY
+              value: "{{ .Values.env.SMARTER_PINECONE_API_KEY }}"
+
+            - name: SMARTER_PINECONE_ENVIRONMENT
+              value: "{{ .Values.env.SMARTER_PINECONE_ENVIRONMENT }}"
+
+            - name: SMARTER_PLUGIN_MAX_DATA_RESULTS
+              value: "{{ .Values.env.SMARTER_PLUGIN_MAX_DATA_RESULTS }}"
+
+            - name: SMARTER_REACTJS_APP_LOADER_PATH
+              value: "{{ .Values.env.SMARTER_REACTJS_APP_LOADER_PATH }}"
+
+            - name: SMARTER_ROOT_DOMAIN
+              value: "{{ .Values.env.SMARTER_ROOT_DOMAIN }}"
+
+            - name: SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS
+              value: "{{ .Values.env.SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS }}"
+
+            - name: SMARTER_SETTINGS_OUTPUT_FORMAT
+              value: "{{ .Values.env.SMARTER_SETTINGS_OUTPUT_FORMAT }}"
+
+            - name: SMARTER_SMTP_FROM_EMAIL
+              value: "{{ .Values.env.SMARTER_SMTP_FROM_EMAIL }}"
+
+            - name: SMARTER_SMTP_PASSWORD
+              value: "{{ .Values.env.SMARTER_SMTP_PASSWORD }}"
+
+            - name: SMARTER_SMTP_SENDER
+              value: "{{ .Values.env.SMARTER_SMTP_SENDER }}"
+
+            - name: SMARTER_SMTP_USERNAME
+              value: "{{ .Values.env.SMARTER_SMTP_USERNAME }}"
+
+            - name: SMARTER_TOGETHERAI_API_KEY
+              value: "{{ .Values.env.SMARTER_TOGETHERAI_API_KEY }}"
+
+            - name: SMTP_HOST
+              value: "{{ .Values.env.SMTP_HOST }}"
+
+            - name: SMTP_PORT
+              value: "{{ .Values.env.SMTP_PORT }}"
+
+            - name: SMTP_USE_SSL
+              value: "{{ .Values.env.SMTP_USE_SSL }}"
+
+            - name: SMTP_USE_TLS
+              value: "{{ .Values.env.SMTP_USE_TLS }}"
 
           image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "IfNotPresent" }}
