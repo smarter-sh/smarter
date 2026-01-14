@@ -1,3 +1,9 @@
+## [0.13.62](https://github.com/smarter-sh/smarter/compare/v0.13.61...v0.13.62) (2026-01-14)
+
+### Bug Fixes
+
+* wrap is_database_ready() in a try block to handle k9s pod startup ([0a3a60a](https://github.com/smarter-sh/smarter/commit/0a3a60a642e58fe100086bda1503a0f882e5c1f5))
+
 ## [0.13.61](https://github.com/smarter-sh/smarter/compare/v0.13.60...v0.13.61) (2026-01-14)
 
 ### Bug Fixes
