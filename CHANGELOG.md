@@ -1,3 +1,9 @@
+## [0.13.65](https://github.com/smarter-sh/smarter/compare/v0.13.64...v0.13.65) (2026-01-14)
+
+### Bug Fixes
+
+* aws cache location ([47f650c](https://github.com/smarter-sh/smarter/commit/47f650c7048b535601b2756f9b057ffd24928d22))
+
 ## [0.13.64](https://github.com/smarter-sh/smarter/compare/v0.13.63...v0.13.64) (2026-01-14)
 
 ### Bug Fixes
