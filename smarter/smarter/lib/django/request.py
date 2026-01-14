@@ -155,7 +155,7 @@ class SmarterRequestMixin(AccountMixin):
     )
 
     # pylint: disable=W0613
-    def __init__(self, request: Optional[HttpRequest], *args, **kwargs):
+    def __init__(self, *args, request: Optional[HttpRequest] = None, **kwargs):
         self._instance_id = id(self)
         self._smarter_request: Optional[HttpRequest] = None
         self._smarter_request_user: Optional[UserType] = None
@@ -178,6 +178,9 @@ class SmarterRequestMixin(AccountMixin):
             request,
             args,
             kwargs,
+        )
+        request = request or next(
+            (req for req in args if isinstance(req, (RestFrameworkRequest, HttpRequest, WSGIRequest, MagicMock))), None
         )
         # ---------------------------------------------------------------------
         # the following reassignments are not necessarily technically required,
@@ -739,13 +742,13 @@ class SmarterRequestMixin(AccountMixin):
             )
             return QueryDict("")
         if not hasattr(self.smarter_request, "META"):
-            logger.error(
+            logger.warning(
                 "%s.params() - request does not have META attribute. Cannot extract query string parameters.",
                 self.request_mixin_logger_prefix,
             )
             return QueryDict("")
         if self.smarter_request.META is None:
-            logger.error(
+            logger.warning(
                 "%s.params() - request.META is None. Cannot extract query string parameters.",
                 self.request_mixin_logger_prefix,
             )
@@ -762,7 +765,7 @@ class SmarterRequestMixin(AccountMixin):
                 self._params = QueryDict(query_string)  # type: ignore
                 if not self._params:
                     raise AttributeError("No query string parameters found.")
-            except AttributeError as e:
+            except AttributeError:
                 return QueryDict("")
         return self._params
 
