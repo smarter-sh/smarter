@@ -17,7 +17,8 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": os.getenv(
-            "CACHES_LOCATION", "redis://:smarter@smarter-redis-master.smarter-platform-dev.svc.cluster.local:6379/1"
+            "CACHES_LOCATION",
+            f"redis://:smarter@smarter-redis-master.smarter-platform-{smarter_settings.environment}.svc.cluster.local:6379/1",
         ),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -29,7 +30,8 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # Celery Configuration
 CELERY_BROKER_URL = os.getenv(
-    "CELERY_BROKER_URL", "redis://:smarter@smarter-redis-master.smarter-platform-dev.svc.cluster.local:6379/1"
+    "CELERY_BROKER_URL",
+    f"redis://:smarter@smarter-redis-master.smarter-platform-{smarter_settings.environment}.svc.cluster.local:6379/1",
 )
 CELERY_REDBEAT_REDIS_URL = CELERY_BROKER_URL
 CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"

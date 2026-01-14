@@ -69,7 +69,7 @@ def main():
     #   id: set-docker-image
     #   shell: bash
     #   run: |-
-    #     echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.62" >> $GITHUB_ENV
+    #     echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.63" >> $GITHUB_ENV
     #   env:
     #     AWS_ECR_REPO: ${{ env.NAMESPACE }}
     update_version_in_file(
