@@ -43,6 +43,10 @@ jobs:
 
       - name: Package and Push Chart
         run: |
+          cd helm/charts/smarter
+          helm dependency update
+          helm dependency build
+          cd ../../..
           helm package helm/charts/smarter
           helm push smarter-*.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
 

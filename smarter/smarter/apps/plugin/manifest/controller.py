@@ -196,6 +196,14 @@ class PluginController(AbstractController):
             self.name,
         )
 
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        return f"{__name__}.{PluginController.__name__}[{id(self)}]"
+
     ###########################################################################
     # Abstract property implementations
     ###########################################################################
