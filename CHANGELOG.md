@@ -1,3 +1,9 @@
+## [0.13.64](https://github.com/smarter-sh/smarter/compare/v0.13.63...v0.13.64) (2026-01-14)
+
+### Bug Fixes
+
+* cache hostname should be redis://:smarter@smarter-redis-master.smarter-platform-{smarter_settings.environment}.svc.cluster.local:6379/1 ([bbce5de](https://github.com/smarter-sh/smarter/commit/bbce5de2b9f6c1ddcb19e4a4b5aa7f07ed92fbee))
+
 ## [0.13.63](https://github.com/smarter-sh/smarter/compare/v0.13.62...v0.13.63) (2026-01-14)
 
 ### Bug Fixes
