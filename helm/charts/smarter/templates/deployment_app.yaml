@@ -53,6 +53,9 @@ spec:
             httpGet:
               path: /healthz
               port: {{ .Values.deployment.containerPort }}
+              httpHeaders:
+              - name: Host
+                value: localhost
             initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 10
@@ -62,6 +65,9 @@ spec:
             httpGet:
               path: /readiness
               port: {{ .Values.deployment.containerPort }}
+              httpHeaders:
+              - name: Host
+                value: localhost
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
@@ -71,6 +77,9 @@ spec:
             httpGet:
               path: /healthz
               port: {{ .Values.deployment.containerPort }}
+              httpHeaders:
+              - name: Host
+                value: localhost
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
