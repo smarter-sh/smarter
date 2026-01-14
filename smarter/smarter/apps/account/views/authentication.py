@@ -251,10 +251,26 @@ class LogoutView(SmarterNeverCachedWebView):
     """View for logging out browser session."""
 
     def get(self, request, *args, **kwargs) -> HttpResponseRedirect:
+        logger.debug(
+            "%s.LogoutView.get() called with request type: %s %s with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            type(request),
+            request,
+            args,
+            kwargs,
+        )
         logout(request)
         return redirect_and_expire_cache(path="/")
 
     def post(self, request, *args, **kwargs) -> HttpResponseRedirect:
+        logger.debug(
+            "%s.LogoutView.post() called with request type: %s %s with args: %s, kwargs: %s",
+            self.formatted_class_name,
+            type(request),
+            request,
+            args,
+            kwargs,
+        )
         logout(request)
         return redirect_and_expire_cache(path="/")
 
@@ -265,6 +281,14 @@ class AccountInactiveView(SmarterNeverCachedWebView):
     template_path = "account/authentication/account-inactive.html"
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
+        logger.debug(
+            "%s.AccountInactiveView.get() called with request type: %s %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            type(request),
+            request,
+            args,
+            kwargs,
+        )
         return self.clean_http_response(request, template_path=self.template_path)
 
 
@@ -280,6 +304,14 @@ class AccountRegisterView(SmarterNeverCachedWebView):
     template_path = "account/authentication/sign-up.html"
 
     def get(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
+        logger.debug(
+            "%s.AccountRegisterView.get() called with request type: %s %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            type(request),
+            request,
+            args,
+            kwargs,
+        )
         user = get_resolved_user(request.user)
         if user and hasattr(user, "is_authenticated") and user.is_authenticated:
             return redirect_and_expire_cache(path="/")
@@ -289,6 +321,14 @@ class AccountRegisterView(SmarterNeverCachedWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request, *args, **kwargs) -> Union[HttpResponseRedirect, HttpResponse]:
+        logger.debug(
+            "%s.AccountRegisterView.post() called with request type: %s %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            type(request),
+            request,
+            args,
+            kwargs,
+        )
         form = AccountRegisterView.SignUpForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data["email"]
@@ -365,6 +405,14 @@ class AccountActivateView(SmarterNeverCachedWebView):
     expiring_token = ExpiringTokenGenerator()
 
     def get(self, request, *args, **kwargs):
+        logger.debug(
+            "%s.AccountActivateView.get() called with request type: %s %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            type(request),
+            request,
+            args,
+            kwargs,
+        )
         uidb64 = kwargs.get("uidb64", None)
         token = kwargs.get("token", None)
 
@@ -373,6 +421,10 @@ class AccountActivateView(SmarterNeverCachedWebView):
             user.is_active = True
             user.save()
         except User.DoesNotExist:
+            logger.debug(
+                "%s.AccountActivateView.get() invalid password reset link. User does not exist.",
+                self.formatted_class_name,
+            )
             return SmarterHttpResponseNotFound(
                 request=request, error_message="Invalid password reset link. User does not exist."
             )
@@ -384,8 +436,19 @@ class AccountActivateView(SmarterNeverCachedWebView):
             SmarterTokenConversionError,
             SmarterTokenIntegrityError,
         ) as e:
+            logger.error(
+                "%s.AccountActivateView.get() bad token error: %s\n%s",
+                self.formatted_class_name,
+                str(e),
+                traceback.format_exc(),
+            )
             return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
         except SmarterTokenExpiredError as e:
+            logger.debug(
+                "%s.AccountActivateView.get() expired token error: %s",
+                self.formatted_class_name,
+                str(e),
+            )
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
         return self.clean_http_response(request, template_path=self.template_path)
