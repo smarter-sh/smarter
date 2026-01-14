@@ -1,3 +1,9 @@
+## [0.13.67](https://github.com/smarter-sh/smarter/compare/v0.13.66...v0.13.67) (2026-01-14)
+
+### Bug Fixes
+
+* add waffle switch to toggle multitenant setup. parameterize whether oauth buttons appear on login page. add unit tests for authentication ([6d44177](https://github.com/smarter-sh/smarter/commit/6d441778c104d57cdcd5528beae71ec50a54412c))
+
 ## [0.13.66](https://github.com/smarter-sh/smarter/compare/v0.13.65...v0.13.66) (2026-01-14)
 
 ### Bug Fixes
