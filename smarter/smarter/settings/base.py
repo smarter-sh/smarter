@@ -30,7 +30,7 @@ from dotenv import load_dotenv
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
-from smarter.common.helpers.console_helpers import formatted_text_green
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
 from smarter.lib import json
 
 
@@ -1587,19 +1587,24 @@ for key, value in os.environ.items():
                 "AWS_SECRET_ACCESS_KEY",
             ]:
                 logger.info(
-                    formatted_text_green("Overriding Django setting from environment variable: %s=%s"),
+                    formatted_text_green("%s Overriding Django setting from environment variable: %s=%s"),
+                    __name__ + ".settings.base.py",
                     key,
                     repr(cast_value),
                 )
             else:
-                logger.info(formatted_text_green("Overriding Django setting from environment variable: %s=******"), key)
+                logger.info(
+                    formatted_text_green("%s Overriding Django setting from environment variable: %s=******"),
+                    __name__ + ".settings.base.py",
+                    key,
+                )
 
 ###############################################################################
 # Settings diagnostics information for all environments
 ###############################################################################
 if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.info("=" * 80)
-    logger.info("smarter.settings.base.py")
+    logger.info(formatted_text(__name__ + ".settings.base.py"))
 
     try:
         with open("/proc/uptime", encoding="utf-8") as f:
@@ -1672,11 +1677,6 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.info("Smarter v%s", smarter_version)
     logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)
     logger.info("Storages backend: %s", STORAGES["default"]["BACKEND"])
-
-    cache_backend = CACHES.get("default", {}).get("BACKEND", "not configured")
-    logger.info("Cache backend: %s", json.dumps(CACHES))
-    if cache_backend != "django_redis.cache.RedisCache":
-        logger.warning("Recommended cache backend is django_redis.cache.RedisCache")
 
     if smarter_settings.smtp_is_configured:
         logger.info("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)

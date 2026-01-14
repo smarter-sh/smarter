@@ -12,13 +12,14 @@ from .base import *
 
 logger = logging.getLogger(__name__)
 logger.info("Loading smarter.settings.base_aws")
+default_redis_location = f"redis://:{smarter_settings.shared_resource_identifier}@{smarter_settings.shared_resource_identifier}-redis-master.{smarter_settings.environment_namespace}.svc.cluster.local:6379/1"
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": os.getenv(
             "CACHES_LOCATION",
-            f"redis://:smarter@smarter-redis-master.smarter-platform-{smarter_settings.environment}.svc.cluster.local:6379/1",
+            default_redis_location,
         ),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -31,7 +32,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 # Celery Configuration
 CELERY_BROKER_URL = os.getenv(
     "CELERY_BROKER_URL",
-    f"redis://:smarter@smarter-redis-master.smarter-platform-{smarter_settings.environment}.svc.cluster.local:6379/1",
+    default_redis_location,
 )
 CELERY_REDBEAT_REDIS_URL = CELERY_BROKER_URL
 CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"
@@ -97,6 +98,13 @@ CORS_ALLOWED_ORIGINS += [
 # (4_0.E001) As of Django 4.0, the values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme
 # (usually http:// or https://) but found platform.smarter.sh. See the release notes for details.
 CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in smarter_settings.allowed_hosts]
+
+if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
+    cache_backend = CACHES.get("default", {}).get("BACKEND", "not configured")
+    logger.info("Cache backend: %s", json.dumps(CACHES))
+    if cache_backend != "django_redis.cache.RedisCache":
+        logger.warning("Recommended cache backend is django_redis.cache.RedisCache")
+
 
 __all__ = [
     name
