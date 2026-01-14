@@ -44,6 +44,14 @@ jobs:
       - name: Package and Push Chart
         run: |
           cd helm/charts/smarter
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo add loki https://grafana.github.io/helm-charts
+          helm repo add mariadb https://charts.bitnami.com/bitnami
+          helm repo add mysql https://charts.bitnami.com/bitnami
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add redis https://charts.bitnami.com/bitnami
+          helm repo update
           helm dependency update
           helm dependency build
           cd ../../..
