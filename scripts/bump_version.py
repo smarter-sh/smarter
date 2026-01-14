@@ -11,6 +11,8 @@ Updates:
 - pyproject.toml
 - Dockerfile
 - helm/charts/smarter/Chart.yaml
+- helm/charts/smarter/values.yaml
+- .github/actions/deploy/action.yml
 """
 
 import re
@@ -54,6 +56,14 @@ def main():
     )
     print(f"Updated Dockerfile to {new_version}")
 
+    # echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.61" >> $GITHUB_ENV
+    update_version_in_file(
+        ".github/actions/deploy/action.yml",
+        r'(echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)(")',
+        f"\\1v{new_version}\\3",
+    )
+    print(f"Updated .github/actions/deploy/action.yml to {new_version}")
+
     # Update helm/charts/smarter/values.yaml
     # global:
     #   image:
@@ -66,21 +76,6 @@ def main():
         f"\\1v{new_version}",
     )
     print(f"Updated helm/charts/smarter/values.yaml to {new_version}")
-
-    # echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.61" >> $GITHUB_ENV
-    update_version_in_file(
-        ".github/actions/deploy/action.yml",
-        r'(echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)(")',
-        f"\\1v{new_version}\\3",
-    )
-    print(f"Updated .github/actions/deploy/action.yml to {new_version}")
-
-    update_version_in_file(
-        "helm/charts/smarter/Chart.yaml",
-        r"(image:\s*mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)",
-        f"\\1v{new_version}",
-    )
-    print(f"Updated helm/charts/smarter/Chart.yaml to {new_version}")
 
     # Update artifacthub.io/images smarter image version in Chart.yaml
     update_version_in_file(
