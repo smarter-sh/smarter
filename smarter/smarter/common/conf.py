@@ -213,23 +213,19 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
 
     retval = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
     if retval is None and is_required:
-        logger.error("smarter.common.conf - Required environment variable %s is missing.", var_name)
-        print(formatted_text_red(f"[ERROR] Required environment variable {var_name} is missing."))
+        msg = (
+            f"{formatted_text(__name__ + ".get_env()")} [WARNING] Required environment variable {var_name} is missing."
+        )
+        logger.warning(msg)
+        print(msg)
         return default
     else:
         cast_val = cast_value(retval, default)  # type: ignore
         log_value = cast_val if not is_secret else "****"
         if VERBOSE_CONSOLE_OUTPUT:
-            logger.info(
-                formatted_text_green("Overriding Smarter setting from environment variable: %s=%s"),
-                cast_val,
-                repr(log_value),
-            )
-            print(
-                formatted_text_green(
-                    f"Overriding Smarter setting from environment variable: {cast_val}={repr(log_value)}"
-                )
-            )
+            msg = f"{formatted_text(__name__ + ".get_env()")} Environment variable {var_name} found. Overriding Smarter setting from environment variable: {var_name}={repr(log_value)}"
+            logger.info(msg)
+            print(msg)
         return cast_val
 
 
