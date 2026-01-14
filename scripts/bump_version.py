@@ -40,9 +40,11 @@ def main():
     update_version_in_file(
         "smarter/smarter/__version__.py", r'__version__\s*=\s*["\'].*?["\']', f'__version__ = "{new_version}"'
     )
+    print(f"Updated __version__.py to {new_version}")
 
     # Update pyproject.toml
     update_version_in_file("pyproject.toml", r'version\s*=\s*["\'].*?["\']', f'version = "{new_version}"')
+    print(f"Updated pyproject.toml to {new_version}")
 
     # Update Dockerfile (example: ARG VERSION=...)
     update_version_in_file(
@@ -50,17 +52,7 @@ def main():
         r'org\.opencontainers\.image\.version="[^"]+"',
         f'org.opencontainers.image.version="{new_version}"',
     )
-
-    print(
-        f"Version updated to {new_version} in __version__.py, pyproject.toml, Dockerfile and helm/charts/smarter/Chart.yaml"
-    )
-
-    # Update Helm chart
-    update_version_in_file(
-        "helm/charts/smarter/Chart.yaml",
-        r'appVersion:\s*["\']?[\w\.\-]+["\']?',
-        f"appVersion: {new_version}",
-    )
+    print(f"Updated Dockerfile to {new_version}")
 
     # Update helm/charts/smarter/values.yaml
     # global:
@@ -73,6 +65,29 @@ def main():
         r"(global:\s*\n\s*image:\s*\n(?:.*\n)*?\s*tag:\s*)v\d+\.\d+\.\d+",
         f"\\1v{new_version}",
     )
+    print(f"Updated helm/charts/smarter/values.yaml to {new_version}")
+
+    update_version_in_file(
+        ".github/actions/deploy/action.yml",
+        r"(SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)",
+        f"\\1v{new_version}",
+    )
+    print(f"Updated .github/actions/deploy/action.yml to {new_version}")
+
+    update_version_in_file(
+        "helm/charts/smarter/Chart.yaml",
+        r"(image:\s*mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)",
+        f"\\1v{new_version}",
+    )
+    print(f"Updated helm/charts/smarter/Chart.yaml to {new_version}")
+
+    # Update artifacthub.io/images smarter image version in Chart.yaml
+    update_version_in_file(
+        "helm/charts/smarter/Chart.yaml",
+        r"(image:\s*mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)",
+        f"\\1v{new_version}",
+    )
+    print(f"Updated artifacthub.io/images in helm/charts/smarter/Chart.yaml to {new_version}")
 
 
 if __name__ == "__main__":
