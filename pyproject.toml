@@ -28,7 +28,7 @@ classifiers = [
 
 [project.urls]
 homepage = "https://smarter.sh/"
-documentation = "https://platform.smarter.sh/docs/"
+documentation = "https://docs.smarter.sh/"
 repository = "https://github.com/smarter-sh/smarter"
 bugtracker = "https://github.com/smarter-sh/smarter/issues"
 changelog = "https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md"

@@ -57,7 +57,7 @@ def main():
     #   org.opencontainers.image.authors="Lawrence McDaniel <lpm0073@gmail.com>" \
     #   org.opencontainers.image.url="https://smarter-sh.github.io/smarter/" \
     #   org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
-    #   org.opencontainers.image.documentation="https://platform.smarter.sh/docs/"
+    #   org.opencontainers.image.documentation="https://docs.smarter.sh/"
     update_version_in_file(
         "Dockerfile",
         r'org\.opencontainers\.image\.version="[^"]+"',

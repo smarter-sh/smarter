@@ -86,7 +86,7 @@ annotations:
     - name: Chart Source
       url: https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter
     - name: Documentation
-      url: https://platform.smarter.sh/docs/
+      url: https://docs.smarter.sh/
     - name: Support
       url: https://github.com/smarter-sh/smarter/issues
   artifacthub.io/maintainers: |
