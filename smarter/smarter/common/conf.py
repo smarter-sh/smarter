@@ -143,7 +143,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
     :rtype: Any
     """
 
-    def cast_value(val: str, default: Any) -> Any:
+    def cast_value(val: Optional[str], default: Any) -> Any:
         """
         Cast the environment variable value to the type of the default value.
 
@@ -152,12 +152,12 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         :return: The casted value.
         """
         if isinstance(default, str):
-            return val.strip()
+            return val.strip() if val is not None else default
         if isinstance(default, bool):
-            return str(val).lower() in ["true", "1", "t", "y", "yes"]
+            return str(val).lower() in ["true", "1", "t", "y", "yes"] if val is not None else default
         if isinstance(default, int):
             try:
-                return int(val)
+                return int(val) if val is not None else default
             except (ValueError, TypeError):
                 logger.error(
                     "Environment variable %s value '%s' cannot be converted to int. Using default %s.",
@@ -168,7 +168,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 return default
         if isinstance(default, float):
             try:
-                return float(val)
+                return float(val) if val is not None else default
             except (ValueError, TypeError):
                 logger.error(
                     "Environment variable %s value '%s' cannot be converted to float. Using default %s.",
@@ -179,9 +179,9 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 return default
         if isinstance(default, list):
             if isinstance(val, str):
-                return [item.strip() for item in val.split(",") if item.strip()]
+                return [item.strip() for item in val.split(",") if item.strip()] if val is not None else default
             elif isinstance(val, list):
-                return val
+                return val if val is not None else default
             else:
                 logger.error(
                     "Environment variable %s value '%s' cannot be converted to list. Using default %s.",
@@ -193,9 +193,9 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         if isinstance(default, dict):
             try:
                 if isinstance(val, str):
-                    return json.loads(val)
+                    return json.loads(val) if val is not None else default
                 elif isinstance(val, dict):
-                    return val
+                    return val if val is not None else default
                 else:
                     logger.error(
                         "Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
