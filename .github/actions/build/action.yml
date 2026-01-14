@@ -10,7 +10,7 @@
 name: Build
 description: "Build and push the Docker image to AWS ECR and Docker Hub"
 branding:
-  icon: "gear"
+  icon: "settings"
   color: "orange"
 inputs:
   environment:
