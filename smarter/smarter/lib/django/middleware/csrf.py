@@ -6,12 +6,10 @@ trusted origins for CSRF protection.
 
 import logging
 from collections import defaultdict
-from collections.abc import Awaitable
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.http import HttpRequest, HttpResponseForbidden
-from django.http.response import HttpResponseBase
+from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.functional import cached_property
 
@@ -147,7 +145,6 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         If the request is for a ChatBot, then we'll exempt it from CSRF checks.
         """
         host = request.get_host()
-        url = self.smarter_build_absolute_uri(request)
 
         if not host:
             return SmarterHttpResponseServerError(
@@ -169,16 +166,16 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             )
             return None
 
-        logger.debug("%s.__call__(): %s", self.formatted_class_name, url)
+        logger.debug("%s.__call__(): %s", self.formatted_class_name, self.url)
 
         if self.is_chatbot:
-            logger.debug("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, url)
+            logger.debug("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.url)
             return None
 
         if self.is_chatbot:
             logger.debug("%s.process_request(): csrf_middleware_logging is active", self.formatted_class_name)
             logger.debug("=" * 80)
-            logger.debug("%s ChatBot: %s", self.formatted_class_name, url)
+            logger.debug("%s ChatBot: %s", self.formatted_class_name, self.url)
             for cookie in request.COOKIES:
                 logger.debug("SmarterCsrfViewMiddleware request.COOKIES: %s", cookie)
             logger.debug("%s cookie settings", self.formatted_class_name)
@@ -210,10 +207,10 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             logger.debug("%s._accept: environment is local. ignoring csrf checks", self.formatted_class_name)
             return None
         if self.is_chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS):
-            logger.debug(
-                "%s.process_view() %s waffle switch is active",
+            logger.info(
+                "%s.process_view() SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS is active. ignoring csrf checks for ChatBot request %s",
                 self.formatted_class_name,
-                SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS,
+                self.url,
             )
             return None
         response = super().process_view(request, callback, callback_args, callback_kwargs)
