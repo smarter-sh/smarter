@@ -22,14 +22,17 @@
 								<!--begin::Login options-->
 								<div class="row g-3 mb-9">
 									<!--begin::Col-->
+                                    {% if is_google_oauth_enabled %}
 									<div class="col-md-6">
 										<!--begin::Google link=-->
 										<a href="{% url 'social:begin' 'google-oauth2' %}" class="btn btn-flex btn-outline btn-text-gray-700 btn-active-color-primary bg-state-light flex-center text-nowrap w-100">
 										<img alt="Logo" src="{% static 'assets/media/svg/brand-logos/google-icon.svg' %}" class="h-15px me-3" />Sign in with Google</a>
 										<!--end::Google link=-->
 									</div>
+                                    {% endif %}
 									<!--end::Col-->
 									<!--begin::Col-->
+                                    {% if is_github_oauth_enabled %}
 									<div class="col-md-6">
 										<!--begin::Google link=-->
 										<a href="{% url 'social:begin' 'github' %}" class="btn btn-flex btn-outline btn-text-gray-700 btn-active-color-primary bg-state-light flex-center text-nowrap w-100">
@@ -37,6 +40,7 @@
 										<img alt="Logo" src="{% static 'assets/media/svg/brand-logos/github-1.svg' %}" class="theme-dark-show h-15px me-3" />Sign in with GitHub</a>
 										<!--end::Google link=-->
 									</div>
+                                    {% endif %}
 									<!--end::Col-->
 									<!--begin::Col-->
 									<!-- <div class="col-md-6">

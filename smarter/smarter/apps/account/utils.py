@@ -353,7 +353,13 @@ def get_cached_default_account(invalidate: bool = False) -> Optional[Account]:
 
     @cache_results()
     def _get_default_account():
-        account = Account.objects.get(is_default_account=True)
+        accounts = Account.objects.filter(is_default_account=True)
+        if not accounts.exists():
+            logger.warning("%s.get_cached_default_account() no default account found", HERE)
+            return None
+        if accounts.count() > 1:
+            logger.warning("%s.get_cached_default_account() multiple default accounts found", HERE)
+        account = accounts.first()
         logger.info("%s.get_cached_default_account() retrieving and caching default account %s", HERE, account)
         return account
 

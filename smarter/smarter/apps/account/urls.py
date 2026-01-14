@@ -11,6 +11,7 @@ from .views.authentication import (
     AccountActivateView,
     AccountActivationEmailView,
     AccountDeactivateView,
+    AccountInactiveView,
     AccountRegisterView,
     LoginView,
     LogoutView,
@@ -39,6 +40,8 @@ class AccountNamedUrls:
 
     """
 
+    namespace = namespace
+
     API_KEYS_LIST = "api_keys_list"
     ACCOUNT_LOGIN = "account_login"
     ACCOUNT_LOGOUT = "account_logout"
@@ -46,6 +49,7 @@ class AccountNamedUrls:
     ACCOUNT_ACTIVATION = "account_activation"
     ACCOUNT_ACTIVATE = "account_activate"
     ACCOUNT_DEACTIVATE = "account_deactivate"
+    ACCOUNT_INACTIVE = "account_inactive"
     ACCOUNT_PASSWORD_RESET_REQUEST = "account_password_reset_request"
     ACCOUNT_PASSWORD_CONFIRM = "account_password_confirm"
     ACCOUNT_USER = "account_user"
@@ -64,6 +68,7 @@ urlpatterns = [
     path("api-keys/", APIKeyListView.as_view(), name=AccountNamedUrls.API_KEYS_LIST),
     path("login/", LoginView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGIN),
     path("logout/", LogoutView.as_view(), name=AccountNamedUrls.ACCOUNT_LOGOUT),
+    path("inactive/", AccountInactiveView.as_view(), name=AccountNamedUrls.ACCOUNT_INACTIVE),
     path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),
     # account lifecycle
     path("register/", AccountRegisterView.as_view(), name=AccountNamedUrls.ACCOUNT_REGISTER),
