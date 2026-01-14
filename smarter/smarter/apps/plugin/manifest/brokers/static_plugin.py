@@ -197,7 +197,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         if self.ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     def plugin_init(self):
         """

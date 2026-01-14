@@ -499,7 +499,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         if self.ready:
             logger.debug(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
         try:
             url = smarter_build_absolute_uri(request)
             logger.debug(

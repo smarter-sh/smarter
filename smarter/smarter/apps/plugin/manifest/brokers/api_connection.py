@@ -94,7 +94,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         super().__init__(*args, **kwargs)
         if not self.ready:
             if not self.loader and not self.manifest and not self.connection:
-                logger.error(
+                logger.warning(
                     "%s.__init__() No loader nor existing Connection provided for %s broker. Cannot initialize.",
                     self.formatted_class_name,
                     self.kind,
@@ -129,7 +129,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if self.ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     # override the base abstract manifest model with the ApiConnection model
     _manifest: Optional[SAMApiConnection] = None
