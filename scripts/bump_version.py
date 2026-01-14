@@ -67,10 +67,11 @@ def main():
     )
     print(f"Updated helm/charts/smarter/values.yaml to {new_version}")
 
+    # echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.61" >> $GITHUB_ENV
     update_version_in_file(
         ".github/actions/deploy/action.yml",
-        r"(SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)",
-        f"\\1v{new_version}",
+        r'(echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)(")',
+        f"\\1v{new_version}\\3",
     )
     print(f"Updated .github/actions/deploy/action.yml to {new_version}")
 
