@@ -40,11 +40,11 @@ CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("MYSQL_DATABASE"),
-        "USER": os.getenv("MYSQL_USER"),
-        "PASSWORD": os.getenv("MYSQL_PASSWORD"),
-        "HOST": os.getenv("MYSQL_HOST"),
-        "PORT": os.getenv("MYSQL_PORT", "3306"),  # default MySQL port
+        "NAME": os.getenv("SMARTER_MYSQL_DATABASE"),
+        "USER": os.getenv("SMARTER_MYSQL_USER"),
+        "PASSWORD": os.getenv("SMARTER_MYSQL_PASSWORD"),
+        "HOST": os.getenv("SMARTER_MYSQL_HOST"),
+        "PORT": os.getenv("SMARTER_MYSQL_PORT", "3306"),  # default MySQL port
     }
 }
 
