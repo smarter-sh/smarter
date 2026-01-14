@@ -48,7 +48,16 @@ def main():
     update_version_in_file("pyproject.toml", r'version\s*=\s*["\'].*?["\']', f'version = "{new_version}"')
     print(f"Updated pyproject.toml to {new_version}")
 
-    # Update Dockerfile (example: ARG VERSION=...)
+    # LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
+    #   description="Docker image for the Smarter Api" \
+    #   license="GNU AGPL v3" \
+    #   vcs-url="https://github.com/smarter-sh/smarter" \
+    #   org.opencontainers.image.title="Smarter API" \
+    #   org.opencontainers.image.version="0.13.62" \
+    #   org.opencontainers.image.authors="Lawrence McDaniel <lpm0073@gmail.com>" \
+    #   org.opencontainers.image.url="https://smarter-sh.github.io/smarter/" \
+    #   org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
+    #   org.opencontainers.image.documentation="https://platform.smarter.sh/docs/"
     update_version_in_file(
         "Dockerfile",
         r'org\.opencontainers\.image\.version="[^"]+"',
@@ -56,7 +65,13 @@ def main():
     )
     print(f"Updated Dockerfile to {new_version}")
 
-    # echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.61" >> $GITHUB_ENV
+    # - name: Set Docker image
+    #   id: set-docker-image
+    #   shell: bash
+    #   run: |-
+    #     echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.62" >> $GITHUB_ENV
+    #   env:
+    #     AWS_ECR_REPO: ${{ env.NAMESPACE }}
     update_version_in_file(
         ".github/actions/deploy/action.yml",
         r'(echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)(")',
@@ -78,6 +93,12 @@ def main():
     print(f"Updated helm/charts/smarter/values.yaml to {new_version}")
 
     # Update artifacthub.io/images smarter image version in Chart.yaml
+    #   artifacthub.io/images: |
+    #     - name: smarter
+    #       image: mcdaniel0073/smarter:v0.13.62
+    #       platforms:
+    #         - linux/amd64
+    #         - linux/arm64
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
         r"(image:\s*mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)",
