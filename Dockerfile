@@ -155,14 +155,18 @@ FROM user_setup AS venv
 RUN python -m venv /home/smarter_user/venv
 ENV PATH="/home/smarter_user/venv/bin:$PATH"
 
-# Add all Python package dependencies
+# Add all Python package dependencies.
+# We do this before adding the application code so that we can take advantage
+# of Docker's caching mechanism. If the requirements files do not change,
+# Docker will use the cached layer and not reinstall the packages.
+#
+# mcdaniel jan-2026: adding local requirements.txt back in because of the
+# https://github.com/smarter-sh/smarter-deploy repo that is used to deploy
+# smarter locally for non-developers.
 COPY ./smarter/requirements requirements
 RUN pip install --upgrade pip && \
-  pip install --no-cache-dir -r requirements/docker.txt
-
-# Install Python dependencies for the local environment for cases where
-# we're going to run python unit tests in the Docker container.
-RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
+  pip install --no-cache-dir -r requirements/docker.txt && \
+  pip install -r requirements/local.txt
 
 ############################## application ##################################
 FROM venv AS application
