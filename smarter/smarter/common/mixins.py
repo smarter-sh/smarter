@@ -20,6 +20,7 @@ from smarter.common.helpers.console_helpers import (
 from smarter.common.utils import (
     is_authenticated_request,
 )
+from smarter.common.utils import mask_string as util_mask_string
 from smarter.common.utils import (
     smarter_build_absolute_uri as utils_smarter_build_absolute_uri,
 )
@@ -179,6 +180,31 @@ class SmarterHelperMixin:
         :raises SmarterValueError: If the URI cannot be built from the request.
         """
         return utils_smarter_build_absolute_uri(request)
+
+    def mask_string(
+        self, string: Optional[str] = "", mask_char: str = "*", mask_length: int = 4, string_length: int = 8
+    ) -> str:
+        """
+        Masks a string for secure logging.
+
+        This utility function masks all but the last `unmasked_chars` characters
+        of the input string, replacing them with asterisks. It is useful for
+        logging sensitive information like API keys or passwords.
+
+        :param string: The string to be masked.
+        :type string: str
+        :param mask_char: The character used for masking.
+        :type mask_char: str
+        :param mask_length: The number of characters to mask.
+        :type mask_length: int
+        :param string_length: The length of the string to consider for masking.
+        :type string_length: int
+        :return: The masked string.
+        :rtype: str
+        """
+        return util_mask_string(
+            string=string, mask_char=mask_char, mask_length=mask_length, string_length=string_length
+        )
 
     def data_to_dict(self, data: Union[dict, str]) -> dict:
         """

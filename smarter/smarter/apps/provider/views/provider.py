@@ -1,3 +1,7 @@
+"""
+Views for provider-related pages in the Smarter Workbench web console.
+"""
+
 import logging
 from typing import Optional
 
