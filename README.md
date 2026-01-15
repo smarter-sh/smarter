@@ -48,10 +48,10 @@ make                # scaffold a .env file in the root of the repo
                     # Add your credentials to .env located in the project root folder.
                     #
 make init           # pulls Docker containers, creates and initializes a local MySql database, preloads example AI resources
-make run            # runs all docker containers and starts a local web server http://localhost:8000/
+make run            # runs all docker containers and starts a local web server http://localhost:9357/
 ```
 
-4. Login at http://localhost:8000/login/ with user `admin@smarter.sh` and password `smarter`.
+4. Login at http://localhost:9357/login/ with user `admin@smarter.sh` and password `smarter`.
 
 See these onboarding videos:
 

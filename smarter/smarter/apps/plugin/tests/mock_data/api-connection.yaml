@@ -16,7 +16,7 @@ metadata:
     - smarter.sh/test-api-connection/contact-email: support@pound-sand.com
 spec:
   connection:
-    baseUrl: http://localhost:8000/
+    baseUrl: http://localhost:9357/
     apiKey: 12345-abcde-67890-fghij
     authMethod: token
     timeout: 10

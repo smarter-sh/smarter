@@ -76,6 +76,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_green,
     formatted_text_red,
 )
+from smarter.common.utils import generate_fernet_encryption_key
 from smarter.lib import json
 from smarter.lib.django.validators import SmarterValidator
 
@@ -460,12 +461,16 @@ class SettingsDefaults:
     EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com", is_required=True)
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
-    FERNET_ENCRYPTION_KEY: SecretStr = SecretStr(get_env("FERNET_ENCRYPTION_KEY", is_secret=True, is_required=True))
-    if FERNET_ENCRYPTION_KEY.get_secret_value() == DEFAULT_MISSING_VALUE:
-        # pylint: disable=C0415
-        from smarter.common.utils import generate_fernet_encryption_key
-
-        FERNET_ENCRYPTION_KEY = SecretStr(generate_fernet_encryption_key())
+    fernet = get_env("FERNET_ENCRYPTION_KEY", default=None, is_secret=True)
+    if fernet is None:
+        warnings.warn(
+            "FERNET_ENCRYPTION_KEY is not set. "
+            "A new encryption key will be generated. This may cause existing encrypted data to become inaccessible. "
+            "You can safely disregard this warning if this is a new installation or test environment.",
+            UserWarning,
+        )
+        fernet = generate_fernet_encryption_key()
+    FERNET_ENCRYPTION_KEY = SecretStr(fernet)
 
     GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY", is_secret=True, is_required=True))
 
@@ -500,7 +505,7 @@ class SettingsDefaults:
     LLM_DEFAULT_MAX_TOKENS = 2048
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
-    LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS += [host + ":9357" for host in LOCAL_HOSTS]
     LOCAL_HOSTS.append("testserver")
 
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
@@ -528,7 +533,16 @@ class SettingsDefaults:
 
     REACTJS_APP_LOADER_PATH = get_env("REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
 
-    SECRET_KEY: SecretStr = SecretStr(get_env("SECRET_KEY", is_secret=True, is_required=True))
+    secret = get_env("SECRET_KEY", default=None, is_secret=True)
+    if secret is None:
+        warnings.warn(
+            "SECRET_KEY is not set. A new secret key will be generated. "
+            "This may cause existing sessions and other cryptographic operations to become invalid. "
+            "You can safely disregard this warning if this is a new installation or test environment.",
+            UserWarning,
+        )
+        secret = base64.urlsafe_b64encode(os.urandom(32)).decode()
+    SECRET_KEY: SecretStr = SecretStr(secret)
     SETTINGS_OUTPUT: bool = bool_environment_variable("SETTINGS_OUTPUT", False)
 
     SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
@@ -3859,7 +3873,7 @@ class Settings(BaseSettings):
             >>> print(smarter_settings.environment_cdn_domain)
             'cdn.alpha.platform.example.com'
             >>> print(smarter_settings.environment_cdn_domain)
-            'cdn.localhost:8000'
+            'cdn.localhost:9357'
 
         See Also:
             - smarter_settings.platform_subdomain
@@ -3880,7 +3894,7 @@ class Settings(BaseSettings):
             >>> print(smarter_settings.environment_cdn_url)
             https://cdn.alpha.platform.example.com
             >>> print(smarter_settings.environment_cdn_url)
-            https://cdn.localhost:8000
+            https://cdn.localhost:9357
 
         Raises:
             SmarterConfigurationError: If the constructed URL is invalid.
@@ -3970,7 +3984,7 @@ class Settings(BaseSettings):
             >>> print(smarter_settings.environment_platform_domain)
             'alpha.platform.example.com'
             >>> print(smarter_settings.environment_platform_domain)
-            'localhost:8000'
+            'localhost:9357'
 
         Note:
             Returns the root domain for the production environment. Otherwise,
@@ -3986,7 +4000,7 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return f"{self.environment}.{self.root_platform_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
-            return "localhost:8000"
+            return "localhost:9357"
         # default domain format
         return f"{self.environment}.{self.root_platform_domain}"
 
@@ -4003,13 +4017,13 @@ class Settings(BaseSettings):
                 'api.example.com',
                 'api.alpha.platform.example.com',
                 'api.beta.platform.example.com',
-                'api.localhost:8000',
+                'api.localhost:9357',
                 'api.next.platform.example.com',
                 'example.com',
                 'platform.example.com',
                 'alpha.platform.example.com',
                 'beta.platform.example.com',
-                'localhost:8000',
+                'localhost:9357',
                 'next.platform.example.com'
             ]
 
@@ -4154,7 +4168,7 @@ class Settings(BaseSettings):
             >>> print(smarter_settings.environment_api_domain)
             'alpha.api.platform.example.com'
             >>> print(smarter_settings.environment_api_domain)
-            'api.localhost:8000'
+            'api.localhost:9357'
 
         Note:
             Returns the root domain for the production environment. Otherwise,
@@ -4173,7 +4187,7 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return f"{self.environment}.{self.root_api_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
-            return f"{SMARTER_API_SUBDOMAIN}.localhost:8000"
+            return f"{SMARTER_API_SUBDOMAIN}.localhost:9357"
         # default domain format
         return f"{self.environment}.{self.root_api_domain}"
 

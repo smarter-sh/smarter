@@ -110,7 +110,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         """
         True if the new_session url parameter was passed and is set to 'true'
 
-        example: http://localhost:8000/api/v1/cli/chat/smarter/?new_session=false&uid=mcdaniel
+        example: http://localhost:9357/api/v1/cli/chat/smarter/?new_session=false&uid=mcdaniel
         """
         if not self.params:
             return False

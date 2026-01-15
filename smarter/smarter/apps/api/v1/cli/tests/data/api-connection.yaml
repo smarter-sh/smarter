@@ -50,7 +50,7 @@ spec:
     account: 6097
     apiKey: test_secret
     authMethod: basic
-    baseUrl: http://localhost:8000/api/v1/cli/example_manifest/plugin/
+    baseUrl: http://localhost:9357/api/v1/cli/example_manifest/plugin/
     proxyHost: null
     proxyPassword: null
     proxyPort: null

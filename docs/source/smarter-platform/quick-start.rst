@@ -59,7 +59,7 @@ Run the following command to start all Docker containers and launch the web serv
 
   make run
 
-The web console will be available at: http://127.0.0.1:8000/ or http://localhost:8000
+The web console will be available at: http://127.0.0.1:9357/ or http://localhost:9357
 If you see a login screen, your deployment is working!
 
 .. raw:: html
@@ -73,7 +73,7 @@ If you see a login screen, your deployment is working!
 6. Log In.
 -------------------------------
 
-Go to http://localhost:8000/login/ and log in with:
+Go to http://localhost:9357/login/ and log in with:
 
 Username: admin@smarter.sh
 Password: smarter

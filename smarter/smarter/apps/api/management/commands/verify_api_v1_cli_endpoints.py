@@ -150,7 +150,7 @@ class Command(SmarterCommand):
                 url = f"https://{smarter_settings.environment_platform_domain}{path}"
             else:
                 response = client.post(path=path, data=manifest, content_type="application/json", extra=headers)
-                url = f"http://localhost:8000{path}"
+                url = f"http://localhost:9357{path}"
 
             response_content = response.content.decode("utf-8")
             response_json = json.loads(response_content)

@@ -238,5 +238,5 @@ FROM collect_assets AS serve_application
 
 WORKDIR /home/smarter_user/smarter
 USER smarter_user
-CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
+CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:9357"]
 EXPOSE 8000

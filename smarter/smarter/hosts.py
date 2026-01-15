@@ -9,10 +9,10 @@ Web Console Hosts
 
    * - Host
      - Description
-   * - localhost:8000
-     - For local development via http://localhost:8000/
-   * - 127.0.0.1:8000
-     - For local development via http://127.0.0.1:8000/
+   * - localhost:9357
+     - For local development via http://localhost:9357/
+   * - 127.0.0.1:9357
+     - For local development via http://127.0.0.1:9357/
    * - platform.example.com
      - Main production platform console.
    * - alpha.platform.example.com
@@ -29,10 +29,10 @@ API Subdomain Hosts
 
    * - Host
      - Description
-   * - api.localhost:8000
-     - Local API endpoint for http://api.localhost:8000/
-   * - api.127.0.0.1:8000
-     - Local API endpoint for http://api.127.0.0.1:8000/
+   * - api.localhost:9357
+     - Local API endpoint for http://api.localhost:9357/
+   * - api.127.0.0.1:9357
+     - Local API endpoint for http://api.127.0.0.1:9357/
    * - api.example.com
      - Main production API endpoint.
    * - alpha.api.example.com
@@ -77,8 +77,8 @@ host_patterns = patterns(
     # -------------------------------------------------------------------------
     # web console
     # -------------------------------------------------------------------------
-    host(r"localhost:8000", smarter_console_urls, name="localhost"),  # for http://localhost:8000/
-    host(r"127.0.0.1:8000", smarter_console_urls, name="127001"),  # for http://127.0.0.1:8000/
+    host(r"localhost:9357", smarter_console_urls, name="localhost"),  # for http://localhost:9357/
+    host(r"127.0.0.1:9357", smarter_console_urls, name="127001"),  # for http://127.0.0.1:9357/
     host(
         rf"{smarter_settings.platform_subdomain}.{smarter_settings.root_domain}",
         smarter_console_urls,
@@ -102,8 +102,8 @@ host_patterns = patterns(
     # -------------------------------------------------------------------------
     # API subdomains
     # -------------------------------------------------------------------------
-    host(r"api.localhost:8000", smarter_api_urls, name="api_localhost"),  # for http://api.localhost:8000/
-    host(r"api.127.0.0.1:8000", smarter_api_urls, name="api_127001"),  # for http://api.127.0.0.1:8000/
+    host(r"api.localhost:9357", smarter_api_urls, name="api_localhost"),  # for http://api.localhost:9357/
+    host(r"api.127.0.0.1:9357", smarter_api_urls, name="api_127001"),  # for http://api.127.0.0.1:9357/
     host(
         rf"{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
         smarter_api_urls,

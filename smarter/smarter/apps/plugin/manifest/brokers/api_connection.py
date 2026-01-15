@@ -664,7 +664,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             ],
         )
         connection = PydanticApiConnection(
-            baseUrl="http://localhost:8000/",
+            baseUrl="http://localhost:9357/",
             apiKey="12345-top-secret-67890-fghij",
             authMethod="token",
             timeout=30,
@@ -795,7 +795,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                         "kind": "ApiConnection",
                         "version": "1.0.0",
                         "account": "2194-1233-0815",
-                        "baseUrl": "http://localhost:8000/api/v1/cli/example_manifest/plugin/",
+                        "baseUrl": "http://localhost:9357/api/v1/cli/example_manifest/plugin/",
                         "apiKey": "testf232a0619cb19da0",
                         "authMethod": "basic",
                         "timeout": 30,
@@ -807,7 +807,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     }
                 },
                 "status": {                             # read only
-                    "connection_string": "http://localhost:8000/api/v1/cli/example_manifest/plugin/ (Auth: ******)",
+                    "connection_string": "http://localhost:9357/api/v1/cli/example_manifest/plugin/ (Auth: ******)",
                     "is_valid": false
                 }
             }

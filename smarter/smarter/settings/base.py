@@ -1529,7 +1529,7 @@ WAGTAILADMIN_BASE_URL = os.environ.get("WAGTAILADMIN_BASE_URL", "/cms/admin/")
 
 WAGTAILTRANSFER_SOURCES = {
     "localhost": {
-        "BASE_URL": "http://localhost:8000/wagtail-transfer/",
+        "BASE_URL": "http://localhost:9357/wagtail-transfer/",
         "SECRET_KEY": "qr4hlujl144ye5hwn0k3f0no462ms81z",
     },
     "alpha": {

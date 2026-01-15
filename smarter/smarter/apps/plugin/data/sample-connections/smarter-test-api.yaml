@@ -15,7 +15,7 @@ metadata:
     - smarter.sh/smarter-test-api/backward-compatibility: true
 spec:
   connection:
-    baseUrl: http://localhost:8000/api/v1/tests
+    baseUrl: http://localhost:9357/api/v1/tests
     headers: {}
     method: GET
     parameters: {}
