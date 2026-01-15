@@ -53,7 +53,7 @@ services:
         target: /smarter
         consistency: cached
     ports:
-      - 8000:9357
+      - 9357:9357
     depends_on:
       - smarter-mysql
       - smarter-redis
