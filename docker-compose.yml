@@ -3,7 +3,7 @@
 # For local development, you can use the following docker-compose file
 # to run the application. This file will start a MySQL database, a Redis
 # server, a Celery worker, and the application itself. The application
-# will be available at http://localhost:8000.
+# will be available at http://localhost:9357.
 #------------------------------------------------------------------------------
 services:
   smarter-mysql:
@@ -46,14 +46,14 @@ services:
         ENVIRONMENT: ${ENVIRONMENT}
         COLLECT_STATIC_FILES: ${COLLECT_STATIC_FILES}
     image: smarter
-    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000 --timeout 120
+    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:9357 --timeout 120
     volumes:
       - type: bind
         source: ./smarter
         target: /smarter
         consistency: cached
     ports:
-      - 8000:8000
+      - 8000:9357
     depends_on:
       - smarter-mysql
       - smarter-redis

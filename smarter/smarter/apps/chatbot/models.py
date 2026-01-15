@@ -651,7 +651,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         requests on new prompts.
 
         maps to "<int:chatbot_id>/chat/"
-        example: "http://localhost:8000/api/v1/chatbots/5174/chat/"
+        example: "http://localhost:9357/api/v1/chatbots/5174/chat/"
 
         :returns: URL for chatbot API
         :rtype: str
@@ -673,7 +673,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         to retrieve the UI configuration for the chatbot.
 
         maps to "<int:chatbot_id>/config/"
-        example: "http://localhost:8000/api/v1/chatbots/5174/config/"
+        example: "http://localhost:9357/api/v1/chatbots/5174/config/"
 
         :returns: URL for chatbot config API
         :rtype: str
@@ -1438,7 +1438,7 @@ class ChatBotHelper(SmarterRequestMixin):
         parsed from the URL, if available.
 
         If the URL contains an account number (for example,
-        ``http://education.3141-5926-5359.api.localhost:8000/config/``),
+        ``http://education.3141-5926-5359.api.localhost:9357/config/``),
         this method will attempt to retrieve and return the corresponding
         cached Account object. If no account number is found in the URL,
         the default account from the superclass is returned.
@@ -1700,8 +1700,8 @@ class ChatBotHelper(SmarterRequestMixin):
               returns ``'alpha.api.example.com'``
 
         Sandbox URL:
-            - ``http://api.localhost:8000/api/v1/chatbots/1/chat/``
-              returns ``'api.localhost:8000'``
+            - ``http://api.localhost:9357/api/v1/chatbots/1/chat/``
+              returns ``'api.localhost:9357'``
 
         Custom domain URL:
             - ``https://hr.smarter.sh/chatbot/``

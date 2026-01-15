@@ -591,10 +591,10 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         from django.http import HttpRequest
 
         request = HttpRequest()
-        request.META['HTTP_HOST'] = 'localhost:8000'
+        request.META['HTTP_HOST'] = 'localhost:9357'
         request.path = '/api/v1/resource/'
         url = smarter_build_absolute_uri(request)
-        print(url)  # Output: http://localhost:8000/api/v1/resource/
+        print(url)  # Output: http://localhost:9357/api/v1/resource/
 
         # Example with DRF Request
         from rest_framework.request import Request

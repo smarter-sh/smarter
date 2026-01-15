@@ -91,7 +91,7 @@ Client front-end: see `https://github.com/smarter-sh/smarter-chat <https://githu
           "Accept": "application/json",
           "Content-Type": "application/json",
           "X-CSRFToken": "q9WXqqIhYJMI3ZSBIOE18JMORBMqAHri",
-          "Origin": "http://localhost:8000",
+          "Origin": "http://localhost:9357",
           "Cookie": "session_key=a07593ecfaecd24008ca4251096732663ac0213b8cc6bdcce4f4c043276ab0b5; debug=true;"
       },
       "body": "the request body goes here..."

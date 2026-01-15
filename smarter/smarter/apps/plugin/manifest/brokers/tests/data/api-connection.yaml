@@ -16,7 +16,7 @@ metadata:
     - smarter.sh/test-api-connection/contact-email: lawrence@stackademy.com
 spec:
   connection:
-    baseUrl: http://localhost:8000/
+    baseUrl: http://localhost:9357/
     apiKey: test_api_key
     authMethod: token
     timeout: 10

@@ -48,9 +48,9 @@ MIDDLEWARE += [
 ]
 CORS_ALLOWED_ORIGINS += [
     "http://127.0.0.1:5173",  # Django
-    "http://127.0.0.1:8000",  # Django
+    "http://127.0.0.1:9357",  # Django
     "http://localhost:5173",
-    "http://localhost:8000",
+    "http://localhost:9357",
 ]
 CORS_ALLOWED_ORIGINS.append(f"http://{smarter_settings.environment_cdn_domain}")
 CORS_ALLOWED_ORIGINS.append(f"https://{smarter_settings.environment_cdn_domain}")

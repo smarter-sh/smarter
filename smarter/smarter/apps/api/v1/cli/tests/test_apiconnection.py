@@ -87,7 +87,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
             name=self.name,
             kind=KIND,
             description="test apiconnection",
-            base_url="http://localhost:8000/api/v1/cli/example_manifest/plugin/",
+            base_url="http://localhost:9357/api/v1/cli/example_manifest/plugin/",
             api_key=self.api_key,
             auth_method=ApiConnection.AUTH_METHOD_CHOICES[1][0],
             timeout=30,
@@ -180,7 +180,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.assertIsInstance(response, dict)
 
         # muck up the manifest with some test data
-        new_url = "http://localhost:8000/api/v1/cli/example_manifest/chatbot/"
+        new_url = "http://localhost:9357/api/v1/cli/example_manifest/chatbot/"
         new_description = "new description"
         data = response[SmarterJournalApiResponseKeys.DATA]
         data[SAMKeys.SPEC.value][SAMApiConnectionSpecKeys.CONNECTION.value][
@@ -282,7 +282,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
                             "account": "test_account_admin_user_6c252feaab8e71d9",
                             "name": "smarter_test_base_92a2c8606f908c29",
                             "description": "test apiconnection",
-                            "baseUrl": "http://localhost:8000/api/v1/cli/example_manifest/plugin/",
+                            "baseUrl": "http://localhost:9357/api/v1/cli/example_manifest/plugin/",
                             "apiKey": "smarter_test_base_92a2c8606f908c29",
                             "authMethod": "basic",
                             "timeout": 30,

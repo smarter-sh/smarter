@@ -27,9 +27,9 @@ See this complete [example config](./json/reactapp.config.json) json dict, based
       "example function calling configuration"
     ],
     "app_placeholder": "Ask me anything...",
-    "url": "http://example.3141-5926-5359.api.localhost:8000/",
-    "url_chatbot": "http://example.3141-5926-5359.api.localhost:8000/chatbot/",
-    "url_chatapp": "http://example.3141-5926-5359.api.localhost:8000/chatapp/"
+    "url": "http://example.3141-5926-5359.api.localhost:9357/",
+    "url_chatbot": "http://example.3141-5926-5359.api.localhost:9357/chatbot/",
+    "url_chatapp": "http://example.3141-5926-5359.api.localhost:9357/chatapp/"
   },
   "meta_data": {},
   "history": [],
@@ -212,7 +212,7 @@ export default defineConfig({
 
 ## CORS Configuration
 
-In dev we have to deal with CORS because, for development purposes, React is served from a different port, http://localhost:5173/, than Django is, http://127.0.0.1:8000/.
+In dev we have to deal with CORS because, for development purposes, React is served from a different port, http://localhost:5173/, than Django is, http://127.0.0.1:9357/.
 
 The following additional settings are necessary for the local dev environment:
 

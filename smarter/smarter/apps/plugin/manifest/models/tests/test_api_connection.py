@@ -273,7 +273,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
         self.assertEqual(self.model.metadata.name, snake_case_name)
 
         self.assertEqual(self.model.metadata.description, "points to smarter api localhost")
-        self.assertEqual(self.model.spec.connection.baseUrl, "http://localhost:8000/")
+        self.assertEqual(self.model.spec.connection.baseUrl, "http://localhost:9357/")
         self.assertEqual(self.model.spec.connection.apiKey, "12345-abcde-67890-fghij")
         self.assertEqual(self.model.spec.connection.timeout, 10)
         self.assertEqual(self.model.spec.connection.authMethod, AuthMethods.TOKEN.value)
