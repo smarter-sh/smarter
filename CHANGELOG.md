@@ -1,3 +1,9 @@
+## [0.13.72](https://github.com/smarter-sh/smarter/compare/v0.13.71...v0.13.72) (2026-01-15)
+
+### Bug Fixes
+
+* rebrand to The Smarter Project ([9aa740f](https://github.com/smarter-sh/smarter/commit/9aa740f35e41847021103d95d341a5ed9f690b59))
+
 ## [0.13.71](https://github.com/smarter-sh/smarter/compare/v0.13.70...v0.13.71) (2026-01-15)
 
 ### Bug Fixes

@@ -74,7 +74,7 @@ annotations:
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/images: |
     - name: smarter
-      image: mcdaniel0073/smarter:v0.13.71
+      image: mcdaniel0073/smarter:v0.13.72
       platforms:
         - linux/amd64
         - linux/arm64
