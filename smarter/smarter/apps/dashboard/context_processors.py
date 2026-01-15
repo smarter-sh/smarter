@@ -51,6 +51,7 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDom
 from smarter.apps.plugin.models import ApiConnection, PluginMeta, SqlConnection
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_COMPANY_NAME
 from smarter.lib.cache import cache_results
 
 
@@ -259,8 +260,8 @@ def base(request: "HttpRequest") -> dict:
                 "username": username,
                 "is_superuser": is_superuser,
                 "is_staff": is_staff,
-                "product_name": "Smarter",
-                "company_name": "smarter.sh",
+                "product_name": SMARTER_COMPANY_NAME,
+                "company_name": smarter_settings.root_domain,
                 "smarter_version": "v" + __version__,
                 "current_year": current_year,
                 "product_description": "Smarter is an enterprise class plugin-based chat solution.",
