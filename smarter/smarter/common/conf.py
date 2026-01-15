@@ -1,8 +1,9 @@
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801,too-many-lines
 """
-Smarter platform configuration settings.
+The Smarter Project - configuration settings.
 
-This module is used to generate strongly typed and validated settings values
+This module is used to generate smarter_settings, a singleton instance of
+Pydantic BaseSettings that provides strongly typed and validated settings values
 from environment variables, `.env` file, and default values. for all
 Pydantic settings fields, custom field validations are performed prior
 to Pydantic's built-in validation.
