@@ -2,61 +2,61 @@
 
 ### Bug Fixes
 
-* ensure that csrf middlware never passes along the authenticated user ([2321f50](https://github.com/smarter-sh/smarter/commit/2321f50fe77d3a5e3a5737979bf893614a0f5cf2))
+- ensure that csrf middleware never passes along the authenticated user ([2321f50](https://github.com/smarter-sh/smarter/commit/2321f50fe77d3a5e3a5737979bf893614a0f5cf2))
 
 ## [0.13.68](https://github.com/smarter-sh/smarter/compare/v0.13.67...v0.13.68) (2026-01-14)
 
 ### Bug Fixes
 
-* smarter.lib.django.auth.GoogleOAuth2 should be social_core.backends.google.GoogleOAuth2 and so on. ([0210bc6](https://github.com/smarter-sh/smarter/commit/0210bc64578100934fa4c939b2c6c032e420521d))
+- smarter.lib.django.auth.GoogleOAuth2 should be social_core.backends.google.GoogleOAuth2 and so on. ([0210bc6](https://github.com/smarter-sh/smarter/commit/0210bc64578100934fa4c939b2c6c032e420521d))
 
 ## [0.13.67](https://github.com/smarter-sh/smarter/compare/v0.13.66...v0.13.67) (2026-01-14)
 
 ### Bug Fixes
 
-* add waffle switch to toggle multitenant setup. parameterize whether oauth buttons appear on login page. add unit tests for authentication ([6d44177](https://github.com/smarter-sh/smarter/commit/6d441778c104d57cdcd5528beae71ec50a54412c))
+- add waffle switch to toggle multitenant setup. parameterize whether oauth buttons appear on login page. add unit tests for authentication ([6d44177](https://github.com/smarter-sh/smarter/commit/6d441778c104d57cdcd5528beae71ec50a54412c))
 
 ## [0.13.66](https://github.com/smarter-sh/smarter/compare/v0.13.65...v0.13.66) (2026-01-14)
 
 ### Bug Fixes
 
-* add smarter.lib.json ([cc91663](https://github.com/smarter-sh/smarter/commit/cc91663363f7005e05ba77546675d44aeb3c6617))
+- add smarter.lib.json ([cc91663](https://github.com/smarter-sh/smarter/commit/cc91663363f7005e05ba77546675d44aeb3c6617))
 
 ## [0.13.65](https://github.com/smarter-sh/smarter/compare/v0.13.64...v0.13.65) (2026-01-14)
 
 ### Bug Fixes
 
-* aws cache location ([47f650c](https://github.com/smarter-sh/smarter/commit/47f650c7048b535601b2756f9b057ffd24928d22))
+- aws cache location ([47f650c](https://github.com/smarter-sh/smarter/commit/47f650c7048b535601b2756f9b057ffd24928d22))
 
 ## [0.13.64](https://github.com/smarter-sh/smarter/compare/v0.13.63...v0.13.64) (2026-01-14)
 
 ### Bug Fixes
 
-* cache hostname should be redis://:smarter@smarter-redis-master.smarter-platform-{smarter_settings.environment}.svc.cluster.local:6379/1 ([bbce5de](https://github.com/smarter-sh/smarter/commit/bbce5de2b9f6c1ddcb19e4a4b5aa7f07ed92fbee))
+- cache hostname should be redis://:smarter@smarter-redis-master.smarter-platform-{smarter_settings.environment}.svc.cluster.local:6379/1 ([bbce5de](https://github.com/smarter-sh/smarter/commit/bbce5de2b9f6c1ddcb19e4a4b5aa7f07ed92fbee))
 
 ## [0.13.63](https://github.com/smarter-sh/smarter/compare/v0.13.62...v0.13.63) (2026-01-14)
 
 ### Bug Fixes
 
-* force a new release ([86ad9e3](https://github.com/smarter-sh/smarter/commit/86ad9e30f1fd20ff1c053950a241f6d8733165dd))
+- force a new release ([86ad9e3](https://github.com/smarter-sh/smarter/commit/86ad9e30f1fd20ff1c053950a241f6d8733165dd))
 
 ## [0.13.62](https://github.com/smarter-sh/smarter/compare/v0.13.61...v0.13.62) (2026-01-14)
 
 ### Bug Fixes
 
-* wrap is_database_ready() in a try block to handle k9s pod startup ([0a3a60a](https://github.com/smarter-sh/smarter/commit/0a3a60a642e58fe100086bda1503a0f882e5c1f5))
+- wrap is_database_ready() in a try block to handle k9s pod startup ([0a3a60a](https://github.com/smarter-sh/smarter/commit/0a3a60a642e58fe100086bda1503a0f882e5c1f5))
 
 ## [0.13.61](https://github.com/smarter-sh/smarter/compare/v0.13.60...v0.13.61) (2026-01-14)
 
 ### Bug Fixes
 
-* force a new release ([fe99d9e](https://github.com/smarter-sh/smarter/commit/fe99d9ea4fa7493c65ddeac0e5b88a3be8ef35b7))
+- force a new release ([fe99d9e](https://github.com/smarter-sh/smarter/commit/fe99d9ea4fa7493c65ddeac0e5b88a3be8ef35b7))
 
 ## [0.13.60](https://github.com/smarter-sh/smarter/compare/v0.13.59...v0.13.60) (2026-01-13)
 
 ### Bug Fixes
 
-* add leading and trailing slashes if necessary in validate_connectivity_test_path() ([c32e895](https://github.com/smarter-sh/smarter/commit/c32e89569ef6fa6ea15f3ed82d470db8cd3f2dc9))
+- add leading and trailing slashes if necessary in validate_connectivity_test_path() ([c32e895](https://github.com/smarter-sh/smarter/commit/c32e89569ef6fa6ea15f3ed82d470db8cd3f2dc9))
 
 # Change Log
 
