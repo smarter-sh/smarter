@@ -1,10 +1,14 @@
 #------------------------------------------------------------------------------
-# This Dockerfile is used to build
-# - a Docker image for the Smarter application.
-# - a Docker container for the Smarter Celery worker.
-# - a Docker container for the Smarter Celery beat.
+# This Dockerfile is used to build the following:
+# - Smarter application.
+# - Smarter Celery worker.
+# - Smarter Celery beat.
 #
 # This image is used for all environments (local, alpha, beta, next and production).
+# - It is published to DockerHub as mcdaniel0073/smarter:latest
+#   https://hub.docker.com/repository/docker/mcdaniel0073/smarter/general
+# - It is also the basis of the Helm chart used to deploy Smarter to production Kubernetes clusters.
+#   https://artifacthub.io/packages/helm/project-smarter/smarter
 #------------------------------------------------------------------------------
 
 ################################## base #######################################
