@@ -40,7 +40,7 @@ import pickle
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
+from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import (
     formatted_text,
     formatted_text_green,
@@ -335,7 +335,7 @@ leading to buggy cache misses such as browser session values not being stored.
 """
 
 
-def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
+def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=True):
     """
     A decorator that caches the result of a function based on the arguments
     passed to it. When
@@ -370,7 +370,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     Technically speaking, there is a statistical non-zero probability of hash collisions, but,
     the risk of this happening is *EXTREMELY* low.
 
-    :param timeout: The cache timeout in seconds. Defaults to ``SMARTER_DEFAULT_CACHE_TIMEOUT``.
+    :param timeout: The cache timeout in seconds. Defaults to ``smarter_settings.cache_expiration``.
     :type timeout: int
     :param logging_enabled: Whether to enable logging for cache hits and misses. Defaults to ``True``.
     :type logging_enabled: bool

@@ -1,6 +1,5 @@
 """Configuration for OpenAPI documentation generation for Swagger and Redoc."""
 
-from django.conf import settings
 from drf_yasg import openapi
 from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.views import get_schema_view
