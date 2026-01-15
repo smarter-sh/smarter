@@ -112,6 +112,9 @@ EXCEPTION_MAP[openai.LengthFinishReasonError] = (HTTPStatus.REQUEST_ENTITY_TOO_L
 EXCEPTION_MAP[openai.UnprocessableEntityError] = (HTTPStatus.BAD_REQUEST.value, "BadRequestError")
 EXCEPTION_MAP[openai.APIResponseValidationError] = (HTTPStatus.BAD_REQUEST.value, "BadRequestError")
 EXCEPTION_MAP[openai.ContentFilterFinishReasonError] = (HTTPStatus.BAD_REQUEST.value, "BadRequestError")
+"""
+Used in the main try block of handler() to map exceptions to HTTP status codes and error types.
+"""
 
 OPENAI_TOOL_CHOICE = "auto"
 SMARTER_SYSTEM_KEY_PREFIX = "smarter_"
@@ -128,6 +131,8 @@ class InternalKeys:
     MESSAGES_KEY = "messages"
     PLUGINS_KEY = "plugins"
     MODEL_KEY = "model"
+    API_URL = "api_url"
+    API_KEY = "api_key"
     TEMPERATURE_KEY = "temperature"
     MAX_COMPLETION_TOKENS_KEY = "max_completion_tokens"
     TOOL_CHOICE = "tool_choice"
@@ -200,16 +205,16 @@ class ChatProviderBase(ProviderDbMixin):
     reference: Optional[str]
 
     iteration: int
-    request_meta_data: dict
-    first_iteration: dict
+    request_meta_data: dict[str, Any]
+    first_iteration: dict[str, Any]
     first_response: Optional[ChatCompletion]
     second_response: Optional[ChatCompletion]
-    second_iteration: Optional[dict]
-    serialized_tool_calls: Optional[list[dict]]
+    second_iteration: Optional[dict[str, Any]]
+    serialized_tool_calls: Optional[list[dict[str, Any]]]
 
     # built-in tools that we make available to all providers
-    tools: Optional[list[dict]]
-    available_functions: dict
+    tools: Optional[list[dict[str, Any]]]
+    available_functions: dict[str, Any]
 
     def __init__(
         self,
@@ -292,7 +297,7 @@ class ChatProviderBase(ProviderDbMixin):
 
         chat_provider_initialized.send(sender=self)
 
-    def prune_empty_values(self, data: dict) -> Optional[dict]:
+    def prune_empty_values(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """
         Remove empty values from a dictionary. Some
         LLM providers, including MetaAI and GoogleAI
@@ -302,7 +307,7 @@ class ChatProviderBase(ProviderDbMixin):
         if not isinstance(data, dict):
             raise SmarterValueError(f"{self.formatted_class_name}: data must be a dictionary")
 
-        def _prune(obj: Optional[dict]) -> Optional[dict]:
+        def _prune(obj: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
             if isinstance(obj, dict):
                 return {k: _prune(v) for k, v in obj.items() if v is not None}
             elif isinstance(obj, list):
@@ -313,6 +318,15 @@ class ChatProviderBase(ProviderDbMixin):
         return _prune(data)
 
     def validate(self):
+        """
+        Validate that all required properties are set. Raise
+        SmarterValueError if any required property is missing.
+
+        :raises SmarterValueError: If any required property is missing.
+
+        :returns: None
+        :rtype: None
+        """
         if not self.chat:
             raise SmarterValueError(f"{self.formatted_class_name}: chat object is required")
         if not self.data:
@@ -338,14 +352,37 @@ class ChatProviderBase(ProviderDbMixin):
 
     @cached_property
     def ready(self) -> bool:
+        """
+        Check if the chat provider is ready to process requests.
+
+        :returns: True if the chat provider is ready, False otherwise.
+        :rtype: bool
+        """
         return bool(self.chat) and bool(self.data) and bool(self.account)
 
     @property
     def messages(self) -> Optional[List[Dict[str, str]]]:
+        """
+        Get the list of messages in the chat. This property
+        returns the internal _messages attribute.
+
+        :returns: The list of messages.
+        :rtype: Optional[List[Dict[str, str]]]
+        """
         return self._messages
 
     @messages.setter
     def messages(self, value: List[Dict[str, str]]) -> None:
+        """
+        Set the list of messages in the chat. This property
+        sets the internal _messages attribute.
+
+        :param value: The list of messages to set.
+        :type value: List[Dict[str, str]]
+
+        :returns: None
+        :rtype: None
+        """
         self._messages = value
 
     @cached_property
@@ -353,45 +390,130 @@ class ChatProviderBase(ProviderDbMixin):
         """
         Returns the class name in a formatted string
         along with the name of this mixin.
+
+        :returns: The formatted class name.
+        :rtype: str
         """
-        inherited_class = super().formatted_class_name
-        return f"{inherited_class} {ChatProviderBase.__name__}[{id(self)}]"
+        return f"{__name__}.{ChatProviderBase.__name__}[{id(self)}]"
 
     @property
     def provider(self) -> Optional[str]:
+        """
+        Get the name of the chat provider. This property
+        returns the internal _provider attribute.
+
+        :returns: The name of the chat provider.
+        :rtype: Optional[str]
+        """
         return self._provider
 
     @property
     def base_url(self) -> Optional[str]:
+        """
+        Get the base URL of the chat provider. This property
+        returns the internal _base_url attribute.
+
+        :returns: The base URL of the chat provider.
+        :rtype: Optional[str]
+        """
         return self._base_url
 
     @property
+    def url(self) -> Optional[str]:
+        """
+        Get the full URL for chat completions. This property
+        constructs the URL by appending the chat completions
+        endpoint to the base URL.
+
+        :examples:
+
+            If the base URL is "https://api.some-llm-company.com", the full URL will be
+            "https://api.some-llm-company.com/v1/chat/completions".
+
+        :returns: The full URL for chat completions.
+        :rtype: Optional[str]
+        """
+        return self._base_url + "chat/completions" if self._base_url else None
+
+    @property
     def api_key(self) -> Optional[str]:
+        """
+        Get the API key of the chat provider. This property
+        returns the unmasked internal _api_key attribute.
+
+        :returns: The unmasked API key of the chat provider.
+        :rtype: Optional[str]
+        """
         return self._api_key
 
     @property
     def default_model(self) -> Optional[str]:
+        """
+        Get the default model of the chat provider. This property
+        returns the internal _default_model attribute.
+
+        :returns: The default model of the chat provider.
+        :rtype: Optional[str]
+        """
         return self._default_model
 
     @property
     def default_system_role(self) -> Optional[str]:
+        """
+        Get the default system role of the chat provider. This property
+        returns the internal _default_system_role attribute.
+
+        :returns: The default system role of the chat provider.
+        :rtype: Optional[str]
+        """
         return self._default_system_role
 
     @property
     def default_temperature(self) -> Optional[float]:
+        """
+        Get the default temperature of the chat provider. This property
+        returns the internal _default_temperature attribute.
+
+        :returns: The default temperature of the chat provider.
+        :rtype: Optional[float]
+        """
         return self._default_temperature
 
     @property
     def default_max_tokens(self) -> Optional[int]:
+        """
+        Get the default max completion tokens of the chat provider. This property
+        returns the internal _default_max_completion_tokens attribute.
+
+        :returns: The default max completion tokens of the chat provider.
+        :rtype: Optional[int]
+        """
         return self._default_max_completion_tokens
 
     @property
     def valid_chat_completion_models(self) -> Optional[list[str]]:
+        """
+        Get the list of valid chat completion models for the chat provider. This property
+        returns the internal _valid_chat_completion_models attribute.
+
+        A valid chat completion model is one that is supported by the chat provider's
+        API for chat completions.
+
+        :returns: The list of valid chat completion models.
+        :rtype: Optional[list[str]]
+        """
         return self._valid_chat_completion_models
 
-    def messages_set_is_new(self, messages: list[dict], is_new: bool = False) -> list[dict]:
+    def messages_set_is_new(self, messages: list[dict[str, Any]], is_new: bool = False) -> list[dict[str, Any]]:
         """
-        Set the is_new flag for all messages in the message thread.
+        Set the is_new flag for all messages in the message thread. This is used to
+        track which messages are new and which have already been processed.
+
+        This affects the treatment of messages in the Reactapp component, where new messages
+        are styled differently.
+
+        :param messages: The list of messages to set the is_new flag for.
+        :type messages: list[dict[str, Any]]
         """
         retval = []
         for message in messages:
@@ -400,10 +522,18 @@ class ChatProviderBase(ProviderDbMixin):
             retval.append(new_message)
         return retval
 
-    def get_message_thread(self, data: dict) -> List[Dict[str, str]]:
+    def get_message_thread(self, data: dict[str, Any]) -> List[Dict[str, str]]:
         """
         Initialize a new message thread with a system prompt
-        and the incoming data.
+        and the incoming data. This method ensures that the system
+        role is present in the message thread.
+
+        :raises SmarterValueError: If the request body is invalid.
+
+        :param data: The incoming data containing the message thread.
+        :type data: dict[str, Any]
+        :returns: The initialized message thread.
+        :rtype: List[Dict[str, str]]
         """
         default_system_role = get_date_time_string()
         if self.chat and self.chat.chatbot and self.chat.chatbot.default_system_role_enhanced:
@@ -420,7 +550,18 @@ class ChatProviderBase(ProviderDbMixin):
         retval = self.messages_set_is_new(client_message_thread, is_new=False)
         return retval
 
-    def get_input_text_prompt(self, data: dict) -> str:
+    def get_input_text_prompt(self, data: dict[str, Any]) -> str:
+        """
+        Extract the input text prompt from the incoming data. This method
+        validates that the input text is present and is a string.
+
+        :raises SmarterValueError: If the input text is missing or invalid.
+
+        :param data: The incoming data containing the input text.
+        :type data: dict[str, Any]
+        :returns: The input text prompt.
+        :rtype: str
+        """
         request_body = get_request_body(data=data)
         _, input_text = parse_request(request_body)
         if not input_text:
@@ -430,8 +571,26 @@ class ChatProviderBase(ProviderDbMixin):
         return input_text
 
     def append_message(
-        self, role: str, content: Optional[Union[dict, list, str]], message: Optional[dict] = None
+        self, role: str, content: Optional[Union[dict[str, Any], list, str]], message: Optional[dict[str, Any]] = None
     ) -> None:
+        """
+        Append a message to the internal message list. This method
+        validates the role and content before appending the message.
+
+        :param role: The role of the message (e.g., "user", "assistant", "system").
+        :type role: str
+
+        :param content: The content of the message. Can be a string, dict[str, Any], or list.
+        :type content: Optional[Union[dict[str, Any], list, str]]
+
+        :param message: An optional message dictionary to append. If provided,
+        it will be used instead of creating a new message.
+
+        :raises SmarterValueError: If the role is invalid or if both content and message are empty.
+
+        :returns: None
+        :rtype: None
+        """
         if role not in OpenAIMessageKeys.all_roles:
             raise SmarterValueError(
                 f"Internal error. Invalid message role: {role} not found in list of valid {self.provider} message roles {OpenAIMessageKeys.all_roles}."
@@ -451,14 +610,43 @@ class ChatProviderBase(ProviderDbMixin):
             self.messages.append(new_message)
 
     def append_message_plugin_selected(self, plugin: str) -> None:
+        """
+        Append a message indicating that a plugin was selected.
+
+        :param plugin: The name of the selected plugin.
+        :type plugin: str
+        :returns: None
+        :rtype: None
+        """
         content = f"Smarter selected this plugin: {plugin}"
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
-    def append_message_tool_called(self, function_name: str, function_args: str) -> None:
-        content = f"{self.provider} called this tool: {function_name}({function_args})"
+    def append_message_tool_called(self, tool_call: ChatCompletionMessageToolCallUnion) -> None:
+        """
+        Append a message indicating that a tool was called.
+
+        :param tool_call: The tool call object containing function name and arguments.
+        :type tool_call: ChatCompletionMessageToolCallUnion
+        :returns: None
+        :rtype: None
+        """
+        tool_call_to_json = tool_call.model_dump()
+        content = f"{self.provider} called this tool: {tool_call.function.name}({tool_call.function.arguments})"
+        content = content + f"\n\nTool call:\n--------------------\n{json.dumps(tool_call_to_json, indent=4)}"
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
     def _insert_charge_by_type(self, charge_type: str) -> None:
+        """
+        Insert a charge record based on the charge type. This method
+        uses the internal db_insert_charge method to create a charge
+        record in the database.
+
+        :param charge_type: The type of charge (e.g., prompt completion, tool, plugin).
+        :type charge_type: str
+
+        :returns: None
+        :rtype: None
+        """
         self.db_insert_charge(
             provider=self.provider,
             charge_type=charge_type,
@@ -557,6 +745,14 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
     @property
     def new_messages(self) -> list[dict[str, Any]]:
+        """
+        Return a list of messages that are marked as new.
+        This property filters the internal message list to return only those messages
+        that have the 'smarter_is_new' flag set to True.
+
+        :returns: A list of new messages.
+        :rtype: list[dict[str, Any]]
+        """
         if self.messages is None:
             return []
 
@@ -570,12 +766,23 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         return self.messages
 
     def prep_first_request(self):
+        """
+        Prepare the first request for the chat completion. This is called
+        at the beginning of the chat completion process.
+
+        :raises SmarterValueError: If the messages are not a list, or if tool definitions are invalid.
+
+        :returns: None
+        :rtype: None
+        """
         logger.debug("%s %s", self.formatted_class_name, formatted_text("prep_first_request()"))
         # ensure that all message history is marked as not new
         if isinstance(self.messages, list):
             self.messages = self.messages_set_is_new(self.messages, is_new=False)
         tool_choice = OPENAI_TOOL_CHOICE
         self.first_iteration[InternalKeys.REQUEST_KEY] = {
+            InternalKeys.API_URL: self.base_url,
+            InternalKeys.API_KEY: self.mask_string(self.api_key),
             InternalKeys.MODEL_KEY: self.model,
             InternalKeys.MESSAGES_KEY: self.openai_messages,
             InternalKeys.TEMPERATURE_KEY: self.temperature,
@@ -585,16 +792,34 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         }
 
         # create a Smarter UI message with the established configuration
-        content = f"Prompt configuration: llm={self.provider}, model={self.model}, temperature={self.temperature}, max_completion_tokens={self.max_completion_tokens}, tool_choice={tool_choice}."
+        content = f"Prompt configuration: llm={self.provider}, url={self.url} api_key={self.mask_string(self.api_key)} model={self.model}, temperature={self.temperature}, max_completion_tokens={self.max_completion_tokens}, tool_choice={tool_choice}."
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
         # for any tools that are included in the request, add Smarter UI messages for each tool
         if self.tools:
             for tool in self.tools:
                 tool_type = tool.get("type")
-                this_tool = tool.get(tool_type) or {}
-                tool_name = this_tool.get("name") or "error: missing name"
-                tool_description = this_tool.get("description") or "error: missing description"
+                if not tool_type:
+                    logger.warning(
+                        "%s: tool type is required in tool definition: %s. This is a bug",
+                        self.formatted_class_name,
+                        tool,
+                    )
+                this_tool = tool.get(tool_type) if tool_type else {}
+                tool_name = this_tool.get("name")
+                if not tool_name:
+                    logger.warning(
+                        "%s: tool name is required in tool definition: %s. This is a bug",
+                        self.formatted_class_name,
+                        tool,
+                    )
+                tool_description = this_tool.get("description")
+                if not tool_description:
+                    logger.warning(
+                        "%s: tool description is required in tool definition: %s. This is a bug",
+                        self.formatted_class_name,
+                        tool,
+                    )
                 tool_parameters = this_tool.get("parameters", {}).get("properties", {})
                 inputs = []
                 for parameter, details in tool_parameters.items():
@@ -605,6 +830,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
                 inputs = ", ".join(inputs)
                 content = f"Tool presented: {tool_name}({inputs}) - {tool_description} "
+                content = content + f"\n\nTool definition:\n--------------------\n{json.dumps(tool, indent=4)}"
                 self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
         # send a chat completion request signal. this triggers a variety of db records to be created
@@ -620,6 +846,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         """
         Prepare the second request for the chat completion. This is called
         in response to a tool call that requires a second request to the LLM.
+
+        :returns: None
+        :rtype: None
         """
         logger.debug("%s.prep_second_request() called.", self.formatted_class_name)
         if not isinstance(self.second_iteration, dict):
@@ -627,6 +856,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
             )
         self.second_iteration[InternalKeys.REQUEST_KEY] = {
+            InternalKeys.API_URL: self.base_url,
+            InternalKeys.API_KEY: self.mask_string(self.api_key),
             InternalKeys.MODEL_KEY: self.model,
             InternalKeys.MESSAGES_KEY: self.openai_messages,
         }
@@ -645,6 +876,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
         :param response: The OpenAI-compatible chat completion response.
         :type response: ChatCompletion
+
+        :returns: None
+        :rtype: None
         """
         logger.debug("%s.append_openai_response() called.", self.formatted_class_name)
         response_message = response.choices[0].message
@@ -659,6 +893,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         """
         handle internal billing, and append messages to the response for prompt completion and the billing summary
 
+        :returns: None
+        :rtype: None
         """
         logger.debug(
             "%s %s", self.formatted_class_name, formatted_text(f"handle_response() iteration: {self.iteration}")
@@ -724,6 +960,14 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     def handle_tool_called(self, function_name: str, function_args: str) -> None:
         """
         handle a built-in tool call. example: get_current_weather()
+
+        :param function_name: The name of the tool function called.
+        :type function_name: str
+        :param function_args: The arguments passed to the tool function.
+        :type function_args: str
+
+        :returns: None
+        :rtype: None
         """
         logger.debug("%s %s - %s", self.formatted_class_name, formatted_text("handle_tool_called()"), function_name)
         request = (self.first_iteration[InternalKeys.REQUEST_KEY],)
@@ -743,6 +987,15 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
 
     def handle_plugin_called(self, plugin: PluginBase) -> None:
+        """
+        handle a plugin tool call. example: SqlPlugin, ApiPlugin, StaticPlugin etc.
+
+        :param plugin: The plugin instance that was called.
+        :type plugin: PluginBase
+
+        :returns: None
+        :rtype: None
+        """
         logger.debug("%s %s - %s", self.formatted_class_name, formatted_text("handle_plugin_called()"), plugin.name)
         chat_completion_plugin_called.send(
             sender=self.handler,
@@ -755,7 +1008,14 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
     def process_tool_call(self, tool_call: ChatCompletionMessageToolCallUnion):
         """
-        tool_call: List[ChatCompletionMessageToolCallUnion]
+        Process a tool call from the LLM. This method handles both built-in tool calls
+        and plugin tool calls.
+
+        :param tool_call: The tool call data from the LLM.
+        :type tool_call: ChatCompletionMessageToolCallUnion
+
+        :returns: None
+        :rtype: None
         """
         logger.debug("%s.process_tool_call() called", self.formatted_class_name)
         if not isinstance(tool_call, ChatCompletionMessageToolCall):
@@ -778,7 +1038,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         function_args = json.loads(tool_call.function.arguments)
         serialized_tool_call["function_name"] = function_name
         serialized_tool_call["function_args"] = function_args
-        self.append_message_tool_called(function_name=function_name, function_args=function_args)
+        self.append_message_tool_called(tool_call=tool_call)
 
         function_response = None
         if function_name == "get_current_weather":
@@ -852,8 +1112,20 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
 
     def handle_plugin_selected(self, plugin: PluginBase) -> None:
-        # does the prompt have anything to do with any of the search terms defined in a plugin?
-        # TODO: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_completion_tokens
+        """
+        Handle a plugin being selected.
+
+        does the prompt have anything to do with any of the search terms defined in a plugin?
+        TODO: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_completion_tokens
+        2025-10-02: updated to validate that messages and tools are lists.
+        2025-10-02: updated to use plugin.plugin_meta.name for the plugin name.
+
+        :param plugin: The plugin instance that was selected.
+        :type plugin: PluginBase
+
+        :returns: None
+        :rtype: None
+        """
         logger.debug("%s.handle_plugin_selected() called.", self.formatted_class_name)
         logger.warning(
             "smarter.apps.prompt.providers.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
@@ -875,6 +1147,13 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
 
     def handle_success(self) -> dict:
+        """
+        Handle a successful chat completion response. This method
+        formats the final response to be returned to the client.
+
+        :returns: A dictionary representing the final chat completion response.
+        :rtype: dict
+        """
         logger.debug("%s.handle_success() called", self.formatted_class_name)
         if not isinstance(self.second_iteration, dict):
             raise SmarterValueError(
@@ -901,7 +1180,11 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
     def request_meta_data_factory(self):
         """
-        Return a dictionary of request meta data.
+        Return a dictionary of request meta data. This includes
+        the model, temperature, max_completion_tokens, and input_text.
+
+        :returns: A dictionary of request meta data.
+        :rtype: dict
         """
         logger.debug("%s.request_meta_data_factory() called.", self.formatted_class_name)
         return {
