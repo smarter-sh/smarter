@@ -1,3 +1,9 @@
+## [0.13.71](https://github.com/smarter-sh/smarter/compare/v0.13.70...v0.13.71) (2026-01-15)
+
+### Bug Fixes
+
+* add local requirements to Dockerhub version, for smarter-deploy ([08a6363](https://github.com/smarter-sh/smarter/commit/08a63636e43e81eefea1724432d160755c48a662))
+
 ## [0.13.70](https://github.com/smarter-sh/smarter/compare/v0.13.69...v0.13.70) (2026-01-15)
 
 ### Bug Fixes
