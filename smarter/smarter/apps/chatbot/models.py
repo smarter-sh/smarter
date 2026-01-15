@@ -25,7 +25,6 @@ from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCom
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
     formatted_text,
@@ -33,8 +32,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_red,
 )
 from smarter.common.helpers.llm import get_date_time_string
-from smarter.common.helpers.url_helpers import clean_url
-from smarter.common.utils import rfc1034_compliant_str, smarter_build_absolute_uri
+from smarter.common.utils import rfc1034_compliant_str
 from smarter.lib import json
 from smarter.lib.cache import cache_results
 from smarter.lib.cache import lazy_cache as cache
@@ -173,7 +171,7 @@ class ChatBotCustomDomain(MetaDataWithOwnershipModel):
         # If the list is not in cache, fetch it from the database
         if not verified_domains:
             verified_domains = list(cls.objects.filter(is_verified=True).values_list("domain_name", flat=True))
-            cache.set(key=cache_key, value=verified_domains, timeout=SMARTER_DEFAULT_CACHE_TIMEOUT)
+            cache.set(key=cache_key, value=verified_domains, timeout=smarter_settings.cache_expiration)
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.debug("get_verified_domains() caching %s", cache_key)
 

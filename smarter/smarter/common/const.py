@@ -35,9 +35,6 @@ SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
 # is used to bypass DRF authentication and permission checks in the API views.
 SMARTER_IS_INTERNAL_API_REQUEST = "smarter_is_internal_api_request"
 
-# Default cache expiration expressed in seconds for Redis based Django caching.
-SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 5  # 5 minutes
-
 # Default maximum lifetime for Smarter API keys in days.
 SMARTER_API_KEY_MAX_LIFETIME_DAYS = 365 * 3  # 3 years
 
