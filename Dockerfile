@@ -23,13 +23,13 @@
 FROM python:3.12-slim-trixie AS linux_base
 
 LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
-  description="Docker image for the Smarter Api" \
+  description="Docker image for the Smarter Api and web console" \
   license="GNU AGPL v3" \
   vcs-url="https://github.com/smarter-sh/smarter" \
   org.opencontainers.image.title="Smarter API" \
   org.opencontainers.image.version="0.13.69" \
   org.opencontainers.image.authors="Lawrence McDaniel <lpm0073@gmail.com>" \
-  org.opencontainers.image.url="https://smarter-sh.github.io/smarter/" \
+  org.opencontainers.image.url="https://smarter.sh/" \
   org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
   org.opencontainers.image.documentation="https://docs.smarter.sh/"
 
