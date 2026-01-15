@@ -1,3 +1,9 @@
+## [0.13.70](https://github.com/smarter-sh/smarter/compare/v0.13.69...v0.13.70) (2026-01-15)
+
+### Bug Fixes
+
+* include the prompt json of tools presented and called ([6225fd3](https://github.com/smarter-sh/smarter/commit/6225fd36d5a7b7ce42b09a4a6352751af6372544))
+
 ## [0.13.69](https://github.com/smarter-sh/smarter/compare/v0.13.68...v0.13.69) (2026-01-14)
 
 ### Bug Fixes
