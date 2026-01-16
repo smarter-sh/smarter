@@ -214,7 +214,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 # Output: ParentClass.SAMSqlConnectionBroker()
 
         """
-        return f"{__name__}.{self.__class__.__name__}[{id(self)}]"
+        return f"{__name__}.{SAMSqlConnectionBroker.__name__}[{id(self)}]"
 
     @property
     def ORMModelClass(self) -> Type[SqlConnection]:

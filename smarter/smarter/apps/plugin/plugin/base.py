@@ -314,7 +314,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         :return: String representation of the class.
         :rtype: str
         """
-        return f"{formatted_text(self.__class__.__name__)}[{id(self)}](name={self.name}, kind={self.kind})"
+        return f"{formatted_text(PluginBase.__name__)}[{id(self)}](name={self.name}, kind={self.kind})"
 
     def __repr__(self) -> str:
         """
