@@ -51,7 +51,8 @@ class Command(SmarterCommand):
         if created:
             self.handle_completed_success(msg=f"Created account: {account.account_number} {account.company_name}")
 
-        user, created = User.objects.get_or_create(username=username, email=email)
+        user, created = User.objects.get_or_create(username=username)
+        user.email = email
         user.is_superuser = True
         user.is_staff = True
         user.is_active = True
