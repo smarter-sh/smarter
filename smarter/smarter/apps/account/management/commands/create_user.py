@@ -47,6 +47,8 @@ class Command(SmarterCommand):
             self.stdout.write(self.style.NOTICE(f"User {username} already exists, updating the existing user."))
         if is_admin:
             user.is_staff = True
+        else:
+            user.is_staff = False
         user.email = email
         user.first_name = first_name
         user.last_name = last_name
