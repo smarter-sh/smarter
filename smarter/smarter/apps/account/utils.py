@@ -171,7 +171,7 @@ def get_cached_secret(name: str, user_profile: UserProfile, invalidate: bool = F
     )
 
 
-def get_cached_secret_by_pk(secret_pk: int, user_profile: UserProfile, invalidate: bool = False) -> Optional[Secret]:
+def get_cached_secret_by_pk(secret_pk: int, invalidate: bool = False) -> Optional[Secret]:
     """
     Retrieve a Secret instance by its primary key and associated UserProfile, using in-memory caching.
 
@@ -196,33 +196,27 @@ def get_cached_secret_by_pk(secret_pk: int, user_profile: UserProfile, invalidat
     """
 
     @cache_results()
-    def _in_memory_secret_by_pk(secret_pk: int, user_profile_id: int) -> Optional[Secret]:
+    def get_secret_by_pk(secret_pk: int) -> Optional[Secret]:
         """
         In-memory cache for secret objects by primary key and user profile ID.
         """
         logger.debug(
-            "%s.get_cached_secret_by_pk() retrieving and caching secret PK %s for user profile ID %s",
+            "%s.get_cached_secret_by_pk() retrieving and caching secret PK %s",
             HERE,
             secret_pk,
-            user_profile_id,
         )
         try:
-            secret = Secret.objects.get(pk=secret_pk, user_profile_id=user_profile_id)
+            secret = Secret.objects.get(pk=secret_pk)
         except Secret.DoesNotExist:
             logger.warning(
                 "%s.get_cached_secret_by_pk() secret with PK %s does not exist for user profile ID %s",
                 HERE,
                 secret_pk,
-                user_profile_id,
             )
             return None
         return secret
 
-    return (
-        _in_memory_secret_by_pk(secret_pk, user_profile.id)
-        if not invalidate
-        else _in_memory_secret_by_pk.invalidate(secret_pk, user_profile.id)
-    )
+    return get_secret_by_pk(secret_pk) if not invalidate else get_secret_by_pk.invalidate(secret_pk)
 
 
 def get_cached_account(
