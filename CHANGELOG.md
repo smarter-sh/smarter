@@ -1,3 +1,9 @@
+## [0.13.82](https://github.com/smarter-sh/smarter/compare/v0.13.81...v0.13.82) (2026-01-16)
+
+### Bug Fixes
+
+* add logger.debug() to plugin broker classes ([6d553ec](https://github.com/smarter-sh/smarter/commit/6d553ecf1f3451e097893939aa269892be8bbfd2))
+
 ## [0.13.81](https://github.com/smarter-sh/smarter/compare/v0.13.80...v0.13.81) (2026-01-16)
 
 ### Bug Fixes
