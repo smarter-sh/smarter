@@ -650,6 +650,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             print(response.data)
 
         """
+        logger.debug(
+            "%s.example_manifest() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -730,6 +738,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
 
         """
+        logger.debug(
+            "%s.get() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
@@ -820,6 +836,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         :raises SAMConnectionBrokerError: If an error occurs during update or save.
         """
+        logger.debug(
+            "%s.apply() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         super().apply(request, kwargs)
         updated = False
         command = self.apply.__name__
@@ -895,6 +919,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
 
         """
+        logger.debug(
+            "%s.chat() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
@@ -932,6 +964,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
 
         """
+        logger.debug(
+            "%s.describeº() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -978,6 +1018,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             print(response.data)
 
         """
+        logger.debug(
+            "%s.delete() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.connection:
@@ -1000,6 +1048,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.deploy() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
@@ -1016,6 +1072,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.undeploy() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
@@ -1032,6 +1096,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.logs() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Logs not implemented", thing=self.kind, command=command)

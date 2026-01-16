@@ -653,6 +653,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SmarterJournaledJsonResponse`
 
         """
+        logger.debug(
+            "%s.example_manifest() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = SqlPlugin.example_manifest(kwargs=kwargs)
@@ -698,7 +706,15 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SAMPluginMeta`
 
         """
-        command = self.describe.__name__
+        logger.debug(
+            "%s.describe() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
+        command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
         if not self.manifest:
@@ -745,6 +761,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SAMPluginBrokerError`
             :class:`SAMBrokerErrorNotReady`
         """
+        logger.debug(
+            "%s.apply() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
@@ -798,6 +822,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.chat() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
@@ -828,6 +860,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SmarterJournalCliCommands`
 
         """
+        logger.debug(
+            "%s.delete() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -870,6 +910,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.deploy() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
@@ -888,6 +936,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.undeploy() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
@@ -905,6 +961,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.logs() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)
