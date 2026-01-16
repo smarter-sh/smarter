@@ -1,3 +1,9 @@
+## [0.13.73](https://github.com/smarter-sh/smarter/compare/v0.13.72...v0.13.73) (2026-01-16)
+
+### Bug Fixes
+
+* calls to Django ORM objects in middleware have to be wrapped in try blocks for fresh installs ([5f05bc7](https://github.com/smarter-sh/smarter/commit/5f05bc775891f1e04ab7e91c11b575554ca603b2))
+
 ## [0.13.72](https://github.com/smarter-sh/smarter/compare/v0.13.71...v0.13.72) (2026-01-15)
 
 ### Bug Fixes
