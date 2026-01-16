@@ -1,3 +1,9 @@
+## [0.13.79](https://github.com/smarter-sh/smarter/compare/v0.13.78...v0.13.79) (2026-01-16)
+
+### Bug Fixes
+
+* refactor new user creation ([e6a0f47](https://github.com/smarter-sh/smarter/commit/e6a0f47e6e363d89362bf956499abc8b4beec089))
+
 ## [0.13.78](https://github.com/smarter-sh/smarter/compare/v0.13.77...v0.13.78) (2026-01-16)
 
 ### Bug Fixes
