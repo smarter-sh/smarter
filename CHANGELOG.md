@@ -1,3 +1,9 @@
+## [0.13.76](https://github.com/smarter-sh/smarter/compare/v0.13.75...v0.13.76) (2026-01-16)
+
+### Bug Fixes
+
+* refactor account initialization. create manage.py initialize_account ([ea8381a](https://github.com/smarter-sh/smarter/commit/ea8381a82bafd5ddb2b4da79936c32e7f1e46c24))
+
 ## [0.13.75](https://github.com/smarter-sh/smarter/compare/v0.13.74...v0.13.75) (2026-01-16)
 
 ### Bug Fixes
