@@ -1,3 +1,9 @@
+## [0.13.80](https://github.com/smarter-sh/smarter/compare/v0.13.79...v0.13.80) (2026-01-16)
+
+### Bug Fixes
+
+* pass k9s admin credentials to manage.py initialize_platform ([a21a3f6](https://github.com/smarter-sh/smarter/commit/a21a3f69ace6664542e74275375770a68ebbfa32))
+
 ## [0.13.79](https://github.com/smarter-sh/smarter/compare/v0.13.78...v0.13.79) (2026-01-16)
 
 ### Bug Fixes
