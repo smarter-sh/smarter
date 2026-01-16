@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """utility for applying any Smarter manifest using the api/v1/cli endpoint."""
 
+import logging
 import os
 from typing import Optional
 from urllib.parse import urljoin
@@ -14,12 +15,15 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(f"{__name__}.apply_manifest")
 
 
 class Command(SmarterCommand):
@@ -150,6 +154,7 @@ class Command(SmarterCommand):
                 user=user,
                 description="DELETE ME: single-use key created by manage.py apply_manifest",
             )
+            logger.debug("%s - created single-use token %s for user %s", logger_prefix, token_key, user_profile)
         # pylint: disable=W0718
         except Exception as e:
             self.handle_completed_failure(e, msg=f"Error creating API token: {e}")
@@ -159,11 +164,9 @@ class Command(SmarterCommand):
         url = urljoin(smarter_settings.environment_url, path)
         headers = {"Authorization": f"Token {token_key}", "Content-Type": "application/json"}
 
-        self.stdout.write(
-            self.style.NOTICE(
-                f"manage.py apply_manifest - Applying manifest via api endpoint {url} as user {user.username} (verbose={verbose})"
-            )
-        )
+        msg = f"manage.py apply_manifest - Applying manifest via api endpoint {url} as user {user.username} (verbose={verbose})"
+        self.stdout.write(self.style.NOTICE(msg))
+        logger.debug("%s - %s", logger_prefix, msg)
         if verbose:
             self.stdout.write(self.style.NOTICE(f"manifest: {self.data}"))
             self.stdout.write(self.style.NOTICE(f"headers: {headers}"))
@@ -185,8 +188,10 @@ class Command(SmarterCommand):
         response = json.dumps(response_json) + "\n"
         if httpx_response.status_code == httpx.codes.OK:
             self.stdout.write(self.style.SUCCESS("manifest applied."))
+            logger.debug("%s - manifest applied successfully", logger_prefix)
             if verbose:
                 self.stdout.write(self.style.SUCCESS(response))
+                logger.debug("%s - manifest apply response: %s", logger_prefix, response)
         else:
             self.handle_completed_failure(
                 msg=f"Manifest apply to {url} failed with status code: {httpx_response.status_code}"

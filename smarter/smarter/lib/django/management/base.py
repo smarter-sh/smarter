@@ -1,10 +1,14 @@
 """Base command class for custom management commands."""
 
+import logging
 import sys
 import traceback
 from typing import Optional
 
 from django.core.management.base import BaseCommand
+
+
+logger = logging.getLogger(__name__)
 
 
 class SmarterCommand(BaseCommand):
@@ -82,13 +86,21 @@ class SmarterCommand(BaseCommand):
         self.stdout.write(f"{self.__module__} started.")
         self.stdout.write("-" * 80)
 
+        logger.debug("-" * 35 + " manage.py " + "-" * 34)
+        logger.debug("%s started.", self.__module__)
+        logger.debug("-" * 80)
+
     def handle_completed_success(self, msg: Optional[str] = None):
         self.stdout.write(self.style.SUCCESS("-" * 80))
+        logger.debug("-" * 80)
         if msg:
             self.stdout.write(self.style.SUCCESS(msg))
+            logger.debug("%s", msg)
         else:
             self.stdout.write(self.style.SUCCESS(f"{self.__module__} completed successfully."))
+            logger.debug("%s completed successfully.", self.__module__)
         self.stdout.write(self.style.SUCCESS("-" * 80))
+        logger.debug("-" * 80)
 
     def handle_completed_failure(
         self,
@@ -96,14 +108,19 @@ class SmarterCommand(BaseCommand):
         msg: Optional[str] = None,
     ):
         self.stdout.write(self.style.ERROR("-" * 80))
+        logger.debug("-" * 80)
         if msg:
             self.stdout.write(self.style.ERROR(msg))
+            logger.debug("%s", msg)
         msg = f"{self.__module__} failed" + f" with error: {err}" if err else "."
         self.stdout.write(self.style.ERROR(msg))
+        logger.debug("%s", msg)
         if err:
             tb = traceback.format_exc()
             self.stdout.write(self.style.ERROR(tb))
+            logger.debug("%s", tb)
         self.stdout.write(self.style.ERROR("-" * 80))
+        logger.debug("-" * 80)
         if err:
             sys.exit(1)
 

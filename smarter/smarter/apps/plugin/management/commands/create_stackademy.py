@@ -84,8 +84,8 @@ class Command(SmarterCommand):
             file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml",
                 "smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml",
-                "smarter/apps/plugin/data/stackademy/stackademy-sql.yaml",
-                "smarter/apps/plugin/data/stackademy/chatbot-stackademy-sql.yaml",
+                "smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml",
+                "smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml",
             ]
             for file_path in file_paths:
                 apply(file_path)
@@ -95,8 +95,8 @@ class Command(SmarterCommand):
             file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-api.yaml",
                 "smarter/apps/plugin/data/sample-connections/smarter-test-api.yaml",
-                "smarter/apps/plugin/data/stackademy/stackademy-api.yaml",
-                "smarter/apps/plugin/data/stackademy/chatbot-stackademy-api.yaml",
+                "smarter/apps/plugin/data/stackademy/stackademy-plugin-api.yaml",
+                "smarter/apps/plugin/data/stackademy/stackademy-chatbot-api.yaml",
             ]
             for file_path in file_paths:
                 apply(file_path)
