@@ -34,8 +34,8 @@ class Command(SmarterCommand):
 
         account, created = Account.objects.get_or_create(
             account_number=SMARTER_ACCOUNT_NUMBER,
-            company_name=SMARTER_COMPANY_NAME,
         )
+        account.company_name = SMARTER_COMPANY_NAME
         account.is_default_account = True
         account.phone_number = "+1 (617) 834-6172"
         account.address1 = "851 Burlway Road"

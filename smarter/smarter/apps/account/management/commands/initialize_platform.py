@@ -1,10 +1,13 @@
 """Django manage.py initialize_platform command."""
 
-import getpass
-
 from django.core.management import call_command
 
 from smarter.common.conf import smarter_settings
+from smarter.common.const import (
+    SMARTER_ACCOUNT_NUMBER,
+    SMARTER_BETA_ACCOUNT_NUMBER,
+    SMARTER_UBC_ACCOUNT_NUMBER,
+)
 from smarter.lib.django.management.base import SmarterCommand
 
 
@@ -21,26 +24,6 @@ class Command(SmarterCommand):
         parser.add_argument("--email", type=str, help="The email address of the user to associate with this Secret.")
         parser.add_argument(
             "--password", type=str, help="The value to encrypt and persist. If not provided, you will be prompted."
-        )
-        parser.add_argument(
-            "--smarter_test_db_host",
-            type=str,
-            help="The hostname for the remote MySql database used for SqlConnection tests. Defaults to sql.lawrencemcdaniel.com",
-        )
-        parser.add_argument(
-            "--smarter_test_db",
-            type=str,
-            help="The database to use for the remote MySql database used for SqlConnection tests. Defaults to smarter_test_db",
-        )
-        parser.add_argument(
-            "--smarter_test_db_username",
-            type=str,
-            help="The username to use for the remote MySql database used for SqlConnection tests. Defaults to smarter_test_user",
-        )
-        parser.add_argument(
-            "--smarter_test_db_password",
-            type=str,
-            help="The password to use for the remote MySql database used for SqlConnection tests",
         )
 
     def handle(self, *args, **options):
@@ -77,30 +60,47 @@ class Command(SmarterCommand):
             password = "smarter"
             self.stdout.write(self.style.WARNING(f"No password provided, using the default value: {password}"))
 
-        test_db_host = options.get("smarter_test_db_host")
-        if not test_db_host:
-            test_db_host = "sql.lawrencemcdaniel.com"
-
-        test_db_name = options.get("smarter_test_db")
-        if not test_db_name:
-            test_db_name = "smarter_test_db"
-
-        test_db_username = options.get("smarter_test_db_username")
-        if not test_db_username:
-            test_db_username = "smarter_test_user"
-
-        test_db_password = options.get("smarter_test_db_password")
-        if not test_db_password:
-            test_db_password = "smarter_test_user"
-            self.stdout.write(self.style.WARNING(f"No password provided, using the default value: {test_db_password}"))
-
-        # Create one user for each role: admin, staff, customer.
+        # create Smarter Account and admin User.
+        # ---------------------------------------------------------------------
         call_command("create_smarter_admin", username=username, password=password, email=email)
+
+        # Initialize Smarter platform components.
+        # ---------------------------------------------------------------------
+        call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
+        call_command("initialize_wagtail")  # Initialize prebuilt Wagtail static page content for Docs area
+        call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
+        call_command(
+            "verify_dns_configuration"
+        )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
+
+        # Initialize Accounts. Creates a collection of example AI resources
+        # for the Account.
+        # ---------------------------------------------------------------------
+        call_command(
+            "initialize_account",
+            account_number=SMARTER_ACCOUNT_NUMBER,
+            username="admin",
+            company_name="The Smarter Project",
+        )
+        call_command(
+            "initialize_account",
+            account_number=SMARTER_UBC_ACCOUNT_NUMBER,
+            username="admin_ubc",
+            company_name="University of British Columbia",
+        )
+        call_command(
+            "initialize_account",
+            account_number=SMARTER_BETA_ACCOUNT_NUMBER,
+            username="admin_beta",
+            company_name="Smarter Beta Users",
+        )
+
+        # Create a Smarter staff and customer user for testing purposes.
         call_command(
             "create_user",
-            account_number="3141-5926-5359",
+            account_number=SMARTER_ACCOUNT_NUMBER,
             username="staff_user",
-            email="staff@smarter.sh",
+            email=f"staff@{smarter_settings.root_domain}",
             password=password,
             first_name="Staff",
             last_name="User",
@@ -108,79 +108,12 @@ class Command(SmarterCommand):
         )
         call_command(
             "create_user",
-            account_number="3141-5926-5359",
+            account_number=SMARTER_ACCOUNT_NUMBER,
             username="customer_user",
-            email="customer@smarter.sh",
+            email=f"customer@{smarter_settings.root_domain}",
             password=password,
             first_name="Customer",
             last_name="User",
         )
-
-        # Setup University of British Columbia account
-        call_command("create_account", account_number="5680-6558-6577", company_name="University of British Columbia")
-        call_command(
-            "create_user",
-            account_number="5680-6558-6577",
-            username="admin_ubc",
-            email="admin_ubc@smarter.sh",
-            password=password,
-            first_name="UBC",
-            last_name="Admin",
-            admin=True,
-        )
-
-        # Setup Beta Users account
-        call_command("create_account", account_number="4386-2072-3294", company_name="Beta Users")
-        call_command(
-            "create_user",
-            account_number="4386-2072-3294",
-            username="admin_beta",
-            email="admin_beta@smarter.sh",
-            password=password,
-            first_name="Beta",
-            last_name="Admin",
-            admin=True,
-        )
-
-        # Initialize platform components.
-        call_command("initialize_waffle")
-        call_command("initialize_wagtail")
-        call_command("initialize_providers")
-        call_command("verify_dns_configuration")
-
-        # Load example plugins and chatbots from GitHub.
-        call_command(
-            "load_from_github", account_number="3141-5926-5359", url="https://github.com/QueriumCorp/smarter-demo"
-        )
-        call_command(
-            "load_from_github",
-            account_number="3141-5926-5359",
-            url="https://github.com/smarter-sh/examples",
-            repo_version=2,
-        )
-        call_command(
-            "load_from_github",
-            account_number="5680-6558-6577",
-            url="https://github.com/smarter-sh/examples",
-            repo_version=2,
-        )
-        call_command(
-            "load_from_github",
-            account_number="4386-2072-3294",
-            url="https://github.com/smarter-sh/examples",
-            repo_version=2,
-        )
-
-        # Add builtin plugin examples and deploy chatbots.
-        call_command("add_plugin_examples", username=username)
-        call_command("deploy_example_chatbot")
-        call_command("deploy_builtin_chatbots", account_number="3141-5926-5359")
-        call_command("deploy_builtin_chatbots", account_number="4386-2072-3294")
-        call_command("deploy_builtin_chatbots", account_number="5680-6558-6577")
-
-        # Setup Stackademy AI resources, used for training and testing.
-        call_command("create_stackademy", account_number="3141-5926-5359")
-        call_command("create_stackademy", account_number="4386-2072-3294")
-        call_command("create_stackademy", account_number="5680-6558-6577")
 
         self.handle_completed_success()
