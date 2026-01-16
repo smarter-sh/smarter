@@ -101,8 +101,8 @@ def main():
     # Update version in Chart.yaml
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
-        r"(version:\s*)[\d\.]+",
-        f"\\g<1>{new_version}",
+        r"^version:\s*[\d\.]+",
+        f"version: {new_version}",
     )
     # Update image version in artifacthub.io/images in Chart.yaml
     update_version_in_file(
