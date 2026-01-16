@@ -93,7 +93,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         :return: The formatted class name.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        return formatted_text(f"{__name__}.{SAMConnectionBaseBroker.__name__}[{id(self)}]")
 
     @property
     def ready(self) -> bool:

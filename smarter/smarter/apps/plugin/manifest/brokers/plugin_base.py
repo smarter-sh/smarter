@@ -88,7 +88,7 @@ class SAMPluginBaseBroker(AbstractBroker):
         :return: The formatted class name.
         :rtype: str
         """
-        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+        return formatted_text(f"{__name__}.{SAMPluginBaseBroker.__name__}[{id(self)}]")
 
     @property
     def orm_instance(self) -> Optional[PluginDataBase]:

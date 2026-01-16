@@ -64,7 +64,7 @@ class LoginView(SmarterNeverCachedWebView):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.formatted_class_name = formatted_text(f"{__name__}.{self.__class__.__name__}")
+        self.formatted_class_name = formatted_text(f"{__name__}.{LoginView.__name__}")
         logger.debug(
             "%s.__init__() called with args: %s, kwargs: %s. is_google_oauth_enabled: %s, is_github_oauth_enabled: %s",
             self.formatted_class_name,

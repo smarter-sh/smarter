@@ -225,7 +225,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
+        return f"{parent_class}.{SAMSqlPluginBroker.__name__}[{id(self)}]"
 
     @property
     def ORMModelClass(self) -> Type[PluginDataSql]:
