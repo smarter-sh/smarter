@@ -34,7 +34,6 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-logger_prefix = formatted_text(__name__ + ".SAMConnectionBaseBroker")
 
 
 class SAMConnectionBaseBroker(AbstractBroker):
@@ -87,6 +86,16 @@ class SAMConnectionBaseBroker(AbstractBroker):
         self._sam_connection_status = None
 
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Return the formatted class name for logging purposes.
+
+        :return: The formatted class name.
+        :rtype: str
+        """
+        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+
+    @property
     def ready(self) -> bool:
         """
         Check if the broker is ready for operations.
@@ -101,12 +110,12 @@ class SAMConnectionBaseBroker(AbstractBroker):
         """
         retval = super().ready
         if not retval:
-            logger.warning("%s.ready() AbstractBroker is not ready for %s", logger_prefix, self.kind)
+            logger.warning("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
             return False
         retval = self.manifest is not None or self.plugin is not None
         logger.debug(
             "%s.ready() manifest presence indicates ready=%s for %s",
-            logger_prefix,
+            self.formatted_class_name,
             retval,
             self.kind,
         )
@@ -116,12 +125,12 @@ class SAMConnectionBaseBroker(AbstractBroker):
 
     @property
     def ORMModelClass(self) -> Type[ConnectionBase]:
-        raise NotImplementedError(f"{logger_prefix}.ORMModelClass must be implemented in the subclass.")
+        raise NotImplementedError(f"{self.formatted_class_name}.ORMModelClass must be implemented in the subclass.")
 
     @property
     def connection(self) -> Optional[ConnectionBase]:
         """Return the connection model instance."""
-        raise NotImplementedError(f"{logger_prefix}.connection must be implemented in the subclass.")
+        raise NotImplementedError(f"{self.formatted_class_name}.connection must be implemented in the subclass.")
 
     @connection.setter
     def connection(self, value: ConnectionBase) -> None:
@@ -211,7 +220,9 @@ class SAMConnectionBaseBroker(AbstractBroker):
             broker.apply(request, manifest_data=manifest_dict)
 
         """
-        logger.info("%s.apply() called with request: %s", logger_prefix, smarter_build_absolute_uri(request=request))
+        logger.info(
+            "%s.apply() called with request: %s", self.formatted_class_name, smarter_build_absolute_uri(request=request)
+        )
         super().apply(request, kwargs)
 
         # update the common meta fields
@@ -238,7 +249,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
             if hasattr(self.connection, key):
                 if getattr(self.connection, key) != value:
                     setattr(self.connection, key, value)
-                    logger.info("%s.apply() updating %s to %s", logger_prefix, key, value)
+                    logger.info("%s.apply() updating %s to %s", self.formatted_class_name, key, value)
                     updated = True
         if updated:
             self.connection.save()

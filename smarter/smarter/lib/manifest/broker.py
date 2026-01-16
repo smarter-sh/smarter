@@ -188,7 +188,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 "loader=%s, api_version=%s, manifest=%s, file_path=%s, url=%s, "
                 "args=%s, kwargs=%s"
             ),
-            self.abstract_broker_logger_prefix,
+            self.formatted_class_name,
             request,
             name,
             kind,
@@ -252,7 +252,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 if isinstance(file_path, str):
                     if self._loader:
                         logger.warning(
-                            f"{self.abstract_broker_logger_prefix}.__init__() - Both loader and file_path provided. "
+                            f"{self.formatted_class_name}.__init__() - Both loader and file_path provided. "
                             f"file_path will override loader."
                         )
                     self.loader = SAMLoader(file_path=file_path)
@@ -379,7 +379,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
     # Class Instance Properties
     ###########################################################################
     @property
-    def abstract_broker_logger_prefix(self) -> str:
+    def formatted_class_name(self) -> str:
         """Return the logger prefix for the AbstractBroker.
 
         :return: The logger prefix for the AbstractBroker.
@@ -402,36 +402,36 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if not self.is_accountmixin_ready:
             logger.warning(
                 "%s.is_ready_abstract_broker() - AccountMixin is not ready. Cannot process broker.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             return False
         if not self.is_requestmixin_ready:
             logger.warning(
                 "%s.is_ready_abstract_broker() - RequestMixin is not ready. Cannot process broker.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             return False
         if bool(self._manifest):
             logger.debug(
                 "%s.is_ready_abstract_broker() returning true because manifest is loaded.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             return True
         if bool(self.loader) and self.loader.ready:
             logger.debug(
                 "%s.is_ready_abstract_broker() returning true because loader is ready.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             return True
         if not bool(self._manifest):
             logger.warning(
                 "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
         if not bool(self.loader) or not self.loader.ready:
             logger.warning(
                 "%s.is_ready_abstract_broker() returning false because loader is not ready.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
         return False
 
@@ -459,7 +459,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if not retval:
             logger.warning(
                 "%s.ready() SmarterRequestMixin is not ready for kind=%s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 self.kind,
             )
             return False
@@ -475,18 +475,6 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if self.ready:
             return self.formatted_state_ready
         return self.formatted_state_not_ready
-
-    @property
-    def formatted_class_name(self) -> str:
-        """
-        Returns the formatted class name for logging purposes.
-        This is used to provide a more readable class name in logs.
-
-        :return: The formatted class name.
-        :rtype: str
-        """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.{AbstractBroker.__name__}()"
 
     @property
     def request(self) -> Optional[HttpRequest]:
@@ -590,7 +578,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if value is None:
             logger.warning(
                 "%s.kind() setter - cannot unset kind. Ignoring this operation.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             return
         if not isinstance(value, str):
@@ -601,7 +589,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             )
 
         self._kind = value
-        logger.debug("%s.kind() setter set kind to %s", self.abstract_broker_logger_prefix, self._kind)
+        logger.debug("%s.kind() setter set kind to %s", self.formatted_class_name, self._kind)
 
     @cached_property
     def name(self) -> Optional[str]:
@@ -628,42 +616,34 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             return self._name
         if self._manifest:
             self._name = self.manifest.metadata.name
-            logger.debug(
-                "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
-            )
+            logger.debug("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
             return self._name
         else:
-            logger.debug("%s.name() manifest is not set.", self.abstract_broker_logger_prefix)
+            logger.debug("%s.name() manifest is not set.", self.formatted_class_name)
         if self.loader:
             logger.debug(
                 "%s.name() found a SAMLoader. Attempting to initialize the manifest.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             if self.manifest:
                 self._name = self.manifest.metadata.name
-                logger.debug(
-                    "%s.name() set name to %s from manifest metadata", self.abstract_broker_logger_prefix, self._name
-                )
+                logger.debug("%s.name() set name to %s from manifest metadata", self.formatted_class_name, self._name)
                 return self._name
             else:
                 self._name = self.loader.manifest_metadata.get("name")
                 if self._name:
-                    logger.debug(
-                        "%s.name() set name to %s from loader metadata", self.abstract_broker_logger_prefix, self._name
-                    )
+                    logger.debug("%s.name() set name to %s from loader metadata", self.formatted_class_name, self._name)
                     return self._name
-                logger.debug("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
+                logger.debug("%s.name() loader metadata does not contain a name", self.formatted_class_name)
         if isinstance(self.params, QueryDict):
             name_param = self.params.get("name", None)
             if name_param:
                 self._name = name_param
-                logger.debug(
-                    "%s.name() set name to %s from name url param", self.abstract_broker_logger_prefix, self._name
-                )
+                logger.debug("%s.name() set name to %s from name url param", self.formatted_class_name, self._name)
             else:
-                logger.debug("%s.name() url params do not contain a name", self.abstract_broker_logger_prefix)
+                logger.debug("%s.name() url params do not contain a name", self.formatted_class_name)
         if not self._name:
-            logger.warning("%s.name() could not determine name, returning None", self.abstract_broker_logger_prefix)
+            logger.warning("%s.name() could not determine name, returning None", self.formatted_class_name)
         return self._name
 
     def name_cached_property_setter(self, value: str):
@@ -687,10 +667,10 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         # Delete cached_property value if present
         try:
             del self.__dict__["name"]
-            logger.debug("%s.name() setter cleared cached_property", self.abstract_broker_logger_prefix)
+            logger.debug("%s.name() setter cleared cached_property", self.formatted_class_name)
         except KeyError:
             pass
-        logger.debug("%s.name() setter set name to %s", self.abstract_broker_logger_prefix, self._name)
+        logger.debug("%s.name() setter set name to %s", self.formatted_class_name, self._name)
 
     @property
     def api_version(self) -> str:
@@ -713,9 +693,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if not isinstance(value, str):
             raise SmarterValueError("api_version must be a string")
         self._api_version = value
-        logger.debug(
-            "%s.api_version() setter set api_version to %s", self.abstract_broker_logger_prefix, self._api_version
-        )
+        logger.debug("%s.api_version() setter set api_version to %s", self.formatted_class_name, self._api_version)
 
     @property
     def loader(self) -> Optional[SAMLoader]:
@@ -740,7 +718,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             self._loader = None
             logger.debug(
                 "%s.loader() setter - unset loader.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             return
         if not isinstance(value, SAMLoader):
@@ -750,7 +728,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             # initialize the manifest from the loader
             assert self.manifest is not None
 
-        logger.debug("%s.loader() setter set loader to %s", self.abstract_broker_logger_prefix, self._loader)
+        logger.debug("%s.loader() setter set loader to %s", self.formatted_class_name, self._loader)
 
     ###########################################################################
     # Abstract Properties
@@ -793,14 +771,14 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         if not self.ready:
             logger.warning(
                 "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             return None
         ModelClass = self.ORMModelClass
         try:
             logger.debug(
                 "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 ModelClass.__name__,
                 self.user,
                 self.name,
@@ -808,14 +786,14 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             instance = ModelClass.objects.get(account=self.account, name=self.name)
             logger.debug(
                 "%s.orm_instance() - retrieved ORM instance: %s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 serializers.serialize("json", [instance]),
             )
             return instance
         except ModelClass.DoesNotExist:
             logger.warning(
                 "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 self.account,
                 self.name,
             )
@@ -854,14 +832,14 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         """
         logger.debug(
             "%s.manifest() setter called with value: %s",
-            self.abstract_broker_logger_prefix,
+            self.formatted_class_name,
             value,
         )
         if value is None:
             self._manifest = None
             logger.debug(
                 "%s.manifest() setter - unset manifest.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             return
         if isinstance(value, AbstractSAMBase):
@@ -872,13 +850,13 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             self.loader = SAMLoader(manifest=self._manifest.model_dump())
             logger.debug(
                 "%s.manifest() setter set manifest from Pydantic model: %s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 self._manifest,
             )
         elif isinstance(value, dict):
             logger.debug(
                 "%s.manifest() setter - dict detected. Initializing SAMLoader from dict representation of manifest.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             self.loader = SAMLoader(manifest=value)
             if not self.loader.ready:
@@ -898,7 +876,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
 
             logger.debug(
                 "%s.manifest() setter set manifest %s from dict: %s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 type(self._manifest).__name__,
                 self._manifest,
             )
@@ -938,7 +916,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         """
         logger.debug(
             "%s.apply() called %s with args: %s, kwargs: %s, account: %s, user: %s",
-            self.abstract_broker_logger_prefix,
+            self.formatted_class_name,
             request,
             args,
             kwargs,
@@ -1120,7 +1098,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         """
         logger.debug(
             "%s.get_or_create_secret() called for user_profile=%s, name=%s, value=%s, description=%s, expiration=%s",
-            self.abstract_broker_logger_prefix,
+            self.formatted_class_name,
             user_profile,
             name,
             value,
@@ -1139,7 +1117,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         try:
             logger.debug(
                 "%s.get_or_create_secret() attempting to retrieve Secret %s for user %s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 name,
                 user_profile,
             )
@@ -1147,7 +1125,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         except Secret.DoesNotExist:
             logger.debug(
                 "%s.get_or_create_secret() Secret %s not found for user %s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 name,
                 user_profile,
             )
@@ -1182,7 +1160,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             except IntegrityError as ie:
                 logger.error(
                     "%s.get_or_create_secret() IntegrityError creating Secret %s for user %s: %s",
-                    self.abstract_broker_logger_prefix,
+                    self.formatted_class_name,
                     name,
                     user_profile,
                     ie,
@@ -1194,7 +1172,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             except Exception as create_exception:
                 logger.error(
                     "%s.get_or_create_secret() Exception creating Secret %s for user %s: %s",
-                    self.abstract_broker_logger_prefix,
+                    self.formatted_class_name,
                     name,
                     user_profile,
                     create_exception,
@@ -1453,7 +1431,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             else:
                 logger.warning(
                     "%s.get_model_titles() skipping field %s: expected dict with str keys and str values but got: %s",
-                    self.abstract_broker_logger_prefix,
+                    self.formatted_class_name,
                     field_name,
                     item,
                 )
@@ -1518,7 +1496,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             except Exception:
                 logger.warning(
                     "%s.to_json() - failed to serialize orm_instance: %s",
-                    self.abstract_broker_logger_prefix,
+                    self.formatted_class_name,
                     serialized,
                 )
         else:
@@ -1545,7 +1523,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: None
         """
         msg = (
-            f"{self.abstract_broker_logger_prefix}[{id(self)}] {self.kind} "
+            f"{self.formatted_class_name}[{id(self)}] {self.kind} "
             f"broker is {self.abstract_broker_ready_state} with "
             f"name: {self._name}, "
             f"manifest: {bool(self._manifest)}, "
