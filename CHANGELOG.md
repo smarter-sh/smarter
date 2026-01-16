@@ -1,3 +1,9 @@
+## [0.13.75](https://github.com/smarter-sh/smarter/compare/v0.13.74...v0.13.75) (2026-01-16)
+
+### Bug Fixes
+
+* refactor manage.py commands for platform initialization ([f5f318c](https://github.com/smarter-sh/smarter/commit/f5f318c13e4c4a747547a49d663349ad8caf9a5c))
+
 ## [0.13.74](https://github.com/smarter-sh/smarter/compare/v0.13.73...v0.13.74) (2026-01-16)
 
 ### Bug Fixes
