@@ -1,3 +1,9 @@
+## [0.13.78](https://github.com/smarter-sh/smarter/compare/v0.13.77...v0.13.78) (2026-01-16)
+
+### Bug Fixes
+
+* work on add_example_plugins() for new accounts ([91811cc](https://github.com/smarter-sh/smarter/commit/91811cc528822a10b07d5a68e3ae2d6c80066c7f))
+
 ## [0.13.77](https://github.com/smarter-sh/smarter/compare/v0.13.76...v0.13.77) (2026-01-16)
 
 ### Bug Fixes
