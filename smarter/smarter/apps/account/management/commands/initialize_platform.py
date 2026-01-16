@@ -74,9 +74,6 @@ class Command(SmarterCommand):
                 )
                 return
 
-        lazy_cache.clear()
-        self.stdout.write(self.style.NOTICE("Cleared the Django cache."))
-
         # create Smarter Account and admin User.
         # ---------------------------------------------------------------------
         call_command("create_smarter_admin", username=username, password=password, email=email)
