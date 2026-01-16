@@ -165,8 +165,11 @@ ENV PATH="/home/smarter_user/venv/bin:$PATH"
 # smarter locally for non-developers.
 COPY ./smarter/requirements requirements
 RUN pip install --upgrade pip && \
-  pip install --no-cache-dir -r requirements/docker.txt && \
-  pip install -r requirements/local.txt
+  pip install --no-cache-dir -r requirements/docker.txt
+
+# Install Python dependencies for the local environment for cases where
+# we're going to run python unit tests in the Docker container.
+RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
 ############################## application ##################################
 FROM venv AS application

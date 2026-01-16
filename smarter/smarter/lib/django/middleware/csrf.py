@@ -81,6 +81,8 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
     :rtype: django.http.HttpResponse or None
     """
 
+    _ready: bool = False
+
     def __init__(self, *args, **kwargs):
         """
         Initialize the SmarterCsrfViewMiddleware.
@@ -90,18 +92,34 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         request is for a ChatBot.
         """
         logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
-
-        admin_user_profile = get_cached_smarter_admin_user_profile()
         super().__init__(*args, **kwargs)
-        SmarterRequestMixin.__init__(
-            self,
-            request=None,
-            user=admin_user_profile.user,
-            user_profile=admin_user_profile,
-            account=admin_user_profile.account,
-            *args,
-            **kwargs,
-        )
+
+        admin_user_profile = None
+        # this can happen on fresh installations where migrations have not yet run.
+        try:
+            admin_user_profile = get_cached_smarter_admin_user_profile()
+            SmarterRequestMixin.__init__(
+                self,
+                request=None,
+                user=admin_user_profile.user,
+                user_profile=admin_user_profile,
+                account=admin_user_profile.account,
+                *args,
+                **kwargs,
+            )
+            self._ready = True
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("%s.__init__() could not get admin user profile: %s", self.formatted_class_name, str(e))
+            SmarterRequestMixin.__init__(self, *args, **kwargs)
+
+    @property
+    def ready(self) -> bool:
+        """
+        Return whether the middleware is ready for use. The middleware is considered ready
+        if it has been properly initialized with the admin user profile.
+        """
+        return self._ready
 
     @property
     def formatted_class_name(self) -> str:
@@ -167,6 +185,9 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             return None
 
         logger.debug("%s.__call__(): %s", self.formatted_class_name, self.url)
+
+        if not self.ready:
+            return super().process_request(request)
 
         if self.is_chatbot:
             logger.debug("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.url)
