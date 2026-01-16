@@ -1,3 +1,9 @@
+## [0.13.74](https://github.com/smarter-sh/smarter/compare/v0.13.73...v0.13.74) (2026-01-16)
+
+### Bug Fixes
+
+* version bump ([f9b44c4](https://github.com/smarter-sh/smarter/commit/f9b44c4664c0d985febe9bfd3241b1fc592e583a))
+
 ## [0.13.73](https://github.com/smarter-sh/smarter/compare/v0.13.72...v0.13.73) (2026-01-16)
 
 ### Bug Fixes
