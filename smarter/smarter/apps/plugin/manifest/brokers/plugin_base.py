@@ -81,6 +81,16 @@ class SAMPluginBaseBroker(AbstractBroker):
         self._manifest = None
 
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Return the formatted class name for logging purposes.
+
+        :return: The formatted class name.
+        :rtype: str
+        """
+        return formatted_text(f"{__name__}.{self.__class__.__name__}[{id(self)}]")
+
+    @property
     def orm_instance(self) -> Optional[PluginDataBase]:
         """
         Return the Django ORM model instance for the broker.
@@ -88,19 +98,26 @@ class SAMPluginBaseBroker(AbstractBroker):
         :return: The Django ORM model instance for the broker.
         :rtype: Optional[TimestampedModel]
         """
+        logger.debug(
+            "%s.orm_instance() called for kind=%s, name=%s, user=%s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            self.user_profile,
+        )
         if self._orm_instance:
             return self._orm_instance
 
         if not self.ready:
             logger.warning(
                 "%s.orm_instance() - broker is not ready. Cannot retrieve ORM instance.",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
             )
             return None
         try:
             logger.debug(
                 "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 PluginDataBase.__name__,
                 self.user,
                 self.name,
@@ -108,14 +125,14 @@ class SAMPluginBaseBroker(AbstractBroker):
             instance = PluginDataBase.objects.get(plugin=self.plugin_meta)
             logger.debug(
                 "%s.orm_instance() - retrieved ORM instance: %s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 serializers.serialize("json", [instance]),
             )
             return instance
         except PluginDataBase.DoesNotExist:
             logger.warning(
                 "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
-                self.abstract_broker_logger_prefix,
+                self.formatted_class_name,
                 self.account,
                 self.name,
             )
@@ -266,6 +283,12 @@ class SAMPluginBaseBroker(AbstractBroker):
             return self._plugin_meta
         if self.name and self.account:
             try:
+                logger.debug(
+                    "%s.plugin_meta() - retrieving PluginMeta for name=%s, account=%s",
+                    logger_prefix,
+                    self.name,
+                    self.account,
+                )
                 self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
             except PluginMeta.DoesNotExist:
                 logger.warning(
@@ -277,6 +300,11 @@ class SAMPluginBaseBroker(AbstractBroker):
 
     @plugin_meta.setter
     def plugin_meta(self, value: PluginMeta) -> None:
+        logger.debug(
+            "%s.plugin_meta() setter called - setting PluginMeta to %s",
+            logger_prefix,
+            value,
+        )
         self._plugin_meta = value
         self._plugin = None
         self._plugin_meta = None
@@ -393,6 +421,13 @@ class SAMPluginBaseBroker(AbstractBroker):
             print(metadata.name, metadata.description)
 
         """
+        logger.debug(
+            "%s.plugin_metadata_orm2pydantic() called for kind=%s, name=%s user=%s",
+            logger_prefix,
+            self.kind,
+            self.name,
+            self.user_profile,
+        )
         command = SmarterJournalCliCommands("describe")
         if not self._plugin_meta:
             raise SAMPluginBrokerError(
@@ -416,7 +451,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                     thing=self.kind,
                     command=command,
                 )
-            logger.info(
+            logger.debug(
                 "%s.describe() PluginMeta %s %s",
                 logger_prefix,
                 self.kind,
@@ -469,6 +504,13 @@ class SAMPluginBaseBroker(AbstractBroker):
             print(data["parameters"])
 
         """
+        logger.debug(
+            "%s.plugin_data_orm2pydantic() called for kind=%s, name=%s user=%s",
+            logger_prefix,
+            self.kind,
+            self.name,
+            self.user_profile,
+        )
         command = SmarterJournalCliCommands("describe")
         if not self.plugin:
             raise SAMPluginBrokerError(
@@ -583,6 +625,13 @@ class SAMPluginBaseBroker(AbstractBroker):
         if self.plugin_meta is None:
             return None
         try:
+            logger.debug(
+                "%s.plugin_prompt_orm() called for kind=%s, name=%s user=%s",
+                logger_prefix,
+                self.kind,
+                self.name,
+                self.user_profile,
+            )
             self._plugin_prompt = PluginPrompt.get_cached_prompt_by_plugin(plugin=self.plugin_meta)
         except PluginPrompt.DoesNotExist:
             logger.warning(
@@ -618,6 +667,13 @@ class SAMPluginBaseBroker(AbstractBroker):
             prompt = broker.plugin_prompt_orm2pydantic()
             print(prompt.template, prompt.variables)
         """
+        logger.debug(
+            "%s.plugin_prompt_orm2pydantic() called for kind=%s, name=%s user=%s",
+            logger_prefix,
+            self.kind,
+            self.name,
+            self.user_profile,
+        )
         command = SmarterJournalCliCommands("describe")
         if self.plugin_meta is None:
             raise SAMPluginBrokerError(
@@ -676,6 +732,13 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         """
         command = SmarterJournalCliCommands("describe")
+        logger.debug(
+            "%s.plugin_selector_orm2pydantic() called for kind=%s, name=%s user=%s",
+            logger_prefix,
+            self.kind,
+            self.name,
+            self.user_profile,
+        )
         if self.plugin is None:
             raise SAMPluginBrokerError(
                 f"Plugin {self.name} not found",
@@ -698,7 +761,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                     thing=self.kind,
                     command=command,
                 )
-            logger.info(
+            logger.debug(
                 "%s.describe() PluginSelector %s %s",
                 logger_prefix,
                 self.kind,
@@ -749,7 +812,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 print(response.status, response.data)
         """
         super().apply(request, kwargs)
-        logger.info("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
+        logger.debug("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -800,7 +863,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             plugins = PluginMeta.objects.filter(account=self.account, name=name)
         else:
             plugins = PluginMeta.objects.filter(account=self.account)
-        logger.info(
+        logger.debug(
             "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
         )
 
