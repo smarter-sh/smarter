@@ -37,7 +37,7 @@ spec:
               mysql -u "{{ .Values.env.MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.MYSQL_HOST }}" --port {{ .Values.env.MYSQL_PORT }} -e "GRANT ALL PRIVILEGES ON {{ .Values.env.MYSQL_DATABASE }}.* TO '{{ .Values.env.MYSQL_USER }}'@'%'; FLUSH PRIVILEGES;"
               python manage.py makemigrations
               python manage.py migrate
-              python manage.py initialize_platform --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" --test_db_password "{{ .Values.env.SMARTER_MYSQL_TEST_DATABASE_PASSWORD }}"
+              python manage.py initialize_platform
           command:
             - /bin/sh
             - -c
