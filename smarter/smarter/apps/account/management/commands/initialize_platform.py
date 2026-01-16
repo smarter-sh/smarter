@@ -7,6 +7,7 @@ from smarter.common.const import (
     SMARTER_ACCOUNT_NUMBER,
     SMARTER_BETA_ACCOUNT_NUMBER,
     SMARTER_UBC_ACCOUNT_NUMBER,
+    SmarterEnvironments,
 )
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -19,11 +20,17 @@ class Command(SmarterCommand):
         parser.add_argument(
             "--username",
             type=str,
-            help="The user to associate with this Secret. If not provided, the current user will be used.",
+            help="The username for the superuser associated with this platform. If not provided, the default 'admin' will be used.",
         )
-        parser.add_argument("--email", type=str, help="The email address of the user to associate with this Secret.")
         parser.add_argument(
-            "--password", type=str, help="The value to encrypt and persist. If not provided, you will be prompted."
+            "--email",
+            type=str,
+            help="The email address of the user to associate with this Secret. If not provided, a default email will be assigned.",
+        )
+        parser.add_argument(
+            "--password",
+            type=str,
+            help="The value to encrypt and persist. If not provided and you are running locally, the default 'smarter' will be used.",
         )
 
     def handle(self, *args, **options):
@@ -56,7 +63,7 @@ class Command(SmarterCommand):
             )
 
         password = options.get("password")
-        if not password:
+        if not password and smarter_settings.environment == SmarterEnvironments.LOCAL:
             password = "smarter"
             self.stdout.write(self.style.WARNING(f"No password provided, using the default value: {password}"))
 
