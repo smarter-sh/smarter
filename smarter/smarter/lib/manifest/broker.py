@@ -13,7 +13,7 @@ from urllib.parse import parse_qs, urlparse
 import inflect
 from django.core import serializers
 from django.core.handlers.wsgi import WSGIRequest
-from django.db import models
+from django.db import IntegrityError, models
 from django.http import HttpRequest, QueryDict
 from requests import PreparedRequest
 from rest_framework.request import Request
@@ -1118,6 +1118,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: The created or retrieved Secret object.
         :rtype: Secret
         """
+        logger.debug(
+            "%s.get_or_create_secret() called for user_profile=%s, name=%s, value=%s, description=%s, expiration=%s",
+            self.abstract_broker_logger_prefix,
+            user_profile,
+            name,
+            value,
+            description,
+            expiration,
+        )
 
         @cache_results()
         def cached_secret_by_name_and_profile_id(name: str, profile_id: int) -> Optional[Secret]:
@@ -1128,46 +1137,77 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
 
         secret: Optional[Secret] = None
         try:
+            logger.debug(
+                "%s.get_or_create_secret() attempting to retrieve Secret %s for user %s",
+                self.abstract_broker_logger_prefix,
+                name,
+                user_profile,
+            )
             secret = cached_secret_by_name_and_profile_id(name=name, profile_id=user_profile.id)
-        except Secret.DoesNotExist as e:
+        except Secret.DoesNotExist:
             logger.debug(
                 "%s.get_or_create_secret() Secret %s not found for user %s",
                 self.abstract_broker_logger_prefix,
                 name,
-                user_profile.user.username,
-            )
-            if not value:
-                raise SAMBrokerError(
-                    message=f"Secret {name} not found and no value was provided provided",
-                    thing=self.thing,
-                    command=SmarterJournalCliCommands.GET,
-                ) from e
-
-            if not user_profile:
-                raise SAMBrokerError(
-                    message=f"Secret {name} not found and no user_profile was provided provided",
-                    thing=self.thing,
-                    command=SmarterJournalCliCommands.GET,
-                ) from e
-
-            if not description:
-                description = f"[auto generated] Secret {name} for {user_profile.user.username}"
-
-            encrypted_value = Secret.encrypt(value)
-
-            secret = Secret.objects.create(
-                user_profile=user_profile,
-                name=name,
-                description=description,
-                encrypted_value=encrypted_value,
-                expires_at=expiration,
+                user_profile,
             )
 
         if not secret:
+            if not value:
+                raise SAMBrokerError(
+                    message=f"Secret {name} not found and no value was provided provided. Cannot create secret.",
+                    thing=self.thing,
+                    command=SmarterJournalCliCommands.GET,
+                )
+
+            if not user_profile:
+                raise SAMBrokerError(
+                    message=f"Secret {name} not found and no user_profile was provided provided. Cannot create secret.",
+                    thing=self.thing,
+                    command=SmarterJournalCliCommands.GET,
+                )
+
+            if not description:
+                description = f"[auto generated] Secret {name} for {user_profile}"
+
+            try:
+                encrypted_value = Secret.encrypt(value)
+                secret = Secret.objects.create(
+                    user_profile=user_profile,
+                    name=name,
+                    description=description,
+                    encrypted_value=encrypted_value,
+                    expires_at=expiration,
+                )
+            except IntegrityError as ie:
+                logger.error(
+                    "%s.get_or_create_secret() IntegrityError creating Secret %s for user %s: %s",
+                    self.abstract_broker_logger_prefix,
+                    name,
+                    user_profile,
+                    ie,
+                )
+                raise SAMBrokerError(
+                    message=f"Failed to create Secret {name} for user {user_profile}: {ie}",
+                    thing=self.thing,
+                ) from ie
+            except Exception as create_exception:
+                logger.error(
+                    "%s.get_or_create_secret() Exception creating Secret %s for user %s: %s",
+                    self.abstract_broker_logger_prefix,
+                    name,
+                    user_profile,
+                    create_exception,
+                )
+                raise SAMBrokerError(
+                    message=f"Failed to create Secret {name} for user {user_profile}: {create_exception}",
+                    thing=self.thing,
+                ) from create_exception
+
+        if not secret:
             raise SAMBrokerError(
-                message=f"Failed to create or retrieve Secret {name}",
+                message=f"Failed to create or retrieve {Secret.__name__} {name}",
                 thing=self.thing,
-                command=SmarterJournalCliCommands.GET,
             )
         return secret
 

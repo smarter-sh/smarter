@@ -1,8 +1,6 @@
 """Django manage.py initialize_platform command."""
 
-import secrets
-import string
-
+from django.core.cache import cache
 from django.core.management import call_command
 
 from smarter.common.conf import smarter_settings
@@ -58,6 +56,9 @@ class Command(SmarterCommand):
         """
         self.handle_begin()
 
+        cache.clear()
+        self.stdout.write(self.style.NOTICE("Cleared the Django cache."))
+
         account_number = options.get("account_number")
         if not account_number:
             self.stdout.write(self.style.ERROR("account number is required."))
@@ -87,13 +88,6 @@ class Command(SmarterCommand):
             return
 
         password = options.get("password")
-        if not password:
-            # create a random strong password
-            alphabet = string.ascii_letters + string.digits + string.punctuation
-            password = "".join(secrets.choice(alphabet) for i in range(16))
-            self.stdout.write(
-                self.style.WARNING(f"No password provided, using a generated strong password: {password}")
-            )
 
         company_name = options.get("company_name")
         if not company_name:
