@@ -21,7 +21,9 @@ class Command(SmarterCommand):
         company_name = options["company_name"]
 
         if account_number:
-            account, created = Account.objects.get_or_create(company_name=company_name, account_number=account_number)
+            account, created = Account.objects.get_or_create(account_number=account_number)
+            account.company_name = company_name
+            account.save()
         else:
             account, created = Account.objects.get_or_create(company_name=company_name)
         if created:
