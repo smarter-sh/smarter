@@ -1,3 +1,9 @@
+## [0.13.81](https://github.com/smarter-sh/smarter/compare/v0.13.80...v0.13.81) (2026-01-16)
+
+### Bug Fixes
+
+* skip clearing the cache ([c128328](https://github.com/smarter-sh/smarter/commit/c128328ab16638fc36706163b35a6c83b780b47a))
+
 ## [0.13.80](https://github.com/smarter-sh/smarter/compare/v0.13.79...v0.13.80) (2026-01-16)
 
 ### Bug Fixes
