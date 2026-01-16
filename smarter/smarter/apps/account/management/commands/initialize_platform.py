@@ -9,6 +9,7 @@ from smarter.common.const import (
     SMARTER_UBC_ACCOUNT_NUMBER,
     SmarterEnvironments,
 )
+from smarter.lib.cache import lazy_cache
 from smarter.lib.django.management.base import SmarterCommand
 
 
@@ -63,9 +64,18 @@ class Command(SmarterCommand):
             )
 
         password = options.get("password")
-        if not password and smarter_settings.environment == SmarterEnvironments.LOCAL:
-            password = "smarter"
-            self.stdout.write(self.style.WARNING(f"No password provided, using the default value: {password}"))
+        if not password:
+            if smarter_settings.environment == SmarterEnvironments.LOCAL:
+                password = "smarter"
+                self.stdout.write(self.style.WARNING(f"No password provided, using the default value: {password}"))
+            else:
+                self.stdout.write(
+                    self.style.ERROR("An administrator password is required when not running in LOCAL environment.")
+                )
+                return
+
+        lazy_cache.clear()
+        self.stdout.write(self.style.NOTICE("Cleared the Django cache."))
 
         # create Smarter Account and admin User.
         # ---------------------------------------------------------------------

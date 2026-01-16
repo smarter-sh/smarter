@@ -1,6 +1,5 @@
 """Django manage.py initialize_platform command."""
 
-from django.core.cache import cache
 from django.core.management import call_command
 
 from smarter.common.conf import smarter_settings
@@ -55,9 +54,6 @@ class Command(SmarterCommand):
         6. Create StackAcademy AI resources.
         """
         self.handle_begin()
-
-        cache.clear()
-        self.stdout.write(self.style.NOTICE("Cleared the Django cache."))
 
         account_number = options.get("account_number")
         if not account_number:
