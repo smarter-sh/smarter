@@ -1,3 +1,9 @@
+## [0.13.77](https://github.com/smarter-sh/smarter/compare/v0.13.76...v0.13.77) (2026-01-16)
+
+### Bug Fixes
+
+* do not rely on cache when setting SecretTransformer.id ([f1a915d](https://github.com/smarter-sh/smarter/commit/f1a915d7318a137f3589f88fa2e313be583bda38))
+
 ## [0.13.76](https://github.com/smarter-sh/smarter/compare/v0.13.75...v0.13.76) (2026-01-16)
 
 ### Bug Fixes
