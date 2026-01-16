@@ -54,11 +54,6 @@ class Command(SmarterCommand):
 
         account = Account.objects.get(account_number=account_number)
 
-        if not password:
-            password_length = 16
-            alphabet = string.ascii_letters + string.digits + string.punctuation
-            password = "".join(secrets.choice(alphabet) for _ in range(password_length))
-
         if not User.objects.filter(username=username).exists():
             user = User.objects.create_user(username=username, email=email, first_name=first_name, last_name=last_name)
             if is_admin:

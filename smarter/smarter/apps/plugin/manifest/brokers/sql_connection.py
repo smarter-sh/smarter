@@ -29,7 +29,6 @@ from smarter.apps.plugin.manifest.models.sql_connection.spec import (
 )
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
-from smarter.apps.plugin.signals import broker_ready
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -37,6 +36,7 @@ from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
+    SAMBrokerError,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -423,6 +423,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
                 connection.save()
 
         """
+        logger.debug("%s.manifest_to_django_orm() called", self.formatted_class_name)
         if self.user_profile is None:
             raise SAMBrokerErrorNotReady(
                 message="No user profile set for the broker",
@@ -438,6 +439,12 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         connection = self.manifest.spec.connection.model_dump()  # type: ignore
         connection = self.camel_to_snake(connection)
         if not isinstance(connection, dict):
+            logger.debug(
+                "%s.manifest_to_django_orm() recasting connection: %s (%s)",
+                self.formatted_class_name,
+                connection,
+                type(connection),
+            )
             connection = json.loads(json.dumps(connection))
         connection[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
         connection[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
@@ -446,9 +453,20 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         # retrieve the password Secret
         password = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
-        connection[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.get_or_create_secret(
-            user_profile=self.user_profile, name=connection[password]
-        )
+        try:
+            connection[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.get_or_create_secret(
+                user_profile=self.user_profile, name=connection[password]
+            )
+        except SAMBrokerError as e:
+            raise SAMConnectionBrokerError(
+                message=f"Failed to create or retrieve {Secret.__name__} {connection[password]}",
+                thing=self.thing,
+            ) from e
+        except Exception as e:
+            raise SAMConnectionBrokerError(
+                message=f"Encountered an unexpected error while creating or retrieving {Secret.__name__} {connection[password]}",
+                thing=self.thing,
+            ) from e
 
         # retrieve the proxyUsername Secret, if it exists
         proxy_password_name = self.camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
