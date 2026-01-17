@@ -6,19 +6,21 @@ import os
 from typing import Optional
 from urllib.parse import urljoin
 
-import httpx
 from django.core.management import CommandError
+from django.test import RequestFactory
 from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.loader import SAMLoader
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -153,64 +155,100 @@ class Command(SmarterCommand):
             self.handle_completed_failure(msg="No admin user profile found.")
             return
 
-        user = user_profile.user
+        # user = user_profile.user
 
-        try:
-            token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
-                account=user_profile.account,
-                name="apply_manifest",
-                user=user,
-                description="DELETE ME: single-use key created by manage.py apply_manifest",
-            )
-            logger.debug("%s - created single-use token %s for user %s", logger_prefix, token_key, user_profile)
-        # pylint: disable=W0718
-        except Exception as e:
-            self.handle_completed_failure(e, msg=f"Error creating API token: {e}")
-            return
+        # try:
+        #     token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
+        #         account=user_profile.account,
+        #         name="apply_manifest",
+        #         user=user,
+        #         description="DELETE ME: single-use key created by manage.py apply_manifest",
+        #     )
+        #     logger.debug("%s - created single-use token %s for user %s", logger_prefix, token_key, user_profile)
+        # # pylint: disable=W0718
+        # except Exception as e:
+        #     self.handle_completed_failure(e, msg=f"Error creating API token: {e}")
+        #     return
 
-        path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply, kwargs={})
-        url = urljoin(smarter_settings.environment_url, path)
-        headers = {"Authorization": f"Token {token_key}", "Content-Type": "application/json"}
+        # path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply, kwargs={})
+        # url = urljoin(smarter_settings.environment_url, path)
+        # headers = {"Authorization": f"Token {token_key}", "Content-Type": "application/json"}
 
-        msg = f"{logger_prefix} applying manifest (verbose={verbose}) url={url} as user={user_profile} headers={headers}  data={self.data}"
-        logger.debug("%s - %s", logger_prefix, msg)
-        if verbose:
-            logger.debug("%s manifest: %s", logger_prefix, self.data)
-            logger.debug("%s headers: %s", logger_prefix, headers)
+        # msg = f"{logger_prefix} applying manifest (verbose={verbose}) url={url} as user={user_profile} headers={headers}  data={self.data}"
+        # logger.debug("%s - %s", logger_prefix, msg)
+        # if verbose:
+        #     logger.debug("%s manifest: %s", logger_prefix, self.data)
+        #     logger.debug("%s headers: %s", logger_prefix, headers)
 
         logger.debug("%s - applying manifest", logger_prefix)
 
-        try:
-            httpx_response = httpx.post(url, content=self.data, headers=headers)
-        except httpx.HTTPError as e:
-            self.handle_completed_failure(e, msg=f"HTTP error applying manifest to {url}: {e}")
+        # ----------------------------------------------------------------------
+        # PLAN B
+        # ----------------------------------------------------------------------
+        loader = SAMLoader(manifest=self.data)
+        factory = RequestFactory()
+        fake_request = factory.post("/fake-url/", data=loader.manifest, content_type="application/json")
+        fake_request.user = user_profile.user
+
+        if not isinstance(loader.kind, str):
+            self.handle_completed_failure(msg="Unable to determine manifest kind.")
             return
-        finally:
-            token_record.delete()
+        BrokerClass = Brokers.get_broker(loader.kind)
+        if BrokerClass is None or not issubclass(BrokerClass, AbstractBroker):
+            self.handle_completed_failure(msg=f"No broker found for manifest kind: {loader.kind}")
+            return
 
-        # wrap up the request
-        response_content = httpx_response.content.decode("utf-8")
-        if isinstance(response_content, (str, bytearray, bytes)):
-            try:
-                response_json = json.loads(response_content)
-            except json.JSONDecodeError:
-                response_json = {"error": "unable to decode response content", "raw": response_content}
-        else:
-            response_json = {"error": "unable to decode response content"}
+        broker = BrokerClass(request=fake_request, loader=loader, user_profile=user_profile)
+        response = broker.apply(request=fake_request)
 
-        response = json.dumps(response_json) + "\n"
-        if httpx_response.status_code == httpx.codes.OK:
+        if response.status_code == 200:
             if verbose:
-                logger.debug("%s - manifest apply response: %s", logger_prefix, response)
+                logger.debug("%s - manifest applied successfully", logger_prefix)
             else:
                 logger.debug("%s - manifest applied successfully", logger_prefix)
+            self.handle_completed_success()
+            return
         else:
-            self.handle_completed_failure(
-                msg=f"Manifest apply to {url} failed with status code: {httpx_response.status_code}"
-            )
+            self.handle_completed_failure(msg=f"Manifest apply failed with status code: {response.status_code}")
             logger.error("%s - manifest: %s", logger_prefix, self.data)
-            logger.error("%s - response: %s", logger_prefix, response)
-            msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {self.data}\nresponse: {response}"
+            logger.error("%s - response: %s", logger_prefix, response.content)
+            msg = f"Manifest apply failed with status code: {response.status_code}\nmanifest: {self.data}\nresponse: {response.content}"
             raise CommandError(msg)
 
-        self.handle_completed_success()
+        # ----------------------------------------------------------------------
+        # PLAN B
+        # ----------------------------------------------------------------------
+        # try:
+        #     httpx_response = httpx.post(url, content=self.data, headers=headers)
+        # except httpx.HTTPError as e:
+        #     self.handle_completed_failure(e, msg=f"HTTP error applying manifest to {url}: {e}")
+        #     return
+        # finally:
+        #     token_record.delete()
+
+        # wrap up the request
+        # response_content = httpx_response.content.decode("utf-8")
+        # if isinstance(response_content, (str, bytearray, bytes)):
+        #     try:
+        #         response_json = json.loads(response_content)
+        #     except json.JSONDecodeError:
+        #         response_json = {"error": "unable to decode response content", "raw": response_content}
+        # else:
+        #     response_json = {"error": "unable to decode response content"}
+
+        # response = json.dumps(response_json) + "\n"
+        # if httpx_response.status_code == httpx.codes.OK:
+        #     if verbose:
+        #         logger.debug("%s - manifest apply response: %s", logger_prefix, response)
+        #     else:
+        #         logger.debug("%s - manifest applied successfully", logger_prefix)
+        # else:
+        #     self.handle_completed_failure(
+        #         msg=f"Manifest apply to {url} failed with status code: {httpx_response.status_code}"
+        #     )
+        #     logger.error("%s - manifest: %s", logger_prefix, self.data)
+        #     logger.error("%s - response: %s", logger_prefix, response)
+        #     msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {self.data}\nresponse: {response}"
+        #     raise CommandError(msg)
+
+        # self.handle_completed_success()
