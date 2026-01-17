@@ -127,7 +127,7 @@ def main():
         f"\\g<1>{new_version}",
     )
 
-    print(f"Updated image version in artifacthub.io/images in helm/charts/smarter/Chart.yaml to {new_version}")
+    print(f"Updated helm/charts/smarter/Chart.yaml to {new_version}")
 
 
 if __name__ == "__main__":
