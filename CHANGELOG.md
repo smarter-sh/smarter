@@ -1,3 +1,9 @@
+## [0.13.88](https://github.com/smarter-sh/smarter/compare/v0.13.87...v0.13.88) (2026-01-17)
+
+### Bug Fixes
+
+* refactor apply_manifest to directly instantiate the Broker ([3acd43a](https://github.com/smarter-sh/smarter/commit/3acd43a6b7ad284f01602cbd7a6069a66e784a66))
+
 ## [0.13.87](https://github.com/smarter-sh/smarter/compare/v0.13.86...v0.13.87) (2026-01-17)
 
 ### Bug Fixes
