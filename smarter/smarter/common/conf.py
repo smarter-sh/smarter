@@ -1610,11 +1610,19 @@ class Settings(BaseSettings):
     True if beta account should be added to CD-CD processes.
     This setting indicates whether a beta account should be included
     in continuous deployment and continuous delivery processes.
-    Enabling this setting allows for testing and validation of new features
-    in a beta environment before they are released to production.
-    :type: bool
-    :default: Value from ``SettingsDefaults.CONFIGURE_BETA_ACCOUNT``
+    Enabling this setting gives you a way to provide early access
+    to new features, in production but with controlled access to a
+    select set of users.
+
+    When enabled, the platform will automatically create and manage
+    a beta account during deployment processes. Namely, it will
+    maintain the built-in example AI resources, which are a common
+    means of demonstrating new features.
+
     :raises SmarterConfigurationError: If the value is not a boolean.
+
+    :type: bool
+    :default: False
     """
 
     @before_field_validator("configure_beta_account")
