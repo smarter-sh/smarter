@@ -1,3 +1,9 @@
+## [0.13.87](https://github.com/smarter-sh/smarter/compare/v0.13.86...v0.13.87) (2026-01-17)
+
+### Bug Fixes
+
+* refactor write() to logger.debug() ([bd0079f](https://github.com/smarter-sh/smarter/commit/bd0079fc77e4bfcb27bd5b24716c9d27ead131c0))
+
 ## [0.13.86](https://github.com/smarter-sh/smarter/compare/v0.13.85...v0.13.86) (2026-01-17)
 
 ### Bug Fixes
