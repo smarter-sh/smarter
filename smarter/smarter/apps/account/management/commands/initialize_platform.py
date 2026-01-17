@@ -96,18 +96,20 @@ class Command(SmarterCommand):
             username="admin",
             company_name="The Smarter Project",
         )
-        call_command(
-            "initialize_account",
-            account_number=SMARTER_UBC_ACCOUNT_NUMBER,
-            username="admin_ubc",
-            company_name="University of British Columbia",
-        )
-        call_command(
-            "initialize_account",
-            account_number=SMARTER_BETA_ACCOUNT_NUMBER,
-            username="admin_beta",
-            company_name="Smarter Beta Users",
-        )
+        if smarter_settings.configure_beta_account:
+            call_command(
+                "initialize_account",
+                account_number=SMARTER_BETA_ACCOUNT_NUMBER,
+                username="admin_beta",
+                company_name="Smarter Beta Users",
+            )
+        if smarter_settings.configure_ubc_account:
+            call_command(
+                "initialize_account",
+                account_number=SMARTER_UBC_ACCOUNT_NUMBER,
+                username="admin_ubc",
+                company_name="University of British Columbia",
+            )
 
         # Create a Smarter staff and customer user for testing purposes.
         call_command(
