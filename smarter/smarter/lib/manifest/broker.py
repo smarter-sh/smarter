@@ -1106,13 +1106,6 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
             expiration,
         )
 
-        @cache_results()
-        def cached_secret_by_name_and_profile_id(name: str, profile_id: int) -> Optional[Secret]:
-            try:
-                return Secret.objects.get(name=name, user_profile__id=profile_id)
-            except Secret.DoesNotExist:
-                return None
-
         secret: Optional[Secret] = None
         try:
             logger.debug(
@@ -1121,7 +1114,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 name,
                 user_profile,
             )
-            secret = cached_secret_by_name_and_profile_id(name=name, profile_id=user_profile.id)
+            secret = Secret.objects.get(user_profile=user_profile, name=name)
         except Secret.DoesNotExist:
             logger.debug(
                 "%s.get_or_create_secret() Secret %s not found for user %s",
