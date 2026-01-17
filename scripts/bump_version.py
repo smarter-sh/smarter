@@ -23,7 +23,7 @@ from pathlib import Path
 def update_version_in_file(filepath, pattern, replacement):
     path = Path(filepath)
     text = path.read_text(encoding="utf-8")
-    new_text = re.sub(pattern, replacement, text)
+    new_text = re.sub(pattern, replacement, text, flags=re.MULTILINE)
     path.write_text(new_text, encoding="utf-8")
 
 
@@ -92,16 +92,20 @@ def main():
     )
     print(f"Updated helm/charts/smarter/values.yaml to {new_version}")
 
+    # -------------------------------------------------------------------------
+    # Update helm/charts/smarter/Chart.yaml
+    # -------------------------------------------------------------------------
+
     # Update appVersion in Chart.yaml
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
         r"(appVersion:\s*)[\d\.]+",
         f"\\g<1>{new_version}",
     )
-    # Update version in Chart.yaml
+    # Update version in Chart.yaml (top-level only)
     update_version_in_file(
         "helm/charts/smarter/Chart.yaml",
-        r"^version:\s*[\d\.]+",
+        r"^version:\s*\d+\.\d+\.\d+$",
         f"version: {new_version}",
     )
     # Update image version in artifacthub.io/images in Chart.yaml
@@ -110,6 +114,19 @@ def main():
         r"(image:\s*mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)",
         f"\\g<1>v{new_version}",
     )
+    # Update version in artifacthub.io/changes description in Chart.yaml
+    update_version_in_file(
+        "helm/charts/smarter/Chart.yaml",
+        r"(description: bump to app version )\d+\.\d+\.\d+",
+        f"\\g<1>{new_version}",
+    )
+    # Update version in helm.sh/chart Chart.yaml
+    update_version_in_file(
+        "helm/charts/smarter/Chart.yaml",
+        r"(helm\.sh/chart:\s*smarter-)\d+\.\d+\.\d+",
+        f"\\g<1>{new_version}",
+    )
+
     print(f"Updated image version in artifacthub.io/images in helm/charts/smarter/Chart.yaml to {new_version}")
 
 

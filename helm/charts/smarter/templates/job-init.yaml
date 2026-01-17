@@ -123,6 +123,9 @@ spec:
             - name: SMARTER_LLAMA_API_KEY
               value: "{{ .Values.env.SMARTER_LLAMA_API_KEY }}"
 
+            - name: SMARTER_MISTRAL_API_KEY
+              value: "{{ .Values.env.SMARTER_MISTRAL_API_KEY }}"
+
             - name: SMARTER_MYSQL_DATABASE
               value: "{{ .Values.env.SMARTER_MYSQL_DATABASE }}"
 
