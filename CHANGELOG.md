@@ -1,3 +1,9 @@
+## [0.13.91](https://github.com/smarter-sh/smarter/compare/v0.13.90...v0.13.91) (2026-01-17)
+
+### Bug Fixes
+
+* add configuration variables to control beta and ubc accounts in ci-cd ([2160be6](https://github.com/smarter-sh/smarter/commit/2160be6148d9fbf1890e6dfe4b2ca22a3b399e87))
+
 ## [0.13.90](https://github.com/smarter-sh/smarter/compare/v0.13.89...v0.13.90) (2026-01-17)
 
 ### Bug Fixes
