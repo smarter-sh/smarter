@@ -204,8 +204,12 @@ def apply_manifest_v2(
     username: Optional[str] = None,
     verbose: bool = False,
 ) -> bool:
+    """
+    Prepare and get a response from the api/v1/cli/apply endpoint by binding
+    directly to the broker class. This avoids the need to make an HTTP request,
+    which can be useful in certain testing or internal scenarios.
+    """
     # pylint: disable=import-outside-toplevel
-    from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
     from smarter.apps.api.v1.cli.views.base import APIV1CLIViewError
 
     user: Optional[User] = None
