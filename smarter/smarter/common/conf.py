@@ -420,6 +420,8 @@ class SettingsDefaults:
 
     CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
     CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
+    CONFIGURE_BETA_ACCOUNT: bool = bool_environment_variable("CONFIGURE_BETA_ACCOUNT", False)
+    CONFIGURE_UBC_ACCOUNT: bool = bool_environment_variable("CONFIGURE_UBC_ACCOUNT", False)
     CHATBOT_CACHE_EXPIRATION: int = int(get_env("CHATBOT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
     CHATBOT_MAX_RETURNED_HISTORY: int = int(get_env("CHATBOT_MAX_RETURNED_HISTORY", 25))
     CHATBOT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("CHATBOT_TASKS_CREATE_DNS_RECORD", True)
@@ -1598,6 +1600,72 @@ class Settings(BaseSettings):
             return int_value
         except ValueError as e:
             raise SmarterConfigurationError("could not validate chat_cache_expiration") from e
+
+    configure_beta_account: bool = Field(
+        SettingsDefaults.CONFIGURE_BETA_ACCOUNT,
+        description="True if beta account should be added to CD-CD processes.",
+        title="Configure Beta Account",
+    )
+    """
+    True if beta account should be added to CD-CD processes.
+    This setting indicates whether a beta account should be included
+    in continuous deployment and continuous delivery processes.
+    Enabling this setting allows for testing and validation of new features
+    in a beta environment before they are released to production.
+    :type: bool
+    :default: Value from ``SettingsDefaults.CONFIGURE_BETA_ACCOUNT``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
+    @before_field_validator("configure_beta_account")
+    def parse_configure_beta_account(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'configure_beta_account' field.
+        Args:
+            v (Optional[Union[bool, str]]): the configure_beta_account value to validate
+        Returns:
+            bool: The validated configure_beta_account.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CONFIGURE_BETA_ACCOUNT
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate configure_beta_account: {v}")
+
+    configure_ubc_account: bool = Field(
+        SettingsDefaults.CONFIGURE_UBC_ACCOUNT,
+        description="True if UBC account should be added to CD-CD processes.",
+        title="Configure UBC Account",
+    )
+    """
+    True if UBC account should be added to CD-CD processes.
+    This setting indicates whether a UBC account should be included
+    in continuous deployment and continuous delivery processes.
+    Enabling this setting allows for testing and validation of new features
+    in a UBC environment before they are released to production.
+
+    :type: bool
+    :default: Value from ``SettingsDefaults.CONFIGURE_UBC_ACCOUNT``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
+    @before_field_validator("configure_ubc_account")
+    def parse_configure_ubc_account(cls, v: Optional[Union[bool, str]]) -> bool:
+        """
+        Validates the 'configure_ubc_account' field.
+        Args: v (Optional[Union[bool, str]]): the configure_ubc_account value to validate
+        Returns: bool: The validated configure_ubc_account.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CONFIGURE_UBC_ACCOUNT
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate configure_ubc_account: {v}")
 
     chatbot_cache_expiration: int = Field(
         SettingsDefaults.CHATBOT_CACHE_EXPIRATION,

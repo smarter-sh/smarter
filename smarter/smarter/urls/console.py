@@ -41,6 +41,8 @@ from smarter.apps.plugin.const import namespace as plugin_namespace
 from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.apps.provider.const import namespace as provider_namespace
+from smarter.common.conf import smarter_settings
+from smarter.common.const import SmarterEnvironments
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 
 
@@ -135,7 +137,7 @@ urlpatterns = [
     re_path(r"^wagtail-transfer/", include(wagtailtransfer_urls)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-if not settings.DEBUG:
+if smarter_settings.environment != SmarterEnvironments.LOCAL:
     # only serve media files when not running locally in debug mode
     urlpatterns += [re_path(r"", include(wagtail_urls))]
 
