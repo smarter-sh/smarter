@@ -3,6 +3,7 @@ This module is used to deploy a collection of customer API's from a GitHub repos
 organized in directories by customer API name.
 """
 
+import logging
 import os
 import re
 import subprocess
@@ -21,9 +22,14 @@ from smarter.apps.plugin.manifest.controller import SAM_MAP, PluginController
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.loader import SAMLoader
+
+
+logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(f"{__name__}")
 
 
 # pylint: disable=E1101,too-many-instance-attributes
@@ -104,7 +110,7 @@ class Command(SmarterCommand):
                 returncode=result, cmd=f"git clone {self.url} {self.local_path}", output="Failed to clone repository"
             )
         else:
-            self.stdout.write(f"Cloned {self.url} to {self.local_path}")
+            logger.debug("%s: Cloned %s to %s", logger_prefix, self.url, self.local_path)
 
     def delete_repo(self):
         """Delete a cloned GitHub repository from the local file system."""
@@ -115,7 +121,7 @@ class Command(SmarterCommand):
                     returncode=result, cmd=f"rm -rf {self.local_path}", output="Failed to delete repository"
                 )
             else:
-                print(f"Deleted {self.local_path}")
+                logger.debug("%s: Deleted %s", logger_prefix, self.local_path)
 
     def load_plugin(self, filespec: str):
         """Load a plugin from a file on the local file system."""
@@ -128,12 +134,17 @@ class Command(SmarterCommand):
         )
 
         if not loader.ready:
-            self.stdout.write(self.style.ERROR("manage.py create_plugin. SAMLoader is not ready."))
+            logger.error("%s: manage.py create_plugin. SAMLoader is not ready.", logger_prefix)
             sys.exit(1)
         plugin_class = SAM_MAP[loader.manifest_kind]
         manifest = plugin_class(**loader.pydantic_model_dump())
-        self.stdout.write(f"Creating {plugin_class.__name__} {manifest.metadata.name} for account {self.account}...")
-
+        logger.debug(
+            "%s: Creating %s %s for account %s...",
+            logger_prefix,
+            plugin_class.__name__,
+            manifest.metadata.name,
+            self.user_profile,
+        )
         controller = PluginController(account=self.account, user=self.user, user_profile=self.user_profile, manifest=manifest)  # type: ignore
         plugin = controller.obj
         return plugin
@@ -161,10 +172,10 @@ class Command(SmarterCommand):
         for root, directory_names, _ in os.walk(self.local_path):
             if "plugins" in directory_names:
                 # we need to process plugins first as these can be dependencies for chatbots
-                self.stdout.write(f"Processing plugins for account {self.account.account_number}...")
+                logger.debug("%s: Processing plugins for account %s...", logger_prefix, self.account.account_number)
                 process_directory(directory="plugins")
             if "chatbots" in directory_names:
-                self.stdout.write(f"Processing chatbots for account {self.account.account_number}...")
+                logger.debug("%s: Processing chatbots for account %s...", logger_prefix, self.account.account_number)
                 process_directory(directory="chatbots")
 
     def process_repo_v1(self):
@@ -179,7 +190,7 @@ class Command(SmarterCommand):
 
             folder_name = os.path.basename(directory_path)
             if not re.fullmatch(VALID_HOST_PATTERN, folder_name, re.IGNORECASE):
-                print(f"Skipping folder: {folder_name}")
+                logger.debug("%s: Skipping folder: %s", logger_prefix, folder_name)
                 return False
 
             for _, _, files in os.walk(directory):
@@ -206,7 +217,7 @@ class Command(SmarterCommand):
                 directory_path = os.path.join(root, directory)
                 api_name = os.path.basename(directory_path)
                 if is_demo_folder(directory=directory_path):
-                    print(f"Processing API: {api_name}")
+                    logger.debug("%s: Processing API: %s", logger_prefix, api_name)
                     chatbot, _ = ChatBot.objects.get_or_create(name=api_name, account=self.account)
                     for _, _, files in os.walk(directory_path):
                         for file in files:
@@ -214,15 +225,24 @@ class Command(SmarterCommand):
                                 try:
                                     filespec = os.path.join(directory_path, file)
                                     filename = os.path.basename(filespec)
-                                    print(f"Loading plugin: {filespec}")
+                                    logger.debug("%s: Loading plugin: %s", logger_prefix, filespec)
                                     plugin = self.load_plugin(filespec=filespec)
                                     if not plugin:
-                                        self.stderr.write(f"Error loading plugin: {filename}")
+                                        logger.error(
+                                            "%s: Error loading plugin: %s for account %s",
+                                            logger_prefix,
+                                            filename,
+                                            self.account.account_number,
+                                        )
                                         continue
                                     ChatBotPlugin.objects.get_or_create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
                                 except Exception as e:
-                                    self.stderr.write(
-                                        f"Error loading plugin: {filename} for account {self.account.account_number}: {e}"
+                                    logger.error(
+                                        "%s: Error loading plugin: %s for account %s: %s",
+                                        logger_prefix,
+                                        filename,
+                                        self.account.account_number,
+                                        e,
                                     )
                                     raise e
 
@@ -252,10 +272,7 @@ class Command(SmarterCommand):
         username = options["username"]
         repo_version = int(options["repo_version"])
 
-        self.stdout.write(self.style.NOTICE("=" * 80))
-        self.stdout.write(self.style.NOTICE(f"{__file__}"))
-        self.stdout.write(self.style.NOTICE(f"Deploying plugins from {self.url} for account {account_number}."))
-        self.stdout.write(self.style.NOTICE("=" * 80))
+        logger.debug("%s: Deploying plugins from %s for account %s.", logger_prefix, self.url, account_number)
 
         if not account_number and not username:
             self.handle_completed_failure(msg="username and/or account_number is required.")

@@ -81,8 +81,20 @@ spec:
             - name: SMARTER_ADMIN_USERNAME
               value: "{{ .Values.env.SMARTER_ADMIN_USERNAME }}"
 
+            - name: SMARTER_AWS_EKS_CLUSTER_NAME
+              value: "{{ .Values.env.SMARTER_AWS_EKS_CLUSTER_NAME }}"
+
+            - name: SMARTER_AWS_RDS_DB_INSTANCE_IDENTIFIER
+              value: "{{ .Values.env.SMARTER_AWS_RDS_DB_INSTANCE_IDENTIFIER }}"
+
             - name: SMARTER_COHERE_API_KEY
               value: "{{ .Values.env.SMARTER_COHERE_API_KEY }}"
+
+            - name: SMARTER_CONFIGURE_UBC_ACCOUNT
+              value: "{{ .Values.env.SMARTER_CONFIGURE_UBC_ACCOUNT }}"
+
+            - name: SMARTER_CONFIGURE_BETA_ACCOUNT
+              value: "{{ .Values.env.SMARTER_CONFIGURE_BETA_ACCOUNT }}"
 
             - name: SMARTER_EMAIL_ADMINS
               value: "{{ .Values.env.SMARTER_EMAIL_ADMINS }}"
