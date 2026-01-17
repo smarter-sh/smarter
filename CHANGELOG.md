@@ -1,3 +1,9 @@
+## [0.13.84](https://github.com/smarter-sh/smarter/compare/v0.13.83...v0.13.84) (2026-01-17)
+
+### Bug Fixes
+
+* don't bother caching Secret ([2a90e4c](https://github.com/smarter-sh/smarter/commit/2a90e4c93abf4db45ce21ba2959f6f77f0b9748c))
+
 ## [0.13.83](https://github.com/smarter-sh/smarter/compare/v0.13.82...v0.13.83) (2026-01-16)
 
 ### Bug Fixes
