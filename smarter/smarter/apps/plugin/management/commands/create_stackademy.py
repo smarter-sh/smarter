@@ -5,12 +5,13 @@ Command to create the Stackademy AI resources.
 import io
 import logging
 
-from django.core.management import CommandError, call_command
+from django.core.management import CommandError
 
 from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
 )
+from smarter.apps.api.utils import apply_manifest_v2
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -81,29 +82,10 @@ class Command(SmarterCommand):
 
         def apply(file_path):
 
-            output.truncate(0)
-            output.seek(0)
-            error_output.truncate(0)
-            error_output.seek(0)
-
-            logger.debug("%s - Applying manifest from file: %s", logger_prefix, file_path)
-            call_command(
-                "apply_manifest",
-                filespec=file_path,
-                username=username,
-                verbose=True,
-                stdout=output,
-                stderr=error_output,
-            )
-            if error_output.getvalue():
-                logger.error(
-                    "%s - Error applying manifest from file: %s: %s", logger_prefix, file_path, error_output.getvalue()
-                )
-                raise CommandError(f"Error applying manifest from file: {file_path}: {error_output.getvalue()}")
-            else:
-                logger.debug(
-                    "%s - Successfully applied manifest from file: %s\n%s", logger_prefix, file_path, output.getvalue()
-                )
+            try:
+                apply_manifest_v2(filespec=file_path, username=username, verbose=True)
+            except Exception as e:
+                raise CommandError(f"Failed to apply manifest {file_path}: {str(e)}") from e
 
         try:
             logger.debug("%s - Creating Stackademy Sql Chatbot...", logger_prefix)

@@ -7,10 +7,12 @@ from typing import Optional
 from urllib.parse import urljoin
 
 import httpx
+from django.test import RequestFactory
 from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
@@ -19,6 +21,8 @@ from smarter.common.helpers.console_helpers import (
 )
 from smarter.lib import json
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.loader import SAMLoader
 
 
 logger = logging.getLogger(__name__)
@@ -190,5 +194,108 @@ def apply_manifest(
             return True
 
         msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {data}\nresponse: {response}"
+        raise APIV1CLIViewError(msg)
+    return True
+
+
+def apply_manifest_v2(
+    filespec: Optional[str] = None,
+    manifest: Optional[str] = None,
+    username: Optional[str] = None,
+    verbose: bool = False,
+) -> bool:
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+    from smarter.apps.api.v1.cli.views.base import APIV1CLIViewError
+
+    user: Optional[User] = None
+    data: Optional[str] = None
+    logger_prefix = formatted_text("smarter.apps.api.utils.apply_manifest()")
+
+    logger.debug(
+        "%s apply_manifest() called with filespec=%s, manifest=%s, username=%s, verbose=%s",
+        logger_prefix,
+        filespec,
+        manifest,
+        username,
+        verbose,
+    )
+
+    if manifest:
+        logger.debug("%s Using manifest provided in manifest argument.", logger_prefix)
+        data = manifest
+    elif filespec:
+        try:
+            with open(filespec, encoding="utf-8") as file:
+                data = file.read()
+            logger.debug("%s Using manifest from file: %s", logger_prefix, filespec)
+        except FileNotFoundError as e:
+            raise SmarterValueError(f"File not found: {filespec}") from e
+    if not data:
+        raise SmarterValueError("Provide either a filespec or a manifest.")
+
+    if not isinstance(username, str) or not username.strip():
+        logger.error("%s Invalid username provided: %s", logger_prefix, username)
+        return False
+
+    try:
+        user = User.objects.get(username=username.strip())
+    except User.DoesNotExist:
+        logger.error("%s User with username '%s' does not exist.", logger_prefix, username)
+        return False
+
+    user_profile = get_cached_user_profile(user=user)
+    if not isinstance(user_profile, UserProfile):
+        logger.error("%s No UserProfile found for user '%s'.", logger_prefix, username)
+        return False
+
+    user = user_profile.user
+
+    if verbose:
+        logger.debug("%s manifest: %s", logger_prefix, data)
+
+    # ----------------------------------------------------------------------
+    # PLAN B
+    # ----------------------------------------------------------------------
+    loader = SAMLoader(manifest=data)
+    factory = RequestFactory()
+    fake_request = factory.post("/fake-url/", data=loader.manifest, content_type="application/json")
+    fake_request.user = user_profile.user
+
+    if not isinstance(loader.kind, str):
+        return False
+    BrokerClass = Brokers.get_broker(loader.kind)
+    if BrokerClass is None or not issubclass(BrokerClass, AbstractBroker):
+        return False
+
+    broker = BrokerClass(request=fake_request, loader=loader, user_profile=user_profile)
+    response_content = broker.apply(request=fake_request)
+
+    if response_content.status_code == 200:
+        if verbose:
+            logger.debug("%s - manifest applied successfully", logger_prefix)
+        else:
+            logger.debug("%s - manifest applied successfully", logger_prefix)
+    else:
+        logger.error("%s - manifest: %s", logger_prefix, data)
+        logger.error("%s - response: %s", logger_prefix, response_content.content)
+        msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {data}\nresponse: {response_content.content}"
+        raise Exception(msg)
+
+    if isinstance(response_content, (str, bytearray, bytes)):
+        try:
+            response_json = json.loads(response_content)
+        except json.JSONDecodeError:
+            response_json = {"error": "unable to decode response content", "raw": response_content}
+    else:
+        response_json = {"error": "unable to decode response content"}
+
+    response = json.dumps(response_json) + "\n"
+    if verbose:
+        if response_content.status_code == 200:
+            logger.debug("%s %s", logger_prefix, formatted_text_green(response))
+            return True
+
+        msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {data}\nresponse: {response}"
         raise APIV1CLIViewError(msg)
     return True
