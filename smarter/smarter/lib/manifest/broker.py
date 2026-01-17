@@ -24,7 +24,6 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
-from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.mixins import SmarterConverterMixin
 from smarter.lib.django.model_helpers import TimestampedModel
