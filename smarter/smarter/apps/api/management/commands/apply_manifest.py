@@ -23,7 +23,7 @@ from smarter.lib.drf.models import SmarterAuthToken
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(f"{__name__}.apply_manifest")
+logger_prefix = formatted_text(f"{__name__}")
 
 
 class Command(SmarterCommand):
@@ -77,13 +77,13 @@ class Command(SmarterCommand):
 
         if self._data is None:
             if self.manifest:
-                self.stdout.write("Using manifest provided on command line.")
+                logger.debug("%s - using manifest provided on command line.", logger_prefix)
                 self._data = self.manifest
             elif self.filespec:
                 try:
                     with open(self.filespec, encoding="utf-8") as file:
                         self._data = file.read()
-                    self.stdout.write(f"Using manifest from file: {self.filespec}")
+                    logger.debug("%s - using manifest from file: %s", logger_prefix, self.filespec)
                 except FileNotFoundError as e:
                     raise SmarterValueError(f"File not found: {self.filespec}") from e
             if not self._data:
@@ -172,14 +172,13 @@ class Command(SmarterCommand):
         url = urljoin(smarter_settings.environment_url, path)
         headers = {"Authorization": f"Token {token_key}", "Content-Type": "application/json"}
 
-        msg = f"manage.py apply_manifest - Applying manifest (verbose={verbose}) url={url} as user={user_profile} headers={headers}  data={self.data}"
-        self.stdout.write(self.style.NOTICE(msg))
+        msg = f"{logger_prefix} applying manifest (verbose={verbose}) url={url} as user={user_profile} headers={headers}  data={self.data}"
         logger.debug("%s - %s", logger_prefix, msg)
         if verbose:
-            self.stdout.write(self.style.NOTICE(f"manifest: {self.data}"))
-            self.stdout.write(self.style.NOTICE(f"headers: {headers}"))
+            logger.debug("%s manifest: %s", logger_prefix, self.data)
+            logger.debug("%s headers: %s", logger_prefix, headers)
 
-        self.stdout.write(self.style.NOTICE("Applying manifest ..."))
+        logger.debug("%s - applying manifest", logger_prefix)
         httpx_response = httpx.post(url, content=self.data, headers=headers)
         token_record.delete()
 
@@ -195,17 +194,16 @@ class Command(SmarterCommand):
 
         response = json.dumps(response_json) + "\n"
         if httpx_response.status_code == httpx.codes.OK:
-            self.stdout.write(self.style.SUCCESS("manifest applied."))
-            logger.debug("%s - manifest applied successfully", logger_prefix)
             if verbose:
-                self.stdout.write(self.style.SUCCESS(response))
                 logger.debug("%s - manifest apply response: %s", logger_prefix, response)
+            else:
+                logger.debug("%s - manifest applied successfully", logger_prefix)
         else:
             self.handle_completed_failure(
                 msg=f"Manifest apply to {url} failed with status code: {httpx_response.status_code}"
             )
-            self.stderr.write(self.style.ERROR(f"manifest: {self.data}"))
-            self.stderr.write(self.style.ERROR(f"response: {response}"))
+            logger.error("%s - manifest: %s", logger_prefix, self.data)
+            logger.error("%s - response: %s", logger_prefix, response)
             msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {self.data}\nresponse: {response}"
             raise CommandError(msg)
 

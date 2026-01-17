@@ -5,7 +5,7 @@ Command to create the Stackademy AI resources.
 import io
 import logging
 
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 
 from smarter.apps.account.utils import (
     get_cached_account,
@@ -16,7 +16,7 @@ from smarter.lib.django.management.base import SmarterCommand
 
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text(f"{__name__}.create_stackademy")
+logger_prefix = formatted_text(f"{__name__}")
 
 
 class Command(SmarterCommand):
@@ -80,6 +80,11 @@ class Command(SmarterCommand):
 
         def apply(file_path):
 
+            output.truncate(0)
+            output.seek(0)
+            error_output.truncate(0)
+            error_output.seek(0)
+
             self.stdout.write(self.style.NOTICE(f"{logger_prefix} Applying manifest from file: {file_path}"))
             call_command(
                 "apply_manifest",
@@ -89,20 +94,15 @@ class Command(SmarterCommand):
                 stdout=output,
                 stderr=error_output,
             )
-            if not error_output.getvalue():
-                self.stdout.write(
-                    self.style.SUCCESS(f"{logger_prefix} Successfully applied manifest from file: {file_path}")
-                )
-                output.truncate(0)
-                output.seek(0)
-            else:
-                error_msg = error_output.getvalue()
-                self.stdout.write(
-                    self.style.ERROR(f"{logger_prefix} Error applying manifest from file: {file_path}: {error_msg}")
-                )
-                error_output.truncate(0)
-                error_output.seek(0)
-                raise Exception(f"Error applying manifest from file: {file_path}: {error_msg}")
+            # if error_output.getvalue():
+            #     self.stdout.write(
+            #         self.style.ERROR(f"{logger_prefix} Error applying manifest from file: {file_path}: {error_output.getvalue()}")
+            #     )
+            #     raise CommandError(f"Error applying manifest from file: {file_path}: {error_output.getvalue()}")
+            # else:
+            #     self.stdout.write(
+            #         self.style.SUCCESS(f"{logger_prefix} Successfully applied manifest from file: {file_path}\n{output.getvalue()}")
+            #     )
 
         try:
             self.stdout.write(self.style.NOTICE(f"{logger_prefix} Creating Stackademy Sql Chatbot..."))
