@@ -1,3 +1,9 @@
+## [0.13.89](https://github.com/smarter-sh/smarter/compare/v0.13.88...v0.13.89) (2026-01-17)
+
+### Bug Fixes
+
+* bind directly to Broker with smarter.apps.plugin.util.apply_manifest() ([e49be02](https://github.com/smarter-sh/smarter/commit/e49be02e3f4aa12d42977d2304814270d51f15c3))
+
 ## [0.13.88](https://github.com/smarter-sh/smarter/compare/v0.13.87...v0.13.88) (2026-01-17)
 
 ### Bug Fixes
