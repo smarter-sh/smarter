@@ -7,6 +7,9 @@ inputs:
   anthropic-api-key:
     description: "The Anthropic API key"
     required: true
+  cohere-api-key:
+    description: "The Cohere API key"
+    required: false
   aws-access-key-id:
     description: "The AWS access key ID"
     required: true
@@ -46,6 +49,9 @@ inputs:
   mailchimp-list-id:
     description: "The Mailchimp list ID"
     required: true
+  mistral-api-key:
+    description: "The Mistral API key"
+    required: false
   openai-api-key:
     description: "The OpenAI API key"
     required: true
@@ -169,7 +175,7 @@ runs:
       id: set-docker-image
       shell: bash
       run: |-
-        echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.91" >> $GITHUB_ENV
+        echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.92" >> $GITHUB_ENV
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
@@ -284,6 +290,7 @@ runs:
             "SMARTER_ADMIN_PASSWORD": ${{ env.SMARTER_ADMIN_PASSWORD && format('"{0}"', env.SMARTER_ADMIN_PASSWORD) || 'null' }},
             "SMARTER_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
             "SMARTER_ANTHROPIC_API_KEY": ${{ inputs.anthropic-api-key && format('"{0}"', inputs.anthropic-api-key) || 'null' }},
+            "SMARTER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
             "SMARTER_EMAIL_ADMIN": "lpm0073@gmail.com",
 
@@ -298,6 +305,7 @@ runs:
             "SMARTER_MAILCHIMP_API_KEY": ${{ inputs.mailchimp-api-key && format('"{0}"', inputs.mailchimp-api-key) || 'null' }},
             "SMARTER_MAILCHIMP_LIST_ID": ${{ inputs.mailchimp-list-id && format('"{0}"', inputs.mailchimp-list-id) || 'null' }},
             "SMARTER_MARKETING_SITE_URL": "https://smarter.sh",
+            "SMARTER_MISTRAL_API_KEY": ${{ inputs.mistral-api-key && format('"{0}"', inputs.mistral-api-key) || 'null' }},
             "SMARTER_MYSQL_DATABASE": ${{ env.SMARTER_MYSQL_DATABASE && format('"{0}"', env.SMARTER_MYSQL_DATABASE) || 'null' }},
             "SMARTER_MYSQL_HOST": ${{ env.MYSQL_HOST && format('"{0}"', env.MYSQL_HOST) || 'null' }},
             "SMARTER_MYSQL_PASSWORD": ${{ env.SMARTER_MYSQL_PASSWORD && format('"{0}"', env.SMARTER_MYSQL_PASSWORD) || 'null' }},
