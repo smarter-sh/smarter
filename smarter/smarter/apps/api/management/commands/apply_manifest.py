@@ -4,21 +4,16 @@
 import logging
 import os
 from typing import Optional
-from urllib.parse import urljoin
 
 from django.core.management import CommandError
 from django.test import RequestFactory
-from django.urls import reverse
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.api.v1.cli.brokers import Brokers
-from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.management.base import SmarterCommand
-from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.loader import SAMLoader
 
