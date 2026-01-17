@@ -1,3 +1,9 @@
+## [0.13.92](https://github.com/smarter-sh/smarter/compare/v0.13.91...v0.13.92) (2026-01-17)
+
+### Bug Fixes
+
+* refactor github loader console output. add SMARTER_AWS_EKS_CLUSTER_NAME and SMARTER_AWS_RDS_DB_INSTANCE_IDENTIFIER to ci-cd ([174ef5d](https://github.com/smarter-sh/smarter/commit/174ef5da0c5a11035d186e45d4e4aff3795635a0))
+
 ## [0.13.91](https://github.com/smarter-sh/smarter/compare/v0.13.90...v0.13.91) (2026-01-17)
 
 ### Bug Fixes
