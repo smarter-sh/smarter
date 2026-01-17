@@ -45,6 +45,9 @@ spec:
             - name: ROOT_DOMAIN
               value: "{{ .Values.env.ROOT_DOMAIN }}"
 
+            - name: AUTHENTICATION_BACKENDS
+              value: "{{ .Values.env.AUTHENTICATION_BACKENDS }}"
+
             - name: AWS_REGION
               value: "{{ .Values.env.AWS_REGION }}"
 
