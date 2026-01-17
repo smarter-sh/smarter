@@ -1,3 +1,9 @@
+## [0.13.85](https://github.com/smarter-sh/smarter/compare/v0.13.84...v0.13.85) (2026-01-17)
+
+### Bug Fixes
+
+* work on console output of manage.py apply_manifest ([a782ad7](https://github.com/smarter-sh/smarter/commit/a782ad7ebe3dd59889d9015581ced7ec52ea4c27))
+
 ## [0.13.84](https://github.com/smarter-sh/smarter/compare/v0.13.83...v0.13.84) (2026-01-17)
 
 ### Bug Fixes
