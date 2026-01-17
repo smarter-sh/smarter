@@ -285,12 +285,6 @@ class RestrictedUserAdmin(UserAdmin):
         return super().get_readonly_fields(request, obj)
 
 
-class UserProfileAdmin(RestrictedModelAdmin):
-    list_display = (
-        ("pk",) + tuple(RestrictedModelAdmin.list_display) if hasattr(RestrictedModelAdmin, "list_display") else ("pk",)
-    )
-
-
 smarter_restricted_admin_site.register(Account, AccountAdmin)
 smarter_restricted_admin_site.register(AccountContact, AccountContactAdmin)
 smarter_restricted_admin_site.register(Charge, ChargeAdmin)
@@ -298,4 +292,4 @@ smarter_restricted_admin_site.register(DailyBillingRecord, DailyBillingRecordAdm
 smarter_restricted_admin_site.register(PaymentMethod, PaymentMethodModelAdmin)
 smarter_restricted_admin_site.register(Secret, SecretAdmin)
 
-smarter_restricted_admin_site.register(UserProfile, UserProfileAdmin)
+smarter_restricted_admin_site.register(UserProfile, RestrictedModelAdmin)
