@@ -79,6 +79,7 @@ def smart_cast(value, default_value):
     return value  # str or fallback
 
 
+APPEND_SLASH = True
 ALLOWED_HOSTS = smarter_settings.allowed_hosts
 """
 A list of strings representing the host/domain names that this Django site can serve.

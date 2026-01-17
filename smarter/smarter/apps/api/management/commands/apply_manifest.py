@@ -130,6 +130,14 @@ class Command(SmarterCommand):
         username = options.get("username")
         verbose = options.get("verbose", False)
 
+        logger.debug(
+            "%s - handle called with filespec=%s, manifest=%s, username=%s",
+            logger_prefix,
+            self.filespec,
+            self.manifest,
+            username,
+        )
+
         if not isinstance(username, str) or not username.strip():
             self.handle_completed_failure(msg="No username provided.")
             return
@@ -164,7 +172,7 @@ class Command(SmarterCommand):
         url = urljoin(smarter_settings.environment_url, path)
         headers = {"Authorization": f"Token {token_key}", "Content-Type": "application/json"}
 
-        msg = f"manage.py apply_manifest - Applying manifest via api endpoint {url} as user {user.username} (verbose={verbose})"
+        msg = f"manage.py apply_manifest - Applying manifest (verbose={verbose}) url={url} as user={user_profile} headers={headers}  data={self.data}"
         self.stdout.write(self.style.NOTICE(msg))
         logger.debug("%s - %s", logger_prefix, msg)
         if verbose:

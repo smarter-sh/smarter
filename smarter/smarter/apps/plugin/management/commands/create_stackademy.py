@@ -3,6 +3,7 @@ Command to create the Stackademy AI resources.
 """
 
 import io
+import logging
 
 from django.core.management import call_command
 
@@ -10,7 +11,12 @@ from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
 )
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.management.base import SmarterCommand
+
+
+logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(f"{__name__}.create_stackademy")
 
 
 class Command(SmarterCommand):
@@ -68,40 +74,60 @@ class Command(SmarterCommand):
 
         self.stdout.write(
             self.style.NOTICE(
-                f"Setting up Stackademy AI resources for account number: {account_number}, username: {username}"
+                f"{logger_prefix} Setting up Stackademy AI resources for account number: {account_number}, username: {username}"
             )
         )
 
         def apply(file_path):
 
-            call_command("apply_manifest", filespec=file_path, username=username, stdout=output, stderr=error_output)
-            if error_output.getvalue():
-                print(f"Command completed with warnings: {error_output.getvalue()}")
+            self.stdout.write(self.style.NOTICE(f"{logger_prefix} Applying manifest from file: {file_path}"))
+            call_command(
+                "apply_manifest",
+                filespec=file_path,
+                username=username,
+                verbose=True,
+                stdout=output,
+                stderr=error_output,
+            )
+            if not error_output.getvalue():
+                self.stdout.write(
+                    self.style.SUCCESS(f"{logger_prefix} Successfully applied manifest from file: {file_path}")
+                )
+                output.truncate(0)
+                output.seek(0)
             else:
-                print(f"Applied manifest {file_path}. output: {output.getvalue()}")
+                error_msg = error_output.getvalue()
+                self.stdout.write(
+                    self.style.ERROR(f"{logger_prefix} Error applying manifest from file: {file_path}: {error_msg}")
+                )
+                error_output.truncate(0)
+                error_output.seek(0)
+                raise Exception(f"Error applying manifest from file: {file_path}: {error_msg}")
 
         try:
-            file_paths = [
+            self.stdout.write(self.style.NOTICE(f"{logger_prefix} Creating Stackademy Sql Chatbot..."))
+            sql_file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml",
                 "smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml",
             ]
-            for file_path in file_paths:
+            for file_path in sql_file_paths:
                 apply(file_path)
 
-            self.stdout.write(self.style.SUCCESS("Successfully created Stackademy SqlPlugin."))
+            self.stdout.write(self.style.SUCCESS(f"{logger_prefix} Successfully created Stackademy Sql Chatbot."))
 
-            file_paths = [
+            self.stdout.write(self.style.NOTICE(f"{logger_prefix} Creating Stackademy Api Chatbot..."))
+            api_file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-api.yaml",
                 "smarter/apps/plugin/data/sample-connections/smarter-test-api.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-plugin-api.yaml",
                 "smarter/apps/plugin/data/stackademy/stackademy-chatbot-api.yaml",
             ]
-            for file_path in file_paths:
+            for file_path in api_file_paths:
                 apply(file_path)
 
-            self.stdout.write(self.style.SUCCESS("Successfully created Stackademy ApiPlugin."))
+            self.stdout.write(self.style.SUCCESS(f"{logger_prefix} Successfully created Stackademy Api Chatbot."))
 
         # pylint: disable=W0718
         except Exception as e:
