@@ -69,6 +69,7 @@ jobs:
         uses: ./.github/actions/deploy
         with:
           environment: ${{ env.ENVIRONMENT }}
+          authentication-backends: "${{ secrets.AUTHENTICATION_BACKENDS }}"
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
@@ -96,7 +97,7 @@ jobs:
           social-auth-github-secret: ${{ secrets.SOCIAL_AUTH_GITHUB_SECRET }}
           social-auth-linkedin-oauth2-key: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}
           social-auth-linkedin-oauth2-secret: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}
-          together-ai-api-key: ${{ secrets.TOGETHER_AI_API_KEY }}
+          togetherai-api-key: ${{ secrets.TOGETHERAI_API_KEY }}
 
       - name: Send Email
         uses: ./.github/actions/send-mail
