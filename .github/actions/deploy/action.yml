@@ -88,6 +88,9 @@ inputs:
   social-auth-linkedin-oauth2-secret:
     description: "The LinkedIn OAuth2 secret"
     required: true
+  together-ai-api-key:
+    description: "The TogetherAI API key"
+    required: false
 
 runs:
   using:
@@ -329,6 +332,7 @@ runs:
             "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET": ${{ inputs.social-auth-google-oauth2-secret && format('"{0}"', inputs.social-auth-google-oauth2-secret) || 'null' }},
             "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY": ${{ inputs.social-auth-linkedin-oauth2-key && format('"{0}"', inputs.social-auth-linkedin-oauth2-key) || 'null' }},
             "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET": ${{ inputs.social-auth-linkedin-oauth2-secret && format('"{0}"', inputs.social-auth-linkedin-oauth2-secret) || 'null' }},
+            "SMARTER_TOGETHER_AI_API_KEY": ${{ inputs.together-ai-api-key && format('"{0}"', inputs.together-ai-api-key) || 'null' }},
             "SMTP_HOST": ${{ env.SMTP_HOST && format('"{0}"', env.SMTP_HOST) || 'null' }},
             "SMTP_PORT": ${{ env.SMTP_PORT && format('"{0}"', env.SMTP_PORT) || 'null' }},
             "SMTP_USE_SSL": ${{ env.SMTP_USE_SSL && format('"{0}"', env.SMTP_USE_SSL) || 'null' }},
