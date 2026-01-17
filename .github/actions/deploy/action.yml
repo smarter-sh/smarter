@@ -260,6 +260,20 @@ runs:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: smarter-django-secret-key
 
+    # set env variable for branding info
+    # TODO: map this to --- something???? --- could be Kubernetes secret, or
+    # GitHub secret, or Helm values file...? TBD.
+    - name: Set branding environment variables
+      id: set-branding-env
+      shell: bash
+      run: |-
+        echo "SMARTER_BRANDING_ADDRESS=851 Burlway Road, Suite 101, Burlingame, CA 94010" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_CONTACT_URL=https://lawrencemcdaniel.com/contact/" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_CORPORATE_NAME=Lawrence P. McDaniel, The Smarter Project" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_SUPPORT_EMAIL=support@example.com" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_SUPPORT_HOURS=MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER=+1 (617) 555-6172" >> $GITHUB_ENV
+
     # Dump all of our environment variables to the run log
     - name: Dump environment variables
       id: dump-env
@@ -300,6 +314,14 @@ runs:
             "SMARTER_ADMIN_PASSWORD": ${{ env.SMARTER_ADMIN_PASSWORD && format('"{0}"', env.SMARTER_ADMIN_PASSWORD) || 'null' }},
             "SMARTER_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
             "SMARTER_ANTHROPIC_API_KEY": ${{ inputs.anthropic-api-key && format('"{0}"', inputs.anthropic-api-key) || 'null' }},
+
+            "SMARTER_BRANDING_ADDRESS": ${ env.SMARTER_BRANDING_ADDRESS && format('"{0}"', env.SMARTER_BRANDING_ADDRESS) || 'null' },
+            "SMARTER_BRANDING_CONTACT_URL": ${ env.SMARTER_BRANDING_CONTACT_URL && format('"{0}"', env.SMARTER_BRANDING_CONTACT_URL) || 'null' },
+            "SMARTER_BRANDING_CORPORATE_NAME": ${ env.SMARTER_BRANDING_CORPORATE_NAME && format('"{0}"', env.SMARTER_BRANDING_CORPORATE_NAME) || 'null' },
+            "SMARTER_BRANDING_SUPPORT_EMAIL": ${ env.SMARTER_BRANDING_SUPPORT_EMAIL && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_EMAIL) || 'null' },
+            "SMARTER_BRANDING_SUPPORT_HOURS": ${ env.SMARTER_BRANDING_SUPPORT_HOURS && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_HOURS) || 'null' },
+            "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER": ${ env.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER) || 'null' },
+
             "SMARTER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
             "SMARTER_EMAIL_ADMIN": "lpm0073@gmail.com",
