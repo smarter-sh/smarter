@@ -326,7 +326,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             "%s.manifest property called for %s %s %s",
             self.formatted_class_name,
             self.kind,
-            self.name,
+            self._name,
             self.user_profile,
         )
 
