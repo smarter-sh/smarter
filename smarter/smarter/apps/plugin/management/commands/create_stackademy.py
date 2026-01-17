@@ -57,25 +57,26 @@ class Command(SmarterCommand):
         error_output = io.StringIO()
         account_number = options.get("account_number")
         if not account_number:
-            self.stdout.write(self.style.ERROR("account number is required."))
+            logger.error("%s - account number is required.", logger_prefix)
             self.handle_completed_failure(msg="account number is required.")
             return
         account = get_cached_account(account_number=account_number)
         if not account:
-            self.stdout.write(self.style.ERROR(f"Account with account number {account_number} does not exist."))
+            logger.error("%s - Account with account number %s does not exist.", logger_prefix, account_number)
             self.handle_completed_failure(msg=f"Account with account number {account_number} does not exist.")
             return
         admin_user = get_cached_admin_user_for_account(account)
         if not admin_user:
-            self.stdout.write(self.style.ERROR(f"No admin user found for account {account_number}."))
+            logger.error("%s - No admin user found for account %s.", logger_prefix, account_number)
             self.handle_completed_failure(msg=f"No admin user found for account {account_number}.")
             return
         username = admin_user.username
 
-        self.stdout.write(
-            self.style.NOTICE(
-                f"{logger_prefix} Setting up Stackademy AI resources for account number: {account_number}, username: {username}"
-            )
+        logger.debug(
+            "%s - Setting up Stackademy AI resources for account number: %s, username: %s",
+            logger_prefix,
+            account_number,
+            username,
         )
 
         def apply(file_path):
@@ -85,7 +86,7 @@ class Command(SmarterCommand):
             error_output.truncate(0)
             error_output.seek(0)
 
-            self.stdout.write(self.style.NOTICE(f"{logger_prefix} Applying manifest from file: {file_path}"))
+            logger.debug("%s - Applying manifest from file: %s", logger_prefix, file_path)
             call_command(
                 "apply_manifest",
                 filespec=file_path,
@@ -94,18 +95,18 @@ class Command(SmarterCommand):
                 stdout=output,
                 stderr=error_output,
             )
-            # if error_output.getvalue():
-            #     self.stdout.write(
-            #         self.style.ERROR(f"{logger_prefix} Error applying manifest from file: {file_path}: {error_output.getvalue()}")
-            #     )
-            #     raise CommandError(f"Error applying manifest from file: {file_path}: {error_output.getvalue()}")
-            # else:
-            #     self.stdout.write(
-            #         self.style.SUCCESS(f"{logger_prefix} Successfully applied manifest from file: {file_path}\n{output.getvalue()}")
-            #     )
+            if error_output.getvalue():
+                logger.error(
+                    "%s - Error applying manifest from file: %s: %s", logger_prefix, file_path, error_output.getvalue()
+                )
+                raise CommandError(f"Error applying manifest from file: {file_path}: {error_output.getvalue()}")
+            else:
+                logger.debug(
+                    "%s - Successfully applied manifest from file: %s\n%s", logger_prefix, file_path, output.getvalue()
+                )
 
         try:
-            self.stdout.write(self.style.NOTICE(f"{logger_prefix} Creating Stackademy Sql Chatbot..."))
+            logger.debug("%s - Creating Stackademy Sql Chatbot...", logger_prefix)
             sql_file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml",
                 "smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml",
@@ -115,9 +116,9 @@ class Command(SmarterCommand):
             for file_path in sql_file_paths:
                 apply(file_path)
 
-            self.stdout.write(self.style.SUCCESS(f"{logger_prefix} Successfully created Stackademy Sql Chatbot."))
+            logger.debug("%s - Successfully created Stackademy Sql Chatbot.", logger_prefix)
 
-            self.stdout.write(self.style.NOTICE(f"{logger_prefix} Creating Stackademy Api Chatbot..."))
+            logger.debug("%s - Creating Stackademy Api Chatbot...", logger_prefix)
             api_file_paths = [
                 "smarter/apps/account/data/example-manifests/secret-smarter-test-api.yaml",
                 "smarter/apps/plugin/data/sample-connections/smarter-test-api.yaml",
@@ -127,7 +128,7 @@ class Command(SmarterCommand):
             for file_path in api_file_paths:
                 apply(file_path)
 
-            self.stdout.write(self.style.SUCCESS(f"{logger_prefix} Successfully created Stackademy Api Chatbot."))
+            logger.debug("%s - Successfully created Stackademy Api Chatbot.", logger_prefix)
 
         # pylint: disable=W0718
         except Exception as e:
