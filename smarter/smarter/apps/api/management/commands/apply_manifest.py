@@ -179,8 +179,14 @@ class Command(SmarterCommand):
             logger.debug("%s headers: %s", logger_prefix, headers)
 
         logger.debug("%s - applying manifest", logger_prefix)
-        httpx_response = httpx.post(url, content=self.data, headers=headers)
-        token_record.delete()
+
+        try:
+            httpx_response = httpx.post(url, content=self.data, headers=headers)
+        except httpx.HTTPError as e:
+            self.handle_completed_failure(e, msg=f"HTTP error applying manifest to {url}: {e}")
+            return
+        finally:
+            token_record.delete()
 
         # wrap up the request
         response_content = httpx_response.content.decode("utf-8")
