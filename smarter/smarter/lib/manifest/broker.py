@@ -378,6 +378,15 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
     # Class Instance Properties
     ###########################################################################
     @property
+    def abstract_broker_logger_prefix(self) -> str:
+        """Return the logger prefix for the AbstractBroker.
+
+        :return: The logger prefix for the AbstractBroker.
+        :rtype: str
+        """
+        return f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+
+    @property
     def formatted_class_name(self) -> str:
         """Return the logger prefix for the AbstractBroker.
 

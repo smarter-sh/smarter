@@ -102,6 +102,9 @@ class SmarterValidator:
     VALID_CLEAN_STRING_WITH_SPACES = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;= %]+$"
     """Pattern for validating clean strings that may include spaces."""
 
+    VALID_EMAIL_PATTERN = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+    """Pattern for validating email addresses."""
+
     VALID_URL_ENDPOINT = r"^/[a-zA-Z0-9/_\-\{\}]+/$"  # NOTE: this allows placeholders like {id} in the url
     """Pattern for validating URL endpoints."""
 
@@ -543,14 +546,9 @@ class SmarterValidator:
 
         """
         logger.debug("%s.validate_email() %s", logger_prefix, email)
-        try:
-            # pylint: disable=import-outside-toplevel
-            from django.core.exceptions import ValidationError
-            from django.core.validators import validate_email
 
-            validate_email(email)
-        except ValidationError as e:
-            raise SmarterValueError(f"Invalid email {email}") from e
+        if not isinstance(email, str) or not re.match(SmarterValidator.VALID_EMAIL_PATTERN, email):
+            raise ValueError(f"Invalid email {email}")
         return email
 
     @staticmethod

@@ -16,6 +16,6 @@ Plugin & Connection Reference
     :language: yaml
     :caption: Example Smarter SQL Connection Manifest
 
-.. literalinclude:: ../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-sql.yaml
+.. literalinclude:: ../../../../smarter/smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml
     :language: yaml
     :caption: Example SQL Plugin Manifest

@@ -82,7 +82,7 @@ class SmarterCommand(BaseCommand):
         super().__init__(*args, **kwargs)
 
     def handle_begin(self):
-        logger.debug("-" * 35 + " manage.py " + "-" * 34)
+        logger.debug("%s manage.py %s", "-" * 35, "-" * 34)
         logger.debug("%s started.", self.__module__)
         logger.debug("-" * 80)
 

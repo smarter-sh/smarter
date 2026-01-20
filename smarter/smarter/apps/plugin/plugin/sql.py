@@ -21,11 +21,11 @@ A PLugin that uses a remote SQL database server to retrieve its return data
     :language: yaml
     :caption: 2.) Example Smarter SQL Connection Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-sql.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-plugin-api.yaml
     :language: yaml
     :caption: 3.) Example Stackademy SQL Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-plugin-sql.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-api.yaml
     :language: yaml
     :caption: 4.) Example Stackademy Chatbot Manifest
 

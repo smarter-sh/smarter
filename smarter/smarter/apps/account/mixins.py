@@ -34,7 +34,7 @@ from .utils import (
 )
 
 
-UserType = Union["AnonymousUser", User, None]
+UserType = Union[AnonymousUser, User, None]
 AccountNumberType = Optional[str]
 ApiTokenType = Optional[bytes]
 

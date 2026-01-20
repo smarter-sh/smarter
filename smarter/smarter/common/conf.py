@@ -214,6 +214,10 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         return val
 
     retval = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
+    # Strip surrounding quotes if present
+    retval = str(retval).strip() if retval is not None else None
+    # Strip surrounding quotes if present
+    retval = str(retval).strip('"').strip("'") if retval is not None else None
     if retval is None and is_required:
         msg = (
             f"{formatted_text(__name__ + ".get_env()")} [WARNING] Required environment variable {var_name} is missing."
@@ -1361,16 +1365,6 @@ class Settings(BaseSettings):
         """
         if v is None or v == "":
             return SettingsDefaults.BRANDING_CONTACT_URL
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except Exception as e:
-                raise SmarterConfigurationError(f"branding_contact_url {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"branding_contact_url {v} is not a HttpUrl.")
-
         return v
 
     branding_support_hours: str = Field(
@@ -1433,16 +1427,6 @@ class Settings(BaseSettings):
         """
         if v is None or v == "":
             return SettingsDefaults.BRANDING_URL_FACEBOOK
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except Exception as e:
-                raise SmarterConfigurationError(f"branding_url_facebook {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"branding_url_facebook {v} is not a HttpUrl.")
-
         return v
 
     branding_url_twitter: Optional[HttpUrl] = Field(
@@ -1471,16 +1455,6 @@ class Settings(BaseSettings):
         """
         if v is None or v == "":
             return SettingsDefaults.BRANDING_URL_TWITTER
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except Exception as e:
-                raise SmarterConfigurationError(f"branding_url_twitter {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"branding_url_twitter {v} is not a HttpUrl.")
-
         return v
 
     branding_url_linkedin: Optional[HttpUrl] = Field(
@@ -1509,16 +1483,6 @@ class Settings(BaseSettings):
         """
         if v is None or v == "":
             return SettingsDefaults.BRANDING_URL_LINKEDIN
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except Exception as e:
-                raise SmarterConfigurationError(f"branding_url_linkedin {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"branding_url_linkedin {v} is not a HttpUrl.")
-
         return v
 
     cache_expiration: int = Field(
@@ -2748,16 +2712,6 @@ class Settings(BaseSettings):
         """
         if v is None:
             return SettingsDefaults.LOGO
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except ValidationError as e:
-                raise SmarterConfigurationError(f"logo {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"logo {v} is not a HttpUrl.")
-        SmarterValidator.validate_url(str(v))
         return v
 
     mailchimp_api_key: Optional[SecretStr] = Field(
@@ -2851,16 +2805,6 @@ class Settings(BaseSettings):
         """
         if str(v) in [None, ""] and SettingsDefaults.MARKETING_SITE_URL is not None:
             return SettingsDefaults.MARKETING_SITE_URL
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except ValidationError as e:
-                raise SmarterConfigurationError(f"marketing_site_url {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"marketing_site_url {v} is not a HttpUrl.")
-        SmarterValidator.validate_url(str(v))
         return v
 
     openai_api_organization: Optional[str] = Field(

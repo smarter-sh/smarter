@@ -112,7 +112,7 @@ docker-build:
 
 docker-run:
 	make docker-check && \
-	docker-compose up
+	docker compose up
 
 docker-test:
 	make docker-check && \
@@ -193,6 +193,16 @@ change-log:
 	@echo "Generating changelog..."
 	npx conventional-changelog -p angular -i CHANGELOG.md -s
 
+# -------------------------------------------------------------------------
+# Sphinx Documentation
+# -------------------------------------------------------------------------
+
+sphinx-docs:
+	cd docs && make SPHINXOPTS="-W" html
+
+sphinx-linkcheck:
+	cd docs && make linkcheck
+
 ######################
 # HELP
 ######################
@@ -231,5 +241,7 @@ help:
 	@echo 'keen-server            - Start local Keen web server using gulp'
 	@echo '<************************** AWS **************************>'
 	@echo 'helm-update            - Update Helm chart dependencies'
+	@echo '<************************** AWS **************************>'
+	@echo 'sphinx-docs            - Build Sphinx documentation'
 	@echo '===================================================================='
 	@echo 'change-log             - update CHANGELOG.md file'

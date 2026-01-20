@@ -477,18 +477,17 @@ class SmarterRequestMixin(AccountMixin):
 
     @property
     def auth_header(self) -> Optional[str]:
-        """Get the Authorization header from the request.
-
-        :return: The value of the "Authorization" header if present, otherwise None.
+        """
+        Get the Authorization header from the request.
 
         Example::
 
             request_mixin = SmarterRequestMixin(request)
             print(request_mixin.auth_header)
 
-        :return: The Authorization header as a string, or None if not present.
-        request.headers.get("Authorization")
-        self._smarter_request.META.get("HTTP_AUTHORIZATION")
+        This property checks for the "Authorization" header in the request headers or in the Django META dictionary.
+
+        :return: The value of the "Authorization" header as a string, or None if not present.
         """
         return (
             self._smarter_request.headers.get("Authorization")
