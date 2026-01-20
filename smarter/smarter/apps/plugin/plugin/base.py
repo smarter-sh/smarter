@@ -470,9 +470,8 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
 
         :raises NotImplementedError: If not implemented in a subclass.
 
-        :Example:
+        Example::
 
-            ```python
             from smarter.apps.plugin.plugin.base import PluginDataBase
 
             class MyPluginData(PluginDataBase):

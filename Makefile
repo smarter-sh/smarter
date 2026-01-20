@@ -195,10 +195,15 @@ change-log:
 
 # -------------------------------------------------------------------------
 # Sphinx Documentation
+#
+# automated ci-cid build target for Sphinx documentation
+# python -m sphinx -T -b html -d _build/doctrees -D language=en . $READTHEDOCS_OUTPUT/html
+#
+# our local build target for Sphinx documentation is intended to try to match
+# what ReadTheDocs does as closely as possible.
 # -------------------------------------------------------------------------
-
 sphinx-docs:
-	cd docs && make SPHINXOPTS="-W" html
+	cd docs && make SPHINXOPTS="-W -T -D language=en" html
 
 sphinx-linkcheck:
 	cd docs && make linkcheck

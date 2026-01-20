@@ -584,12 +584,13 @@ class ChatProviderBase(ProviderDbMixin):
         :type content: Optional[Union[dict[str, Any], list, str]]
 
         :param message: An optional message dictionary to append. If provided,
-        it will be used instead of creating a new message.
+            it will be used instead of creating a new message.
 
         :raises SmarterValueError: If the role is invalid or if both content and message are empty.
 
         :returns: None
         :rtype: None
+
         """
         if role not in OpenAIMessageKeys.all_roles:
             raise SmarterValueError(
