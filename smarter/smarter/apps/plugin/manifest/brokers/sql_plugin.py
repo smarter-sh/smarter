@@ -516,44 +516,44 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         This method constructs a `SqlData` Pydantic model using the data associated with the current
         `plugin_meta`. It retrieves the data using the ORM-to-Pydantic conversion method.
 
-        parameters: an OpenAI Api compliant dictionary of parameters to pass to the API call.
-            {
-                'type': 'object',
-                'required': ['username'],
-                'properties': {
-                    'unit': {
-                        'enum': ['Celsius', 'Fahrenheit'],
-                        'type': 'string',
-                        'default': 'Celsius',
-                        'description': 'The temperature unit to use.'
+        Parameters:
+            parameters (dict): An OpenAI API-compliant dictionary of parameters to pass to the API call, e.g.::
+
+                {
+                    'type': 'object',
+                    'required': ['username'],
+                    'properties': {
+                        'unit': {
+                            'enum': ['Celsius', 'Fahrenheit'],
+                            'type': 'string',
+                            'default': 'Celsius',
+                            'description': 'The temperature unit to use.'
+                        },
+                        'username': {
+                            'type': 'string',
+                            'default': 'admin',
+                            'description': 'The username to query.'
+                        }
                     },
-                    'username': {
-                        'type': 'string',
-                        'default': 'admin',
-                        'description': 'The username to query.'
-                    }
-                },
-                'additionalProperties': False
-            }
+                    'additionalProperties': False
+                }
 
-        :return: The plugin data as a Pydantic model.
-        :rtype: SqlData
+        Returns:
+            SqlData: The plugin data as a Pydantic model.
 
-        **Example:**
+        Example:
 
-        .. code-block:: python
+            .. code-block:: python
 
-            broker = SAMSqlPluginBroker()
-            sql_data = broker.plugin_data_orm2pydantic()
-            print(sql_data.model_dump_json())
+                broker = SAMSqlPluginBroker()
+                sql_data = broker.plugin_data_orm2pydantic()
+                print(sql_data.model_dump_json())
 
-        :raises SAMPluginBrokerError:
-            If there is an error retrieving or converting the plugin data.
+        Raises:
+            SAMPluginBrokerError: If there is an error retrieving or converting the plugin data.
 
-
-        .. seealso::
-
-            - `SqlData`
+        See Also:
+            - SqlData
         """
         if not self.plugin_meta:
             return None

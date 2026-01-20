@@ -8,9 +8,11 @@ Plugin & Connection Reference
 
    connection/sql
    connection/api
+   plugin/base
    plugin/static
    plugin/sql
    plugin/api
+   plugin/utils
 
 .. literalinclude:: ../../../../smarter/smarter/apps/plugin/data/sample-connections/smarter-test-db.yaml
     :language: yaml
