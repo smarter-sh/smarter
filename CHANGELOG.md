@@ -1,3 +1,9 @@
+## [0.13.94](https://github.com/smarter-sh/smarter/compare/v0.13.93...v0.13.94) (2026-01-20)
+
+### Bug Fixes
+
+* remaining Sphinx linter errors in docstrings ([925f440](https://github.com/smarter-sh/smarter/commit/925f440d768b295f34ff906b4b16891b8fe9ca99))
+
 ## [0.13.93](https://github.com/smarter-sh/smarter/compare/v0.13.92...v0.13.93) (2026-01-20)
 
 ### Bug Fixes
