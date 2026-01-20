@@ -22,6 +22,8 @@ class SAMDataFormats(SmarterEnumAbstract):
     """
     Data format enumeration.
 
+    .. :no-index:
+
     Used to specify the format of data being handled, such as JSON or YAML.
 
     attributes:
@@ -40,6 +42,8 @@ class SAMSpecificationKeyOptions(SmarterEnumAbstract):
     Key types enumeration.
     Used to specify whether a key in the specification is required, optional, or read-only.
 
+    .. :no-index:
+
     attributes:
         REQUIRED: Indicates that the key is mandatory.
         OPTIONAL: Indicates that the key is optional.
@@ -54,6 +58,8 @@ class SAMSpecificationKeyOptions(SmarterEnumAbstract):
 class SAMKeys(SmarterEnumAbstract):
     """
     Smarter API required keys enumeration.
+
+    .. :no-index:
 
     attributes:
         APIVERSION: The API version key.
@@ -73,6 +79,8 @@ class SAMKeys(SmarterEnumAbstract):
 class SAMMetadataKeys(SmarterEnumAbstract):
     """
     Smarter API Plugin Metadata keys enumeration.
+
+    .. :no-index:
 
     attributes:
         ACCOUNT: The account key.
@@ -100,6 +108,8 @@ class SCLIResponseGet(SmarterEnumAbstract):
     """
     CLI get response enumeration.
 
+    .. :no-index:
+
     attributes:
         KWARGS: The kwargs key.
         DATA: The data key.
@@ -111,7 +121,10 @@ class SCLIResponseGet(SmarterEnumAbstract):
 
 class SCLIResponseGetData(SmarterEnumAbstract):
     """
+
     CLI get response data enumeration.
+
+    .. :no-index:
 
     attributes:
         TITLES: The titles key.

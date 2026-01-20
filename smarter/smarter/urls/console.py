@@ -135,7 +135,10 @@ urlpatterns = [
     # -----------------------------------
     path("documents/", include(wagtaildocs_urls)),
     re_path(r"^wagtail-transfer/", include(wagtailtransfer_urls)),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + list(static(settings.STATIC_URL, document_root=settings.STATIC_ROOT))
+
+# mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
+# Sphinx doc build error: 'TypeError: can only concatenate list (not "static") to list
 
 if smarter_settings.environment != SmarterEnvironments.LOCAL:
     # only serve media files when not running locally in debug mode

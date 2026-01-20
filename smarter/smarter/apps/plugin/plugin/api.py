@@ -24,7 +24,7 @@ A Plugin that uses a REST API to retrieve its return data
     :language: yaml
     :caption: 3.) Example Stackademy API Plugin Manifest
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-plugin-api.yaml
+.. literalinclude:: ../../../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-api.yaml
     :language: yaml
     :caption: 4.) Example Stackademy Chatbot Manifest
 

@@ -46,7 +46,7 @@ Usage
 Example Manifest
 ----------------
 
-.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-sql.yaml
+.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml
    :language: yaml
    :caption: Example Smarter Manifest
 

@@ -16,12 +16,26 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 SMARTER_ROOT = os.path.abspath(os.path.join(HERE, "../../smarter"))
 sys.path.insert(0, SMARTER_ROOT)
 
+###############################################################################
+# Smarter setup
+###############################################################################
 from smarter.__version__ import __version__  # noqa: F401
 from smarter.common.conf import smarter_settings
 
 
 if not smarter_settings.environment:
     raise RuntimeError("The 'smarter_settings.environment' variable is not set.")
+
+###############################################################################
+# Django setup
+###############################################################################
+os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.local"
+
+import django
+
+
+django.setup()
+
 
 project = "Smarter Documentation"
 
@@ -83,14 +97,15 @@ html_static_path = ["_static"]
 html_css_files = [
     "custom.css",
 ]
-
-
-###############################################################################
-# Django setup
-###############################################################################
-os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
-
-import django
-
-
-django.setup()
+# autodoc_mock_imports = ["taggit", "smarter.common.exceptions", "smarter.lib.django.validators", "smarter.lib.json"]
+autodoc_mock_imports = [
+    "taggit",
+    "cryptography.fernet",
+    "django.conf",
+    "django.contrib.auth.models",
+    "django.core.validators",
+    "django.core.handlers.wsgi",
+    "django.db",
+    "django.template.loader",
+    "django.utils",
+]

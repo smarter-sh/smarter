@@ -129,7 +129,7 @@ env:
   SMARTER_CONFIGURE_BETA_ACCOUNT: "True"
   SMARTER_CONFIGURE_UBC_ACCOUNT: "True"
   SMARTER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_EMAIL_ADMIN: admin@example.com
+  SMARTER_EMAIL_ADMIN: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_FIREWORKS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_GEMINI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"

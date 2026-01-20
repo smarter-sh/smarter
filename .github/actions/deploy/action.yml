@@ -273,6 +273,7 @@ runs:
         echo "SMARTER_BRANDING_SUPPORT_EMAIL=support@example.com" >> $GITHUB_ENV
         echo "SMARTER_BRANDING_SUPPORT_HOURS=MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)" >> $GITHUB_ENV
         echo "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER=+1 (617) 555-6172" >> $GITHUB_ENV
+        echo "SMARTER_EMAIL_ADMIN=lpm0073@gmail.com" >> $GITHUB_ENV
 
     # Dump all of our environment variables to the run log
     - name: Dump environment variables
@@ -322,7 +323,7 @@ runs:
             "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER": ${{ env.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER) || 'null' }},
             "SMARTER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
-            "SMARTER_EMAIL_ADMIN": "lpm0073@gmail.com",
+            "SMARTER_EMAIL_ADMIN": ${{ env.SMARTER_EMAIL_ADMIN && format('"{0}"', env.SMARTER_EMAIL_ADMIN) || 'null' }},
             "SMARTER_FERNET_ENCRYPTION_KEY": $(jq -Rn --arg v "${{ inputs.fernet-encryption-key }}" '$v'),
             "SMARTER_FIREWORKS_API_KEY": ${{ inputs.fireworks-api-key && format('"{0}"', inputs.fireworks-api-key) || 'null' }},
             "SMARTER_GEMINI_API_KEY": ${{ inputs.gemini-api-key && format('"{0}"', inputs.gemini-api-key) || 'null' }},
