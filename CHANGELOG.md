@@ -1,152 +1,158 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
 ## [0.13.94](https://github.com/smarter-sh/smarter/compare/v0.13.93...v0.13.94) (2026-01-20)
 
 ### Bug Fixes
 
-* remaining Sphinx linter errors in docstrings ([925f440](https://github.com/smarter-sh/smarter/commit/925f440d768b295f34ff906b4b16891b8fe9ca99))
+- remaining Sphinx linter errors in docstrings ([925f440](https://github.com/smarter-sh/smarter/commit/925f440d768b295f34ff906b4b16891b8fe9ca99))
 
 ## [0.13.93](https://github.com/smarter-sh/smarter/compare/v0.13.92...v0.13.93) (2026-01-20)
 
 ### Bug Fixes
 
-* Sphinx doc header cleanup ([02a2ec9](https://github.com/smarter-sh/smarter/commit/02a2ec91cdfdfb35cf22de702d6f8f3bdc700e11))
+- Sphinx doc header cleanup ([02a2ec9](https://github.com/smarter-sh/smarter/commit/02a2ec91cdfdfb35cf22de702d6f8f3bdc700e11))
 
 ## [0.13.92](https://github.com/smarter-sh/smarter/compare/v0.13.91...v0.13.92) (2026-01-17)
 
 ### Bug Fixes
 
-* refactor github loader console output. add SMARTER_AWS_EKS_CLUSTER_NAME and SMARTER_AWS_RDS_DB_INSTANCE_IDENTIFIER to ci-cd ([174ef5d](https://github.com/smarter-sh/smarter/commit/174ef5da0c5a11035d186e45d4e4aff3795635a0))
+- refactor github loader console output. add SMARTER_AWS_EKS_CLUSTER_NAME and SMARTER_AWS_RDS_DB_INSTANCE_IDENTIFIER to ci-cd ([174ef5d](https://github.com/smarter-sh/smarter/commit/174ef5da0c5a11035d186e45d4e4aff3795635a0))
 
 ## [0.13.91](https://github.com/smarter-sh/smarter/compare/v0.13.90...v0.13.91) (2026-01-17)
 
 ### Bug Fixes
 
-* add configuration variables to control beta and ubc accounts in ci-cd ([2160be6](https://github.com/smarter-sh/smarter/commit/2160be6148d9fbf1890e6dfe4b2ca22a3b399e87))
+- add configuration variables to control beta and ubc accounts in ci-cd ([2160be6](https://github.com/smarter-sh/smarter/commit/2160be6148d9fbf1890e6dfe4b2ca22a3b399e87))
 
 ## [0.13.90](https://github.com/smarter-sh/smarter/compare/v0.13.89...v0.13.90) (2026-01-17)
 
 ### Bug Fixes
 
-* force a new release ([e6080eb](https://github.com/smarter-sh/smarter/commit/e6080eb2d0ade3b62ea84cb7a63ab1ca64d3b3b0))
+- force a new release ([e6080eb](https://github.com/smarter-sh/smarter/commit/e6080eb2d0ade3b62ea84cb7a63ab1ca64d3b3b0))
 
 ## [0.13.89](https://github.com/smarter-sh/smarter/compare/v0.13.88...v0.13.89) (2026-01-17)
 
 ### Bug Fixes
 
-* bind directly to Broker with smarter.apps.plugin.util.apply_manifest() ([e49be02](https://github.com/smarter-sh/smarter/commit/e49be02e3f4aa12d42977d2304814270d51f15c3))
+- bind directly to Broker with smarter.apps.plugin.util.apply_manifest() ([e49be02](https://github.com/smarter-sh/smarter/commit/e49be02e3f4aa12d42977d2304814270d51f15c3))
 
 ## [0.13.88](https://github.com/smarter-sh/smarter/compare/v0.13.87...v0.13.88) (2026-01-17)
 
 ### Bug Fixes
 
-* refactor apply_manifest to directly instantiate the Broker ([3acd43a](https://github.com/smarter-sh/smarter/commit/3acd43a6b7ad284f01602cbd7a6069a66e784a66))
+- refactor apply_manifest to directly instantiate the Broker ([3acd43a](https://github.com/smarter-sh/smarter/commit/3acd43a6b7ad284f01602cbd7a6069a66e784a66))
 
 ## [0.13.87](https://github.com/smarter-sh/smarter/compare/v0.13.86...v0.13.87) (2026-01-17)
 
 ### Bug Fixes
 
-* refactor write() to logger.debug() ([bd0079f](https://github.com/smarter-sh/smarter/commit/bd0079fc77e4bfcb27bd5b24716c9d27ead131c0))
+- refactor write() to logger.debug() ([bd0079f](https://github.com/smarter-sh/smarter/commit/bd0079fc77e4bfcb27bd5b24716c9d27ead131c0))
 
 ## [0.13.86](https://github.com/smarter-sh/smarter/compare/v0.13.85...v0.13.86) (2026-01-17)
 
 ### Bug Fixes
 
-* refactor all console write() to logger.debug() ([f874ee7](https://github.com/smarter-sh/smarter/commit/f874ee7bde41501eba2a9ccd82f3eed85b7488b8))
+- refactor all console write() to logger.debug() ([f874ee7](https://github.com/smarter-sh/smarter/commit/f874ee7bde41501eba2a9ccd82f3eed85b7488b8))
 
 ## [0.13.85](https://github.com/smarter-sh/smarter/compare/v0.13.84...v0.13.85) (2026-01-17)
 
 ### Bug Fixes
 
-* work on console output of manage.py apply_manifest ([a782ad7](https://github.com/smarter-sh/smarter/commit/a782ad7ebe3dd59889d9015581ced7ec52ea4c27))
+- work on console output of manage.py apply_manifest ([a782ad7](https://github.com/smarter-sh/smarter/commit/a782ad7ebe3dd59889d9015581ced7ec52ea4c27))
 
 ## [0.13.84](https://github.com/smarter-sh/smarter/compare/v0.13.83...v0.13.84) (2026-01-17)
 
 ### Bug Fixes
 
-* don't bother caching Secret ([2a90e4c](https://github.com/smarter-sh/smarter/commit/2a90e4c93abf4db45ce21ba2959f6f77f0b9748c))
+- don't bother caching Secret ([2a90e4c](https://github.com/smarter-sh/smarter/commit/2a90e4c93abf4db45ce21ba2959f6f77f0b9748c))
 
 ## [0.13.83](https://github.com/smarter-sh/smarter/compare/v0.13.82...v0.13.83) (2026-01-16)
 
 ### Bug Fixes
 
-* force a new release ([ea60774](https://github.com/smarter-sh/smarter/commit/ea607744ea317408700f906d06cc01a5120ea3cc))
+- force a new release ([ea60774](https://github.com/smarter-sh/smarter/commit/ea607744ea317408700f906d06cc01a5120ea3cc))
 
 ## [0.13.82](https://github.com/smarter-sh/smarter/compare/v0.13.81...v0.13.82) (2026-01-16)
 
 ### Bug Fixes
 
-* add logger.debug() to plugin broker classes ([6d553ec](https://github.com/smarter-sh/smarter/commit/6d553ecf1f3451e097893939aa269892be8bbfd2))
+- add logger.debug() to plugin broker classes ([6d553ec](https://github.com/smarter-sh/smarter/commit/6d553ecf1f3451e097893939aa269892be8bbfd2))
 
 ## [0.13.81](https://github.com/smarter-sh/smarter/compare/v0.13.80...v0.13.81) (2026-01-16)
 
 ### Bug Fixes
 
-* skip clearing the cache ([c128328](https://github.com/smarter-sh/smarter/commit/c128328ab16638fc36706163b35a6c83b780b47a))
+- skip clearing the cache ([c128328](https://github.com/smarter-sh/smarter/commit/c128328ab16638fc36706163b35a6c83b780b47a))
 
 ## [0.13.80](https://github.com/smarter-sh/smarter/compare/v0.13.79...v0.13.80) (2026-01-16)
 
 ### Bug Fixes
 
-* pass k9s admin credentials to manage.py initialize_platform ([a21a3f6](https://github.com/smarter-sh/smarter/commit/a21a3f69ace6664542e74275375770a68ebbfa32))
+- pass k9s admin credentials to manage.py initialize_platform ([a21a3f6](https://github.com/smarter-sh/smarter/commit/a21a3f69ace6664542e74275375770a68ebbfa32))
 
 ## [0.13.79](https://github.com/smarter-sh/smarter/compare/v0.13.78...v0.13.79) (2026-01-16)
 
 ### Bug Fixes
 
-* refactor new user creation ([e6a0f47](https://github.com/smarter-sh/smarter/commit/e6a0f47e6e363d89362bf956499abc8b4beec089))
+- refactor new user creation ([e6a0f47](https://github.com/smarter-sh/smarter/commit/e6a0f47e6e363d89362bf956499abc8b4beec089))
 
 ## [0.13.78](https://github.com/smarter-sh/smarter/compare/v0.13.77...v0.13.78) (2026-01-16)
 
 ### Bug Fixes
 
-* work on add_example_plugins() for new accounts ([91811cc](https://github.com/smarter-sh/smarter/commit/91811cc528822a10b07d5a68e3ae2d6c80066c7f))
+- work on add_example_plugins() for new accounts ([91811cc](https://github.com/smarter-sh/smarter/commit/91811cc528822a10b07d5a68e3ae2d6c80066c7f))
 
 ## [0.13.77](https://github.com/smarter-sh/smarter/compare/v0.13.76...v0.13.77) (2026-01-16)
 
 ### Bug Fixes
 
-* do not rely on cache when setting SecretTransformer.id ([f1a915d](https://github.com/smarter-sh/smarter/commit/f1a915d7318a137f3589f88fa2e313be583bda38))
+- do not rely on cache when setting SecretTransformer.id ([f1a915d](https://github.com/smarter-sh/smarter/commit/f1a915d7318a137f3589f88fa2e313be583bda38))
 
 ## [0.13.76](https://github.com/smarter-sh/smarter/compare/v0.13.75...v0.13.76) (2026-01-16)
 
 ### Bug Fixes
 
-* refactor account initialization. create manage.py initialize_account ([ea8381a](https://github.com/smarter-sh/smarter/commit/ea8381a82bafd5ddb2b4da79936c32e7f1e46c24))
+- refactor account initialization. create manage.py initialize_account ([ea8381a](https://github.com/smarter-sh/smarter/commit/ea8381a82bafd5ddb2b4da79936c32e7f1e46c24))
 
 ## [0.13.75](https://github.com/smarter-sh/smarter/compare/v0.13.74...v0.13.75) (2026-01-16)
 
 ### Bug Fixes
 
-* refactor manage.py commands for platform initialization ([f5f318c](https://github.com/smarter-sh/smarter/commit/f5f318c13e4c4a747547a49d663349ad8caf9a5c))
+- refactor manage.py commands for platform initialization ([f5f318c](https://github.com/smarter-sh/smarter/commit/f5f318c13e4c4a747547a49d663349ad8caf9a5c))
 
 ## [0.13.74](https://github.com/smarter-sh/smarter/compare/v0.13.73...v0.13.74) (2026-01-16)
 
 ### Bug Fixes
 
-* version bump ([f9b44c4](https://github.com/smarter-sh/smarter/commit/f9b44c4664c0d985febe9bfd3241b1fc592e583a))
+- version bump ([f9b44c4](https://github.com/smarter-sh/smarter/commit/f9b44c4664c0d985febe9bfd3241b1fc592e583a))
 
 ## [0.13.73](https://github.com/smarter-sh/smarter/compare/v0.13.72...v0.13.73) (2026-01-16)
 
 ### Bug Fixes
 
-* calls to Django ORM objects in middleware have to be wrapped in try blocks for fresh installs ([5f05bc7](https://github.com/smarter-sh/smarter/commit/5f05bc775891f1e04ab7e91c11b575554ca603b2))
+- calls to Django ORM objects in middleware have to be wrapped in try blocks for fresh installs ([5f05bc7](https://github.com/smarter-sh/smarter/commit/5f05bc775891f1e04ab7e91c11b575554ca603b2))
 
 ## [0.13.72](https://github.com/smarter-sh/smarter/compare/v0.13.71...v0.13.72) (2026-01-15)
 
 ### Bug Fixes
 
-* rebrand to The Smarter Project ([9aa740f](https://github.com/smarter-sh/smarter/commit/9aa740f35e41847021103d95d341a5ed9f690b59))
+- rebrand to The Smarter Project ([9aa740f](https://github.com/smarter-sh/smarter/commit/9aa740f35e41847021103d95d341a5ed9f690b59))
 
 ## [0.13.71](https://github.com/smarter-sh/smarter/compare/v0.13.70...v0.13.71) (2026-01-15)
 
 ### Bug Fixes
 
-* add local requirements to Dockerhub version, for smarter-deploy ([08a6363](https://github.com/smarter-sh/smarter/commit/08a63636e43e81eefea1724432d160755c48a662))
+- add local requirements to Dockerhub version, for smarter-deploy ([08a6363](https://github.com/smarter-sh/smarter/commit/08a63636e43e81eefea1724432d160755c48a662))
 
 ## [0.13.70](https://github.com/smarter-sh/smarter/compare/v0.13.69...v0.13.70) (2026-01-15)
 
 ### Bug Fixes
 
-* include the prompt json of tools presented and called ([6225fd3](https://github.com/smarter-sh/smarter/commit/6225fd36d5a7b7ce42b09a4a6352751af6372544))
+- include the prompt json of tools presented and called ([6225fd3](https://github.com/smarter-sh/smarter/commit/6225fd36d5a7b7ce42b09a4a6352751af6372544))
 
 ## [0.13.69](https://github.com/smarter-sh/smarter/compare/v0.13.68...v0.13.69) (2026-01-14)
 
@@ -207,12 +213,6 @@
 ### Bug Fixes
 
 - add leading and trailing slashes if necessary in validate_connectivity_test_path() ([c32e895](https://github.com/smarter-sh/smarter/commit/c32e89569ef6fa6ea15f3ed82d470db8cd3f2dc9))
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.13.59](https://github.com/smarter-sh/smarter/compare/v0.13.58...v0.13.59) (2026-01-12)
 
