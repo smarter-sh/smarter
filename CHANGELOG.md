@@ -1,3 +1,9 @@
+## [0.13.93](https://github.com/smarter-sh/smarter/compare/v0.13.92...v0.13.93) (2026-01-20)
+
+### Bug Fixes
+
+* Sphinx doc header cleanup ([02a2ec9](https://github.com/smarter-sh/smarter/commit/02a2ec91cdfdfb35cf22de702d6f8f3bdc700e11))
+
 ## [0.13.92](https://github.com/smarter-sh/smarter/compare/v0.13.91...v0.13.92) (2026-01-17)
 
 ### Bug Fixes
