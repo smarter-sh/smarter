@@ -5,7 +5,7 @@
 # usage: developer support packages for code syntax and type checking, testing,
 #        formatting, security, quality, vanity, debugging, build & packaging
 #
-#       pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
+#       pip-compile smarter/requirements/in/local.in --upgrade -o smarter/requirements/local.txt
 # -----------------------------------------------------------------------------
 
 -r constraints.in
@@ -42,7 +42,7 @@ pytest_mock==3.14.0
 # Code linters, formatters, and security scanners
 # ------------
 bandit==1.8.6                       # security linter
-black==25.1.0                       # code formatter
+black==26.1.0                       # code formatter
 codespell==2.4.1                    # typo checker
 coverage==7.10.5                    # test coverage
 flake8==7.3.0                       # code linter
