@@ -26,7 +26,7 @@ repos:
       - id: prettier
         exclude: "^smarter/|^helm/|^docs/source/example-manifests/"
   - repo: https://github.com/psf/black
-    rev: 26.1.0
+    rev: 25.12.0
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
@@ -95,14 +95,5 @@ ci:
   autoupdate_branch: ""
   autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
   autoupdate_schedule: weekly
-  skip:
-    [
-      terraform-fmt,
-      helmlint,
-      terraform-validate,
-      tflint,
-      shellcheck,
-      markdown-link-check,
-      commitlint,
-    ]
+  skip: [helmlint, shellcheck, markdown-link-check, commitlint]
   submodules: false

@@ -7,6 +7,7 @@ import logging
 import os
 import random
 from typing import TYPE_CHECKING, Optional, Union
+from urllib.parse import urljoin
 
 # 3rd party stuff
 from cryptography.fernet import Fernet
@@ -101,6 +102,9 @@ def welcome_email_context(first_name: str) -> dict:
         "facebook_url": smarter_settings.branding_url_facebook,
         "twitter_url": smarter_settings.branding_url_twitter,
         "linkedin_url": smarter_settings.branding_url_linkedin,
+        "login_url": urljoin(smarter_settings.environment_url, "/login/"),
+        "learn_url": urljoin(smarter_settings.environment_url, "/docs/learn/"),
+        "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/example/chat/"),
     }
 
 
