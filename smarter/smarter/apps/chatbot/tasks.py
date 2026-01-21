@@ -5,6 +5,7 @@ Celery tasks for chatbot app.
 These tasks are long-running and/or i/o intensive operations that are managed by Celery.
 They are intended to be called asynchronously from the main application.
 """
+
 import logging
 import os
 import time

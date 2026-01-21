@@ -1,5 +1,6 @@
 # pylint: disable=C0115
 """Django views"""
+
 import logging
 
 from smarter.common.conf import smarter_settings

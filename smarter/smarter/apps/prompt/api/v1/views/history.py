@@ -1,5 +1,6 @@
 # pylint: disable=W0707,W0718,C0115,W0613
 """Account views for smarter api."""
+
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 

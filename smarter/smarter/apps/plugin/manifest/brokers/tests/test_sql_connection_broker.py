@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test SAMSqlConnectionBroker."""
 
-
 import logging
 import os
 
@@ -24,7 +23,6 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.loader import SAMLoader
 
 from .base_classes.connection_base import TestSmarterConnectionBrokerBase
-
 
 logger = logging.getLogger(__name__)
 

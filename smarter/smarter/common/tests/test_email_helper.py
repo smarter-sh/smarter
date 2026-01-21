@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test STMPT Email Helper."""
 
-
 # our stuff
 from smarter.lib.unittest.base_classes import SmarterTestBase
 

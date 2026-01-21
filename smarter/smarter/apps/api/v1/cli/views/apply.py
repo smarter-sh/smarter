@@ -3,6 +3,7 @@
 Smarter API command-line interface 'apply' view
 /api/v1/cli/apply/
 """
+
 import logging
 from http import HTTPStatus
 

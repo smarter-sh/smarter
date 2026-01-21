@@ -4,6 +4,7 @@ Verification functions for the Provider model.
 This module contains functions to verify various aspects of a provider, such as API connectivity,
 logo, contact email, support email, website_url URL, terms of service URL, privacy policy URL, TOS acceptance, and production API key.
 """
+
 import logging
 
 from smarter.apps.provider.models import (

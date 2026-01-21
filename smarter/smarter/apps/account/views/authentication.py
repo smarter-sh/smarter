@@ -1,5 +1,6 @@
 # pylint: disable=W0613
 """Django Authentication views."""
+
 import logging
 import traceback
 from typing import Optional, Union
