@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.15
+aiohttp==3.13.3
     # via llamaai
 aiosignal==1.4.0
     # via aiohttp
@@ -18,17 +18,17 @@ annotated-types==0.7.0
     # via pydantic
 anyascii==0.3.3
     # via wagtail
-anyio==4.10.0
+anyio==4.12.1
     # via
     #   httpx
     #   openai
-asgiref==3.9.1
+asgiref==3.11.0
     # via
     #   django
     #   django-cors-headers
 astroid==3.3.11
     # via pylint
-attrs==25.3.0
+attrs==25.4.0
     # via
     #   aiohttp
     #   cattrs
@@ -39,33 +39,32 @@ babel==2.17.0
     # via sphinx
 bandit==1.8.6
     # via -r smarter/requirements/in/local.in
-bcrypt==4.3.0
+bcrypt==5.0.0
     # via paramiko
 beautifulsoup4==4.13.3
     # via
     #   -r smarter/requirements/in/base.in
     #   types-lxml
     #   wagtail
-billiard==4.2.1
+billiard==4.2.4
     # via celery
-black==25.1.0
+black==26.1.0
     # via -r smarter/requirements/in/local.in
-boto3==1.40.30
+boto3==1.42.31
     # via -r smarter/requirements/in/base.in
-botocore==1.40.30
+botocore==1.42.31
     # via
     #   -r smarter/requirements/in/base.in
     #   boto3
     #   s3transfer
-build==1.3.0
+build==1.4.0
     # via pip-tools
 cachetools==5.5.2
     # via
     #   -r smarter/requirements/in/base.in
     #   -r smarter/requirements/in/constraints.in
-    #   google-auth
     #   tox
-cattrs==25.2.0
+cattrs==25.3.0
     # via requests-cache
 celery==5.5.3
     # via
@@ -74,7 +73,7 @@ celery==5.5.3
     #   django-celery-beat
 celery-redbeat==2.3.3
     # via -r smarter/requirements/in/base.in
-certifi==2025.8.3
+certifi==2025.11.12
     # via
     #   -r smarter/requirements/in/constraints.in
     #   httpcore
@@ -85,17 +84,17 @@ cffi==2.0.0
     # via
     #   cryptography
     #   pynacl
-cfgv==3.4.0
+cfgv==3.5.0
     # via pre-commit
 chardet==5.2.0
     # via
     #   -r smarter/requirements/in/constraints.in
     #   tox
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via
     #   -r smarter/requirements/in/constraints.in
     #   requests
-click==8.2.1
+click==8.3.1
     # via
     #   black
     #   celery
@@ -120,10 +119,11 @@ coverage==7.10.5
     # via -r smarter/requirements/in/local.in
 cron-descriptor==2.0.6
     # via django-celery-beat
-cryptography==45.0.7
+cryptography==46.0.3
     # via
+    #   google-auth
     #   paramiko
-    #   social-auth-core
+    #   pyjwt
     #   types-paramiko
 cssselect==1.3.0
     # via types-lxml
@@ -132,7 +132,7 @@ defusedxml==0.7.1
     #   python3-openid
     #   social-auth-core
     #   willow
-dill==0.4.0
+dill==0.4.1
     # via pylint
 distlib==0.4.0
     # via virtualenv
@@ -178,7 +178,7 @@ django-filter==25.1
     #   wagtail
 django-hosts==7.0.0
     # via -r smarter/requirements/in/base.in
-django-modelcluster==6.4
+django-modelcluster==6.4.1
     # via wagtail
 django-permissionedforms==0.1
     # via wagtail
@@ -192,7 +192,7 @@ django-stubs==5.2.2
     # via
     #   -r smarter/requirements/in/local.in
     #   djangorestframework-stubs
-django-stubs-ext==5.2.5
+django-stubs-ext==5.2.9
     # via
     #   django-stubs
     #   django-tasks
@@ -202,9 +202,9 @@ django-taggit==6.1.0
     #   wagtail
 django-tasks==0.8.1
     # via wagtail
-django-timezone-field==7.1
+django-timezone-field==7.2.1
     # via django-celery-beat
-django-treebeard==4.7.1
+django-treebeard==4.8.0
     # via wagtail
 django-waffle==5.0.0
     # via -r smarter/requirements/in/base.in
@@ -225,7 +225,7 @@ docutils==0.21.2
     #   -r smarter/requirements/in/base.in
     #   sphinx
     #   sphinx-rtd-theme
-draftjs-exporter==5.1.0
+draftjs-exporter==5.2.0
     # via wagtail
 drf-yasg==1.21.10
     # via -r smarter/requirements/in/base.in
@@ -233,7 +233,7 @@ email-validator==2.3.0
     # via -r smarter/requirements/in/base.in
 et-xmlfile==2.0.0
     # via openpyxl
-filelock==3.20.1
+filelock==3.20.3
     # via
     #   -r smarter/requirements/in/constraints.in
     #   tldextract
@@ -247,39 +247,39 @@ flake8==7.3.0
     #   flake8-coding
 flake8-coding==1.3.2
     # via -r smarter/requirements/in/local.in
-flatbuffers==25.2.10
+flatbuffers==25.9.23
     # via openmeteo-sdk
-frozenlist==1.7.0
+frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
 google-ai-generativelanguage==0.6.15
     # via google-generativeai
-google-api-core[grpc]==2.25.1
+google-api-core[grpc]==2.29.0
     # via
     #   google-ai-generativelanguage
     #   google-api-python-client
     #   google-generativeai
-google-api-python-client==2.181.0
+google-api-python-client==2.188.0
     # via google-generativeai
-google-auth==2.40.3
+google-auth==2.48.0rc0
     # via
     #   google-ai-generativelanguage
     #   google-api-core
     #   google-api-python-client
     #   google-auth-httplib2
     #   google-generativeai
-google-auth-httplib2==0.2.0
+google-auth-httplib2==0.3.0
     # via google-api-python-client
 google-generativeai==0.8.5
     # via -r smarter/requirements/in/base.in
-googleapis-common-protos==1.70.0
+googleapis-common-protos==1.72.0
     # via
     #   google-api-core
     #   grpcio-status
 googlemaps==4.10.0
     # via -r smarter/requirements/in/base.in
-grpcio==1.74.0
+grpcio==1.76.0
     # via
     #   google-api-core
     #   grpcio-status
@@ -291,15 +291,15 @@ htmlmin==0.1.12
     # via -r smarter/requirements/in/base.in
 httpcore==1.0.9
     # via httpx
-httplib2==0.31.0
+httplib2==0.31.1
     # via
     #   google-api-python-client
     #   google-auth-httplib2
 httpx==0.28.1
     # via openai
-identify==2.6.14
+identify==2.6.16
     # via pre-commit
-idna==3.10
+idna==3.11
     # via
     #   -r smarter/requirements/in/constraints.in
     #   anyio
@@ -315,11 +315,11 @@ inflect==7.4.0
     # via -r smarter/requirements/in/base.in
 inflection==0.5.1
     # via drf-yasg
-iniconfig==2.1.0
+iniconfig==2.3.0
     # via
     #   -r smarter/requirements/in/constraints.in
     #   pytest
-invoke==2.2.0
+invoke==2.2.1
     # via paramiko
 isort==6.0.1
     # via
@@ -327,14 +327,14 @@ isort==6.0.1
     #   pylint
 jinja2==3.1.6
     # via sphinx
-jiter==0.10.0
+jiter==0.12.0
     # via openai
 jmespath==1.0.1
     # via
     #   -r smarter/requirements/in/constraints.in
     #   boto3
     #   botocore
-joblib==1.5.2
+joblib==1.5.3
     # via
     #   -r smarter/requirements/in/constraints.in
     #   nltk
@@ -342,7 +342,7 @@ kombu==5.5.4
     # via celery
 laces==0.1.2
     # via wagtail
-lark==1.2.2
+lark==1.3.1
     # via python-hcl2
 levenshtein==0.27.1
     # via python-levenshtein
@@ -371,7 +371,7 @@ more-itertools==10.8.0
     # via
     #   -r smarter/requirements/in/constraints.in
     #   inflect
-multidict==6.6.4
+multidict==6.7.0
     # via
     #   -r smarter/requirements/in/constraints.in
     #   aiohttp
@@ -391,9 +391,9 @@ nltk==3.9.1
     # via
     #   -r smarter/requirements/in/base.in
     #   textblob
-nodeenv==1.9.1
+nodeenv==1.10.0
     # via pre-commit
-numpy==2.3.3
+numpy==2.4.1
     # via
     #   pandas
     #   pandas-stubs
@@ -405,7 +405,7 @@ openai==1.101.0
     # via -r smarter/requirements/in/base.in
 openmeteo-requests==1.3.0
     # via -r smarter/requirements/in/base.in
-openmeteo-sdk==1.20.1
+openmeteo-sdk==1.24.0
     # via openmeteo-requests
 openpyxl==3.1.5
     # via wagtail
@@ -425,19 +425,17 @@ pandas-stubs==2.3.2.250827
     # via -r smarter/requirements/in/local.in
 paramiko==4.0.0
     # via -r smarter/requirements/in/base.in
-pathspec==0.12.1
-    # via
-    #   -r smarter/requirements/in/constraints.in
-    #   black
+pathspec==1.0.3
+    # via black
 pillow==11.3.0
     # via
     #   pillow-heif
     #   wagtail
-pillow-heif==1.1.0
+pillow-heif==1.1.1
     # via willow
 pip-tools==7.5.2
     # via -r smarter/requirements/in/local.in
-platformdirs==4.4.0
+platformdirs==4.5.1
     # via
     #   -r smarter/requirements/in/constraints.in
     #   black
@@ -456,11 +454,11 @@ pre-commit==4.3.0
     # via -r smarter/requirements/in/local.in
 prompt-toolkit==3.0.52
     # via click-repl
-propcache==0.3.2
+propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-proto-plus==1.26.1
+proto-plus==1.27.0
     # via
     #   google-ai-generativelanguage
     #   google-api-core
@@ -472,7 +470,7 @@ protobuf==5.29.5
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via
     #   -r smarter/requirements/in/constraints.in
     #   pyasn1-modules
@@ -515,8 +513,10 @@ pygments==2.19.2
     #   pytest
     #   rich
     #   sphinx
-pyjwt==2.10.1
-    # via social-auth-core
+pyjwt[crypto]==2.10.1
+    # via
+    #   pyjwt
+    #   social-auth-core
 pylint==3.3.4
     # via
     #   -r smarter/requirements/in/local.in
@@ -526,13 +526,13 @@ pylint-django==2.6.1
     # via -r smarter/requirements/in/local.in
 pylint-plugin-utils==0.9.0
     # via pylint-django
-pynacl==1.6.0
+pynacl==1.6.2
     # via paramiko
-pyparsing==3.2.4
+pyparsing==3.3.2
     # via
     #   -r smarter/requirements/in/constraints.in
     #   httplib2
-pyproject-api==1.9.1
+pyproject-api==1.10.0
     # via tox
 pyproject-hooks==1.2.0
     # via
@@ -563,6 +563,8 @@ python-levenshtein==0.27.1
     # via -r smarter/requirements/in/base.in
 python3-openid==3.2.0
     # via social-auth-core
+pytokens==0.4.0
+    # via black
 pytz==2025.2
     # via
     #   drf-yasg
@@ -573,15 +575,15 @@ pyyaml==6.0.2
     #   bandit
     #   drf-yasg
     #   pre-commit
-rapidfuzz==3.14.1
+rapidfuzz==3.14.3
     # via
     #   -r smarter/requirements/in/constraints.in
     #   levenshtein
-redis==6.4.0
+redis==7.1.0
     # via
     #   celery-redbeat
     #   django-redis
-regex==2025.9.1
+regex==2025.11.3
     # via
     #   -r smarter/requirements/in/constraints.in
     #   nltk
@@ -605,21 +607,23 @@ requests==2.32.5
     #   wagtail
 requests-cache==1.2.1
     # via -r smarter/requirements/in/base.in
-requests-file==2.1.0
+requests-file==3.0.1
     # via tldextract
 requests-oauthlib==2.0.0
     # via social-auth-core
 retry-requests==2.0.0
     # via -r smarter/requirements/in/base.in
-rich==14.1.0
+rich==14.2.0
     # via bandit
-roman-numerals-py==3.1.0
+roman-numerals==4.1.0
+    # via roman-numerals-py
+roman-numerals-py==4.1.0
     # via sphinx
 rsa==4.9.1
     # via
     #   -r smarter/requirements/in/constraints.in
     #   google-auth
-s3transfer==0.14.0
+s3transfer==0.16.0
     # via boto3
 six==1.17.0
     # via
@@ -629,15 +633,14 @@ six==1.17.0
 sniffio==1.3.1
     # via
     #   -r smarter/requirements/in/constraints.in
-    #   anyio
     #   openai
 snowballstemmer==3.0.1
     # via sphinx
 social-auth-app-django==5.6.0
     # via -r smarter/requirements/in/base.in
-social-auth-core==4.7.0
+social-auth-core==4.8.3
     # via social-auth-app-django
-soupsieve==2.8
+soupsieve==2.8.3
     # via
     #   -r smarter/requirements/in/constraints.in
     #   beautifulsoup4
@@ -675,12 +678,12 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sqlparse==0.5.3
+sqlparse==0.5.5
     # via
     #   -r smarter/requirements/in/constraints.in
     #   django
     #   django-debug-toolbar
-stevedore==5.5.0
+stevedore==5.6.0
     # via
     #   -r smarter/requirements/in/constraints.in
     #   bandit
@@ -694,7 +697,7 @@ textblob==0.19.0
     # via -r smarter/requirements/in/base.in
 tldextract==5.3.0
     # via -r smarter/requirements/in/base.in
-tomlkit==0.13.3
+tomlkit==0.14.0
     # via
     #   -r smarter/requirements/in/constraints.in
     #   pylint
@@ -709,7 +712,7 @@ typeguard==4.4.4
     # via inflect
 types-cachetools==6.2.0.20250827
     # via -r smarter/requirements/in/local.in
-types-html5lib==1.1.11.20250809
+types-html5lib==1.1.11.20251117
     # via types-lxml
 types-lxml==2025.8.25
     # via -r smarter/requirements/in/local.in
@@ -717,7 +720,7 @@ types-markdown==3.9.0.20250906
     # via -r smarter/requirements/in/local.in
 types-paramiko==4.0.0.20250822
     # via -r smarter/requirements/in/local.in
-types-pytz==2025.2.0.20250809
+types-pytz==2025.2.0.20251108
     # via pandas-stubs
 types-pyyaml==6.0.12.20250822
     # via
@@ -728,6 +731,8 @@ types-requests==2.32.4.20250809
     # via
     #   -r smarter/requirements/in/local.in
     #   djangorestframework-stubs
+types-webencodings==0.5.0.20251108
+    # via types-html5lib
 typing-extensions==4.15.0
     # via
     #   -r smarter/requirements/in/constraints.in
@@ -741,6 +746,7 @@ typing-extensions==4.15.0
     #   django-tasks
     #   djangorestframework-stubs
     #   google-generativeai
+    #   grpcio
     #   mypy
     #   openai
     #   pydantic
@@ -752,7 +758,7 @@ typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-tzdata==2025.2
+tzdata==2025.3
     # via
     #   -r smarter/requirements/in/constraints.in
     #   django-celery-beat
@@ -783,7 +789,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.34.0
+virtualenv==20.36.1
     # via
     #   pre-commit
     #   tox
@@ -795,7 +801,7 @@ wagtail-transfer==0.9.4
     # via -r smarter/requirements/in/base.in
 watchdog==6.0.0
     # via -r smarter/requirements/in/local.in
-wcwidth==0.2.13
+wcwidth==0.2.14
     # via
     #   -r smarter/requirements/in/constraints.in
     #   prompt-toolkit
@@ -805,11 +811,11 @@ wheel==0.45.1
     #   pip-tools
 whitenoise==6.9.0
     # via -r smarter/requirements/in/base.in
-willow[heif]==1.11.0
+willow[heif]==1.12.0
     # via
     #   wagtail
     #   willow
-yarl==1.20.1
+yarl==1.22.0
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:

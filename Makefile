@@ -97,7 +97,7 @@ docker-init:
 	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
 	docker exec smarter-app bash -c "\
 		python manage.py makemigrations && python manage.py migrate && \
-		python manage.py initialize_platform && \
+		python manage.py initialize_platform" && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
