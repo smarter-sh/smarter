@@ -46,9 +46,6 @@ more-itertools>=10.8.0,<11.0.0
 # Multi-value dictionary implementation; required by aiohttp and yarl for async web frameworks.
 multidict>=6.6.4,<7.0.0
 
-# Pattern matching for file paths; used by black, pre-commit, and other tools for file selection.
-pathspec>=0.12.1,<1.0.0
-
 # Determines platform-specific directories; used by black, jupyter, and other tools for config/cache locations.
 platformdirs>=4.4.0,<5.0.0
 

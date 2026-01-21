@@ -26,6 +26,7 @@ module.exports = {
       "@semantic-release/changelog",
       {
         changelogFile: "CHANGELOG.md",
+        changelogTitle: `# Change Log\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).\n\n`,
       },
     ],
     "@semantic-release/github",
