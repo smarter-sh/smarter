@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.13.95](https://github.com/smarter-sh/smarter/compare/v0.13.94...v0.13.95) (2026-01-21)
+
+### Bug Fixes
+
+* insert release notes after CHANGELOG.MD title ([24e97f3](https://github.com/smarter-sh/smarter/commit/24e97f3754b7327bda158bbd516fc71acf27d9ae))
+* reduce disk requirements to 10Gib ([f77b715](https://github.com/smarter-sh/smarter/commit/f77b7159f2f62eb7eff5cf2e28645b697ba242d3))
+* update docs urls ([03673e3](https://github.com/smarter-sh/smarter/commit/03673e37b81aae522f47dc0354aea96997f188a0))
+
 ## [0.13.94](https://github.com/smarter-sh/smarter/compare/v0.13.93...v0.13.94) (2026-01-20)
 
 ### Bug Fixes
