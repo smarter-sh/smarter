@@ -5,7 +5,7 @@
         "debug_mode": true,
         "chatbot": {
             "id": 1,
-            "url_chatbot": "http://localhost:8000/api/v1/chatbots/1/chat/",
+            "url_chatbot": "http://localhost:9357/api/v1/chatbots/1/chat/",
             "account": {
                 "accountNumber": "3141-5926-5359"
             },
@@ -46,7 +46,7 @@
                 "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc",
                 "ip_address": "192.168.65.1",
                 "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
-                "url": "http://example.3141-5926-5359.api.localhost:8000/config/",
+                "url": "http://example.3141-5926-5359.api.localhost:9357/config/",
                 "account": 1,
                 "chatbot": 1
             },
@@ -133,12 +133,12 @@
         "meta_data": {
             "ready": true,
             "name": "example",
-            "api_host": "api.localhost:8000",
+            "api_host": "api.localhost:9357",
             "chatbot_id": null,
             "chatbot_name": null,
             "chatbot_custom_domain": null,
-            "environment_api_domain": "api.localhost:8000",
-            "err": "ChatBotHelper.__init__() not a chatbot. Quitting. http://localhost:8000/api/v1/chatbots/1/chat/config/",
+            "environment_api_domain": "api.localhost:9357",
+            "err": "ChatBotHelper.__init__() not a chatbot. Quitting. http://localhost:9357/api/v1/chatbots/1/chat/config/",
             "is_custom_domain": false,
             "is_deployed": true,
             "is_valid": true,
@@ -176,9 +176,9 @@
                 "app_file_attachment": false,
                 "dns_verification_status": "Verified",
                 "tls_certificate_issuance_status": "No Certificate",
-                "url_chatbot": "http://localhost:8000/api/v1/chatbots/1/chat/"
+                "url_chatbot": "http://localhost:9357/api/v1/chatbots/1/chat/"
             },
-            "url": "http://localhost:8000/api/v1/chatbots/1/chat/config/",
+            "url": "http://localhost:9357/api/v1/chatbots/1/chat/config/",
             "session_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc",
             "auth_header": "Bearer****",
             "api_token": null,
@@ -196,13 +196,13 @@
             "root_domain": "localhost",
             "subdomain": "",
             "api_subdomain": null,
-            "domain": "localhost:8000",
+            "domain": "localhost:9357",
             "timestamp": "2025-10-14T12:48:51.879796",
-            "unique_client_string": "3141-5926-5359.http://localhost:8000/api/v1/chatbots/1/chat/config/.Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36.162.159.140.245.2025-10-14T12:48:51.879796",
+            "unique_client_string": "3141-5926-5359.http://localhost:9357/api/v1/chatbots/1/chat/config/.Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36.162.159.140.245.2025-10-14T12:48:51.879796",
             "client_key": "3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc",
             "ip_address": "162.159.140.245",
             "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
-            "parsed_url": "ParseResult(scheme='http', netloc='localhost:8000', path='/api/v1/chatbots/1/chat/config/', params='', query='session_key=3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc', fragment='')",
+            "parsed_url": "ParseResult(scheme='http', netloc='localhost:9357', path='/api/v1/chatbots/1/chat/config/', params='', query='session_key=3927197f336c00394e1a5503b6e1999fb8476f3363f8585de557025ccf5126fc', fragment='')",
             "request": true,
             "qualified_request": true,
             "url_path_parts": [

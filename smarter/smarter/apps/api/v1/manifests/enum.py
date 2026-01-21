@@ -172,7 +172,7 @@ class SAMKinds(SmarterEnumAbstract):
     def from_url(cls, url) -> Optional[str]:
         """
         Extract the manifest kind from a URL.
-        example: http://localhost:8000/api/v1/cli/example_manifest/Account/
+        example: http://localhost:9357/api/v1/cli/example_manifest/Account/
                 http://platform.smarter.sh/api/v1/cli/whoami/
         """
         if isinstance(url, bytes):

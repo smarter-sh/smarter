@@ -6,21 +6,16 @@ trusted origins for CSRF protection.
 
 import logging
 from collections import defaultdict
-from collections.abc import Awaitable
-from typing import Optional
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.http import HttpRequest, HttpResponseForbidden
-from django.http.response import HttpResponseBase
+from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware
 from django.utils.functional import cached_property
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.mixins import SmarterHelperMixin
-from smarter.common.utils import is_authenticated_request
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseServerError
 from smarter.lib.django.request import SmarterRequestMixin
@@ -40,7 +35,7 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 logger.debug("Loading %s", formatted_text(__name__ + ".SmarterCsrfViewMiddleware"))
 
 
-class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
+class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
     """
     Middleware for enforcing CSRF (Cross-Site Request Forgery) protection with dynamic trusted origins.
 
@@ -52,8 +47,9 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
     provides additional logic for chatbot requests, health checks, and internal IP addresses. It also
     integrates with application logging and waffle switches for feature toggling.
 
-    :cvar smarter_request: The current request wrapped in a SmarterRequestMixin, or None.
-    :vartype smarter_request: Optional[SmarterRequestMixin]
+    Note that this middleware uses the admin user as a proxy for initializing the SmarterRequestMixin,
+    which is used solely for purposes of determining if the request is for a ChatBot. The user
+    object is stripped from the request before passing it downstream in the middleware chain.
 
     **Key Features**
 
@@ -85,16 +81,50 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
     :rtype: django.http.HttpResponse or None
     """
 
-    smarter_request: Optional[SmarterRequestMixin] = None
+    _ready: bool = False
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the SmarterCsrfViewMiddleware.
+
+        We are not yet authenticated, which is fine. we use the admin user for
+        any needed context. This is needed for evaluating whether or not this
+        request is for a ChatBot.
+        """
+        logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs)
+        super().__init__(*args, **kwargs)
+
+        admin_user_profile = None
+        # this can happen on fresh installations where migrations have not yet run.
+        try:
+            admin_user_profile = get_cached_smarter_admin_user_profile()
+            SmarterRequestMixin.__init__(
+                self,
+                request=None,
+                user=admin_user_profile.user,
+                user_profile=admin_user_profile,
+                account=admin_user_profile.account,
+                *args,
+                **kwargs,
+            )
+            self._ready = True
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("%s.__init__() could not get admin user profile: %s", self.formatted_class_name, str(e))
+            SmarterRequestMixin.__init__(self, *args, **kwargs)
+
+    @property
+    def ready(self) -> bool:
+        """
+        Return whether the middleware is ready for use. The middleware is considered ready
+        if it has been properly initialized with the admin user profile.
+        """
+        return self._ready
 
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
         return formatted_text(f"{__name__}.{SmarterCsrfViewMiddleware.__name__}")
-
-    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
-        logger.debug("%s.__call__(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
-        return super().__call__(request)
 
     @property
     def CSRF_TRUSTED_ORIGINS(self) -> list[str]:
@@ -103,8 +133,8 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
         If the request is for a ChatBot, the ChatBot's URL is added to the list.
         """
         retval = settings.CSRF_TRUSTED_ORIGINS
-        if self.smarter_request and (self.smarter_request.is_chatbot or self.smarter_request.is_config):
-            retval += [self.smarter_request.url]
+        if self.is_chatbot or self.is_config:
+            retval += [self.url]
         logger.debug("%s.CSRF_TRUSTED_ORIGINS: %s", self.formatted_class_name, retval)
         return retval
 
@@ -133,7 +163,6 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
         If the request is for a ChatBot, then we'll exempt it from CSRF checks.
         """
         host = request.get_host()
-        url = self.smarter_build_absolute_uri(request)
 
         if not host:
             return SmarterHttpResponseServerError(
@@ -155,37 +184,19 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
             )
             return None
 
-        # this is a workaround to not being able to inherit from
-        # SmarterRequestMixin inside of middleware.
-        if request is not None:
-            logger.debug("%s.process_request - initializing SmarterRequestMixin", self.formatted_class_name)
-            self.smarter_request = SmarterRequestMixin(request)
-            if self.smarter_request and hasattr(self.smarter_request, "user") and self.smarter_request.user is not None:
-                request.user = self.smarter_request.user
+        logger.debug("%s.__call__(): %s", self.formatted_class_name, self.url)
 
-        if not is_authenticated_request(request):
-            # this would only happen if the url routes to DRF but no
-            # Authentication token was passed in the header. In this
-            # case we'll add our own smarter admin user just for initializing
-            # the ChatBotHelper.
-            admin_user_profile = get_cached_smarter_admin_user_profile()
-            request.user = admin_user_profile.user
-            logger.debug(
-                "%s: request is not (yet) authenticated. Using admin user as a proxy for evaluating CSRF_TRUSTED_ORIGINS: %s",
-                self.formatted_class_name,
-                admin_user_profile,
-            )
+        if not self.ready:
+            return super().process_request(request)
 
-        logger.debug("%s.__call__(): %s", self.formatted_class_name, url)
-
-        if self.smarter_request.is_chatbot:
-            logger.debug("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, url)
+        if self.is_chatbot:
+            logger.debug("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.url)
             return None
 
-        if self.smarter_request.is_chatbot:
+        if self.is_chatbot:
             logger.debug("%s.process_request(): csrf_middleware_logging is active", self.formatted_class_name)
             logger.debug("=" * 80)
-            logger.debug("%s ChatBot: %s", self.formatted_class_name, url)
+            logger.debug("%s ChatBot: %s", self.formatted_class_name, self.url)
             for cookie in request.COOKIES:
                 logger.debug("SmarterCsrfViewMiddleware request.COOKIES: %s", cookie)
             logger.debug("%s cookie settings", self.formatted_class_name)
@@ -206,21 +217,21 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterHelperMixin):
             logger.debug("=" * 80)
 
         # ------------------------------------------------------
+        if hasattr(request, "user") and request.user is not None:
+            # not expecting for this to actually be set, but just in case
+            # strip it out before passing downstream.
+            request.user = None
         return super().process_request(request)
 
     def process_view(self, request, callback, callback_args, callback_kwargs):
         if smarter_settings.environment == "local":
             logger.debug("%s._accept: environment is local. ignoring csrf checks", self.formatted_class_name)
             return None
-        if (
-            self.smarter_request
-            and self.smarter_request.is_chatbot
-            and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS)
-        ):
-            logger.debug(
-                "%s.process_view() %s waffle switch is active",
+        if self.is_chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS):
+            logger.info(
+                "%s.process_view() SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS is active. ignoring csrf checks for ChatBot request %s",
                 self.formatted_class_name,
-                SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS,
+                self.url,
             )
             return None
         response = super().process_view(request, callback, callback_args, callback_kwargs)

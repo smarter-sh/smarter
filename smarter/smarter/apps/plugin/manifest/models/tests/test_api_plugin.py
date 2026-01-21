@@ -2,10 +2,10 @@
 Test SAM Plugin manifest using ApiPlugin
 Test cases for the PluginDataAPI Manifest.
 
-http://localhost:8000/api/v1/tests/unauthenticated/dict/
-http://localhost:8000/api/v1/tests/unauthenticated/list/
-http://localhost:8000/api/v1/tests/authenticated/dict/
-http://localhost:8000/api/v1/tests/authenticated/list/
+http://localhost:9357/api/v1/tests/unauthenticated/dict/
+http://localhost:9357/api/v1/tests/unauthenticated/list/
+http://localhost:9357/api/v1/tests/authenticated/dict/
+http://localhost:9357/api/v1/tests/authenticated/list/
 """
 
 import logging

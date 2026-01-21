@@ -10,7 +10,7 @@ spec:
   connection:
     apiKey: 12345-abcde-67890-fghij
     authMethod: token
-    baseUrl: http://localhost:8000/
+    baseUrl: http://localhost:9357/
     proxyHost: proxy.example.com
     proxyPassword: proxypass
     proxyPort: 8080

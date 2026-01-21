@@ -38,7 +38,7 @@ class TestApiDocsJsonSchemas(TestAccountMixin):
         """
         Test all docs/json-schema/ endpoints with an unauthenticated user
         to ensure that we get a 200 response
-        example: http://localhost:8000/docs/json-schema/plugin/
+        example: http://localhost:9357/docs/json-schema/plugin/
         """
 
         for kind in ALL_KINDS:
@@ -55,7 +55,7 @@ class TestApiDocsJsonSchemas(TestAccountMixin):
         """
         Test all docs/json-schema/ endpoints with an authenticated user
         to ensure that we get a 200 response
-        example: http://localhost:8000/docs/json-schema/plugin/
+        example: http://localhost:9357/docs/json-schema/plugin/
         """
         self.client.force_login(self.non_admin_user)
         for kind in ALL_KINDS:

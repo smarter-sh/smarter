@@ -34,7 +34,7 @@ from .utils import (
 )
 
 
-UserType = Union["AnonymousUser", User, None]
+UserType = Union[AnonymousUser, User, None]
 AccountNumberType = Optional[str]
 ApiTokenType = Optional[bytes]
 
@@ -216,7 +216,7 @@ class AccountMixin(SmarterHelperMixin):
         :return: String representation of the class.
         :rtype: str
         """
-        return f"{formatted_text(self.__class__.__name__)}[{id(self)}](user={self.user_profile})"
+        return f"{formatted_text(AccountMixin.__name__)}[{id(self)}](user={self.user_profile})"
 
     def __repr__(self) -> str:
         """
@@ -667,4 +667,4 @@ class AccountMixin(SmarterHelperMixin):
         if self.is_accountmixin_ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)

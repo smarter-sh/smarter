@@ -1,8 +1,9 @@
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801,too-many-lines
 """
-Smarter platform configuration settings.
+The Smarter Project - configuration settings.
 
-This module is used to generate strongly typed and validated settings values
+This module is used to generate smarter_settings, a singleton instance of
+Pydantic BaseSettings that provides strongly typed and validated settings values
 from environment variables, `.env` file, and default values. for all
 Pydantic settings fields, custom field validations are performed prior
 to Pydantic's built-in validation.
@@ -75,6 +76,7 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_green,
     formatted_text_red,
 )
+from smarter.common.utils import generate_fernet_encryption_key
 from smarter.lib import json
 from smarter.lib.django.validators import SmarterValidator
 
@@ -143,7 +145,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
     :rtype: Any
     """
 
-    def cast_value(val: str, default: Any) -> Any:
+    def cast_value(val: Optional[str], default: Any) -> Any:
         """
         Cast the environment variable value to the type of the default value.
 
@@ -152,12 +154,12 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         :return: The casted value.
         """
         if isinstance(default, str):
-            return val.strip()
+            return val.strip() if val is not None else default
         if isinstance(default, bool):
-            return str(val).lower() in ["true", "1", "t", "y", "yes"]
+            return str(val).lower() in ["true", "1", "t", "y", "yes"] if val is not None else default
         if isinstance(default, int):
             try:
-                return int(val)
+                return int(val) if val is not None else default
             except (ValueError, TypeError):
                 logger.error(
                     "Environment variable %s value '%s' cannot be converted to int. Using default %s.",
@@ -168,7 +170,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 return default
         if isinstance(default, float):
             try:
-                return float(val)
+                return float(val) if val is not None else default
             except (ValueError, TypeError):
                 logger.error(
                     "Environment variable %s value '%s' cannot be converted to float. Using default %s.",
@@ -179,9 +181,9 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 return default
         if isinstance(default, list):
             if isinstance(val, str):
-                return [item.strip() for item in val.split(",") if item.strip()]
+                return [item.strip() for item in val.split(",") if item.strip()] if val is not None else default
             elif isinstance(val, list):
-                return val
+                return val if val is not None else default
             else:
                 logger.error(
                     "Environment variable %s value '%s' cannot be converted to list. Using default %s.",
@@ -193,9 +195,9 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         if isinstance(default, dict):
             try:
                 if isinstance(val, str):
-                    return json.loads(val)
+                    return json.loads(val) if val is not None else default
                 elif isinstance(val, dict):
-                    return val
+                    return val if val is not None else default
                 else:
                     logger.error(
                         "Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
@@ -211,25 +213,26 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 return default
         return val
 
-    key = var_name
-    retval = os.environ.get(key)
-    if retval is None:
-        key = f"SMARTER_{var_name}"
-        retval = os.environ.get(key)
-    if retval is None:
-        if is_required:
-            logger.error("smarter.common.conf - Required environment variable %s is missing.", key)
-            print(formatted_text_red(f"[ERROR] Required environment variable {key} is missing."))
-        return default
-
-    cast_val = cast_value(retval, default)
-    log_value = cast_val if not is_secret else "****"
-    if VERBOSE_CONSOLE_OUTPUT:
-        logger.info(
-            formatted_text_green("Overriding Smarter setting from environment variable: %s=%s"), key, repr(log_value)
+    retval = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
+    # Strip surrounding quotes if present
+    retval = str(retval).strip() if retval is not None else None
+    # Strip surrounding quotes if present
+    retval = str(retval).strip('"').strip("'") if retval is not None else None
+    if retval is None and is_required:
+        msg = (
+            f"{formatted_text(__name__ + ".get_env()")} [WARNING] Required environment variable {var_name} is missing."
         )
-        print(formatted_text_green(f"Overriding Smarter setting from environment variable: {key}={repr(log_value)}"))
-    return cast_val
+        logger.warning(msg)
+        print(msg)
+        return default
+    else:
+        cast_val = cast_value(retval, default)  # type: ignore
+        log_value = cast_val if not is_secret else "****"
+        if VERBOSE_CONSOLE_OUTPUT:
+            msg = f"{formatted_text(__name__ + ".get_env()")} Environment variable {var_name} found. Overriding Smarter setting from environment variable: {var_name}={repr(log_value)}"
+            logger.info(msg)
+            print(msg)
+        return cast_val
 
 
 def recursive_sort_dict(d):
@@ -388,7 +391,10 @@ class SettingsDefaults:
     """
 
     ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", DEFAULT_ROOT_DOMAIN, is_required=True)
-    ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", [])
+
+    # for liveness and readiness probes from kubernetes.
+    # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
+    ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", ["localhost"])
     ANTHROPIC_API_KEY: SecretStr = SecretStr(get_env("ANTHROPIC_API_KEY", is_secret=True, is_required=True))
 
     API_DESCRIPTION: str = get_env(
@@ -418,6 +424,8 @@ class SettingsDefaults:
 
     CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
     CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
+    CONFIGURE_BETA_ACCOUNT: bool = bool_environment_variable("CONFIGURE_BETA_ACCOUNT", False)
+    CONFIGURE_UBC_ACCOUNT: bool = bool_environment_variable("CONFIGURE_UBC_ACCOUNT", False)
     CHATBOT_CACHE_EXPIRATION: int = int(get_env("CHATBOT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
     CHATBOT_MAX_RETURNED_HISTORY: int = int(get_env("CHATBOT_MAX_RETURNED_HISTORY", 25))
     CHATBOT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("CHATBOT_TASKS_CREATE_DNS_RECORD", True)
@@ -459,12 +467,16 @@ class SettingsDefaults:
     EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com", is_required=True)
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
-    FERNET_ENCRYPTION_KEY: SecretStr = SecretStr(get_env("FERNET_ENCRYPTION_KEY", is_secret=True, is_required=True))
-    if FERNET_ENCRYPTION_KEY.get_secret_value() == DEFAULT_MISSING_VALUE:
-        # pylint: disable=C0415
-        from smarter.common.utils import generate_fernet_encryption_key
-
-        FERNET_ENCRYPTION_KEY = SecretStr(generate_fernet_encryption_key())
+    fernet = get_env("FERNET_ENCRYPTION_KEY", default=None, is_secret=True)
+    if fernet is None:
+        warnings.warn(
+            "FERNET_ENCRYPTION_KEY is not set. "
+            "A new encryption key will be generated. This may cause existing encrypted data to become inaccessible. "
+            "You can safely disregard this warning if this is a new installation or test environment.",
+            UserWarning,
+        )
+        fernet = generate_fernet_encryption_key()
+    FERNET_ENCRYPTION_KEY = SecretStr(fernet)
 
     GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY", is_secret=True, is_required=True))
 
@@ -499,7 +511,7 @@ class SettingsDefaults:
     LLM_DEFAULT_MAX_TOKENS = 2048
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
-    LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS += [host + ":9357" for host in LOCAL_HOSTS]
     LOCAL_HOSTS.append("testserver")
 
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
@@ -527,7 +539,16 @@ class SettingsDefaults:
 
     REACTJS_APP_LOADER_PATH = get_env("REACTJS_APP_LOADER_PATH", SMARTER_DEFAULT_APP_LOADER_PATH)
 
-    SECRET_KEY: SecretStr = SecretStr(get_env("SECRET_KEY", is_secret=True, is_required=True))
+    secret = get_env("SECRET_KEY", default=None, is_secret=True)
+    if secret is None:
+        warnings.warn(
+            "SECRET_KEY is not set. A new secret key will be generated. "
+            "This may cause existing sessions and other cryptographic operations to become invalid. "
+            "You can safely disregard this warning if this is a new installation or test environment.",
+            UserWarning,
+        )
+        secret = base64.urlsafe_b64encode(os.urandom(32)).decode()
+    SECRET_KEY: SecretStr = SecretStr(secret)
     SETTINGS_OUTPUT: bool = bool_environment_variable("SETTINGS_OUTPUT", False)
 
     SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
@@ -742,6 +763,7 @@ class Settings(BaseSettings):
                 retval.append(parsed.hostname)
         for host in retval:
             SmarterValidator.validate_hostname(host)
+
         return list(set(retval))
 
     anthropic_api_key: SecretStr = Field(
@@ -1343,16 +1365,6 @@ class Settings(BaseSettings):
         """
         if v is None or v == "":
             return SettingsDefaults.BRANDING_CONTACT_URL
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except Exception as e:
-                raise SmarterConfigurationError(f"branding_contact_url {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"branding_contact_url {v} is not a HttpUrl.")
-
         return v
 
     branding_support_hours: str = Field(
@@ -1415,16 +1427,6 @@ class Settings(BaseSettings):
         """
         if v is None or v == "":
             return SettingsDefaults.BRANDING_URL_FACEBOOK
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except Exception as e:
-                raise SmarterConfigurationError(f"branding_url_facebook {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"branding_url_facebook {v} is not a HttpUrl.")
-
         return v
 
     branding_url_twitter: Optional[HttpUrl] = Field(
@@ -1453,16 +1455,6 @@ class Settings(BaseSettings):
         """
         if v is None or v == "":
             return SettingsDefaults.BRANDING_URL_TWITTER
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except Exception as e:
-                raise SmarterConfigurationError(f"branding_url_twitter {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"branding_url_twitter {v} is not a HttpUrl.")
-
         return v
 
     branding_url_linkedin: Optional[HttpUrl] = Field(
@@ -1491,16 +1483,6 @@ class Settings(BaseSettings):
         """
         if v is None or v == "":
             return SettingsDefaults.BRANDING_URL_LINKEDIN
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except Exception as e:
-                raise SmarterConfigurationError(f"branding_url_linkedin {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"branding_url_linkedin {v} is not a HttpUrl.")
-
         return v
 
     cache_expiration: int = Field(
@@ -1582,6 +1564,80 @@ class Settings(BaseSettings):
             return int_value
         except ValueError as e:
             raise SmarterConfigurationError("could not validate chat_cache_expiration") from e
+
+    configure_beta_account: bool = Field(
+        SettingsDefaults.CONFIGURE_BETA_ACCOUNT,
+        description="True if beta account should be added to CD-CD processes.",
+        title="Configure Beta Account",
+    )
+    """
+    True if beta account should be added to CD-CD processes.
+    This setting indicates whether a beta account should be included
+    in continuous deployment and continuous delivery processes.
+    Enabling this setting gives you a way to provide early access
+    to new features, in production but with controlled access to a
+    select set of users.
+
+    When enabled, the platform will automatically create and manage
+    a beta account during deployment processes. Namely, it will
+    maintain the built-in example AI resources, which are a common
+    means of demonstrating new features.
+
+    :raises SmarterConfigurationError: If the value is not a boolean.
+
+    :type: bool
+    :default: False
+    """
+
+    @before_field_validator("configure_beta_account")
+    def parse_configure_beta_account(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'configure_beta_account' field.
+        Args:
+            v (Optional[Union[bool, str]]): the configure_beta_account value to validate
+        Returns:
+            bool: The validated configure_beta_account.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CONFIGURE_BETA_ACCOUNT
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate configure_beta_account: {v}")
+
+    configure_ubc_account: bool = Field(
+        SettingsDefaults.CONFIGURE_UBC_ACCOUNT,
+        description="True if UBC account should be added to CD-CD processes.",
+        title="Configure UBC Account",
+    )
+    """
+    True if UBC account should be added to CD-CD processes.
+    This setting indicates whether a UBC account should be included
+    in continuous deployment and continuous delivery processes.
+    Enabling this setting allows for testing and validation of new features
+    in a UBC environment before they are released to production.
+
+    :type: bool
+    :default: Value from ``SettingsDefaults.CONFIGURE_UBC_ACCOUNT``
+    :raises SmarterConfigurationError: If the value is not a boolean.
+    """
+
+    @before_field_validator("configure_ubc_account")
+    def parse_configure_ubc_account(cls, v: Optional[Union[bool, str]]) -> bool:
+        """
+        Validates the 'configure_ubc_account' field.
+        Args: v (Optional[Union[bool, str]]): the configure_ubc_account value to validate
+        Returns: bool: The validated configure_ubc_account.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.CONFIGURE_UBC_ACCOUNT
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate configure_ubc_account: {v}")
 
     chatbot_cache_expiration: int = Field(
         SettingsDefaults.CHATBOT_CACHE_EXPIRATION,
@@ -2656,16 +2712,6 @@ class Settings(BaseSettings):
         """
         if v is None:
             return SettingsDefaults.LOGO
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except ValidationError as e:
-                raise SmarterConfigurationError(f"logo {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"logo {v} is not a HttpUrl.")
-        SmarterValidator.validate_url(str(v))
         return v
 
     mailchimp_api_key: Optional[SecretStr] = Field(
@@ -2759,16 +2805,6 @@ class Settings(BaseSettings):
         """
         if str(v) in [None, ""] and SettingsDefaults.MARKETING_SITE_URL is not None:
             return SettingsDefaults.MARKETING_SITE_URL
-
-        if isinstance(v, str):
-            try:
-                v = HttpUrl(v)
-            except ValidationError as e:
-                raise SmarterConfigurationError(f"marketing_site_url {v} is not a valid HttpUrl.") from e
-
-        if not isinstance(v, HttpUrl):
-            raise SmarterConfigurationError(f"marketing_site_url {v} is not a HttpUrl.")
-        SmarterValidator.validate_url(str(v))
         return v
 
     openai_api_organization: Optional[str] = Field(
@@ -3857,7 +3893,7 @@ class Settings(BaseSettings):
             >>> print(smarter_settings.environment_cdn_domain)
             'cdn.alpha.platform.example.com'
             >>> print(smarter_settings.environment_cdn_domain)
-            'cdn.localhost:8000'
+            'cdn.localhost:9357'
 
         See Also:
             - smarter_settings.platform_subdomain
@@ -3878,7 +3914,7 @@ class Settings(BaseSettings):
             >>> print(smarter_settings.environment_cdn_url)
             https://cdn.alpha.platform.example.com
             >>> print(smarter_settings.environment_cdn_url)
-            https://cdn.localhost:8000
+            https://cdn.localhost:9357
 
         Raises:
             SmarterConfigurationError: If the constructed URL is invalid.
@@ -3968,7 +4004,7 @@ class Settings(BaseSettings):
             >>> print(smarter_settings.environment_platform_domain)
             'alpha.platform.example.com'
             >>> print(smarter_settings.environment_platform_domain)
-            'localhost:8000'
+            'localhost:9357'
 
         Note:
             Returns the root domain for the production environment. Otherwise,
@@ -3984,7 +4020,7 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return f"{self.environment}.{self.root_platform_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
-            return "localhost:8000"
+            return "localhost:9357"
         # default domain format
         return f"{self.environment}.{self.root_platform_domain}"
 
@@ -4001,13 +4037,13 @@ class Settings(BaseSettings):
                 'api.example.com',
                 'api.alpha.platform.example.com',
                 'api.beta.platform.example.com',
-                'api.localhost:8000',
+                'api.localhost:9357',
                 'api.next.platform.example.com',
                 'example.com',
                 'platform.example.com',
                 'alpha.platform.example.com',
                 'beta.platform.example.com',
-                'localhost:8000',
+                'localhost:9357',
                 'next.platform.example.com'
             ]
 
@@ -4152,7 +4188,7 @@ class Settings(BaseSettings):
             >>> print(smarter_settings.environment_api_domain)
             'alpha.api.platform.example.com'
             >>> print(smarter_settings.environment_api_domain)
-            'api.localhost:8000'
+            'api.localhost:9357'
 
         Note:
             Returns the root domain for the production environment. Otherwise,
@@ -4171,7 +4207,7 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return f"{self.environment}.{self.root_api_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
-            return f"{SMARTER_API_SUBDOMAIN}.localhost:8000"
+            return f"{SMARTER_API_SUBDOMAIN}.localhost:9357"
         # default domain format
         return f"{self.environment}.{self.root_api_domain}"
 

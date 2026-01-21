@@ -1,10 +1,14 @@
 #------------------------------------------------------------------------------
-# This Dockerfile is used to build
-# - a Docker image for the Smarter application.
-# - a Docker container for the Smarter Celery worker.
-# - a Docker container for the Smarter Celery beat.
+# This Dockerfile is used to build the following:
+# - Smarter application.
+# - Smarter Celery worker.
+# - Smarter Celery beat.
 #
 # This image is used for all environments (local, alpha, beta, next and production).
+# - It is published to DockerHub as mcdaniel0073/smarter:latest
+#   https://hub.docker.com/repository/docker/mcdaniel0073/smarter/general
+# - It is also the basis of the Helm chart used to deploy Smarter to production Kubernetes clusters.
+#   https://artifacthub.io/packages/helm/project-smarter/smarter
 #------------------------------------------------------------------------------
 
 ################################## base #######################################
@@ -19,15 +23,15 @@
 FROM python:3.12-slim-trixie AS linux_base
 
 LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
-  description="Docker image for the Smarter Api" \
+  description="Docker image for the Smarter Api and web console" \
   license="GNU AGPL v3" \
   vcs-url="https://github.com/smarter-sh/smarter" \
   org.opencontainers.image.title="Smarter API" \
-  org.opencontainers.image.version="0.13.60" \
+  org.opencontainers.image.version="0.13.94" \
   org.opencontainers.image.authors="Lawrence McDaniel <lpm0073@gmail.com>" \
-  org.opencontainers.image.url="https://smarter-sh.github.io/smarter/" \
+  org.opencontainers.image.url="https://smarter.sh/" \
   org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
-  org.opencontainers.image.documentation="https://platform.smarter.sh/docs/"
+  org.opencontainers.image.documentation="https://docs.smarter.sh/"
 
 
 # Environment: local, alpha, beta, next, or production
@@ -151,7 +155,14 @@ FROM user_setup AS venv
 RUN python -m venv /home/smarter_user/venv
 ENV PATH="/home/smarter_user/venv/bin:$PATH"
 
-# Add all Python package dependencies
+# Add all Python package dependencies.
+# We do this before adding the application code so that we can take advantage
+# of Docker's caching mechanism. If the requirements files do not change,
+# Docker will use the cached layer and not reinstall the packages.
+#
+# mcdaniel jan-2026: adding local requirements.txt back in because of the
+# https://github.com/smarter-sh/smarter-deploy repo that is used to deploy
+# smarter locally for non-developers.
 COPY ./smarter/requirements requirements
 RUN pip install --upgrade pip && \
   pip install --no-cache-dir -r requirements/docker.txt
@@ -230,5 +241,5 @@ FROM collect_assets AS serve_application
 
 WORKDIR /home/smarter_user/smarter
 USER smarter_user
-CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
+CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:9357"]
 EXPOSE 8000

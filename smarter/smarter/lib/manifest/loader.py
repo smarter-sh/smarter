@@ -701,7 +701,7 @@ class SAMLoader(SmarterHelperMixin):
         :rtype: str
 
         """
-        return formatted_text(self.__class__.__name__)
+        return formatted_text(SAMLoader.__name__)
 
     def loader_ready_state(self) -> str:
         """

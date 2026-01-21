@@ -89,7 +89,7 @@ Usage
 Example Manifest
 -----------------------
 
-.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-sql.yaml
+.. literalinclude:: ../../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml
     :language: yaml
     :caption: Example SQL Plugin Manifest
 
@@ -109,7 +109,6 @@ Technical Reference
    plugins/const
    plugins/nlp
    plugins/signals
-   plugins/plugin
    plugins/tasks
    plugins/utils
    plugins/views

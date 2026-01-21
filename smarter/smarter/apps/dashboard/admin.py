@@ -29,6 +29,12 @@ class RestrictedModelAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request: HttpRequest, obj=None):
         return request.user.is_superuser
 
+    def get_list_display(self, request):
+        base = super().get_list_display(request)
+        if "pk" not in base:
+            return ("pk",) + tuple(base)
+        return base
+
 
 class SuperUserOnlyModelAdmin(admin.ModelAdmin):
     """
@@ -38,6 +44,12 @@ class SuperUserOnlyModelAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request: HttpRequest):
         return request.user.is_superuser
+
+    def get_list_display(self, request):
+        base = super().get_list_display(request)
+        if "pk" not in base:
+            return ("pk",) + tuple(base)
+        return base
 
 
 class RestrictedAdminSite(admin.AdminSite):

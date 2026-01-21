@@ -122,7 +122,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
 
     def test_non_api_url(self):
         """Test a non-api url."""
-        request: WSGIRequest = self.wsgi_request_factory.get("/", SERVER_NAME="localhost:8000")
+        request: WSGIRequest = self.wsgi_request_factory.get("/", SERVER_NAME="localhost:9357")
         helper = ChatBotHelper(
             request=request, chatbot_id=None, account=self.account, user=self.admin_user, user_profile=self.user_profile
         )
@@ -134,7 +134,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         self.assertIsNone(helper.chatbot, f"Expected None, but got {helper.chatbot}")
         self.assertEqual(helper.account_number, self.account.account_number)
         self.assertEqual(
-            helper.api_host, "api.localhost:8000", f"Expected api.localhost:8000, but got {helper.api_host}"
+            helper.api_host, "api.localhost:9357", f"Expected api.localhost:9357, but got {helper.api_host}"
         )
         self.assertIsNone(helper.api_subdomain, f"Expected None, but got {helper.api_subdomain}")
 

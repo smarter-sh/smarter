@@ -94,7 +94,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         super().__init__(*args, **kwargs)
         if not self.ready:
             if not self.loader and not self.manifest and not self.connection:
-                logger.error(
+                logger.warning(
                     "%s.__init__() No loader nor existing Connection provided for %s broker. Cannot initialize.",
                     self.formatted_class_name,
                     self.kind,
@@ -129,7 +129,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         if self.ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     # override the base abstract manifest model with the ApiConnection model
     _manifest: Optional[SAMApiConnection] = None
@@ -219,8 +219,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             logger.info("%s: operation started", broker.formatted_class_name)
 
         """
-        parent_class = super().formatted_class_name
-        return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
+        return f"{__name__}.{SAMApiConnectionBroker.__name__}[{id(self)}]"
 
     @property
     def ORMModelClass(self) -> Type[ApiConnection]:
@@ -650,6 +649,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             print(response.data)
 
         """
+        logger.debug(
+            "%s.example_manifest() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -664,7 +671,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             ],
         )
         connection = PydanticApiConnection(
-            baseUrl="http://localhost:8000/",
+            baseUrl="http://localhost:9357/",
             apiKey="12345-top-secret-67890-fghij",
             authMethod="token",
             timeout=30,
@@ -730,6 +737,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
 
         """
+        logger.debug(
+            "%s.get() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
@@ -795,7 +810,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                         "kind": "ApiConnection",
                         "version": "1.0.0",
                         "account": "2194-1233-0815",
-                        "baseUrl": "http://localhost:8000/api/v1/cli/example_manifest/plugin/",
+                        "baseUrl": "http://localhost:9357/api/v1/cli/example_manifest/plugin/",
                         "apiKey": "testf232a0619cb19da0",
                         "authMethod": "basic",
                         "timeout": 30,
@@ -807,7 +822,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     }
                 },
                 "status": {                             # read only
-                    "connection_string": "http://localhost:8000/api/v1/cli/example_manifest/plugin/ (Auth: ******)",
+                    "connection_string": "http://localhost:9357/api/v1/cli/example_manifest/plugin/ (Auth: ******)",
                     "is_valid": false
                 }
             }
@@ -820,6 +835,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         :raises SAMConnectionBrokerError: If an error occurs during update or save.
         """
+        logger.debug(
+            "%s.apply() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         super().apply(request, kwargs)
         updated = False
         command = self.apply.__name__
@@ -895,6 +918,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
 
         """
+        logger.debug(
+            "%s.chat() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
@@ -932,6 +963,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
 
         """
+        logger.debug(
+            "%s.describeº() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -978,6 +1017,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             print(response.data)
 
         """
+        logger.debug(
+            "%s.delete() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         if self.connection:
@@ -1000,6 +1047,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.deploy() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
@@ -1016,6 +1071,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.undeploy() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
@@ -1032,6 +1095,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         :return: SAMBrokerErrorNotImplemented. This method always raises an exception.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.logs() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Logs not implemented", thing=self.kind, command=command)

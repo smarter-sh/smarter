@@ -1,3 +1,7 @@
+"""
+Views for provider-related pages in the Smarter Workbench web console.
+"""
+
 import logging
 from typing import Optional
 
@@ -11,7 +15,6 @@ from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.provider.models import Provider
-from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.utils import rfc1034_compliant_to_snake
 from smarter.lib.django import waffle

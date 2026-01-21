@@ -16,17 +16,17 @@
 							<h1 class="fw-bolder fs-2qx text-gray-900 mb-4">Permission Denied</h1>
 							<!--end::Title-->
 							<!--begin::Text-->
-							<div class="fw-semibold fs-6 text-gray-500 mb-7">{{ error_message|default:"Permission Denied." }}</div>
+							<div class="fw-semibold fs-6 text-gray-500 mb-7">{{ "Permission Denied." }}</div>
 							<!--end::Text-->
 							<!--begin::Illustration-->
 							<div class="mb-11">
-								<img src="{% static 'assets/media/auth/welcome.png' %}" class="mw-100 mh-300px theme-light-show" alt="" />
-								<img src="{% static 'assets/media/auth/welcome-dark.png' %}" class="mw-100 mh-300px theme-dark-show" alt="" />
+								<img src="{% static 'assets/media/auth/permission_denied.png' %}" class="mw-100 mh-300px theme-light-show" alt="" />
+								<img src="{% static 'assets/media/auth/permission_denied-dark.png' %}" class="mw-100 mh-300px theme-dark-show" alt="" />
 							</div>
 							<!--end::Illustration-->
 							<!--begin::Link-->
 							<div class="mb-0">
-								<a href={% url 'root_home' %} class="btn btn-sm btn-primary">Return Home</a>
+								<a href="{% url 'root_home' %}" class="btn btn-sm btn-primary">Return Home</a>
 							</div>
 							<!--end::Link-->
 						</div>

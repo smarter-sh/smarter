@@ -114,6 +114,9 @@ class SmarterWaffleSwitches:
     ACCOUNT_LOGGING = "log_account"
     """Enables logging throughout the smarter.app.account namespace."""
 
+    MULTITENANT_AUTHENTICATION = "enable_multitenant_authentication"
+    """Enables multi-tenant authentication support for hosted Smarter platforms."""
+
     API_LOGGING = "log_api"
     """Enables logging throughout the smarter.api namespace."""
 
@@ -245,8 +248,14 @@ def switch_is_active(switch_name: str) -> bool:
     if not apps.ready:
         logger.warning("%s App registry not ready, assuming switch %s is inactive.", prefix, switch_name)
         return False
-    if not is_database_ready():
-        logger.warning("%s Database not ready, assuming switch %s is inactive.", prefix, switch_name)
+
+    try:
+        if not is_database_ready():
+            logger.warning("%s Database not ready, assuming switch %s is inactive.", prefix, switch_name)
+            return False
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.warning("%s Error checking database readiness: %s", prefix, e, exc_info=True)
         return False
     if not isinstance(switch_name, str):
         logger.error("%s switch_name must be a string, got %s", prefix, type(switch_name).__name__)

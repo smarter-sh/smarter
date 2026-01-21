@@ -19,19 +19,28 @@ from http import HTTPStatus
 import requests
 from django.contrib import messages
 from django.contrib.auth.backends import ModelBackend
+from django.shortcuts import redirect
 from requests.exceptions import HTTPError, RequestException, Timeout, TooManyRedirects
 from social_core.backends.github import GithubOAuth2
 from social_core.backends.google import GoogleOAuth2
 
+from smarter.apps.account.models import User
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
+from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 
 logger = logging.getLogger(__name__)
+logger_prefix = formatted_text("smarter.lib.django.auth")
 
 USERNAME = "username"
+INACTIVE_ACCOUNT_REDIRECT_URL = "account_inactive"
 SUBSCRIPTION_STATUS_API_URL = f"https://api.am.{smarter_settings.root_domain}/accounts/subscription-status/"
+"""
+API endpoint to verify subscription status. see https://github.com/smarter-sh/account-manager
+"""
 
 
 @cache_results()
@@ -48,7 +57,7 @@ def verify_payment_status(username) -> bool:
         """
         Helper function to format error messages.
         """
-        return f"{err_type} error occurred while verifying payment status for user {username}: {err}"
+        return f"{logger_prefix}.verify_payment_status() {err_type} error occurred while verifying payment status for user {username}: {err}"
 
     DEFAULT_ERROR_RESPONSE = True
     headers = {
@@ -56,9 +65,38 @@ def verify_payment_status(username) -> bool:
         "X-Client-Domain": smarter_settings.environment_platform_domain,
         "X-Client-Username": username,
     }
+
+    # Superusers are always allowed access
+    try:
+        User.objects.get(username=username, is_superuser=True, is_active=True)
+        logger.info(
+            "%s.verify_payment_status() User %s is a superuser; skipping payment status check.", logger_prefix, username
+        )
+        return True
+    except User.DoesNotExist:
+        # User is not a superuser, proceed to check subscription status
+        pass
+
+    # check to see if multitenant authentication is enabled
+    if not switch_is_active(SmarterWaffleSwitches.MULTITENANT_AUTHENTICATION):
+        logger.info(
+            "%s.verify_payment_status() Multitenant authentication is disabled; skipping payment status check for user %s. You can enable multitenant authentication by activating the corresponding waffle switch in the Django admin console.",
+            logger_prefix,
+            username,
+        )
+        return True
+
+    # --------------------------------------------------------------------------
+    # Make the API call to check subscription status
+    # --------------------------------------------------------------------------
     try:
         response = requests.get(SUBSCRIPTION_STATUS_API_URL, headers=headers, timeout=5)
-        logger.info("Subscription status API response for user %s: %s", username, response.status_code)
+        logger.info(
+            "%s.verify_payment_status() Subscription status API response for user %s: %s",
+            logger_prefix,
+            username,
+            response.status_code,
+        )
         return response.status_code == HTTPStatus.OK
     except Timeout as timeout_err:
         logger.error(handle_error("Timeout", timeout_err))
@@ -83,7 +121,7 @@ def verify_payment_status(username) -> bool:
         return DEFAULT_ERROR_RESPONSE
 
 
-class GoogleOAuth2Hosted(GoogleOAuth2):
+class GoogleOAuth2Multitenant(GoogleOAuth2):
     """
     Custom Google OAuth2 backend that also verifies
     payment status of the hosted platform.
@@ -102,16 +140,14 @@ class GoogleOAuth2Hosted(GoogleOAuth2):
             return details
         if verify_payment_status(details.get(USERNAME)):
             return details
-        if smarter_settings.environment == SmarterEnvironments.LOCAL:
-            logger.warning("Skipping payment status check for user %s in local environment.", details.get(USERNAME))
-            return details
         request = getattr(self, "strategy", None)
         if request and hasattr(request, "request"):
             messages.error(request.request, "Your subscription is not active. Please check your payment status.")
+            request.request.session["account_status"] = "inactive"
         return None
 
 
-class GithubOAuth2Hosted(GithubOAuth2):
+class GithubOAuth2Multitenant(GithubOAuth2):
     """
     Custom GitHub OAuth2 backend that also verifies
     payment status of the hosted platform.
@@ -136,10 +172,11 @@ class GithubOAuth2Hosted(GithubOAuth2):
         request = getattr(self, "strategy", None)
         if request and hasattr(request, "request"):
             messages.error(request.request, "Your subscription is not active. Please check your payment status.")
+            request.request.session["account_status"] = "inactive"
         return None
 
 
-class DjangoModelBackendHosted(ModelBackend):
+class DjangoModelBackendMultitenant(ModelBackend):
     """
     Custom Django ModelBackend that also verifies
     payment status of the hosted platform.
@@ -149,11 +186,8 @@ class DjangoModelBackendHosted(ModelBackend):
         user = super().authenticate(request, username, password, **kwargs)
         username = username or kwargs.get(USERNAME)
         if user and username:
-            if smarter_settings.environment == SmarterEnvironments.LOCAL:
-                logger.warning("Skipping payment status check for user %s in local environment.", username)
-                return user
             if not verify_payment_status(username):
                 if request is not None:
                     messages.error(request, "Your subscription is not active. Please check your payment status.")
-                return None
+                return redirect(INACTIVE_ACCOUNT_REDIRECT_URL)
         return user

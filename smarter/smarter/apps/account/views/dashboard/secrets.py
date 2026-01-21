@@ -3,6 +3,7 @@
 # python stuff
 import logging
 from http import HTTPStatus
+from typing import Optional
 
 # django stuff
 from django import http
@@ -11,7 +12,6 @@ from django.core.handlers.wsgi import WSGIRequest
 # our stuff
 from smarter.apps.account.admin import SecretAdminForm as SecretForm
 from smarter.apps.account.models import Secret
-from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
@@ -38,7 +38,7 @@ class SecretsView(SmarterAdminWebView):
     template_path = "account/dashboard/secrets.html"
 
     def get(self, request: WSGIRequest):
-        logger.info("%s.get() user: %s", self.formatted_class_name, self.user_profile)
+        logger.debug("%s.get() user: %s", self.formatted_class_name, self.user_profile)
         secrets = Secret.objects.filter(user_profile=self.user_profile).only(
             "id", "name", "description", "created_at", "updated_at", "last_accessed", "expires_at"
         )
@@ -60,7 +60,7 @@ class SecretView(SmarterAdminWebView):
         """
         Handle multipart form data for both edit and create secret.
         """
-        logger.info("%s._handle_multipart_form() %s", self.formatted_class_name, self.user_profile)
+        logger.debug("%s._handle_multipart_form() %s", self.formatted_class_name, self.user_profile)
         data = request.POST
         secret_form = SecretForm(data, instance=self.secret)
         if not secret_form.is_valid():
@@ -74,7 +74,7 @@ class SecretView(SmarterAdminWebView):
             self.secret.description = description
             self.secret.expires_at = expires_at
             self.secret.encrypted_value = encrypted_value
-            logger.info(
+            logger.debug(
                 "%s._handle_multipart_form() %s is editing secret: %s",
                 self.formatted_class_name,
                 self.user_profile,
@@ -88,28 +88,28 @@ class SecretView(SmarterAdminWebView):
                 expires_at=expires_at,
                 encrypted_value=encrypted_value,
             )
-            logger.info(
+            logger.debug(
                 "%s._handle_multipart_form() %s is creating secret: %s",
                 self.formatted_class_name,
                 self.user_profile,
                 name,
             )
         self.secret.save()
-        logger.info(
+        logger.debug(
             "%s._handle_multipart_form() %s saved secret: %s", self.formatted_class_name, self.user_profile, name
         )
         return http.JsonResponse(status=HTTPStatus.OK.value, data=secret_form.data)
 
     def _handle_json(self, request: WSGIRequest):
 
-        logger.info(
+        logger.debug(
             "%s._handle_json() %s is editing secret: %s", self.formatted_class_name, self.user_profile, self.secret
         )
         data: dict = json.loads(request.body)
         data["user_profile"] = self.user_profile.pk
         secret_form = SecretForm(data, instance=self.secret)
         if not secret_form.is_valid():
-            logger.error("%s._handle_json() form data is not valid %s", self.formatted_class_name, secret_form.errors)
+            logger.debug("%s._handle_json() form data is not valid %s", self.formatted_class_name, secret_form.errors)
             return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data=secret_form.errors)
 
         name = secret_form.cleaned_data["name"]
@@ -124,7 +124,7 @@ class SecretView(SmarterAdminWebView):
         self.secret.expires_at = expires_at
         self.secret.encrypted_value = encrypted_value
         self.secret.save()
-        logger.info("%s._handle_json() %s saved secret: %s", self.formatted_class_name, self.user_profile, self.secret)
+        logger.debug("%s._handle_json() %s saved secret: %s", self.formatted_class_name, self.user_profile, self.secret)
         return http.JsonResponse(status=HTTPStatus.OK.value, data={})
 
     def _handle_write_request(self, request: WSGIRequest):
@@ -137,11 +137,11 @@ class SecretView(SmarterAdminWebView):
     def setup(self, request: WSGIRequest, *args, **kwargs):
         super().setup(request, *args, **kwargs)
 
-        logger.info("%s.setup() user: %s", self.formatted_class_name, self.user_profile)
+        logger.debug("%s.setup() user: %s", self.formatted_class_name, self.user_profile)
 
-        secret_id: int = kwargs.get("secret_id")
+        secret_id: Optional[int] = kwargs.get("secret_id")
         if secret_id:
-            logger.info("%s.setup() secret_id: %s", self.formatted_class_name, secret_id)
+            logger.debug("%s.setup() secret_id: %s", self.formatted_class_name, secret_id)
             try:
                 self.secret = Secret.objects.get(pk=secret_id, user_profile=self.user_profile)
             except Secret.DoesNotExist:
@@ -151,7 +151,7 @@ class SecretView(SmarterAdminWebView):
                     status=HTTPStatus.FORBIDDEN.value, data={"error": "You are not allowed to view this secret"}
                 )
         else:
-            logger.info("%s.setup() with no secret_id", self.formatted_class_name)
+            logger.debug("%s.setup() with no secret_id", self.formatted_class_name)
 
     def get(self, request: WSGIRequest, secret_id: int = None):
         """
@@ -169,18 +169,18 @@ class SecretView(SmarterAdminWebView):
         # case 1: create a new secret
         # ie. we arrived here via /account/dashboard/secrets/new/
         if not self.secret:
-            logger.info("%s.get() %s is creating a new secret", self.formatted_class_name, self.user_profile)
+            logger.debug("%s.get() %s is creating a new secret", self.formatted_class_name, self.user_profile)
             return self.clean_http_response(request, template_path=self.template_path, context=context)
 
         # case 2: edit an existing secret
-        logger.info("%s.get() %s got secret: %s", self.formatted_class_name, self.user_profile, secret_id)
+        logger.debug("%s.get() %s got secret: %s", self.formatted_class_name, self.user_profile, secret_id)
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request: WSGIRequest):
         """
         Create
         """
-        logger.info("%s.post() %s posted a new secret", self.formatted_class_name, self.user_profile)
+        logger.debug("%s.post() %s posted a new secret", self.formatted_class_name, self.user_profile)
         return self._handle_multipart_form(request)
 
     # pylint: disable=W0613
@@ -188,13 +188,13 @@ class SecretView(SmarterAdminWebView):
         """
         Edit/Create
         """
-        logger.info("%s.patch() %s patching secret: %s", self.formatted_class_name, self.user_profile, secret_id)
+        logger.debug("%s.patch() %s patching secret: %s", self.formatted_class_name, self.user_profile, secret_id)
         return self._handle_write_request(request)
 
     def delete(self, request: WSGIRequest, secret_id):
         if not self.secret:
             return SmarterHttpResponseNotFound(request=request, error_message="Secret not found")
-        logger.info("%s.delete() received DELETE request: %s", self.formatted_class_name, request)
+        logger.debug("%s.delete() received DELETE request: %s", self.formatted_class_name, request)
         try:
             secret = Secret.objects.get(pk=secret_id)
         except Secret.DoesNotExist:
@@ -204,5 +204,5 @@ class SecretView(SmarterAdminWebView):
                 request=request, error_message="You are not allowed to delete this secret"
             )
         secret.delete()
-        logger.info("%s.delete() %s deleted secret: %s", self.formatted_class_name, self.user_profile, secret_id)
+        logger.debug("%s.delete() %s deleted secret: %s", self.formatted_class_name, self.user_profile, secret_id)
         return http.JsonResponse(status=HTTPStatus.OK.value, data={})

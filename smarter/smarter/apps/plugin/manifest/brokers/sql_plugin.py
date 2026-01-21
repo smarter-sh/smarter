@@ -170,7 +170,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         if self.ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     def plugin_init(self) -> None:
         """
@@ -225,7 +225,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
+        return f"{parent_class}.{SAMSqlPluginBroker.__name__}[{id(self)}]"
 
     @property
     def ORMModelClass(self) -> Type[PluginDataSql]:
@@ -516,44 +516,44 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         This method constructs a `SqlData` Pydantic model using the data associated with the current
         `plugin_meta`. It retrieves the data using the ORM-to-Pydantic conversion method.
 
-        parameters: an OpenAI Api compliant dictionary of parameters to pass to the API call.
-            {
-                'type': 'object',
-                'required': ['username'],
-                'properties': {
-                    'unit': {
-                        'enum': ['Celsius', 'Fahrenheit'],
-                        'type': 'string',
-                        'default': 'Celsius',
-                        'description': 'The temperature unit to use.'
+        Parameters:
+            parameters (dict): An OpenAI API-compliant dictionary of parameters to pass to the API call, e.g.::
+
+                {
+                    'type': 'object',
+                    'required': ['username'],
+                    'properties': {
+                        'unit': {
+                            'enum': ['Celsius', 'Fahrenheit'],
+                            'type': 'string',
+                            'default': 'Celsius',
+                            'description': 'The temperature unit to use.'
+                        },
+                        'username': {
+                            'type': 'string',
+                            'default': 'admin',
+                            'description': 'The username to query.'
+                        }
                     },
-                    'username': {
-                        'type': 'string',
-                        'default': 'admin',
-                        'description': 'The username to query.'
-                    }
-                },
-                'additionalProperties': False
-            }
+                    'additionalProperties': False
+                }
 
-        :return: The plugin data as a Pydantic model.
-        :rtype: SqlData
+        Returns:
+            SqlData: The plugin data as a Pydantic model.
 
-        **Example:**
+        Example:
 
-        .. code-block:: python
+            .. code-block:: python
 
-            broker = SAMSqlPluginBroker()
-            sql_data = broker.plugin_data_orm2pydantic()
-            print(sql_data.model_dump_json())
+                broker = SAMSqlPluginBroker()
+                sql_data = broker.plugin_data_orm2pydantic()
+                print(sql_data.model_dump_json())
 
-        :raises SAMPluginBrokerError:
-            If there is an error retrieving or converting the plugin data.
+        Raises:
+            SAMPluginBrokerError: If there is an error retrieving or converting the plugin data.
 
-
-        .. seealso::
-
-            - `SqlData`
+        See Also:
+            - SqlData
         """
         if not self.plugin_meta:
             return None
@@ -653,6 +653,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SmarterJournaledJsonResponse`
 
         """
+        logger.debug(
+            "%s.example_manifest() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = SqlPlugin.example_manifest(kwargs=kwargs)
@@ -698,7 +706,15 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SAMPluginMeta`
 
         """
-        command = self.describe.__name__
+        logger.debug(
+            "%s.describe() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
+        command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
         if not self.manifest:
@@ -745,6 +761,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SAMPluginBrokerError`
             :class:`SAMBrokerErrorNotReady`
         """
+        logger.debug(
+            "%s.apply() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
@@ -798,6 +822,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.chat() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
@@ -828,6 +860,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SmarterJournalCliCommands`
 
         """
+        logger.debug(
+            "%s.delete() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -870,6 +910,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.deploy() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
@@ -888,6 +936,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.undeploy() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
@@ -905,6 +961,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :return: A `SmarterJournaledJsonResponse` indicating that the method is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.logs() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

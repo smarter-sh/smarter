@@ -8,7 +8,6 @@ from typing import Dict, Optional, Union
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.common.conf import smarter_settings
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -145,6 +144,14 @@ class PluginController(AbstractController):
         **kwargs,
     ):
         super().__init__(account, user, *args, user_profile, **kwargs)
+        logger.debug(
+            "%s.__init__ called with account: %s, user: %s, user_profile: %s, kwargs: %s",
+            self.formatted_class_name,
+            account,
+            user,
+            user_profile,
+            kwargs,
+        )
         if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta) and not bool(name)):
             raise SAMPluginControllerError(
                 f"One and only one of manifest or plugin_meta should be provided. Received? manifest: {bool(manifest)}, plugin_meta: {bool(plugin_meta)}, name: {bool(name)}."
@@ -171,7 +178,7 @@ class PluginController(AbstractController):
 
         if manifest:
             self._manifest = manifest
-            logger.info("%s received manifest: %s", self.formatted_class_name, self._manifest.metadata.name)
+            logger.debug("%s received manifest: %s", self.formatted_class_name, self._manifest.metadata.name)
             if self._manifest.kind not in VALID_MANIFEST_KINDS:
                 raise SAMPluginControllerError(
                     f"Manifest kind {self._manifest.kind} should be one of: {VALID_MANIFEST_KINDS}."
@@ -179,13 +186,13 @@ class PluginController(AbstractController):
 
         if plugin_meta:
             self._plugin_meta = plugin_meta
-            logger.info("%s received plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
+            logger.debug("%s received plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
 
         if name:
             self._name = name
-            logger.info("%s received name: %s", self.formatted_class_name, self._name)
+            logger.debug("%s received name: %s", self.formatted_class_name, self._name)
 
-        logger.info(
+        logger.debug(
             "%s initialized with account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
             self.formatted_class_name,
             self.account,
@@ -195,6 +202,14 @@ class PluginController(AbstractController):
             self.plugin_meta,
             self.name,
         )
+
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        return f"{__name__}.{PluginController.__name__}[{id(self)}]"
 
     ###########################################################################
     # Abstract property implementations
@@ -220,7 +235,7 @@ class PluginController(AbstractController):
                     name=self.name,
                     plugin_class=self.plugin_class,
                 )
-                logger.info("%s retrieved plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
+                logger.debug("%s retrieved plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
             except PluginMeta.DoesNotExist:
                 pass
         return self._plugin_meta

@@ -510,7 +510,7 @@ class ChatConfigView(SmarterNeverCachedWebView):
         #
         # examples:
         # - https://customer-support.3141-5926-5359.api.example.com/workbench/config/?session_key=123456
-        # - http://localhost:8000/api/v1/chatbots/1556/chat/config/?session_key=0733c7b3a33e7eb733c95f6d7fc88d671b6c957e6857a04d05b3f5905167116f
+        # - http://localhost:9357/api/v1/chatbots/1556/chat/config/?session_key=0733c7b3a33e7eb733c95f6d7fc88d671b6c957e6857a04d05b3f5905167116f
         #
         # The React app calls this endpoint at app initialization to get a
         # json dict that includes, among other pertinent info, this session_key
@@ -611,7 +611,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
 
         Sandbox mode:
             - http://smarter.sh/workbench/hr/
-            - http://127.0.0.1:8000/workbench/<str:name>/
+            - http://127.0.0.1:9357/workbench/<str:name>/
 
         Production mode:
             - https://hr.3141-5926-5359.alpha.api.example.com/workbench/
