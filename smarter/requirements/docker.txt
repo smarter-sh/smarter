@@ -326,8 +326,6 @@ pandas==2.3.2
     # via -r smarter/requirements/in/base.in
 paramiko==4.0.0
     # via -r smarter/requirements/in/base.in
-pathspec==0.12.1
-    # via -r smarter/requirements/in/constraints.in
 pillow==11.3.0
     # via
     #   pillow-heif
