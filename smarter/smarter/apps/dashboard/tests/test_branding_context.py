@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test global context processor."""
 
-
 from django.test import RequestFactory
 
 # our stuff

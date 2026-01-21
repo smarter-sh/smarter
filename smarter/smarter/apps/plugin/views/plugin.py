@@ -4,6 +4,7 @@ smarter.apps.plugin.views.plugin
 This module contains views to implement the card-style list view
 in the Smarter Dashboard.
 """
+
 import logging
 from typing import Optional
 

@@ -1,5 +1,6 @@
 # pylint: disable=W0707,W0718
 """Account Payment method views for smarter api."""
+
 import logging
 from http import HTTPStatus
 from typing import Optional

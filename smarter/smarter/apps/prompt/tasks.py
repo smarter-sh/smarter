@@ -6,6 +6,7 @@ These tasks are i/o intensive operations for creating chat and plugin history re
 Celery workers in order to avoid blocking the main app thread. This is advance work to lay groundwork for
 future high-traffic scenarios.
 """
+
 import logging
 
 from smarter.apps.account.models import Account

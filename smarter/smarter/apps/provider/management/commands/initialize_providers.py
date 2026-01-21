@@ -20,7 +20,6 @@ from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT
 from smarter.common.mixins import json
 from smarter.lib.django.management.base import SmarterCommand
 
-
 logger = logging.getLogger(__name__)
 
 HERE = Path(__file__).resolve().parent
@@ -221,6 +220,10 @@ class Command(SmarterCommand):
             return
         except GoogleAuthError as e:
             self.stdout.write(self.style.ERROR(f"initialize_googleai: Error loading Google credentials: {e}"))
+
+        # pylint: disable=broad-except
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"initialize_googleai: Unexpected error: {e}"))
             return
         credentials.refresh(auth_req)
         bearer_token = credentials.token

@@ -13,7 +13,6 @@ from .swagger import (
     EXAMPLE_DESCRIBE_USER,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -39,8 +38,7 @@ class ApiV1CliDescribeApiView(CliBaseApiView):
         inherited_class = super().formatted_class_name
         return f"{inherited_class}.{ApiV1CliDescribeApiView.__name__}[{id(self)}]"
 
-    @swagger_auto_schema(
-        operation_description="""
+    @swagger_auto_schema(operation_description="""
 Executes the 'describe' command for all Smarter resources.  The resource name is passed in the url query parameters.
 
 This is the API endpoint for the 'describe' command in the Smarter command-line interface (CLI). The 'describe' command is a Smarter Brokered and Journaled operation that is used with all Smarter resources. It expects a YAML manifest in smarter.sh/v1 format.
@@ -48,8 +46,7 @@ This is the API endpoint for the 'describe' command in the Smarter command-line 
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, which is written in Golang and available on Windows, macOS, and Linux.
 
 The response from this endpoint is a JSON object containing a representation of the resource manifest.
-"""
-    )
+""")
     def post(self, request, kind: str, *args, **kwargs):
         logger.debug(
             "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs

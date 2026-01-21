@@ -3,6 +3,7 @@
 Django REST framework base views for /docs/ brokered viewsets,
 manifest and schema.
 """
+
 import os
 from logging import getLogger
 from typing import TYPE_CHECKING, Optional
@@ -23,7 +24,6 @@ from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
 from smarter.lib.django.view_helpers import SmarterWebHtmlView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
-
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
