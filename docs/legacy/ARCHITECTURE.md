@@ -86,7 +86,7 @@ Not to be confused with Smarter's flagship product, customer-implemented custom 
 
 ## Minimum Developer Requirements
 
-- 20Gib of available drive space
+- 10Gib of available drive space
 - MacOS: Version 12 (Monterey), Apple Silicon (M1 or newer) or Intel CPU with support for virtualization
 - Windows: Windows 10 64-bit, 64-bit processor with Second Level Address Translation (SLAT), 8Gib of RAM, Windows Subsystem for Linux 2 if running Windows Home Editions.
 - [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git). _pre-installed on Linux and macOS_
