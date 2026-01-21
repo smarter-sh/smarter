@@ -43,7 +43,7 @@ Usage
 .. code-block:: bash
 
   # Smarter Prompt Engineer Workbench
-  curl -X POST http://localhost:8000/api/v1/chatbots/9/chat/?session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7
+  curl -X POST http://localhost:9357/api/v1/chatbots/9/chat/?session_key=e5c0368d6d7201b60f4f20c470f4b5ba36faf45e80ddbe8b04b6cf20f33167a7
 
   # Deployed Smarter Chatbot - Alpha
   curl -X GET https://stackademy.3141-5926-5359.alpha.api.example.com/chat/?session_key=<SESSION-KEY>

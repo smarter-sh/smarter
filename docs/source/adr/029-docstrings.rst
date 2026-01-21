@@ -38,6 +38,7 @@ Example:
 
         Raises:
             ValueError: If the username is invalid.
+
         """
 
 Consequences

@@ -11,6 +11,8 @@ Updates:
 - pyproject.toml
 - Dockerfile
 - helm/charts/smarter/Chart.yaml
+- helm/charts/smarter/values.yaml
+- .github/actions/deploy/action.yml
 """
 
 import re
@@ -21,7 +23,7 @@ from pathlib import Path
 def update_version_in_file(filepath, pattern, replacement):
     path = Path(filepath)
     text = path.read_text(encoding="utf-8")
-    new_text = re.sub(pattern, replacement, text)
+    new_text = re.sub(pattern, replacement, text, flags=re.MULTILINE)
     path.write_text(new_text, encoding="utf-8")
 
 
@@ -40,39 +42,92 @@ def main():
     update_version_in_file(
         "smarter/smarter/__version__.py", r'__version__\s*=\s*["\'].*?["\']', f'__version__ = "{new_version}"'
     )
+    print(f"Updated __version__.py to {new_version}")
 
     # Update pyproject.toml
     update_version_in_file("pyproject.toml", r'version\s*=\s*["\'].*?["\']', f'version = "{new_version}"')
+    print(f"Updated pyproject.toml to {new_version}")
 
-    # Update Dockerfile (example: ARG VERSION=...)
+    # LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
+    #   description="Docker image for the Smarter Api" \
+    #   license="GNU AGPL v3" \
+    #   vcs-url="https://github.com/smarter-sh/smarter" \
+    #   org.opencontainers.image.title="Smarter API" \
+    #   org.opencontainers.image.version="x.x.x" \
+    #   org.opencontainers.image.authors="Lawrence McDaniel <lpm0073@gmail.com>" \
+    #   org.opencontainers.image.url="https://smarter-sh.github.io/smarter/" \
+    #   org.opencontainers.image.source="https://github.com/smarter-sh/smarter" \
+    #   org.opencontainers.image.documentation="https://docs.smarter.sh/"
     update_version_in_file(
         "Dockerfile",
         r'org\.opencontainers\.image\.version="[^"]+"',
         f'org.opencontainers.image.version="{new_version}"',
     )
+    print(f"Updated Dockerfile to {new_version}")
 
-    print(
-        f"Version updated to {new_version} in __version__.py, pyproject.toml, Dockerfile and helm/charts/smarter/Chart.yaml"
-    )
-
-    # Update Helm chart
+    # - name: Set Docker image
+    #   id: set-docker-image
+    #   shell: bash
+    #   run: |-
+    #     echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:vx.x.x" >> $GITHUB_ENV
+    #   env:
+    #     AWS_ECR_REPO: ${{ env.NAMESPACE }}
     update_version_in_file(
-        "helm/charts/smarter/Chart.yaml",
-        r'appVersion:\s*["\']?[\w\.\-]+["\']?',
-        f"appVersion: {new_version}",
+        ".github/actions/deploy/action.yml",
+        r'(echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)(\"[^\n]*)',
+        f"\\g<1>v{new_version}\\g<3>",
     )
+    print(f"Updated .github/actions/deploy/action.yml to {new_version}")
 
     # Update helm/charts/smarter/values.yaml
     # global:
     #   image:
     #     pullPolicy: IfNotPresent
     #     repository: lpm0073/smarter
-    #     tag: v0.13.38
+    #     tag: vx.x.x
     update_version_in_file(
         "helm/charts/smarter/values.yaml",
-        r"(global:\s*\n\s*image:\s*\n(?:.*\n)*?\s*tag:\s*)v\d+\.\d+\.\d+",
-        f"\\1v{new_version}",
+        r"(tag:\s*)v\d+\.\d+\.\d+",
+        f"\\g<1>v{new_version}",
     )
+    print(f"Updated helm/charts/smarter/values.yaml to {new_version}")
+
+    # -------------------------------------------------------------------------
+    # Update helm/charts/smarter/Chart.yaml
+    # -------------------------------------------------------------------------
+
+    # Update appVersion in Chart.yaml
+    update_version_in_file(
+        "helm/charts/smarter/Chart.yaml",
+        r"(appVersion:\s*)[\d\.]+",
+        f"\\g<1>{new_version}",
+    )
+    # Update version in Chart.yaml (top-level only)
+    update_version_in_file(
+        "helm/charts/smarter/Chart.yaml",
+        r"^version:\s*\d+\.\d+\.\d+$",
+        f"version: {new_version}",
+    )
+    # Update image version in artifacthub.io/images in Chart.yaml
+    update_version_in_file(
+        "helm/charts/smarter/Chart.yaml",
+        r"(image:\s*mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)",
+        f"\\g<1>v{new_version}",
+    )
+    # Update version in artifacthub.io/changes description in Chart.yaml
+    update_version_in_file(
+        "helm/charts/smarter/Chart.yaml",
+        r"(description: bump to app version )\d+\.\d+\.\d+",
+        f"\\g<1>{new_version}",
+    )
+    # Update version in helm.sh/chart Chart.yaml
+    update_version_in_file(
+        "helm/charts/smarter/Chart.yaml",
+        r"(helm\.sh/chart:\s*smarter-)\d+\.\d+\.\d+",
+        f"\\g<1>{new_version}",
+    )
+
+    print(f"Updated helm/charts/smarter/Chart.yaml to {new_version}")
 
 
 if __name__ == "__main__":

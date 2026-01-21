@@ -145,7 +145,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         super().__init__(*args, **kwargs)
         if not self.ready:
             if not self.loader and not self.manifest and not self.plugin:
-                logger.error(
+                logger.warning(
                     "%s.__init__() No loader nor existing Plugin provided for %s broker. Cannot initialize.",
                     self.formatted_class_name,
                     self.kind,
@@ -175,7 +175,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         if self.ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     def plugin_init(self) -> None:
         """
@@ -238,7 +238,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
+        return f"{parent_class}.{SAMApiPluginBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:
@@ -538,6 +538,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             print(response.data)
 
         """
+        logger.debug(
+            "%s.example_manifest() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         data = ApiPlugin.example_manifest(kwargs=kwargs)
@@ -582,6 +590,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             Use this method to inspect the current manifest and plugin details for debugging, API responses, or documentation.
 
         """
+        logger.debug(
+            "%s.describe() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -634,6 +650,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             Use this method to onboard, update, or synchronize plugin manifests with the database.
 
         """
+        logger.debug(
+            "%s.apply() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
@@ -682,6 +706,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         :return: Not implemented error response.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.chat() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
@@ -723,6 +755,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             print(response.data)
 
         """
+        logger.debug(
+            "%s.delete() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -767,6 +807,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         :return: Not implemented error response.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.deploy() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
@@ -805,6 +853,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         :return: Not implemented error response.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.logs() called for %s %s args: %s kwargs: %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            args,
+            kwargs,
+        )
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

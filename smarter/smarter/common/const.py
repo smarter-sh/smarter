@@ -17,7 +17,7 @@ SMARTER_BETA_ACCOUNT_NUMBER = "4386-2072-3294"
 SMARTER_UBC_ACCOUNT_NUMBER = "5680-6558-6577"
 SMARTER_API_SUBDOMAIN = "api"
 SMARTER_PLATFORM_SUBDOMAIN = "platform"
-SMARTER_COMPANY_NAME = "Smarter"
+SMARTER_COMPANY_NAME = "The Smarter Project"
 SMARTER_EXAMPLE_CHATBOT_NAME = "example"
 SMARTER_CUSTOMER_SUPPORT_EMAIL = "support@smarter.sh"
 SMARTER_CONTACT_EMAIL = "contact@smarter.sh"
@@ -34,9 +34,6 @@ SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
 # to indicate that the request is an internal API request. This
 # is used to bypass DRF authentication and permission checks in the API views.
 SMARTER_IS_INTERNAL_API_REQUEST = "smarter_is_internal_api_request"
-
-# Default cache expiration expressed in seconds for Redis based Django caching.
-SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 5  # 5 minutes
 
 # Default maximum lifetime for Smarter API keys in days.
 SMARTER_API_KEY_MAX_LIFETIME_DAYS = 365 * 3  # 3 years

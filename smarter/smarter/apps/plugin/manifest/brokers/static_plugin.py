@@ -197,7 +197,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         if self.ready:
             logger.info(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     def plugin_init(self):
         """
@@ -255,7 +255,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
         """
         parent_class = super().formatted_class_name
-        return f"{parent_class}.{self.__class__.__name__}[{id(self)}]"
+        return f"{parent_class}.{SAMStaticPluginBroker.__name__}[{id(self)}]"
 
     @property
     def kind(self) -> str:
@@ -665,6 +665,13 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
 
 
         """
+        logger.debug(
+            "%s.example_manifest() called for %s %s %s",
+            self.formatted_class_name,
+            self.kind,
+            self.name,
+            self.user_profile,
+        )
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -795,6 +802,9 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             JSON response containing the plugin manifest or error details.
 
         """
+        logger.debug(
+            "%s.describe() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
+        )
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
 
@@ -843,6 +853,9 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             - `StaticPlugin.save`
             - `SmarterJournaledJsonResponse`
         """
+        logger.debug(
+            "%s.apply() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
+        )
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
@@ -910,6 +923,9 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         :return: JSON response indicating error.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.chat() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
+        )
         super().chat(request, kwargs)
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
@@ -938,6 +954,9 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             - :meth:`SAMPluginBaseBroker.set_and_verify_name_param`
 
         """
+        logger.debug(
+            "%s.delete() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
+        )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -981,6 +1000,9 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         :return: JSON response indicating error.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.deploy() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
+        )
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
@@ -999,6 +1021,9 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         :return: JSON response indicating error.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.undeployº() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
+        )
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
@@ -1017,6 +1042,9 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         :return: JSON response indicating error.
         :rtype: SmarterJournaledJsonResponse
         """
+        logger.debug(
+            "%s.logs() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
+        )
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

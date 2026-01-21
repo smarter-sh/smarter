@@ -36,7 +36,6 @@ from smarter.apps.prompt.manifest.brokers.chat_plugin_usage import (
 )
 from smarter.apps.prompt.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
 from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
-from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -167,7 +166,7 @@ class Brokers:
         determine the broker to use when the kind is not provided in the
         request.
 
-        example: http://localhost:8000/api/v1/cli/example_manifest/account/
+        example: http://localhost:9357/api/v1/cli/example_manifest/account/
         returns: "Account"
         """
         parsed_url = urlparse(url)

@@ -92,7 +92,7 @@ Basic Commands
    docker build -t my-image .
 
    # Run a container from an image
-   docker run -p 8000:8000 my-image
+   docker run -p 9357:9357 my-image
 
    # Stop all running containers
    docker stop $(docker ps -q)

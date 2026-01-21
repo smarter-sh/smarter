@@ -432,10 +432,6 @@ class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
         Fixed a bug where Django method decorators were raising exceptions for unauthenticated
         users instead of redirecting them to the login page. Replaced the decorators
         with explicit checks in the `dispatch` method.
-
-    .. changelog::
-
-        :versionadded: v0.13.39
     """
 
     @property

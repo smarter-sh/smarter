@@ -34,6 +34,7 @@ class Command(SmarterCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
+        parser.add_argument("--account_number", type=str, help="The account number for the demo chatbot.")
         parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
 
     def handle(self, *args, **options):
@@ -42,11 +43,12 @@ class Command(SmarterCommand):
         self.handle_begin()
 
         foreground = options["foreground"] if "foreground" in options else False
+        account_number = options.get("account_number", SMARTER_ACCOUNT_NUMBER)
 
         log_prefix = "manage.py deploy_example_chatbot:"
         self.stdout.write(self.style.NOTICE(log_prefix + "Deploying the Smarter demo API..."))
 
-        account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
+        account = Account.objects.get(account_number=account_number)
         user = get_cached_admin_user_for_account(account)
         user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
         chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)

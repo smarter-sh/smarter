@@ -7,6 +7,12 @@ inputs:
   anthropic-api-key:
     description: "The Anthropic API key"
     required: true
+  authentication-backends:
+    description: "The authentication backends to enable"
+    required: false
+  cohere-api-key:
+    description: "The Cohere API key"
+    required: false
   aws-access-key-id:
     description: "The AWS access key ID"
     required: true
@@ -28,6 +34,9 @@ inputs:
   fernet-encryption-key:
     description: "The Fernet encryption key"
     required: true
+  fireworks-api-key:
+    description: "The Fireworks API key"
+    required: false
   gemini-api-key:
     description: "The Gemini API key"
     required: true
@@ -46,6 +55,9 @@ inputs:
   mailchimp-list-id:
     description: "The Mailchimp list ID"
     required: true
+  mistral-api-key:
+    description: "The Mistral API key"
+    required: false
   openai-api-key:
     description: "The OpenAI API key"
     required: true
@@ -82,6 +94,9 @@ inputs:
   social-auth-linkedin-oauth2-secret:
     description: "The LinkedIn OAuth2 secret"
     required: true
+  togetherai-api-key:
+    description: "The TogetherAI API key"
+    required: false
 
 runs:
   using:
@@ -136,12 +151,13 @@ runs:
         echo "-------------"
         aws sts get-caller-identity
 
-    # install kubectl, which Helm will use to deploy the application
-    - name: Install kubectl
-      id: kubectl-install
+    # install jq, which k8s-get-secret will use to parse the Kubernetes secret
+    # and set the environment variables
+    - name: Install jq and kubectl
       shell: bash
-      run: |-
-        sudo snap install kubectl --classic
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq kubectl
 
     # setup kubeconfig using the aws eks helper command, 'update-kubeconfig'
     - name: Configure kubectl
@@ -155,15 +171,6 @@ runs:
       env:
         EKS_CLUSTER_NAME: apps-hosting-service
 
-    # install jq, which k8s-get-secret will use to parse the Kubernetes secret
-    # and set the environment variables
-    - name: Install jq
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y jq
-
-    # connect to Amazon ECR so that we can programmatically
     # figure out the Docker image to add to the Helm values for the
     # Kubernetes deployment manifest.
     - name: Login to Amazon ECR
@@ -177,8 +184,7 @@ runs:
       id: set-docker-image
       shell: bash
       run: |-
-        echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.60" >> $GITHUB_ENV
-
+        echo "SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:v0.13.92" >> $GITHUB_ENV
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
@@ -254,15 +260,20 @@ runs:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: smarter-django-secret-key
 
-    # see: https://github.com/helm/helm
-    #      we're installing directly from the github repo amd64 binary
-    - name: Install Helm
-      id: helm-install
+    # set env variable for branding info
+    # TODO: map this to --- something???? --- could be Kubernetes secret, or
+    # GitHub secret, or Helm values file...? TBD.
+    - name: Set branding environment variables
+      id: set-branding-env
       shell: bash
       run: |-
-        curl -LO https://get.helm.sh/helm-v3.14.2-linux-amd64.tar.gz
-        tar -zxvf helm-v3.14.2-linux-amd64.tar.gz
-        sudo mv linux-amd64/helm /usr/local/bin/helm
+        echo "SMARTER_BRANDING_ADDRESS=851 Burlway Road, Suite 101, Burlingame, CA 94010" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_CONTACT_URL=https://lawrencemcdaniel.com/contact/" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_CORPORATE_NAME=Lawrence P. McDaniel, The Smarter Project" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_SUPPORT_EMAIL=support@example.com" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_SUPPORT_HOURS=MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)" >> $GITHUB_ENV
+        echo "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER=+1 (617) 555-6172" >> $GITHUB_ENV
+        echo "SMARTER_EMAIL_ADMIN=lpm0073@gmail.com" >> $GITHUB_ENV
 
     # Dump all of our environment variables to the run log
     - name: Dump environment variables
@@ -279,6 +290,104 @@ runs:
       run: |-
         kubectl delete job smarter-db-init-job --namespace ${{ env.NAMESPACE }} || true
 
+    - name: Create secrets values file
+      id: create-json
+      shell: bash
+      run: |
+        cat > /tmp/values.json <<EOF
+        {
+          "deployTimestamp": "$(date +%s)",
+          "env": {
+            "AUTHENTICATION_BACKENDS": ${{ inputs.authentication-backends && format('"{0}"', inputs.authentication-backends) || 'null' }},
+            "AWS_ACCESS_KEY_ID": ${{ inputs.aws-access-key-id && format('"{0}"', inputs.aws-access-key-id) || 'null' }},
+            "AWS_REGION": ${{ inputs.aws-region && format('"{0}"', inputs.aws-region) || 'null' }},
+            "AWS_SECRET_ACCESS_KEY": ${{ inputs.aws-secret-access-key && format('"{0}"', inputs.aws-secret-access-key) || 'null' }},
+            "CACHES_LOCATION": ${{ env.CACHES_LOCATION && format('"{0}"', env.CACHES_LOCATION) || 'null' }},
+            "CELERY_BROKER_URL": ${{ env.CELERY_BROKER_URL && format('"{0}"', env.CELERY_BROKER_URL) || 'null' }},
+            "CELERY_RESULT_BACKEND": ${{ env.CELERY_RESULT_BACKEND && format('"{0}"', env.CELERY_RESULT_BACKEND) || 'null' }},
+            "DJANGO_SETTINGS_MODULE": ${{ env.DJANGO_SETTINGS_MODULE && format('"{0}"', env.DJANGO_SETTINGS_MODULE) || 'null' }},
+            "DOCKERHUB_PAT": ${{ inputs.dockerhub-pat && format('"{0}"', inputs.dockerhub-pat) || 'null' }},
+            "DOCKERHUB_USERNAME": ${{ inputs.dockerhub-username && format('"{0}"', inputs.dockerhub-username) || 'null' }},
+            "ENVIRONMENT": ${{ inputs.environment && format('"{0}"', inputs.environment) || 'null' }},
+            "NAMESPACE": ${{ env.NAMESPACE && format('"{0}"', env.NAMESPACE) || 'null' }},
+            "SECRET_KEY": ${{ env.SECRET_KEY && format('"{0}"', env.SECRET_KEY) || 'null' }},
+            "SMARTER_ADMIN_EMAIL": ${{ env.SMARTER_ADMIN_EMAIL && format('"{0}"', env.SMARTER_ADMIN_EMAIL) || 'null' }},
+            "SMARTER_ADMIN_PASSWORD": ${{ env.SMARTER_ADMIN_PASSWORD && format('"{0}"', env.SMARTER_ADMIN_PASSWORD) || 'null' }},
+            "SMARTER_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
+            "SMARTER_ANTHROPIC_API_KEY": ${{ inputs.anthropic-api-key && format('"{0}"', inputs.anthropic-api-key) || 'null' }},
+            "SMARTER_BRANDING_ADDRESS": ${{ env.SMARTER_BRANDING_ADDRESS && format('"{0}"', env.SMARTER_BRANDING_ADDRESS) || 'null' }},
+            "SMARTER_BRANDING_CONTACT_URL": ${{ env.SMARTER_BRANDING_CONTACT_URL && format('"{0}"', env.SMARTER_BRANDING_CONTACT_URL) || 'null' }},
+            "SMARTER_BRANDING_CORPORATE_NAME": ${{ env.SMARTER_BRANDING_CORPORATE_NAME && format('"{0}"', env.SMARTER_BRANDING_CORPORATE_NAME) || 'null' }},
+            "SMARTER_BRANDING_SUPPORT_EMAIL": ${{ env.SMARTER_BRANDING_SUPPORT_EMAIL && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_EMAIL) || 'null' }},
+            "SMARTER_BRANDING_SUPPORT_HOURS": ${{ env.SMARTER_BRANDING_SUPPORT_HOURS && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_HOURS) || 'null' }},
+            "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER": ${{ env.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER && format('"{0}"', env.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER) || 'null' }},
+            "SMARTER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
+            "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
+            "SMARTER_EMAIL_ADMIN": ${{ env.SMARTER_EMAIL_ADMIN && format('"{0}"', env.SMARTER_EMAIL_ADMIN) || 'null' }},
+            "SMARTER_FERNET_ENCRYPTION_KEY": $(jq -Rn --arg v "${{ inputs.fernet-encryption-key }}" '$v'),
+            "SMARTER_FIREWORKS_API_KEY": ${{ inputs.fireworks-api-key && format('"{0}"', inputs.fireworks-api-key) || 'null' }},
+            "SMARTER_GEMINI_API_KEY": ${{ inputs.gemini-api-key && format('"{0}"', inputs.gemini-api-key) || 'null' }},
+            "SMARTER_GOOGLE_MAPS_API_KEY": ${{ inputs.google-maps-api-key && format('"{0}"', inputs.google-maps-api-key) || 'null' }},
+            "SMARTER_GOOGLE_SERVICE_ACCOUNT_B64": ${{ inputs.google-service-account-b64 && format('"{0}"', inputs.google-service-account-b64) || 'null' }},
+            "SMARTER_LLAMA_API_KEY": ${{ inputs.llama-api-key && format('"{0}"', inputs.llama-api-key) || 'null' }},
+            "SMARTER_LOGIN_URL": ${{ env.SMARTER_LOGIN_URL && format('"{0}"', env.SMARTER_LOGIN_URL) || 'null' }},
+            "SMARTER_LOGO": ${{ inputs.smarter-logo && format('"{0}"', inputs.smarter-logo) || 'null' }},
+            "SMARTER_MAILCHIMP_API_KEY": ${{ inputs.mailchimp-api-key && format('"{0}"', inputs.mailchimp-api-key) || 'null' }},
+            "SMARTER_MAILCHIMP_LIST_ID": ${{ inputs.mailchimp-list-id && format('"{0}"', inputs.mailchimp-list-id) || 'null' }},
+            "SMARTER_MARKETING_SITE_URL": "https://smarter.sh",
+            "SMARTER_MISTRAL_API_KEY": ${{ inputs.mistral-api-key && format('"{0}"', inputs.mistral-api-key) || 'null' }},
+            "SMARTER_MYSQL_DATABASE": ${{ env.SMARTER_MYSQL_DATABASE && format('"{0}"', env.SMARTER_MYSQL_DATABASE) || 'null' }},
+            "SMARTER_MYSQL_HOST": ${{ env.MYSQL_HOST && format('"{0}"', env.MYSQL_HOST) || 'null' }},
+            "SMARTER_MYSQL_PASSWORD": ${{ env.SMARTER_MYSQL_PASSWORD && format('"{0}"', env.SMARTER_MYSQL_PASSWORD) || 'null' }},
+            "SMARTER_MYSQL_PORT": ${{ env.MYSQL_PORT && format('"{0}"', env.MYSQL_PORT) || 'null' }},
+            "SMARTER_MYSQL_ROOT_PASSWORD": ${{ env.MYSQL_ROOT_PASSWORD && format('"{0}"', env.MYSQL_ROOT_PASSWORD) || 'null' }},
+            "SMARTER_MYSQL_ROOT_USERNAME": ${{ env.MYSQL_ROOT_USERNAME && format('"{0}"', env.MYSQL_ROOT_USERNAME) || 'null' }},
+            "SMARTER_MYSQL_TEST_DATABASE_PASSWORD": ${{ inputs.smarter-mysql-test_database_password && format('"{0}"', inputs.smarter-mysql-test_database_password) || 'null' }},
+            "SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME": "smarter_test_db",
+            "SMARTER_MYSQL_USER": ${{ env.SMARTER_MYSQL_USERNAME && format('"{0}"', env.SMARTER_MYSQL_USERNAME) || 'null' }},
+            "SMARTER_OPENAI_API_KEY": ${{ inputs.openai-api-key && format('"{0}"', inputs.openai-api-key) || 'null' }},
+            "SMARTER_PINECONE_API_KEY": ${{ inputs.pinecone-api-key && format('"{0}"', inputs.pinecone-api-key) || 'null' }},
+            "SMARTER_PINECONE_ENVIRONMENT": ${{ inputs.pinecone-environment && format('"{0}"', inputs.pinecone-environment) || 'null' }},
+            "SMARTER_ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
+            "SMARTER_SMTP_FROM_EMAIL": "no-reply@platform.smarter.sh",
+            "SMARTER_SMTP_PASSWORD": ${{ env.SMTP_PASSWORD && format('"{0}"', env.SMTP_PASSWORD) || 'null' }},
+            "SMARTER_SMTP_SENDER": "no-reply@smarter.sh",
+            "SMARTER_SMTP_USERNAME": ${{ env.SMTP_USERNAME && format('"{0}"', env.SMTP_USERNAME) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_GITHUB_KEY": ${{ inputs.social-auth-github-key && format('"{0}"', inputs.social-auth-github-key) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_GITHUB_SECRET": ${{ inputs.social-auth-github-secret && format('"{0}"', inputs.social-auth-github-secret) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY": ${{ inputs.social-auth-google-oauth2-key && format('"{0}"', inputs.social-auth-google-oauth2-key) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET": ${{ inputs.social-auth-google-oauth2-secret && format('"{0}"', inputs.social-auth-google-oauth2-secret) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY": ${{ inputs.social-auth-linkedin-oauth2-key && format('"{0}"', inputs.social-auth-linkedin-oauth2-key) || 'null' }},
+            "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET": ${{ inputs.social-auth-linkedin-oauth2-secret && format('"{0}"', inputs.social-auth-linkedin-oauth2-secret) || 'null' }},
+            "SMARTER_TOGETHERAI_API_KEY": ${{ inputs.togetherai-api-key && format('"{0}"', inputs.togetherai-api-key) || 'null' }},
+            "SMTP_HOST": ${{ env.SMTP_HOST && format('"{0}"', env.SMTP_HOST) || 'null' }},
+            "SMTP_PORT": ${{ env.SMTP_PORT && format('"{0}"', env.SMTP_PORT) || 'null' }},
+            "SMTP_USE_SSL": ${{ env.SMTP_USE_SSL && format('"{0}"', env.SMTP_USE_SSL) || 'null' }},
+            "SMTP_USE_TLS": ${{ env.SMTP_USE_TLS && format('"{0}"', env.SMTP_USE_TLS) || 'null' }}
+          }
+        }
+        EOF
+
+    - name: Convert to yaml
+      id: convert-to-yaml
+      shell: bash
+      run: |-
+        cat /tmp/values.json | jq . > /tmp/values_clean.json && mv /tmp/values_clean.json /tmp/values.json
+        cat /tmp/values.json | yq eval -P --input-format=json > /tmp/values.yaml
+        echo "values.yaml"
+        echo "--------------------------------------------------------------------------------"
+        cat /tmp/values.yaml
+
+    # see: https://github.com/helm/helm
+    #      we're installing directly from the github repo amd64 binary
+    - name: Install Helm
+      id: helm-install
+      shell: bash
+      run: |-
+        curl -LO https://get.helm.sh/helm-v3.14.2-linux-amd64.tar.gz
+        tar -zxvf helm-v3.14.2-linux-amd64.tar.gz
+        sudo mv linux-amd64/helm /usr/local/bin/helm
+
     - name: Update Helm charts
       id: helm-update
       shell: bash
@@ -294,104 +403,6 @@ runs:
         helm repo update
         helm dependency update
         helm dependency build
-
-    # Create a temporary values file with secrets
-    - name: Create secrets values file
-      id: create-secrets-values
-      shell: bash
-      run: |-
-        cat > /tmp/values.yaml <<EOF
-        deployTimestamp: "$(date +%s)"
-
-        env:
-          # Deployment
-          # -------------------------------------------------------------------
-          DJANGO_SETTINGS_MODULE: "${{ env.DJANGO_SETTINGS_MODULE }}"
-          ENVIRONMENT: "${{ inputs.environment }}"
-          NAMESPACE: "${{ env.NAMESPACE }}"
-          SMARTER_DOCKER_IMAGE: "${{ env.SMARTER_DOCKER_IMAGE }}"
-
-          # AWS
-          # -------------------------------------------------------------------
-          AWS_REGION: "${{ inputs.aws-region }}"
-          AWS_ACCESS_KEY_ID: "${{ inputs.aws-access-key-id }}"
-          AWS_SECRET_ACCESS_KEY: "${{ inputs.aws-secret-access-key }}"
-
-          # Docker Hub
-          # -------------------------------------------------------------------
-          DOCKERHUB_USERNAME: "${{ inputs.dockerhub-username }}"
-          DOCKERHUB_PAT: "${{ inputs.dockerhub-pat }}"
-
-          # Required Smarter settings
-          # -------------------------------------------------------------------
-          SMARTER_ROOT_DOMAIN: "${{ inputs.root-domain }}"
-          SMARTER_EMAIL_ADMIN: "lpm0073@gmail.com"
-          SMARTER_GOOGLE_SERVICE_ACCOUNT_B64: "${{ inputs.google-service-account-b64 }}"
-          SMARTER_LOGO: "${{ inputs.smarter-logo }}"
-          SMARTER_MARKETING_SITE_URL: "https://smarter.sh"
-          SMARTER_MYSQL_TEST_DATABASE_SECRET_NAME: smarter_test_db
-          SMARTER_SMTP_SENDER: no-reply@smarter.sh
-          SMARTER_SMTP_FROM_EMAIL:no-reply@alpha.platform.smarter.sh
-          SMARTER_FERNET_ENCRYPTION_KEY: "${{ inputs.fernet-encryption-key }}"
-          SECRET_KEY: "${{ env.SECRET_KEY }}"
-
-          # Email
-          # -------------------------------------------------------------------
-          MAILCHIMP_API_KEY: "${{ inputs.mailchimp-api-key }}"
-          MAILCHIMP_LIST_ID: "${{ inputs.mailchimp-list-id }}"
-
-          # AI APIs
-          # -------------------------------------------------------------------
-          SMARTER_ANTHROPIC_API_KEY: "${{ inputs.anthropic-api-key }}"
-          SMARTER_OPENAI_API_KEY: "${{ inputs.openai-api-key }}"
-          SMARTER_PINECONE_API_KEY: "${{ inputs.pinecone-api-key }}"
-          SMARTER_PINECONE_ENVIRONMENT: "${{ inputs.pinecone-environment }}"
-          SMARTER_GOOGLE_MAPS_API_KEY: "${{ inputs.google-maps-api-key }}"
-          SMARTER_GEMINI_API_KEY: "${{ inputs.gemini-api-key }}"
-          SMARTER_LLAMA_API_KEY: "${{ inputs.llama-api-key }}"
-
-          # OAuth
-          # -------------------------------------------------------------------
-          SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "${{ inputs.social-auth-google-oauth2-key }}"
-          SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "${{ inputs.social-auth-google-oauth2-secret }}"
-          SMARTER_SOCIAL_AUTH_GITHUB_KEY: "${{ inputs.social-auth-github-key }}"
-          SMARTER_SOCIAL_AUTH_GITHUB_SECRET: "${{ inputs.social-auth-github-secret }}"
-          SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "${{ inputs.social-auth-linkedin-oauth2-key }}"
-          SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "${{ inputs.social-auth-linkedin-oauth2-secret }}"
-
-          # Database
-          # -------------------------------------------------------------------
-          SMARTER_MYSQL_HOST: "${{ env.MYSQL_HOST }}"
-          SMARTER_MYSQL_PORT: "${{ env.MYSQL_PORT }}"
-          SMARTER_MYSQL_DATABASE: "${{ env.SMARTER_MYSQL_DATABASE }}"
-          SMARTER_MYSQL_USER: "${{ env.SMARTER_MYSQL_USERNAME }}"
-          SMARTER_MYSQL_PASSWORD: "${{ env.SMARTER_MYSQL_PASSWORD }}"
-          SMARTER_MYSQL_ROOT_USERNAME: "${{ env.MYSQL_ROOT_USERNAME }}"
-          SMARTER_MYSQL_ROOT_PASSWORD: "${{ env.MYSQL_ROOT_PASSWORD }}"
-          SMARTER_MYSQL_TEST_DATABASE_PASSWORD: "${{ inputs.smarter-mysql-test_database_password }}"
-
-          # Admin
-          # -------------------------------------------------------------------
-          SMARTER_LOGIN_URL: "${{ env.SMARTER_LOGIN_URL }}"
-          SMARTER_ADMIN_PASSWORD: "${{ env.SMARTER_ADMIN_PASSWORD }}"
-          SMARTER_ADMIN_USERNAME: "${{ env.SMARTER_ADMIN_USERNAME }}"
-          SMARTER_ADMIN_EMAIL: "${{ env.SMARTER_ADMIN_EMAIL }}"
-
-          # SMTP
-          # -------------------------------------------------------------------
-          SMTP_HOST: "${{ env.SMTP_HOST }}"
-          SMTP_PORT: "${{ env.SMTP_PORT }}"
-          SMTP_USE_SSL: "${{ env.SMTP_USE_SSL }}"
-          SMTP_USE_TLS: "${{ env.SMTP_USE_TLS }}"
-          SMARTER_SMTP_USERNAME: "${{ env.SMTP_USERNAME }}"
-          SMARTER_SMTP_PASSWORD: "${{ env.SMTP_PASSWORD }}"
-
-          # Cache/Celery
-          # -------------------------------------------------------------------
-          CACHES_LOCATION: "${{ env.CACHES_LOCATION }}"
-          CELERY_BROKER_URL: "${{ env.CELERY_BROKER_URL }}"
-          CELERY_RESULT_BACKEND: "${{ env.CELERY_RESULT_BACKEND }}"
-        EOF
 
     # Deploy the application to Kubernetes using Helm
     - name: Deploy

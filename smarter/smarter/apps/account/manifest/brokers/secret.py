@@ -177,7 +177,7 @@ class SAMSecretBroker(AbstractBroker):
         if self.ready:
             logger.debug(msg)
         else:
-            logger.error(msg)
+            logger.warning(msg)
 
     def init_secret(self):
         """Initialize the secret transformer."""

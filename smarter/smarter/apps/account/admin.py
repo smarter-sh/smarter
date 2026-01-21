@@ -291,4 +291,5 @@ smarter_restricted_admin_site.register(Charge, ChargeAdmin)
 smarter_restricted_admin_site.register(DailyBillingRecord, DailyBillingRecordAdmin)
 smarter_restricted_admin_site.register(PaymentMethod, PaymentMethodModelAdmin)
 smarter_restricted_admin_site.register(Secret, SecretAdmin)
+
 smarter_restricted_admin_site.register(UserProfile, RestrictedModelAdmin)

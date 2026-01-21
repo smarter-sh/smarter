@@ -76,7 +76,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
     @property
     def formatted_class_name(self) -> str:
         """Return the formatted class name for logging purposes."""
-        return formatted_text(f"{__name__}.{self.__class__.__name__}")
+        return formatted_text(f"{__name__}.{SmarterTokenAuthentication.__name__}")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

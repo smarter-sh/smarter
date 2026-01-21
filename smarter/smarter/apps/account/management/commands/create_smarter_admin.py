@@ -34,8 +34,8 @@ class Command(SmarterCommand):
 
         account, created = Account.objects.get_or_create(
             account_number=SMARTER_ACCOUNT_NUMBER,
-            company_name=SMARTER_COMPANY_NAME,
         )
+        account.company_name = SMARTER_COMPANY_NAME
         account.is_default_account = True
         account.phone_number = "+1 (617) 834-6172"
         account.address1 = "851 Burlway Road"
@@ -51,9 +51,12 @@ class Command(SmarterCommand):
         if created:
             self.handle_completed_success(msg=f"Created account: {account.account_number} {account.company_name}")
 
-        user, created = User.objects.get_or_create(
-            username=username, email=email, is_superuser=True, is_staff=True, is_active=True
-        )
+        user, created = User.objects.get_or_create(username=username)
+        user.email = email
+        user.is_superuser = True
+        user.is_staff = True
+        user.is_active = True
+        user.save()
         if created:
             if not password:
                 password_length = 16

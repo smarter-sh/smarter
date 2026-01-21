@@ -8,12 +8,10 @@ from typing import Optional
 import yaml
 from django.core.management import call_command
 
-from smarter.apps.account.const import DATA_PATH as ACCOUNT_DATA_PATH
 from smarter.apps.account.models import UserProfile
-from smarter.apps.api.utils import apply_manifest
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
@@ -81,6 +79,8 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
             print("Example plugins created successfully.")
 
     """
+    logger_prefix = formatted_text(f"{__name__}.add_example_plugins()")
+    logger.debug("%s.add_example_plugins Adding example plugins for user profile: %s", logger_prefix, user_profile)
 
     plugin_examples = PluginExamples()
     data: Optional[dict] = None
@@ -90,19 +90,30 @@ def add_example_plugins(user_profile: Optional[UserProfile], verbose: bool = Fal
     output = io.StringIO()
     error_output = io.StringIO()
 
-    # Add required secrets
-    manifest_path = os.path.join(ACCOUNT_DATA_PATH, "example-manifests", "secret-smarter-test-db.yaml")
-    if not apply_manifest(filespec=manifest_path, username=username, verbose=verbose):
-        raise SmarterValueError(f"Failed to apply manifest: {error_output.getvalue()}")
+    def apply(file_path):
 
-    # add required connections
-    manifest_path = os.path.join(HERE, "data/sample-connections/smarter-test-db.yaml")
-    if not apply_manifest(filespec=manifest_path, username=username, verbose=verbose):
-        raise SmarterValueError(f"Failed to apply manifest: {error_output.getvalue()}")
+        call_command("apply_manifest", filespec=file_path, username=username, stdout=output, stderr=error_output)
+        if error_output.getvalue():
+            print(f"Command completed with warnings: {error_output.getvalue()}")
+        else:
+            print(f"Applied manifest {file_path}. output: {output.getvalue()}")
 
-    manifest_path = os.path.join(HERE, "data/sample-connections/smarter-test-api.yaml")
-    if not apply_manifest(filespec=manifest_path, username=username, verbose=verbose):
-        raise SmarterValueError(f"Failed to apply manifest: {error_output.getvalue()}")
+    try:
+        file_paths = [
+            os.path.join("smarter", "apps", "account", "data", "example-manifests", "secret-smarter-test-db.yaml"),
+            os.path.join("smarter", "apps", "account", "data", "example-manifests", "secret-smarter-test-db.yaml"),
+            os.path.join(
+                "smarter", "apps", "account", "data", "example-manifests", "secret-smarter-test-db-proxy-password.yaml"
+            ),
+            os.path.join("smarter", "apps", "plugin", "data", "sample-connections", "smarter-test-db.yaml"),
+            os.path.join("smarter", "apps", "plugin", "data", "sample-connections", "smarter-test-api.yaml"),
+        ]
+        for file_path in file_paths:
+            apply(file_path)
+
+    # pylint: disable=W0718
+    except Exception as e:
+        raise SmarterValueError(f"Failed to apply manifest or secret for example plugins: {e}") from e
 
     for plugin in plugin_examples.plugins:
         yaml_data = plugin.to_yaml()

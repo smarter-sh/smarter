@@ -63,7 +63,7 @@ class SmarterValidator:
     """
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
-    LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS += [host + ":9357" for host in LOCAL_HOSTS]
     LOCAL_HOSTS.append("testserver")
     """List of local hosts used for validation purposes."""
 
@@ -101,6 +101,9 @@ class SmarterValidator:
 
     VALID_CLEAN_STRING_WITH_SPACES = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;= %]+$"
     """Pattern for validating clean strings that may include spaces."""
+
+    VALID_EMAIL_PATTERN = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+    """Pattern for validating email addresses."""
 
     VALID_URL_ENDPOINT = r"^/[a-zA-Z0-9/_\-\{\}]+/$"  # NOTE: this allows placeholders like {id} in the url
     """Pattern for validating URL endpoints."""
@@ -478,6 +481,29 @@ class SmarterValidator:
         return account_number
 
     @staticmethod
+    def validate_username(username: str) -> str:
+        """Validate username format
+
+        Checks if the provided string is a valid username.
+
+        :param username: The username to validate.
+        :type username: str
+        :raises SmarterValueError: If the username is not valid.
+        :returns: The validated username.
+        :rtype: str
+
+        Example::
+
+            SmarterValidator.validate_username("valid_username")  # returns "valid_username"
+            SmarterValidator.validate_username("invalid username") # raises SmarterValueError
+
+        """
+        logger.debug("%s.validate_username() %s", logger_prefix, username)
+        if not re.match(r"^[a-zA-Z0-9_.-]+$", username):
+            raise SmarterValueError(f"Invalid username {username}")
+        return username
+
+    @staticmethod
     def validate_domain(domain: Optional[str]) -> Optional[str]:
         """Validate domain format
 
@@ -520,14 +546,9 @@ class SmarterValidator:
 
         """
         logger.debug("%s.validate_email() %s", logger_prefix, email)
-        try:
-            # pylint: disable=import-outside-toplevel
-            from django.core.exceptions import ValidationError
-            from django.core.validators import validate_email
 
-            validate_email(email)
-        except ValidationError as e:
-            raise SmarterValueError(f"Invalid email {email}") from e
+        if not isinstance(email, str) or not re.match(SmarterValidator.VALID_EMAIL_PATTERN, email):
+            raise ValueError(f"Invalid email {email}")
         return email
 
     @staticmethod
@@ -887,6 +908,30 @@ class SmarterValidator:
         logger.debug("%s.is_valid_account_number() %s", logger_prefix, account_number)
         try:
             SmarterValidator.validate_account_number(account_number)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_username(username: str) -> bool:
+        """Check if username is valid
+
+        Checks whether the provided username is valid.
+
+        :param username: The username to check.
+        :type username: str
+        :returns: True if the username is valid, otherwise False.
+        :rtype: bool
+
+        Example::
+
+            SmarterValidator.is_valid_username("valid_username")  # returns True
+            SmarterValidator.is_valid_username("invalid username") # returns False
+
+        """
+        logger.debug("%s.is_valid_username() %s", logger_prefix, username)
+        try:
+            SmarterValidator.validate_username(username)
             return True
         except SmarterValueError:
             return False

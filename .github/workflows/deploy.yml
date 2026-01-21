@@ -69,16 +69,22 @@ jobs:
         uses: ./.github/actions/deploy
         with:
           environment: ${{ env.ENVIRONMENT }}
+          authentication-backends: "${{ secrets.AUTHENTICATION_BACKENDS }}"
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+          cohere-api-key: ${{ secrets.COHERE_API_KEY }}
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-pat: ${{ secrets.DOCKERHUB_PAT }}
           fernet-encryption-key: ${{ secrets.FERNET_ENCRYPTION_KEY }}
+          fireworks-api-key: ${{ secrets.FIREWORKS_API_KEY }}
           google-service-account-b64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}
           google-maps-api-key: ${{ secrets.GOOGLE_MAPS_API_KEY }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
           llama-api-key: ${{ secrets.LLAMA_API_KEY }}
+          mailchimp-api-key: ${{ secrets.MAILCHIMP_API_KEY }}
+          mailchimp-list-id: ${{ secrets.MAILCHIMP_LIST_ID }}
+          mistral-api-key: ${{ secrets.MISTRAL_API_KEY }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           pinecone-api-key: ${{ secrets.PINECONE_API_KEY }}
@@ -92,8 +98,7 @@ jobs:
           social-auth-github-secret: ${{ secrets.SOCIAL_AUTH_GITHUB_SECRET }}
           social-auth-linkedin-oauth2-key: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}
           social-auth-linkedin-oauth2-secret: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}
-          mailchimp-api-key: ${{ secrets.MAILCHIMP_API_KEY }}
-          mailchimp-list-id: ${{ secrets.MAILCHIMP_LIST_ID }}
+          togetherai-api-key: ${{ secrets.TOGETHERAI_API_KEY }}
 
       - name: Send Email
         uses: ./.github/actions/send-mail

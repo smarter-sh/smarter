@@ -243,7 +243,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         ]
         comma_separated = ", ".join(sorted(set(sources)))
         msg = f"{self.formatted_class_name}.__init__() initializing from {comma_separated}."
-        logger.info(msg)
+        logger.debug(msg)
         self._api_version = api_version or self.api_version
         self._selected = selected
         self._user_profile = user_profile
@@ -314,7 +314,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         :return: String representation of the class.
         :rtype: str
         """
-        return f"{formatted_text(self.__class__.__name__)}[{id(self)}](name={self.name}, kind={self.kind})"
+        return f"{formatted_text(PluginBase.__name__)}[{id(self)}](name={self.name}, kind={self.kind})"
 
     def __repr__(self) -> str:
         """
@@ -470,9 +470,8 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
 
         :raises NotImplementedError: If not implemented in a subclass.
 
-        :Example:
+        Example::
 
-            ```python
             from smarter.apps.plugin.plugin.base import PluginDataBase
 
             class MyPluginData(PluginDataBase):
@@ -660,7 +659,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         :param value: The plugin parameters to set.
         :type value: dict
         """
-        logger.info("Setting plugin parameters: %s", value)
+        logger.debug("Setting plugin parameters: %s", value)
         if not isinstance(value, dict):
             raise SmarterValueError("Plugin parameters must be a dictionary.")
         self._params = value
@@ -1289,14 +1288,14 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         if not self._manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
 
-        logger.info("%s.create() creating plugin %s", self.formatted_class_name, self.manifest.metadata.name)
+        logger.debug("%s.create() creating plugin %s", self.formatted_class_name, self.manifest.metadata.name)
 
         def committed(plugin: PluginMeta):
             plugin_id: int = plugin.id if isinstance(plugin, PluginMeta) else None  # type: ignore[reportOptionalMemberAccess]
             self.id = plugin_id
             plugin_created.send(sender=self.__class__, plugin=self)
             plugin_meta = self._plugin_meta
-            logger.info(
+            logger.debug(
                 "%s.create() created and committed plugin %s: %s.",
                 self.formatted_class_name,
                 self.plugin_meta.name if self.plugin_meta else "Unknown",
@@ -1304,7 +1303,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             )
 
         if self.plugin_meta:
-            logger.info(
+            logger.debug(
                 "%s.create() Plugin %s already exists. Updating plugin %s.",
                 self.formatted_class_name,
                 self.plugin_meta.name,
@@ -1319,7 +1318,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
                 tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
                 plugin_meta.tags.set(tags)
 
-                logger.info("%s.create() created PluginMeta: %s", self.formatted_class_name, plugin_meta)
+                logger.debug("%s.create() created PluginMeta: %s", self.formatted_class_name, plugin_meta)
 
                 selector = self.plugin_selector_django_model
                 prompt = self.plugin_prompt_django_model
@@ -1334,12 +1333,12 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
 
                 if selector is not None:
                     plugin_selector = PluginSelector.objects.create(**selector)
-                    logger.info("%s.create() created PluginSelector: %s", self.formatted_class_name, plugin_selector)
+                    logger.debug("%s.create() created PluginSelector: %s", self.formatted_class_name, plugin_selector)
                 if prompt is not None:
                     plugin_prompt = PluginPrompt.objects.create(**prompt)
-                    logger.info("%s.create() created PluginPrompt: %s", self.formatted_class_name, plugin_prompt)
+                    logger.debug("%s.create() created PluginPrompt: %s", self.formatted_class_name, plugin_prompt)
                 if plugin_data is not None:
-                    logger.info("%s.create() creating PluginData: %s", self.formatted_class_name, plugin_data)
+                    logger.debug("%s.create() creating PluginData: %s", self.formatted_class_name, plugin_data)
                     self.plugin_data_class.objects.create(**plugin_data)
 
         transaction.on_commit(lambda: committed(plugin=plugin_meta))
@@ -1515,7 +1514,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
         # pylint: disable=W0613
         def committed(new_plugin: Optional[PluginMeta]):
             plugin_cloned.send(sender=self.__class__, plugin=self)
-            logger.info(
+            logger.debug(
                 "Cloned plugin %s: %s to %s: %s",
                 self.id,
                 self.name,

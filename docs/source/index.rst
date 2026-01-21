@@ -63,7 +63,7 @@ Usage
 
 **1. Create a Smarter manifest**
 
-.. literalinclude:: ../../smarter/smarter/apps/plugin/data/stackademy/chatbot-stackademy-sql.yaml
+.. literalinclude:: ../../smarter/smarter/apps/plugin/data/stackademy/stackademy-chatbot-sql.yaml
    :language: yaml
    :caption: Example Smarter Manifest
 
@@ -72,7 +72,7 @@ Usage
 
 .. code-block:: console
 
-   smarter apply -f stackademy_chatbot.yaml
+   smarter apply -f stackademy-chatbot-sql.yaml
 
 **3. Interact with the Chatbot**
 

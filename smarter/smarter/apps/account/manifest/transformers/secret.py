@@ -389,8 +389,6 @@ class SecretTransformer(SmarterHelperMixin):
     @id.setter
     def id(self, value: int):
         """Set the id of the secret."""
-        if not self.user_profile:
-            raise SmarterSecretTransformerError("User profile is not set. Cannot set secret by id.")
 
         self._name = None
         self._secret_serializer = None
@@ -398,11 +396,10 @@ class SecretTransformer(SmarterHelperMixin):
             self._secret = None
             return
 
-        self._secret = get_cached_secret_by_pk(secret_pk=value, user_profile=self.user_profile)
-        if not self._secret:
-            raise SmarterSecretTransformerError(
-                "Secret.DoesNotExist: pk={} for user_profile={}".format(value, self.user_profile)
-            )
+        try:
+            self._secret = Secret.objects.get(pk=value)
+        except Secret.DoesNotExist as e:
+            raise SmarterSecretTransformerError(f"Secret.DoesNotExist: pk={value}") from e
 
     @property
     def secret(self) -> Optional[Secret]:
@@ -558,7 +555,7 @@ class SecretTransformer(SmarterHelperMixin):
             if self.secret:
                 return True
 
-        logger.error(
+        logger.warning(
             "%s.ready() Not in a ready state: No manifest nor secret instance found. ", self.formatted_class_name
         )
         return False

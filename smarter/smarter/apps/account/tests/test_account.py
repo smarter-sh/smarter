@@ -4,12 +4,10 @@
 # our stuff
 import logging
 
-from smarter.apps.account.models import User
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import hash_factory
 from smarter.lib.unittest.base_classes import SmarterTestBase
-
-from ..models import Account, UserProfile
 
 
 logger = logging.getLogger(__name__)

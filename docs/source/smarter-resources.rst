@@ -11,7 +11,7 @@ that define the desired state of each resource. Smarter's declarative approach a
 And importantly, SAM files are human-readable, infrastructure-as-code documents that can be reviewed and understood by non-developers,
 like business analysts and product managers.
 
-.. literalinclude:: ../../smarter/smarter/apps/account/data/sample-secrets/smarter-test-db.yaml
+.. literalinclude:: ../../smarter/smarter/apps/account/data/example-manifests/secret-smarter-test-db.yaml
   :language: yaml
   :caption: Example Manifest
 

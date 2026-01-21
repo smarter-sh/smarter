@@ -30,7 +30,7 @@ from dotenv import load_dotenv
 from smarter.__version__ import __version__ as smarter_version
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
-from smarter.common.helpers.console_helpers import formatted_text_green
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
 from smarter.lib import json
 
 
@@ -79,6 +79,7 @@ def smart_cast(value, default_value):
     return value  # str or fallback
 
 
+APPEND_SLASH = True
 ALLOWED_HOSTS = smarter_settings.allowed_hosts
 """
 A list of strings representing the host/domain names that this Django site can serve.
@@ -897,6 +898,8 @@ SOCIAL_AUTH_PIPELINE = (
     # Populate the extra_data field in the social record with the values
     # specified by settings (and the default ones like access_token, etc).
     "social_core.pipeline.social_auth.load_extra_data",
+    # Custom: Redirect inactive accounts before finalizing login
+    "smarter.apps.account.pipeline.redirect_inactive_account",
     # Update the user record with any changed info from the auth service.
     "social_core.pipeline.user.user_details",
 )
@@ -1527,7 +1530,7 @@ WAGTAILADMIN_BASE_URL = os.environ.get("WAGTAILADMIN_BASE_URL", "/cms/admin/")
 
 WAGTAILTRANSFER_SOURCES = {
     "localhost": {
-        "BASE_URL": "http://localhost:8000/wagtail-transfer/",
+        "BASE_URL": "http://localhost:9357/wagtail-transfer/",
         "SECRET_KEY": "qr4hlujl144ye5hwn0k3f0no462ms81z",
     },
     "alpha": {
@@ -1587,19 +1590,24 @@ for key, value in os.environ.items():
                 "AWS_SECRET_ACCESS_KEY",
             ]:
                 logger.info(
-                    formatted_text_green("Overriding Django setting from environment variable: %s=%s"),
+                    formatted_text_green("%s Overriding Django setting from environment variable: %s=%s"),
+                    __name__ + ".settings.base.py",
                     key,
                     repr(cast_value),
                 )
             else:
-                logger.info(formatted_text_green("Overriding Django setting from environment variable: %s=******"), key)
+                logger.info(
+                    formatted_text_green("%s Overriding Django setting from environment variable: %s=******"),
+                    __name__ + ".settings.base.py",
+                    key,
+                )
 
 ###############################################################################
 # Settings diagnostics information for all environments
 ###############################################################################
 if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.info("=" * 80)
-    logger.info("smarter.settings.base.py")
+    logger.info(formatted_text(__name__ + ".settings.base.py"))
 
     try:
         with open("/proc/uptime", encoding="utf-8") as f:
@@ -1672,11 +1680,6 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.info("Smarter v%s", smarter_version)
     logger.info("Default file storage: %s", DEFAULT_FILE_STORAGE)
     logger.info("Storages backend: %s", STORAGES["default"]["BACKEND"])
-
-    cache_backend = CACHES.get("default", {}).get("BACKEND", "not configured")
-    logger.info("Cache backend: %s", json.dumps(CACHES))
-    if cache_backend != "django_redis.cache.RedisCache":
-        logger.warning("Recommended cache backend is django_redis.cache.RedisCache")
 
     if smarter_settings.smtp_is_configured:
         logger.info("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)
