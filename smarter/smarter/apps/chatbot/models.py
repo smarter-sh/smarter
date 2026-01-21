@@ -1,5 +1,6 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
+
 import logging
 import warnings
 from functools import cached_property
@@ -55,7 +56,6 @@ from .signals import (
     chatbot_dns_verified,
     chatbot_undeployed,
 )
-
 
 CACHE_PREFIX = "ChatBotHelper_"
 API_VI_CHATBOT_NAMESPACE = "api:v1:chatbot"

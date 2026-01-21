@@ -54,6 +54,7 @@ from urllib.parse import urljoin, urlparse  # library for URL manipulation
 
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
+import requests
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from dotenv import load_dotenv
 from pydantic import (
@@ -92,8 +93,8 @@ from .const import (
 from .exceptions import SmarterConfigurationError, SmarterValueError
 from .utils import bool_environment_variable
 
-
 logger = logging.getLogger(__name__)
+logger_prefix = formatted_text(__name__ + "Settings()")
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
 DEFAULT_ROOT_DOMAIN = "example.com"
 DOT_ENV_LOADED = load_dotenv()
@@ -491,6 +492,10 @@ class SettingsDefaults:
             "See https://console.cloud.google.com/projectselector2/iam-admin/serviceaccounts?supportedpurview=project"
         )
         GOOGLE_SERVICE_ACCOUNT = SecretStr(json.dumps({}))
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.error("Unexpected error loading Google service account: %s", e)
+        GOOGLE_SERVICE_ACCOUNT = SecretStr(json.dumps({}))
 
     GEMINI_API_KEY: SecretStr = SecretStr(get_env("GEMINI_API_KEY", is_secret=True, is_required=True))
     INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
@@ -610,6 +615,9 @@ if Services.enabled(Services.AWS_EC2):
         AWS_REGIONS = [region["RegionName"] for region in regions["Regions"]]
     except (ProfileNotFound, NoCredentialsError):
         logger.warning("could not initialize ec2 client")
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.error("unexpected error initializing aws ec2 client: %s", e)
 
 
 def empty_str_to_bool_default(v: str, default: bool) -> bool:
@@ -4368,8 +4376,9 @@ class Settings(BaseSettings):
     def smarter_reactjs_app_loader_url(self) -> str:
         """
         Return the full URL to the ReactJS app loader script.
-        This is used for loading the ReactJS Chat
-        frontend component into html web pages.
+        This is used for loading the ReactJS Chat frontend component into html
+        web pages. Attempts to validate the URL by checking for HTTP 200 status.
+        Provides a fallback URL if the primary URL is not reachable.
 
         Example:
             >>> print(smarter_settings.smarter_reactjs_app_loader_url)
@@ -4379,7 +4388,40 @@ class Settings(BaseSettings):
             - smarter_settings.environment_cdn_url
             - smarter_settings.smarter_reactjs_app_loader_path
         """
-        return urljoin(self.environment_cdn_url, self.smarter_reactjs_app_loader_path)
+
+        def check_smarter_reactjs_app_loader_url(url, timeout: float = 1.50) -> bool:
+            """
+            Checks if the smarter_reactjs_app_loader_url returns HTTP 200 status.
+            Returns True if status code is 200, False otherwise.
+            Uses requests if available, else falls back to urllib.
+            """
+            try:
+                resp = requests.get(url, timeout=timeout)
+                return resp.status_code == 200
+            # pylint: disable=broad-except
+            except Exception:
+                return False
+
+        intended_url = urljoin(self.environment_cdn_url, self.smarter_reactjs_app_loader_path)
+        fallback_url = "https://cdn.platform.smarter.sh/ui-chat/app-loader.js"
+        if check_smarter_reactjs_app_loader_url(intended_url):
+            logger.error(
+                "%s Could not retrieve the ReactJS app loader from %s. Falling back to %s. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Chat.",
+                logger_prefix,
+                intended_url,
+                fallback_url,
+            )
+            return intended_url
+        elif check_smarter_reactjs_app_loader_url(fallback_url):
+            logger.error(
+                "%s Could not retrieve the ReactJS app loader from the fallback url %s.", logger_prefix, fallback_url
+            )
+            return fallback_url
+        else:
+            raise SmarterConfigurationError(
+                f"Could not retrieve the ReactJS app loader from either {intended_url} or {fallback_url}. "
+                "Please check your CDN configuration and internet connectivity."
+            )
 
     @cached_property
     def smarter_reactjs_root_div_id(self) -> str:

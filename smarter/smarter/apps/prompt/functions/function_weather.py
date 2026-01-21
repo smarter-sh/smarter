@@ -61,7 +61,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
 from retry_requests import retry
 
 from smarter.common.conf import smarter_settings
-from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -77,20 +77,23 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(__name__)
 
 
 # Google Maps API key
 gmaps = None
+if (
+    not smarter_settings.google_maps_api_key
+    or smarter_settings.google_maps_api_key.get_secret_value() == smarter_settings.default_missing_value
+):
+    logger.error(f"{logger_prefix} Google Maps API key is not set. Please set GOOGLE_MAPS_API_KEY in your .env file.")
+
 try:
-    if not smarter_settings.google_maps_api_key:
-        raise SmarterConfigurationError(
-            "Google Maps API key is not set. Please set GOOGLE_MAPS_API_KEY in your .env file."
-        )
     gmaps = googlemaps.Client(key=smarter_settings.google_maps_api_key.get_secret_value())
 # pylint: disable=broad-exception-caught
 except ValueError as value_error:
     logger.error(
-        "Could not initialize Google Maps API. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview. Add your GOOGLE_MAPS_API_KEY to .env: %s"
+        f"{logger_prefix} Could not initialize Google Maps API. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview. Add your GOOGLE_MAPS_API_KEY to .env: {value_error}"
     )
 
 # Make sure all required weather variables are listed here
@@ -156,10 +159,10 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit
         longitude = geocode_result[0]["geometry"]["location"]["lng"] or 0
         address = geocode_result[0]["formatted_address"]
     except googlemaps.exceptions.ApiError as api_error:
-        logger.error("Google Maps API error getting geo coordinates for %s: %s", location, api_error)
+        logger.error(f"{logger_prefix} Google Maps API error getting geo coordinates for {location}: {api_error}")
     # pylint: disable=broad-exception-caught
     except Exception as e:
-        logger.error("An unexpected error occurred while getting geo coordinates for %s: %s", location, e)
+        logger.error(f"{logger_prefix} An unexpected error occurred while getting geo coordinates for {location}: {e}")
 
     params = {
         "latitude": latitude,

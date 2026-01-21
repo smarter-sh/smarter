@@ -1,5 +1,6 @@
 # pylint: disable=missing-docstring
 """Django token generators for single-use authentications."""
+
 from urllib.parse import urlparse
 
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -15,7 +16,6 @@ from django.utils.timezone import now as timezone_now
 
 from smarter.apps.account.models import User
 from smarter.common.exceptions import SmarterException
-
 
 DEFAULT_LINK_EXPIRATION = 86400
 HFS_EPOCH_UNIX_TIMESTAMP = 2082844800

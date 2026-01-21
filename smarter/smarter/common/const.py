@@ -1,5 +1,6 @@
 # pylint: disable=E1101
 """A module containing constants for the OpenAI API."""
+
 import importlib.util
 import logging
 import os
@@ -7,7 +8,6 @@ from pathlib import Path
 from typing import Dict
 
 import hcl2
-
 
 logger = logging.getLogger(__name__)
 

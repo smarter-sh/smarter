@@ -6,6 +6,7 @@ These tasks are i/o intensive operations for creating billing records with
 Celery workers in order to avoid blocking the main app thread. This is advance work to lay groundwork for
 future high-traffic scenarios.
 """
+
 # python stuff
 import logging
 from typing import Optional

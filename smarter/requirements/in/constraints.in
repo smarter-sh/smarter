@@ -120,5 +120,3 @@ wcwidth>=0.2.13,<1.0.0
 
 # Built-package format for Python; required for building and distributing Python packages.
 wheel>=0.45.1,<1.0.0
-
-# URL parsing for async frameworks; required by aiohttp for URL handling.

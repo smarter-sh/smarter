@@ -322,9 +322,7 @@ iniconfig==2.3.0
 invoke==2.2.1
     # via paramiko
 isort==6.0.1
-    # via
-    #   -r smarter/requirements/in/local.in
-    #   pylint
+    # via pylint
 jinja2==3.1.6
     # via sphinx
 jiter==0.12.0

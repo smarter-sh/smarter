@@ -1,6 +1,7 @@
 # pylint: disable=duplicate-code
 # pylint: disable=E1101
 """Utility functions for the OpenAI Lambda functions"""
+
 import base64
 import logging
 import sys  # libraries for error management

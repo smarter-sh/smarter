@@ -1,7 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test TestSmarterConnectionBrokerBase."""
 
-
 import logging
 import os
 
@@ -12,7 +11,6 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
-
 
 logger = logging.getLogger(__name__)
 MANIFEST_PATH_SECRET_SMARTER_TEST_DB_PASSWORD = os.path.abspath(
