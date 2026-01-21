@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.96](https://github.com/smarter-sh/smarter/compare/v0.13.95...v0.13.96) (2026-01-21)
+
+### Bug Fixes
+
+* ensure that platform can startup (with warnings) without Google credentials ([91889f3](https://github.com/smarter-sh/smarter/commit/91889f36f21e7fa887e22802eabe9a8c20840b01))
+
 ## [0.13.95](https://github.com/smarter-sh/smarter/compare/v0.13.94...v0.13.95) (2026-01-21)
 
 ### Bug Fixes
