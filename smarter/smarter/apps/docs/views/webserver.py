@@ -2,6 +2,7 @@
 """
 Web server views for the docs app
 """
+
 import os
 from datetime import datetime
 

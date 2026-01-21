@@ -1,5 +1,6 @@
 # pylint: disable=W0707,W0718
 """Account views for smarter api."""
+
 import logging
 
 from django.http.response import HttpResponseForbidden

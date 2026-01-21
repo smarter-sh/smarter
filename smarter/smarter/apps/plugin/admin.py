@@ -1,5 +1,6 @@
 # pylint: disable=C0114,C0115
 """Plugin admin."""
+
 import re
 
 from django.contrib import admin

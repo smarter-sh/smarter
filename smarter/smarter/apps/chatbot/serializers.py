@@ -1,5 +1,6 @@
 # pylint: disable=missing-class-docstring,W0212
 """Chatbot serializers."""
+
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import (

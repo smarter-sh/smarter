@@ -1,7 +1,6 @@
 # pylint: disable=W0613
 """Django views"""
 
-
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.lib.django.view_helpers import SmarterWebHtmlView
 

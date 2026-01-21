@@ -1,5 +1,6 @@
 # pylint: disable=E0402,E0602,unused-wildcard-import,wildcard-import
 """Django settings for beta.platform.smarter.sh"""
+
 import logging
 import os
 import sys
@@ -9,7 +10,6 @@ from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
 
 from .base_aws import *
-
 
 logger = logging.getLogger(__name__)
 

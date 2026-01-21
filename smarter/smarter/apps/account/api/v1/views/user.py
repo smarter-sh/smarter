@@ -1,5 +1,6 @@
 # pylint: disable=W0707,W0718,W0613
 """User views for smarter api."""
+
 import logging
 from http import HTTPStatus
 from typing import Optional

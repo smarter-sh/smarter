@@ -1,5 +1,6 @@
 # pylint: disable=W0613
 """Django REST framework views for the API admin app."""
+
 from django.shortcuts import render
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews

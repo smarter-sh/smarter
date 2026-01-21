@@ -1,5 +1,6 @@
 # pylint: disable=W0707,W0718,W0613
 """Views for unit tests."""
+
 import logging
 
 from rest_framework import serializers, status
@@ -16,7 +17,6 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
     SmarterAuthenticatedListAPIView,
 )
-
 
 logger = logging.getLogger(__name__)
 faux_dict = {

@@ -31,6 +31,7 @@ Note
 
 This module does not document individual function signatures or arguments, as these are automatically included by Sphinx's ``automodule`` directive. For detailed API documentation, refer to the generated documentation for each function.
 """
+
 import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
@@ -53,7 +54,6 @@ from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_COMPANY_NAME
 from smarter.lib.cache import cache_results
-
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
