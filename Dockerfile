@@ -20,6 +20,8 @@
 # The "slim" variant is a minimal image that excludes unnecessary files and packages,
 # making it smaller and faster to download and build.
 # It is commonly used for production deployments where a lightweight Python environment is preferred.
+# This is important because the Smarter container image build exceeds 2.4 GB,
+# even when using the slim image as a base.
 FROM python:3.12-slim-trixie AS linux_base
 
 LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
