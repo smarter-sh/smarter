@@ -38,7 +38,7 @@ import hashlib
 import logging
 import pickle
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import Any, Callable, Optional
 
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import (
@@ -47,10 +47,6 @@ from smarter.common.helpers.console_helpers import (
     formatted_text_red,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-
-
-if TYPE_CHECKING:
-    from django.http import HttpRequest
 
 logger = logging.getLogger(__name__)
 logger_prefix_normal = formatted_text(f"{__name__}.@cache_results()")
