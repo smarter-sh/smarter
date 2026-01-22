@@ -9,7 +9,6 @@ from pydantic import Field
 from smarter.apps.prompt.manifest.models.chat_plugin_usage.const import MANIFEST_KIND
 from smarter.lib.manifest.models import AbstractSAMStatusBase
 
-
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 

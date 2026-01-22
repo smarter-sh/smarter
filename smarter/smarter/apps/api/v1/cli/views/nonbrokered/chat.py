@@ -46,7 +46,6 @@ from ..swagger import (
     openai_success_response,
 )
 
-
 # for establishing a lifetime for chat sessions. we create a session_key, then cache it
 # and reuse it until it eventually expires.
 CACHE_EXPIRATION = 24 * 60 * 60  # 24 hours

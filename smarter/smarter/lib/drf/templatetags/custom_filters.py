@@ -4,7 +4,6 @@ import codecs
 
 from django import template
 
-
 register = template.Library()
 
 

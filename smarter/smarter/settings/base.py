@@ -33,7 +33,6 @@ from smarter.common.const import SMARTER_PLATFORM_SUBDOMAIN
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
 from smarter.lib import json
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -2,7 +2,6 @@
 
 from django.dispatch import Signal
 
-
 new_user_created = Signal()
 """
 Signal sent when a new user is created.

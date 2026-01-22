@@ -9,7 +9,6 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 from .base_class import ApiV1CliTestBase
 
-
 logger = logging.getLogger(__name__)
 
 

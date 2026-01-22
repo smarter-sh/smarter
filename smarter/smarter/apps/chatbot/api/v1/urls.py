@@ -20,7 +20,6 @@ from .views.views import (
     ChatbotView,
 )
 
-
 app_name = namespace
 
 

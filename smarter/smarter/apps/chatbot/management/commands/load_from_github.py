@@ -27,7 +27,6 @@ from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.loader import SAMLoader
 
-
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{__name__}")
 

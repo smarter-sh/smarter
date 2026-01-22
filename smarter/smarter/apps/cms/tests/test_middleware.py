@@ -8,7 +8,6 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.cms.middleware import HTMLMinifyMiddleware
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-
 ALL_KINDS = SAMKinds.singular_slugs()
 
 

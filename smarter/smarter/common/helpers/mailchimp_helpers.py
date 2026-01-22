@@ -7,7 +7,6 @@ from mailchimp_marketing.api_client import ApiClientError
 
 from smarter.common.conf import smarter_settings
 
-
 logger = logging.getLogger(__name__)
 
 MAILCHIMP_SERVER = "us3"

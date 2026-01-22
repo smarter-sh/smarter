@@ -6,7 +6,6 @@ from django.views.generic.base import RedirectView
 from .const import namespace
 from .views.dashboard import ChangeLogView, DashboardView, EmailAdded, NotificationsView
 
-
 app_name = namespace
 
 urlpatterns = [

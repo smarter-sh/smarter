@@ -23,7 +23,6 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 from ..const import namespace
 from ..utils import json_schema_name, manifest_name
 
-
 logger = getLogger(__name__)
 
 

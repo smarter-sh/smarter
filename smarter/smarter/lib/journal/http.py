@@ -29,7 +29,6 @@ from .enum import (
 )
 from .models import SAMJournal
 
-
 logger = logging.getLogger(__name__)
 
 

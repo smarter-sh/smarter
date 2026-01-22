@@ -71,7 +71,6 @@ from smarter.urls import api as smarter_api_urls
 from smarter.urls import chatbots as smarter_chatbots_urls
 from smarter.urls import console as smarter_console_urls
 
-
 host_patterns = patterns(
     "",
     # -------------------------------------------------------------------------

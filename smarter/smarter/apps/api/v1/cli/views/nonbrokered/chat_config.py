@@ -26,7 +26,6 @@ from ..swagger import (
 )
 from .chat import CACHE_EXPIRATION, ApiV1CliChatBaseApiView
 
-
 if TYPE_CHECKING:
     from django.http import HttpRequest
 

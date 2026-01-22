@@ -31,7 +31,6 @@ from .models.common.plugin.model import SAMPluginCommon
 from .models.sql_plugin.model import SAMSqlPlugin
 from .models.static_plugin.model import SAMStaticPlugin
 
-
 VALID_MANIFEST_KINDS = [SAMKinds.STATIC_PLUGIN.value, SAMKinds.SQL_PLUGIN.value, SAMKinds.API_PLUGIN.value]
 PluginType = type[ApiPlugin] | type[SqlPlugin] | type[StaticPlugin]
 Plugins = Optional[Union[StaticPlugin, SqlPlugin, ApiPlugin]]

@@ -15,7 +15,6 @@ from smarter.apps.api.utils import apply_manifest_v2
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.management.base import SmarterCommand
 
-
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{__name__}")
 

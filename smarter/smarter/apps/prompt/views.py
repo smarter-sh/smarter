@@ -66,7 +66,6 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .signals import chat_config_invoked, chat_session_invoked
 
-
 MAX_RETURNED_PLUGINS = 10
 
 

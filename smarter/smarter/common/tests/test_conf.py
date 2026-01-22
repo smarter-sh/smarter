@@ -14,7 +14,6 @@ from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-
 logger = logging.getLogger(__name__)
 
 

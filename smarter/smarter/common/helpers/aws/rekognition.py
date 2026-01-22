@@ -7,7 +7,6 @@ import botocore.exceptions
 
 from .aws import AWSBase
 
-
 logger = logging.getLogger(__name__)
 
 

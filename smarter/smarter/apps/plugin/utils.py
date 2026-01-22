@@ -18,7 +18,6 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .plugin.utils import PluginExamples
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 

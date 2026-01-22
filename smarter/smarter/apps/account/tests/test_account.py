@@ -9,7 +9,6 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.utils import hash_factory
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -10,7 +10,6 @@ from .views.provider import (
     ProvidersApiViewSet,
 )
 
-
 app_name = namespace
 
 urlpatterns = [

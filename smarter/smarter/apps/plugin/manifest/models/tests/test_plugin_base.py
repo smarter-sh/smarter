@@ -54,7 +54,6 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoaderError
 
-
 logger = logging.getLogger(__name__)
 
 

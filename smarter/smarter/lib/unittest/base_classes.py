@@ -17,7 +17,6 @@ from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import camel_to_snake, hash_factory
 from smarter.lib import json
 
-
 logger = logging.getLogger(__name__)
 HERE = __name__
 logger_prefix = formatted_text(f"{HERE}.SmarterTestBase()")

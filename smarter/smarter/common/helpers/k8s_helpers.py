@@ -21,7 +21,6 @@ from smarter.common.mixins import Singleton, SmarterHelperMixin
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
 
-
 logger = logging.getLogger(__name__)
 module_prefix = formatted_text(f"{__name__}.KubernetesHelper")
 

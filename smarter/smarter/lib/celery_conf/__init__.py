@@ -2,7 +2,6 @@
 
 from celery import Celery
 
-
 APP = Celery("smarter")
 APP.conf.task_protocol = 1
 # Using a string here means the worker doesn't have to serialize

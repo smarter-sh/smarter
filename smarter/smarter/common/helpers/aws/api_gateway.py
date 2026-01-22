@@ -10,7 +10,6 @@ from smarter.common.conf import SettingsDefaults
 
 from .aws import AWSBase, SmarterAWSException
 
-
 logger = logging.getLogger(__name__)
 
 

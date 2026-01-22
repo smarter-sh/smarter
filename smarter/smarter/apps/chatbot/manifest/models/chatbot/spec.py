@@ -10,7 +10,6 @@ from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
-
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048

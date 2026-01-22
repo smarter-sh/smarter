@@ -43,7 +43,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 
-
 if TYPE_CHECKING:
     from django.http import HttpRequest
 

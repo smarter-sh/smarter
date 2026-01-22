@@ -28,7 +28,6 @@ from django.urls import include, path
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.prompt.views import ChatConfigView
 
-
 urlpatterns = [
     path("", ChatConfigView.as_view(), name="chatbot_named_config"),
     path("config/", ChatConfigView.as_view(), name="chatbot_named_config"),

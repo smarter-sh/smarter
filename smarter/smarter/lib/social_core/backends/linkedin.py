@@ -13,7 +13,6 @@ from social_core.backends.oauth import BaseOAuth2
 from social_core.backends.open_id_connect import OpenIdConnectAuth
 from social_core.exceptions import AuthCanceled, AuthTokenError
 
-
 logger = logging.getLogger(__name__)
 
 

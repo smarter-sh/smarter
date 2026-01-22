@@ -10,7 +10,6 @@ from rest_framework.views import APIView
 from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.utils import is_authenticated_request
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -12,7 +12,6 @@ from smarter.lib.manifest.enum import SAMKeys
 from .const import MANIFEST_KIND
 from .spec import SAMApiConnectionSpec
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

@@ -12,7 +12,6 @@ from .metadata import SAMChatbotMetadata
 from .spec import SAMChatbotSpec
 from .status import SAMChatbotStatus
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

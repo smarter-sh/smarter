@@ -26,7 +26,6 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
-
 logger = logging.getLogger(__name__)
 
 MAX_RESULTS = 1000

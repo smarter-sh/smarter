@@ -11,7 +11,6 @@ import subprocess
 import sys
 from datetime import datetime
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 SMARTER_ROOT = os.path.abspath(os.path.join(HERE, "../../smarter"))
 sys.path.insert(0, SMARTER_ROOT)
@@ -22,7 +21,6 @@ sys.path.insert(0, SMARTER_ROOT)
 from smarter.__version__ import __version__  # noqa: F401
 from smarter.common.conf import smarter_settings
 
-
 if not smarter_settings.environment:
     raise RuntimeError("The 'smarter_settings.environment' variable is not set.")
 
@@ -32,7 +30,6 @@ if not smarter_settings.environment:
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.local"
 
 import django
-
 
 django.setup()
 

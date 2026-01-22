@@ -22,7 +22,6 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
 # guard against Sphinx doc build circular import errors
 validator_logging_is_active: bool = False
 if apps.ready:

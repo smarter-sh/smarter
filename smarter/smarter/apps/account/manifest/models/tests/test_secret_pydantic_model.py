@@ -9,7 +9,6 @@ from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 

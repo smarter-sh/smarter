@@ -13,7 +13,6 @@ from .api.const import namespace as api_namespace
 from .const import namespace
 from .views import ChatAppWorkbenchView, ChatConfigView, PromptListView
 
-
 app_name = namespace
 
 urlpatterns = [

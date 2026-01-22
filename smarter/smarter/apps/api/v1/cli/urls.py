@@ -49,7 +49,6 @@ from .views.nonbrokered.whoami import ApiV1CliWhoamiApiView
 from .views.schema import ApiV1CliSchemaApiView
 from .views.undeploy import ApiV1CliUndeployApiView
 
-
 app_name = namespace
 
 

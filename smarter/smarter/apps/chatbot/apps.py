@@ -6,7 +6,6 @@ from django.apps import AppConfig
 
 from .const import namespace as app_name
 
-
 logger = logging.getLogger(__name__)
 
 

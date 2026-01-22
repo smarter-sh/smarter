@@ -14,13 +14,11 @@ of the module. Thus, we have to name it something else.
 
 import os
 
-
 # Set the default Django settings module for the 'celery' program
 # and then instantiate the Celery singleton.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
 
 # pylint: disable=wrong-import-position,unused-import
 from smarter.lib.celery_conf import APP as app
-
 
 __all__ = ("app",)

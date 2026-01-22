@@ -9,7 +9,6 @@ from smarter.common.conf import smarter_settings
 
 from .aws import AWSBase
 
-
 logger = logging.getLogger(__name__)
 
 

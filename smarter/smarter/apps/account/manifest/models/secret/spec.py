@@ -9,7 +9,6 @@ from pydantic import Field, field_validator
 from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
-
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 

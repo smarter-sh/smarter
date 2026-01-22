@@ -19,7 +19,6 @@ from smarter.lib.journal.enum import (
 )
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
-
 logger = logging.getLogger(__name__)
 
 

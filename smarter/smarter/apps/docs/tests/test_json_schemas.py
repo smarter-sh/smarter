@@ -12,7 +12,6 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.docs.const import namespace
 from smarter.apps.docs.utils import json_schema_name
 
-
 ALL_KINDS = SAMKinds.singular_slugs()
 logger = getLogger(__name__)
 
