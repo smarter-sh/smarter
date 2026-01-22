@@ -15,7 +15,6 @@ from openai.types.chat.chat_completion_message_tool_call import (
 from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent.parent)
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)

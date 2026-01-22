@@ -24,7 +24,6 @@ from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.drf.models import SmarterAuthToken
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 

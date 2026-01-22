@@ -15,7 +15,6 @@ from smarter.common.const import (
 )
 from smarter.lib import json
 
-
 with open(os.path.join(PROJECT_ROOT, "apps", "api", "v1", "cli", "data", "get", "plugins.json"), encoding="utf-8") as f:
     EXAMPLE_GET_RESPONSE = json.load(f)
 

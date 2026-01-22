@@ -13,7 +13,6 @@ from .views.test_views import (
     TestStackademyCourseCatalogueView,
 )
 
-
 app_name = namespace
 
 

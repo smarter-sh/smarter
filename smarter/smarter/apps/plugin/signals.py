@@ -2,7 +2,6 @@
 
 from django.dispatch import Signal
 
-
 plugin_created = Signal()
 """
 Signal sent when a plugin is created.

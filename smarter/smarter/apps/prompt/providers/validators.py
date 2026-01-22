@@ -5,7 +5,6 @@ from smarter.lib import json
 
 from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 
-
 ####################################################################################################
 # Legacy openai validators
 ####################################################################################################

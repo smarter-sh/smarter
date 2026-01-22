@@ -5,7 +5,6 @@ URLs for Smarter Api.
 from django.contrib import admin
 from django.urls import include, path
 
-
 urlpatterns = [
     path("", include("smarter.apps.api.urls")),
     #

@@ -9,7 +9,6 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .factories import admin_user_factory, factory_account_teardown, mortal_user_factory
 
-
 logger = logging.getLogger(__name__)
 HERE = __name__
 logger_prefix = formatted_text(f"{HERE}.TestAccountMixin()")

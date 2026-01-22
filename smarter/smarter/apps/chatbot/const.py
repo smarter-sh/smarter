@@ -4,7 +4,6 @@ Constants for the chatbot app.
 
 import os
 
-
 namespace = "chatbot"
 
 HERE = os.path.abspath(os.path.dirname(__file__))

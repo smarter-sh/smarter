@@ -13,7 +13,6 @@ from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydantic
 
 from .enum import DbEngines, DBMSAuthenticationMethods
 
-
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048

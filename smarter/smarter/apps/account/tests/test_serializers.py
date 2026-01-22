@@ -20,7 +20,6 @@ from .factories import (
 )
 from .mixins import TestAccountMixin
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -4,7 +4,6 @@ import datetime
 
 from smarter.lib import json
 
-
 __all__ = ["dumps", "serialize_python_dict"]
 
 

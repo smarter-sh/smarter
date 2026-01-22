@@ -13,7 +13,6 @@ from smarter.lib.django.validators import SmarterValidator
 
 from ..mixins import Singleton
 
-
 logger = logging.getLogger(__name__)
 
 

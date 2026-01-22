@@ -25,7 +25,6 @@ from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 sys.path.append(PYTHON_ROOT)  # noqa: E402
 

@@ -43,7 +43,6 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
-
 logger = logging.getLogger(__name__)
 MANIFEST_PATH_API_PLUGIN = os.path.abspath(
     os.path.join(PLUGIN_DATA_PATH, "manifest", "brokers", "tests", "data", "api-plugin.yaml")

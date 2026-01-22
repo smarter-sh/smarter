@@ -25,7 +25,6 @@ from smarter.lib.manifest.models import AbstractSAMBase
 
 from .abstractbroker_test_class import SAMTestBroker
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -4,7 +4,6 @@ import logging
 
 from .aws import AWSBase
 
-
 logger = logging.getLogger(__name__)
 
 

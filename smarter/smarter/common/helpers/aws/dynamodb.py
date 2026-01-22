@@ -5,7 +5,6 @@ from typing import Optional
 
 from .aws import AWSBase
 
-
 logger = logging.getLogger(__name__)
 
 

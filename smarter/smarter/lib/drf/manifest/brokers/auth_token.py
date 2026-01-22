@@ -41,7 +41,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 
-
 MAX_RESULTS = 1000
 logger = getLogger(__name__)
 

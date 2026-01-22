@@ -10,7 +10,6 @@ from whitenoise import WhiteNoise
 
 from smarter.common.conf import smarter_settings
 
-
 os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
 
 application = get_wsgi_application()

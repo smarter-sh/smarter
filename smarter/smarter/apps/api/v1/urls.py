@@ -34,7 +34,6 @@ from smarter.apps.provider.const import namespace as provider_namespace
 from .cli.const import namespace as cli_namespace
 from .const import namespace
 
-
 app_name = namespace
 
 # /api/v1/ is the main entry point for the API

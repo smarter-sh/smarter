@@ -21,7 +21,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-
 HERE = formatted_text(__name__)
 COMMON_VERSION = "0.0.1"
 

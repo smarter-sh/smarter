@@ -12,7 +12,6 @@ from .metadata import SAMSecretMetadata
 from .spec import SAMSecretSpec
 from .status import SAMSecretStatus
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

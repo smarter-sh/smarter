@@ -11,7 +11,6 @@ from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
-
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 

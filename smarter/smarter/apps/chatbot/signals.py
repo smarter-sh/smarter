@@ -6,7 +6,6 @@ such as deployment, DNS verification, and API management.
 
 from django.dispatch import Signal
 
-
 chatbot_called = Signal()
 """
 Signal triggered when a chatbot is called.

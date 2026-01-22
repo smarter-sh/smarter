@@ -25,7 +25,6 @@ from smarter.apps.docs.views.manifest import (
 from smarter.common.conf import smarter_settings
 from smarter.lib.django.management.base import SmarterCommand
 
-
 logging.basicConfig(level=smarter_settings.log_level)
 logger = logging.getLogger(__name__)
 

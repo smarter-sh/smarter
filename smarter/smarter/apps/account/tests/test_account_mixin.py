@@ -20,7 +20,6 @@ from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-
 logger = logging.getLogger(__name__)
 
 

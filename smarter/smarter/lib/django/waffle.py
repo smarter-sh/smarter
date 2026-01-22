@@ -49,7 +49,6 @@ from django.db import connections
 from django.db.utils import OperationalError, ProgrammingError
 from waffle.admin import SwitchAdmin
 
-
 # Also catch MySQLdb.OperationalError for lower-level DB errors
 try:
     import MySQLdb
@@ -59,7 +58,6 @@ except ImportError:
     MySQLdbOperationalError = None
 
 from smarter.common.helpers.console_helpers import formatted_text_green
-
 
 logger = logging.getLogger(__name__)
 prefix = formatted_text_green("smarter.lib.django.waffle.switch_is_active()")

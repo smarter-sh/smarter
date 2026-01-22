@@ -7,7 +7,6 @@ import os
 # python stuff
 from smarter.lib import json
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 

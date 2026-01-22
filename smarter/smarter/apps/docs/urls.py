@@ -53,7 +53,6 @@ from .views.manifest import (
 )
 from .views.views import JsonSchemasView, ManifestsView
 
-
 app_name = namespace
 urlpatterns = [
     # -------------------------------------------------------------------------

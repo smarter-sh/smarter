@@ -13,7 +13,6 @@ from django.core.management import call_command
 from smarter.apps.cms.const import WAGTAIL_DUMP
 from smarter.lib.django.management.base import SmarterCommand
 
-
 WAGTAIL_APPS = [
     "cms.RawHtmlSnippet",
     "cms.RawHtmlPage",

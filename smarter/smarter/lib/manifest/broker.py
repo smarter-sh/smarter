@@ -45,7 +45,6 @@ from smarter.lib.manifest.models import AbstractSAMBase
 
 from .exceptions import SAMExceptionBase
 
-
 inflect_engine = inflect.engine()
 
 SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]

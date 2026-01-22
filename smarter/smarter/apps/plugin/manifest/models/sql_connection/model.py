@@ -16,7 +16,6 @@ from smarter.lib.manifest.models import AbstractSAMBase
 from .const import MANIFEST_KIND
 from .spec import SAMSqlConnectionSpec
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

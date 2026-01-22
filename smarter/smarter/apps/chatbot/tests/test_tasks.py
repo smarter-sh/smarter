@@ -21,7 +21,6 @@ from smarter.common.conf import smarter_settings
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib.django.validators import SmarterValidator
 
-
 logger = logging.getLogger(__name__)
 
 

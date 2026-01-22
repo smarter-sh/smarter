@@ -30,7 +30,6 @@ from smarter.common.mixins import SmarterHelperMixin
 # but the validators don't depend on django initialization, so we're okay here.
 from smarter.lib.django.validators import SmarterValidator, SmarterValueError
 
-
 # from .exceptions import AWSNotReadyError
 
 

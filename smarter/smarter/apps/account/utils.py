@@ -41,7 +41,6 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
 HERE = formatted_text(__name__)
 
 

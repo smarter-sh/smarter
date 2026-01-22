@@ -12,7 +12,6 @@ from .metadata import SAMUserMetadata
 from .spec import SAMUserSpec
 from .status import SAMUserStatus
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

@@ -85,7 +85,6 @@ from smarter.common.helpers.console_helpers import formatted_text
 
 from .mixins import TestAccountMixin
 
-
 logger = logging.getLogger(__name__)
 
 
