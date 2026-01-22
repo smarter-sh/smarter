@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # For local development, you can use the following docker-compose file
 # to run the application. This file will start a MySQL database, a Redis
-# server, a Celery worker, and the application itself. The application
+# server, Celery and Beat workers, and the application itself. The application
 # will be available at http://localhost:9357.
 #------------------------------------------------------------------------------
 services:
@@ -25,8 +25,8 @@ services:
 
   smarter-redis:
     container_name: smarter-redis
-    mem_limit: 1g
     cpus: 0.25
+    mem_limit: 1g
     image: redis:latest
     command: redis-server --requirepass smarter
     ports:
