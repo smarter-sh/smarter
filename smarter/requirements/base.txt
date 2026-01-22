@@ -567,7 +567,7 @@ wcwidth==0.2.14
     # via
     #   -r smarter/requirements/in/constraints.in
     #   prompt-toolkit
-wheel==0.45.1
+wheel==0.46.2
     # via -r smarter/requirements/in/constraints.in
 whitenoise==6.9.0
     # via -r smarter/requirements/in/base.in

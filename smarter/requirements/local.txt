@@ -744,7 +744,7 @@ watchdog==6.0.0
     # via -r smarter/requirements/in/local.in
 wcwidth==0.3.0
     # via prompt-toolkit
-wheel==0.45.1
+wheel==0.46.2
     # via pip-tools
 whitenoise==6.9.0
     # via -r smarter/requirements/in/base.in
