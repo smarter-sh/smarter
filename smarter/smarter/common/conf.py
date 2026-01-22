@@ -660,13 +660,13 @@ class Settings(BaseSettings):
     -----------------
     - smarter_settings values are immutable after instantiation.
     - Every property/attribute in smarter_settings has a value.
+      If a value is None then it is intentionally None.
     - Sensitive values are stored as pydantic SecretStr types.
     - smarter_settings values are initialized according to the following prioritization sequence:
         1. constructor. This is discouraged. prefer to use .env file or environment variables.
-        2. SettingsDefaults
-        3. `.env` file
-        4. environment variables. If present and not already consumed by SettingsDefaults, these are overridden by .env file values.
-        5. default values defined in this class.
+        2. `.env` file. When sourced, these override existing environment variables.
+        3. environment variables.
+        4. SettingsDefaults
     - The dump property returns a dictionary of all configuration values.
     - smarter_settings values should be accessed via the smarter_settings singleton instance when possible.
     """
@@ -1080,6 +1080,8 @@ class Settings(BaseSettings):
         - is the root domain set?
         - is AWS configured?
         - is SMTP configured?
+        - is OpenAI API key configured?
+        - is Google Maps API key configured? (used for get_current_weather() function)
 
         :type: bool
         """
@@ -1099,6 +1101,7 @@ class Settings(BaseSettings):
                 "ROOT_DOMAIN is set to the default value 'example.com'. This is not recommended for production deployments."
             )
             retval = False
+
         if not self.aws_is_configured:
             print(
                 formatted_text_red(
@@ -1112,6 +1115,7 @@ class Settings(BaseSettings):
             )
             logger.warning("AWS is not configured properly. Some features may not work as expected.")
             retval = False
+
         if not self.smtp_is_configured:
             print(
                 formatted_text_red(
@@ -1125,7 +1129,39 @@ class Settings(BaseSettings):
             )
             logger.warning("SMTP is not configured properly. Email features may not work as expected.")
             retval = False
-        return retval
+
+        if self.openai_api_key and self.openai_api_key.get_secret_value() == self.default_missing_value:
+            print(
+                formatted_text_red(
+                    "\n"
+                    + "=" * 80
+                    + "\n[WARNING] OPENAI_API_KEY is not configured properly. OpenAI features may not work as expected.\n"
+                    + "Ensure that OPENAI_API_KEY is set in environment variables or .env file.\n"
+                    + "=" * 80
+                    + "\n"
+                )
+            )
+            logger.warning("OPENAI_API_KEY is not configured properly. OpenAI features may not work as expected.")
+            retval = False
+
+        if self.google_maps_api_key and self.google_maps_api_key.get_secret_value() == self.default_missing_value:
+            print(
+                formatted_text_red(
+                    "\n"
+                    + "=" * 80
+                    + "\n[WARNING] GOOGLE_MAPS_API_KEY is not configured properly. Google Maps features may not work as expected.\n"
+                    + "Ensure that GOOGLE_MAPS_API_KEY is set in environment variables or .env file.\n"
+                    + "=" * 80
+                    + "\n"
+                )
+            )
+            logger.warning(
+                "GOOGLE_MAPS_API_KEY is not configured properly. Google Maps features may not work as expected."
+            )
+            retval = False
+
+        self._ready = retval
+        return self._ready
 
     @property
     def aws_is_configured(self) -> bool:
