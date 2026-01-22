@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.97](https://github.com/smarter-sh/smarter/compare/v0.13.96...v0.13.97) (2026-01-22)
+
+### Bug Fixes
+
+* hide all oauth elements when oauth is not configured ([147f22e](https://github.com/smarter-sh/smarter/commit/147f22e9e6c318169fac36cd95dcefe59adb6d46))
+
 ## [0.13.96](https://github.com/smarter-sh/smarter/compare/v0.13.95...v0.13.96) (2026-01-21)
 
 ### Bug Fixes
