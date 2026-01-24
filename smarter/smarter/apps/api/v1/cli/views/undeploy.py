@@ -13,7 +13,6 @@ from .swagger import (
     openai_success_response,
 )
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -31,7 +31,6 @@ from ..signals import (
 )
 from ..tests.test_setup import get_test_file, get_test_file_path
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent.parent)
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)

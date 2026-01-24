@@ -21,7 +21,7 @@ Two caching strategies are used:
 import logging
 import re
 import uuid
-from typing import Any, Optional
+from typing import Optional
 
 from django.contrib.auth.models import AnonymousUser
 
@@ -40,7 +40,6 @@ from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-
 
 HERE = formatted_text(__name__)
 
@@ -63,7 +62,16 @@ SMARTER_ACCOUNT_NUMBER_PATTERN = re.compile(SmarterValidator.SMARTER_ACCOUNT_NUM
 # ----------------------------
 class SmarterCachedObjects:
     """
-    Lazy instantiations of cached objects for the smarter account.
+    Lazy instantiations of cached objects for the smarter account. This is a
+    much-simplified means of caching commonly used objects without having to
+    actually decorate every function that fetches them.
+
+    :raises SmarterConfigurationError: If the smarter account or admin user cannot be found.
+
+    .. note::
+
+           This class uses lazy loading to fetch and cache the smarter account
+           and admin user only when accessed.
     """
 
     def __init__(self):
@@ -74,6 +82,12 @@ class SmarterCachedObjects:
 
     @property
     def smarter_account(self) -> Account:
+        """
+        Retrieve the smarter account instance.
+
+        :returns: Account instance representing the smarter account.
+        :raises SmarterConfigurationError: If the smarter account cannot be found.
+        """
         if not self._smarter_account:
             try:
                 self._smarter_account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
@@ -83,6 +97,12 @@ class SmarterCachedObjects:
 
     @property
     def smarter_admin(self) -> User:
+        """
+        Retrieve the smarter admin user instance.
+
+        :returns: User instance representing the smarter admin.
+        :raises SmarterConfigurationError: If the smarter admin user cannot be found.
+        """
         if not self._smarter_admin:
             try:
                 user = User.objects.filter(userprofile__account=self.smarter_account, is_superuser=True).first()
@@ -95,6 +115,12 @@ class SmarterCachedObjects:
 
     @property
     def smarter_admin_user_profile(self) -> UserProfile:
+        """
+        Retrieve the UserProfile instance for the smarter admin user.
+
+        :returns: UserProfile instance for the smarter admin user.
+        :raises SmarterConfigurationError: If the UserProfile cannot be found.
+        """
         if not self._smarter_admin_user_profile:
             try:
                 user_profile = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first()
@@ -107,6 +133,12 @@ class SmarterCachedObjects:
 
     @property
     def admin_user(self) -> User:
+        """
+        Retrieve the admin user instance for the smarter account.
+
+        :returns: User instance representing the admin user.
+        :raises SmarterConfigurationError: If the admin user cannot be found.
+        """
         if not self._admin_user:
             try:
                 self._admin_user = User.objects.get(username=SMARTER_ADMIN_USERNAME, is_superuser=True)
@@ -116,6 +148,11 @@ class SmarterCachedObjects:
 
 
 smarter_cached_objects = SmarterCachedObjects()
+"""
+smarter_cached_objects = SmarterCachedObjects()
+An instance of `SmarterCachedObjects` for accessing commonly used cached objects.
+Functions as a singleton for the project.
+"""
 
 
 def get_cached_secret(name: str, user_profile: UserProfile, invalidate: bool = False) -> Optional[Secret]:
@@ -361,10 +398,28 @@ def get_cached_default_account(invalidate: bool = False) -> Optional[Account]:
 
 
 def get_cached_account_for_user(user, invalidate: bool = False) -> Optional[Account]:
-    if not user:
-        return None
+    """
+    Locate the Account associated with a given user, using caching for performance.
 
-    if isinstance(user, AnonymousUser):
+    :param user: User instance. The user whose account should be located.
+    :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
+    :returns: Account instance if found, otherwise None.
+
+    .. warning::
+              If no account is found for the user, None is returned and a warning is logged.
+    .. tip::
+              Use ``invalidate=True`` after updating user or account data to ensure cache consistency.
+
+    **Example usage**::
+
+        # Locate account for a user
+        account = get_cached_account_for_user(user)
+        # Invalidate cache before fetching
+        account = get_cached_account_for_user(user, invalidate=True)
+
+    """
+    if not isinstance(user, User):
+        logger.warning("%s.get_cached_account_for_user() invalid user type: %s", HERE, type(user))
         return None
 
     username = getattr(user, "username")
@@ -693,6 +748,9 @@ def account_number_from_url(url: str, invalidate: bool = False) -> Optional[str]
         account_number = account_number_from_url("https://hr.3141-5926-5359.alpha.api.example.com/", invalidate=True)
     """
     if not url:
+        return None
+    if not isinstance(url, str):
+        logger.warning("%s.account_number_from_url() invalid URL type: %s", HERE, type(url))
         return None
 
     @cache_results()

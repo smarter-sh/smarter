@@ -17,7 +17,6 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from .mixins import TestAccountMixin
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 

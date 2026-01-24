@@ -12,7 +12,6 @@ from .metadata import SAMProviderMetadata
 from .spec import SAMProviderSpec
 from .status import SAMProviderStatus
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

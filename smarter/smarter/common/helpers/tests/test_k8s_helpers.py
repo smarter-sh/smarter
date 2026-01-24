@@ -27,7 +27,6 @@ from smarter.common.helpers.k8s_helpers import (
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-
 logger = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
 

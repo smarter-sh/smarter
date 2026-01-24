@@ -13,7 +13,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import ChatBot
 
-
 logger = getLogger(__name__)
 
 LRU_CACHE_MAX_SIZE = 128

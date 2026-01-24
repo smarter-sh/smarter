@@ -3,7 +3,6 @@ import os
 import re
 import sys
 
-
 # Set up sys.path as in your conf.py
 HERE = os.path.abspath(os.path.dirname(__file__))
 SMARTER_ROOT = os.path.abspath(os.path.join(HERE, "smarter"))

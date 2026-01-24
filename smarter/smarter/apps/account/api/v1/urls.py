@@ -7,7 +7,6 @@ from .views.account import AccountListView, AccountView
 from .views.payment_methods import PaymentMethodsListView, PaymentMethodView
 from .views.user import UserListView, UserView
 
-
 app_name = namespace
 
 urlpatterns = [

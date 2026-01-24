@@ -51,12 +51,11 @@ class TestSmarterView(TestViewHelpersBase):
         result = self.view.remove_comments(html)
         self.assertEqual(result, "<div>content</div>")
 
-    @patch("smarter.lib.django.view_helpers.minify")
-    def test_minify_html(self, mock_minify):
-        mock_minify.return_value = "minified"
-        result = self.view.minify_html("<div>   </div>")
-        self.assertEqual(result, "minified")
-        mock_minify.assert_called()
+    def test_minify_html(self):
+        html = "<div>   </div>"
+        result = self.view.minify_html(html)
+        expected_output = "<div></div>"
+        self.assertEqual(result, expected_output)
 
     @patch("smarter.lib.django.view_helpers.render")
     @patch.object(view_helpers.SmarterView, "remove_comments")

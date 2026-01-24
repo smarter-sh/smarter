@@ -26,5 +26,7 @@
       "reportAttributeAccessIssue": "none",
       "reportOptionalMemberAccess": "none"
     }
-  }
+  },
+  "python.linting.enabled": true,
+  "python.linting.mypyEnabled": true
 }

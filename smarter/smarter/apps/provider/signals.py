@@ -3,7 +3,6 @@
 
 from django.dispatch import Signal
 
-
 model_verification_requested = Signal()
 model_verification_success = Signal()
 model_verification_failure = Signal()

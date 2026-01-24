@@ -7,7 +7,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/mcdaniel0073/smarter.svg?logo=docker&label=DockerHub)](https://hub.docker.com/r/mcdaniel0073/smarter)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter)](https://artifacthub.io/packages/search?repo=project-smarter)<br>[![Docs](https://img.shields.io/badge/Read%20the%20Docs-smarter.sh-blue?logo=readthedocs)](https://docs.smarter.sh/en/latest/)
 [![Website](https://img.shields.io/badge/official%20web%20site-smarter.sh-blue?logo=google-chrome)](https://smarter.sh)
-[![License: GNU AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)<br>[![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
+[![License: GNU AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)<br>[![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-5.2-green?logo=django)](https://www.djangoproject.com/)
 [![Pydantic](https://img.shields.io/badge/Pydantic-2.12-blue?logo=pydantic)](https://docs.pydantic.dev/)
 [![Django Rest Framework](https://img.shields.io/badge/Django%20Rest%20Framework-3.16-3a3a3a?logo=django)](https://www.django-rest-framework.org/)<br>[![hack.d Lawrence McDaniel](https://img.shields.io/badge/Author-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
@@ -32,7 +32,7 @@ Smarter is an extensible AI resource management system. It is used as an instruc
 
 You can spin up the platform locally in Docker in around 10 minutes. Runs on Linux, Windows and macOS.
 
-1. Verify project requirements: [Python 3.12](https://www.python.org/), [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/).
+1. Verify project requirements: [Python 3.13](https://www.python.org/), [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/).
 
 2. Add your credentials to [.env](./.env.example) in the root of this repo.
 

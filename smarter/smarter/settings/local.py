@@ -18,7 +18,6 @@ from smarter.common.conf import smarter_settings
 
 from .base import *
 
-
 logger = logging.getLogger(__name__)
 
 if smarter_settings.developer_mode:

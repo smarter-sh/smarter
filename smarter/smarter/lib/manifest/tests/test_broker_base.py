@@ -23,7 +23,6 @@ from smarter.lib.manifest.enum import (
 )
 from smarter.lib.manifest.loader import SAMLoader
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{HERE}.TestSAMBrokerBaseClass()")

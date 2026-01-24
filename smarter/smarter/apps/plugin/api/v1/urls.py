@@ -12,7 +12,6 @@ from .views import (
     PluginView,
 )
 
-
 app_name = namespace
 
 

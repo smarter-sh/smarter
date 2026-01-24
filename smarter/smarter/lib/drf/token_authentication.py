@@ -24,7 +24,6 @@ from .signals import (
     smarter_token_authentication_success,
 )
 
-
 CACHE_TIMEOUT = 60 * 60 * 24  # 24 hours
 
 

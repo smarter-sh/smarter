@@ -2,7 +2,6 @@
 
 from django.dispatch import Signal
 
-
 api_request_initiated = Signal()
 """
 Sent when an API request is initiated.

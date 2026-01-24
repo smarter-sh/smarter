@@ -13,7 +13,6 @@ from smarter.apps.plugin.manifest.models.common.plugin.spec import SAMPluginComm
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.lib.manifest.models import SmarterBasePydanticModel
 
-
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 8192  # this is actually the overall max token count for OpenAI chatGPT-4

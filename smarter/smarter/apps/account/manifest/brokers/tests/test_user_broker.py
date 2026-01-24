@@ -19,7 +19,6 @@ from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
-
 logger = logging.getLogger(__name__)
 
 

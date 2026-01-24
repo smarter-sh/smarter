@@ -29,7 +29,6 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from .base_class import ApiV1CliTestBase
 
-
 KIND = SAMKinds.SQL_CONNECTION.value
 
 

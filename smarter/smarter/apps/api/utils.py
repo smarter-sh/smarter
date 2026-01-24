@@ -24,7 +24,6 @@ from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.loader import SAMLoader
 
-
 logger = logging.getLogger(__name__)
 
 

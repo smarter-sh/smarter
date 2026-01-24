@@ -15,7 +15,6 @@ from smarter.common.helpers.console_helpers import formatted_text
 from .aws import AWSBase, SmarterAWSException
 from .exceptions import AWSRoute53RecordVerificationTimeout
 
-
 logger = logging.getLogger(__name__)
 module_prefix = "smarter.common.helpers.aws.route53."
 

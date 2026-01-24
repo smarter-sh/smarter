@@ -17,7 +17,6 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT
 from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 
-
 HERE = Path(__file__).resolve().parent
 default_handler = chat_providers.default_handler
 

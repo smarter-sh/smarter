@@ -12,7 +12,6 @@ from .api.const import namespace as api_namespace
 from .const import namespace
 from .views.provider import ProviderDetailView, ProviderListView
 
-
 app_name = namespace
 
 urlpatterns = [

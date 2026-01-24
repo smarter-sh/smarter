@@ -15,7 +15,6 @@ from smarter.lib import json
 from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
 from .exceptions import SAMExceptionBase
 
-
 logger = logging.getLogger(__name__)
 
 SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
@@ -179,10 +178,13 @@ class SAMLoader(SmarterHelperMixin):
     Smarter API Manifest Loader base class.
 
     This class provides the foundational logic for loading, parsing, and validating
-    Smarter API Manifest files. It is designed to handle manifests provided as JSON or YAML,
+    Smarter API Manifest files, prior to attempting to use the manifest data for
+    initializing a Pydantic model. It is designed to handle manifests provided as JSON or YAML,
     and supports loading from a string, dictionary, file path, or URL. The loader ensures
     that the manifest conforms to a specified schema, validating both the structure and
-    the data types of the manifest's contents.
+    the data types of the manifest's contents. In cases where the syntax or structure
+    of the manifest is invalid, the loader is intended to provide more human readable
+    error messages than those produced by Pydantic alone.
 
     **Usage Overview**
 

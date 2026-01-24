@@ -91,7 +91,7 @@ Not to be confused with Smarter's flagship product, customer-implemented custom 
 - Windows: Windows 10 64-bit, 64-bit processor with Second Level Address Translation (SLAT), 8Gib of RAM, Windows Subsystem for Linux 2 if running Windows Home Editions.
 - [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git). _pre-installed on Linux and macOS_
 - [make](https://gnuwin32.sourceforge.net/packages/make.htm). _pre-installed on Linux and macOS._
-- [Python 3.12](https://www.python.org/downloads/): for creating virtual environment used for building AWS Lambda Layer, and locally by pre-commit linters and code formatters.
+- [Python 3.13](https://www.python.org/downloads/): for creating virtual environment used for building AWS Lambda Layer, and locally by pre-commit linters and code formatters.
 - [Docker Desktop](https://docs.docker.com/desktop/): for local development as well as the run-time environment. This also installs Docker Compose.
 
 Cloud engineers:

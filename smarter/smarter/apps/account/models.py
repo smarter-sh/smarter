@@ -41,7 +41,6 @@ from .signals import (
     secret_edited,
 )
 
-
 if TYPE_CHECKING:
     try:
         from django.contrib.auth.models import AbstractUser, AnonymousUser, _AnyUser

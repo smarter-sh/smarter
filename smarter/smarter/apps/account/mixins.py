@@ -33,7 +33,6 @@ from .utils import (
     get_cached_user_profile,
 )
 
-
 UserType = Union[AnonymousUser, User, None]
 AccountNumberType = Optional[str]
 ApiTokenType = Optional[bytes]

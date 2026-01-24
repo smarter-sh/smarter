@@ -27,7 +27,6 @@ from smarter.common.utils import (
 from smarter.lib import json
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-
 if TYPE_CHECKING:
     from django.http import HttpRequest
 MOCK_REGEX = re.compile(r"<MagicMock|<Mock|mock\\.MagicMock|mock\\.Mock", re.IGNORECASE)

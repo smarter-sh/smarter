@@ -16,7 +16,6 @@ from smarter.lib.manifest.enum import SAMKeys, SCLIResponseGet, SCLIResponseGetD
 
 from .base_class import ApiV1CliTestBase
 
-
 KIND = SAMKinds.STATIC_PLUGIN.value
 HERE = os.path.abspath(os.path.dirname(__file__))
 

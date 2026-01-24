@@ -15,7 +15,6 @@ from smarter.apps.account.models import MetaDataWithOwnershipModel, User
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
 
-
 logger = getLogger(__name__)
 
 

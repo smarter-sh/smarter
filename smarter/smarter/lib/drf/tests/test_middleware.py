@@ -14,7 +14,6 @@ from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.api.v1.tests.urls import ApiV1TestUrls
 from smarter.lib.drf.middleware import SmarterTokenAuthenticationMiddleware
 
-
 logger = getLogger(__name__)
 
 

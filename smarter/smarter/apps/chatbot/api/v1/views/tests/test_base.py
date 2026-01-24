@@ -19,7 +19,6 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from ..base import ChatBotApiBaseViewSet
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 

@@ -10,7 +10,6 @@ from smarter.lib import json
 
 from .base import *
 
-
 logger = logging.getLogger(__name__)
 logger.info("Loading smarter.settings.base_aws")
 default_redis_location = f"redis://:{smarter_settings.shared_resource_identifier}@{smarter_settings.shared_resource_identifier}-redis-master.{smarter_settings.environment_namespace}.svc.cluster.local:6379/1"
