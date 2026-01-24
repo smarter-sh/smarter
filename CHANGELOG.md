@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.98](https://github.com/smarter-sh/smarter/compare/v0.13.97...v0.13.98) (2026-01-24)
+
+### Bug Fixes
+
+* python3.13 upgrade ([92dfc24](https://github.com/smarter-sh/smarter/commit/92dfc2496082761e0aae605ecc076e45816fe2d6))
+
 ## [0.13.97](https://github.com/smarter-sh/smarter/compare/v0.13.96...v0.13.97) (2026-01-22)
 
 ### Bug Fixes
