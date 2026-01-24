@@ -17,7 +17,6 @@ from smarter.lib import json
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 
-
 logger = getLogger(__name__)
 
 VALID_ANNOTATION_VALUE_TYPES_SET = (

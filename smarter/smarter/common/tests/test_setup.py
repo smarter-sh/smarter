@@ -7,7 +7,6 @@ import sys
 # python stuff
 from smarter.lib import json
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 PYTHON_ROOT = os.path.dirname(HERE)
 sys.path.append(PYTHON_ROOT)  # noqa: E402

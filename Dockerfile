@@ -15,12 +15,14 @@
 # Use the official Python image as a parent image
 # see https://hub.docker.com/_/python
 #
-# 3.12-slim-trixie is an official Docker image tag for Python 3.12 based on
+# 3.13-slim-trixie is an official Docker image tag for Python 3.13 based on
 # Debian "Trixie" (the codename for Debian 13).
 # The "slim" variant is a minimal image that excludes unnecessary files and packages,
 # making it smaller and faster to download and build.
 # It is commonly used for production deployments where a lightweight Python environment is preferred.
-FROM python:3.12-slim-trixie AS linux_base
+# This is important because the Smarter container image build exceeds 2.4 GB,
+# even when using the slim image as a base.
+FROM python:3.13-slim-trixie AS linux_base
 
 LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
   description="Docker image for the Smarter Api and web console" \
@@ -44,13 +46,13 @@ ENV ENVIRONMENT=$ENVIRONMENT
 RUN echo "ENVIRONMENT: $ENVIRONMENT"
 
 ############################## install system packages #################################
-# build-essential           needed to build some python packages, but not included in 3.12-slim-trixie
+# build-essential           needed to build some python packages, but not included in 3.13-slim-trixie
 # libssl-dev                ... ditto ...
 # libffi-dev                ... ditto ...
 # python3-dev               ... ditto ...
 # pkg-config                ... ditto ...
 # ------
-# ca-certificates           needed for SSL/TLS support in http requests but not included in 3.12-slim-trixie
+# ca-certificates           needed for SSL/TLS support in http requests but not included in 3.13-slim-trixie
 # python-dev-is-python3     helper package to ensure that the 'python' command points to python3
 # default-mysql-client      needed for Django mysql backend support
 # libmariadb-dev            needed for default-mysql-client python package

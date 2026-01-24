@@ -16,7 +16,6 @@ from smarter.lib.manifest.models import AbstractSAMBase
 
 from .const import MANIFEST_KIND
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

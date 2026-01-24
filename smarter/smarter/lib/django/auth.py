@@ -31,7 +31,6 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
-
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text("smarter.lib.django.auth")
 

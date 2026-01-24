@@ -14,7 +14,6 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 # smarter chat provider stuff
 from ..const import VALID_CHAT_COMPLETION_MODELS
 
-
 BASE_URL = "https://api.openai.com/v1/"  # don't forget the trailing slash
 PROVIDER_NAME = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"

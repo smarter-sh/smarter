@@ -46,7 +46,6 @@ from smarter.lib.manifest.enum import (
 from . import SAMConnectionBrokerError
 from .connection_base import SAMConnectionBaseBroker
 
-
 if TYPE_CHECKING:
     from django.http import HttpRequest
 

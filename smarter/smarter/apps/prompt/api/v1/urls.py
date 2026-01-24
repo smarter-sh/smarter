@@ -13,7 +13,6 @@ from .views.history import (
 )
 from .views.providers.smarter import SmarterChatApiViewSet
 
-
 app_name = namespace
 
 urlpatterns = [

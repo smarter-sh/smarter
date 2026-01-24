@@ -10,7 +10,6 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib import json
 from smarter.lib.manifest.loader import SAMLoader
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 

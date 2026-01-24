@@ -30,7 +30,6 @@ from .aws.rekognition import AWSRekognition
 from .aws.route53 import AWSRoute53
 from .aws.s3 import AWSSimpleStorageSystem
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -3,6 +3,11 @@ Overridden JSON utilities. The effective modifications are
 - Use SmarterJSONEncoder as the default encoder
 - Standardize indentation to 2 characters
 - Use str as the default for non-serializable objects
+- Support for additional types in SmarterJSONEncoder:
+  - datetime.datetime, datetime.date, datetime.time, datetime.timedelta
+  - decimal.Decimal
+  - uuid.UUID
+  - Django TaggableManager
 """
 
 import datetime
@@ -24,8 +29,6 @@ class Promise:
     Base class for the proxy class created in the closure of the lazy function.
     It's used to recognize promises in code.
     """
-
-    pass
 
 
 def _get_duration_components(duration):

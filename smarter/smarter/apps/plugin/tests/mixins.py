@@ -23,7 +23,6 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from .factories import secret_factory
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 

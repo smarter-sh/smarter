@@ -6,7 +6,6 @@ from .const import namespace
 from .views.connection import ConnectionDetailView, ConnectionListView
 from .views.plugin import PluginDetailView, PluginListView
 
-
 app_name = namespace
 
 urlpatterns = [

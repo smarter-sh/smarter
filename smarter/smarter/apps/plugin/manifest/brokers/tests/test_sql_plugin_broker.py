@@ -27,7 +27,6 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from .base_classes.plugin_base import TestSmarterPluginBrokerBase
 
-
 logger = logging.getLogger(__name__)
 HERE = __name__
 

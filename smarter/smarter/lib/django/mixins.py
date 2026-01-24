@@ -10,7 +10,6 @@ from typing import Optional, Union
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 
-
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(f"{__name__}.SmarterConverterMixin")
 

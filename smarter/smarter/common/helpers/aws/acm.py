@@ -10,7 +10,6 @@ from typing import Optional
 from .aws import AWSBase
 from .exceptions import AWSACMVerificationFailed
 
-
 logger = logging.getLogger(__name__)
 
 

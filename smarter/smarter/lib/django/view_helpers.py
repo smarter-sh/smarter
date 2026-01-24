@@ -4,6 +4,7 @@ import logging
 import re
 from http import HTTPStatus
 
+from bs4 import BeautifulSoup
 from django import template
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
@@ -11,7 +12,7 @@ from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import cache_control, cache_page, never_cache
-from htmlmin.main import minify
+
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.common.conf import smarter_settings
@@ -115,7 +116,11 @@ class SmarterView(View, SmarterRequestMixin):
         :return: The minified HTML string.
         :rtype: str
         """
-        return minify(html, remove_empty_space=True)
+        soup = BeautifulSoup(html, "html.parser")
+        for element in soup.find_all(text=True):
+            if isinstance(element, str) and element.isspace():
+                element.extract()
+        return str(soup)
 
     def render_clean_html(self, request: HttpRequest, template_path, context=None):
         """

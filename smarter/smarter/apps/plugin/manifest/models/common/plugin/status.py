@@ -10,7 +10,6 @@ from smarter.lib.manifest.models import AbstractSAMStatusBase
 
 from .const import MANIFEST_KIND
 
-
 filename = os.path.splitext(os.path.basename(__file__))[0]
 
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"

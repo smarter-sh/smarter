@@ -4,20 +4,27 @@
 
 from unittest.mock import MagicMock, patch
 
+from django.http import HttpRequest
+from django.test import override_settings
+
 from smarter.lib.django.middleware.csrf import SmarterCsrfViewMiddleware
-from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.apps.account.tests.mixins import TestAccountMixin
 
 
-class TestSmarterCsrfViewMiddleware(SmarterTestBase):
+class TestSmarterCsrfViewMiddleware(TestAccountMixin):
     """Test the SmarterCsrfViewMiddleware class."""
 
     def setUp(self):
         super().setUp()
-        self.get_response = MagicMock()
+
+        def dummy_get_response(request):
+            return None
+
+        self.get_response = dummy_get_response
         self.middleware = SmarterCsrfViewMiddleware(self.get_response)
-        self.request = MagicMock()
-        self.request.COOKIES = {}
-        self.request.META = {}
+
+        self.request = HttpRequest()
+        self.request.user = self.admin_user
 
     @patch("smarter.lib.django.middleware.csrf.settings")
     @patch("smarter.lib.django.middleware.csrf.waffle")
@@ -52,13 +59,14 @@ class TestSmarterCsrfViewMiddleware(SmarterTestBase):
         self.assertIn("https", allowed)
         self.assertIn(".bar.com", allowed["https"])
 
+    @override_settings(ALLOWED_HOSTS=["example.com"])
+    @patch("smarter.lib.django.middleware.csrf.settings")
     @patch("smarter.lib.django.middleware.csrf.waffle")
-    def test_process_request_with_chatbot(self, mock_waffle):
-        self.request.build_absolute_uri.return_value = "https://example.com/"
-        # Set up a mock user with a valid id
-        mock_user = MagicMock()
-        mock_user.id = 1
-        self.request.user = mock_user
+    def test_process_request_with_chatbot(self, mock_waffle, mock_settings):
+        self.request.build_absolute_uri = MagicMock(return_value="https://example.com/")
+        self.request.META["SERVER_NAME"] = "example.com"
+        self.request.META["SERVER_PORT"] = "443"
+        self.request.META["HTTP_HOST"] = "example.com:443"
         self.middleware.request = self.request
         result = self.middleware.process_request(self.request)
         self.assertIsNone(result)
@@ -69,7 +77,7 @@ class TestSmarterCsrfViewMiddleware(SmarterTestBase):
         mock_smarter_settings.environment = "local"
         mock_waffle.switch_is_active.return_value = False
         self.middleware.request = self.request
-        result = self.middleware.process_view(self.request, MagicMock(), [], {})
+        result = self.middleware.process_view(self.request, MagicMock(), (), {})
         self.assertIsNone(result)
 
     @patch("smarter.lib.django.middleware.csrf.smarter_settings")
@@ -83,5 +91,5 @@ class TestSmarterCsrfViewMiddleware(SmarterTestBase):
         smarter_request_mock.is_chatbot = True
         self.middleware.smarter_request = smarter_request_mock
         self.middleware.request = self.request
-        result = self.middleware.process_view(self.request, MagicMock(), [], {})
+        result = self.middleware.process_view(self.request, MagicMock(), (), {})
         self.assertIsNone(result)

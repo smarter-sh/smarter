@@ -35,7 +35,6 @@ from smarter.lib.manifest.broker import (
 from . import SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
 
-
 if TYPE_CHECKING:
     from django.http import HttpRequest
 

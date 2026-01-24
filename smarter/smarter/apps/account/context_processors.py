@@ -9,7 +9,6 @@ from smarter.common.utils import is_authenticated_request
 from .models import UserProfile
 from .utils import get_cached_user_profile
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -1,6 +1,6 @@
 # Python Requirements
 
-[![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python)](https://www.python.org/)
 [![PyPI](https://img.shields.io/badge/PyPI-website-blue?logo=pypi)](https://pypi.org/)
 
 Python requirements files are managed here. These files are formatted for use with the

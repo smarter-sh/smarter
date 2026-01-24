@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from smarter.common.const import SmarterEnvironments
 from smarter.lib import json
 
-
 load_dotenv()
 
 environment = os.environ.get("ENVIRONMENT", SmarterEnvironments.LOCAL)

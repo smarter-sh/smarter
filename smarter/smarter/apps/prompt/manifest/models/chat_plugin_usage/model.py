@@ -12,7 +12,6 @@ from .metadata import SAMChatPluginUsageMetadata
 from .spec import SAMChatPluginUsageSpecConfig
 from .status import SAMChatPluginUsageStatus
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

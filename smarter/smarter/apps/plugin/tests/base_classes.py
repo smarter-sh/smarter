@@ -19,7 +19,6 @@ from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 logger = logging.getLogger(__name__)

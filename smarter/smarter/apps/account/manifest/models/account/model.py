@@ -12,7 +12,6 @@ from .metadata import SAMAccountMetadata
 from .spec import SAMAccountSpec
 from .status import SAMAccountStatus
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

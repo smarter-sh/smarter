@@ -12,7 +12,6 @@ from .metadata import SAMSmarterAuthTokenMetadata
 from .spec import SAMSmarterAuthTokenSpec
 from .status import SAMSmarterAuthTokenStatus
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

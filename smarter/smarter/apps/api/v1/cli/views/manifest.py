@@ -13,7 +13,6 @@ from .swagger import (
     EXAMPLE_MANIFEST_PLUGIN,
 )
 
-
 logger = logging.getLogger(__name__)
 
 

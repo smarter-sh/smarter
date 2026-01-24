@@ -13,7 +13,6 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.json import SmarterJSONEncoder
 
-
 logger = getLogger(__name__)
 
 

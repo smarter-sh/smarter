@@ -8,7 +8,6 @@ from django.core.management import call_command
 from smarter.apps.plugin.tests.base_classes import TestPluginClassBase
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 
-
 logger = getLogger(__name__)
 
 

@@ -9,7 +9,6 @@ from pathlib import Path
 # python stuff
 from smarter.lib import json
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent.parent.parent.parent)
 sys.path.append(PROJECT_ROOT)  # noqa: E402

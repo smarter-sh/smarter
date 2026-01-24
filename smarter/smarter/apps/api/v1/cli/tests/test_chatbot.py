@@ -16,7 +16,6 @@ from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from .base_class import ApiV1CliTestBase
 
-
 KIND = SAMKinds.CHATBOT.value
 
 

@@ -2,6 +2,14 @@
 # WARNING: everything is in here for a reason. Edit with care.
 # -------------------------------------
 
+# -------------------------------------
+# Helm chart artifacts. charts are compressed
+# binary files that do not belong in GitHub.
+#
+# the Chart.lock files are generated during
+# deployment and contain checksums
+# and do not belong in GitHub.
+# -------------------------------------
 helm/charts/smarter/charts/
 helm/charts/smarter/Chart.lock
 
@@ -15,12 +23,14 @@ docs/build/
 # -------------------------------------
 keen_**
 
-# Google service account raw files.
+# Google service account raw files. These
+# are source files for generating service-account.b64
+# that is used for authenticating to Google APIs.
 # -------------------------------------
 service-account.json
 service-account.b64
 
-# application data
+# application local dev run-time data
 # -------------------------------------
 celerybeat-schedule
 mysql-data
@@ -30,16 +40,15 @@ staticfiles
 *.swp
 
 # build artifacts
+# But don't ignore '.github/actions/build'
 # -------------------------------------
+!.github/actions/build/
 **/build/
 **/dist/
-lambda_dist_pkg
 *.zip
-# But don't ignore '.github/actions/build'
-!.github/actions/build/
 
 
-# coverage artifacts
+# coverage analysis artifacts
 # -------------------------------------
 **/.coverage
 **/.coverage.*
@@ -78,7 +87,7 @@ config.json
 *.p7c
 
 
-# Python
+# Python run-time artifacts
 # -------------------------------------
 .pypi_cache
 __pycache__
@@ -90,6 +99,7 @@ venv
 *.pyo
 *.pyd
 
-# ReactJS
+# ReactJS run-time artifacts
+# -------------------------------------
 node_modules
 package-lock.json

@@ -19,7 +19,6 @@ from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.utils import is_authenticated_request
 from smarter.lib.django.request import SmarterRequestMixin
 
-
 SMARTER_DEV_ADMIN_PASSWORD = "smarter"
 logger = getLogger(__name__)
 

@@ -10,7 +10,6 @@ from smarter.lib.manifest.enum import SAMKeys
 
 from .spec import SAMApiPluginSpec
 
-
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 

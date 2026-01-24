@@ -14,7 +14,6 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..models import SmarterAuthToken
 
-
 logger = getLogger(__name__)
 
 
