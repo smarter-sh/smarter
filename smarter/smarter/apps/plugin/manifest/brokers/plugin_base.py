@@ -289,7 +289,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     self.account,
                 )
-                self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
+                self._plugin_meta = PluginMeta.objects.get(user_profile__account=self.account, name=self.name)
             except PluginMeta.DoesNotExist:
                 logger.warning(
                     "PluginMeta does not exist for name %s and account %s",
@@ -860,9 +860,9 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
-            plugins = PluginMeta.objects.filter(account=self.account, name=name)
+            plugins = PluginMeta.objects.filter(user_profile__account=self.account, name=name)
         else:
-            plugins = PluginMeta.objects.filter(account=self.account)
+            plugins = PluginMeta.objects.filter(user_profile__account=self.account)
         logger.debug(
             "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
         )

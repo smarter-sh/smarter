@@ -69,7 +69,7 @@ class Command(SmarterCommand):
         self.stdout.write(f"manage.py delete_plugin: Retrieving plugin {name} for account {account}")
 
         try:
-            plugin_meta = PluginMeta.objects.get(name=options["name"], account_id=account.id)  # type: ignore
+            plugin_meta = PluginMeta.objects.get(name=options["name"], user_profile__account__id=account.id)  # type: ignore
         except PluginMeta.DoesNotExist as e:
             self.stdout.write(f"manage.py delete_plugin: Did not find a plugin named {name} for account {account}")
             return

@@ -195,4 +195,4 @@ class TestApiV1CliPlugin(ApiV1CliTestBase):
         self.assertIsInstance(response, dict)
         self.assertEqual(response["message"], "Plugin cli_test_plugin deleted successfully")
         with self.assertRaises(PluginMeta.DoesNotExist):
-            PluginMeta.objects.get(name=self.name, account=self.account)
+            PluginMeta.objects.get(name=self.name, user_profile__account=self.account)

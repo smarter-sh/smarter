@@ -82,7 +82,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
             value="test",
         )
         apiconnection = ApiConnection.objects.create(
-            account=self.account,
+            user_profile=self.user_profile,
             name=self.name,
             kind=KIND,
             description="test apiconnection",

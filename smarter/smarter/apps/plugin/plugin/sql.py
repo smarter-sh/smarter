@@ -455,7 +455,7 @@ class SqlPlugin(PluginBase):
             try:
                 account = self.user_profile.account if self.user_profile else None
                 plugin_data_sqlconnection = SqlConnection.objects.get(
-                    account=account,
+                    user_profile__account=account,
                     name=connection_name,
                 )
                 sql_data["connection"] = plugin_data_sqlconnection

@@ -45,7 +45,7 @@ class Command(SmarterCommand):
 
         api_key = SmarterAuthToken.objects.get(key_id=key_id)
         account = Account.objects.get(account_number=account_number)
-        chatbot = ChatBot.objects.get(account=account, name=name)
+        chatbot = ChatBot.objects.get(user_profile__account=account, name=name)
         chatbot_api_key, created = ChatBotAPIKey.objects.get_or_create(chatbot=chatbot, api_key=api_key)
         msg = f"API key {key_id} '{chatbot_api_key.api_key.description}'"
         if created:

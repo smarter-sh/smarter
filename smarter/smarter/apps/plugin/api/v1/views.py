@@ -92,7 +92,7 @@ class PluginListView(SmarterAuthenticatedListAPIView):
     serializer_class = PluginMetaSerializer
 
     def get_queryset(self):
-        plugins = PluginMeta.objects.filter(author__user=self.request.user)
+        plugins = PluginMeta.objects.filter(user_profile__account=self.account).order_by("-created_at")
         return plugins
 
 

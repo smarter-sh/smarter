@@ -67,10 +67,10 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         """Set up test fixtures."""
         super().setUp()
         self.auth_token, self.secret_key = SmarterAuthToken.objects.create(
-            account=self.account, name="testKey", user=self.admin_user, description="unit test"
+            user_profile=self.user_profile, name="testKey", user=self.admin_user, description="unit test"
         )  # type: ignore
         self.chatbot = ChatBot.objects.create(
-            account=self.account,
+            user_profile=self.user_profile,
             name="manage-command-create-plugin-test-case",
         )
         self._chatbot_dns_verification_status_changed = False
@@ -169,7 +169,7 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         )
         print("sleeping for 15 seconds to allow DNS record to be created")
         time.sleep(15)
-        chatbot = ChatBot.objects.get(name=self.chatbot.name, account=self.account)
+        chatbot = ChatBot.objects.get(name=self.chatbot.name, user_profile__account=self.account)
         print(f"found chatbot.id={chatbot.id} chatbot.default_host={chatbot.default_host}")
 
         # verify that a DNS record was created for the chatbot
@@ -206,7 +206,7 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
             self.chatbot.name,
             "--foreground",
         )
-        chatbot = ChatBot.objects.get(name=self.chatbot.name, account=self.account)
+        chatbot = ChatBot.objects.get(name=self.chatbot.name, user_profile__account=self.account)
         self.assertEqual(chatbot.deployed, False)
         self.assertEqual(chatbot.dns_verification_status, chatbot.DnsVerificationStatusChoices.NOT_VERIFIED)
         a_record = aws_helper.route53.get_dns_record(
@@ -226,7 +226,7 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         time.sleep(15)
 
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
-        chatbot = ChatBot.objects.get(name=SMARTER_EXAMPLE_CHATBOT_NAME, account=account)
+        chatbot = ChatBot.objects.get(name=SMARTER_EXAMPLE_CHATBOT_NAME, user_profile__account=account)
         self.assertIn(
             chatbot.dns_verification_status,
             [chatbot.DnsVerificationStatusChoices.VERIFYING, chatbot.DnsVerificationStatusChoices.VERIFIED],

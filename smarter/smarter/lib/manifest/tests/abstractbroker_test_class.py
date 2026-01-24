@@ -182,7 +182,7 @@ class SAMTestBroker(AbstractBroker):
             return self._plugin_meta
         if self.name and self.account:
             try:
-                self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
+                self._plugin_meta = PluginMeta.objects.get(user_profile=self.user_profile, name=self.name)
             except PluginMeta.DoesNotExist:
                 logger.warning(
                     "PluginMeta does not exist for name %s and account %s",

@@ -71,7 +71,7 @@ class Command(SmarterCommand):
             return
 
         try:
-            chatbot = ChatBot.objects.get(account=account, name=name)
+            chatbot = ChatBot.objects.get(user_profile__account=account, name=name)
         except ChatBot.DoesNotExist as e:
             self.handle_completed_failure(
                 e, msg=f"Chatbot {name} not found for account {account.account_number} {account.company_name}."

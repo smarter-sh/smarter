@@ -815,7 +815,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             if self.user_profile and self._manifest:
                 self._plugin_meta_django_model = {
                     "id": self.id,
-                    "account": self.user_profile.account,
+                    "user_profile": self.user_profile,
                     "name": self.manifest.metadata.name,
                     "description": self.manifest.metadata.description,
                     "plugin_class": self.manifest.metadata.pluginClass,

@@ -574,7 +574,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         try:
             name = self.camel_to_snake(self.name)  # type: ignore
-            self._connection = ApiConnection.objects.get(account=self.account, name=name)
+            self._connection = ApiConnection.objects.get(user_profile__account=self.account, name=name)
         except ApiConnection.DoesNotExist as e:
             if self._manifest:
                 model_dump = (
@@ -751,9 +751,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         # generate a QuerySet of ApiConnection objects that match our search criteria
         if name:
-            api_connections = ApiConnection.objects.filter(account=self.account, name=name)
+            api_connections = ApiConnection.objects.filter(user_profile__account=self.account, name=name)
         else:
-            api_connections = ApiConnection.objects.filter(account=self.account)
+            api_connections = ApiConnection.objects.filter(user_profile__account=self.account)
 
         model_titles = self.get_model_titles(serializer=self.SerializerClass())
 

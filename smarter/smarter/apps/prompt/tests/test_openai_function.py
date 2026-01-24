@@ -115,7 +115,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
 
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
-            account=self.account,
+            user_profile=self.user_profile,
             chatbot=self.chatbot,
             ip_address="192.1.1.1",
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
@@ -131,7 +131,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
     def chatbot_factory(self):
         chatbot = ChatBot.objects.create(
             name="TestChatBot",
-            account=self.account,
+            user_profile=self.user_profile,
             description="Test ChatBot",
             version="1.0.0",
             subdomain=None,

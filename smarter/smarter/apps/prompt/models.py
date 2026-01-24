@@ -498,7 +498,7 @@ class ChatHelper(SmarterRequestMixin):
                 django_friendly_url = django_friendly_url.replace("http://testserver/", "http://testserver.local/")
                 chat = Chat.objects.create(
                     session_key=self.session_key,
-                    account=self.account,
+                    user_profile=self.user_profile,
                     chatbot=self.chatbot,
                     ip_address=self.ip_address,
                     user_agent=self.user_agent,
