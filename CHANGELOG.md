@@ -4,33 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-
-
 ## [0.13.98](https://github.com/smarter-sh/smarter/compare/v0.13.97...v0.13.98) (2026-01-24)
 
 ### Bug Fixes
 
-* python3.13 upgrade ([92dfc24](https://github.com/smarter-sh/smarter/commit/92dfc2496082761e0aae605ecc076e45816fe2d6))
+- python3.13 upgrade ([92dfc24](https://github.com/smarter-sh/smarter/commit/92dfc2496082761e0aae605ecc076e45816fe2d6))
 
 ## [0.13.97](https://github.com/smarter-sh/smarter/compare/v0.13.96...v0.13.97) (2026-01-22)
 
 ### Bug Fixes
 
-* hide all oauth elements when oauth is not configured ([147f22e](https://github.com/smarter-sh/smarter/commit/147f22e9e6c318169fac36cd95dcefe59adb6d46))
+- hide all oauth elements when oauth is not configured ([147f22e](https://github.com/smarter-sh/smarter/commit/147f22e9e6c318169fac36cd95dcefe59adb6d46))
 
 ## [0.13.96](https://github.com/smarter-sh/smarter/compare/v0.13.95...v0.13.96) (2026-01-21)
 
 ### Bug Fixes
 
-* ensure that platform can startup (with warnings) without Google credentials ([91889f3](https://github.com/smarter-sh/smarter/commit/91889f36f21e7fa887e22802eabe9a8c20840b01))
+- ensure that platform can startup (with warnings) without Google credentials ([91889f3](https://github.com/smarter-sh/smarter/commit/91889f36f21e7fa887e22802eabe9a8c20840b01))
 
 ## [0.13.95](https://github.com/smarter-sh/smarter/compare/v0.13.94...v0.13.95) (2026-01-21)
 
 ### Bug Fixes
 
-* insert release notes after CHANGELOG.MD title ([24e97f3](https://github.com/smarter-sh/smarter/commit/24e97f3754b7327bda158bbd516fc71acf27d9ae))
-* reduce disk requirements to 10Gib ([f77b715](https://github.com/smarter-sh/smarter/commit/f77b7159f2f62eb7eff5cf2e28645b697ba242d3))
-* update docs urls ([03673e3](https://github.com/smarter-sh/smarter/commit/03673e37b81aae522f47dc0354aea96997f188a0))
+- insert release notes after CHANGELOG.MD title ([24e97f3](https://github.com/smarter-sh/smarter/commit/24e97f3754b7327bda158bbd516fc71acf27d9ae))
+- reduce disk requirements to 10Gib ([f77b715](https://github.com/smarter-sh/smarter/commit/f77b7159f2f62eb7eff5cf2e28645b697ba242d3))
+- update docs urls ([03673e3](https://github.com/smarter-sh/smarter/commit/03673e37b81aae522f47dc0354aea96997f188a0))
 
 ## [0.13.94](https://github.com/smarter-sh/smarter/compare/v0.13.93...v0.13.94) (2026-01-20)
 
@@ -276,9 +274,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Refactor
 
-- Test Coverage - Added approximately 450 unit tests, focused on smarter.lib, smarter.common, smarter.apps.api.v1.cli, and the SAM broker model in general.
-- Documentation - Published a Read the Docs site: [https://docs.smarter.sh/en/latest/](https://docs.smarter.sh/en/latest/)
-- Caching - strategically implemented caching vis a vis @cache_results() on the most commonly accessed Python objects.
+- Test Coverage \* Added approximately 450 unit tests, focused on smarter.lib, smarter.common, smarter.apps.api.v1.cli, and the SAM broker model in general.
+- Documentation \* Published a Read the Docs site: [https://docs.smarter.sh/en/latest/](https://docs.smarter.sh/en/latest/)
+- Caching \* strategically implemented caching vis a vis @cache_results() on the most commonly accessed Python objects.
 
 ## [0.13.57](https://github.com/smarter-sh/smarter/compare/v0.13.56...v0.13.57) (2025-12-26)
 
@@ -534,7 +532,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Bug Fixes
 
-- refactor project root modules - celery, urls, hosts ([600e6ab](https://github.com/smarter-sh/smarter/commit/600e6ab99b3efdf5281b7556c52c14bd544fc536))
+- refactor project root modules \* celery, urls, hosts ([600e6ab](https://github.com/smarter-sh/smarter/commit/600e6ab99b3efdf5281b7556c52c14bd544fc536))
 
 ## [0.13.19](https://github.com/smarter-sh/smarter/compare/v0.13.18...v0.13.19) (2025-10-14)
 
@@ -1032,7 +1030,7 @@ This is a major low-level refactoring of business logic for Account and WSGI req
 - bad user attribute. changed 'user' to 'email' ([8fa4156](https://github.com/smarter-sh/smarter/commit/8fa4156195d2f224070d2b93afbaafbc7319ccaf))
 - catch any exception on SAMJournal.objects.create() ([e2e3746](https://github.com/smarter-sh/smarter/commit/e2e3746e587c9e481df11086af56f90ea2750a0d))
 - chatbot_id initialization from <int:chatbot_id>/chat/config/ ([2ed7f77](https://github.com/smarter-sh/smarter/commit/2ed7f771d8e9940af50600f135824698da0b3b25))
-- ChatBotHelper and ChatBotApiBaseViewSet handling of named urls - https://example.3141-5926-5359.api.smarter.sh ([2bc5877](https://github.com/smarter-sh/smarter/commit/2bc5877cdd4e74373ff2e3818f10b6bd8fe722de))
+- ChatBotHelper and ChatBotApiBaseViewSet handling of named urls \* https://example.3141-5926-5359.api.smarter.sh ([2bc5877](https://github.com/smarter-sh/smarter/commit/2bc5877cdd4e74373ff2e3818f10b6bd8fe722de))
 - cleanup json dump ([24e62b5](https://github.com/smarter-sh/smarter/commit/24e62b5f1114605095483e9307ffa842a9cd79cf))
 - ensure that ChatBotHelper still works with sandbox urls ([6bca39a](https://github.com/smarter-sh/smarter/commit/6bca39adccb61a792a238cb0cc56d128347df783))
 - ensure that the url path includes /api/ ([4bfebb9](https://github.com/smarter-sh/smarter/commit/4bfebb9a149cf8e48c8fe32535b4d315e29cdb37))
