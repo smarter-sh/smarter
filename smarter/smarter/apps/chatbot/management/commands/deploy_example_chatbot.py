@@ -51,7 +51,7 @@ class Command(SmarterCommand):
         account = Account.objects.get(account_number=account_number)
         user = get_cached_admin_user_for_account(account)
         user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
-        chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
+        chatbot, _ = ChatBot.objects.get_or_create(user_profile=user_profile, name=SMARTER_EXAMPLE_CHATBOT_NAME)
         chatbot.provider = SettingsDefaults.LLM_DEFAULT_PROVIDER
         chatbot.default_model = SettingsDefaults.LLM_DEFAULT_MODEL
         chatbot.default_system_role = SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE
@@ -76,7 +76,7 @@ class Command(SmarterCommand):
             self.handle_completed_success(msg=f"The Smarter demo API is already deployed.")
             return
 
-        for plugin_meta in PluginMeta.objects.filter(account=user_profile.account):
+        for plugin_meta in PluginMeta.objects.filter(user_profile=user_profile):
             if plugin_meta.name in ["everlasting_gobstopper", "example_configuration"]:
                 if not ChatBotPlugin.objects.filter(chatbot=chatbot, plugin_meta=plugin_meta).exists():
                     ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin_meta)

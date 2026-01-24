@@ -230,7 +230,7 @@ class PluginController(AbstractController):
         if not self._plugin_meta and self.account and self.name and self.manifest:
             try:
                 self._plugin_meta = PluginMeta.objects.get(
-                    account=self.account,
+                    user_profile__account=self.account,
                     name=self.name,
                     plugin_class=self.plugin_class,
                 )

@@ -59,7 +59,7 @@ class Command(SmarterCommand):
             self.handle_completed_failure(msg=f"User profile not found for account: {account} user: {user}")
             raise ValueError(f"User profile not found for account: {account} user: {user}")
 
-        chatbot = ChatBot.objects.get(account=user_profile.account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
+        chatbot = ChatBot.objects.get(user_profile=user_profile, name=SMARTER_EXAMPLE_CHATBOT_NAME)
         if not chatbot:
             self.handle_completed_failure(msg=f"Chatbot not found {SMARTER_EXAMPLE_CHATBOT_NAME}")
             raise ValueError(f"Chatbot not found {SMARTER_EXAMPLE_CHATBOT_NAME}")
@@ -68,7 +68,7 @@ class Command(SmarterCommand):
         chat, _ = Chat.objects.get_or_create(
             session_key=session_key,
             chatbot=chatbot,
-            account=account,
+            user_profile=user_profile,
             url="https://localhost:9357/seed-chat-history",
             ip_address="192.1.1.1",
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",

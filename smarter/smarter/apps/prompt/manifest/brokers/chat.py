@@ -93,7 +93,9 @@ class SAMChatBroker(AbstractBroker):
         try:
             # Fixnote: we should be searching on the session_key, not the description
             if self.manifest:
-                self._chat = Chat.objects.get(user=self.user, description=self.manifest.metadata.description)
+                self._chat = Chat.objects.get(
+                    user_profile__user=self.user, description=self.manifest.metadata.description
+                )
         except Chat.DoesNotExist:
             pass
 
@@ -223,9 +225,11 @@ class SAMChatBroker(AbstractBroker):
 
         data = []
         if session_key:
-            chats = Chat.objects.filter(user=self.user, session_key=session_key).first()
+            chats = Chat.objects.filter(user_profile=self.user_profile, session_key=session_key).first()
         else:
-            chats = Chat.objects.filter(account=self.account)
+            chats = Chat.objects.filter(user_profile__account=self.account)
+        chats = chats or Chat.objects.none()
+        chats = chats.order_by("-created_at")[:MAX_RESULTS]
 
         logger.info("SAMChatBroker().get() found %s Chats for account %s", chats.count(), self.account)
 

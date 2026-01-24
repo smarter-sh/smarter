@@ -475,9 +475,9 @@ class SAMProviderBroker(AbstractBroker):
         data = []
 
         if name:
-            provider = Provider.objects.filter(account=self.account, name=name)
+            provider = Provider.objects.filter(user_profile__account=self.account, name=name)
         else:
-            providers = Provider.objects.filter(account=self.account)
+            providers = Provider.objects.filter(user_profile__account=self.account)
         providers = [provider for provider in providers]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
@@ -617,7 +617,7 @@ class SAMProviderBroker(AbstractBroker):
 
         name = kwargs.get("name")
         try:
-            self._provider = Provider.objects.get(account=self.account, name=name)
+            self._provider = Provider.objects.get(user_profile__account=self.account, name=name)
         except Provider.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {name}. Not found", thing=self.kind, command=command
@@ -656,7 +656,7 @@ class SAMProviderBroker(AbstractBroker):
             raise SAMBrokerErrorNotImplemented(message="Params must be a dictionary", thing=self.kind, command=command)
         name = self.params.get("name")
         try:
-            provider = Provider.objects.get(account=self.account, name=name)
+            provider = Provider.objects.get(user_profile__account=self.account, name=name)
         except Provider.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to delete {self.kind} {name}. Not found", thing=self.kind, command=command

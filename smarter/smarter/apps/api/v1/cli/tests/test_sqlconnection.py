@@ -89,7 +89,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
             value="smarter",
         )
         sqlconnection = SqlConnection.objects.create(
-            account=self.account,
+            user_profile=self.user_profile,
             name=self.name,
             kind=KIND,
             description="local mysql test sqlconnection - ",
@@ -191,7 +191,7 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         logger.info("response: %s", response)
 
         # tear down the test results.
-        sql_connection = SqlConnection.objects.get(name=manifest.metadata.name, account=self.account)
+        sql_connection = SqlConnection.objects.get(name=manifest.metadata.name, user_profile__account=self.account)
         sql_connection.delete()
         password_secret.delete()
 

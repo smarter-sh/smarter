@@ -75,7 +75,7 @@ class APIKeyView(APIKeyBase):
 
     def _handle_create(self, request):
         new_api_key, token = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
-            account=self.account,
+            user_profile=self.user_profile,
             name="New API Key",
             user=request.user,
             description=f"New API key created by {request.user}",

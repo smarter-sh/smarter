@@ -16,6 +16,10 @@ from urllib.parse import urlparse
 import dns.resolver
 
 from smarter.apps.account.models import Account, AccountContact
+from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
+    get_cached_user_profile,
+)
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
@@ -187,9 +191,11 @@ def register_custom_domain(account_id: int, domain_name: str):
 
     pre_register_custom_domain.send(sender=register_custom_domain, account_id=account_id, domain_name=domain_name)
     account = Account.objects.get(id=account_id)
+    admin = get_cached_admin_user_for_account(account=account)
+    admin_user_profile = get_cached_user_profile(user=admin, account=account)  # type: ignore[assignment]
     domain_name = aws_helper.aws.domain_resolver(domain_name)
     try:
-        ChatBotCustomDomain.objects.get(account=account, domain_name=domain_name)
+        ChatBotCustomDomain.objects.get(user_profile__account=account, domain_name=domain_name)
         certificate_arn = aws_helper.acm.get_certificate_arn(domain_name=domain_name)
         if not certificate_arn:
             raise AWSACMCertificateNotFound
@@ -220,9 +226,10 @@ def register_custom_domain(account_id: int, domain_name: str):
         pass
 
     # create a Hosted Zone for the custom domain
+
     aws_hosted_zone, _ = aws_helper.route53.get_or_create_hosted_zone(domain_name=domain_name)
     host, _ = ChatBotCustomDomain.objects.get_or_create(
-        account=account,
+        user_profile=admin_user_profile,
         domain_name=domain_name,
     )
     host.aws_hosted_zone_id = aws_hosted_zone["Id"]

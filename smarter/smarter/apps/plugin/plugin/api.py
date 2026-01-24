@@ -248,7 +248,7 @@ class ApiPlugin(PluginBase):
             try:
                 account = self.user_profile.account if self.user_profile else None
                 plugin_data_apiconnection = ApiConnection.objects.get(
-                    account=account,
+                    user_profile__account=account,
                     name=connection_name,
                 )
                 api_data["connection"] = plugin_data_apiconnection

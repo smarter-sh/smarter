@@ -1225,7 +1225,7 @@ def get_cached_chatbot(
     @cache_results()
     def get_chatbot_by_name_account(name: str, account_id: int) -> ChatBot:
         account = Account.objects.get(id=account_id)
-        return ChatBot.objects.get(name=name, account=account)
+        return ChatBot.objects.get(name=name, user_profile__account=account)
 
     if chatbot_id is not None:
         return get_chatbot_by_id(chatbot_id)

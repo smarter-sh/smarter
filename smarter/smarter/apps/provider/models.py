@@ -129,13 +129,6 @@ class Provider(MetaDataWithOwnershipModel, SmarterHelperMixin):
         verbose_name = "Provider"
         verbose_name_plural = "Providers"
 
-    owner = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        blank=False,
-        null=False,
-        help_text="The users that owns the provider.",
-    )
     status = models.CharField(
         max_length=32,
         choices=ProviderStatus.choices,

@@ -384,7 +384,6 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     plugin_class = models.CharField(
         choices=PLUGIN_CLASSES, help_text="The class name of the plugin", max_length=255, default="PluginMeta"
     )
-    author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugin_meta_author")
 
     def __str__(self):
         return str(self.name) or ""
@@ -1284,14 +1283,14 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         @cache_results()
         def cached_sqlconnection_by_id_and_name(account_id: int, name: str) -> Union["SqlConnection", None]:
             try:
-                return SqlConnection.objects.get(account_id=account_id, name=name)
+                return SqlConnection.objects.get(user_profile__account__id=account_id, name=name)
             except SqlConnection.DoesNotExist:
                 return None
 
         @cache_results()
         def cached_apiconnection_by_id_and_name(account_id: int, name: str) -> Union["ApiConnection", None]:
             try:
-                return ApiConnection.objects.get(account_id=account_id, name=name)
+                return ApiConnection.objects.get(user_profile__account__id=account_id, name=name)
             except ApiConnection.DoesNotExist:
                 return None
 

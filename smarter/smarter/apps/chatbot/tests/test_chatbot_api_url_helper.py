@@ -38,20 +38,20 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         settings.ALLOWED_HOSTS.append(self.domain_name)
 
         self.chatbot = ChatBot.objects.create(
-            account=self.account,
+            user_profile=self.user_profile,
             name=f"test-{self.hash_suffix}",
             deployed=True,
         )
 
         self.custom_domain = ChatBotCustomDomain.objects.create(
-            account=self.account,
+            user_profile=self.user_profile,
             domain_name=self.domain_name,
             aws_hosted_zone_id="TEST_HOSTED_ZONE_ID",
             is_verified=True,
         )
 
         self.custom_chatbot = ChatBot.objects.create(
-            account=self.account,
+            user_profile=self.user_profile,
             name=f"test-custom-{self.hash_suffix}",
             custom_domain=self.custom_domain,
             deployed=True,

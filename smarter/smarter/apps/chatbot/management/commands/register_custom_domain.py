@@ -55,8 +55,8 @@ class Command(SmarterCommand):
             )
             return None
 
-        custom_domain = ChatBotCustomDomain.objects.get(account=account, domain_name=domain)
+        custom_domain = ChatBotCustomDomain.objects.get(user_profile__account=account, domain_name=domain)
         ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=custom_domain.aws_hosted_zone_id)
         self.handle_completed_success(
-            msg=f"Successfully registered the domain name {domain} for account {custom_domain.account.account_number} {custom_domain.account.company_name}. Please begin the domain verification process once you've added these NS records to the root domain's DNS settings: {ns_records}"
+            msg=f"Successfully registered the domain name {domain} for account {custom_domain.user_profile.account.account_number} {custom_domain.user_profile.account.company_name}. Please begin the domain verification process once you've added these NS records to the root domain's DNS settings: {ns_records}"
         )

@@ -68,7 +68,7 @@ class Command(SmarterCommand):
         self.stdout.write(f"manage.py retrieve_plugin: Retrieving plugin {name} for account {account}")
 
         try:
-            plugin_meta = PluginMeta.objects.get(name=name, account=account)
+            plugin_meta = PluginMeta.objects.get(name=name, user_profile__account=account)
         except PluginMeta.DoesNotExist as e:
             self.handle_completed_failure(
                 e,

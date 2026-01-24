@@ -153,7 +153,7 @@ class Command(SmarterCommand):
                 defaults={
                     "description": "OpenAI provides advanced AI models and APIs.",
                     "owner": self.user_profile.user,
-                    "account": self.user_profile.account,
+                    "user_profile": self.user_profile,
                     "status": ProviderStatus.VERIFIED,
                     "is_active": True,
                     "is_verified": True,
@@ -236,7 +236,7 @@ class Command(SmarterCommand):
                 defaults={
                     "description": "Google AI provides a range of AI and machine learning services.",
                     "owner": self.user_profile.user,
-                    "account": self.user_profile.account,
+                    "user_profile": self.user_profile,
                     "status": ProviderStatus.VERIFIED,
                     "is_active": True,
                     "is_verified": True,
@@ -289,7 +289,7 @@ class Command(SmarterCommand):
                 defaults={
                     "description": "Meta AI provides a range of AI and machine learning services.",
                     "owner": self.user_profile.user,
-                    "account": self.user_profile.account,
+                    "user_profile": self.user_profile,
                     "status": ProviderStatus.VERIFIED,
                     "is_active": True,
                     "is_verified": True,

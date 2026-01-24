@@ -804,7 +804,13 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
             return False
 
         def get_chatbots_for_account(account) -> QuerySet:
-            return ChatBot.objects.filter(account=account)
+            user_chatbots = ChatBot.objects.filter(user_profile=self.user_profile).order_by("name")
+            smarter_chatbots = ChatBot.objects.filter(user_profile=get_cached_smarter_admin_user_profile()).order_by(
+                "name"
+            )
+            combined_chatbots = user_chatbots | smarter_chatbots
+            combined_chatbots = combined_chatbots.distinct().order_by("name")
+            return combined_chatbots
 
         self.chatbots = get_chatbots_for_account(account=self.account)
 

@@ -358,7 +358,7 @@ class TestPluginBase(TestAccountMixin):
         add_example_plugins(user_profile=self.user_profile)
 
         # verify that all of the sample plugins were added to the user account
-        plugins = PluginMeta.objects.filter(account=self.account)
+        plugins = PluginMeta.objects.filter(user_profile__account=self.account)
         self.assertEqual(len(plugins), PluginExamples().count())
 
         # verify that all of the sample plugins were correctdly created

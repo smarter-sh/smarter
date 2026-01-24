@@ -217,7 +217,7 @@ class Command(SmarterCommand):
                 api_name = os.path.basename(directory_path)
                 if is_demo_folder(directory=directory_path):
                     logger.debug("%s: Processing API: %s", logger_prefix, api_name)
-                    chatbot, _ = ChatBot.objects.get_or_create(name=api_name, account=self.account)
+                    chatbot, _ = ChatBot.objects.get_or_create(name=api_name, user_profile=self.user_profile)
                     for _, _, files in os.walk(directory_path):
                         for file in files:
                             if file.endswith(".yaml") or file.endswith(".yml"):
@@ -228,19 +228,19 @@ class Command(SmarterCommand):
                                     plugin = self.load_plugin(filespec=filespec)
                                     if not plugin:
                                         logger.error(
-                                            "%s: Error loading plugin: %s for account %s",
+                                            "%s: Error loading plugin: %s for user_profile %s",
                                             logger_prefix,
                                             filename,
-                                            self.account.account_number,
+                                            self.user_profile,
                                         )
                                         continue
                                     ChatBotPlugin.objects.get_or_create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
                                 except Exception as e:
                                     logger.error(
-                                        "%s: Error loading plugin: %s for account %s: %s",
+                                        "%s: Error loading plugin: %s for user_profile %s: %s",
                                         logger_prefix,
                                         filename,
-                                        self.account.account_number,
+                                        self.user_profile,
                                         e,
                                     )
                                     raise e

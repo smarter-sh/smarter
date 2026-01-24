@@ -9,6 +9,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
     get_cached_smarter_account,
+    get_cached_smarter_admin_user_profile,
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain
 from smarter.apps.chatbot.tasks import (
@@ -38,6 +39,7 @@ class TestChatBotTasks(TestAccountMixin):
         # same account number for DNS verifications in local.api.smarter.sh in
         # AWS Route53
         cls.smarter_account = get_cached_smarter_account()
+        cls.smarter_user_profile = get_cached_smarter_admin_user_profile()
         cls.smarter_admin_user = get_cached_admin_user_for_account(account=cls.smarter_account)
 
     def setUp(self):
@@ -51,14 +53,14 @@ class TestChatBotTasks(TestAccountMixin):
             aws_helper.route53.delete_hosted_zone(domain_name=self.domain_name)
 
         self.chatbot = ChatBot.objects.create(
-            account=self.smarter_account,
+            user_profile=self.smarter_user_profile,
             name=common_name,
         )
 
     def tearDown(self):
         """Clean up test fixtures."""
         try:
-            ChatBotCustomDomain.objects.get(account_id=self.smarter_account.id).delete()
+            ChatBotCustomDomain.objects.get(user_profile__account__id=self.smarter_account.id).delete()
         except ChatBotCustomDomain.DoesNotExist:
             pass
 
@@ -95,7 +97,7 @@ class TestChatBotTasks(TestAccountMixin):
         self.assertIsNotNone(hosted_zone)
 
         custom_domain, _ = ChatBotCustomDomain.objects.get_or_create(
-            account=self.smarter_account,
+            user_profile=self.smarter_user_profile,
             domain_name=resolved_domain,
             aws_hosted_zone_id=hosted_zone,
         )
