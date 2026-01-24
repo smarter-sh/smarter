@@ -547,7 +547,7 @@ class SmarterValidator:
         logger.debug("%s.validate_email() %s", logger_prefix, email)
 
         if not isinstance(email, str) or not re.match(SmarterValidator.VALID_EMAIL_PATTERN, email):
-            raise ValueError(f"Invalid email {email}")
+            raise SmarterValueError(f"Invalid email {email}")
         return email
 
     @staticmethod
@@ -980,7 +980,7 @@ class SmarterValidator:
         try:
             SmarterValidator.validate_email(email)
             return True
-        except SmarterValueError:
+        except (SmarterValueError, ValueError):
             return False
 
     @staticmethod

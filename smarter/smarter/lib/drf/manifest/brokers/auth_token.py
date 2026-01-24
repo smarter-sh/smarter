@@ -338,7 +338,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             return self._orm_instance
 
         if not self._manifest:
-            logger.warning(
+            logger.debug(
                 "%s.orm_instance() - manifest is not set. Cannot retrieve ORM instance.",
                 self.abstract_broker_logger_prefix,
             )
@@ -593,11 +593,22 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
 
+        if not self.smarter_auth_token:
+            self.apply(request, *args, **kwargs)
+
         if self.smarter_auth_token:
             if not self.smarter_auth_token.is_active:
                 self.smarter_auth_token.is_active = True
                 self.smarter_auth_token.save()
         else:
+            logger.error(
+                "%s.deploy() - %s %s is not ready after apply(). manifest: %s, loader: %s",
+                self.formatted_class_name,
+                self.kind,
+                self.name,
+                self.manifest,
+                self.loader,
+            )
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
         return self.json_response_ok(command=command, data=self.to_json())
 

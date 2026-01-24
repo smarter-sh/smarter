@@ -541,7 +541,8 @@ def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_
     if isinstance(string, bytes):
         string = string.decode("utf-8")
     if not isinstance(string, str):
-        raise TypeError("string must be a string")
+        logger.warning("mask_string() - Input is not a string or bytes: %s", type(string))
+        return str(string)
     if len(string) <= mask_length:
         return string
     if mask_length < 0:

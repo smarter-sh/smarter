@@ -383,7 +383,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
         :return: The logger prefix for the AbstractBroker.
         :rtype: str
         """
-        return f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
+        return formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
 
     @property
     def formatted_class_name(self) -> str:

@@ -418,10 +418,8 @@ def get_cached_account_for_user(user, invalidate: bool = False) -> Optional[Acco
         account = get_cached_account_for_user(user, invalidate=True)
 
     """
-    if not user:
-        return None
-
-    if isinstance(user, AnonymousUser):
+    if not isinstance(user, User):
+        logger.warning("%s.get_cached_account_for_user() invalid user type: %s", HERE, type(user))
         return None
 
     username = getattr(user, "username")
@@ -750,6 +748,9 @@ def account_number_from_url(url: str, invalidate: bool = False) -> Optional[str]
         account_number = account_number_from_url("https://hr.3141-5926-5359.alpha.api.example.com/", invalidate=True)
     """
     if not url:
+        return None
+    if not isinstance(url, str):
+        logger.warning("%s.account_number_from_url() invalid URL type: %s", HERE, type(url))
         return None
 
     @cache_results()

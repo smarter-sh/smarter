@@ -26,9 +26,9 @@ The Smarter Dockerfile begins with a novel base image declaration that helps to 
 
 .. code-block:: docker
 
-   FROM python:3.12-slim-trixie AS linux_base
+   FROM python:3.13-slim-trixie AS linux_base
 
-python:3.12-slim-trixie includes the latest Python 3.12, installed on a minimal Debian 13 ("Trixie") operating system base
+python:3.13-slim-trixie includes the latest Python 3.13, installed on a minimal Debian 13 ("Trixie") operating system base
 which is optimized for size and performance. The Dockerfile is laid out in stages (eg, layers),
 ordered to optimize build caching and minimize final image size.
 
