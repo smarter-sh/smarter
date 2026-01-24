@@ -13,7 +13,6 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import cache_control, cache_page, never_cache
 
-
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
