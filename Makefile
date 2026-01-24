@@ -7,7 +7,7 @@ ifeq ($(OS),Windows_NT)
     PYTHON := python.exe
     ACTIVATE_VENV := venv\Scripts\activate
 else
-    PYTHON := python3.12
+    PYTHON := python3.13
     ACTIVATE_VENV := source venv/bin/activate
 endif
 PIP := $(PYTHON) -m pip
@@ -25,7 +25,7 @@ all: help
 # initialize local development environment.
 # takes around 5 minutes to complete
 init:
-	make check-python		# verify Python 3.12 is installed
+	make check-python		# verify Python 3.13 is installed
 	make docker-check		# verify Docker is installed and running
 	make python-init		# create/replace Python virtual environment and install dependencies
 	make docker-init		# initialize MySQL and create the smarter database
@@ -116,7 +116,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.apps.account"
+	docker exec smarter-app bash -c "python manage.py test smarter.common.tests.test_conf.TestSettings.test_ready"
 
 docker-prune:
 	make docker-check && \

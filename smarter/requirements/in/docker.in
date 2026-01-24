@@ -13,4 +13,4 @@
 -r constraints.in
 -r base.in
 
-gunicorn==23.0.0
+gunicorn==24.1.0

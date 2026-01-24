@@ -18,7 +18,7 @@ See setup instructions below for each technology.
     - Follow PEP 8 for code formatting and naming conventions.
     - Prefer DRY (Don't Repeat Yourself) principles; code should be generic and reusable.
     - Document any deprecations or breaking changes clearly.
-    - Ensure compatibility with Python 3.12 or later, Django 5.x or later, DRF 3.x or later, and Pydantic 2.9 or later.
+    - Ensure compatibility with Python 3.10 or later, Django 5.x or later, DRF 3.x or later, and Pydantic 2.9 or later.
 
 
 
@@ -67,7 +67,7 @@ are installed in your local environment:
 - Docker Desktop or Docker CE 25x or later
 - Docker Compose
 - Node: 20 or later
-- python: 3.12 or later
+- python: 3.10 or later
 - git: 2.x or later
 - make: 3.8 or later
 
