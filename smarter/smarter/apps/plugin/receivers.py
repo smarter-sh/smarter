@@ -74,10 +74,9 @@ def handle_plugin_created(sender, plugin: PluginBase, **kwargs):
     """Handle plugin created signal."""
 
     logger.info(
-        "%s - account: %s - user: %s - name: %s data: %s",
+        "%s - %s - name: %s data: %s",
         formatted_text(prefix + "plugin_created"),
-        plugin.user_profile.account if plugin.user_profile else None,
-        plugin.user_profile.user if plugin.user_profile else None,
+        plugin.user_profile,
         plugin.name,
         formatted_json(plugin.data) if plugin.data else None,
     )
@@ -95,10 +94,9 @@ def handle_plugin_updated(sender, plugin: PluginBase, **kwargs):
     """Handle plugin updated signal."""
 
     logger.info(
-        "%s - account: %s - user: %s - name: %s data: %s",
+        "%s - %s - name: %s data: %s",
         formatted_text(prefix + "plugin_updated"),
-        plugin.user_profile.account if plugin.user_profile else None,
-        plugin.user_profile.user if plugin.user_profile else None,
+        plugin.user_profile,
         plugin.name,
         formatted_json(plugin.data) if plugin.data else None,
     )
@@ -288,19 +286,19 @@ def handle_api_connection_saved(sender, instance, created, **kwargs):
 def handle_sql_connection_saved(sender, instance: SqlConnection, created, **kwargs):
     """Handle SQL connection saved signal."""
 
-    account = str(instance.account) if instance.account else "(account is missing)"
+    user_profile = str(instance.user_profile) if instance.user_profile else "(user_profile is missing)"
     if created:
         logger.info(
             "%s - %s %s",
             formatted_text(prefix + "post_save() SqlConnection() created"),
-            account,
+            user_profile,
             formatted_json(model_to_dict(instance)),
         )
     else:
         logger.info(
             "%s - %s %s",
             formatted_text(prefix + "post_save() SqlConnection() updated"),
-            account,
+            user_profile,
             formatted_json(model_to_dict(instance)),
         )
 

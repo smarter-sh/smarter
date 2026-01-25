@@ -586,7 +586,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                         f"Manifest spec.connection is not a dict: {type(model_dump)}",
                         thing=self.kind,
                     ) from e
-                model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
+                # model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
                 model_dump[SAMMetadataKeys.NAME.value] = (
                     self.manifest.metadata.name if self.manifest and self.manifest.metadata else None
                 )
@@ -598,6 +598,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
                 model_dump[SAMKeys.KIND.value] = self.kind
                 model_dump["api_key"] = self.api_key_secret
+                model_dump["user_profile"] = self.user_profile
 
                 self._connection = ApiConnection(**model_dump)
                 self._connection.save()

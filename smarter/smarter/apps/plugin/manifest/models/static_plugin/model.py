@@ -6,7 +6,6 @@ from typing import ClassVar
 from pydantic import Field
 
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
-from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper

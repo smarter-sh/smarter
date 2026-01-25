@@ -671,12 +671,13 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             model_dump = self.camel_to_snake(model_dump)
             if not isinstance(model_dump, dict):
                 model_dump = json.loads(json.dumps(model_dump))
-            model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
+            # model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
             model_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
             model_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
             model_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
             model_dump[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.password_secret
             model_dump[SAMKeys.KIND.value] = self.kind
+            model_dump["user_profile"] = self.user_profile
             self._connection = SqlConnection(**model_dump)
 
             logger.info(
