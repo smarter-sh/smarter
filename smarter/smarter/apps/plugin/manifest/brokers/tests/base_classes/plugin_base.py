@@ -56,7 +56,7 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
             raise SmarterValueError("Failed to get test secret name from manifest metadata.")
         try:
             cls.sql_connection = SqlConnection.objects.get(
-                user_profile__account=cls.account,
+                user_profile=cls.user_profile,
                 name=cls.test_sql_connection_name,
             )
         except SqlConnection.DoesNotExist as e:

@@ -5,6 +5,8 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
+from django.core.exceptions import MultipleObjectsReturned
+
 from smarter.apps.account.models import Secret
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.plugin.manifest.enum import SAMApiConnectionSpecConnectionKeys
@@ -575,7 +577,18 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         try:
             name = self.camel_to_snake(self.name)  # type: ignore
             self._connection = ApiConnection.objects.get(user_profile__account=self.account, name=name)
-        except ApiConnection.DoesNotExist as e:
+        except MultipleObjectsReturned:
+            try:
+                self._connection = ApiConnection.objects.get(
+                    user_profile=self.user_profile,
+                    name=name,
+                )
+            except ApiConnection.DoesNotExist:
+                pass
+        except ApiConnection.DoesNotExist:
+            pass
+
+        if not self._connection:
             if self._manifest:
                 model_dump = (
                     self._manifest.spec.connection.model_dump() if self._manifest and self._manifest.spec else None
@@ -585,7 +598,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     raise SAMConnectionBrokerError(
                         f"Manifest spec.connection is not a dict: {type(model_dump)}",
                         thing=self.kind,
-                    ) from e
+                    )
                 # model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
                 model_dump[SAMMetadataKeys.NAME.value] = (
                     self.manifest.metadata.name if self.manifest and self.manifest.metadata else None

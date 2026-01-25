@@ -877,3 +877,40 @@ def cache_invalidate(user: Optional[User] = None, account: Optional[Account] = N
         get_cached_user_profile(user=resolved_user, account=account, invalidate=True)
         get_cached_user_for_user_id(user_id=resolved_user.id, invalidate=True)
         get_cached_user_for_username(username=resolved_user.username, invalidate=True)
+
+
+def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[UserProfile]:
+    """
+    Get a list of valid owners for the given user profile.
+
+    This function retrieves all user profiles associated with the same account as the provided user profile.
+    These profiles are considered valid owners for plugins created by the user.
+
+    :param user_profile: The `UserProfile` instance representing the user.
+    :type user_profile: UserProfile
+
+    :return: A list of `UserProfile` instances that are valid plugin owners.
+    :rtype: list[UserProfile]
+
+    .. seealso::
+
+        - :class:`UserProfile`
+    **Example usage**:
+    .. code-block:: python
+
+        from smarter.apps.account.models import UserProfile
+        from smarter.apps.plugin.utils import valid_plugin_owners_for_user
+
+        user_profile = UserProfile.objects.get(user__username="exampleuser")
+        owners = valid_plugin_owners_for_user(user_profile)
+        print("Valid plugin owners:", [owner.user.username for owner in owners])
+
+    """
+    if not user_profile:
+        return [smarter_cached_objects.smarter_admin_user_profile]
+
+    account_admin = get_cached_admin_user_for_account(user_profile.account)
+
+    if not isinstance(account_admin, UserProfile):
+        return [user_profile, smarter_cached_objects.smarter_admin_user_profile]
+    return [user_profile, account_admin, smarter_cached_objects.smarter_admin_user_profile]

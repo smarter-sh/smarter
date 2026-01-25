@@ -5,6 +5,7 @@ import logging
 from typing import Any, Optional, Type
 
 from django.core import serializers
+from django.core.exceptions import MultipleObjectsReturned
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
@@ -290,6 +291,18 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.account,
                 )
                 self._plugin_meta = PluginMeta.objects.get(user_profile__account=self.account, name=self.name)
+            except MultipleObjectsReturned:
+                try:
+                    self._plugin_meta = PluginMeta.objects.get(
+                        user_profile=self.user_profile,
+                        name=self.name,
+                    )
+                except PluginMeta.DoesNotExist:
+                    logger.warning(
+                        "PluginMeta does not exist for name %s and user_profile %s",
+                        self.name,
+                        self.user_profile,
+                    )
             except PluginMeta.DoesNotExist:
                 logger.warning(
                     "PluginMeta does not exist for name %s and account %s",

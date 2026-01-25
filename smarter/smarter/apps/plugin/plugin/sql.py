@@ -36,6 +36,8 @@ import re
 from datetime import datetime
 from typing import Any, Optional, Type, Union
 
+from django.core.exceptions import MultipleObjectsReturned
+
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
@@ -458,11 +460,24 @@ class SqlPlugin(PluginBase):
                     user_profile__account=account,
                     name=connection_name,
                 )
-                sql_data["connection"] = plugin_data_sqlconnection
-            except SqlConnection.DoesNotExist as e:
+            except SqlConnection.DoesNotExist:
+                pass
+            except MultipleObjectsReturned:
+                try:
+                    # narrow the search to exactly the user_profile
+                    # that authenticated the request.
+                    plugin_data_sqlconnection = SqlConnection.objects.get(
+                        user_profile=self.user_profile,
+                        name=connection_name,
+                    )
+                except SqlConnection.DoesNotExist:
+                    pass
+            if not plugin_data_sqlconnection:
                 raise SmarterSqlPluginError(
                     f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for account {account}. Error: {e}"
-                ) from e
+                )
+
+            sql_data["connection"] = plugin_data_sqlconnection
 
         # recast the Pydantic model's parameters field
         # to conform to openai's function calling schema.

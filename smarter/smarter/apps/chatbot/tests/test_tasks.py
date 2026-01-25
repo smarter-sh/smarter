@@ -60,7 +60,7 @@ class TestChatBotTasks(TestAccountMixin):
     def tearDown(self):
         """Clean up test fixtures."""
         try:
-            ChatBotCustomDomain.objects.get(user_profile__account__id=self.smarter_account.id).delete()
+            ChatBotCustomDomain.objects.get(user_profile=self.smarter_user_profile).delete()
         except ChatBotCustomDomain.DoesNotExist:
             pass
 

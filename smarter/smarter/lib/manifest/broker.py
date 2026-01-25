@@ -12,6 +12,7 @@ from urllib.parse import parse_qs, urlparse
 
 import inflect
 from django.core import serializers
+from django.core.exceptions import MultipleObjectsReturned
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import IntegrityError, models
 from django.http import HttpRequest, QueryDict
@@ -20,6 +21,7 @@ from rest_framework.request import Request
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import Account, Secret, User, UserProfile
+from smarter.apps.account.utils import valid_resource_owners_for_user
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -790,7 +792,19 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.user,
                 self.name,
             )
-            instance = ModelClass.objects.get(user_profile__account=self.account, name=self.name)
+            try:
+                # first try to bound the results only by account
+                instance = ModelClass.objects.get(user_profile__account=self.account, name=self.name)
+                # we ran across a resource owned by a different user in the same account, but with
+                # the same name. This is not allowed, so we'll return None.
+                if instance.user_profile not in valid_resource_owners_for_user(self.user_profile):
+                    return None
+            except MultipleObjectsReturned:
+                # However, it is perfectly viable to have multiple records with
+                # the same name across different users within the same account.
+                # So if we encounter this then we'll narrow the criteria to
+                # the exact user_profile that authenticated the request object.
+                instance = ModelClass.objects.get(user_profile=self.user_profile, name=self.name)
             logger.debug(
                 "%s.orm_instance() - retrieved ORM instance: %s",
                 self.formatted_class_name,
