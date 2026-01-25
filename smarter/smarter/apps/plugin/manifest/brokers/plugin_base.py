@@ -827,6 +827,13 @@ class SAMPluginBaseBroker(AbstractBroker):
         super().apply(request, kwargs)
         logger.debug("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
 
+        if not self.user.is_staff:
+            raise SAMBrokerError(
+                message="Only account admins can apply plugin manifests.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response with a list of SQL plugins for this account.

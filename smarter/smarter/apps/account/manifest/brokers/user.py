@@ -840,6 +840,13 @@ class SAMUserBroker(AbstractBroker):
         logger.debug("%s.apply() called", self.formatted_class_name)
         readonly_fields = ["id", "date_joined", "last_login", "username", "is_superuser"]
 
+        if not self.user.is_staff:
+            raise SAMUserBrokerError(
+                message="Only account admins can apply user manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not self.manifest:
             raise SAMUserBrokerError("User manifest is not set", thing=self.kind, command=command)
 
@@ -991,6 +998,13 @@ class SAMUserBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.delete() called", self.formatted_class_name)
 
+        if not self.user.is_staff:
+            raise SAMUserBrokerError(
+                message="Only account admins can delete user manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not self.brokered_user:
             raise SAMBrokerErrorNotFound(f"Failed to delete {self.kind}. Not found", thing=self.kind, command=command)
 
@@ -1031,6 +1045,13 @@ class SAMUserBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.deploy() called", self.formatted_class_name)
 
+        if not self.user.is_staff:
+            raise SAMUserBrokerError(
+                message="Only account admins can deploy user manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         if self.brokered_user:
             try:
                 if not self.brokered_user.is_active:
@@ -1057,6 +1078,13 @@ class SAMUserBroker(AbstractBroker):
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.undeploy() called", self.formatted_class_name)
+
+        if not self.user.is_staff:
+            raise SAMUserBrokerError(
+                message="Only account admins can undeploy user manifests.",
+                thing=self.kind,
+                command=command,
+            )
 
         if self.brokered_user:
             try:
