@@ -101,6 +101,9 @@ docker-init:
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
+docker-do:
+	docker exec smarter-app bash -c "python manage.py makemigrations && python manage.py migrate"
+
 docker-shell:
 	make docker-check && \
 	docker exec -it smarter-app /bin/bash

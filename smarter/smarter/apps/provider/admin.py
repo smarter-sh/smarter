@@ -33,8 +33,8 @@ class ProviderModelVerificationAdmin(admin.StackedInline):
         if request.user.is_superuser:
             return qs
         try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(chat__account=account)
+            account = get_cached_account_for_user(user=request.user)  # type: ignore
+            return qs.filter(chat__user_profile__account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -54,8 +54,8 @@ class ProviderVerificationAdmin(admin.StackedInline):
         if request.user.is_superuser:
             return qs
         try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(provider__account=account)
+            account = get_cached_account_for_user(user=request.user)  # type: ignore
+            return qs.filter(provider__user_profile__account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -70,7 +70,7 @@ class ProviderAdmin(RestrictedModelAdmin):
         "updated_at",
     )
 
-    list_display = ["created_at", "account", "name", "status", "is_active"]
+    list_display = ["created_at", "user_profile", "name", "status", "is_active"]
     model = Provider
 
     def get_queryset(self, request):
@@ -78,8 +78,8 @@ class ProviderAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(account=account)
+            account = get_cached_account_for_user(user=request.user)  # type: ignore
+            return qs.filter(user_profile__account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -101,8 +101,8 @@ class ProviderModelAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            account = get_cached_account_for_user(user=request.user)
-            return qs.filter(provider_model__provider__account=account)
+            account = get_cached_account_for_user(user=request.user)  # type: ignore
+            return qs.filter(provider_model__provider__user_profile__account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
 

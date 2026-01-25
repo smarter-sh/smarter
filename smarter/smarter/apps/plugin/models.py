@@ -328,8 +328,8 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     Represents the core metadata for a Smarter plugin, serving as the central registry for all plugin types.
 
     This class defines the essential identifying and descriptive information for a plugin, including its name,
-    description, type (static, SQL, or API), version, author, and associated tags. Each plugin is uniquely
-    associated with an account and an author profile, ensuring that plugin names are unique per account and
+    description, type (static, SQL, or API), version, user_profile, and associated tags. Each plugin is uniquely
+    associated with an account and a user_profile, ensuring that plugin names are unique per account and
     enforcing a snake_case naming convention for consistency and compatibility.
 
     The ``PluginMeta`` model acts as the anchor point for related plugin configuration and data models, such as
@@ -349,7 +349,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     class Meta:
         verbose_name = "Plugin"
         verbose_name_plural = "Plugins"
-        unique_together = ("account", "name")
+        unique_together = ("user_profile", "name")
 
     PLUGIN_CLASSES = [
         (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),

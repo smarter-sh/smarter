@@ -643,6 +643,7 @@ class UserProfile(MetaDataModel):
         on_delete=models.CASCADE,
         related_name="user_profile",
     )
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="user_profiles")
     is_test = models.BooleanField(
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )

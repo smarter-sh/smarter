@@ -36,29 +36,26 @@ class PluginMetaSerializer(MetaDataWithOwnershipModelSerializer):
     Serializer for the PluginMeta model.
 
     This serializer provides a camelCase API for plugin metadata, including fields for name, account,
-    description, plugin class, version, author, and tags. It is used to serialize and deserialize
+    description, plugin class, version, user_profile, and tags. It is used to serialize and deserialize
     plugin metadata for API responses and requests.
 
     :param tags: List of tags associated with the plugin.
     :type tags: TagListSerializerField
-    :param author: The user profile of the plugin author (read-only).
-    :type author: UserProfileSerializer
-    :param account: The account associated with the plugin (read-only).
-    :type account: AccountMiniSerializer
+    :param user_profile: The user profile of the plugin user_profile (read-only).
+    :type user_profile: UserProfileSerializer
 
     :return: Serialized plugin metadata.
     :rtype: dict
 
     .. important::
 
-        The `author` and `account` fields are read-only and cannot be modified via API requests.
+        The `user_profile` field is read-only and cannot be modified via API requests.
 
     .. seealso::
 
         - :class:`PluginMeta`
         - :class:`TagListSerializerField`
         - :class:`UserProfileSerializer`
-        - :class:`AccountMiniSerializer`
 
     **Example usage**:
 
@@ -72,24 +69,23 @@ class PluginMetaSerializer(MetaDataWithOwnershipModelSerializer):
         print(serializer.data)
         # Output: {
         #   "name": "...",
-        #   "account": {...},
+        #   "userProfile": {...},
         #   "description": "...",
         #   "pluginClass": "...",
         #   "version": "...",
-        #   "author": {...},
+        #   "userProfile": {...},
         #   "tags": ["tag1", "tag2"]
         # }
 
     """
 
-    author = UserProfileSerializer(read_only=True)
-    account = AccountMiniSerializer(read_only=True)
+    user_profile = UserProfileSerializer(read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginMeta
-        fields = ["name", "account", "description", "plugin_class", "version", "author", "tags"]
-        read_only_fields = ["author", "account"]
+        fields = ["name", "user_profile", "description", "plugin_class", "version", "tags"]
+        read_only_fields = ["user_profile"]
 
 
 class PluginSelectorSerializer(SmarterCamelCaseSerializer):
