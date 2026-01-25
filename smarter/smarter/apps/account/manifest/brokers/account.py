@@ -669,6 +669,13 @@ class SAMAccountBroker(AbstractBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user.is_superuser:
+            raise SAMAccountBrokerError(
+                message="Only superusers can apply account manifests.",
+                thing=self.kind,
+                command=command,
+            )
         readonly_fields = ["id", "created_at", "updated_at", "account_number"]
 
         if not self.manifest:

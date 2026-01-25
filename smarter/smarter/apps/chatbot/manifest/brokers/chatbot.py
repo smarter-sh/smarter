@@ -743,6 +743,12 @@ class SAMChatbotBroker(AbstractBroker):
                     data.pop(field, None)
                 for key, value in data.items():
                     setattr(self.chatbot, key, value)
+                if self.chatbot.user_profile != self.user_profile:
+                    raise SAMChatbotBrokerError(
+                        f"User profile mismatch for {self.kind} {self.manifest.metadata.name}",
+                        thing=self.kind,
+                        command=command,
+                    )
                 self.chatbot.save()
                 self.chatbot.refresh_from_db()
             except Exception as e:

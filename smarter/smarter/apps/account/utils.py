@@ -906,6 +906,8 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
         print("Valid plugin owners:", [owner.user.username for owner in owners])
 
     """
+    logger.debug("%s.valid_resource_owners_for_user() called with user_profile: %s", HERE, user_profile)
+
     if not user_profile:
         return [smarter_cached_objects.smarter_admin_user_profile]
 

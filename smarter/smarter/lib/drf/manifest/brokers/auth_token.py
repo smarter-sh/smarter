@@ -456,6 +456,13 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
             "token_key",
         ]
 
+        if not self.user.is_staff:
+            raise SAMSmarterAuthTokenBrokerError(
+                message="Only account admins can apply auth token manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not self.manifest:
             raise SAMBrokerErrorNotReady(
                 f"Manifest not set for {self.kind} broker. Cannot apply.",
@@ -575,6 +582,14 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
+
+        if not self.user.is_staff:
+            raise SAMSmarterAuthTokenBrokerError(
+                message="Only account admins can delete auth tokens.",
+                thing=self.kind,
+                command=command,
+            )
+
         if self.smarter_auth_token:
             try:
                 self.smarter_auth_token.delete()

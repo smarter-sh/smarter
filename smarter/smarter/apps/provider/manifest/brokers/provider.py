@@ -544,6 +544,14 @@ class SAMProviderBroker(AbstractBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user.is_staff:
+            raise SAMProviderBrokerError(
+                message="Only account admins can apply provider manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         readonly_fields = [
             "id",
             "account",
@@ -643,13 +651,20 @@ class SAMProviderBroker(AbstractBroker):
         :returns: A `SmarterJournaledJsonResponse` indicating the result of the delete operation.
 
         :raises: :class:`SAMBrokerErrorNotFound`
-           If the user with the specified username does not exist.
+           If the provider with the specified name does not exist.
         :raises: :class:`SAMProviderBrokerError`
-           If deletion fails for the user.
+           If deletion fails for the provider.
 
         """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user.is_staff:
+            raise SAMProviderBrokerError(
+                message="Only account admins can delete providers.",
+                thing=self.kind,
+                command=command,
+            )
 
         if not isinstance(self.params, dict):
             raise SAMBrokerErrorNotImplemented(message="Params must be a dictionary", thing=self.kind, command=command)

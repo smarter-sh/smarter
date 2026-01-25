@@ -862,6 +862,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at"]
 
+        if not self.user.is_staff:
+            raise SAMConnectionBrokerError(
+                message="Only account admins can apply api connection manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         # update the spec
         api_key_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
         proxy_password_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
@@ -1040,6 +1047,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user.is_staff:
+            raise SAMConnectionBrokerError(
+                message="Only account admins can delete api connection manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         if self.connection:
             try:
                 self.connection.delete()
