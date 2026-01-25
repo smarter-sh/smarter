@@ -292,6 +292,10 @@ See:
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
+KNOX_TOKEN_MODEL = "knox.AuthToken"
+"""
+The Django model to use for Knox authentication tokens. Smarter uses the default.
+"""
 
 # -------------------------------
 # Django session settings

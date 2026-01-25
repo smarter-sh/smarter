@@ -30,7 +30,7 @@ class ChatBotAdmin(RestrictedModelAdmin):
         "created_at",
         "updated_at",
         "url",
-        "account",
+        "user_profile",
         "name",
         "deployed",
         "mode",
@@ -51,7 +51,7 @@ class ChatBotAdmin(RestrictedModelAdmin):
             return qs
         try:
             user_profile = get_cached_user_profile(user=request.user)
-            return qs.filter(account=user_profile.account)
+            return qs.filter(user_profile__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -93,7 +93,7 @@ class ChatBotCustomDomainAdmin(RestrictedModelAdmin):
             return qs
         try:
             user_profile = get_cached_user_profile(user=request.user)
-            return qs.filter(account=user_profile.account)
+            return qs.filter(user_profile__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -112,7 +112,7 @@ class ChatBotCustomDomainDNSAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
             return qs.filter(custom_domain__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -132,8 +132,8 @@ class ChatBotAPIKeyAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(user=request.user)
-            return qs.filter(chatbot__account=user_profile.account)
+            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
+            return qs.filter(chatbot__user_profile__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -151,8 +151,8 @@ class ChatBotPluginAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(user=request.user)
-            return qs.filter(chatbot__account=user_profile.account)
+            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
+            return qs.filter(chatbot__user_profile__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -171,8 +171,8 @@ class ChatBotFunctionsAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = get_cached_user_profile(user=request.user)
-            return qs.filter(chatbot__account=user_profile.account)
+            user_profile = get_cached_user_profile(user=request.user)  # type: ignore
+            return qs.filter(chatbot__user_profile__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
