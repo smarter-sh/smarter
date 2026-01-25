@@ -9,6 +9,7 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
+from smarter.apps.account.utils import valid_resource_owners_for_user
 from smarter.apps.chatbot.manifest.enum import SAMChatbotSpecKeys
 from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.apps.chatbot.manifest.models.chatbot.metadata import SAMChatbotMetadata
@@ -670,6 +671,8 @@ class SAMChatbotBroker(AbstractBroker):
             chatbots = ChatBot.objects.filter(user_profile__account=self.account, name=name)
         else:
             chatbots = ChatBot.objects.filter(user_profile__account=self.account)
+        valid_owners = valid_resource_owners_for_user(user_profile=self.user_profile)
+        chatbots = chatbots.filter(user_profile__in=valid_owners).order_by("name")[:MAX_RESULTS]
         logger.info(
             "%s.get() found %s ChatBots for account %s", self.formatted_class_name, chatbots.count(), self.account
         )

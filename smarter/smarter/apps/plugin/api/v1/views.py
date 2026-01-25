@@ -15,7 +15,10 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import (
+    get_cached_user_profile,
+    valid_resource_owners_for_user,
+)
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
@@ -93,6 +96,8 @@ class PluginListView(SmarterAuthenticatedListAPIView):
 
     def get_queryset(self):
         plugins = PluginMeta.objects.filter(user_profile__account=self.account).order_by("-created_at")
+        valid_owners = valid_resource_owners_for_user(user_profile=self.user_profile)
+        plugins = plugins.filter(user_profile__in=valid_owners)
         return plugins
 
 

@@ -5,10 +5,10 @@ import datetime
 import logging
 from typing import Optional, Type
 
-from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
-from smarter.apps.provider.manifest.enum import ProviderModelEnum, SAMProviderSpecKeys
+from smarter.apps.account.utils import valid_resource_owners_for_user
+from smarter.apps.provider.manifest.enum import SAMProviderSpecKeys
 from smarter.apps.provider.manifest.models.provider.const import MANIFEST_KIND
 from smarter.apps.provider.manifest.models.provider.metadata import SAMProviderMetadata
 from smarter.apps.provider.manifest.models.provider.model import SAMProvider
@@ -17,9 +17,8 @@ from smarter.apps.provider.manifest.models.provider.spec import (
     SAMProviderSpecProvider,
 )
 from smarter.apps.provider.manifest.models.provider.status import SAMProviderStatus
-from smarter.apps.provider.models import Provider, ProviderStatus
+from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
-from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -473,27 +472,27 @@ class SAMProviderBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
-
         if name:
-            provider = Provider.objects.filter(user_profile__account=self.account, name=name)
+            providers = Provider.objects.filter(user_profile__account=self.account, name=name)
         else:
             providers = Provider.objects.filter(user_profile__account=self.account)
         providers = [provider for provider in providers]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for provider in providers:
-            try:
-                self._provider = provider
-                model_dump = self.django_orm_to_manifest_dict()
-                if not model_dump:
+            if provider.user_profile in valid_resource_owners_for_user(self.user_profile):
+                try:
+                    self._provider = provider
+                    model_dump = self.django_orm_to_manifest_dict()
+                    if not model_dump:
+                        raise SAMProviderBrokerError(
+                            f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
+                        )
+                    data.append(model_dump)
+                except Exception as e:
                     raise SAMProviderBrokerError(
                         f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
-                    )
-                data.append(model_dump)
-            except Exception as e:
-                raise SAMProviderBrokerError(
-                    f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
-                ) from e
+                    ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -656,7 +655,7 @@ class SAMProviderBroker(AbstractBroker):
             raise SAMBrokerErrorNotImplemented(message="Params must be a dictionary", thing=self.kind, command=command)
         name = self.params.get("name")
         try:
-            provider = Provider.objects.get(user_profile__account=self.account, name=name)
+            provider = Provider.objects.get(user_profile=self.user_profile, name=name)
         except Provider.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to delete {self.kind} {name}. Not found", thing=self.kind, command=command

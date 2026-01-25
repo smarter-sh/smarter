@@ -2311,9 +2311,11 @@ class PluginDataSql(PluginDataBase):
         return data_by_plugin_id(plugin.id)
 
     def __str__(self) -> str:
-        user_profile = self.plugin.user_profile if self.plugin else "No User Profile"
+        plugin: PluginMeta = self.plugin
+        user_profile = plugin.user_profile if self.plugin else "No User Profile"
         user_profile = str(user_profile)
-        return str(user_profile + " - " + self.plugin.name)
+        name = str(plugin.name) if plugin else "No Plugin Name"
+        return str(user_profile + " - " + name)
 
 
 class ApiConnection(ConnectionBase):
@@ -2779,9 +2781,11 @@ class PluginDataApi(PluginDataBase):
         return data_by_plugin_id(plugin.id)
 
     def __str__(self) -> str:
-        user_profile = self.plugin.user_profile if self.plugin else "No User Profile"
+        plugin: PluginMeta = self.plugin
+        user_profile = plugin.user_profile if plugin else "No User Profile"
         user_profile = str(user_profile)
-        return str(user_profile + " - " + self.plugin.name)
+        name = str(plugin.name) if plugin else "No Plugin Name"
+        return str(user_profile + " - " + name)
 
 
 PluginDataType = type[PluginDataStatic] | type[PluginDataApi] | type[PluginDataSql]

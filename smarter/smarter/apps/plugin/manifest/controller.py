@@ -6,7 +6,10 @@ import logging
 from functools import cached_property
 from typing import Dict, Optional, Union
 
+from django.core.exceptions import MultipleObjectsReturned
+
 from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.utils import valid_resource_owners_for_user
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.lib import json
 from smarter.lib.django import waffle
@@ -229,12 +232,21 @@ class PluginController(AbstractController):
     def plugin_meta(self) -> Optional[PluginMeta]:
         if not self._plugin_meta and self.account and self.name and self.manifest:
             try:
-                self._plugin_meta = PluginMeta.objects.get(
+                plugin_meta = PluginMeta.objects.get(
                     user_profile__account=self.account,
                     name=self.name,
                     plugin_class=self.plugin_class,
                 )
+                if plugin_meta.user_profile not in valid_resource_owners_for_user(self.user_profile):
+                    return None
+                self._plugin_meta = plugin_meta
                 logger.debug("%s retrieved plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
+            except MultipleObjectsReturned:
+                self._plugin_meta = PluginMeta.objects.get(
+                    user_profile=self.user_profile,
+                    name=self.name,
+                    plugin_class=self.plugin_class,
+                )
             except PluginMeta.DoesNotExist:
                 pass
         return self._plugin_meta

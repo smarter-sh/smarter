@@ -8,10 +8,10 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.forms.models import model_to_dict
 from rest_framework.serializers import ModelSerializer
 
+from smarter.apps.account.utils import valid_resource_owners_for_user
 from smarter.apps.prompt.manifest.models.chat.const import MANIFEST_KIND
 from smarter.apps.prompt.manifest.models.chat.model import SAMChat
 from smarter.apps.prompt.models import Chat
-from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -190,9 +190,9 @@ class SAMChatBroker(AbstractBroker):
             self._manifest = SAMChat(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=self.loader.manifest_metadata,
-                spec=self.loader.manifest_spec,
-                status=self.loader.manifest_status,
+                metadata=self.loader.manifest_metadata,  # type: ignore
+                spec=self.loader.manifest_spec,  # type: ignore
+                status=self.loader.manifest_status,  # type: ignore
             )
         return self._manifest
 
@@ -221,7 +221,7 @@ class SAMChatBroker(AbstractBroker):
         session_key: str = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, "")
         session_key = self.clean_cli_param(
             param=session_key, param_name=SMARTER_CHAT_SESSION_KEY_NAME, url=self.smarter_build_absolute_uri(request)
-        )
+        )  # type: ignore
 
         data = []
         if session_key:
@@ -235,16 +235,17 @@ class SAMChatBroker(AbstractBroker):
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Chat
         for chat in chats:
-            try:
-                model_dump = ChatSerializer(chat).data
-                if not model_dump:
-                    raise SAMChatBrokerError(f"Model dump failed for {self.kind} {chat.id}")
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
-                data.append(camel_cased_model_dump)
-            except Exception as e:
-                raise SAMChatBrokerError(
-                    f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command
-                ) from e
+            if chat.user_profile in valid_resource_owners_for_user(self.user_profile):
+                try:
+                    model_dump = ChatSerializer(chat).data
+                    if not model_dump:
+                        raise SAMChatBrokerError(f"Model dump failed for {self.kind} {chat.id}")
+                    camel_cased_model_dump = self.snake_to_camel(model_dump)
+                    data.append(camel_cased_model_dump)
+                except Exception as e:
+                    raise SAMChatBrokerError(
+                        f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command
+                    ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,

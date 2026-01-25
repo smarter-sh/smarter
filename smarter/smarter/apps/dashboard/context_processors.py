@@ -38,15 +38,14 @@ from typing import TYPE_CHECKING, Optional
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
-    Account,
     Secret,
     User,
     UserProfile,
     get_resolved_user,
 )
 from smarter.apps.account.utils import (
-    get_cached_account_for_user,
     get_cached_smarter_admin_user_profile,
+    valid_resource_owners_for_user,
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.plugin.models import ApiConnection, PluginMeta, SqlConnection
@@ -221,8 +220,14 @@ def get_providers(user_profile: UserProfile) -> int:
     :return: The number of providers belonging to the user account + those belonging to the official smarter admin.
     :rtype: int
     """
-    smarter_admin = get_cached_smarter_admin_user_profile().user
+    if not user_profile:
+        return 0
+
     account_owned = Provider.objects.filter(user_profile__account=user_profile.account).count() if user_profile else 0
+    valid_owners = valid_resource_owners_for_user(user_profile=user_profile)
+    account_owned = Provider.objects.filter(user_profile__in=valid_owners).count()
+
+    smarter_admin = get_cached_smarter_admin_user_profile().user
     official = Provider.objects.filter(user_profile__user=smarter_admin).count()
 
     return account_owned + official

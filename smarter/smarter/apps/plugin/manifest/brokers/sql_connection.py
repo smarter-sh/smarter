@@ -5,6 +5,8 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
+from django.core.exceptions import MultipleObjectsReturned
+
 from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
@@ -654,7 +656,18 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         try:
             name = self.camel_to_snake(self.name)  # type: ignore
             self._connection = SqlConnection.objects.get(user_profile__account=self.account, name=name)
+        except MultipleObjectsReturned:
+            try:
+                self._connection = SqlConnection.objects.get(
+                    user_profile=self.user_profile,
+                    name=name,
+                )
+            except SqlConnection.DoesNotExist:
+                pass
         except SqlConnection.DoesNotExist:
+            pass
+
+        if not self._connection:
             logger.warning(
                 "%s SqlConnection %s not found for account %s",
                 self.formatted_class_name,

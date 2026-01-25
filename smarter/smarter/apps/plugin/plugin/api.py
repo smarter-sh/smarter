@@ -36,6 +36,8 @@ import logging
 from datetime import datetime
 from typing import Any, Optional, Type, Union
 
+from django.core.exceptions import MultipleObjectsReturned
+
 # smarter stuff
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -251,11 +253,22 @@ class ApiPlugin(PluginBase):
                     user_profile__account=account,
                     name=connection_name,
                 )
-                api_data["connection"] = plugin_data_apiconnection
-            except ApiConnection.DoesNotExist as e:
+            except ApiConnection.DoesNotExist:
+                pass
+            except MultipleObjectsReturned:
+                try:
+                    plugin_data_apiconnection = ApiConnection.objects.get(
+                        user_profile=self.user_profile,
+                        name=connection_name,
+                    )
+                except ApiConnection.DoesNotExist:
+                    pass
+            if not plugin_data_apiconnection:
                 raise SmarterApiPluginError(
                     f"{self.formatted_class_name}.plugin_data_django_model() error: ApiConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}. Error: {e}"
-                ) from e
+                )
+
+            api_data["connection"] = plugin_data_apiconnection
 
         # recast the Pydantic model's parameters field
         # to conform to openai's function calling schema.

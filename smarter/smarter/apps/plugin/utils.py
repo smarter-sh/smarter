@@ -9,6 +9,10 @@ import yaml
 from django.core.management import call_command
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
+    smarter_cached_objects,
+)
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
