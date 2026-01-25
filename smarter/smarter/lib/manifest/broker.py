@@ -790,7 +790,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.user,
                 self.name,
             )
-            instance = ModelClass.objects.get(account=self.account, name=self.name)
+            instance = ModelClass.objects.get(user_profile__account=self.account, name=self.name)
             logger.debug(
                 "%s.orm_instance() - retrieved ORM instance: %s",
                 self.formatted_class_name,
