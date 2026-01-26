@@ -43,13 +43,15 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
-from smarter.apps.account.utils import (
-    smarter_cached_objects,
-    valid_resource_owners_for_user,
-)
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
-from smarter.apps.plugin.models import ApiConnection, PluginMeta, SqlConnection
+from smarter.apps.plugin.models import (
+    ApiConnection,
+    ConnectionBase,
+    PluginMeta,
+    SqlConnection,
+)
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_COMPANY_NAME
@@ -174,14 +176,8 @@ def get_connections(user_profile: UserProfile) -> int:
     :return: The number of API and SQL connections belonging to the user.
     :rtype: int
     """
-
-    @cache_results(timeout=CACHE_TIMEOUT)
-    def _get_connections(user_profile_id: int) -> int:
-        retval = ApiConnection.objects.filter(user_profile__id=user_profile_id).count() or 0
-        retval += SqlConnection.objects.filter(user_profile__id=user_profile_id).count() or 0
-        return retval
-
-    return _get_connections(user_profile.id)
+    retval = ConnectionBase.get_cached_connections_for_user(user_profile.user)
+    return len(retval)
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
@@ -215,17 +211,8 @@ def get_providers(user_profile: UserProfile) -> int:
     :return: The number of providers belonging to the user account + those belonging to the official smarter admin.
     :rtype: int
     """
-    if not user_profile:
-        return 0
-
-    account_owned = Provider.objects.filter(user_profile__account=user_profile.account).count() if user_profile else 0
-    valid_owners = valid_resource_owners_for_user(user_profile=user_profile)
-    account_owned = Provider.objects.filter(user_profile__in=valid_owners).count()
-
-    smarter_admin = smarter_cached_objects.smarter_admin
-    official = Provider.objects.filter(user_profile__user=smarter_admin).count()
-
-    return account_owned + official
+    retval = Provider.get_cached_providers_for_user(user_profile.user)
+    return len(retval)
 
 
 def base(request: "HttpRequest") -> dict:
