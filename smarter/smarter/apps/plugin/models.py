@@ -1272,6 +1272,18 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
     )
 
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name formatted for logging.
+
+        :return: The formatted class name as a string.
+        :rtype: str
+
+        """
+
+        return formatted_text(self.__class__.__module__ + "." + self.__class__.__name__)
+
+    @property
     @abstractmethod
     def connection_string(self) -> str:
         """Return the connection string."""
@@ -1318,7 +1330,14 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
             instances.extend(
                 subclass.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile).order_by("name")
             )
-        return instances or []
+        logger.debug(
+            "%s.get_cached_connections_for_user: Found these connections %s for user %s",
+            cls.formatted_class_name,
+            instances,
+            user,
+        )
+        unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
+        return list(unique_instances)
 
     @classmethod
     def get_cached_connection_by_name_and_kind(
