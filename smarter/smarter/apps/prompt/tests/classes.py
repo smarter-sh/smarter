@@ -183,7 +183,7 @@ class ProviderBaseClass(TestAccountMixin):
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
             chatbot=self.chatbot,
-            account=self.account,
+            user_profile=self.user_profile,
             ip_address="192.1.1.1",
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
             url="https://www.test.com",
@@ -217,7 +217,7 @@ class ProviderBaseClass(TestAccountMixin):
     def chatbot_factory(self, provider: str = "openai"):
         chatbot, _ = ChatBot.objects.get_or_create(
             name="TestChatBot",
-            account=self.account,
+            user_profile=self.user_profile,
             description="Test ChatBot",
             version="1.0.0",
             subdomain=None,

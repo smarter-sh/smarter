@@ -9,6 +9,7 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
+from smarter.apps.account.utils import valid_resource_owners_for_user
 from smarter.apps.chatbot.manifest.enum import SAMChatbotSpecKeys
 from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.apps.chatbot.manifest.models.chatbot.metadata import SAMChatbotMetadata
@@ -255,47 +256,22 @@ class SAMChatbotBroker(AbstractBroker):
         """
         if not self._chatbot:
             try:
-                self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
+                self._chatbot = ChatBot.objects.get(user_profile=self.user_profile, name=self.name)
             except ChatBot.DoesNotExist:
                 if self.manifest:
                     data = self.manifest_to_django_orm()
-                    data["account"] = self.account
+                    data["user_profile"] = self.user_profile
                     logger.info("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
-                    example_data = {
-                        "account": "<Account: 9595-3980-5981 - TestAccount_AdminUser_f5b5c15e8e8f1568>",
-                        "name": "example_chatbot",
-                        "description": "To create and deploy an example Smarter chatbot. Prompt with example function calling to trigger the example Static Plugin",
-                        "version": "0.1.0",
-                        "subdomain": "example-chatbot",
-                        "custom_domain": None,
-                        "deployed": True,
-                        "provider": "openai",
-                        "default_model": "gpt-4o-mini",
-                        "default_system_role": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
-                        "default_temperature": 0.5,
-                        "default_max_tokens": 2048,
-                        "app_name": "Example Chatbot",
-                        "app_assistant": "Elle",
-                        "app_welcome_message": "Welcome to the Example Chatbot! How can I help you today?",
-                        "app_example_prompts": [
-                            "What is the weather in New York?",
-                            "Tell me a joke",
-                            "what's the current price of Apple stock?",
-                            "How many days ago was 29-Feb-1972?",
-                        ],
-                        "app_placeholder": "Ask me anything...",
-                        "app_info_url": "https://example.com",
-                        "app_background_image_url": "https://example.com/background-image.jpg",
-                        "app_logo_url": "https://example.com/logo.png",
-                        "app_file_attachment": False,
-                    }
                     logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
                     self._chatbot = ChatBot.objects.create(**data)
 
                     self._created = True
                 else:
                     logger.warning(
-                        "%s.chatbot() %s not found for account %s", self.formatted_class_name, self.name, self.account
+                        "%s.chatbot() %s not found for user_profile %s",
+                        self.formatted_class_name,
+                        self.name,
+                        self.user_profile,
                     )
 
         return self._chatbot
@@ -416,7 +392,7 @@ class SAMChatbotBroker(AbstractBroker):
                 f"Failed to convert {self.kind} {self.manifest.metadata.name} to dict", thing=self.kind
             )
         return {
-            "account": self.account,
+            "user_profile": self.user_profile,
             "name": self.manifest.metadata.name,
             "description": self.manifest.metadata.description,
             "version": self.manifest.metadata.version,
@@ -461,7 +437,6 @@ class SAMChatbotBroker(AbstractBroker):
         if not isinstance(chatbot_dict, dict):
             raise SAMChatbotBrokerError(f"Failed to convert {self.kind} {self.chatbot.name} to dict", thing=self.kind)
         chatbot_dict.pop("id")
-        chatbot_dict.pop("account")
         chatbot_dict.pop("name")
         chatbot_dict.pop("description")
         chatbot_dict.pop("version")
@@ -692,9 +667,11 @@ class SAMChatbotBroker(AbstractBroker):
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
-            chatbots = ChatBot.objects.filter(account=self.account, name=name)
+            chatbots = ChatBot.objects.filter(user_profile__account=self.account, name=name)
         else:
-            chatbots = ChatBot.objects.filter(account=self.account)
+            chatbots = ChatBot.objects.filter(user_profile__account=self.account)
+        valid_owners = valid_resource_owners_for_user(user_profile=self.user_profile)
+        chatbots = chatbots.filter(user_profile__in=valid_owners).order_by("name")[:MAX_RESULTS]
         logger.info(
             "%s.get() found %s ChatBots for account %s", self.formatted_class_name, chatbots.count(), self.account
         )
@@ -765,6 +742,12 @@ class SAMChatbotBroker(AbstractBroker):
                     data.pop(field, None)
                 for key, value in data.items():
                     setattr(self.chatbot, key, value)
+                if self.chatbot.user_profile != self.user_profile:
+                    raise SAMChatbotBrokerError(
+                        f"User profile mismatch for {self.kind} {self.manifest.metadata.name}",
+                        thing=self.kind,
+                        command=command,
+                    )
                 self.chatbot.save()
                 self.chatbot.refresh_from_db()
             except Exception as e:
@@ -822,7 +805,7 @@ class SAMChatbotBroker(AbstractBroker):
                 for plugin_name in self.manifest.spec.plugins:
                     plugin_name = self.camel_to_snake(plugin_name)
                     try:
-                        plugin = PluginMeta.objects.get(name=plugin_name, account=self.account)
+                        plugin = PluginMeta.objects.get(name=plugin_name, user_profile__account=self.account)
                     except PluginMeta.DoesNotExist as e:
                         logger.error(
                             "%s.apply() failed to find PluginMeta %s",

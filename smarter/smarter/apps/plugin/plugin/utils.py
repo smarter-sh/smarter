@@ -9,10 +9,12 @@ from typing import Any, Optional, Union
 import yaml
 
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.utils import get_cached_user_profile
+from smarter.apps.account.utils import (
+    get_cached_smarter_admin_user_profile,
+    get_cached_user_profile,
+)
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginDataValueError, PluginMeta
-from smarter.common.conf import smarter_settings
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -67,11 +69,27 @@ class Plugins:
         self.account = account or get_cached_user_profile(user=user).account
         self.user_profile = get_cached_user_profile(user=user, account=account)
 
-        for plugin in PluginMeta.objects.filter(account=self.account):
+        # plugins for this user profile
+        for plugin in PluginMeta.objects.filter(user_profile=self.user_profile):
             plugin_controller = PluginController(
                 user_profile=self.user_profile,
                 account=self.account,
                 user=user,
+                plugin_meta=plugin,
+            )
+            if not plugin_controller or not plugin_controller.plugin:
+                raise PluginDataValueError(
+                    f"PluginController could not be created for plugin_id: {plugin.id}, user_profile: {self.user_profile}"  # type: ignore[arg-type]
+                )
+            self.plugins.append(plugin_controller.plugin)
+
+        # plugins for the smarter admin user profile
+        smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
+        for plugin in PluginMeta.objects.filter(user_profile=smarter_admin_user_profile):
+            plugin_controller = PluginController(
+                user_profile=smarter_admin_user_profile,
+                account=smarter_admin_user_profile.account,
+                user=smarter_admin_user_profile.user,
                 plugin_meta=plugin,
             )
             if not plugin_controller or not plugin_controller.plugin:

@@ -308,10 +308,10 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                     thing=self.kind,
                 )
 
-            admin = get_cached_admin_user_for_account(self.plugin_meta.account)
+            admin = get_cached_admin_user_for_account(self.plugin_meta.user_profile.account)
             if not admin:
                 raise SAMPluginBrokerError(
-                    f"{self.formatted_class_name} No admin user found for account {self.plugin_meta.account}",
+                    f"{self.formatted_class_name} No admin user found for account {self.plugin_meta.user_profile.account}",
                     thing=self.kind,
                 )
             self._manifest = SAMApiPlugin(
@@ -660,6 +660,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user.is_staff:
+            raise SAMPluginBrokerError(
+                message="Only account admins can apply api plugin manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         if self.plugin is None:
             raise SAMBrokerError(
                 f"{self.formatted_class_name} plugin not initialized. Cannot apply manifest.",
@@ -764,6 +772,14 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user.is_staff:
+            raise SAMPluginBrokerError(
+                message="Only account admins can delete api plugin manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         self.set_and_verify_name_param(command=command)
         if self.plugin is None:
             raise SAMBrokerError(

@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 from django.http import HttpRequest
 from django.test import override_settings
 
-from smarter.lib.django.middleware.csrf import SmarterCsrfViewMiddleware
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.lib.django.middleware.csrf import SmarterCsrfViewMiddleware
 
 
 class TestSmarterCsrfViewMiddleware(TestAccountMixin):

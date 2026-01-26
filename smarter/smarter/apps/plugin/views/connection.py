@@ -91,7 +91,7 @@ class ConnectionDetailView(DocsBaseView):
             logger.error("%s.setup() User is not authenticated.", self.formatted_class_name)
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         self.connection = ConnectionBase.get_cached_connection_by_name_and_kind(
-            user=request.user, kind=self.kind, name=self.name
+            user=request.user, kind=self.kind, name=self.name  # type: ignore[arg-type]
         )
 
     def get(self, request, *args, **kwargs):

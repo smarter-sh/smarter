@@ -95,7 +95,7 @@ class ChatbotView(ViewBase):
         if chatbot_id:
             kwargs.pop("chatbot_id")
             self.chatbot = get_object_or_404(ChatBot, pk=chatbot_id)
-            self.account = self.chatbot.account
+            self.user_profile = self.chatbot.user_profile
             logger.info("ChatbotView.dispatch() chatbot_id: %s", chatbot_id)
             logger.info("ChatbotView.dispatch() account: %s", self.account)
         return retval
@@ -170,11 +170,11 @@ class ChatbotListView(ListViewBase):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
             return response
-        self.chatbots = ChatBot.objects.filter(account=self.account)
+        self.chatbots = ChatBot.objects.filter(user_profile__account=self.account)
         return response
 
     def get_queryset(self, *args, **kwargs):
-        return ChatBot.objects.filter(account=self.account)
+        return ChatBot.objects.filter(user_profile__account=self.account)
 
 
 class ChatBotDeployView(ViewBase):

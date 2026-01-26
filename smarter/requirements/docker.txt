@@ -95,7 +95,7 @@ defusedxml==0.7.1
     #   willow
 distro==1.9.0
     # via openai
-django==5.2.7
+django==5.2.10
     # via
     #   -r smarter/requirements/in/base.in
     #   django-celery-beat
@@ -119,9 +119,9 @@ django==5.2.7
     #   wagtail
 django-celery-beat==2.8.1
     # via -r smarter/requirements/in/base.in
-django-cors-headers==4.7.0
+django-cors-headers==4.9.0
     # via -r smarter/requirements/in/base.in
-django-filter==25.1
+django-filter==25.2
     # via
     #   -r smarter/requirements/in/base.in
     #   wagtail
@@ -213,7 +213,7 @@ grpcio==1.74.0
     #   grpcio-status
 grpcio-status==1.71.2
     # via google-api-core
-gunicorn==23.0.0
+gunicorn==24.1.0
     # via -r smarter/requirements/in/docker.in
 h11==0.16.0
     # via httpcore
@@ -345,7 +345,7 @@ pydantic==2.12.0
     #   pydantic-settings
 pydantic-core==2.41.1
     # via pydantic
-pydantic-settings==2.11.0
+pydantic-settings==2.12.0
     # via -r smarter/requirements/in/base.in
 pyjwt==2.10.1
     # via social-auth-core
@@ -439,7 +439,7 @@ tenacity==9.1.2
     # via celery-redbeat
 textblob==0.19.0
     # via -r smarter/requirements/in/base.in
-tldextract==5.3.0
+tldextract==5.3.1
     # via -r smarter/requirements/in/base.in
 tqdm==4.67.1
     # via

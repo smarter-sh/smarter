@@ -5,6 +5,8 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
+from django.core.exceptions import MultipleObjectsReturned
+
 from smarter.apps.account.models import Secret
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.plugin.manifest.enum import SAMApiConnectionSpecConnectionKeys
@@ -574,8 +576,19 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         try:
             name = self.camel_to_snake(self.name)  # type: ignore
-            self._connection = ApiConnection.objects.get(account=self.account, name=name)
-        except ApiConnection.DoesNotExist as e:
+            self._connection = ApiConnection.objects.get(user_profile__account=self.account, name=name)
+        except MultipleObjectsReturned:
+            try:
+                self._connection = ApiConnection.objects.get(
+                    user_profile=self.user_profile,
+                    name=name,
+                )
+            except ApiConnection.DoesNotExist:
+                pass
+        except ApiConnection.DoesNotExist:
+            pass
+
+        if not self._connection:
             if self._manifest:
                 model_dump = (
                     self._manifest.spec.connection.model_dump() if self._manifest and self._manifest.spec else None
@@ -585,8 +598,8 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                     raise SAMConnectionBrokerError(
                         f"Manifest spec.connection is not a dict: {type(model_dump)}",
                         thing=self.kind,
-                    ) from e
-                model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
+                    )
+                # model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
                 model_dump[SAMMetadataKeys.NAME.value] = (
                     self.manifest.metadata.name if self.manifest and self.manifest.metadata else None
                 )
@@ -598,6 +611,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
                 )
                 model_dump[SAMKeys.KIND.value] = self.kind
                 model_dump["api_key"] = self.api_key_secret
+                model_dump["user_profile"] = self.user_profile
 
                 self._connection = ApiConnection(**model_dump)
                 self._connection.save()
@@ -751,9 +765,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
         # generate a QuerySet of ApiConnection objects that match our search criteria
         if name:
-            api_connections = ApiConnection.objects.filter(account=self.account, name=name)
+            api_connections = ApiConnection.objects.filter(user_profile__account=self.account, name=name)
         else:
-            api_connections = ApiConnection.objects.filter(account=self.account)
+            api_connections = ApiConnection.objects.filter(user_profile__account=self.account)
 
         model_titles = self.get_model_titles(serializer=self.SerializerClass())
 
@@ -847,6 +861,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at"]
+
+        if not self.user.is_staff:
+            raise SAMConnectionBrokerError(
+                message="Only account admins can apply api connection manifests.",
+                thing=self.kind,
+                command=command,
+            )
 
         # update the spec
         api_key_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
@@ -1026,6 +1047,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         )
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user.is_staff:
+            raise SAMConnectionBrokerError(
+                message="Only account admins can delete api connection manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         if self.connection:
             try:
                 self.connection.delete()

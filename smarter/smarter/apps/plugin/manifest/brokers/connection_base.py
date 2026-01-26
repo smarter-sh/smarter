@@ -22,7 +22,11 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerErrorNotReady
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotReady,
+)
 
 
 def should_log(level):
@@ -173,15 +177,15 @@ class SAMConnectionBaseBroker(AbstractBroker):
         Return the common connection status from the manifest.
         """
         if self.connection:
-            admin = get_cached_admin_user_for_account(self.connection.account)
+            admin = get_cached_admin_user_for_account(self.connection.user_profile.account)
             if not admin:
                 raise SAMBrokerErrorNotReady(
-                    f"Admin user not found for account {self.connection.account_number}. Cannot retrieve connection status.",
+                    f"Admin user not found for account {self.connection.user_profile.account.account_number}. Cannot retrieve connection status.",
                     thing=self.thing,
                     command=SmarterJournalCliCommands.GET,
                 )
             self._sam_connection_status = SAMConnectionCommonStatus(
-                account_number=self.connection.account.account_number,
+                account_number=self.connection.user_profile.account.account_number,
                 username=admin.username,
                 created=self.connection.created_at,
                 modified=self.connection.updated_at,
@@ -224,6 +228,13 @@ class SAMConnectionBaseBroker(AbstractBroker):
             "%s.apply() called with request: %s", self.formatted_class_name, smarter_build_absolute_uri(request=request)
         )
         super().apply(request, kwargs)
+
+        if not self.user.is_staff:
+            raise SAMBrokerError(
+                message="Only account admins can apply connection manifests.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
 
         # update the common meta fields
         data = self.manifest.metadata.model_dump() if self.manifest else None

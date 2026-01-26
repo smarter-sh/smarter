@@ -47,12 +47,11 @@ def plugin_meta_factory(plugin_class: str, account: Account, user_profile: UserP
         )
 
     meta_data = PluginMeta(
-        account=account,
         name="Test Plugin",
         description="Test Plugin Description",
         plugin_class=plugin_class,
         version="1.0.0",
-        author=user_profile,
+        user_profile=user_profile,
     )
     meta_data.save()
 

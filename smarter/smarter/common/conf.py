@@ -4441,16 +4441,17 @@ class Settings(BaseSettings):
         intended_url = urljoin(self.environment_cdn_url, self.smarter_reactjs_app_loader_path)
         fallback_url = "https://cdn.platform.smarter.sh/ui-chat/app-loader.js"
         if check_smarter_reactjs_app_loader_url(intended_url):
-            logger.error(
-                "%s Could not retrieve the ReactJS app loader from %s. Falling back to %s. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Chat.",
+            logger.debug(
+                "%s Successfully retrieved the ReactJS app loader from %s. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Chat.",
                 logger_prefix,
                 intended_url,
-                fallback_url,
             )
             return intended_url
         elif check_smarter_reactjs_app_loader_url(fallback_url):
-            logger.error(
-                "%s Could not retrieve the ReactJS app loader from the fallback url %s.", logger_prefix, fallback_url
+            logger.debug(
+                "%s Successfully retrieved the ReactJS app loader from the fallback url %s. See https://github.com/smarter-sh/web-integration-example for details on configuring Smarter Chat.",
+                logger_prefix,
+                fallback_url,
             )
             return fallback_url
         else:

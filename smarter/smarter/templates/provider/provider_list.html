@@ -32,12 +32,12 @@
         <!--begin::Row-->
         <div class="row g-5 g-xl-10 mb-l-10">
 
-          {% for provider in plugins %}
+          {% for provider in provider_list.providers %}
           <!--begin::Col Smarter provider Card-->
           <div class="col-lg-6 mb-4 p-5">
             <!--begin::provider card-->
             <a href="{% url 'provider:provider_by_name' provider.rfc1034_compliant_name %}">
-              <div id="plugin_id_{{ provider.id }}" class="card card-flush h-xl-100 provider-card {% if provider.user_profile == smarter_admin %}smarter-provider-card{% else %}user-provider-card{% endif %}">
+              <div id="plugin_id_{{ provider.id }}" class="card card-flush h-xl-100 provider-card {% if provider.user_profile == provider_list.smarter_admin %}smarter-provider-card{% else %}user-provider-card{% endif %}">
                 <!--begin::Header-->
                 <div class="p-5">
                   <!--begin::Title-->

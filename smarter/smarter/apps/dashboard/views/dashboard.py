@@ -89,7 +89,7 @@ class NotificationsView(SmarterAuthenticatedWebView):
     template_path = "dashboard/notifications.html"
 
 
-class DashboardView(SmarterWebHtmlView):
+class DashboardView(SmarterAuthenticatedWebView):
     """Public Access Dashboard view"""
 
     template_path = "dashboard/authenticated.html"

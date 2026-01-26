@@ -344,15 +344,14 @@ class AccountMixin(SmarterHelperMixin):
         """
         if self._account:
             return self._account
-        if self._user_profile:
-            self._account = self._user_profile.account if self._user_profile else None
-            if self._account:
-                logger.debug(
-                    "%s.account() set _account to %s based on user_profile %s",
-                    self.account_mixin_logger_prefix,
-                    self._account,
-                    self._user_profile,
-                )
+        if isinstance(self._user_profile, UserProfile):
+            self._account = self._user_profile.account
+            logger.debug(
+                "%s.account() set _account to %s based on user_profile %s",
+                self.account_mixin_logger_prefix,
+                self._account,
+                self._user_profile,
+            )
             return self._account
         if self._user:
             self._account = get_cached_account_for_user(self._user)
@@ -401,6 +400,7 @@ class AccountMixin(SmarterHelperMixin):
                 self._user,
                 self._account,
             )
+            self.log_account_mixin_ready_status()
 
     @property
     def account_number(self) -> AccountNumberType:
@@ -437,6 +437,7 @@ class AccountMixin(SmarterHelperMixin):
                 self._account,
                 account_number,
             )
+            self.log_account_mixin_ready_status()
 
     @property
     def user(self) -> UserType:
@@ -477,6 +478,7 @@ class AccountMixin(SmarterHelperMixin):
             self._user_profile = None
             logger.debug("%s.user.setter: unset _user_profile", self.account_mixin_logger_prefix)
             return
+        self.log_account_mixin_ready_status()
 
     @property
     def user_profile(self) -> Optional[UserProfile]:
@@ -508,6 +510,8 @@ class AccountMixin(SmarterHelperMixin):
                 self._user,
                 self._account,
             )
+        else:
+            self.log_account_mixin_ready_status()
         return self._user_profile
 
     @user_profile.setter
@@ -536,6 +540,7 @@ class AccountMixin(SmarterHelperMixin):
             logger.debug("%s.user_profile.setter: set _user to %s", self.account_mixin_logger_prefix, self._user)
             self._account = self._user_profile.account
             logger.debug("%s.user_profile.setter: set _account to %s", self.account_mixin_logger_prefix, self._account)
+            self.log_account_mixin_ready_status()
 
     @property
     def is_accountmixin_ready(self) -> bool:
@@ -550,24 +555,24 @@ class AccountMixin(SmarterHelperMixin):
         :return: True if the AccountMixin is ready to be used.
         :rtype: bool
         """
-        if not isinstance(self.user, User):
-            logger.warning(
-                "%s.is_accountmixin_ready() returning false because user is not initialized.",
-                self.account_mixin_logger_prefix,
-            )
-            return False
         if not isinstance(self.user_profile, UserProfile):
             logger.warning(
                 "%s.is_accountmixin_ready() returning false because user_profile is not initialized.",
                 self.account_mixin_logger_prefix,
             )
             return False
-        if not isinstance(self.account, Account):
+        if not isinstance(self.user, User):
             logger.warning(
-                "%s.is_accountmixin_ready() returning false because account is not initialized.",
+                "%s.is_accountmixin_ready() had to initialize user from user_profile. This is a bug.",
                 self.account_mixin_logger_prefix,
             )
-            return False
+            self._user = self.user_profile.user
+        if not isinstance(self.account, Account):
+            logger.warning(
+                "%s.is_accountmixin_ready() had to initialize account from user_profile. This is a bug.",
+                self.account_mixin_logger_prefix,
+            )
+            self._account = self.user_profile.account
         logger.debug("%s.is_accountmixin_ready() returning true.", self.account_mixin_logger_prefix)
         return True
 

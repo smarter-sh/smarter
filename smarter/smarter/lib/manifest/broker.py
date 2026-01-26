@@ -19,14 +19,23 @@ from requests import PreparedRequest
 from rest_framework.request import Request
 from rest_framework.serializers import ModelSerializer
 
-from smarter.apps.account.models import Account, Secret, User, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    MetaDataWithOwnershipModel,
+    Secret,
+    User,
+    UserProfile,
+)
+from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
+    smarter_cached_objects,
+)
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.mixins import SmarterConverterMixin
-from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
@@ -164,7 +173,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
     _validated: bool = False
     _thing: Optional[SmarterJournalThings] = None
     _created: bool = False
-    _orm_instance: Optional[TimestampedModel] = None
+    _orm_instance: Optional[MetaDataWithOwnershipModel] = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -753,24 +762,31 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
 
     @property
     @abstractmethod
-    def ORMModelClass(self) -> Type[TimestampedModel]:
+    def ORMModelClass(self) -> Type[MetaDataWithOwnershipModel]:
         """
         Return the Django ORM model class for the broker.
 
         :return: The Django ORM model class definition for the broker.
-        :rtype: Type[TimestampedModel]
+        :rtype: Type[MetaDataWithOwnershipModel]
         """
         raise SAMBrokerErrorNotImplemented(
             message="Subclasses must implement the ModelClass", thing=self.thing, command=None
         )
 
     @property
-    def orm_instance(self) -> Optional[TimestampedModel]:
+    def orm_instance(self) -> Optional[MetaDataWithOwnershipModel]:
         """
-        Return the Django ORM model instance for the broker.
+        Return the Django ORM model instance for the broker. There are
+        multiple strategies to retrieve the ORM instance:
+        1. If the instance is already cached in self._orm_instance, return it.
+        2. If the broker is not ready or the name is not set, log a warning and return None.
+        3. Attempt to retrieve the ORM instance using the user_profile and name.
+           If not found, attempt to retrieve using the admin user_profile for the account.
+           If still not found, attempt to retrieve using the Smarter platform admin user_profile.
+        4. Cache the retrieved instance for future access.
 
         :return: The Django ORM model instance for the broker.
-        :rtype: Optional[TimestampedModel]
+        :rtype: Optional[MetaDataWithOwnershipModel]
         """
         if self._orm_instance:
             return self._orm_instance
@@ -781,30 +797,63 @@ class AbstractBroker(ABC, SmarterRequestMixin, SmarterConverterMixin):
                 self.formatted_class_name,
             )
             return None
-        ModelClass = self.ORMModelClass
-        try:
-            logger.debug(
-                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
-                self.formatted_class_name,
-                ModelClass.__name__,
-                self.user,
-                self.name,
-            )
-            instance = ModelClass.objects.get(account=self.account, name=self.name)
-            logger.debug(
-                "%s.orm_instance() - retrieved ORM instance: %s",
-                self.formatted_class_name,
-                serializers.serialize("json", [instance]),
-            )
-            return instance
-        except ModelClass.DoesNotExist:
+
+        if not self.name:
             logger.warning(
-                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
+                "%s.orm_instance() - name is not set. Cannot retrieve ORM instance.",
                 self.formatted_class_name,
-                self.account,
-                self.name,
             )
             return None
+
+        ModelClass = self.ORMModelClass
+
+        try:
+            # first try with the user_profile
+            instance = ModelClass.objects.get(user_profile=self.user_profile, name=self.name)
+            logger.debug(
+                "%s.orm_instance() - retrieved ORM instance from cache using %s and %s",
+                self.formatted_class_name,
+                self.user_profile,
+                self.name,
+            )
+        except ModelClass.DoesNotExist:
+            admin_user_profile = get_cached_admin_user_for_account(account=self.account)  # type: ignore
+            try:
+                # next try with account admin user_profile
+                instance = ModelClass.objects.get(user_profile=admin_user_profile, name=self.name)
+                logger.debug(
+                    "%s.orm_instance() - retrieved ORM instance from cache using admin %s and %s",
+                    self.formatted_class_name,
+                    admin_user_profile,
+                    self.name,
+                )
+            except ModelClass.DoesNotExist:
+                try:
+                    # finally try with Smarter platform admin user_profile
+                    instance = ModelClass.objects.get(
+                        user_profile=smarter_cached_objects.smarter_admin_user_profile, name=self.name
+                    )
+                    logger.debug(
+                        "%s.orm_instance() - retrieved ORM instance from cache using Smarter platform admin %s and %s",
+                        self.formatted_class_name,
+                        smarter_cached_objects.smarter_admin_user_profile,
+                        self.name,
+                    )
+                except ModelClass.DoesNotExist:
+                    logger.warning(
+                        "%s.orm_instance() - ORM instance does not exist for user_profile=%s, name=%s",
+                        self.formatted_class_name,
+                        self.user_profile,
+                        self.name,
+                    )
+                    return None
+        logger.debug(
+            "%s.orm_instance() - retrieved ORM instance: %s %s",
+            self.formatted_class_name,
+            ModelClass.__name__,
+            serializers.serialize("json", [instance]),
+        )
+        return instance
 
     @property
     def SAMModelClass(self) -> Type[AbstractSAMBase]:

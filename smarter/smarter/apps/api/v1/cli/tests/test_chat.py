@@ -46,7 +46,7 @@ class TestApiCliV1Chat(ApiV1CliTestBase):
     def chatbot_factory(self):
         chatbot = ChatBot.objects.create(
             name=self.name,
-            account=self.account,
+            user_profile=self.user_profile,
             description="Test ChatBot",
             version="1.0.0",
             subdomain=None,

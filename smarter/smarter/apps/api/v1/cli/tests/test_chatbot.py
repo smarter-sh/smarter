@@ -46,7 +46,7 @@ class TestApiCliV1ChatBot(ApiV1CliTestBase):
     def chatbot_factory(self):
         chatbot = ChatBot.objects.create(
             name=self.name,
-            account=self.account,
+            user_profile=self.user_profile,
             description="Test ChatBot",
             version="1.0.0",
             subdomain=None,
@@ -316,7 +316,7 @@ class TestApiCliV1ChatBot(ApiV1CliTestBase):
 
         # verify the chatbot was deleted
         try:
-            ChatBot.objects.get(name=self.name, account=self.account)
+            ChatBot.objects.get(name=self.name, user_profile=self.user_profile)
             self.fail("ChatBot was not deleted")
         except ChatBot.DoesNotExist:
             pass

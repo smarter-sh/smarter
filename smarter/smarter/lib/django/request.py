@@ -231,7 +231,6 @@ class SmarterRequestMixin(AccountMixin):
                 args,
                 kwargs,
             )
-            super().__init__(*args, **kwargs)
             return None
 
         if not self.smarter_request:
@@ -1903,7 +1902,7 @@ class SmarterRequestMixin(AccountMixin):
         :return: True if the request is ready, False otherwise.
 
         """
-        retval = super().ready
+        retval = not self.is_config and super().ready
         if not retval:
             logger.warning(
                 "%s.ready() - returning False because AccountMixin is not ready.",

@@ -11,17 +11,18 @@ from abc import abstractmethod
 from functools import lru_cache
 from http import HTTPStatus
 from socket import socket
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, Union
 from urllib.parse import urljoin
 
 import paramiko
 import requests
-
-# django stuff
 from django.core.exceptions import ImproperlyConfigured
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
+
+# django stuff
+from django.db.models import QuerySet
 from django.db.utils import ConnectionHandler
 
 # 3rd party stuff
@@ -35,12 +36,18 @@ from smarter.apps.account.models import (
     User,
     UserProfile,
 )
-from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.account.utils import (
+    get_cached_account_for_user,
+    get_cached_admin_user_for_account,
+    get_cached_user_profile,
+    smarter_cached_objects,
+)
 
 # smarter stuff
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import SettingsDefaults, smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import camel_to_snake, rfc1034_compliant_str
 from smarter.lib import json
@@ -83,6 +90,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(f"{__name__}")
 
 
 class PluginDataValueError(SmarterValueError):
@@ -328,8 +336,8 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     Represents the core metadata for a Smarter plugin, serving as the central registry for all plugin types.
 
     This class defines the essential identifying and descriptive information for a plugin, including its name,
-    description, type (static, SQL, or API), version, author, and associated tags. Each plugin is uniquely
-    associated with an account and an author profile, ensuring that plugin names are unique per account and
+    description, type (static, SQL, or API), version, user_profile, and associated tags. Each plugin is uniquely
+    associated with an account and a user_profile, ensuring that plugin names are unique per account and
     enforcing a snake_case naming convention for consistency and compatibility.
 
     The ``PluginMeta`` model acts as the anchor point for related plugin configuration and data models, such as
@@ -349,7 +357,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     class Meta:
         verbose_name = "Plugin"
         verbose_name_plural = "Plugins"
-        unique_together = ("account", "name")
+        unique_together = ("user_profile", "name")
 
     PLUGIN_CLASSES = [
         (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
@@ -384,10 +392,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     plugin_class = models.CharField(
         choices=PLUGIN_CLASSES, help_text="The class name of the plugin", max_length=255, default="PluginMeta"
     )
-    author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugin_meta_author")
 
     def __str__(self):
-        return str(self.name) or ""
+        return str(self.user_profile) + " " + str(self.name) or ""
 
     def save(self, *args, **kwargs):
         """
@@ -416,8 +423,8 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         super().save(*args, **kwargs)
         if not isinstance(self.name, str) or not self.name:
             raise SmarterValueError("PluginMeta.save(): name is required after save.")
-        self.get_cached_plugin_by_account_and_name(self.account, self.name, invalidate=True)
-        self.get_cached_plugin_by_account_id_and_name(self.account.id, self.name, invalidate=True)
+        self.get_cached_plugin_by_account_and_name(self.user_profile.account, self.name, invalidate=True)
+        self.get_cached_plugin_by_account_id_and_name(self.user_profile.account.id, self.name, invalidate=True)
         self.get_cached_plugin_by_pk(self.pk, invalidate=True)
 
     @property
@@ -470,7 +477,10 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         return None
 
     @classmethod
-    def get_cached_plugins_for_user(cls, user: User, invalidate: bool = False) -> list["PluginMeta"]:
+    @cache_results()
+    def get_cached_plugins_for_user_profile_id(
+        cls, user_profile_id: int, invalidate: bool = False
+    ) -> list["PluginMeta"]:
         """
         Return a list of all instances of PluginMeta for the given user.
 
@@ -486,19 +496,47 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         - :func:`smarter.lib.cache.cache_results`
         """
 
-        @cache_results()
-        def cached_plugins_by_account_id(account_id: int) -> list["PluginMeta"]:
-            plugins = cls.objects.filter(account_id=account_id).order_by("name")
-            return list(plugins) or []
+        try:
+            retval = []
+            user_profile = UserProfile.objects.get(id=user_profile_id)
+            admin_user = get_cached_admin_user_for_account(account=user_profile.account)
+            admin_user_profile = get_cached_user_profile(user=admin_user, account=user_profile.account)  # type: ignore[arg-type]
 
-        account = get_cached_account_for_user(user)
-        if invalidate:
-            cached_plugins_by_account_id.invalidate(account.id)
+            def was_already_added(plugin_meta: PluginMeta) -> bool:
+                if not plugin_meta:
+                    logger.error("%s.dispatch() - plugin_meta is None. This is a bug.", logger_prefix)
+                    return False
+                for b in retval:
+                    if b.id == plugin_meta.id:
+                        return True
+                return False
 
-        if not account:
+            def get_plugins_for_account() -> QuerySet:
+                user_plugins = PluginMeta.objects.filter(user_profile=user_profile).order_by("name")
+                admin_plugins = PluginMeta.objects.filter(user_profile=admin_user_profile).order_by("name")
+                smarter_plugins = PluginMeta.objects.filter(
+                    user_profile=smarter_cached_objects.smarter_admin_user_profile
+                ).order_by("name")
+                combined_plugins = user_plugins | admin_plugins | smarter_plugins
+                combined_plugins = combined_plugins.distinct().order_by("name")
+                return combined_plugins
+
+            plugins = get_plugins_for_account()
+
+            for plugin_meta in plugins:
+                if not was_already_added(plugin_meta):
+                    retval.append(plugin_meta)
+
+            return retval
+
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.dispatch() - Exception occurred while getting plugins for user_profile %s.",
+                logger_prefix,
+                user_profile,
+            )
             return []
-        plugins = cached_plugins_by_account_id(account.id)
-        return list(plugins) or []
 
     @classmethod
     def get_cached_plugin_by_account_id_and_name(
@@ -519,7 +557,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         @cache_results()
         def plugin_by_account_id_and_name(account_id: int, name: str) -> Union["PluginMeta", None]:
             try:
-                return cls.objects.get(account_id=account_id, name=name)
+                return cls.objects.get(user_profile__account__id=account_id, name=name)
             except cls.DoesNotExist:
                 logger.warning(
                     "%s.get_cached_plugin_by_account_id_and_name: Plugin not found for account_id: %s, name: %s",
@@ -533,6 +571,35 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             plugin_by_account_id_and_name.invalidate(account_id, name)
 
         return plugin_by_account_id_and_name(account_id, name)
+
+    @classmethod
+    def get_cached_plugin_by_user_profile_and_name(cls, user_profile_id: int, name: str) -> Union["PluginMeta", None]:
+        """
+        Return a single instance of PluginMeta by name for the given user profile ID.
+        This method caches the results to improve performance.
+
+        :param user_profile_id: The ID of the user profile whose plugin should be retrieved.
+        :type user_profile_id: int
+        :param name: The name of the plugin to retrieve.
+        :type name: str
+        :return: A PluginMeta instance if found, otherwise None.
+        :rtype: Union[PluginMeta, None]
+        """
+
+        @cache_results()
+        def plugin_by_user_profile_id_and_name(user_profile_id: int, name: str) -> Union["PluginMeta", None]:
+            try:
+                return cls.objects.get(user_profile__id=user_profile_id, name=name)
+            except cls.DoesNotExist:
+                logger.warning(
+                    "%s.get_cached_plugin_by_user_profile_and_name: Plugin not found for user_profile_id: %s, name: %s",
+                    cls.formatted_class_name,
+                    user_profile_id,
+                    name,
+                )
+                return None
+
+        return plugin_by_user_profile_id_and_name(user_profile_id, name)
 
     @classmethod
     def get_cached_plugin_by_user_and_name(cls, user: User, name: str) -> Union["PluginMeta", None]:
@@ -1205,12 +1272,25 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
     )
 
     @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name formatted for logging.
+
+        :return: The formatted class name as a string.
+        :rtype: str
+
+        """
+
+        return formatted_text(self.__class__.__module__ + "." + self.__class__.__name__)
+
+    @property
     @abstractmethod
     def connection_string(self) -> str:
         """Return the connection string."""
         raise NotImplementedError
 
     @classmethod
+    @cache_results()
     def get_cached_connections_for_user(cls, user: User, invalidate: bool = False) -> list["ConnectionBase"]:
         """
         Return a list of all instances of all concrete subclasses of :class:`ConnectionBase`.
@@ -1240,11 +1320,24 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if user is None:
             logger.warning("%s.get_cached_connections_for_user: user is None", cls.formatted_class_name)
             return []
-        account = get_cached_account_for_user(user, invalidate=invalidate)
+        user_profile = get_cached_user_profile(user=user, invalidate=invalidate)
+        admin_user = get_cached_admin_user_for_account(user_profile.account, invalidate=invalidate)
+        admin_user_profile = get_cached_user_profile(user=admin_user, invalidate=invalidate)  # type: ignore
         instances = []
         for subclass in ConnectionBase.__subclasses__():
-            instances.extend(subclass.objects.filter(account=account).order_by("name"))
-        return instances or []
+            instances.extend(subclass.objects.filter(user_profile=user_profile).order_by("name"))
+            instances.extend(subclass.objects.filter(user_profile=admin_user_profile).order_by("name"))
+            instances.extend(
+                subclass.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile).order_by("name")
+            )
+        logger.debug(
+            "%s.get_cached_connections_for_user: Found these connections %s for user %s",
+            cls.formatted_class_name,
+            instances,
+            user,
+        )
+        unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
+        return list(unique_instances)
 
     @classmethod
     def get_cached_connection_by_name_and_kind(
@@ -1284,14 +1377,14 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         @cache_results()
         def cached_sqlconnection_by_id_and_name(account_id: int, name: str) -> Union["SqlConnection", None]:
             try:
-                return SqlConnection.objects.get(account_id=account_id, name=name)
+                return SqlConnection.objects.get(user_profile__account__id=account_id, name=name)
             except SqlConnection.DoesNotExist:
                 return None
 
         @cache_results()
         def cached_apiconnection_by_id_and_name(account_id: int, name: str) -> Union["ApiConnection", None]:
             try:
-                return ApiConnection.objects.get(account_id=account_id, name=name)
+                return ApiConnection.objects.get(user_profile__account__id=account_id, name=name)
             except ApiConnection.DoesNotExist:
                 return None
 
@@ -2284,11 +2377,11 @@ class PluginDataSql(PluginDataBase):
         return data_by_plugin_id(plugin.id)
 
     def __str__(self) -> str:
-        account_number: Optional[str] = (
-            self.plugin.account.account_number if self.plugin and self.plugin.account else "No Account"
-        )
-        account_number = cast(str, account_number)
-        return str(account_number + " - " + self.plugin.name)
+        plugin: PluginMeta = self.plugin
+        user_profile = plugin.user_profile if self.plugin else "No User Profile"
+        user_profile = str(user_profile)
+        name = str(plugin.name) if plugin else "No Plugin Name"
+        return str(user_profile + " - " + name)
 
 
 class ApiConnection(ConnectionBase):
@@ -2754,11 +2847,11 @@ class PluginDataApi(PluginDataBase):
         return data_by_plugin_id(plugin.id)
 
     def __str__(self) -> str:
-        account_number: Optional[str] = (
-            self.connection.account.account_number if self.connection and self.connection.account else "No Account"
-        )
-        account_number = cast(str, account_number)
-        return str(account_number + " - " + self.plugin.name)
+        plugin: PluginMeta = self.plugin
+        user_profile = plugin.user_profile if plugin else "No User Profile"
+        user_profile = str(user_profile)
+        name = str(plugin.name) if plugin else "No Plugin Name"
+        return str(user_profile + " - " + name)
 
 
 PluginDataType = type[PluginDataStatic] | type[PluginDataApi] | type[PluginDataSql]

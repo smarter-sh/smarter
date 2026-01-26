@@ -609,7 +609,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         model_dump = self.model.spec.connection.model_dump()
 
         model_dump["name"] = self.model.metadata.name
-        model_dump["account"] = self.account
+        model_dump["user_profile"] = self.user_profile
         model_dump["description"] = self.model.metadata.description
         model_dump["kind"] = self.model.kind
 
@@ -626,7 +626,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         django_model.save()
 
         self.assertIsNotNone(django_model)
-        self.assertEqual(django_model.account, self.account)
+        self.assertEqual(django_model.user_profile, self.user_profile)
 
         snake_case_name = camel_to_snake(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
@@ -694,7 +694,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
 
         model_dump = self.model.spec.connection.model_dump()
 
-        model_dump["account"] = self.account
+        model_dump["user_profile"] = self.user_profile
         model_dump["name"] = self.model.metadata.name
         model_dump["description"] = self.model.metadata.description
         model_dump["kind"] = self.model.kind
@@ -715,7 +715,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         logger.warning("FIX NOTE: we still need a good test case for sql tcpip_ssl connection")
 
         self.assertIsNotNone(django_model)
-        self.assertEqual(django_model.account, self.account)
+        self.assertEqual(django_model.user_profile, self.user_profile)
 
         snake_case_name = camel_to_snake(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
@@ -788,7 +788,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
 
         model_dump = self.model.spec.connection.model_dump()
 
-        model_dump["account"] = self.account
+        model_dump["user_profile"] = self.user_profile
         model_dump["name"] = self.model.metadata.name
         model_dump["description"] = self.model.metadata.description
         model_dump["kind"] = self.model.kind
@@ -831,7 +831,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
             "poolSize": 5,
             "maxOverflow": 10,
             "authenticationMethod": "none",
-            "account": "<Account: TestAccount_AdminUser_c8383754ac60882b>",
+            "userProfile": "<UserProfile: TestUserProfile_AdminUser_c8383754ac60882b>",
             "name": "test_sql_connection",
             "description": "points to the Django mysql database",
             "password": "<Secret: test_secret_968d486895af353a>",
@@ -843,7 +843,7 @@ class TestSqlConnectionLegacy(TestConnectionBase):
         logger.warning("FIX NOTE: we still need a good test case for sql tcpip_ssh connection")
 
         self.assertIsNotNone(django_model)
-        self.assertEqual(django_model.account, self.account)
+        self.assertEqual(django_model.user_profile, self.user_profile)
 
         snake_case_name = camel_to_snake(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)

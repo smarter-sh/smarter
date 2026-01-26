@@ -358,7 +358,7 @@ class TestPluginBase(TestAccountMixin):
         add_example_plugins(user_profile=self.user_profile)
 
         # verify that all of the sample plugins were added to the user account
-        plugins = PluginMeta.objects.filter(account=self.account)
+        plugins = PluginMeta.objects.filter(user_profile__account=self.account)
         self.assertEqual(len(plugins), PluginExamples().count())
 
         # verify that all of the sample plugins were correctdly created
@@ -503,7 +503,7 @@ class TestPluginBase(TestAccountMixin):
         self.assertNotEqual(plugin.plugin_meta.name, plugin_clone.plugin_meta.name)  # type: ignore
         self.assertNotEqual(plugin.plugin_meta.created_at, plugin_clone.plugin_meta.created_at)  # type: ignore
 
-        self.assertEqual(plugin.plugin_meta.author, plugin_clone.plugin_meta.author)  # type: ignore
+        self.assertEqual(plugin.plugin_meta.user_profile, plugin_clone.plugin_meta.user_profile)  # type: ignore
         self.assertListEqual(list(plugin.plugin_meta.tags.all()), list(plugin_clone.plugin_meta.tags.all()))  # type: ignore
 
         self.assertEqual(plugin.plugin_selector.directive, plugin_clone.plugin_selector.directive)  # type: ignore

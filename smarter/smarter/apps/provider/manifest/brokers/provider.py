@@ -5,10 +5,10 @@ import datetime
 import logging
 from typing import Optional, Type
 
-from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
-from smarter.apps.provider.manifest.enum import ProviderModelEnum, SAMProviderSpecKeys
+from smarter.apps.account.utils import valid_resource_owners_for_user
+from smarter.apps.provider.manifest.enum import SAMProviderSpecKeys
 from smarter.apps.provider.manifest.models.provider.const import MANIFEST_KIND
 from smarter.apps.provider.manifest.models.provider.metadata import SAMProviderMetadata
 from smarter.apps.provider.manifest.models.provider.model import SAMProvider
@@ -17,9 +17,8 @@ from smarter.apps.provider.manifest.models.provider.spec import (
     SAMProviderSpecProvider,
 )
 from smarter.apps.provider.manifest.models.provider.status import SAMProviderStatus
-from smarter.apps.provider.models import Provider, ProviderStatus
+from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
-from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -222,7 +221,6 @@ class SAMProviderBroker(AbstractBroker):
         )
         spec = SAMProviderSpec(provider=spec_provider)
         status = SAMProviderStatus(
-            owner=self.provider.owner.username if self.provider.owner else "unknown",
             created=self.provider.created_at,
             modified=self.provider.updated_at,
             is_active=self.provider.is_active,
@@ -473,27 +471,27 @@ class SAMProviderBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
-
         if name:
-            provider = Provider.objects.filter(account=self.account, name=name)
+            providers = Provider.objects.filter(user_profile__account=self.account, name=name)
         else:
-            providers = Provider.objects.filter(account=self.account)
+            providers = Provider.objects.filter(user_profile__account=self.account)
         providers = [provider for provider in providers]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for provider in providers:
-            try:
-                self._provider = provider
-                model_dump = self.django_orm_to_manifest_dict()
-                if not model_dump:
+            if provider.user_profile in valid_resource_owners_for_user(self.user_profile):
+                try:
+                    self._provider = provider
+                    model_dump = self.django_orm_to_manifest_dict()
+                    if not model_dump:
+                        raise SAMProviderBrokerError(
+                            f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
+                        )
+                    data.append(model_dump)
+                except Exception as e:
                     raise SAMProviderBrokerError(
                         f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
-                    )
-                data.append(model_dump)
-            except Exception as e:
-                raise SAMProviderBrokerError(
-                    f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
-                ) from e
+                    ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -545,6 +543,14 @@ class SAMProviderBroker(AbstractBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user.is_staff:
+            raise SAMProviderBrokerError(
+                message="Only account admins can apply provider manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         readonly_fields = [
             "id",
             "account",
@@ -617,7 +623,7 @@ class SAMProviderBroker(AbstractBroker):
 
         name = kwargs.get("name")
         try:
-            self._provider = Provider.objects.get(account=self.account, name=name)
+            self._provider = Provider.objects.get(user_profile__account=self.account, name=name)
         except Provider.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {name}. Not found", thing=self.kind, command=command
@@ -644,19 +650,26 @@ class SAMProviderBroker(AbstractBroker):
         :returns: A `SmarterJournaledJsonResponse` indicating the result of the delete operation.
 
         :raises: :class:`SAMBrokerErrorNotFound`
-           If the user with the specified username does not exist.
+           If the provider with the specified name does not exist.
         :raises: :class:`SAMProviderBrokerError`
-           If deletion fails for the user.
+           If deletion fails for the provider.
 
         """
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
 
+        if not self.user.is_staff:
+            raise SAMProviderBrokerError(
+                message="Only account admins can delete providers.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not isinstance(self.params, dict):
             raise SAMBrokerErrorNotImplemented(message="Params must be a dictionary", thing=self.kind, command=command)
         name = self.params.get("name")
         try:
-            provider = Provider.objects.get(account=self.account, name=name)
+            provider = Provider.objects.get(user_profile=self.user_profile, name=name)
         except Provider.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
                 f"Failed to delete {self.kind} {name}. Not found", thing=self.kind, command=command

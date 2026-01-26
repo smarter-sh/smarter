@@ -13,7 +13,6 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import cache_control, cache_page, never_cache
 
-
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
@@ -81,6 +80,7 @@ class SmarterView(View, SmarterRequestMixin):
         logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
 
+        # none of these are actually expected until sometime between dispatch() and setup()
         request = kwargs.pop("request", None) or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
         user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
         account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
@@ -172,13 +172,19 @@ class SmarterView(View, SmarterRequestMixin):
             "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
         )
         if not self.smarter_request:
-            logger.warning(
-                "%s.setup() - SmarterRequestMixin.smarter_request not initialized. Initializing now. This should not happen.",
-                self.logger_prefix,
-            )
             self.smarter_request = (
                 request or kwargs["request"] or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
             )
+            if self.smarter_request:
+                logger.info(
+                    "%s.setup() - SmarterRequestMixin.smarter_request initialized successfully.",
+                    self.logger_prefix,
+                )
+            else:
+                logger.warning(
+                    "%s.setup() - SmarterRequestMixin.smarter_request could not be initialized.",
+                    self.logger_prefix,
+                )
         return super().setup(request, *args, **kwargs)
 
 
@@ -332,7 +338,10 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         logger.debug(
             "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
         )
-        return super().setup(request, *args, **kwargs)
+        retval = super().setup(request, *args, **kwargs)
+        if not self.smarter_request:
+            self.smarter_request = request
+        return retval
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
@@ -346,6 +355,8 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         if hasattr(request, "user") and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
             response = super().dispatch(request, *args, **kwargs)
             patch_vary_headers(response, ["Cookie"])
+            if not self.smarter_request:
+                self.smarter_request = request
             return response
 
         return redirect_and_expire_cache(path="/login/")

@@ -1,5 +1,7 @@
 """This module is used to initialize the environment."""
 
+import logging
+
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
@@ -8,6 +10,8 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.common.conf import SettingsDefaults
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 from smarter.lib.django.management.base import SmarterCommand
+
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=E1101
@@ -43,15 +47,20 @@ class Command(SmarterCommand):
         self.handle_begin()
 
         foreground = options["foreground"] if "foreground" in options else False
-        account_number = options.get("account_number", SMARTER_ACCOUNT_NUMBER)
+        account_number = options.get("account_number") or SMARTER_ACCOUNT_NUMBER
 
         log_prefix = "manage.py deploy_example_chatbot:"
         self.stdout.write(self.style.NOTICE(log_prefix + "Deploying the Smarter demo API..."))
 
-        account = Account.objects.get(account_number=account_number)
+        try:
+            account = Account.objects.get(account_number=account_number)
+        except Account.DoesNotExist:
+            logger.error("Account with account number '%s' does not exist.", account_number)
+            self.handle_completed_failure()
+            return
         user = get_cached_admin_user_for_account(account)
         user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
-        chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
+        chatbot, _ = ChatBot.objects.get_or_create(user_profile=user_profile, name=SMARTER_EXAMPLE_CHATBOT_NAME)
         chatbot.provider = SettingsDefaults.LLM_DEFAULT_PROVIDER
         chatbot.default_model = SettingsDefaults.LLM_DEFAULT_MODEL
         chatbot.default_system_role = SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE
@@ -76,7 +85,7 @@ class Command(SmarterCommand):
             self.handle_completed_success(msg=f"The Smarter demo API is already deployed.")
             return
 
-        for plugin_meta in PluginMeta.objects.filter(account=user_profile.account):
+        for plugin_meta in PluginMeta.objects.filter(user_profile=user_profile):
             if plugin_meta.name in ["everlasting_gobstopper", "example_configuration"]:
                 if not ChatBotPlugin.objects.filter(chatbot=chatbot, plugin_meta=plugin_meta).exists():
                     ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin_meta)

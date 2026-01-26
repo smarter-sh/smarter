@@ -859,6 +859,14 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user.is_staff:
+            raise SAMBrokerError(
+                message="Only account admins can apply static plugins.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+
         if self.plugin.ready:
             # the Plugin class was initialized with enough data to bring
             # itself to a ready state, meaning that no create/save is needed.
@@ -960,6 +968,14 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
+
+        if not self.user.is_staff:
+            raise SAMBrokerError(
+                message="Only account admins can delete static plugins.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+
         if not isinstance(self.plugin, StaticPlugin):
             raise SAMPluginBrokerError(
                 f"{self.formatted_class_name} {self.kind} plugin not initialized. Cannot delete",

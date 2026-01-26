@@ -38,18 +38,20 @@ from typing import TYPE_CHECKING, Optional
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
-    Account,
     Secret,
     User,
     UserProfile,
     get_resolved_user,
 )
-from smarter.apps.account.utils import (
-    get_cached_account_for_user,
-    get_cached_smarter_admin_user_profile,
-)
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
-from smarter.apps.plugin.models import ApiConnection, PluginMeta, SqlConnection
+from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
+from smarter.apps.plugin.models import (
+    ApiConnection,
+    ConnectionBase,
+    PluginMeta,
+    SqlConnection,
+)
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_COMPANY_NAME
@@ -62,8 +64,7 @@ if TYPE_CHECKING:
 CACHE_TIMEOUT = 60  # 1 minute
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
-def get_pending_deployments(account: Account) -> int:
+def get_pending_deployments(user_profile: UserProfile) -> int:
     """
     Returns the number of chatbot deployments that are pending for the specified user.
 
@@ -76,11 +77,15 @@ def get_pending_deployments(account: Account) -> int:
     :return: The number of pending chatbot deployments for the user.
     :rtype: int
     """
-    return ChatBot.objects.filter(account=account, deployed=False).count() or 0
+
+    @cache_results(timeout=CACHE_TIMEOUT)
+    def _get_pending_deployments(user_profile_id: int) -> int:
+        return ChatBot.objects.filter(user_profile__id=user_profile_id, deployed=False).count() or 0
+
+    return _get_pending_deployments(user_profile.id)
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
-def get_chatbots(account: Account) -> int:
+def get_chatbots(user_profile: UserProfile) -> int:
     """
     Returns the total number of chatbots associated with the specified user.
 
@@ -93,11 +98,12 @@ def get_chatbots(account: Account) -> int:
     :return: The number of chatbots belonging to the user.
     :rtype: int
     """
-    return ChatBot.objects.filter(account=account).count() or 0
+
+    chatbots = get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id)
+    return len(chatbots)
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
-def get_plugins(account: Account) -> int:
+def get_plugins(user_profile: UserProfile) -> int:
     """
     Returns the total number of plugins associated with the specified user.
 
@@ -110,11 +116,12 @@ def get_plugins(account: Account) -> int:
     :return: The number of plugins belonging to the user.
     :rtype: int
     """
-    return PluginMeta.objects.filter(account=account).count() or 0
+
+    retval = PluginMeta.get_cached_plugins_for_user_profile_id(user_profile_id=user_profile.id)
+    return len(retval)
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
-def get_api_keys(account: Account) -> int:
+def get_api_keys(user_profile: UserProfile) -> int:
     """
     Returns the total number of API keys associated with the specified user.
 
@@ -127,11 +134,15 @@ def get_api_keys(account: Account) -> int:
     :return: The number of API keys belonging to the user.
     :rtype: int
     """
-    return ChatBotAPIKey.objects.filter(chatbot__account=account).count() or 0
+
+    @cache_results(timeout=CACHE_TIMEOUT)
+    def _get_api_keys(user_profile_id: int) -> int:
+        return ChatBotAPIKey.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+
+    return _get_api_keys(user_profile.id)
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
-def get_custom_domains(account: Account) -> int:
+def get_custom_domains(user_profile: UserProfile) -> int:
     """
     Returns the total number of custom domains associated with the specified user.
 
@@ -144,11 +155,15 @@ def get_custom_domains(account: Account) -> int:
     :return: The number of custom domains belonging to the user.
     :rtype: int
     """
-    return ChatBotCustomDomain.objects.filter(chatbot__account=account).count() or 0
+
+    @cache_results(timeout=CACHE_TIMEOUT)
+    def _get_custom_domains(user_profile_id: int) -> int:
+        return ChatBotCustomDomain.objects.filter(chatbot__user_profile__id=user_profile_id).count() or 0
+
+    return _get_custom_domains(user_profile.id)
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
-def get_connections(account: Account) -> int:
+def get_connections(user_profile: UserProfile) -> int:
     """
     Returns the total number of API and SQL connections associated with the specified user.
 
@@ -161,9 +176,8 @@ def get_connections(account: Account) -> int:
     :return: The number of API and SQL connections belonging to the user.
     :rtype: int
     """
-    retval = ApiConnection.objects.filter(account=account).count() or 0
-    retval += SqlConnection.objects.filter(account=account).count() or 0
-    return retval
+    retval = ConnectionBase.get_cached_connections_for_user(user_profile.user)
+    return len(retval)
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
@@ -186,22 +200,19 @@ def get_secrets(user_profile: UserProfile) -> int:
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_providers(user_profile: UserProfile) -> int:
     """
-    Returns the total number of providers associated with the specified user's profile.
+    Returns the total number of providers associated with the specified user's account.
 
-    This function queries the database for all provider records linked to the user's profile. The resulting count is used to display the user's available providers on the dashboard.
+    This function queries the database for all provider records linked to the user's account. The resulting count is used to display the user's available providers on the dashboard.
 
     The result is cached for a short duration to reduce database queries and improve dashboard performance.
 
     :param user_profile: The user profile whose providers are to be counted.
     :type user_profile: UserProfile
-    :return: The number of providers belonging to the user profile.
+    :return: The number of providers belonging to the user account + those belonging to the official smarter admin.
     :rtype: int
     """
-    smarter_admin = get_cached_smarter_admin_user_profile().user
-    user_owned = Provider.objects.filter(owner=user_profile.user).count() if user_profile else 0
-    official = Provider.objects.filter(owner=smarter_admin).count()
-
-    return user_owned + official
+    retval = Provider.get_cached_providers_for_user(user_profile.user)
+    return len(retval)
 
 
 def base(request: "HttpRequest") -> dict:
@@ -220,10 +231,8 @@ def base(request: "HttpRequest") -> dict:
     user = request.user
     resolved_user = get_resolved_user(user)
     user_profile: Optional[UserProfile] = None
-    account: Optional[Account] = None
     if resolved_user and getattr(resolved_user, "is_authenticated", False):
         user_profile = UserProfile.objects.filter(user=resolved_user).first()
-        account = get_cached_account_for_user(user)
 
     @cache_results(timeout=CACHE_TIMEOUT)
     def get_cached_context(user: Optional[User]) -> dict:
@@ -265,12 +274,14 @@ def base(request: "HttpRequest") -> dict:
                 "smarter_version": "v" + __version__,
                 "current_year": current_year,
                 "product_description": "Smarter is an enterprise class plugin-based chat solution.",
-                "my_resources_pending_deployments": get_pending_deployments(account=account) if account else 0,
-                "my_resources_chatbots": get_chatbots(account=account) if account else 0,
-                "my_resources_plugins": get_plugins(account=account) if account else 0,
-                "my_resources_api_keys": get_api_keys(account=account) if account else 0,
-                "my_resources_custom_domains": get_custom_domains(account=account) if account else 0,
-                "my_resources_connections": get_connections(account=account) if account else 0,
+                "my_resources_pending_deployments": (
+                    get_pending_deployments(user_profile=user_profile) if user_profile else 0
+                ),
+                "my_resources_chatbots": get_chatbots(user_profile=user_profile) if user_profile else 0,
+                "my_resources_plugins": get_plugins(user_profile=user_profile) if user_profile else 0,
+                "my_resources_api_keys": get_api_keys(user_profile=user_profile) if user_profile else 0,
+                "my_resources_custom_domains": get_custom_domains(user_profile=user_profile) if user_profile else 0,
+                "my_resources_connections": get_connections(user_profile=user_profile) if user_profile else 0,
                 "my_resources_secrets": get_secrets(user_profile=user_profile) if user_profile else 0,
                 "my_resources_providers": get_providers(user_profile=user_profile) if user_profile else 0,
             }
@@ -341,3 +352,43 @@ def cache_buster(request) -> dict:
     The ``cache_buster`` variable is a string in the format ``v=<timestamp>``.
     """
     return {"cache_buster": "v=" + str(time.time())}
+
+
+def prompt_list_context(request: "HttpRequest") -> dict:
+    """
+    Provides default placeholder context for prompt list views in the dashboard.
+    This mitigate Django template rendering errors presumably caused by Wagtail
+    admin interface interactions.
+
+    Example usage in a Django template::
+
+        {% for prompt in prompt_list.prompts %}
+            {{ prompt.title }}
+        {% endfor %}
+    """
+    return {"prompt_list": {"smarter_admin": smarter_cached_objects.smarter_admin, "chatbot_helpers": []}}
+
+
+def prompt_chatapp_workbench_context(request: "HttpRequest") -> dict:
+    """
+    Provides default placeholder context for chat application workbench views in the dashboard.
+    This mitigate Django template rendering errors presumably caused by Wagtail
+    admin interface interactions.
+
+    Example usage in a Django template::
+
+        <script class="smarter-chat" async="" src="{{ chatapp_workbench.app_loader_url }}"></script>
+    """
+    return {
+        "chatapp_workbench": {
+            "div_id": smarter_settings.smarter_reactjs_root_div_id,
+            "app_loader_url": "",
+            "chatbot_api_url": "",
+            "toggle_metadata": True,
+            "csrf_cookie_name": "csrftoken",
+            "smarter_session_cookie_name": "",
+            "django_session_cookie_name": "",
+            "cookie_domain": "",
+            "debug_mode": False,
+        }
+    }

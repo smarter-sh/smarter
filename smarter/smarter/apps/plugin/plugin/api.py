@@ -36,6 +36,8 @@ import logging
 from datetime import datetime
 from typing import Any, Optional, Type, Union
 
+from django.core.exceptions import MultipleObjectsReturned
+
 # smarter stuff
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -68,13 +70,14 @@ from smarter.apps.plugin.manifest.models.common.plugin.status import (
 from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
 from smarter.apps.plugin.serializers import PluginApiSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults, smarter_settings
+from smarter.common.conf import SettingsDefaults
 from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib import json
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
 
@@ -248,14 +251,25 @@ class ApiPlugin(PluginBase):
             try:
                 account = self.user_profile.account if self.user_profile else None
                 plugin_data_apiconnection = ApiConnection.objects.get(
-                    account=account,
+                    user_profile__account=account,
                     name=connection_name,
                 )
-                api_data["connection"] = plugin_data_apiconnection
-            except ApiConnection.DoesNotExist as e:
+            except ApiConnection.DoesNotExist:
+                pass
+            except MultipleObjectsReturned:
+                try:
+                    plugin_data_apiconnection = ApiConnection.objects.get(
+                        user_profile=self.user_profile,
+                        name=connection_name,
+                    )
+                except ApiConnection.DoesNotExist:
+                    pass
+            if not plugin_data_apiconnection:
                 raise SmarterApiPluginError(
                     f"{self.formatted_class_name}.plugin_data_django_model() error: ApiConnection {connection_name} does not exist for Plugin {self.plugin_meta.name if self.plugin_meta else "(Missing name)"} in account {account}. Error: {e}"
-                ) from e
+                )
+
+            api_data["connection"] = plugin_data_apiconnection
 
         # recast the Pydantic model's parameters field
         # to conform to openai's function calling schema.
@@ -468,6 +482,9 @@ class ApiPlugin(PluginBase):
         :raises SmarterConfigurationError: If the plugin is not ready.
         :raises NotImplementedError: If the method is not implemented in a subclass.
         """
+        if not self.user.is_staff:
+            raise SmarterApiPluginError("Only account admins can apply static plugins.")
+
         if not self.ready:
             raise SmarterConfigurationError(f"{self.name} PluginDataApi.apply() error: Plugin is not ready.")
 
