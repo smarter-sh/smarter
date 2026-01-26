@@ -7,7 +7,7 @@ from functools import cached_property
 from typing import Any, List, Optional, Type
 from urllib.parse import ParseResult, urljoin, urlparse
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.db import models
 from django.http import HttpRequest
 from django.urls import reverse
@@ -19,6 +19,7 @@ from smarter.apps.account.serializers import UserProfileSerializer
 from smarter.apps.account.utils import (
     account_number_from_url,
     get_cached_account,
+    get_cached_admin_user_for_account,
     get_cached_user_profile,
     smarter_cached_objects,
 )
@@ -1890,7 +1891,7 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         return self.chatbot_custom_domain is not None
 
-    @cached_property
+    @property
     def chatbot_custom_domain(self) -> Optional[ChatBotCustomDomain]:
         """
         Returns a lazy instance of the ChatBotCustomDomain.
@@ -1903,19 +1904,61 @@ class ChatBotHelper(SmarterRequestMixin):
         :returns: The ChatBotCustomDomain instance, or ``None`` if not found.
         :rtype: Optional[ChatBotCustomDomain]
         """
+        if self._chatbot_custom_domain:
+            return self._chatbot_custom_domain
+
         try:
-            self._chatbot_custom_domain = ChatBotCustomDomain.objects.get(domain_name=self.root_domain)
+            self._chatbot_custom_domain = ChatBotCustomDomain.objects.get(
+                user_profile=self.user_profile, domain_name=self.root_domain
+            )
             logger.debug(
-                "%s.chatbot_custom_domain() found ChatBotCustomDomain for root domain: %s",
+                "%s.chatbot_custom_domain() found ChatBotCustomDomain for root domain: %s %s",
                 self.formatted_class_name,
                 self.root_domain,
+                self.user_profile,
             )
         except ChatBotCustomDomain.DoesNotExist:
-            logger.debug(
+            if not self.account:
+                logger.warning(
+                    "%s.chatbot_custom_domain() cannot lookup ChatBotCustomDomain for rootdomain: %s because account is None",
+                    self.formatted_class_name,
+                    self.root_domain,
+                )
+                return None
+            account_admin = get_cached_admin_user_for_account(self.account)  # type: ignore[arg-type]
+            account_admin_user_profile = get_cached_user_profile(account_admin)  # type: ignore[arg-type]
+
+            try:
+                self._chatbot_custom_domain = ChatBotCustomDomain.objects.get(
+                    user_profile=account_admin_user_profile,
+                    domain_name=self.root_domain,
+                )
+                logger.debug(
+                    "%s.chatbot_custom_domain() found ChatBotCustomDomain for rootdomain: %s under account admin user_profile id %s",
+                    self.formatted_class_name,
+                    self.root_domain,
+                    account_admin_user_profile,
+                )
+            except ChatBotCustomDomain.DoesNotExist:
+                try:
+                    self._chatbot_custom_domain = ChatBotCustomDomain.objects.get(
+                        user_profile=smarter_cached_objects.smarter_admin_user_profile,
+                        domain_name=self.root_domain,
+                    )
+                    logger.debug(
+                        "%s.chatbot_custom_domain() found ChatBotCustomDomain for rootdomain: %s under smarter platform admin user_profile id %s",
+                        self.formatted_class_name,
+                        self.root_domain,
+                        smarter_cached_objects.smarter_admin_user_profile,
+                    )
+                except ChatBotCustomDomain.DoesNotExist:
+                    pass
+
+        if not self._chatbot_custom_domain:
+            logger.warning(
                 "%s.chatbot_custom_domain() did not find ChatBotCustomDomain for rootdomain: %s",
                 self.formatted_class_name,
                 self.root_domain,
             )
-            return None
 
         return self._chatbot_custom_domain

@@ -83,7 +83,6 @@ class SAMMetadataKeys(SmarterEnumAbstract):
     .. :no-index:
 
     attributes:
-        ACCOUNT: The account key.
         AUTHOR: The author key.
         NAME: The name key.
         DESCRIPTION: The description key.
@@ -92,7 +91,6 @@ class SAMMetadataKeys(SmarterEnumAbstract):
         ANNOTATIONS: The annotations key.
     """
 
-    ACCOUNT = "account"
     AUTHOR = "author"
     NAME = "name"
     DESCRIPTION = "description"

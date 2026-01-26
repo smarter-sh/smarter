@@ -406,12 +406,12 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
     """
     Serializer for the ApiConnection model.
 
-    This serializer exposes API connection configuration fields, including account, name, description,
+    This serializer exposes API connection configuration fields, including user_profile, name, description,
     base URL, API key, authentication method, timeout, and optional proxy settings. It is used to
     serialize and deserialize API connection information for plugin APIs.
 
-    :param account: The account associated with the API connection (read-only).
-    :type account: AccountMiniSerializer
+    :param user_profile: The user profile associated with the API connection (read-only).
+    :type user_profile: AccountMiniSerializer
     :param name: The name of the API connection.
     :type name: str
     :param description: A brief description of the API connection.
@@ -460,7 +460,7 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
         serializer = ApiConnectionSerializer(api_conn)
         print(serializer.data)
         # Output: {
-        #   "account": {...},
+        #   "userProfile": {...},
         #   "name": "...",
         #   "description": "...",
         #   "baseUrl": "...",
@@ -476,7 +476,7 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
 
     """
 
-    account = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    user_profile = serializers.SlugRelatedField(slug_field="name", read_only=True)
     api_key = serializers.SlugRelatedField(slug_field="name", read_only=True)
     proxy_password = serializers.SlugRelatedField(slug_field="name", read_only=True)
 
@@ -484,7 +484,7 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
     class Meta:
         model = ApiConnection
         fields = [
-            "account",
+            "user_profile",
             "name",
             "description",
             "base_url",

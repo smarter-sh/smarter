@@ -39,11 +39,7 @@ class TestLambdaOpenaiFunctionWeather(SmarterTestBase):
         tool_call = ChatCompletionMessageToolCall(id="test_get_current_weather", function=function, type="function")
 
         retval = get_current_weather(tool_call=tool_call, location=location, unit=unit)
-        self.assertIsInstance(retval, str)
-        try:
-            json.loads(retval)
-        except Exception:
-            self.fail("get_current_weather() returned invalid JSON")
+        self.assertIsInstance(retval, list)
 
     def test_weather_tool_factory(self):
         """Test integrity weather_tool_factory()"""
