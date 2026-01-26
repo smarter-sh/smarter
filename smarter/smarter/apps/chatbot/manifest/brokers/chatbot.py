@@ -437,7 +437,6 @@ class SAMChatbotBroker(AbstractBroker):
         if not isinstance(chatbot_dict, dict):
             raise SAMChatbotBrokerError(f"Failed to convert {self.kind} {self.chatbot.name} to dict", thing=self.kind)
         chatbot_dict.pop("id")
-        chatbot_dict.pop("account")
         chatbot_dict.pop("name")
         chatbot_dict.pop("description")
         chatbot_dict.pop("version")

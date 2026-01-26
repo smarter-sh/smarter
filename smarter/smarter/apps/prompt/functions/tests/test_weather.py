@@ -41,8 +41,8 @@ class GetCurrentWeather(SmarterTestBase):
             name="get_current_weather", arguments='{"location": "Cambridge, MA, near Kendall Square", "unit": "METRIC"}'
         )
         tool_call = ChatCompletionMessageToolCall(id="test_get_current_weather", function=function, type="function")
-        json_string_result = get_current_weather(tool_call=tool_call, location=location, unit=unit)
-        json_result = json.loads(json.loads(json_string_result))
+        json_result = get_current_weather(tool_call=tool_call, location=location, unit=unit)
+        self.assertIsInstance(json_result, list)
         logger.info("json_result: %s", json_result)
         logger.info("type of json_result: %s", type(json_result))
         self.assertTrue(isinstance(json_result, (dict, list)))
@@ -54,8 +54,8 @@ class GetCurrentWeather(SmarterTestBase):
             name="get_current_weather", arguments='{"location": "Cambridge, MA, near Kendall Square", "unit": "METRIC"}'
         )
         tool_call = ChatCompletionMessageToolCall(id="test_get_current_weather", function=function, type="function")
-        json_string_result = get_current_weather(tool_call, location=location)
-        json_result = json.loads(json.loads(json_string_result))
+        json_result = get_current_weather(tool_call, location=location)
+        self.assertIsInstance(json_result, list)
         logger.info("json_result: %s", json_result)
         logger.info("type of json_result: %s", type(json_result))
         self.assertTrue(isinstance(json_result, (dict, list)))

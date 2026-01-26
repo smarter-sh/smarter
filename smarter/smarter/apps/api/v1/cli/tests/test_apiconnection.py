@@ -18,7 +18,6 @@ from smarter.apps.plugin.manifest.enum import (
 )
 from smarter.apps.plugin.models import ApiConnection
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
@@ -263,7 +262,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
                 "kwargs": {"kwargs": {}},
                 "data": {
                     "titles": [
-                        {"name": "account", "type": "SlugRelatedField"},
+                        {"name": "user_profile", "type": "SlugRelatedField"},
                         {"name": "name", "type": "CharField"},
                         {"name": "description", "type": "CharField"},
                         {"name": "baseUrl", "type": "URLField"},
@@ -278,7 +277,7 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
                     ],
                     "items": [
                         {
-                            "account": "test_account_admin_user_6c252feaab8e71d9",
+                            "user_profile": "a user profile",
                             "name": "smarter_test_base_92a2c8606f908c29",
                             "description": "test apiconnection",
                             "baseUrl": "http://localhost:9357/api/v1/cli/example_manifest/plugin/",

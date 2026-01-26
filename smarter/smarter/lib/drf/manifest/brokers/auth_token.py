@@ -472,7 +472,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker):
         if self.smarter_auth_token is None:
             self.smarter_auth_token = SmarterAuthToken(
                 user=self.user,
-                account=self.account,
+                user_profile=self.user_profile,
             )
         try:
             data = self.manifest_to_django_orm()

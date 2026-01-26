@@ -106,7 +106,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         # 2.) transform the manifest for a django model
         # ---------------------------------------------------------------------
         connection_model_dump = connection_model.spec.connection.model_dump()
-        connection_model_dump["account"] = cls.account
+        connection_model_dump["user_profile"] = cls.user_profile
         connection_model_dump["name"] = connection_model.metadata.name
         connection_model_dump["description"] = connection_model.metadata.description
         connection_model_dump["kind"] = connection_model.kind
@@ -194,7 +194,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         # 2.) transform the manifest for a django model
         # ---------------------------------------------------------------------
         connection_model_dump = connection_model.spec.connection.model_dump()
-        connection_model_dump["account"] = cls.account
+        connection_model_dump["user_profile"] = cls.user_profile
         connection_model_dump["name"] = connection_model.metadata.name
         connection_model_dump["description"] = connection_model.metadata.description
 

@@ -52,7 +52,7 @@ class TestChatBotTasks(TestAccountMixin):
         if self.hosted_zone:
             aws_helper.route53.delete_hosted_zone(domain_name=self.domain_name)
 
-        self.chatbot = ChatBot.objects.create(
+        self.chatbot, _ = ChatBot.objects.get_or_create(
             user_profile=self.smarter_user_profile,
             name=common_name,
         )

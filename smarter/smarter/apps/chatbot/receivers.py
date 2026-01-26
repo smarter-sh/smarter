@@ -129,7 +129,9 @@ def chatbot_deleted(sender, instance: ChatBot, **kwargs):
     chatbot: ChatBot = instance
     prefix = formatted_text(f"{module_prefix}.chatbot_deleted()")
     logger.info("%s - %s", prefix, instance.url)
-    delete_default_api.delay(url=chatbot.url, account_number=chatbot.account.account_number, name=chatbot.name)
+    delete_default_api.delay(
+        url=chatbot.url, account_number=chatbot.user_profile.account.account_number, name=chatbot.name
+    )
 
 
 @receiver(pre_delete, sender=ChatBotPlugin)

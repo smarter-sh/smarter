@@ -675,7 +675,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             f"If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified. "
             f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
         )
-        AccountContact.send_email_to_primary_contact(account=chatbot.account, subject=subject, body=body)
+        AccountContact.send_email_to_primary_contact(account=chatbot.user_profile.account, subject=subject, body=body)
     else:
         logger.error(
             "%s unable to verify domain %s. Chatbot %s will not be deployed.",
