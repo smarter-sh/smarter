@@ -20,6 +20,13 @@ module.exports = {
       "@semantic-release/release-notes-generator",
       {
         preset: "conventionalcommits",
+        parserOpts: {
+          types: [
+            { type: "feat", section: "Features" },
+            { type: "fix", section: "Bug Fixes" },
+            { type: "refactor", section: "Refactoring" },
+          ],
+        },
       },
     ],
     [
