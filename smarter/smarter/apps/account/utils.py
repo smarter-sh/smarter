@@ -105,7 +105,7 @@ class SmarterCachedObjects:
         """
         if not self._smarter_admin:
             try:
-                user = User.objects.filter(userprofile__account=self.smarter_account, is_superuser=True).first()
+                user = User.objects.filter(user_profile__account=self.smarter_account, is_superuser=True).first()
             except User.DoesNotExist as e:
                 raise SmarterConfigurationError("No superuser found for smarter account") from e
             if not user:
@@ -786,7 +786,7 @@ def get_users_for_account(account: Account) -> list[User]:
     """
     if not account:
         raise SmarterValueError("Account is required")
-    users = User.objects.filter(userprofile__account=account)
+    users = User.objects.filter(user_profile__account=account)
     return list[users]  # type: ignore[list-item,return-value]
 
 

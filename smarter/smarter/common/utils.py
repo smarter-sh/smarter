@@ -128,18 +128,21 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
                 type(request.user),
             )
 
+        url = smarter_build_absolute_uri(request)
         if is_valid_request_object and has_user and has_is_authenticated:
             retval = request.user.is_authenticated
             logger.debug(
-                "%s.is_authenticated_request() Request is_authenticated: %s",
+                "%s.is_authenticated_request() Request is_authenticated: %s URL: %s",
                 logger_prefix,
                 retval,
+                url,
             )
         else:
             retval = False
             logger.debug(
-                "%s.is_authenticated_request() Request is not authenticated - returning False",
+                "%s.is_authenticated_request() Request is not authenticated - returning False URL: %s",
                 logger_prefix,
+                url,
             )
         return retval
 

@@ -748,15 +748,17 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         # the basic idea is to pass the names of the necessary cookies to the React app, and then
         # it is supposed to find and read the cookies to get the chat session key, csrf token, etc.
         context = {
-            "div_id": smarter_settings.smarter_reactjs_root_div_id,
-            "app_loader_url": self.reactjs_loader_url,
-            "chatbot_api_url": self.chatbot.url,
-            "toggle_metadata": True,
-            "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
-            "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter chat session, not the Django session.
-            "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-            "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-            "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE),
+            "chatapp_workbench": {
+                "div_id": smarter_settings.smarter_reactjs_root_div_id,
+                "app_loader_url": self.reactjs_loader_url,
+                "chatbot_api_url": self.chatbot.url,
+                "toggle_metadata": True,
+                "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
+                "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter chat session, not the Django session.
+                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
+                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
+                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE),
+            }
         }
         logger.debug(
             "%s.dispatch() - rendering template %s with context: %s",
@@ -789,37 +791,51 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
 
         self.chatbot_helpers = []
 
-        def was_already_added(chatbot_helper: ChatBotHelper) -> bool:
-            if not chatbot_helper.chatbot:
-                logger.error("%s.dispatch() - chatbot_helper.chatbot is None", self.formatted_class_name)
+        try:
+
+            def was_already_added(chatbot_helper: ChatBotHelper) -> bool:
+                if not chatbot_helper.chatbot:
+                    logger.error(
+                        "%s.dispatch() - chatbot_helper.chatbot is None. This is a bug.", self.formatted_class_name
+                    )
+                    return False
+                for b in self.chatbot_helpers:
+                    if b.chatbot and b.chatbot.id == chatbot_helper.chatbot.id:  # type: ignore[union-attr]
+                        return True
                 return False
-            for b in self.chatbot_helpers:
-                if b.chatbot and b.chatbot.id == chatbot_helper.chatbot.id:  # type: ignore[union-attr]
-                    return True
-            return False
 
-        def get_chatbots_for_account(account) -> QuerySet:
-            user_chatbots = ChatBot.objects.filter(user_profile=self.user_profile).order_by("name")
-            smarter_chatbots = ChatBot.objects.filter(user_profile=get_cached_smarter_admin_user_profile()).order_by(
-                "name"
+            def get_chatbots_for_account(account) -> QuerySet:
+                user_chatbots = ChatBot.objects.filter(user_profile=self.user_profile).order_by("name")
+                smarter_chatbots = ChatBot.objects.filter(
+                    user_profile=get_cached_smarter_admin_user_profile()
+                ).order_by("name")
+                combined_chatbots = user_chatbots | smarter_chatbots
+                combined_chatbots = combined_chatbots.distinct().order_by("name")
+                return combined_chatbots
+
+            self.chatbots = get_chatbots_for_account(account=self.account)
+
+            for chatbot in self.chatbots:
+                chatbot_helper = ChatBotHelper(
+                    request=request,
+                    chatbot=chatbot,
+                    user=request.user,
+                )
+                if not was_already_added(chatbot_helper):
+                    self.chatbot_helpers.append(chatbot_helper)
+
+            smarter_admin = get_cached_smarter_admin_user_profile()
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(
+                "%s.dispatch() - Exception occurred while getting chatbots: %s. " "Request URL: %s\nStack trace: %s",
+                self.formatted_class_name,
+                str(e),
+                request.build_absolute_uri(),
+                traceback.format_exc(),
             )
-            combined_chatbots = user_chatbots | smarter_chatbots
-            combined_chatbots = combined_chatbots.distinct().order_by("name")
-            return combined_chatbots
-
-        self.chatbots = get_chatbots_for_account(account=self.account)
-
-        for chatbot in self.chatbots:
-            chatbot_helper = ChatBotHelper(
-                request=request,
-                chatbot=chatbot,
-                user=request.user,
-            )
-            if not was_already_added(chatbot_helper):
-                self.chatbot_helpers.append(chatbot_helper)
-
-        smarter_admin = get_cached_smarter_admin_user_profile()
-        context = {"smarter_admin": smarter_admin, "chatbot_helpers": self.chatbot_helpers}
+            return SmarterHttpResponseServerError(request=request, error_message=str(e))
+        context = {"prompt_list": {"smarter_admin": smarter_admin, "chatbot_helpers": self.chatbot_helpers}}
         logger.debug(
             "%s.dispatch() rendering template %s with context: %s",
             self.formatted_class_name,

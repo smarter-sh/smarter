@@ -763,30 +763,11 @@ TEMPLATES = [
                 "smarter.apps.cms.context_processors.base",
                 "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.base",
+                "smarter.apps.dashboard.context_processors.prompt_list_context",
+                "smarter.apps.dashboard.context_processors.prompt_chatapp_workbench_context",
                 "social_django.context_processors.backends",
                 "social_django.context_processors.login_redirect",
                 "wagtail.contrib.settings.context_processors.settings",
-            ],
-        },
-    },
-    {
-        "NAME": "react",
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            BASE_DIR / "templates",
-        ],
-        "APP_DIRS": False,
-        "OPTIONS": {
-            "loaders": [
-                "django.template.loaders.filesystem.Loader",
-            ],
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-                "smarter.apps.account.context_processors.base",
-                "smarter.apps.dashboard.context_processors.base",
             ],
         },
     },
