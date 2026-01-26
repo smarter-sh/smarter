@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.13.99](https://github.com/smarter-sh/smarter/compare/v0.13.98...v0.13.99) (2026-01-26)
+
+### Bug Fixes
+
+* AccountMixin initialization sequence when inherited from RequestMixin ([bb99ded](https://github.com/smarter-sh/smarter/commit/bb99ded6875e325b368757596a1fdbdb5f760600))
+* flush out more orphaned references to account. replace with user_profile ([2e5e0b7](https://github.com/smarter-sh/smarter/commit/2e5e0b7951114f1053388f746ab6ca9b17cc51fc))
+* squash db migrations ([7b99b5d](https://github.com/smarter-sh/smarter/commit/7b99b5d5879c90e02b61484894d48878fe7b66a8))
+* test and fix up Providers ([65391f9](https://github.com/smarter-sh/smarter/commit/65391f9b93a3bf79041c06eaf98b19315f510f03))
+* wagtail induced template rendering errors in workbench django template and chatbot listview ([13217f9](https://github.com/smarter-sh/smarter/commit/13217f995203440c460642ee682966e9e1e0462e))
+* work on context processors and dashboard metrics ([048d970](https://github.com/smarter-sh/smarter/commit/048d970481e08796cfbb47cde77c689ed402bfc9))
+* work on unit tests ([c2a2edf](https://github.com/smarter-sh/smarter/commit/c2a2edfef2f73a8003b8e142fa04940ebc69c258))
+
 ## [0.13.98](https://github.com/smarter-sh/smarter/compare/v0.13.97...v0.13.98) (2026-01-24)
 
 ### Bug Fixes
