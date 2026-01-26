@@ -18,10 +18,6 @@ class SAMProviderStatus(AbstractSAMStatusBase):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    owner: str = Field(
-        description=f"{class_identifier}.owner: The designated Smarter user that owns this {MANIFEST_KIND}. Read only.",
-    )
-
     created: datetime = Field(
         description=f"{class_identifier}.created: The date in which this {MANIFEST_KIND} was created. Read only.",
     )

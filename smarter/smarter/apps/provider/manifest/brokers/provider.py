@@ -221,7 +221,6 @@ class SAMProviderBroker(AbstractBroker):
         )
         spec = SAMProviderSpec(provider=spec_provider)
         status = SAMProviderStatus(
-            owner=self.provider.owner.username if self.provider.owner else "unknown",
             created=self.provider.created_at,
             modified=self.provider.updated_at,
             is_active=self.provider.is_active,

@@ -152,7 +152,6 @@ class Command(SmarterCommand):
                 name=OPENAI_API,
                 defaults={
                     "description": "OpenAI provides advanced AI models and APIs.",
-                    "owner": self.user_profile.user,
                     "user_profile": self.user_profile,
                     "status": ProviderStatus.VERIFIED,
                     "is_active": True,
@@ -235,7 +234,6 @@ class Command(SmarterCommand):
                 name=GOOGLE_API,
                 defaults={
                     "description": "Google AI provides a range of AI and machine learning services.",
-                    "owner": self.user_profile.user,
                     "user_profile": self.user_profile,
                     "status": ProviderStatus.VERIFIED,
                     "is_active": True,
@@ -288,7 +286,6 @@ class Command(SmarterCommand):
                 name=META_API,
                 defaults={
                     "description": "Meta AI provides a range of AI and machine learning services.",
-                    "owner": self.user_profile.user,
                     "user_profile": self.user_profile,
                     "status": ProviderStatus.VERIFIED,
                     "is_active": True,

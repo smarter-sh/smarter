@@ -23,8 +23,6 @@ import re
 import uuid
 from typing import Optional
 
-from django.contrib.auth.models import AnonymousUser
-
 from smarter.apps.account.models import (
     Account,
     Secret,
