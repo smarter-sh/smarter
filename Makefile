@@ -117,7 +117,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.apps.api.v1.cli.tests.test_apiconnection.TestApiCliV1ApiConnection.test_get"
+	docker exec smarter-app bash -c "python manage.py test smarter"
 
 docker-prune:
 	make docker-check && \
