@@ -10,7 +10,6 @@ from typing import Any, Optional, Union
 
 from django.conf import settings
 from django.db import models
-from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
@@ -29,6 +28,7 @@ from smarter.apps.chatbot.serializers import (
     ChatBotConfigSerializer,
     ChatBotPluginSerializer,
 )
+from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.plugin.models import (
     PluginSelectorHistory,
     PluginSelectorHistorySerializer,
@@ -789,52 +789,8 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
         if response.status_code >= 300:
             return response
 
-        self.chatbot_helpers = []
-
-        try:
-
-            def was_already_added(chatbot_helper: ChatBotHelper) -> bool:
-                if not chatbot_helper.chatbot:
-                    logger.error(
-                        "%s.dispatch() - chatbot_helper.chatbot is None. This is a bug.", self.formatted_class_name
-                    )
-                    return False
-                for b in self.chatbot_helpers:
-                    if b.chatbot and b.chatbot.id == chatbot_helper.chatbot.id:  # type: ignore[union-attr]
-                        return True
-                return False
-
-            def get_chatbots_for_account(account) -> QuerySet:
-                user_chatbots = ChatBot.objects.filter(user_profile=self.user_profile).order_by("name")
-                smarter_chatbots = ChatBot.objects.filter(
-                    user_profile=get_cached_smarter_admin_user_profile()
-                ).order_by("name")
-                combined_chatbots = user_chatbots | smarter_chatbots
-                combined_chatbots = combined_chatbots.distinct().order_by("name")
-                return combined_chatbots
-
-            self.chatbots = get_chatbots_for_account(account=self.account)
-
-            for chatbot in self.chatbots:
-                chatbot_helper = ChatBotHelper(
-                    request=request,
-                    chatbot=chatbot,
-                    user=request.user,
-                )
-                if not was_already_added(chatbot_helper):
-                    self.chatbot_helpers.append(chatbot_helper)
-
-            smarter_admin = get_cached_smarter_admin_user_profile()
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
-                "%s.dispatch() - Exception occurred while getting chatbots: %s. " "Request URL: %s\nStack trace: %s",
-                self.formatted_class_name,
-                str(e),
-                request.build_absolute_uri(),
-                traceback.format_exc(),
-            )
-            return SmarterHttpResponseServerError(request=request, error_message=str(e))
+        self.chatbot_helpers = get_cached_chatbots_for_user_profile(self.user_profile.id)
+        smarter_admin = get_cached_smarter_admin_user_profile()
         context = {"prompt_list": {"smarter_admin": smarter_admin, "chatbot_helpers": self.chatbot_helpers}}
         logger.debug(
             "%s.dispatch() rendering template %s with context: %s",

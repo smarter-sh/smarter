@@ -16,12 +16,13 @@ from urllib.parse import urljoin
 
 import paramiko
 import requests
-
-# django stuff
 from django.core.exceptions import ImproperlyConfigured
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
+
+# django stuff
+from django.db.models import QuerySet
 from django.db.utils import ConnectionHandler
 
 # 3rd party stuff
@@ -33,13 +34,20 @@ from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
     Secret,
     User,
+    UserProfile,
 )
-from smarter.apps.account.utils import get_cached_account_for_user
+from smarter.apps.account.utils import (
+    get_cached_account_for_user,
+    get_cached_admin_user_for_account,
+    get_cached_user_profile,
+    smarter_cached_objects,
+)
 
 # smarter stuff
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import SettingsDefaults, smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.logger_helpers import formatted_text
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import camel_to_snake, rfc1034_compliant_str
 from smarter.lib import json
@@ -82,6 +90,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(f"{__name__}")
 
 
 class PluginDataValueError(SmarterValueError):
@@ -468,7 +477,10 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         return None
 
     @classmethod
-    def get_cached_plugins_for_user(cls, user: User, invalidate: bool = False) -> list["PluginMeta"]:
+    @cache_results()
+    def get_cached_plugins_for_user_profile_id(
+        cls, user_profile_id: int, invalidate: bool = False
+    ) -> list["PluginMeta"]:
         """
         Return a list of all instances of PluginMeta for the given user.
 
@@ -484,19 +496,47 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         - :func:`smarter.lib.cache.cache_results`
         """
 
-        @cache_results()
-        def cached_plugins_by_account_id(account_id: int) -> list["PluginMeta"]:
-            plugins = cls.objects.filter(account_id=account_id).order_by("name")
-            return list(plugins) or []
+        try:
+            retval = []
+            user_profile = UserProfile.objects.get(id=user_profile_id)
+            admin_user = get_cached_admin_user_for_account(account=user_profile.account)
+            admin_user_profile = get_cached_user_profile(user=admin_user, account=user_profile.account)  # type: ignore[arg-type]
 
-        account = get_cached_account_for_user(user)
-        if invalidate:
-            cached_plugins_by_account_id.invalidate(account.id)
+            def was_already_added(plugin_meta: PluginMeta) -> bool:
+                if not plugin_meta:
+                    logger.error("%s.dispatch() - plugin_meta is None. This is a bug.", logger_prefix)
+                    return False
+                for b in retval:
+                    if b.id == plugin_meta.id:
+                        return True
+                return False
 
-        if not account:
+            def get_plugins_for_account() -> QuerySet:
+                user_plugins = PluginMeta.objects.filter(user_profile=user_profile).order_by("name")
+                admin_plugins = PluginMeta.objects.filter(user_profile=admin_user_profile).order_by("name")
+                smarter_plugins = PluginMeta.objects.filter(
+                    user_profile=smarter_cached_objects.smarter_admin_user_profile
+                ).order_by("name")
+                combined_plugins = user_plugins | admin_plugins | smarter_plugins
+                combined_plugins = combined_plugins.distinct().order_by("name")
+                return combined_plugins
+
+            plugins = get_plugins_for_account()
+
+            for plugin_meta in plugins:
+                if not was_already_added(plugin_meta):
+                    retval.append(plugin_meta)
+
+            return retval
+
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.dispatch() - Exception occurred while getting plugins for user_profile %s.",
+                logger_prefix,
+                user_profile,
+            )
             return []
-        plugins = cached_plugins_by_account_id(account.id)
-        return list(plugins) or []
 
     @classmethod
     def get_cached_plugin_by_account_id_and_name(
@@ -1238,6 +1278,7 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         raise NotImplementedError
 
     @classmethod
+    @cache_results()
     def get_cached_connections_for_user(cls, user: User, invalidate: bool = False) -> list["ConnectionBase"]:
         """
         Return a list of all instances of all concrete subclasses of :class:`ConnectionBase`.
@@ -1267,10 +1308,16 @@ class ConnectionBase(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if user is None:
             logger.warning("%s.get_cached_connections_for_user: user is None", cls.formatted_class_name)
             return []
-        account = get_cached_account_for_user(user, invalidate=invalidate)
+        user_profile = get_cached_user_profile(user=user, invalidate=invalidate)
+        admin_user = get_cached_admin_user_for_account(user_profile.account, invalidate=invalidate)
+        admin_user_profile = get_cached_user_profile(user=admin_user, invalidate=invalidate)  # type: ignore
         instances = []
         for subclass in ConnectionBase.__subclasses__():
-            instances.extend(subclass.objects.filter(account=account).order_by("name"))
+            instances.extend(subclass.objects.filter(user_profile=user_profile).order_by("name"))
+            instances.extend(subclass.objects.filter(user_profile=admin_user_profile).order_by("name"))
+            instances.extend(
+                subclass.objects.filter(user_profile=smarter_cached_objects.smarter_admin_user_profile).order_by("name")
+            )
         return instances or []
 
     @classmethod

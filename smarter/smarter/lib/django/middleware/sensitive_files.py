@@ -207,7 +207,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
                 "You have been blocked due to too many suspicious requests from your IP. Try again later or contact support@smarter.sh."
             )
 
-        @cache_results()
+        @cache_results(timeout=60 * 60 * 24)
         def cached_security_check_by_url(path) -> bool:
             parsed_url = urllib.parse.urlparse(path)
             path = parsed_url.path.lower()
