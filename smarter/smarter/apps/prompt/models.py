@@ -272,7 +272,7 @@ class ChatHelper(SmarterRequestMixin):
                 self.formatted_class_name,
                 self.account,
             )
-            self.account = chatbot.account
+            self.user_profile = chatbot.user_profile
 
         if session_key:
             self._session_key = session_key

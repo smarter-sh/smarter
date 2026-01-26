@@ -588,6 +588,14 @@ class SAMAccountBroker(AbstractBroker):
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.get() called", self.formatted_class_name)
         data = []
+
+        if not self.user.is_superuser:
+            raise SAMAccountBrokerError(
+                message="Only superusers can view accounts.",
+                thing=self.kind,
+                command=command,
+            )
+
         if self.brokered_account is None:
             raise SAMBrokerErrorNotReady(
                 f"Account not set for {self.kind} broker. Cannot get.",
@@ -676,6 +684,7 @@ class SAMAccountBroker(AbstractBroker):
                 thing=self.kind,
                 command=command,
             )
+
         readonly_fields = ["id", "created_at", "updated_at", "account_number"]
 
         if not self.manifest:
@@ -758,6 +767,14 @@ class SAMAccountBroker(AbstractBroker):
         command = command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         logger.debug("%s.describe() called for %s", self.formatted_class_name, self.name)
+
+        if not self.user.is_superuser:
+            raise SAMAccountBrokerError(
+                message="Only superusers can view accounts.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not self.brokered_account:
             raise SAMBrokerErrorNotFound(message="No account found", thing=self.kind, command=command)
 

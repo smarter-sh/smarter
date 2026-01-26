@@ -171,13 +171,19 @@ class SmarterView(View, SmarterRequestMixin):
             "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
         )
         if not self.smarter_request:
-            logger.warning(
-                "%s.setup() - SmarterRequestMixin.smarter_request not initialized. Initializing now. This should not happen.",
-                self.logger_prefix,
-            )
             self.smarter_request = (
                 request or kwargs["request"] or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
             )
+            if self.smarter_request:
+                logger.info(
+                    "%s.setup() - SmarterRequestMixin.smarter_request initialized successfully.",
+                    self.logger_prefix,
+                )
+            else:
+                logger.warning(
+                    "%s.setup() - SmarterRequestMixin.smarter_request could not be initialized.",
+                    self.logger_prefix,
+                )
         return super().setup(request, *args, **kwargs)
 
 
@@ -345,6 +351,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         if hasattr(request, "user") and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
             response = super().dispatch(request, *args, **kwargs)
             patch_vary_headers(response, ["Cookie"])
+            self.smarter_request = request
             return response
 
         return redirect_and_expire_cache(path="/login/")

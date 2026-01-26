@@ -4,8 +4,8 @@
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import (
-    AccountMiniSerializer,
     MetaDataWithOwnershipModelSerializer,
+    UserProfileSerializer,
 )
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
@@ -21,7 +21,7 @@ from .models import (
 
 class ChatBotSerializer(MetaDataWithOwnershipModelSerializer):
     url_chatbot = serializers.ReadOnlyField()
-    account = AccountMiniSerializer()
+    user_profile = UserProfileSerializer()
     default_system_role = serializers.SerializerMethodField()
 
     class Meta:
@@ -45,7 +45,7 @@ class ChatBotConfigSerializer(serializers.ModelSerializer):
     """
 
     url_chatbot = serializers.ReadOnlyField()
-    account = AccountMiniSerializer()
+    user_profile = UserProfileSerializer()
     default_system_role = serializers.SerializerMethodField()
 
     class Meta:

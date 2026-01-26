@@ -195,7 +195,6 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
         client_ip = self.get_client_ip(request)
         if not client_ip:
-            logger.error("%s Could not determine client IP for request: %s", self.formatted_class_name, request.path)
             client_ip = "unknown-ip"
 
         # Throttle check
