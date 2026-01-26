@@ -19,17 +19,17 @@
   -->
   <section aria-label="Chat with your AI assistant" class="smarter-chat-section">
     <div
-      id="{{ div_id }}"
+      id="{{ chatapp_workbench.div_id }}"
       class="smarter-chat"
       style="height: 88vh;"
-      smarter-chatbot-api-url="{{ chatbot_api_url }}"
-      smarter-toggle-metadata="{{ toggle_metadata }}"
-      smarter-csrf-cookie-name="{{ csrf_cookie_name }}"
-      smarter-session-cookie-name="{{ smarter_session_cookie_name }}"
-      smarter-cookie-domain="{{ cookie_domain }}"
-      smarter-debug-mode="{{ debug_mode }}"
-      django-csrftoken="{{ csrf_token }}"
-      django-session-cookie-name="{{ django_session_cookie_name }}"
+      smarter-chatbot-api-url="{{ chatapp_workbench.chatbot_api_url }}"
+      smarter-toggle-metadata="{{ chatapp_workbench.toggle_metadata }}"
+      smarter-csrf-cookie-name="{{ chatapp_workbench.csrf_cookie_name }}"
+      smarter-session-cookie-name="{{ chatapp_workbench.smarter_session_cookie_name }}"
+      smarter-cookie-domain="{{ chatapp_workbench.cookie_domain }}"
+      smarter-debug-mode="{{ chatapp_workbench.debug_mode }}"
+      django-csrftoken="{{ chatapp_workbench.csrf_cookie_name }}"
+      django-session-cookie-name="{{ chatapp_workbench.django_session_cookie_name }}"
       >
     </div>
   </section>
@@ -42,6 +42,6 @@
       src="https://cdn.platform.smarter.sh/ui-chat/app-loader.js">
     </script>
   -->
-  <script class="smarter-chat" async="" src="{{ app_loader_url }}" onerror="console.error('Failed to load:', this.src)"></script>
+  <script class="smarter-chat" async="" src="{{ chatapp_workbench.app_loader_url }}" onerror="console.error('Failed to load:', this.src)"></script>
 
 {% endblock %}

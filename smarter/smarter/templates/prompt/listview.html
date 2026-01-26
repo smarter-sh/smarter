@@ -32,15 +32,15 @@
         <!--begin::Row-->
         <section class="row g-5 g-xl-10 mb-l-10">
 
-          {% for chatbot_helper in chatbot_helpers %}
+          {% for chatbot_helper in prompt_list.chatbot_helpers|default:"" %}
           <!--begin::Col Smarter Chatbot Card-->
           <article class="col-lg-6 mb-4 p-5">
             <!--begin::Chatbot card-->
             <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
-              <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card {% if chatbot_helper.user_profile == smarter_admin %}smarter-chatbot-card{% else %}user-chatbot-card{% endif %}">
+              <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card {% if chatbot_helper.user_profile == prompt_list.smarter_admin %}smarter-chatbot-card{% else %}user-chatbot-card{% endif %}">
                 <!--begin::Header-->
                 <div class="p-5">
-                  {% if chatbot_helper.chatbot.is_authentication_required %}
+                  {% if chatbot_helper.is_authentication_required %}
                   <i class="fas fa-lock" style="position: absolute; top: 10px; right: 30px; color: darkgreen; padding: 5px;"></i>
                   {% else %}
                   <i class="fas fa-unlock" style="position: absolute; top: 10px; right: 30px; color: darkred; padding: 5px;"></i>

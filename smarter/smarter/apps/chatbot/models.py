@@ -1719,7 +1719,9 @@ class ChatBotHelper(SmarterRequestMixin):
     @property
     def ready(self) -> bool:
         """
-        Returns ``True`` if the ChatBotHelper and its ChatBot are ready to be used
+        Returns ``True`` if the ChatBotHelper and its ChatBot are ready to be used.
+        This property checks both the readiness of the ChatBotHelper itself and the readiness
+        of the underlying ChatBot instance.
 
         :returns: ``True`` if both the helper and ChatBot are ready, otherwise ``False``.
         :rtype: bool

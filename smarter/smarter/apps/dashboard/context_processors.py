@@ -44,7 +44,7 @@ from smarter.apps.account.models import (
     get_resolved_user,
 )
 from smarter.apps.account.utils import (
-    get_cached_smarter_admin_user_profile,
+    smarter_cached_objects,
     valid_resource_owners_for_user,
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
@@ -227,7 +227,7 @@ def get_providers(user_profile: UserProfile) -> int:
     valid_owners = valid_resource_owners_for_user(user_profile=user_profile)
     account_owned = Provider.objects.filter(user_profile__in=valid_owners).count()
 
-    smarter_admin = get_cached_smarter_admin_user_profile().user
+    smarter_admin = smarter_cached_objects.smarter_admin
     official = Provider.objects.filter(user_profile__user=smarter_admin).count()
 
     return account_owned + official
@@ -370,3 +370,43 @@ def cache_buster(request) -> dict:
     The ``cache_buster`` variable is a string in the format ``v=<timestamp>``.
     """
     return {"cache_buster": "v=" + str(time.time())}
+
+
+def prompt_list_context(request: "HttpRequest") -> dict:
+    """
+    Provides default placeholder context for prompt list views in the dashboard.
+    This mitigate Django template rendering errors presumably caused by Wagtail
+    admin interface interactions.
+
+    Example usage in a Django template::
+
+        {% for prompt in prompt_list.prompts %}
+            {{ prompt.title }}
+        {% endfor %}
+    """
+    return {"prompt_list": {"smarter_admin": smarter_cached_objects.smarter_admin, "chatbot_helpers": []}}
+
+
+def prompt_chatapp_workbench_context(request: "HttpRequest") -> dict:
+    """
+    Provides default placeholder context for chat application workbench views in the dashboard.
+    This mitigate Django template rendering errors presumably caused by Wagtail
+    admin interface interactions.
+
+    Example usage in a Django template::
+
+        <script class="smarter-chat" async="" src="{{ chatapp_workbench.app_loader_url }}"></script>
+    """
+    return {
+        "chatapp_workbench": {
+            "div_id": smarter_settings.smarter_reactjs_root_div_id,
+            "app_loader_url": "",
+            "chatbot_api_url": "",
+            "toggle_metadata": True,
+            "csrf_cookie_name": "csrftoken",
+            "smarter_session_cookie_name": "",
+            "django_session_cookie_name": "",
+            "cookie_domain": "",
+            "debug_mode": False,
+        }
+    }
