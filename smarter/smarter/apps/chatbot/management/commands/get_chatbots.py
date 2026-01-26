@@ -61,7 +61,7 @@ class Command(SmarterCommand):
         else:
             raise SmarterValueError("You must provide either an account number or a company name.")
 
-        chatbots = ChatBot.objects.filter(account=account)
+        chatbots = ChatBot.objects.filter(user_profile__account=account)
 
         for chatbot in chatbots:
             print(f"{chatbot.hostname}")

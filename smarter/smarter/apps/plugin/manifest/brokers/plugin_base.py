@@ -5,6 +5,7 @@ import logging
 from typing import Any, Optional, Type
 
 from django.core import serializers
+from django.core.exceptions import MultipleObjectsReturned
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
@@ -289,7 +290,19 @@ class SAMPluginBaseBroker(AbstractBroker):
                     self.name,
                     self.account,
                 )
-                self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
+                self._plugin_meta = PluginMeta.objects.get(user_profile__account=self.account, name=self.name)
+            except MultipleObjectsReturned:
+                try:
+                    self._plugin_meta = PluginMeta.objects.get(
+                        user_profile=self.user_profile,
+                        name=self.name,
+                    )
+                except PluginMeta.DoesNotExist:
+                    logger.warning(
+                        "PluginMeta does not exist for name %s and user_profile %s",
+                        self.name,
+                        self.user_profile,
+                    )
             except PluginMeta.DoesNotExist:
                 logger.warning(
                     "PluginMeta does not exist for name %s and account %s",
@@ -377,15 +390,15 @@ class SAMPluginBaseBroker(AbstractBroker):
             return self._plugin_status
         if not self.plugin_meta:
             return None
-        admin = get_cached_admin_user_for_account(self.plugin_meta.account)
+        admin = get_cached_admin_user_for_account(self.plugin_meta.user_profile.account)
         if not admin:
             raise SAMPluginBrokerError(
-                f"No admin user found for account {self.plugin_meta.account.account_number}",
+                f"No admin user found for account {self.plugin_meta.user_profile.account}",
                 thing=self.kind,
                 command=SmarterJournalCliCommands("describe"),
             )
         self._plugin_status = SAMPluginCommonStatus(
-            accountNumber=self.plugin_meta.account.account_number,
+            accountNumber=self.plugin_meta.user_profile.account.account_number,
             username=admin.username,
             created=self.plugin_meta.created_at,
             modified=self.plugin_meta.updated_at,
@@ -814,6 +827,13 @@ class SAMPluginBaseBroker(AbstractBroker):
         super().apply(request, kwargs)
         logger.debug("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
 
+        if not self.user.is_staff:
+            raise SAMBrokerError(
+                message="Only account admins can apply plugin manifests.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Return a JSON response with a list of SQL plugins for this account.
@@ -860,9 +880,9 @@ class SAMPluginBaseBroker(AbstractBroker):
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
-            plugins = PluginMeta.objects.filter(account=self.account, name=name)
+            plugins = PluginMeta.objects.filter(user_profile__account=self.account, name=name)
         else:
-            plugins = PluginMeta.objects.filter(account=self.account)
+            plugins = PluginMeta.objects.filter(user_profile__account=self.account)
         logger.debug(
             "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
         )

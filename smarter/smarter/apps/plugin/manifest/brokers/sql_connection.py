@@ -5,6 +5,8 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Type
 
+from django.core.exceptions import MultipleObjectsReturned
+
 from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
@@ -653,8 +655,19 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         try:
             name = self.camel_to_snake(self.name)  # type: ignore
-            self._connection = SqlConnection.objects.get(account=self.account, name=name)
+            self._connection = SqlConnection.objects.get(user_profile__account=self.account, name=name)
+        except MultipleObjectsReturned:
+            try:
+                self._connection = SqlConnection.objects.get(
+                    user_profile=self.user_profile,
+                    name=name,
+                )
+            except SqlConnection.DoesNotExist:
+                pass
         except SqlConnection.DoesNotExist:
+            pass
+
+        if not self._connection:
             logger.warning(
                 "%s SqlConnection %s not found for account %s",
                 self.formatted_class_name,
@@ -671,12 +684,13 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             model_dump = self.camel_to_snake(model_dump)
             if not isinstance(model_dump, dict):
                 model_dump = json.loads(json.dumps(model_dump))
-            model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
+            # model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
             model_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
             model_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
             model_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
             model_dump[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.password_secret
             model_dump[SAMKeys.KIND.value] = self.kind
+            model_dump["user_profile"] = self.user_profile
             self._connection = SqlConnection(**model_dump)
 
             logger.info(
@@ -903,9 +917,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
         # generate a QuerySet of SqlConnection objects that match our search criteria
         if name:
-            sql_connections = SqlConnection.objects.filter(account=self.account, name=name)
+            sql_connections = SqlConnection.objects.filter(user_profile__account=self.account, name=name)
         else:
-            sql_connections = SqlConnection.objects.filter(account=self.account)
+            sql_connections = SqlConnection.objects.filter(user_profile__account=self.account)
 
         model_titles = self.get_model_titles(serializer=self.SerializerClass())
 

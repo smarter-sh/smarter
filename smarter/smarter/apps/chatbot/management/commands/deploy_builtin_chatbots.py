@@ -11,6 +11,7 @@ from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_account,
     get_cached_admin_user_for_account,
+    get_cached_user_profile,
 )
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.chatbot.models import ChatBot
@@ -72,19 +73,17 @@ class Command(SmarterCommand):
 
     def delete_chatbot(self, name: str):
         """Delete a chatbot by name."""
-        if not self.account:
-            raise SmarterValueError("Account is required to delete a chatbot.")
+        if not self.user_profile:
+            raise SmarterValueError("UserProfile is required to delete a chatbot.")
 
         try:
-            chatbot = ChatBot.objects.get(account=self.account, name=name)
+            chatbot = ChatBot.objects.get(user_profile=self.user_profile, name=name)
         except ChatBot.DoesNotExist:
             return
 
         chatbot.delete()
         self.stdout.write(
-            self.style.NOTICE(
-                f"Found and deleted existing chatbot {name} for account {self.account.account_number} {self.account.company_name}."
-            )
+            self.style.NOTICE(f"Found and deleted existing chatbot {name} for user_profile {self.user_profile}.")
         )
 
     def create_plugin(self, filespec: str) -> bool:
@@ -95,11 +94,9 @@ class Command(SmarterCommand):
         - get a response
         - check the response
         """
-        if not self.account:
-            raise SmarterValueError("Account is required to create a plugin.")
-        self.stdout.write(
-            f"Creating plugin from manifest {filespec} for account {self.account.account_number} {self.account.company_name}."
-        )
+        if not self.user_profile:
+            raise SmarterValueError("UserProfile is required to create a plugin.")
+        self.stdout.write(f"Creating plugin from manifest {filespec} for user_profile {self.user_profile}.")
         manifest = SAMLoader(file_path=filespec)
         output = io.StringIO()
         try:
@@ -119,11 +116,11 @@ class Command(SmarterCommand):
         - get the chatbot by name
         - deploy the chatbot as a Celery task
         """
-        if not self.account:
-            raise SmarterValueError("Account is required to create and deploy a chatbot.")
+        if not self.user_profile:
+            raise SmarterValueError("UserProfile is required to create and deploy a chatbot.")
 
         self.stdout.write(
-            f"Creating and deploying chatbot from manifest {filespec} for account {self.account.account_number} {self.account.company_name}."
+            f"Creating and deploying chatbot from manifest {filespec} for user_profile {self.user_profile}."
         )
 
         manifest = SAMLoader(file_path=filespec)
@@ -136,7 +133,7 @@ class Command(SmarterCommand):
 
         try:
             sam_chatbot = SAMChatbot(**manifest.pydantic_model_dump())
-            chatbot = ChatBot.objects.get(account=self.account, name=sam_chatbot.metadata.name)
+            chatbot = ChatBot.objects.get(user_profile=self.user_profile, name=sam_chatbot.metadata.name)
 
             # deploy the chatbot as a Celery task because this could take a while.
             self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.name} as a Celery task."))
@@ -157,7 +154,9 @@ class Command(SmarterCommand):
 
         account_number = options["account_number"]
         self.account = get_cached_account(account_number=account_number)
-        self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore[arg-type]
+        admin = get_cached_admin_user_for_account(account=self.account)  # type: ignore[assignment]
+        admin_user_profile = get_cached_user_profile(user=admin, account=self.account)  # type: ignore[assignment]
+        self.user_profile = admin_user_profile  # type: ignore[arg-type]
         self.stdout.write(self.style.NOTICE("=" * 80))
         self.stdout.write(self.style.NOTICE(f"{__file__}"))
         self.stdout.write(self.style.NOTICE(f"Deploying built-in plugins and chatbots for account {account_number}."))

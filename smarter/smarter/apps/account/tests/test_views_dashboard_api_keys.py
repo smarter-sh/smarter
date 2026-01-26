@@ -42,7 +42,7 @@ class TestAPIKeys(TestAccountMixin):
     def create_api_key(self):
         """Create an API Key."""
         api_key, _ = SmarterAuthToken.objects.create(
-            account=self.account,
+            user_profile=self.user_profile,
             name="testAPIKey",
             user=self.admin_user,
             description="Test API Key",
@@ -63,7 +63,7 @@ class TestAPIKeys(TestAccountMixin):
     def test_get_api_key_no_permissions(self):
         """Test that we can't get an api key without permissions."""
         another_api_key, _ = SmarterAuthToken.objects.create(
-            account=self.account,
+            user_profile=self.user_profile,
             user=self.admin_user,
             name=self.admin_user.username,
             description="ANOTHER Test API Key",

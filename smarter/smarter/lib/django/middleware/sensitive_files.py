@@ -178,7 +178,6 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         self.sensitive_files = SENSITIVE_FILES
 
     def __call__(self, request):
-        logger.info("%s.__call__(): %s", self.formatted_class_name, self.smarter_build_absolute_uri(request))
         request_path = request.path.lower()
         if request_path.replace("/", "") in self.amnesty_urls:
             logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
@@ -195,7 +194,6 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
 
         client_ip = self.get_client_ip(request)
         if not client_ip:
-            logger.error("%s Could not determine client IP for request: %s", self.formatted_class_name, request.path)
             client_ip = "unknown-ip"
 
         # Throttle check
@@ -209,7 +207,7 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
                 "You have been blocked due to too many suspicious requests from your IP. Try again later or contact support@smarter.sh."
             )
 
-        @cache_results()
+        @cache_results(timeout=60 * 60 * 24)
         def cached_security_check_by_url(path) -> bool:
             parsed_url = urllib.parse.urlparse(path)
             path = parsed_url.path.lower()

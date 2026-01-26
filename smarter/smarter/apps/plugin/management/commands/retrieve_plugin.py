@@ -2,6 +2,8 @@
 
 from typing import Optional
 
+from django.core.exceptions import MultipleObjectsReturned
+
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
     get_cached_account,
@@ -66,9 +68,16 @@ class Command(SmarterCommand):
             )
 
         self.stdout.write(f"manage.py retrieve_plugin: Retrieving plugin {name} for account {account}")
-
         try:
-            plugin_meta = PluginMeta.objects.get(name=name, account=account)
+            plugin_meta = PluginMeta.objects.get(name=name, user_profile__account=account)
+        except MultipleObjectsReturned as e:
+            try:
+                plugin_meta = PluginMeta.objects.get(name=name, user_profile=user_profile)
+            except PluginMeta.DoesNotExist as e2:
+                self.handle_completed_failure(
+                    e2,
+                    f"manage.py retrieve_plugin: Multiple plugins named {name} exist for account {account_number}, but none for user {user_profile}.",
+                )
         except PluginMeta.DoesNotExist as e:
             self.handle_completed_failure(
                 e,

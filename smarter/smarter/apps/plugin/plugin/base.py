@@ -815,12 +815,11 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
             if self.user_profile and self._manifest:
                 self._plugin_meta_django_model = {
                     "id": self.id,
-                    "account": self.user_profile.account,
+                    "user_profile": self.user_profile,
                     "name": self.manifest.metadata.name,
                     "description": self.manifest.metadata.description,
                     "plugin_class": self.manifest.metadata.pluginClass,
                     "version": self.manifest.metadata.version,
-                    "author": self.user_profile,
                     "annotations": json.loads(json.dumps(self.manifest.metadata.annotations)),
                 }
             else:
@@ -1376,7 +1375,7 @@ class PluginBase(ABC, AccountMixin, SmarterConverterMixin):
 
         with transaction.atomic():
             if isinstance(self.plugin_meta, PluginMeta):
-                read_only_attrs = ["id", "account", "name", "author", "created_at", "updated_at"]
+                read_only_attrs = ["id", "user_profile", "name", "created_at", "updated_at"]
                 for attr, value in plugin_meta_django_model.items():
                     if attr not in read_only_attrs:
                         setattr(self.plugin_meta, attr, value)

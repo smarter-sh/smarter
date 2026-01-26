@@ -10,6 +10,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.shortcuts import render
 
 from smarter.apps.account.models import User
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -144,8 +145,8 @@ class ProviderListView(SmarterAuthenticatedNeverCachedWebView):
                 type(request.user),
             )
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
-        self.plugins = Provider.get_cached_providers_for_user(request.user)
+        self.providers = Provider.get_cached_providers_for_user(request.user)
         context = {
-            "plugins": self.plugins,
+            "provider_list": {"providers": self.providers, "smarter_admin": smarter_cached_objects.smarter_admin}
         }
         return self.clean_http_response(request=request, template_path=self.template_path, context=context)

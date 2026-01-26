@@ -75,7 +75,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         """Create a SmarterAuthToken record for testing"""
 
         auth_token_record, secret_token = SmarterAuthToken.objects.create(
-            account=self.account,
+            user_profile=self.user_profile,
             name=self.name,
             user=self.admin_user,
             description=f"{self.__class__.__name__} Test API Key",

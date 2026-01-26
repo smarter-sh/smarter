@@ -62,7 +62,10 @@ class Command(SmarterCommand):
             return
 
         auth_token, token_key = SmarterAuthToken.objects.create(
-            name=f"{account.account_number}.{user.username}", user=user, description=description
+            user_profile=user_profile,
+            name=f"{account.account_number}.{user.username}",
+            user=user,
+            description=description,
         )  # type: ignore[assignment]
         self.handle_completed_success(
             msg=f"Created API key {auth_token.name} for account {account.account_number} and user {user.username}"

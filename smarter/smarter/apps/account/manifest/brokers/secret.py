@@ -750,6 +750,13 @@ class SAMSecretBroker(AbstractBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
+        if not self.user.is_staff:
+            raise SAMSecretBrokerError(
+                message="Only account admin can apply secret manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         if not self.manifest:
             raise SAMBrokerErrorNotReady(
                 f"Manifest not set for {self.kind} broker. Cannot apply.",
@@ -877,6 +884,14 @@ class SAMSecretBroker(AbstractBroker):
         logger.debug("%s.delete() called", self.formatted_class_name)
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+
+        if not self.user.is_staff:
+            raise SAMSecretBrokerError(
+                message="Only account admin can apply delete manifests.",
+                thing=self.kind,
+                command=command,
+            )
+
         if self.secret:
             try:
                 self.secret.delete()

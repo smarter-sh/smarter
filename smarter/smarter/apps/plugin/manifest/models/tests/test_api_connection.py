@@ -535,7 +535,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
         self.load_manifest(filename="api-connection.yaml")
         model_dump = self.model.spec.connection.model_dump()
 
-        model_dump["account"] = self.account
+        model_dump["user_profile"] = self.user_profile
         model_dump["name"] = self.model.metadata.name
         model_dump["description"] = self.model.metadata.description
         model_dump["kind"] = self.model.kind
@@ -559,7 +559,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
         django_model.save()
 
         self.assertIsNotNone(django_model)
-        self.assertEqual(django_model.account, self.account)
+        self.assertEqual(django_model.user_profile, self.user_profile)
 
         snake_case_name = camel_to_snake(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)

@@ -30,7 +30,7 @@ class TestPluginUrls(TestAccountMixin):
             self.assertIsInstance(json_data, dict)
             self.assertGreaterEqual(len(json_data), 1)
 
-        plugins = PluginMeta.objects.filter(account=self.account)
+        plugins = PluginMeta.objects.filter(user_profile=self.user_profile)
         self.assertGreaterEqual(len(plugins), 1)
 
         for plugin in plugins:

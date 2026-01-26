@@ -405,7 +405,7 @@ class TestSmarterChatBotBroker(TestSAMBrokerBaseClass):
         """
         self.broker.user = None
 
-        with self.assertRaises((ChatBot.DoesNotExist, ChatBot.account.RelatedObjectDoesNotExist)):
+        with self.assertRaises((ChatBot.DoesNotExist, ChatBot.user_profile.RelatedObjectDoesNotExist)):
             self.broker.delete(self.request, **self.kwargs)
 
     def test_describe_account_not_found(self):
@@ -413,7 +413,7 @@ class TestSmarterChatBotBroker(TestSAMBrokerBaseClass):
         Test describe method raises not found for missing account.
         """
         self.broker.user = None
-        with self.assertRaises((ChatBot.DoesNotExist, ChatBot.account.RelatedObjectDoesNotExist)):
+        with self.assertRaises((ChatBot.DoesNotExist, ChatBot.user_profile.RelatedObjectDoesNotExist)):
             self.broker.describe(self.request, **self.kwargs)
 
     def test_logs_returns_ok(self):

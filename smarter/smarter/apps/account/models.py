@@ -326,34 +326,6 @@ class Account(MetaDataModel):
         return str(self.account_number) + " - " + str(self.company_name)
 
 
-class MetaDataWithOwnershipModel(MetaDataModel):
-    """
-    Abstract Django ORM base model that adds Account ownership
-    to a SAM Metadata model.
-
-    This model extends `MetaDataModel` to include a foreign key
-    relationship to the `Account` model, establishing ownership of resources
-    by a specific account. It also enforces uniqueness constraints on
-    the combination of `account` and `name` fields,
-
-    :param account: ForeignKey to :class:`Account`. The account that owns this resource.
-
-    .. note::
-
-        This is an abstract base class and should not be instantiated directly.
-    """
-
-    # pylint: disable=missing-class-docstring
-    class Meta:
-        abstract = True
-        unique_together = (
-            "account",
-            "name",
-        )
-
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="%(class)ss")
-
-
 class AccountContact(TimestampedModel):
     """
     Model for storing contact information associated with an account.
@@ -636,7 +608,7 @@ class AccountContact(TimestampedModel):
         return self.first_name + " " + self.last_name
 
 
-class UserProfile(MetaDataWithOwnershipModel):
+class UserProfile(MetaDataModel):
     """
     UserProfile model for associating Django users with Smarter accounts.
 
@@ -671,6 +643,7 @@ class UserProfile(MetaDataWithOwnershipModel):
         on_delete=models.CASCADE,
         related_name="user_profile",
     )
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="user_profiles")
     is_test = models.BooleanField(
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )
@@ -799,6 +772,34 @@ class UserProfile(MetaDataWithOwnershipModel):
 
     def __str__(self):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
+
+
+class MetaDataWithOwnershipModel(MetaDataModel):
+    """
+    Abstract Django ORM base model that adds Account and
+    User ownership to a SAM Metadata model.
+
+    This model extends `MetaDataModel` to include a foreign key
+    relationship to the `UserProfile` model, establishing ownership of resources
+    by a specific user profile. It also enforces uniqueness constraints on
+    the combination of `user_profile` and `name` fields,
+
+    :param user_profile: ForeignKey to :class:`UserProfile`. The user profile that owns this resource.
+
+    .. note::
+
+        This is an abstract base class and should not be instantiated directly.
+    """
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        abstract = True
+        unique_together = (
+            "user_profile",
+            "name",
+        )
+
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="%(class)ss")
 
 
 class PaymentMethod(TimestampedModel):

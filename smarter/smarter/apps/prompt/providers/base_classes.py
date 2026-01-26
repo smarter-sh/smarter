@@ -1263,7 +1263,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         logger.debug("%s.handler() called.", self.formatted_class_name)
         self._chat = chat
         if chat:
-            self.account = chat.account
+            self.user_profile = chat.user_profile
         self.data = data
         if plugins:
             self.plugins = plugins

@@ -46,7 +46,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         """class-level setup."""
         super().setUpClass()
         cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
-            account=cls.account,
+            user_profile=cls.user_profile,
             name="testAPIKey",
             user=cls.admin_user,
             description="Test API Key",
