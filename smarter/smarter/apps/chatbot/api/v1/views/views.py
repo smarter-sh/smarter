@@ -95,7 +95,7 @@ class ChatbotView(ViewBase):
         if chatbot_id:
             kwargs.pop("chatbot_id")
             self.chatbot = get_object_or_404(ChatBot, pk=chatbot_id)
-            self.account = self.chatbot.account
+            self.user_profile = self.chatbot.user_profile
             logger.info("ChatbotView.dispatch() chatbot_id: %s", chatbot_id)
             logger.info("ChatbotView.dispatch() account: %s", self.account)
         return retval

@@ -1231,21 +1231,27 @@ def get_cached_chatbot(
     """
 
     @cache_results()
-    def get_chatbot_by_id(chatbot_id: int) -> ChatBot:
+    def get_chatbot_by_id(chatbot_id: int) -> Optional[ChatBot]:
         """
         Returns a chatbot by its ID. Creates a lightweight cache key based on
         the chatbot int ID value.
         """
-        return ChatBot.objects.get(id=chatbot_id)
+        try:
+            return ChatBot.objects.get(id=chatbot_id)
+        except ChatBot.DoesNotExist:
+            return None
 
     @cache_results()
-    def get_chatbot_by_name_and_user_profile(name: str, user_profile_id: int) -> ChatBot:
+    def get_chatbot_by_name_and_user_profile(name: str, user_profile_id: int) -> Optional[ChatBot]:
         """
         Returns a chatbot by name and user_profile_id. Creates a lightweight
         cache key based on name and the UserProfile int id value.
         """
         user_profile = UserProfile.objects.get(id=user_profile_id)
-        return ChatBot.objects.get(name=name, user_profile=user_profile)
+        try:
+            return ChatBot.objects.get(name=name, user_profile=user_profile)
+        except ChatBot.DoesNotExist:
+            return None
 
     if chatbot_id is not None:
         return get_chatbot_by_id(chatbot_id)
@@ -1258,6 +1264,12 @@ def get_cached_chatbot(
         # 1. Try to get chatbot owned by the user_profile
         retval = get_chatbot_by_name_and_user_profile(name, user_profile.id)
         if retval:
+            logger.debug(
+                "%s get_cached_chatbot() found chatbot '%s' owned by user_profile id %d",
+                formatted_text(__name__),
+                name,
+                user_profile.id,
+            )
             return retval
 
         # 2. Try to get chatbot owned by the account administrator
@@ -1265,10 +1277,28 @@ def get_cached_chatbot(
         account_admin_user_profile = get_cached_user_profile(account_admin)
         retval = get_chatbot_by_name_and_user_profile(name, account_admin_user_profile.id)
         if retval:
+            logger.debug(
+                "%s get_cached_chatbot() found chatbot '%s' owned by account admin user_profile id %d",
+                formatted_text(__name__),
+                name,
+                account_admin_user_profile.id,
+            )
             return retval
 
     # 3. Try to get chatbot owned by the Smarter platform administrator
-    return get_chatbot_by_name_and_user_profile(name, smarter_cached_objects.smarter_admin_user_profile.id)
+    retval = get_chatbot_by_name_and_user_profile(name, smarter_cached_objects.smarter_admin_user_profile.id)
+    if retval:
+        logger.debug(
+            "%s get_cached_chatbot() found chatbot '%s' owned by smarter platform admin user_profile id %d",
+            formatted_text(__name__),
+            name,
+            smarter_cached_objects.smarter_admin_user_profile.id,
+        )
+        return retval
+    logger.warning(
+        "%s get_cached_chatbot() could not find chatbot '%s' for %s", formatted_text(__name__), name, user_profile
+    )
+    return None
 
 
 def get_cached_chatbot_by_request(request: HttpRequest) -> Optional[ChatBot]:
@@ -1821,9 +1851,9 @@ class ChatBotHelper(SmarterRequestMixin):
                 return self._chatbot
             except ChatBot.DoesNotExist:
                 chatbot_helper_logger.error(
-                    "%s.chatbot() did not find chatbot for account: %s name: %s",
+                    "%s.chatbot() did not find chatbot for %s name: %s",
                     self.formatted_class_name,
-                    self.account,
+                    self._user_profile,
                     self.name,
                 )
 

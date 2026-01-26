@@ -241,7 +241,6 @@ def get_readonly_csv_file(file_path):
         for row in rows:
             print(row)  # {'column1': 'value1', 'column2': 'value2', ...}
     """
-    logger.debug("%s.get_readonly_csv_file()", logger_prefix)
     with open(file_path, encoding="utf-8") as file:
         reader = csv.DictReader(file)
         return list(reader)
@@ -676,15 +675,10 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         try:
             url = request.build_absolute_uri()
             if url:
-                logger.debug(
-                    "%s.smarter_build_absolute_uri() obtained URL from request.build_absolute_uri(): %s",
-                    logger_prefix,
-                    url,
-                )
                 return url
         # pylint: disable=W0718
         except Exception as e:
-            logger.debug(
+            logger.warning(
                 "%s.smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
                 logger_prefix,
                 formatted_text_red(str(e)),
@@ -890,7 +884,6 @@ def camel_to_snake(data: Union[str, dict, list]) -> Optional[Union[str, dict, li
         print(camel_to_snake(["firstName", "lastName"]))
         # Output: ['first_name', 'last_name']
     """
-    logger.debug("%s.camel_to_snake()", logger_prefix)
 
     def convert(name: str):
         name = name.replace(" ", "_")

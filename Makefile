@@ -101,8 +101,6 @@ docker-init:
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
-docker-do:
-	docker exec smarter-app bash -c "python manage.py makemigrations && python manage.py migrate"
 
 docker-shell:
 	make docker-check && \
@@ -119,7 +117,7 @@ docker-run:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "python manage.py test smarter.common.tests.test_conf.TestSettings.test_ready"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.account"
 
 docker-prune:
 	make docker-check && \

@@ -161,7 +161,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         if self._chatbot_helper:
             return self._chatbot_helper
         # ensure that we have some combination of properties that can identify a chatbot
-        if not (self.url or self.chatbot_id or (self.account and self.name)):
+        if not (self.url or self.chatbot_id or (self.user_profile and self.name)):
             return None
         try:
             self._chatbot_helper = ChatBotHelper(
@@ -381,7 +381,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         if self._chatbot_id:
             kwargs.pop("chatbot_id")
         if self.chatbot:
-            self.account = self.chatbot.account
+            self.user_profile = self.chatbot.user_profile
         else:
             self._name = self._name or name
         if not self.chatbot:
@@ -571,7 +571,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         logger.info(
             "%s.post() - chat: %s",
             self.formatted_class_name,
-            self.chat_helper.chat.account.account_number if self.chat_helper and self.chat_helper.chat else None,
+            self.chat_helper.chat.user_profile if self.chat_helper and self.chat_helper.chat else None,
         )
         logger.info("%s.post() - chatbot: %s", self.formatted_class_name, self.chatbot)
         logger.info("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
