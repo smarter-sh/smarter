@@ -5,6 +5,7 @@ import datetime
 import logging
 import os
 import urllib.parse
+from collections.abc import Sequence
 from typing import Optional, TypedDict
 
 import requests
@@ -14,9 +15,11 @@ from django.db import models
 from smarter.apps.account.models import MetaDataWithOwnershipModel, Secret, User
 from smarter.apps.account.utils import (
     get_cached_account_for_user,
+    get_cached_admin_user_for_account,
     get_cached_smarter_admin_user_profile,
+    get_cached_user_profile,
+    smarter_cached_objects,
 )
-from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
@@ -220,10 +223,8 @@ class Provider(MetaDataWithOwnershipModel, SmarterHelperMixin):
     @property
     def is_official_provider(self) -> bool:
         """Check if the provider is an official provider."""
-        if not self.owner:
-            return False
         smarter_admin = get_cached_smarter_admin_user_profile()
-        return self.owner == smarter_admin.user
+        return self.user_profile == smarter_admin.user
 
     @property
     def tos_accepted(self) -> bool:
@@ -453,7 +454,7 @@ class Provider(MetaDataWithOwnershipModel, SmarterHelperMixin):
         @cache_results()
         def cached_provider_by_account_id_and_name(account_id: int, name: str) -> Optional["Provider"]:
             try:
-                provider = cls.objects.get(account_id=account_id, name=name)
+                provider = cls.objects.get(user_profile__account__id=account_id, name=name)
                 return provider
             except cls.DoesNotExist:
                 return None
@@ -465,22 +466,33 @@ class Provider(MetaDataWithOwnershipModel, SmarterHelperMixin):
         return provider
 
     @classmethod
-    def get_cached_providers_for_user(cls, user: User, invalidate: bool = False) -> list["Provider"]:
+    def get_cached_providers_for_user(cls, user: User, invalidate: bool = False) -> Sequence["Provider"]:
         """Get cached providers for a user."""
 
         @cache_results()
-        def cached_providers_by_account_id(account_id: int) -> list["Provider"]:
-            providers = cls.objects.filter(account_id=account_id).order_by("name")
-            return list(providers) or []
+        def cached_providers_by_account_id(account_id: int) -> Sequence["Provider"]:
+            admin_user = get_cached_admin_user_for_account(user_profile.account)
+            admin_user_profile = get_cached_user_profile(admin_user)  # type: ignore[arg-type]
 
-        account = get_cached_account_for_user(user)
+            account_providers = cls.objects.filter(user_profile=admin_user_profile).order_by("name")
+            smarter_providers = cls.objects.filter(
+                user_profile=smarter_cached_objects.smarter_admin_user_profile
+            ).order_by("name")
+            retval = list((account_providers | smarter_providers).distinct()) or []
+            logger.debug(
+                "%s.cached_providers_by_account_id() retrieved %s providers for account %s",
+                cls.formatted_class_name,
+                retval,
+                user_profile.account,
+            )
+            return retval
+
+        user_profile = get_cached_user_profile(user)
 
         if invalidate:
-            cached_providers_by_account_id.invalidate(account.id)
+            cached_providers_by_account_id.invalidate(user_profile.account.id)
 
-        if not account:
-            return []
-        providers = cached_providers_by_account_id(account.id)
+        providers = cached_providers_by_account_id(user_profile.account.id)
         return list(providers) or []
 
     @classmethod
@@ -506,14 +518,11 @@ class Provider(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
     def validate(self) -> None:
         """Validate the provider before saving."""
-        if self.owner and self.account:
-            owner_account = get_cached_account_for_user(self.owner)
-            if owner_account != self.account:
-                raise SmarterValueError("Provider owner must belong to the same Account as the provider.")
+        pass
 
     def __str__(self):
         """String representation of the provider."""
-        return f"{self.name} ({self.account.account_number}) - {self.status}"
+        return f"{self.name} ({self.user_profile}) - {self.status}"
 
 
 class ProviderModel(TimestampedModel):
