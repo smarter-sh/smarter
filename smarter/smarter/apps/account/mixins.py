@@ -401,6 +401,7 @@ class AccountMixin(SmarterHelperMixin):
                 self._user,
                 self._account,
             )
+            self.log_account_mixin_ready_status()
 
     @property
     def account_number(self) -> AccountNumberType:
@@ -437,6 +438,7 @@ class AccountMixin(SmarterHelperMixin):
                 self._account,
                 account_number,
             )
+            self.log_account_mixin_ready_status()
 
     @property
     def user(self) -> UserType:
@@ -477,6 +479,7 @@ class AccountMixin(SmarterHelperMixin):
             self._user_profile = None
             logger.debug("%s.user.setter: unset _user_profile", self.account_mixin_logger_prefix)
             return
+        self.log_account_mixin_ready_status()
 
     @property
     def user_profile(self) -> Optional[UserProfile]:
@@ -508,6 +511,8 @@ class AccountMixin(SmarterHelperMixin):
                 self._user,
                 self._account,
             )
+        else:
+            self.log_account_mixin_ready_status()
         return self._user_profile
 
     @user_profile.setter
@@ -536,6 +541,7 @@ class AccountMixin(SmarterHelperMixin):
             logger.debug("%s.user_profile.setter: set _user to %s", self.account_mixin_logger_prefix, self._user)
             self._account = self._user_profile.account
             logger.debug("%s.user_profile.setter: set _account to %s", self.account_mixin_logger_prefix, self._account)
+            self.log_account_mixin_ready_status()
 
     @property
     def is_accountmixin_ready(self) -> bool:

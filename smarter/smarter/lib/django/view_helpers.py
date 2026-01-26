@@ -80,6 +80,7 @@ class SmarterView(View, SmarterRequestMixin):
         logger.debug("%s.__init__() called with args: %s, kwargs: %s", self.logger_prefix, args, kwargs)
         super().__init__(*args, **kwargs)
 
+        # none of these are actually expected until sometime between dispatch() and setup()
         request = kwargs.pop("request", None) or next((arg for arg in args if isinstance(arg, HttpRequest)), None)
         user = kwargs.pop("user", None) or next((arg for arg in args if isinstance(arg, User)), None)
         account = kwargs.pop("account", None) or next((arg for arg in args if isinstance(arg, Account)), None)
@@ -337,7 +338,10 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         logger.debug(
             "%s.setup() called with request: %s, args: %s, kwargs: %s", self.logger_prefix, request, args, kwargs
         )
-        return super().setup(request, *args, **kwargs)
+        retval = super().setup(request, *args, **kwargs)
+        if not self.smarter_request:
+            self.smarter_request = request
+        return retval
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
@@ -351,7 +355,8 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
         if hasattr(request, "user") and hasattr(request.user, "is_authenticated") and request.user.is_authenticated:
             response = super().dispatch(request, *args, **kwargs)
             patch_vary_headers(response, ["Cookie"])
-            self.smarter_request = request
+            if not self.smarter_request:
+                self.smarter_request = request
             return response
 
         return redirect_and_expire_cache(path="/login/")
