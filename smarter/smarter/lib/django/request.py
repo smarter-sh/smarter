@@ -231,7 +231,6 @@ class SmarterRequestMixin(AccountMixin):
                 args,
                 kwargs,
             )
-            super().__init__(*args, **kwargs)
             return None
 
         if not self.smarter_request:
