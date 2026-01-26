@@ -11,15 +11,18 @@ from django.core.management import call_command
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
+    get_cached_user_profile,
     smarter_cached_objects,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
+from .models import PluginMeta
 from .plugin.utils import PluginExamples
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -32,6 +35,7 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger_prefix = formatted_text(f"{__name__}")
 
 
 # pylint: disable=W0613,C0415

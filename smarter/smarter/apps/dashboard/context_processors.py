@@ -48,6 +48,7 @@ from smarter.apps.account.utils import (
     valid_resource_owners_for_user,
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
+from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.plugin.models import ApiConnection, PluginMeta, SqlConnection
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
@@ -96,11 +97,8 @@ def get_chatbots(user_profile: UserProfile) -> int:
     :rtype: int
     """
 
-    @cache_results(timeout=CACHE_TIMEOUT)
-    def _get_chatbots(user_profile_id: int) -> int:
-        return ChatBot.objects.filter(user_profile__id=user_profile_id).count() or 0
-
-    return _get_chatbots(user_profile.id)
+    chatbots = get_cached_chatbots_for_user_profile(user_profile_id=user_profile.id)
+    return len(chatbots)
 
 
 def get_plugins(user_profile: UserProfile) -> int:
@@ -117,11 +115,8 @@ def get_plugins(user_profile: UserProfile) -> int:
     :rtype: int
     """
 
-    @cache_results(timeout=CACHE_TIMEOUT)
-    def _get_plugins(user_profile_id: int) -> int:
-        return PluginMeta.objects.filter(user_profile__id=user_profile_id).count() or 0
-
-    return _get_plugins(user_profile.id)
+    retval = PluginMeta.get_cached_plugins_for_user_profile_id(user_profile_id=user_profile.id)
+    return len(retval)
 
 
 def get_api_keys(user_profile: UserProfile) -> int:

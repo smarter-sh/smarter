@@ -177,15 +177,15 @@ class SAMConnectionBaseBroker(AbstractBroker):
         Return the common connection status from the manifest.
         """
         if self.connection:
-            admin = get_cached_admin_user_for_account(self.connection.account)
+            admin = get_cached_admin_user_for_account(self.connection.user_profile.account)
             if not admin:
                 raise SAMBrokerErrorNotReady(
-                    f"Admin user not found for account {self.connection.account_number}. Cannot retrieve connection status.",
+                    f"Admin user not found for account {self.connection.user_profile.account.account_number}. Cannot retrieve connection status.",
                     thing=self.thing,
                     command=SmarterJournalCliCommands.GET,
                 )
             self._sam_connection_status = SAMConnectionCommonStatus(
-                account_number=self.connection.account.account_number,
+                account_number=self.connection.user_profile.account.account_number,
                 username=admin.username,
                 created=self.connection.created_at,
                 modified=self.connection.updated_at,
