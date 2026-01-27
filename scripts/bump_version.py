@@ -74,7 +74,7 @@ def main():
     #     AWS_ECR_REPO: ${{ env.NAMESPACE }}
     update_version_in_file(
         ".github/actions/deploy/action.yml",
-        r'(echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)(".*)',
+        r'^(\s*echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v\d+\.\d+\.\d+)(".*)$',
         f"\\g<1>v{new_version}\\g<3>",
     )
     print(f"Updated .github/actions/deploy/action.yml to {new_version}")
