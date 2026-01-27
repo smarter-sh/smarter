@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.103](https://github.com/smarter-sh/smarter/compare/v0.13.102...v0.13.103) (2026-01-27)
+
+### Bug Fixes
+
+* tweaks to Smarter account bootup ([111ce56](https://github.com/smarter-sh/smarter/commit/111ce56a6b39e9d9da3ad525edcae8fefa3668c2))
+
 ## [0.13.102](https://github.com/smarter-sh/smarter/compare/v0.13.101...v0.13.102) (2026-01-27)
 
 ### Bug Fixes
