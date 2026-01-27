@@ -1,0 +1,356 @@
+{
+    "data": {
+        "account": {
+            "accountNumber": "3141-5926-5359"
+        },
+        "api_subdomain": null,
+        "api_token": null,
+        "api_version": "smarter.sh/v1",
+        "auth_header": null,
+        "cache_key": "d78547dd63f355336eeb225a4b7bf98ff94f3b52812ceed789e5abe8b4071699",
+        "chatbot_id": null,
+        "chatbot_name": null,
+        "class_name": "SmarterHelperMixin",
+        "data": {
+            "apiVersion": "smarter.sh/v1",
+            "kind": "SqlPlugin",
+            "metadata": {
+                "description": "Online course catalogue inquiries for fictional Stackademy University that only offers computer science degrees programs.",
+                "name": "stackademy_sql",
+                "pluginClass": "sql",
+                "version": "0.1.0",
+                "tags": [
+                    "db",
+                    "sql",
+                    "database"
+                ],
+                "annotations": [
+                    {
+                        "smarter.sh/stackademy-sql/display-name": "Stackademy SQL"
+                    },
+                    {
+                        "smarter.sh/stackademy-sql/icon": "https://example.com/stackademy-sql-icon.png"
+                    },
+                    {
+                        "smarter.sh/stackademy-sql/documentation-url": "https://docs.stackademy.com/sql"
+                    },
+                    {
+                        "smarter.sh/stackademy-sql/contact-email": "no-reply@example.com"
+                    }
+                ]
+            },
+            "spec": {
+                "selector": {
+                    "directive": "always"
+                },
+                "prompt": {
+                    "provider": "openai",
+                    "systemRole": "You are a helpful student advisor at the fictional Stackademy University that only offers computer science degrees programs. Whenever possible you should defer to the tool calls provided for additional information about the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University should be answered with \"I am sorry, but I can only provide information about the courses offered by Stackademy University.\"\n",
+                    "model": "gpt-4o-mini",
+                    "temperature": 0.5,
+                    "maxTokens": 2048
+                },
+                "connection": "smarter_test_db",
+                "sqlData": {
+                    "description": "returns up to 10 rows of course detail data, filtered by the maximum cost a student is willing to pay for a course and the area of specialization.\n",
+                    "limit": 10,
+                    "sqlQuery": "SELECT c.course_code, c.course_name, c.description, c.cost, prerequisite.course_code AS prerequisite_course_code, prerequisite.course_name AS prerequisite_course_name FROM courses c LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id WHERE ((c.description LIKE CONCAT('%', {description}, '%')) OR ({description} IS NULL)) AND (c.cost <= {max_cost} OR {max_cost} IS NULL) ORDER BY c.prerequisite_id;",
+                    "parameters": [
+                        {
+                            "description": "the maximum cost that a student is willing to pay for a course.",
+                            "enum": null,
+                            "name": "max_cost",
+                            "required": false,
+                            "type": "number"
+                        },
+                        {
+                            "description": "areas of specialization for courses in the catalogue.",
+                            "enum": [
+                                "AI",
+                                "mobile",
+                                "web",
+                                "database",
+                                "network",
+                                "neural networks"
+                            ],
+                            "name": "description",
+                            "required": false,
+                            "type": "string"
+                        }
+                    ],
+                    "testValues": [
+                        {
+                            "name": "description",
+                            "value": "AI"
+                        },
+                        {
+                            "name": "max_cost",
+                            "value": 500
+                        }
+                    ]
+                }
+            }
+        },
+        "domain": "localhost:9357",
+        "ip_address": "172.18.0.1",
+        "is_chatbot": false,
+        "is_chatbot_cli_api_url": false,
+        "is_chatbot_named_url": false,
+        "is_chatbot_sandbox_url": false,
+        "is_chatbot_smarter_api_url": false,
+        "is_config": false,
+        "is_dashboard": false,
+        "is_default_domain": false,
+        "is_environment_root_domain": false,
+        "is_smarter_api": true,
+        "is_workbench": false,
+        "kind": "SqlPlugin",
+        "loader": {
+            "apiVersion": "smarter.sh/v1",
+            "kind": "SqlPlugin",
+            "metadata": {
+                "description": "Online course catalogue inquiries for fictional Stackademy University that only offers computer science degrees programs.",
+                "name": "stackademy_sql",
+                "pluginClass": "sql",
+                "version": "0.1.0",
+                "tags": [
+                    "db",
+                    "sql",
+                    "database"
+                ],
+                "annotations": [
+                    {
+                        "smarter.sh/stackademy-sql/display-name": "Stackademy SQL"
+                    },
+                    {
+                        "smarter.sh/stackademy-sql/icon": "https://example.com/stackademy-sql-icon.png"
+                    },
+                    {
+                        "smarter.sh/stackademy-sql/documentation-url": "https://docs.stackademy.com/sql"
+                    },
+                    {
+                        "smarter.sh/stackademy-sql/contact-email": "no-reply@example.com"
+                    }
+                ]
+            },
+            "spec": {
+                "selector": {
+                    "directive": "always"
+                },
+                "prompt": {
+                    "provider": "openai",
+                    "systemRole": "You are a helpful student advisor at the fictional Stackademy University that only offers computer science degrees programs. Whenever possible you should defer to the tool calls provided for additional information about the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University should be answered with \"I am sorry, but I can only provide information about the courses offered by Stackademy University.\"\n",
+                    "model": "gpt-4o-mini",
+                    "temperature": 0.5,
+                    "maxTokens": 2048
+                },
+                "connection": "smarter_test_db",
+                "sqlData": {
+                    "description": "returns up to 10 rows of course detail data, filtered by the maximum cost a student is willing to pay for a course and the area of specialization.\n",
+                    "limit": 10,
+                    "sqlQuery": "SELECT c.course_code, c.course_name, c.description, c.cost, prerequisite.course_code AS prerequisite_course_code, prerequisite.course_name AS prerequisite_course_name FROM courses c LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id WHERE ((c.description LIKE CONCAT('%', {description}, '%')) OR ({description} IS NULL)) AND (c.cost <= {max_cost} OR {max_cost} IS NULL) ORDER BY c.prerequisite_id;",
+                    "parameters": [
+                        {
+                            "description": "the maximum cost that a student is willing to pay for a course.",
+                            "enum": null,
+                            "name": "max_cost",
+                            "required": false,
+                            "type": "number"
+                        },
+                        {
+                            "description": "areas of specialization for courses in the catalogue.",
+                            "enum": [
+                                "AI",
+                                "mobile",
+                                "web",
+                                "database",
+                                "network",
+                                "neural networks"
+                            ],
+                            "name": "description",
+                            "required": false,
+                            "type": "string"
+                        }
+                    ],
+                    "testValues": [
+                        {
+                            "name": "description",
+                            "value": "AI"
+                        },
+                        {
+                            "name": "max_cost",
+                            "value": 500
+                        }
+                    ]
+                }
+            }
+        },
+        "manifest": {
+            "apiVersion": "smarter.sh/v1",
+            "kind": "SqlPlugin",
+            "metadata": {
+                "name": "stackademy_sql",
+                "description": "Online course catalogue inquiries for fictional Stackademy University that only offers computer science degrees programs.",
+                "version": "0.1.0",
+                "tags": [
+                    "db",
+                    "sql",
+                    "database"
+                ],
+                "annotations": [
+                    {
+                        "smarter.sh/stackademy-sql/display-name": "Stackademy SQL"
+                    },
+                    {
+                        "smarter.sh/stackademy-sql/icon": "https://example.com/stackademy-sql-icon.png"
+                    },
+                    {
+                        "smarter.sh/stackademy-sql/documentation-url": "https://docs.stackademy.com/sql"
+                    },
+                    {
+                        "smarter.sh/stackademy-sql/contact-email": "no-reply@example.com"
+                    }
+                ],
+                "pluginClass": "sql"
+            },
+            "spec": {
+                "selector": {
+                    "directive": "always",
+                    "searchTerms": null
+                },
+                "prompt": {
+                    "provider": "openai",
+                    "systemRole": "You are a helpful student advisor at the fictional Stackademy University that only offers computer science degrees programs. Whenever possible you should defer to the tool calls provided for additional information about the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University should be answered with \"I am sorry, but I can only provide information about the courses offered by Stackademy University.\"\n",
+                    "model": "gpt-4o-mini",
+                    "temperature": 0.5,
+                    "maxTokens": 2048
+                },
+                "connection": "smarter_test_db",
+                "sqlData": {
+                    "sqlQuery": "SELECT c.course_code, c.course_name, c.description, c.cost, prerequisite.course_code AS prerequisite_course_code, prerequisite.course_name AS prerequisite_course_name FROM courses c LEFT JOIN courses prerequisite ON c.prerequisite_id = prerequisite.course_id WHERE ((c.description LIKE CONCAT('%', {description}, '%')) OR ({description} IS NULL)) AND (c.cost <= {max_cost} OR {max_cost} IS NULL) ORDER BY c.prerequisite_id;",
+                    "parameters": [
+                        {
+                            "name": "max_cost",
+                            "type": "number",
+                            "description": "the maximum cost that a student is willing to pay for a course.",
+                            "required": false,
+                            "enum": null,
+                            "default": null
+                        },
+                        {
+                            "name": "description",
+                            "type": "string",
+                            "description": "areas of specialization for courses in the catalogue.",
+                            "required": false,
+                            "enum": [
+                                "AI",
+                                "mobile",
+                                "web",
+                                "database",
+                                "network",
+                                "neural networks"
+                            ],
+                            "default": null
+                        }
+                    ],
+                    "testValues": [
+                        {
+                            "name": "description",
+                            "value": "AI"
+                        },
+                        {
+                            "name": "max_cost",
+                            "value": "500"
+                        }
+                    ],
+                    "limit": 10
+                }
+            }
+        },
+        "name": "stackademy_sql",
+        "orm_instance": {
+            "model": "plugin.plugindatabase",
+            "pk": 13,
+            "fields": {
+                "created_at": "2026-01-25T16:45:52.644Z",
+                "updated_at": "2026-01-27T17:36:54.328Z",
+                "plugin": 14,
+                "description": "Online course catalogue inquiries for fictional Stackademy University that only offers computer science degrees programs.",
+                "parameters": {
+                    "type": "object",
+                    "required": [],
+                    "properties": {
+                        "max_cost": {
+                            "type": "number",
+                            "description": "the maximum cost that a student is willing to pay for a course."
+                        },
+                        "description": {
+                            "enum": [
+                                "AI",
+                                "mobile",
+                                "web",
+                                "database",
+                                "network",
+                                "neural networks"
+                            ],
+                            "type": "string",
+                            "description": "areas of specialization for courses in the catalogue."
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "test_values": [
+                    {
+                        "name": "description",
+                        "value": "AI"
+                    },
+                    {
+                        "name": "max_cost",
+                        "value": "500"
+                    }
+                ]
+            }
+        },
+        "orm_model_class": "PluginDataSql",
+        "params": {},
+        "parsed_url": "ParseResult(scheme='http', netloc='localhost:9357', path='/api/v1/cli/apply/', params='', query='', fragment='')",
+        "path": "/api/v1/cli/apply/",
+        "qualified_request": true,
+        "ready": true,
+        "request": true,
+        "root_domain": "localhost",
+        "serializer_class": "PluginSerializer",
+        "session_key": "e9910d24892165d1ddd6b8c9ae422d72fb58134c7ffaf70f1804b79404cb4cee",
+        "subdomain": null,
+        "timestamp": "2026-01-27T17:36:53.978282",
+        "uid": null,
+        "unique_client_string": "3141-5926-5359.http://localhost:9357/api/v1/cli/apply/.Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36.172.18.0.1.2026-01-27T17:36:53.978282",
+        "url": "http://localhost:9357/api/v1/cli/apply/",
+        "url_path_parts": [
+            "api",
+            "v1",
+            "cli",
+            "apply"
+        ],
+        "user": {
+            "username": "lpm0073",
+            "email": "lpm0073@gmail.com"
+        },
+        "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+        "user_profile": {
+            "user": {
+                "username": "lpm0073",
+                "email": "lpm0073@gmail.com"
+            },
+            "account": {
+                "accountNumber": "3141-5926-5359"
+            }
+        }
+    },
+    "message": "SqlPlugin stackademy_sql applied successfully",
+    "api": "smarter.sh/v1",
+    "thing": "SqlPlugin",
+    "metadata": {
+        "command": "apply"
+    }
+}
