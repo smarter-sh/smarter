@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.13.100](https://github.com/smarter-sh/smarter/compare/v0.13.99...v0.13.100) (2026-01-27)
+
+### Bug Fixes
+
+* code the browser js drop-zone handler ([4b05b74](https://github.com/smarter-sh/smarter/commit/4b05b7411968b16c65423c49526f7526add927f7))
+* code yaml manifest drop zone ([5847764](https://github.com/smarter-sh/smarter/commit/58477640370018ff7e18a04405f52baf1eed1fb4))
+* scaffold yaml file drop zone over web console ([9681290](https://github.com/smarter-sh/smarter/commit/9681290b055e5309067cf8ea7e709bc1d1db8f6a))
+
 ## [0.13.99](https://github.com/smarter-sh/smarter/compare/v0.13.98...v0.13.99) (2026-01-26)
 
 ### Refactor
