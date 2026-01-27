@@ -88,7 +88,13 @@ class SmarterCachedObjects:
         """
         if not self._smarter_account:
             try:
-                self._smarter_account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
+                self._smarter_account, created = Account.objects.get_or_create(account_number=SMARTER_ACCOUNT_NUMBER)
+                if created:
+                    logger.info(
+                        "%s.smarter_account created new smarter account with account number %s",
+                        HERE,
+                        SMARTER_ACCOUNT_NUMBER,
+                    )
             except Account.DoesNotExist as e:
                 raise SmarterConfigurationError("Smarter account does not exist") from e
         return self._smarter_account
@@ -103,11 +109,14 @@ class SmarterCachedObjects:
         """
         if not self._smarter_admin:
             try:
-                user = User.objects.filter(user_profile__account=self.smarter_account, is_superuser=True).first()
-            except User.DoesNotExist as e:
-                raise SmarterConfigurationError("No superuser found for smarter account") from e
-            if not user:
-                raise SmarterConfigurationError("No superuser found for smarter account")
+                user = UserProfile.objects.filter(account=self.smarter_account, user__is_superuser=True).first().user
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    username=SMARTER_ADMIN_USERNAME, is_superuser=True, is_staff=True, is_active=True
+                )
+                logger.warning(
+                    "%s.smarter_admin created new smarter admin user with username %s", HERE, SMARTER_ADMIN_USERNAME
+                )
             self._smarter_admin = user
         return self._smarter_admin
 

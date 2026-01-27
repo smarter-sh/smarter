@@ -4,8 +4,10 @@ import secrets
 import string
 
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
+from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_ACCOUNT_NUMBER,
+    SMARTER_ADMIN_USERNAME,
     SMARTER_COMPANY_NAME,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
     SMARTER_CUSTOMER_SUPPORT_PHONE,
@@ -28,8 +30,8 @@ class Command(SmarterCommand):
         """create the superuser account."""
         self.handle_begin()
 
-        username = options["username"]
-        email = options["email"]
+        username = options["username"] or SMARTER_ADMIN_USERNAME
+        email = options["email"] or f"{username}@{smarter_settings.root_api_domain}"
         password = options["password"]
 
         account, created = Account.objects.get_or_create(

@@ -9,7 +9,6 @@ from smarter.common.const import (
     SMARTER_UBC_ACCOUNT_NUMBER,
     SmarterEnvironments,
 )
-from smarter.lib.cache import lazy_cache
 from smarter.lib.django.management.base import SmarterCommand
 
 
