@@ -1,20 +1,15 @@
 /*-----------------------------------------------------------------------------
-  Handle File Drop for YAML files
+  Handle File Drop for YAML files.
 
-  success response example:
-  {
-      "data": {
-          "account": {
-              "accountNumber": "3141-5926-5359"
-          },
-      },
-      "message": "SqlPlugin stackademy_sql applied successfully",
-      "api": "smarter.sh/v1",
-      "thing": "SqlPlugin",
-      "metadata": {
-          "command": "apply"
-      }
-  }
+  See sample http response data in:
+  - smarter/smarter/apps/api/v1/cli/data/responses/SmarterJournaledJsonResponse.json
+  - smarter/smarter/apps/api/v1/cli/data/responses/SmarterJournaledJsonErrorResponse.json.json
+
+    window.workbenchListPath = "{{ drop_zone.workbench_list_path }}";
+    window.pluginListPath = "{{ drop_zone.plugin_list_path }}";
+    window.connectionListPath = "{{ drop_zone.connection_list_path }}";
+    window.providerListPath = "{{ drop_zone.provider_list_path }}";
+
  -----------------------------------------------------------------------------*/
 
 function showModal(title, message, data, isError = false) {
@@ -40,6 +35,21 @@ function showModal(title, message, data, isError = false) {
     title || "Smarter Api";
   document.getElementById("drop-zone-modal-close").onclick = function () {
     modal.style.display = "none";
+    // navigate to appropriate page based on what was applied
+    // Enumerate possible 'thing' values and their redirect paths
+    const thingRedirects = [
+      { things: ["SqlPlugin", "ApiPlugin", "StaticPlugin"], path: window.pluginListPath },
+      { things: ["SqlConnection", "ApiConnection"], path: window.connectionListPath },
+      { things: ["Provider"], path: window.providerListPath },
+      { things: ["ChatBot"], path: window.workbenchListPath },
+    ];
+    for (const entry of thingRedirects) {
+      if (entry.things.includes(data.thing)) {
+        window.location.href = entry.path;
+        break;
+      }
+    }
+
   };
   if (data) {
     const dataPre = document.getElementById("drop-zone-modal-data");
@@ -119,7 +129,6 @@ function applyManifest(overlay, yamlContent) {
           overlay.classList.remove("drop-zone--error");
         }, 1200);
         let briefMsg = data.error.description || "Unknown error";
-        console.log("Error:", data);
         showModal("Smarter Api Error", briefMsg, data, true);
         throw new Error(briefMsg);
       }
@@ -131,7 +140,6 @@ function applyManifest(overlay, yamlContent) {
     })
     .then((data) => {
       if (data) {
-        console.log("Success:", data);
         showModal(
           "Smarter Api",
           data.message || "Manifest applied successfully.",
@@ -148,7 +156,6 @@ function applyManifest(overlay, yamlContent) {
       ) {
         showModal("Smarter Api Error", error.message, error.stack || "", true);
       }
-      console.error("Error:", error);
     });
 }
 

@@ -231,6 +231,10 @@ def file_drop_zone(request: "HttpRequest") -> dict:
         "drop_zone": {
             "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
             "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
+            "workbench_list_path": reverse("prompt_workbench:listview"),
+            "plugin_list_path": reverse("plugin:plugin_listview"),
+            "connection_list_path": reverse("plugin:connection_listview"),
+            "provider_list_path": reverse("provider:provider_listview"),
         }
     }
 
