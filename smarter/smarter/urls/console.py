@@ -12,8 +12,6 @@ from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from waffle import get_waffle_switch_model
 from wagtail import urls as wagtail_urls
-from wagtail.documents import urls as wagtaildocs_urls
-from wagtail_transfer import urls as wagtailtransfer_urls
 
 from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.views.authentication import (
@@ -144,10 +142,11 @@ if smarter_settings.environment != SmarterEnvironments.LOCAL:
     # only serve media files when not running locally in debug mode
     urlpatterns += [re_path(r"", include(wagtail_urls))]
 
-if settings.DEBUG:
+if smarter_settings.debug_mode:
     import debug_toolbar
-urlpatterns += [
-    path("__debug__/", include(debug_toolbar.urls)),
-]
+
+    urlpatterns += [
+        path("__debug__/", include(debug_toolbar.urls)),
+    ]
 
 __all__ = ["urlpatterns"]
