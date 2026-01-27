@@ -34,7 +34,7 @@ function injectHtmlModal() {
       <div id="error-modal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;">
         <div style="background:#fff;padding:24px 20px 16px 20px;border-radius:8px;max-width:500px;width:90%;box-shadow:0 2px 16px rgba(0,0,0,0.2);position:relative;">
           <button id="error-modal-close" style="position:absolute;top:8px;right:12px;font-size:18px;background:none;border:none;cursor:pointer;">&times;</button>
-          <div style="margin-bottom:10px;font-weight:bold;font-size:18px;">Error</div>
+          <div style="margin-bottom:10px;font-weight:bold;font-size:18px;">Smarter Manifest Processing Error</div>
           <div id="error-modal-code" style="font-size:14px;color:#b00;margin-bottom:6px;"></div>
           <div id="error-modal-message" style="font-size:15px;margin-bottom:10px;"></div>
           <button id="error-modal-toggle-trace" style="background:#eee;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:13px;margin-bottom:8px;">Show Stack Trace</button>
@@ -45,6 +45,21 @@ function injectHtmlModal() {
   }
 }
 
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      // Does this cookie string begin with the name we want?
+      if (cookie.substring(0, name.length + 1) === (name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
 
 function showOverlay(overlay) {
   console.log("Showing overlay");
@@ -67,14 +82,16 @@ function applyManifest(overlay, yamlContent) {
   setTimeout(() => {
     overlay.classList.remove("drop-zone--dropped");
   }, 600); // match animation duration
-  fetch(apiApplyPath, {
+  const init = {
     method: "POST",
     headers: {
       "Content-Type": "application/x-yaml",
+      "X-CSRFToken": getCookie("csrftoken"),
     },
     body: yamlContent,
     credentials: "same-origin",
-  })
+  };
+  fetch(apiApplyPath, init)
     .then(async (response) => {
       if (!response.ok) {
         overlay.classList.add("drop-zone--error");
@@ -141,9 +158,11 @@ document.addEventListener("DOMContentLoaded", function () {
   injectHtmlModal();
 
   window.addEventListener("dragover", function (e) {
-    console.log("Drag over detected");
     e.preventDefault();
-    showOverlay(overlay);
+    if (!overlay.classList.contains("drop-zone--hover")) {
+      console.log("Drag over detected");
+      showOverlay(overlay);
+    }
   });
 
   window.addEventListener("dragleave", function (e) {
@@ -162,7 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const reader = new FileReader();
         reader.onload = function (evt) {
           const yamlContent = evt.target.result;
-          console.log("YAML file content:", yamlContent);
+          console.log("YAML file received.");
           applyManifest(overlay, yamlContent);
         };
         reader.readAsText(file);

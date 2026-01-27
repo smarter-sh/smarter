@@ -827,9 +827,9 @@ class SAMPluginBaseBroker(AbstractBroker):
         super().apply(request, kwargs)
         logger.debug("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
 
-        if not self.user.is_staff:
+        if request.user != self.user:
             raise SAMBrokerError(
-                message="Only account admins can apply plugin manifests.",
+                message=f"This plugin is owned by {self.user_profile}",
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
