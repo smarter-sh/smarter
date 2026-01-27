@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.101](https://github.com/smarter-sh/smarter/compare/v0.13.100...v0.13.101) (2026-01-27)
+
+### Bug Fixes
+
+* automatically navigate to the page listview containing the resource that was applied ([d7fda39](https://github.com/smarter-sh/smarter/commit/d7fda39c5c2d18315d3296b819a5756b1c58e4b4))
+
 ## [0.13.100](https://github.com/smarter-sh/smarter/compare/v0.13.99...v0.13.100) (2026-01-27)
 
 ### Bug Fixes
