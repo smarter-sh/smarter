@@ -40,8 +40,6 @@ LABEL maintainer="Lawrence McDaniel <lpm0073@gmail.com>" \
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG ENVIRONMENT=local
-ARG COLLECT_STATIC_FILES=true
-ENV COLLECT_STATIC_FILES=${COLLECT_STATIC_FILES}
 ENV ENVIRONMENT=$ENVIRONMENT
 RUN echo "ENVIRONMENT: $ENVIRONMENT"
 
@@ -230,6 +228,8 @@ COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compos
 # but the static assets do not change, we can take advantage of Docker's
 # caching mechanism.
 FROM data AS collect_assets
+ARG COLLECT_STATIC_FILES=true
+ENV COLLECT_STATIC_FILES=${COLLECT_STATIC_FILES}
 WORKDIR /home/smarter_user/smarter
 RUN if [ "$COLLECT_STATIC_FILES" = "true" ]; then python manage.py collectstatic --noinput; else echo "Skipping collectstatic"; fi
 

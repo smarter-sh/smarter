@@ -36,6 +36,8 @@ import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
+from django.urls import reverse
+
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
     Secret,
@@ -44,13 +46,12 @@ from smarter.apps.account.models import (
     get_resolved_user,
 )
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
 from smarter.apps.plugin.models import (
-    ApiConnection,
     ConnectionBase,
     PluginMeta,
-    SqlConnection,
 )
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
@@ -213,6 +214,25 @@ def get_providers(user_profile: UserProfile) -> int:
     """
     retval = Provider.get_cached_providers_for_user(user_profile.user)
     return len(retval)
+
+
+def file_drop_zone(request: "HttpRequest") -> dict:
+    """
+    Provides context for enabling file drop zone functionality in the dashboard.
+
+    This context processor injects a variable into the template context that can be used to enable or disable file drop zone features in the dashboard interface. This is useful for enhancing user experience by allowing drag-and-drop file uploads.
+
+    :param request: The HTTP request object.
+    :type request: "HttpRequest"
+    :return: A dictionary containing the file drop zone context variable.
+    :rtype: dict
+    """
+    return {
+        "drop_zone": {
+            "file_drop_zone_enabled": smarter_settings.file_drop_zone_enabled,
+            "api_apply_path": reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply),
+        }
+    }
 
 
 def base(request: "HttpRequest") -> dict:
