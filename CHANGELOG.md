@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.102](https://github.com/smarter-sh/smarter/compare/v0.13.101...v0.13.102) (2026-01-27)
+
+### Bug Fixes
+
+* control django debug toolbar with smarter_settings.debug_mode ([c20b944](https://github.com/smarter-sh/smarter/commit/c20b9449867442d05918e6acb6ecc3cb51609a80))
+
 ## [0.13.101](https://github.com/smarter-sh/smarter/compare/v0.13.100...v0.13.101) (2026-01-27)
 
 ### Bug Fixes
