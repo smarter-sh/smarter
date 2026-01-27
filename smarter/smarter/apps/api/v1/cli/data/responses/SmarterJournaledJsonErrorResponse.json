@@ -1,0 +1,16 @@
+{
+    "error": {
+        "errorClass": "SmarterAPIV1CLIViewErrorNotAuthenticated",
+        "stacktrace": "Traceback (most recent call last):\n  File \"/home/smarter_user/smarter/smarter/apps/api/v1/cli/views/base.py\", line 671, in initial\n    super().initial(request, *args, **kwargs)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/smarter_user/venv/lib/python3.13/site-packages/rest_framework/views.py\", line 421, in initial\n    self.check_permissions(request)\n    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^\n  File \"/home/smarter_user/venv/lib/python3.13/site-packages/rest_framework/views.py\", line 339, in check_permissions\n    self.permission_denied(\n    ~~~~~~~~~~~~~~~~~~~~~~^\n        request,\n        ^^^^^^^^\n        message=getattr(permission, 'message', None),\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        code=getattr(permission, 'code', None)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"/home/smarter_user/venv/lib/python3.13/site-packages/rest_framework/views.py\", line 180, in permission_denied\n    raise exceptions.NotAuthenticated()\nrest_framework.exceptions.NotAuthenticated: Authentication credentials were not provided.\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/smarter_user/smarter/smarter/apps/api/v1/cli/views/base.py\", line 510, in dispatch\n    response = super().dispatch(request, *args, **kwargs)\n  File \"/home/smarter_user/venv/lib/python3.13/site-packages/rest_framework/views.py\", line 515, in dispatch\n    response = self.handle_exception(exc)\n  File \"/home/smarter_user/venv/lib/python3.13/site-packages/rest_framework/views.py\", line 475, in handle_exception\n    self.raise_uncaught_exception(exc)\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^\n  File \"/home/smarter_user/venv/lib/python3.13/site-packages/rest_framework/views.py\", line 486, in raise_uncaught_exception\n    raise exc\n  File \"/home/smarter_user/venv/lib/python3.13/site-packages/rest_framework/views.py\", line 503, in dispatch\n    self.initial(request, *args, **kwargs)\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/smarter_user/smarter/smarter/apps/api/v1/cli/views/base.py\", line 715, in initial\n    raise SmarterAPIV1CLIViewErrorNotAuthenticated(\n        \"Smarter api v1 command-line interface error: authentication failed\"\n    ) from e\nsmarter.apps.api.v1.cli.views.base.SmarterAPIV1CLIViewErrorNotAuthenticated: Smarter api v1 command-line interface error: not authenticated: Smarter api v1 command-line interface error: authentication failed\n",
+        "description": "Smarter api v1 command-line interface error: authentication failed",
+        "status": "403",
+        "args": "url=http://localhost:9357/api/v1/cli/apply/",
+        "cause": "Python Exception",
+        "context": "thing=None, command=apply"
+    },
+    "api": "smarter.sh/v1",
+    "thing": "None",
+    "metadata": {
+        "command": "apply"
+    }
+}

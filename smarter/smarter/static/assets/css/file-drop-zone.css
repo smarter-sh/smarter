@@ -16,12 +16,25 @@
 
 /* Immediately after file is dropped (animation) */
 .drop-zone--dropped {
-  animation: drop-received 0.6s;
+  animation: drop-received 1.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 @keyframes drop-received {
-  0% { box-shadow: 0 0 0px #28a74544; }
-  40% { box-shadow: 0 0 24px #28a74588; background: #eaffea; }
-  100% { box-shadow: 0 0 0px #28a74544; background: #fafafa; }
+  0% {
+    box-shadow: 0 0 0px #28a745cc;
+    background: #d4f8d4;
+  }
+  30% {
+    box-shadow: 0 0 32px #28a745ee;
+    background: #7ff57f;
+  }
+  80% {
+    box-shadow: 0 0 16px #28a745cc;
+    background: #d4f8d4;
+  }
+  100% {
+    box-shadow: 0 0 0px #28a74544;
+    background: #fafafa;
+  }
 }
 
 /* On successful apply */

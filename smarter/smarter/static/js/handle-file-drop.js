@@ -1,48 +1,54 @@
-//-----------------------------------------------------------------------------
-// Handle File Drop for YAML files
-//-----------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
+  Handle File Drop for YAML files
 
-// Modal dialog logic
-function showErrorModal(httpCode, briefMsg, stackTrace) {
-  const modal = document.getElementById("error-modal");
-  document.getElementById("error-modal-code").textContent =
-    `HTTP Status: ${httpCode}`;
-  document.getElementById("error-modal-message").textContent = briefMsg;
-  document.getElementById("error-modal-trace").textContent = stackTrace || "";
-  document.getElementById("error-modal-trace").style.display = "none";
-  const toggleBtn = document.getElementById("error-modal-toggle-trace");
-  toggleBtn.textContent = "Show Stack Trace";
-  toggleBtn.onclick = function () {
-    const trace = document.getElementById("error-modal-trace");
-    if (trace.style.display === "none") {
-      trace.style.display = "block";
-      toggleBtn.textContent = "Hide Stack Trace";
-    } else {
-      trace.style.display = "none";
-      toggleBtn.textContent = "Show Stack Trace";
-    }
-  };
-  document.getElementById("error-modal-close").onclick = function () {
-    modal.style.display = "none";
-  };
-  modal.style.display = "flex";
-}
+  success response example:
+  {
+      "data": {
+          "account": {
+              "accountNumber": "3141-5926-5359"
+          },
+      },
+      "message": "SqlPlugin stackademy_sql applied successfully",
+      "api": "smarter.sh/v1",
+      "thing": "SqlPlugin",
+      "metadata": {
+          "command": "apply"
+      }
+  }
+ -----------------------------------------------------------------------------*/
 
-function injectHtmlModal() {
-  if (!document.getElementById("error-modal")) {
+function showModal(title, message, data, isError = false) {
+  if (!document.getElementById("drop-zone-modal")) {
+    const outcomeColor = isError ? "#dc3545" : "#28a745";
     const modalHtml = `
-      <div id="error-modal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;">
+      <div id="drop-zone-modal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);justify-content:center;align-items:center;">
         <div style="background:#fff;padding:24px 20px 16px 20px;border-radius:8px;max-width:500px;width:90%;box-shadow:0 2px 16px rgba(0,0,0,0.2);position:relative;">
-          <button id="error-modal-close" style="position:absolute;top:8px;right:12px;font-size:18px;background:none;border:none;cursor:pointer;">&times;</button>
-          <div style="margin-bottom:10px;font-weight:bold;font-size:18px;">Smarter Manifest Processing Error</div>
-          <div id="error-modal-code" style="font-size:14px;color:#b00;margin-bottom:6px;"></div>
-          <div id="error-modal-message" style="font-size:15px;margin-bottom:10px;"></div>
-          <button id="error-modal-toggle-trace" style="background:#eee;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:13px;margin-bottom:8px;">Show Stack Trace</button>
-          <pre id="error-modal-trace" style="display:none;max-height:200px;overflow:auto;background:#f8f8f8;padding:10px;border-radius:4px;font-size:12px;color:#333;"></pre>
+          <button id="drop-zone-modal-close" style="position:absolute;top:8px;right:12px;font-size:18px;background:none;border:none;cursor:pointer;">&times;</button>
+          <div id="drop-zone-modal-title" style="margin-bottom:10px;font-weight:bold;font-size:18px;"></div>
+          <div id="drop-zone-modal-message" style="font-size:15px;margin-bottom:10px;color:${outcomeColor};"></div>
+          <pre id="drop-zone-modal-data" style="display:none;max-height:200px;overflow:auto;background:#f8f8f8;padding:10px;border-radius:4px;font-size:12px;color:#333;"></pre>
         </div>
       </div>`;
     document.body.insertAdjacentHTML("beforeend", modalHtml);
   }
+  const modal = document.getElementById("drop-zone-modal");
+  const messageDiv = document.getElementById("drop-zone-modal-message");
+  messageDiv.textContent = message || "Unknown outcome :(";
+  messageDiv.style.color = isError ? "#dc3545" : "#28a745";
+
+  document.getElementById("drop-zone-modal-title").textContent =
+    title || "Smarter Api";
+  document.getElementById("drop-zone-modal-close").onclick = function () {
+    modal.style.display = "none";
+  };
+  if (data) {
+    const dataPre = document.getElementById("drop-zone-modal-data");
+    dataPre.textContent = JSON.stringify(data, null, 2);
+    dataPre.style.display = "block";
+  } else {
+    document.getElementById("drop-zone-modal-data").style.display = "none";
+  }
+  modal.style.display = "flex";
 }
 
 function getCookie(name) {
@@ -52,7 +58,7 @@ function getCookie(name) {
     for (let i = 0; i < cookies.length; i++) {
       const cookie = cookies[i].trim();
       // Does this cookie string begin with the name we want?
-      if (cookie.substring(0, name.length + 1) === (name + "=")) {
+      if (cookie.substring(0, name.length + 1) === name + "=") {
         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
         break;
       }
@@ -81,7 +87,7 @@ function applyManifest(overlay, yamlContent) {
   overlay.classList.add("drop-zone--dropped");
   setTimeout(() => {
     overlay.classList.remove("drop-zone--dropped");
-  }, 600); // match animation duration
+  }, 1000); // match animation duration
   const init = {
     method: "POST",
     headers: {
@@ -93,52 +99,57 @@ function applyManifest(overlay, yamlContent) {
   };
   fetch(apiApplyPath, init)
     .then(async (response) => {
+      let data = null;
+      let text = null;
+      try {
+        data = await response.json();
+        console.log("Response JSON parsed:", data);
+      } catch (e) {
+        try {
+          text = await response.text();
+          console.log("Response text parsed:", text);
+        } catch {}
+      }
+      return { response, data: data || text };
+    })
+    .then(({ response, data }) => {
       if (!response.ok) {
         overlay.classList.add("drop-zone--error");
         setTimeout(() => {
           overlay.classList.remove("drop-zone--error");
         }, 1200);
-        let stackTrace = "";
-        let briefMsg = response.statusText || "Unknown error";
-        try {
-          const data = await response.json();
-          if (data && data.error) {
-            briefMsg = data.error;
-          }
-          if (data && data.traceback) {
-            stackTrace = data.traceback;
-          }
-        } catch (e) {
-          // Try to get text if not JSON
-          try {
-            const text = await response.text();
-            stackTrace = text;
-          } catch {}
-        }
-        showErrorModal(response.status, briefMsg, stackTrace);
+        let briefMsg = data.error.description || "Unknown error";
+        console.log("Error:", data);
+        showModal("Smarter Api Error", briefMsg, data, true);
         throw new Error(briefMsg);
       }
       overlay.classList.add("drop-zone--success");
       setTimeout(() => {
         overlay.classList.remove("drop-zone--success");
-      }, 1200);
-      return response.json();
+      }, 2000);
+      return data;
     })
     .then((data) => {
-      console.log("Success:", data);
-      alert("YAML file applied successfully!");
+      if (data) {
+        console.log("Success:", data);
+        showModal(
+          "Smarter Api",
+          data.message || "Manifest applied successfully.",
+          data,
+          false,
+        );
+      }
     })
     .catch((error) => {
       // Only show modal if not already shown
       if (
-        !document.getElementById("error-modal").style.display ||
-        document.getElementById("error-modal").style.display === "none"
+        !document.getElementById("drop-zone-modal").style.display ||
+        document.getElementById("drop-zone-modal").style.display === "none"
       ) {
-        showErrorModal("N/A", error.message, error.stack || "");
+        showModal("Smarter Api Error", error.message, error.stack || "", true);
       }
       console.error("Error:", error);
     });
-
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -155,8 +166,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   console.log("File drop zone enabled:", window.dropzoneEnabled);
 
-  injectHtmlModal();
-
   window.addEventListener("dragover", function (e) {
     e.preventDefault();
     if (!overlay.classList.contains("drop-zone--hover")) {
@@ -168,7 +177,8 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("dragleave", function (e) {
     console.log("Drag leave detected");
     e.preventDefault();
-    if (e.target === overlay || e.pageX === 0 || e.pageY === 0) hideOverlay(overlay);
+    if (e.target === overlay || e.pageX === 0 || e.pageY === 0)
+      hideOverlay(overlay);
   });
 
   window.addEventListener("drop", function (e) {
