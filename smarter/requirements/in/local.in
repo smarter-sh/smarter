@@ -16,7 +16,7 @@ pip-tools==7.5.2
 # Django dev tools
 # ------------
 django-extensions==4.1                  # a collection of custom extensions for the Django Framework.
-django-debug-toolbar==6.0.0             # a configurable set of panels that display various debug information about the current request/response.
+django-debug-toolbar==6.2.0             # a configurable set of panels that display various debug information about the current request/response.
 
 
 # type annotations for packages that don't include them

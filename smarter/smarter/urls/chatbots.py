@@ -32,11 +32,6 @@ urlpatterns = [
     path("", ChatConfigView.as_view(), name="chatbot_named_config"),
     path("config/", ChatConfigView.as_view(), name="chatbot_named_config"),
     path("chat/", DefaultChatbotApiView.as_view(), name="chatbot_named_chat"),
-    #
-    # superfluous stuff that breaks the site unless it's included ...
-    # -----------
-    # path("admin/", admin.site.urls),
-    # path("", include("smarter.urls.console")),
 ]
 
 __all__ = ["urlpatterns"]
