@@ -2,7 +2,7 @@
 URLs for Smarter Api.
 """
 
-from django.contrib import admin
+# from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
@@ -10,8 +10,8 @@ urlpatterns = [
     #
     # superfluous stuff that breaks the site unless it's included ...
     # -----------
-    path("admin/", admin.site.urls),
-    path("", include("smarter.urls.console")),
+    # path("admin/", admin.site.urls),
+    # path("", include("smarter.urls.console")),
 ]
 
 __all__ = ["urlpatterns"]

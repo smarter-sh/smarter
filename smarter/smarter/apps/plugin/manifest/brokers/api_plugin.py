@@ -661,13 +661,6 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
-        if not self.user.is_staff:
-            raise SAMPluginBrokerError(
-                message="Only account admins can apply api plugin manifests.",
-                thing=self.kind,
-                command=command,
-            )
-
         if self.plugin is None:
             raise SAMBrokerError(
                 f"{self.formatted_class_name} plugin not initialized. Cannot apply manifest.",

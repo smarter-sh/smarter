@@ -1,0 +1,52 @@
+/* File Drop Zone CSS Scaffold */
+
+.drop-zone {
+  position: relative;
+  border: 2px dashed #bbb;
+  background: #fafafa;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+/* While a file is hovering over */
+.drop-zone--hover {
+  border-color: #007bff;
+  background: #e6f0ff;
+  box-shadow: 0 0 8px #007bff44;
+}
+
+/* Immediately after file is dropped (animation) */
+.drop-zone--dropped {
+  animation: drop-received 1.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes drop-received {
+  0% {
+    box-shadow: 0 0 0px #28a745cc;
+    background: #d4f8d4;
+  }
+  30% {
+    box-shadow: 0 0 32px #28a745ee;
+    background: #7ff57f;
+  }
+  80% {
+    box-shadow: 0 0 16px #28a745cc;
+    background: #d4f8d4;
+  }
+  100% {
+    box-shadow: 0 0 0px #28a74544;
+    background: #fafafa;
+  }
+}
+
+/* On successful apply */
+.drop-zone--success {
+  border-color: #28a745;
+  background: #eaffea;
+  box-shadow: 0 0 12px #28a74588;
+}
+
+/* On error */
+.drop-zone--error {
+  border-color: #dc3545;
+  background: #ffeaea;
+  box-shadow: 0 0 12px #dc354588;
+}

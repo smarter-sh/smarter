@@ -772,13 +772,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
 
-        if not self.user.is_staff:
-            raise SAMBrokerError(
-                message="Only account admins can apply sql plugin manifests.",
-                thing=self.kind,
-                command=SmarterJournalCliCommands.APPLY,
-            )
-
         if not isinstance(self.manifest, SAMSqlPlugin):
             raise SAMPluginBrokerError(
                 f"{self.formatted_class_name} {self.plugin_meta.name if self.plugin_meta else '<-- Missing Name -->'} manifest is not set",
