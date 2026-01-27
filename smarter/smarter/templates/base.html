@@ -37,7 +37,7 @@
   <meta name="twitter:image" content="https://cdn.platform.smarter.sh/cms/img/smarter_og_image.png" />
 
   {% block canonical %}
-  <link rel="canonical" href={% url 'root_home' %} />
+  <link rel="canonical" href="{% url 'root_home' %}" />
   {% endblock %}
 
   <!--begin::Fonts(mandatory for all pages)-->
@@ -51,6 +51,7 @@
   <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
   <link href="{% static 'assets/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
   <link href="{% static 'assets/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
+  <link href="{% static 'assets/css/file-drop-zone.css' %}" rel="stylesheet" type="text/css" />
   <!--end::Global Stylesheets Bundle-->
   <script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
   {% endblock %}
@@ -64,6 +65,11 @@
   data-kt-app-sidebar-enabled="true" data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-hoverable="true"
   data-kt-app-sidebar-push-header="true" data-kt-app-sidebar-push-toolbar="true" data-kt-app-sidebar-push-footer="true"
   data-kt-app-toolbar-enabled="true" class="app-default">
+
+  <div
+    id="drop-zone-overlay"
+    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;z-index: 9999; display: none; background: rgba(0,0,0,0.1); pointer-events: none;"
+  ></div>
 
   {% block body_class %}
   {% endblock %}
@@ -106,6 +112,11 @@
   <!--begin::Global Javascript Bundle(mandatory for all pages)-->
   <script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
   <script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
+  <script>
+    window.dropzoneEnabled = "{{ drop_zone.file_drop_zone_enabled }}";
+    window.apiApplyPath = "{{ drop_zone.api_apply_path }}";
+  </script>
+  <script src="{% static 'js/handle-file-drop.js' %}"></script>
   <!--end::Global Javascript Bundle-->
   <!--end::Javascript-->
   {% endblock %}

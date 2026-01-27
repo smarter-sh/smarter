@@ -542,10 +542,9 @@ def cache_results(timeout=smarter_settings.cache_expiration, logging_enabled=Tru
                 lazy_cache.set(cache_key, cache_value, timeout)
                 if logging_enabled and lazy_cache.cache_logging:
                     logger.info(
-                        "%s cache miss for %s, caching result: %s with timeout %s",
+                        "%s cache miss for %s, caching result: with timeout %s",
                         logger_prefix_red,
                         cache_key,
-                        cache_value,
                         timeout,
                     )
             return result

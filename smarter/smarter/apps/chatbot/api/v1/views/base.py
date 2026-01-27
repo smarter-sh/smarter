@@ -402,7 +402,7 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         logger.info("%s.dispatch() - chatbot=%s", self.formatted_class_name, self.chatbot)
         logger.info("%s.dispatch() - user=%s", self.formatted_class_name, request.user)
         logger.info("%s.dispatch() - method=%s", self.formatted_class_name, request.method)
-        logger.info("%s.dispatch() - body=%s", self.formatted_class_name, request.body)
+        logger.info("%s.dispatch() - body=%s", self.formatted_class_name, self.data)
         logger.info("%s.dispatch() - headers=%s", self.formatted_class_name, request.META)
 
         if not self.chatbot_helper:

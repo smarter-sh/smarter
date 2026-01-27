@@ -479,6 +479,8 @@ class SettingsDefaults:
         fernet = generate_fernet_encryption_key()
     FERNET_ENCRYPTION_KEY = SecretStr(fernet)
 
+    FILE_DROP_ZONE_ENABLED = bool_environment_variable("FILE_DROP_ZONE_ENABLED", True)
+
     GOOGLE_MAPS_API_KEY: SecretStr = SecretStr(get_env("GOOGLE_MAPS_API_KEY", is_secret=True, is_required=True))
 
     try:
@@ -2267,6 +2269,17 @@ class Settings(BaseSettings):
     :type: str
     :default: Value from ``SettingsDefaults.FERNET_ENCRYPTION_KEY``
     :raises SmarterConfigurationError: If the value is not a valid Fernet key.
+    """
+
+    file_drop_zone_enabled: bool = Field(
+        SettingsDefaults.FILE_DROP_ZONE_ENABLED,
+        description="True if the file drop zone feature is enabled based on the current environment.",
+        title="File Drop Zone Enabled",
+    )
+    """Determines if the file drop zone feature is enabled based on the current environment.
+
+    Returns:
+        bool: True if the file drop zone is enabled, False otherwise.
     """
 
     @before_field_validator("fernet_encryption_key")
