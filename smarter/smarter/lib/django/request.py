@@ -26,6 +26,7 @@ import tldextract
 import yaml
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest, QueryDict
+from django.http.request import RawPostDataException
 from rest_framework.request import Request as RestFrameworkRequest
 
 from smarter.apps.account.mixins import AccountMixin, UserType
@@ -420,6 +421,7 @@ class SmarterRequestMixin(AccountMixin):
     def smarter_request(self, request: SmarterRequestType):
         self.clear_cached_properties()
         self._smarter_request = request
+        self._data = None
         logger.debug(
             "%s.smarter_request setter - request set to: %s",
             self.request_mixin_logger_prefix,
@@ -1036,6 +1038,15 @@ class SmarterRequestMixin(AccountMixin):
         if self._data:
             return self._data
 
+        body: Union[dict, bytes, str, bytearray, None] = None
+        body_str: Union[dict, bytes, str, bytearray, None] = None
+
+        logger.debug(
+            "%s.data() - parsing request body for: %s",
+            self.request_mixin_logger_prefix,
+            self.smarter_request,
+        )
+
         if not self.smarter_request:
             logger.debug(
                 "%s.data() - request is None. Cannot parse request body.",
@@ -1046,22 +1057,61 @@ class SmarterRequestMixin(AccountMixin):
             logger.debug(
                 "%s.data() - request is not a qualified_request. Cannot parse request body: %s",
                 self.request_mixin_logger_prefix,
-                self.url,
+                self.smarter_request,
             )
             return None
-
-        body = self.smarter_request.body if hasattr(self.smarter_request, "body") else None
-        if not isinstance(body, (str, bytearray, bytes)):
+        try:
+            # plan-A is to use .data attribute if available (DRF Request)
+            # and created with our custom smarter.lib.drf.parsers.YAMLParser()
+            # which populates .data with parsed YAML or JSON.
+            body_str = self.smarter_request.data  # type: ignore
             logger.debug(
-                "%s.data() - request body is not a string or bytes. Cannot parse request body: %s",
+                "%s.data() - using .data attribute from request: %s %s",
                 self.request_mixin_logger_prefix,
-                body,
+                type(body_str),
+                body_str,
             )
-            return None
-        body_str = body.decode("utf-8").strip()
+        except AttributeError:
+            logger.debug(
+                "%s.data() - request %s has no .data attribute. Falling back to .body attribute.",
+                self.request_mixin_logger_prefix,
+                self.smarter_request,
+            )
+            try:
+                body = self.smarter_request.body
+                logger.debug(
+                    "%s.data() - read .body attribute from request: %s %s",
+                    self.request_mixin_logger_prefix,
+                    type(body),
+                    body,
+                )
+            except RawPostDataException as e:
+                logger.error(
+                    "%s.data() - failed to read request body due to RawPostDataException: %s",
+                    self.request_mixin_logger_prefix,
+                    e,
+                )
+            if not isinstance(body, (str, bytearray, bytes)):
+                logger.warning(
+                    "%s.data() - request body is not a string or bytes. Cannot parse request body: %s",
+                    self.request_mixin_logger_prefix,
+                    body,
+                )
+            try:
+                body_str = body.decode("utf-8").strip()
+            except (AttributeError, UnicodeDecodeError):
+                logger.warning(
+                    "%s.data() - request body could not be decoded as utf-8: %s", self.request_mixin_logger_prefix, body
+                )
+                body_str = body if isinstance(body, str) else None
+
         if body_str is not None:
             try:
-                self._data = json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
+                self._data = (
+                    body_str
+                    if isinstance(body_str, (dict, list))
+                    else json.loads(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
+                )
                 logger.debug(
                     "%s.data() - initialized json from request body: %s",
                     self.request_mixin_logger_prefix,
@@ -1069,7 +1119,7 @@ class SmarterRequestMixin(AccountMixin):
                 )
             except json.JSONDecodeError:
                 try:
-                    self._data = yaml.safe_load(body_str) if body_str else None
+                    self._data = yaml.safe_load(body_str) if isinstance(body_str, (str, bytearray, bytes)) else None
                     if isinstance(self._data, (dict, list)):
                         logger.debug(
                             "%s.data() - initialized json from parsed yaml request body: %s",

@@ -22,8 +22,8 @@ Endpoints
     - :class:`smarter.apps.chatbot.api.v1.views.default.DefaultChatbotApiView`
 """
 
-from django.contrib import admin
-from django.urls import include, path
+# from django.contrib import admin
+from django.urls import path
 
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.prompt.views import ChatConfigView
@@ -35,8 +35,8 @@ urlpatterns = [
     #
     # superfluous stuff that breaks the site unless it's included ...
     # -----------
-    path("admin/", admin.site.urls),
-    path("", include("smarter.urls.console")),
+    # path("admin/", admin.site.urls),
+    # path("", include("smarter.urls.console")),
 ]
 
 __all__ = ["urlpatterns"]

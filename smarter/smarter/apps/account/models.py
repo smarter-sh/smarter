@@ -143,9 +143,7 @@ def get_resolved_user(
             :class:`django.utils.functional.SimpleLazyObject`
 
     """
-    logger.info(
-        "%s.get_resolved_user() called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user)
-    )
+    logger.info("%s called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user))
     if user is None:
         return None
 

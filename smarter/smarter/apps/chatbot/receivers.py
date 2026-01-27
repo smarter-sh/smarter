@@ -307,7 +307,7 @@ def handle_chatbot_called(sender, **kwargs):
 
     request: Optional[HttpRequest] = kwargs.get("request")
     try:
-        request_data = json.loads(request.body) if request and request.body else None
+        request_data = kwargs.get("data")
         if chatbot and request_data:
             create_chatbot_request.delay(chatbot.id, request_data)
     except json.JSONDecodeError:

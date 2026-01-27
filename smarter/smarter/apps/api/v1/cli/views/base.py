@@ -8,6 +8,7 @@ from typing import Any, Optional, Type
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -35,11 +36,7 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.common.helpers.aws.exceptions import SmarterAWSError
-from smarter.common.helpers.console_helpers import (
-    formatted_text,
-    formatted_text_green,
-    formatted_text_red,
-)
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import KubernetesHelperException
 from smarter.common.utils import (
     is_authenticated_request,
@@ -129,7 +126,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     """
 
     permission_classes = (SmarterAuthenticatedPermissionClass,)
-    authentication_classes = (SmarterTokenAuthentication,)
+    authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
 
     _BrokerClass: Optional[Type[AbstractBroker]] = None
     _broker: Optional[AbstractBroker] = None
@@ -239,7 +236,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         return self._BrokerClass
 
     @property
-    def broker(self) -> AbstractBroker:
+    def broker(self) -> Optional[AbstractBroker]:
         """
         Use a loader to try to instantiate a broker. A broker is a class that
         implements the broker service pattern. It provides a service interface
@@ -247,7 +244,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         the object-specific service (create, update, get, delete, etc).
 
         :return: Broker instance for the manifest kind
-        :rtype: AbstractBroker
+        :rtype: Optional[AbstractBroker]
         """
         if not self._broker:
             BrokerClass = self.BrokerClass
@@ -281,6 +278,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     e,
                     exc_info=True,
                 )
+            # pylint: disable=broad-except
             except Exception as e:
                 logger.error(
                     "%s.broker() - unexpected error instantiating broker: %s: %s",
@@ -329,14 +327,14 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         return self._manifest_name
 
     @property
-    def manifest_kind(self) -> str:
+    def manifest_kind(self) -> Optional[str]:
         """
         The kind of the manifest. The manifest kind is used to identify the type
         of resource that the manifest is describing. The kind is used to identify
         the broker that will be used to broker the http request for the resource.
 
         :return: The kind of the manifest
-        :rtype: str
+        :rtype: Optional[str]
         """
         if not self._manifest_kind and self.manifest_data:
             self._manifest_kind = str(self.manifest_data.get("kind", None))
@@ -355,7 +353,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     "%s.manifest_kind() setting manifest kind to %s from analysis of url %s",
                     self.logger_prefix,
                     self._manifest_kind,
-                    self.url,
+                    self.smarter_request,
                 )
 
         # may or may not have a manifest kind at this point.
@@ -493,28 +491,28 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             DRF documentation on view methods and the dispatch process.
         """
         logger.debug("%s.dispatch() called with args %s and kwargs %s", self.logger_prefix, args, kwargs)
+        if not isinstance(request, Request):
+            logger.warning("%s.dispatch() - request is not an instance of DRF Request: %s", self.logger_prefix, request)
         self.smarter_request = request
         response = None
-        msg = f"{self.logger_prefix}.dispatch() - is {self.is_cli_base_api_view_ready_state} - {self.url} - {self.user_profile if self.user_profile else "Anonymous"}"
+        msg = f"{self.logger_prefix}.dispatch() - is {self.is_cli_base_api_view_ready_state} - {self.smarter_request} - {self.user_profile if self.user_profile else "Anonymous"}"
         if self.ready:
             logger.debug(msg)
         else:
             logger.warning(msg)
         try:
-            url = smarter_build_absolute_uri(request)
             logger.debug(
                 "%s.dispatch() - called for request: %s and authorization: %s",
                 self.logger_prefix,
-                url,
+                request,
                 request.headers.get("Authorization"),
             )
             response = super().dispatch(request, *args, **kwargs)
             logger.debug(
-                "%s.dispatch() - finished processing request: %s, user_profile: %s, account: %s",
+                "%s.dispatch() - finished processing request: %s, user_profile: %s",
                 self.logger_prefix,
-                url,
-                self.user_profile if self.user_profile else None,
-                self.account if self.account else None,
+                request,
+                self.user_profile,
             )
             api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
             return response
@@ -652,6 +650,17 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             kwargs,
             request.headers.get("Authorization"),
         )
+        # there are cases where the requests lifecycle begins with a WSGIRequest that is
+        # eventually wrapped into a DRF Request object. So we need to ensure that
+        # the smarter_request is always set to the DRF Request object.
+        if isinstance(request, Request) and not isinstance(self.smarter_request, Request):
+            logger.debug(
+                "%s.initial() - re-initializing smarter_request to DRF Request object: %s (was %s)",
+                self.logger_prefix,
+                request,
+                self.smarter_request,
+            )
+        self.smarter_request = request
 
         # Check if the request is authenticated. If not, raise an
         # authentication error. see SmarterTokenAuthentication for details
@@ -664,7 +673,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             logger.debug(
                 "%s.initial() - authenticated request: %s, user: %s, self.user: %s is_authenticated: %s, auth_header: %s",
                 self.logger_prefix,
-                self.url,
+                request,
                 request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
                 self.user_profile,
                 is_authenticated_request(request),
@@ -674,7 +683,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             logger.warning(
                 "%s.initial() - authenticated failed for url: %s, user: %s, self.user: %s is_authenticated: %s",
                 self.logger_prefix,
-                self.url,
+                request,
                 request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
                 self.user_profile,
                 is_authenticated_request(request),
@@ -684,7 +693,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 logger.debug(
                     "%s.initial() - internal api request. Skipping authentication: %s",
                     self.logger_prefix,
-                    self.url,
+                    request,
                 )
             else:
                 # regardless of the authentication error, we still need to
@@ -734,11 +743,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # This is used to pass additional parameters to the child view's post method.
         self._manifest_name = self.params.get("name", None) if self.params else kwargs.get("name", None)
 
-        user_agent = request.headers.get("User-Agent", "")
-        if "Go-http-client" not in user_agent:
-            logger.warning(
-                "%s.initial() The User-Agent is not a Go lang application: %s", self.logger_prefix, user_agent
-            )
+        user_agent = request.headers.get("User-Agent", "unknown")
+        logger.debug("%s.initial() processing request from %s user-agent.", self.logger_prefix, user_agent)
 
         kind = kwargs.get("kind", None)
         if kind:

@@ -340,7 +340,7 @@ See:
 - `React Integration <https://docs.smarter.sh/en/latest/developers/architecture/lib/react-integration.html#django-react-integration>`__
 """
 
-SESSION_COOKIE_AGE = CSRF_COOKIE_AGE
+SESSION_COOKIE_AGE = 1209600 * 2
 """
 The age of the session cookie, in seconds. Default is 1209600 (2 weeks). Here it is set to match
 the CSRF cookie age. This is a placeholder.
@@ -766,8 +766,8 @@ TEMPLATES = [
                 "smarter.apps.dashboard.context_processors.prompt_list_context",
                 "smarter.apps.dashboard.context_processors.prompt_chatapp_workbench_context",
                 "smarter.apps.dashboard.context_processors.file_drop_zone",
-                "social_django.context_processors.backends",
-                "social_django.context_processors.login_redirect",
+                # "social_django.context_processors.backends",
+                # "social_django.context_processors.login_redirect",
                 "wagtail.contrib.settings.context_processors.settings",
             ],
         },
