@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.109](https://github.com/smarter-sh/smarter/compare/v0.13.108...v0.13.109) (2026-01-28)
+
+### Bug Fixes
+
+* restyle the workbench listview ([cf23fe9](https://github.com/smarter-sh/smarter/commit/cf23fe969cd641ebdefccfb1dd11fb7efb90e37a))
+
 ## [0.13.108](https://github.com/smarter-sh/smarter/compare/v0.13.107...v0.13.108) (2026-01-28)
 
 ### Bug Fixes
