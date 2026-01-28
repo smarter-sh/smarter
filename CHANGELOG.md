@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.106](https://github.com/smarter-sh/smarter/compare/v0.13.105...v0.13.106) (2026-01-28)
+
+### Bug Fixes
+
+* enable waffle flags by default. re-add wagtail urls ([f202bd5](https://github.com/smarter-sh/smarter/commit/f202bd578f3f53df2fe65789fe7197bf13aa67e6))
+
 ## [0.13.105](https://github.com/smarter-sh/smarter/compare/v0.13.104...v0.13.105) (2026-01-28)
 
 ### Bug Fixes
