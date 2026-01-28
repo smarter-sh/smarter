@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.107](https://github.com/smarter-sh/smarter/compare/v0.13.106...v0.13.107) (2026-01-28)
+
+### Bug Fixes
+
+* social auth user experience improvements ([4468213](https://github.com/smarter-sh/smarter/commit/44682132af827ae3e1689185a27b360528762f5f))
+
 ## [0.13.106](https://github.com/smarter-sh/smarter/compare/v0.13.105...v0.13.106) (2026-01-28)
 
 ### Bug Fixes
