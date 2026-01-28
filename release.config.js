@@ -51,6 +51,7 @@ module.exports = {
           ".github/actions/deploy/action.yml",
           "helm/charts/smarter/values.yaml",
           "helm/charts/smarter/Chart.yaml",
+          "helm/charts/smarter/README.md",
           "smarter/smarter/__version__.py",
           "smarter/requirements/**/*",
           "pyproject.toml",
