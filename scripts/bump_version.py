@@ -127,6 +127,13 @@ def main():
         f"\\g<1>{new_version}",
     )
 
+    # Update --version flag in Quickstart section of helm/charts/smarter/README.md
+    update_version_in_file(
+        "helm/charts/smarter/README.md",
+        r"(^\s*--version\s+)(\d+\.\d+\.\d+)(\s*\\)",
+        f"\\g<1>{new_version}\\g<3>",
+    )
+
     print(f"Updated helm/charts/smarter/Chart.yaml to {new_version}")
 
 

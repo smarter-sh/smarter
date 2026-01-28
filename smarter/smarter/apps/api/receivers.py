@@ -45,27 +45,28 @@ def handle_api_request_initiated(sender, instance: CliBaseApiView, request: WSGI
 def handle_api_request_completed(sender, instance: CliBaseApiView, request: WSGIRequest, response, **kwargs):
     """Handle API request completed signal."""
     json_content: Optional[dict]
+    content = response.content if hasattr(response, "content") else None
     try:
-        if isinstance(response.content, dict):
-            json_content = response.content
-        elif isinstance(response.content, str):
-            json_content = json.loads(response.content)
+        if isinstance(content, dict):
+            json_content = content
+        elif isinstance(content, str):
+            json_content = json.loads(content)
         else:
             logger.warning(
-                "handle_api_request_completed: recasting json response.content %s %s failed. attempting to load as json",
-                type(response.content),
-                response.content,
+                "handle_api_request_completed: recasting json content %s %s failed. attempting to load as json",
+                type(content),
+                content,
             )
-            json_content = json.loads(response.content)
+            json_content = json.loads(content) if content else None
     # pylint: disable=W0718
     except Exception:
         logger.warning(
-            "handle_api_request_completed: recasting json response.content %s %s failed. attempting to decode as utf-8",
-            type(response.content),
-            response.content,
+            "handle_api_request_completed: recasting json content %s %s failed. attempting to decode as utf-8",
+            type(content),
+            content,
         )
         try:
-            json_content = response.content.decode("utf-8", errors="replace")
+            json_content = content.decode("utf-8", errors="replace")
             json_content = json.loads(json_content) if isinstance(json_content, str) else json_content
         except Exception:
             json_content = None
