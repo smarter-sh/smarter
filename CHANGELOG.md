@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.105](https://github.com/smarter-sh/smarter/compare/v0.13.104...v0.13.105) (2026-01-28)
+
+### Bug Fixes
+
+* django-csrftoken should contain the csrf token value, not the cookie name. ([7c51ffb](https://github.com/smarter-sh/smarter/commit/7c51ffb25fd4685ca490c251655d73176e0df320))
+
 ## [0.13.104](https://github.com/smarter-sh/smarter/compare/v0.13.103...v0.13.104) (2026-01-28)
 
 ### Bug Fixes
