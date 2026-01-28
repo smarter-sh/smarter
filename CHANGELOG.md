@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.104](https://github.com/smarter-sh/smarter/compare/v0.13.103...v0.13.104) (2026-01-28)
+
+### Bug Fixes
+
+* set ingressClassName to 'default' and remove deprecated annotation ([bfdb4a8](https://github.com/smarter-sh/smarter/commit/bfdb4a8db1c5270acccc2511d38c9c0d0b654180))
+
 ## [0.13.103](https://github.com/smarter-sh/smarter/compare/v0.13.102...v0.13.103) (2026-01-27)
 
 ### Bug Fixes
