@@ -12,6 +12,7 @@ from social_django.middleware import SocialAuthExceptionMiddleware
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.urls import AccountNamedUrls
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.common.helpers.console_helpers import formatted_text
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,7 @@ def create_user(strategy, details, backend, *args, user=None, **kwargs):
     fields["is_active"] = False  # Ensure the user is inactive upon creation
     user = strategy.create_user(**fields)
     logger.info("%s.create_user() Created new user: %s", logger_prefix, user)
+    UserProfile.objects.create(user=user, account=smarter_cached_objects.smarter_account)
     return {
         "is_new": True,
         "user": user,
@@ -121,6 +123,8 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
     if not profile_image_url:
         return None
 
+    logger.debug("%s.user_details() Found profile image URL: %s", logger_prefix, profile_image_url)
+
     # Validate the profile image URL by making a HEAD request
     try:
         response = requests.head(profile_image_url, timeout=1)
@@ -132,6 +136,7 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
                 response.status_code,
             )
             return None
+        logger.debug("%s.user_details() Successfully validated profile image URL: %s", logger_prefix, profile_image_url)
     except requests.RequestException as e:
         logger.error(
             "%s.user_details() Exception occurred while fetching profile image from URL: %s. Exception: %s",
@@ -143,12 +148,14 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
 
     try:
         user_profile = UserProfile.objects.get(user=user)
-        if user_profile.profile_image_url != profile_image_url:
-            user_profile.profile_image_url = profile_image_url
-            user_profile.save()
-            logger.info("%s.user_details() Updated profile image URL for user: %s", logger_prefix, user)
     except UserProfile.DoesNotExist:
+        user_profile = UserProfile.objects.create(user=user, account=smarter_cached_objects.smarter_account)
         logger.error("%s.user_details() No UserProfile found for user: %s. This is a bug.", logger_prefix, user)
+
+    if user_profile.profile_image_url is None or user_profile.profile_image_url != profile_image_url:
+        user_profile.profile_image_url = profile_image_url
+        user_profile.save()
+        logger.info("%s.user_details() Updated profile image URL for user: %s", logger_prefix, user)
 
 
 def redirect_inactive_account(strategy, details, *args, user=None, **kwargs):
