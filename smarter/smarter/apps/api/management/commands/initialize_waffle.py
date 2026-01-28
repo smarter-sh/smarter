@@ -50,7 +50,7 @@ class Command(SmarterCommand):
         def verify_switch(switch_name):
             """Initialize a switch."""
             if not Switch.objects.filter(name=switch_name).exists():
-                call_command("waffle_switch", switch_name, "off", "--create")
+                call_command("waffle_switch", switch_name, "on", "--create")
             else:
                 print(f"Verified switch {switch_name}")
 
