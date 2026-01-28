@@ -3,11 +3,10 @@ kind: Ingress
 metadata:
   annotations:
     cert-manager.io/cluster-issuer: ${cluster_issuer}
-    kubernetes.io/ingress.class: nginx
   name: ${domain}
   namespace: ${environment_namespace}
 spec:
-  ingressClassName: nginx
+  ingressClassName: default
   rules:
     - host: ${domain}
       http:
