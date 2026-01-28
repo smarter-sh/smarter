@@ -143,7 +143,7 @@ def get_resolved_user(
             :class:`django.utils.functional.SimpleLazyObject`
 
     """
-    logger.info("%s called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user))
+    logger.debug("%s called for user type: %s", formatted_text(__name__) + ".get_resolved_user()", type(user))
     if user is None:
         return None
 
@@ -642,6 +642,9 @@ class UserProfile(MetaDataModel):
         related_name="user_profile",
     )
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="user_profiles")
+    profile_image_url = models.URLField(
+        blank=True, null=True, help_text="URL to the user's profile image, provided via oauth."
+    )
     is_test = models.BooleanField(
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )

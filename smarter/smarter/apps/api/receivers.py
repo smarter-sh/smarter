@@ -46,11 +46,23 @@ def handle_api_request_completed(sender, instance: CliBaseApiView, request: WSGI
     """Handle API request completed signal."""
     json_content: Optional[dict]
     try:
-        json_content = json.loads(response.content)
+        if isinstance(response.content, dict):
+            json_content = response.content
+        elif isinstance(response.content, str):
+            json_content = json.loads(response.content)
+        else:
+            logger.warning(
+                "handle_api_request_completed: recasting json response.content %s %s failed. attempting to load as json",
+                type(response.content),
+                response.content,
+            )
+            json_content = json.loads(response.content)
     # pylint: disable=W0718
     except Exception:
         logger.warning(
-            "handle_api_request_completed: recasting json response.content failed. attempting to decode as utf-8"
+            "handle_api_request_completed: recasting json response.content %s %s failed. attempting to decode as utf-8",
+            type(response.content),
+            response.content,
         )
         try:
             json_content = response.content.decode("utf-8", errors="replace")

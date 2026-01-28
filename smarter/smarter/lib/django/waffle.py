@@ -174,6 +174,7 @@ class SmarterWaffleSwitches:
         """Return all switches."""
         return [
             self.ACCOUNT_LOGGING,
+            self.MULTITENANT_AUTHENTICATION,
             self.API_LOGGING,
             self.CACHE_LOGGING,
             self.PROMPT_LOGGING,

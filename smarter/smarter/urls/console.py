@@ -94,8 +94,8 @@ urlpatterns = [
     # root paths
     # -----------------------------------
     path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
+    path("admin/docs/", include("django.contrib.admindocs.urls")),
     path("admin/", admin.site.urls, name="django_admin"),
-    # path("admin/docs/", include("django.contrib.admindocs.urls")),
     path("cms/", include("smarter.apps.cms.urls", namespace=None)),
     path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
     path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
