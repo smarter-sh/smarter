@@ -15,6 +15,7 @@ from .views.authentication import (
     AccountRegisterView,
     LoginView,
     LogoutView,
+    SocialAuthAlreadyAssociatedView,
 )
 from .views.dashboard.api_keys import APIKeyListView
 from .views.dashboard.users import UsersView, UserView
@@ -43,6 +44,7 @@ class AccountNamedUrls:
     namespace = namespace
 
     API_KEYS_LIST = "api_keys_list"
+    ACCOUNT_ALREADY_ASSOCIATED = "account_already_associated"
     ACCOUNT_LOGIN = "account_login"
     ACCOUNT_LOGOUT = "account_logout"
     ACCOUNT_REGISTER = "account_register"
@@ -59,6 +61,11 @@ class AccountNamedUrls:
 
 app_name = namespace
 urlpatterns = [
+    path(
+        "already-associated/",
+        SocialAuthAlreadyAssociatedView.as_view(),
+        name=AccountNamedUrls.ACCOUNT_ALREADY_ASSOCIATED,
+    ),
     path(
         "",
         RedirectView.as_view(url="/dashboard/account/dashboard/", permanent=False),
