@@ -48,6 +48,8 @@ module.exports = {
       {
         assets: [
           "CHANGELOG.md",
+          ".github/actions/deploy/action.yml",
+          "helm/charts/smarter/values.yaml",
           "helm/charts/smarter/Chart.yaml",
           "smarter/smarter/__version__.py",
           "smarter/requirements/**/*",
