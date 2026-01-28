@@ -7,7 +7,7 @@ from functools import cached_property
 from typing import Any, List, Optional, Type
 from urllib.parse import ParseResult, urljoin, urlparse
 
-from django.core.exceptions import MultipleObjectsReturned, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.http import HttpRequest
 from django.urls import reverse
@@ -27,6 +27,7 @@ from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
+from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import (
@@ -495,29 +496,70 @@ class ChatBot(MetaDataWithOwnershipModel):
     @property
     def rfc1034_compliant_name(self) -> str:
         """
-        Returns a RFC 1034 compliant name for the ChatBot.
+        Returns a RFC 1034 compliant name for the ChatBot. This name is used
+        in the hostname of the ChatBot's default and custom URLs. The name
+        is constructed by combining the ChatBot's name and the username of
+        the associated user profile, separated by a dot. The resulting name
+        adheres to the following rules:
 
         - lower case
-        - alphanumeric characters and hyphens only
+        - alphanumeric characters and hyphens only [a-z0-9-]
         - starts and ends with an alphanumeric character
         - max length of 63 characters
+        - no consecutive hyphens
+        - no leading or trailing hyphens
+        - no underscores or special characters
+        - no spaces
+        - no dots except for separating the ChatBot name and username
+        - no more than one dot
+
+        Examples:
+
+        - For a ChatBot with name "example" and associated user profile "adminuser",
+            that IS the account admin, the resulting RFC 1034 compliant name
+            would be "example"
+
+        - For a ChatBot with name "example" and associated user profile "user123",
+            that is NOT the account admin, the resulting RFC 1034 compliant name
+            would be "example.user123"
 
         :returns: RFC 1034 compliant name
         :rtype: str
         """
-        return rfc1034_compliant_str(self.name)
+        user_profile: UserProfile = self.user_profile
+        admin_user = get_cached_admin_user_for_account(user_profile.account)
+        if user_profile.user == admin_user:
+            raw_name = f"{self.name}"
+        else:
+            raw_name = f"{self.name}.{user_profile.user.username}"
+        return rfc1034_compliant_str(raw_name)
 
     @property
     def default_system_role_enhanced(self):
         """
         prepends a date/time string to the default_system_role
 
-        example: "2024-06-01 12:00:00 System: You are a helpful assistant."
-
+        Example: "2024-06-01 12:00:00 System: You are a helpful assistant."
         :returns: enhanced system role string
         :rtype: str
         """
         return f"{get_date_time_string()}{self.default_system_role}"
+
+    @property
+    def base_default_host(self):
+        """
+        The base default hostname for the ChatBot. This is the part of the hostname
+        that comes after the RFC 1034 compliant name. It includes the account number
+        and the environment API domain.
+
+        Example:
+            For a ChatBot associated with an account number "1234-5678-9012"
+            and environment API domain "alpha.api.example.com", the resulting
+            base default host would be:
+            .1234-5678-9012.alpha.api.example.com
+        """
+        user_profile: UserProfile = self.user_profile
+        return f".{user_profile.account.account_number}.{smarter_settings.environment_api_domain}"
 
     @property
     def default_host(self):
@@ -534,7 +576,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         :returns: default hostname
         :rtype: str
         """
-        domain = f"{self.rfc1034_compliant_name}.{self.user_profile.account.account_number}.{smarter_settings.environment_api_domain}"
+        domain = f"{self.rfc1034_compliant_name}{self.base_default_host}"
         SmarterValidator.validate_domain(domain)
         return domain
 
@@ -1880,6 +1922,46 @@ class ChatBotHelper(SmarterRequestMixin):
             chatbot_helper_logger.debug("@chatbot.setter cleared self.chatbot_id and self.name because chatbot is None")
         if hasattr(self, "is_chatbothelper_ready"):
             del self.is_chatbothelper_ready
+
+    @cached_property
+    def provider(self) -> Optional[Provider]:
+        """
+        Returns the Provider associated with the ChatBot.
+
+        :returns: The Provider instance, or ``None`` if not found.
+        :rtype: Optional[Provider]
+        """
+        if not self.chatbot:
+            return None
+        try:
+            return Provider.objects.get(name=self.chatbot.provider, user_profile__account=self.account)
+        except Provider.DoesNotExist:
+            return None
+
+    @cached_property
+    def chatbot_plugins_list(self) -> list[ChatBotPlugin]:
+        """
+        Returns a list of ChatBotPlugin instances associated with the ChatBot.
+
+        :returns: A list of ChatBotPlugin instances.
+        :rtype: list[ChatBotPlugin]
+        """
+        if not self.chatbot:
+            return []
+        return list(ChatBotPlugin.objects.filter(chatbot=self.chatbot))
+
+    @cached_property
+    def chatbot_plugins_list_str(self) -> str:
+        """
+        Returns a comma-separated string of ChatBotPlugin names associated with the ChatBot.
+
+        :returns: A comma-separated string of ChatBotPlugin names.
+        :rtype: str
+        """
+        plugins = self.chatbot_plugins_list
+        return ", ".join(
+            str(plugin.plugin_meta.name) + " (" + str(plugin.plugin_meta.user_profile) + ")" for plugin in plugins
+        )
 
     @property
     def is_custom_domain(self) -> bool:

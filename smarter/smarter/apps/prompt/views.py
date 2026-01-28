@@ -790,8 +790,27 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
             return response
 
         self.chatbot_helpers = get_cached_chatbots_for_user_profile(self.user_profile.id)
+
+        user_chatbots = [
+            chatbot_helper
+            for chatbot_helper in self.chatbot_helpers
+            if chatbot_helper.chatbot.user_profile == self.user_profile
+        ]
+        shared_chatbots = [
+            chatbot_helper
+            for chatbot_helper in self.chatbot_helpers
+            if chatbot_helper.chatbot.user_profile != self.user_profile
+        ]
+
         smarter_admin = get_cached_smarter_admin_user_profile()
-        context = {"prompt_list": {"smarter_admin": smarter_admin, "chatbot_helpers": self.chatbot_helpers}}
+        context = {
+            "prompt_list": {
+                "smarter_admin": smarter_admin,
+                "user_chatbots": user_chatbots,
+                "user_chatbots_count": len(user_chatbots),
+                "shared_chatbots": shared_chatbots,
+            }
+        }
         logger.debug(
             "%s.dispatch() rendering template %s with context: %s",
             self.formatted_class_name,
