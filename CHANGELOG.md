@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.108](https://github.com/smarter-sh/smarter/compare/v0.13.107...v0.13.108) (2026-01-28)
+
+### Bug Fixes
+
+* place profile image if it exists ([5132af4](https://github.com/smarter-sh/smarter/commit/5132af438ce9d73b11493b33bddd8433f84d64ba))
+
 ## [0.13.107](https://github.com/smarter-sh/smarter/compare/v0.13.106...v0.13.107) (2026-01-28)
 
 ### Bug Fixes
