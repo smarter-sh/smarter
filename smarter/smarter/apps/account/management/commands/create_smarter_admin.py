@@ -77,20 +77,15 @@ class Command(SmarterCommand):
                 msg=f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}"
             )
 
-        try:
-            account_contact = AccountContact.objects.get(
-                account=account,
-                is_primary=True,
-            )
-        except AccountContact.DoesNotExist:
-            account_contact = AccountContact(
-                account=account,
-                first_name="Smarter",
-                last_name="Admin",
-                email=SMARTER_CUSTOMER_SUPPORT_EMAIL,
-                phone=SMARTER_CUSTOMER_SUPPORT_PHONE,
-                is_primary=True,
-            )
+        account_contact, created = AccountContact.objects.get_or_create(
+            account=account,
+            is_primary=True,
+        )
+        if created:
+            account_contact.first_name = "Smarter"
+            account_contact.last_name = "Admin"
+            account_contact.email = SMARTER_CUSTOMER_SUPPORT_EMAIL
+            account_contact.phone = SMARTER_CUSTOMER_SUPPORT_PHONE
             account_contact.save()
             self.handle_completed_success(
                 msg=f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
