@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.110](https://github.com/smarter-sh/smarter/compare/v0.13.109...v0.13.110) (2026-01-29)
+
+### Bug Fixes
+
+* history in ChatConfigView ([28bbbc2](https://github.com/smarter-sh/smarter/commit/28bbbc286e627e49c835e7f1f62a3fcc3d3900a9))
+
 ## [0.13.109](https://github.com/smarter-sh/smarter/compare/v0.13.108...v0.13.109) (2026-01-28)
 
 ### Bug Fixes
