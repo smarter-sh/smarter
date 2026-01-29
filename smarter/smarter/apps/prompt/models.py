@@ -228,6 +228,9 @@ class ChatHelper(SmarterRequestMixin):
 
     _chat: Optional[Chat] = None
     _chatbot: Optional[ChatBot] = None
+    _chat_tool_call: Optional[Union[models.QuerySet, list]] = None
+    _chat_plugin_usage: Optional[Union[models.QuerySet, list]] = None
+    _history: Optional[dict] = None
 
     def __init__(
         self, request: HttpRequest, session_key: Optional[str], *args, chatbot: Optional[ChatBot] = None, **kwargs
@@ -247,7 +250,7 @@ class ChatHelper(SmarterRequestMixin):
         :raises SmarterValueError: If neither a session key nor a ChatBot instance is provided.
         :raises SmarterConfigurationError: If there is an error creating a new Chat object.
         """
-        logger.info(
+        logger.debug(
             "%s.__init__() - received request: %s session_key: %s, chatbot: %s",
             self.formatted_class_name,
             self.smarter_build_absolute_uri(request),
@@ -259,6 +262,9 @@ class ChatHelper(SmarterRequestMixin):
         super().__init__(request, session_key=session_key, **kwargs)
         self._chat = None
         self._chatbot = chatbot
+        self._chat_tool_call = None
+        self._chat_plugin_usage = None
+        self._history = None
 
         if not session_key and not chatbot:
             raise SmarterValueError(
@@ -266,8 +272,8 @@ class ChatHelper(SmarterRequestMixin):
             )
 
         if chatbot:
-            logger.info("%s.__init__() received ChatBot instance: %s", self.formatted_class_name, chatbot)
-            logger.info(
+            logger.debug("%s.__init__() received ChatBot instance: %s", self.formatted_class_name, chatbot)
+            logger.debug(
                 "%s.__init__() - reinitializing account from chatbot.account: %s",
                 self.formatted_class_name,
                 self.account,
@@ -276,16 +282,16 @@ class ChatHelper(SmarterRequestMixin):
 
         if session_key:
             self._session_key = session_key
-            logger.info(
+            logger.debug(
                 "%s.__init__() - setting session_key to %s from session_key parameter",
                 self.formatted_class_name,
                 self._session_key,
             )
         if self.session_key:
-            logger.info("%s.__init__() received session_key: %s", self.formatted_class_name, session_key)
+            logger.debug("%s.__init__() received session_key: %s", self.formatted_class_name, session_key)
             self._chat = self.get_cached_chat()
 
-        logger.info(
+        logger.debug(
             "%s.__init__() - %s with session_key: %s, chat: %s",
             self.formatted_class_name,
             "is ready" if self.ready else "is not ready",
@@ -385,7 +391,7 @@ class ChatHelper(SmarterRequestMixin):
             return self._chatbot
         self._chatbot = get_cached_chatbot_by_request(request=self.smarter_request)
 
-    @cached_property
+    @property
     def chat_history(self) -> Union[models.QuerySet, list]:
         """
         Get the most recent chat history for the current chat session.
@@ -396,7 +402,7 @@ class ChatHelper(SmarterRequestMixin):
         rec = ChatHistory.objects.filter(chat=self.chat).order_by("-created_at").first()
         return rec.chat_history if rec else []
 
-    @cached_property
+    @property
     def chat_tool_call(self) -> Union[models.QuerySet, list]:
         """
         Get the most recent chat tool call history for the current chat session.
@@ -404,10 +410,12 @@ class ChatHelper(SmarterRequestMixin):
         :returns: A queryset of ChatToolCall instances for the current chat session, ordered by creation date.
         :rtype: Union[models.QuerySet, list]
         """
-        recs = ChatToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
-        return recs
+        if self._chat_tool_call:
+            return self._chat_tool_call
+        self._chat_tool_call = ChatToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
+        return self._chat_tool_call
 
-    @cached_property
+    @property
     def chat_plugin_usage(self) -> Union[models.QuerySet, list]:
         """
         Get the most recent chat plugin usage history for the current chat session.
@@ -415,10 +423,12 @@ class ChatHelper(SmarterRequestMixin):
         :returns: A queryset of ChatPluginUsage instances for the current chat session, ordered by creation date.
         :rtype: Union[models.QuerySet, list]
         """
-        recs = ChatPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
-        return recs
+        if self._chat_plugin_usage:
+            return self._chat_plugin_usage
+        self._chat_plugin_usage = ChatPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
+        return self._chat_plugin_usage
 
-    @cached_property
+    @property
     def history(self) -> dict:
         """
         Serialize the most recent logged history output for the chat session.
@@ -426,10 +436,12 @@ class ChatHelper(SmarterRequestMixin):
         :returns: A dictionary containing serialized chat, chat history, tool calls, and plugin usage.
         :rtype: dict
         """
+        if self._history:
+            return self._history
         chat_serializer = ChatSerializer(self.chat)
         chat_tool_call_serializer = ChatToolCallSerializer(self.chat_tool_call, many=True)
         chat_plugin_usage_serializer = ChatPluginUsageSerializer(self.chat_plugin_usage, many=True)
-        return {
+        self._history = {
             "chat": chat_serializer.data,
             "chat_history": self.chat_history,
             "chat_tool_call_history": chat_tool_call_serializer.data,
@@ -437,18 +449,7 @@ class ChatHelper(SmarterRequestMixin):
             # these two will be added upstream.
             "chatbot_request_history": None,  # ChatBotRequests
         }
-
-    @cached_property
-    def unique_client_string(self):
-        """
-        Generate a unique client string for the chat session.
-
-        :returns: A unique string combining account number, URL, user agent, and IP address.
-        :rtype: str
-        """
-        if not self.account:
-            return f"{self.url}{self.user_agent}{self.ip_address}"
-        return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
+        return self._history
 
     def get_cached_chat(self) -> Optional[Chat]:
         """
@@ -468,7 +469,7 @@ class ChatHelper(SmarterRequestMixin):
 
         chat: Chat = cache.get(self.session_key)  # type: ignore[assignment]
         if chat:
-            logger.info(
+            logger.debug(
                 "%s - retrieved cached Chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
             )
             return chat
@@ -476,7 +477,7 @@ class ChatHelper(SmarterRequestMixin):
         if self.session_key:
             try:
                 chat = Chat.objects.get(session_key=self.session_key)
-                logger.info(
+                logger.debug(
                     "%s - retrieved Chat instance: %s session_key: %s",
                     self.formatted_class_name,
                     chat,
@@ -509,7 +510,7 @@ class ChatHelper(SmarterRequestMixin):
 
         cache.set(key=self.session_key, value=chat, timeout=smarter_settings.chat_cache_expiration or 300)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.info(
+            logger.debug(
                 "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
             )
 
