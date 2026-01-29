@@ -441,7 +441,9 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                 logger.info("%s.dispatch(): chat_helper=%s", self.formatted_class_name, self.chat_helper)
 
         if self.chatbot_helper.is_chatbot and self.chat_helper:
-            chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
+            chatbot_called.send(
+                sender=self.__class__, chatbot=self.chatbot, request=request, data=self.data, args=args, kwargs=kwargs
+            )
 
         return super().dispatch(request, *args, **kwargs)
 
