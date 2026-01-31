@@ -75,3 +75,4 @@ drf-yasg==1.21.10                       # Swagger API documentation
 lxml==6.0.0                             # parser for Wagtail page compression
 markdown==3.8                           # Markdown reader/parser
 whitenoise==6.9.0                       # static file serving
+pillow==11.3.0                          # for provider.Provider.logo:
