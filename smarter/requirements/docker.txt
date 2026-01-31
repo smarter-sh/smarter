@@ -264,6 +264,8 @@ pandas==2.3.2
     # via -r smarter/requirements/in/base.in
 paramiko==4.0.0
     # via -r smarter/requirements/in/base.in
+pillow==11.3.0
+    # via -r smarter/requirements/in/base.in
 platformdirs==4.4.0
     # via requests-cache
 prompt-toolkit==3.0.52
