@@ -3,8 +3,8 @@ Smarter Web Dashboard
 
 The web console principally exists in order to provide access to `Django Admin <https://docs.djangoproject.com/en/6.0/ref/contrib/admin/>`__
 and to host the Prompt Engineer Workbench. However, the Smarter Framework also includes a
-customizable dashboard application that you can use in conjunction with Wagtail to
-a highly personalized experience for your users.
+customizable dashboard application that you can use to create a highly personalized
+experience for your users.
 
 
 .. raw:: html

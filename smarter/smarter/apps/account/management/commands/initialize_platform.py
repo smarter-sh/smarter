@@ -39,7 +39,6 @@ class Command(SmarterCommand):
 
         1. Create an admin user with the provided username, email, and password.
         2. Create example accounts and users.
-        3. Initialize Waffle and Wagtail.
         4. Verify DNS configuration.
         5. Load example projects from GitHub.
         6. Add plugin examples.
@@ -80,7 +79,6 @@ class Command(SmarterCommand):
         # Initialize Smarter platform components.
         # ---------------------------------------------------------------------
         call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
-        call_command("initialize_wagtail")  # Initialize prebuilt Wagtail static page content for Docs area
         call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
         call_command(
             "verify_dns_configuration"
