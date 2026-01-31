@@ -22,7 +22,7 @@ from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST, SmarterEnviron
 from smarter.common.exceptions import SmarterException
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import json
-from smarter.lib.django.view_helpers import SmarterWebHtmlView
+from smarter.lib.django.view_helpers import SmarterAuthenticatedWebView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ class DocsError(SmarterException):
 # ------------------------------------------------------------------------------
 # Public Access Views
 # ------------------------------------------------------------------------------
-class DocsBaseView(SmarterWebHtmlView):
+class DocsBaseView(SmarterAuthenticatedWebView):
     """JSON Schema base view"""
 
     template_path: Optional[str] = None
@@ -109,10 +109,7 @@ class DocsBaseView(SmarterWebHtmlView):
         return json_response
 
     def dispatch(self, request: "HttpRequest", *args, **kwargs) -> HttpResponse:
-        self.context = {
-            "og_url": self.smarter_build_absolute_uri(request),
-            "canonical": request.path,
-        }
+        self.context = {}
 
         return super().dispatch(request, *args, **kwargs)  # type: ignore[return]
 
@@ -120,7 +117,7 @@ class DocsBaseView(SmarterWebHtmlView):
 # ------------------------------------------------------------------------------
 # Public Access Base Views
 # ------------------------------------------------------------------------------
-class TxtBaseView(SmarterWebHtmlView):
+class TxtBaseView(SmarterAuthenticatedWebView):
     """Text base view"""
 
     template_path = "docs/txt_file.html"
@@ -144,7 +141,7 @@ class TxtBaseView(SmarterWebHtmlView):
         return render(request, self.template_path, context=context)
 
 
-class MarkdownBaseView(SmarterWebHtmlView):
+class MarkdownBaseView(SmarterAuthenticatedWebView):
     """Markdown base view"""
 
     template_path = "docs/markdown.html"

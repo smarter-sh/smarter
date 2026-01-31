@@ -29,7 +29,6 @@ leveraging the strengths of each to provide a robust and flexible foundation for
    smarter-framework/smtp
    smarter-framework/smarter-api
    smarter-framework/smarter-caching
-   smarter-framework/smarter-cms
    smarter-framework/smarter-cli
    smarter-framework/smarter-dashboard
    smarter-framework/smarter-enum
