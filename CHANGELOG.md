@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.112](https://github.com/smarter-sh/smarter/compare/v0.13.111...v0.13.112) (2026-01-31)
+
+### Bug Fixes
+
+* add pillow to venv ([d0fcc6e](https://github.com/smarter-sh/smarter/commit/d0fcc6e5674a32258f4891cee7266468c6f64267))
+
 ## [0.13.111](https://github.com/smarter-sh/smarter/compare/v0.13.110...v0.13.111) (2026-01-31)
 
 ### Bug Fixes
