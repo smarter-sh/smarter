@@ -12,9 +12,14 @@
 [![Pydantic](https://img.shields.io/badge/Pydantic-2.12-blue?logo=pydantic)](https://docs.pydantic.dev/)
 [![Django Rest Framework](https://img.shields.io/badge/Django%20Rest%20Framework-3.16-3a3a3a?logo=django)](https://www.django-rest-framework.org/)<br>[![hack.d Lawrence McDaniel](https://img.shields.io/badge/Author-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-This repo contains source code for the Smarter REST Api and the web based Prompt Engineer Workbench.
+This repo contains source code for the Smarter REST Api and the web based
+authoring platform.
 
-Smarter is an extensible AI resource management system. It is used as an instructional tool at [University of British Columbia](https://www.ubc.ca/) for teaching cloud computing at scale, and generative AI prompt engineering techniques including advanced use of LLM tool calling involving secure integrations to remote data sources like Sql databases and remote Apis.
+Smarter is a declarative extensible AI authoring and resource management system.
+It is used as an instructional tool at [University of British Columbia](https://www.ubc.ca/)
+for teaching cloud computing at scale, and generative AI prompt engineering
+techniques including advanced use of LLM tool calling involving secure
+integrations to remote data sources like Sql databases and remote Apis.
 
 ## At a Glance
 
