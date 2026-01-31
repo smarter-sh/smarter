@@ -56,7 +56,7 @@ from smarter.apps.plugin.models import (
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_COMPANY_NAME
-from smarter.common.utils import is_authenticated_request
+from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.cache import cache_results
 
 if TYPE_CHECKING:
@@ -347,12 +347,9 @@ def branding(request: "HttpRequest") -> dict:
     """
     current_year = datetime.now().year
     root_url = request.build_absolute_uri("/").rstrip("/")
-    if is_authenticated_request(request):
-        smarter_home_url = "/"
-    else:
-        smarter_home_url = smarter_settings.marketing_site_url
     context = {
         "branding": {
+            "canonical": request.path,
             "root_url": root_url,
             "smarter_logo": smarter_settings.logo,
             "support_phone_number": smarter_settings.branding_support_phone_number,
@@ -362,11 +359,12 @@ def branding(request: "HttpRequest") -> dict:
             "contact_url": smarter_settings.branding_contact_url,
             "support_hours": smarter_settings.branding_support_hours,
             "copyright": f"© {current_year} {smarter_settings.branding_corporate_name}. All rights reserved.",
+            "og_url": smarter_build_absolute_uri(request),
             "url_facebook": smarter_settings.branding_url_facebook,
             "url_twitter": smarter_settings.branding_url_twitter,
             "url_linkedin": smarter_settings.branding_url_linkedin,
             "smarter_marketing_site_url": smarter_settings.marketing_site_url,
-            "smarter_home_url": smarter_home_url,
+            "smarter_home_url": "/",
         }
     }
     return context
