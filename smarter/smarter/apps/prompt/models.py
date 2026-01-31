@@ -228,6 +228,9 @@ class ChatHelper(SmarterRequestMixin):
 
     _chat: Optional[Chat] = None
     _chatbot: Optional[ChatBot] = None
+    _chat_plugin_usage: Optional[Union[models.QuerySet, list]] = None
+    _chat_tool_call: Optional[Union[models.QuerySet, list]] = None
+    _history: Optional[dict] = None
 
     def __init__(
         self, request: HttpRequest, session_key: Optional[str], *args, chatbot: Optional[ChatBot] = None, **kwargs
@@ -404,8 +407,12 @@ class ChatHelper(SmarterRequestMixin):
         :returns: A queryset of ChatToolCall instances for the current chat session, ordered by creation date.
         :rtype: Union[models.QuerySet, list]
         """
-        recs = ChatToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
-        return recs
+        if self._chat_tool_call:
+            return self._chat_tool_call
+        if not self.chat:
+            return []
+        self._chat_tool_call = ChatToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
+        return self._chat_tool_call
 
     @cached_property
     def chat_plugin_usage(self) -> Union[models.QuerySet, list]:
@@ -415,8 +422,12 @@ class ChatHelper(SmarterRequestMixin):
         :returns: A queryset of ChatPluginUsage instances for the current chat session, ordered by creation date.
         :rtype: Union[models.QuerySet, list]
         """
-        recs = ChatPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
-        return recs
+        if self._chat_plugin_usage:
+            return self._chat_plugin_usage
+        if not self.chat:
+            return []
+        self._chat_plugin_usage = ChatPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
+        return self._chat_plugin_usage
 
     @cached_property
     def history(self) -> dict:
@@ -426,6 +437,10 @@ class ChatHelper(SmarterRequestMixin):
         :returns: A dictionary containing serialized chat, chat history, tool calls, and plugin usage.
         :rtype: dict
         """
+        if self._history:
+            return self._history
+        if not self.chat:
+            return {}
         chat_serializer = ChatSerializer(self.chat)
         chat_tool_call_serializer = ChatToolCallSerializer(self.chat_tool_call, many=True)
         chat_plugin_usage_serializer = ChatPluginUsageSerializer(self.chat_plugin_usage, many=True)
