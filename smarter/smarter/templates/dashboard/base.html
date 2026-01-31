@@ -154,7 +154,7 @@
 								<div class="menu-content d-flex align-items-center px-3">
 									<!--begin::Avatar-->
 									<div class="symbol symbol-50px me-5">
-										<img alt="Logo" src="{% static 'assets/media/avatars/300-3.jpg' %}" />
+										<img alt="Logo" src="{{ dashboard.profile_image_url }}" />
 									</div>
 									<!--end::Avatar-->
 									<!--begin::Username-->
@@ -170,6 +170,7 @@
 
 										</div>
 										<a href="#" class="fw-semibold text-muted text-hover-primary fs-7">{{ dashboard.user_email }}</a>
+                                        <div class="text-muted d-flex align-items-center fs-7">{{ dashboard.first_name }} {{ dashboard.last_name }}</div>
 									</div>
 									<!--end::Username-->
 								</div>

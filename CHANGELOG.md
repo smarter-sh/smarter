@@ -6,6 +6,60 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.110](https://github.com/smarter-sh/smarter/compare/v0.13.109...v0.13.110) (2026-01-29)
+
+### Bug Fixes
+
+* history in ChatConfigView ([28bbbc2](https://github.com/smarter-sh/smarter/commit/28bbbc286e627e49c835e7f1f62a3fcc3d3900a9))
+
+## [0.13.109](https://github.com/smarter-sh/smarter/compare/v0.13.108...v0.13.109) (2026-01-28)
+
+### Bug Fixes
+
+* restyle the workbench listview ([cf23fe9](https://github.com/smarter-sh/smarter/commit/cf23fe969cd641ebdefccfb1dd11fb7efb90e37a))
+
+## [0.13.108](https://github.com/smarter-sh/smarter/compare/v0.13.107...v0.13.108) (2026-01-28)
+
+### Bug Fixes
+
+* place profile image if it exists ([5132af4](https://github.com/smarter-sh/smarter/commit/5132af438ce9d73b11493b33bddd8433f84d64ba))
+
+## [0.13.107](https://github.com/smarter-sh/smarter/compare/v0.13.106...v0.13.107) (2026-01-28)
+
+### Bug Fixes
+
+* social auth user experience improvements ([4468213](https://github.com/smarter-sh/smarter/commit/44682132af827ae3e1689185a27b360528762f5f))
+
+## [0.13.106](https://github.com/smarter-sh/smarter/compare/v0.13.105...v0.13.106) (2026-01-28)
+
+### Bug Fixes
+
+* enable waffle flags by default. re-add wagtail urls ([f202bd5](https://github.com/smarter-sh/smarter/commit/f202bd578f3f53df2fe65789fe7197bf13aa67e6))
+
+## [0.13.105](https://github.com/smarter-sh/smarter/compare/v0.13.104...v0.13.105) (2026-01-28)
+
+### Bug Fixes
+
+* django-csrftoken should contain the csrf token value, not the cookie name. ([7c51ffb](https://github.com/smarter-sh/smarter/commit/7c51ffb25fd4685ca490c251655d73176e0df320))
+
+## [0.13.104](https://github.com/smarter-sh/smarter/compare/v0.13.103...v0.13.104) (2026-01-28)
+
+### Bug Fixes
+
+* set ingressClassName to 'default' and remove deprecated annotation ([bfdb4a8](https://github.com/smarter-sh/smarter/commit/bfdb4a8db1c5270acccc2511d38c9c0d0b654180))
+
+## [0.13.103](https://github.com/smarter-sh/smarter/compare/v0.13.102...v0.13.103) (2026-01-27)
+
+### Bug Fixes
+
+* tweaks to Smarter account bootup ([111ce56](https://github.com/smarter-sh/smarter/commit/111ce56a6b39e9d9da3ad525edcae8fefa3668c2))
+
+## [0.13.102](https://github.com/smarter-sh/smarter/compare/v0.13.101...v0.13.102) (2026-01-27)
+
+### Bug Fixes
+
+* control django debug toolbar with smarter_settings.debug_mode ([c20b944](https://github.com/smarter-sh/smarter/commit/c20b9449867442d05918e6acb6ecc3cb51609a80))
+
 ## [0.13.101](https://github.com/smarter-sh/smarter/compare/v0.13.100...v0.13.101) (2026-01-27)
 
 ### Bug Fixes

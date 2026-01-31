@@ -717,7 +717,7 @@ class SmarterRequestMixin(AccountMixin):
             path = path.decode("utf-8")
         return path.strip("/").split("/")
 
-    @property
+    @cached_property
     def params(self) -> QueryDict:
         """
         The query string parameters from the Django request object.
@@ -1147,7 +1147,7 @@ class SmarterRequestMixin(AccountMixin):
         self._data = self._data or {}
         return self._data
 
-    @cached_property
+    @property
     def unique_client_string(self) -> str:
         """
         Generate a unique string based on several request attributes.
@@ -1171,12 +1171,9 @@ class SmarterRequestMixin(AccountMixin):
             print(unique_str)
 
         """
-        if not self.smarter_request:
-            return "unique_client_string"
-        account_number = self.account.account_number if self.account else "####-####-####"
-        url = self.url if self.url else "http://localhost:9357/"
-        timestamp = self.timestamp.isoformat()
-        return f"{account_number}.{url}.{self.user_agent}.{self.ip_address}.{timestamp}"
+        if not self.account:
+            return f"{self.url}{self.user_agent}{self.ip_address}"
+        return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
 
     @cached_property
     def ip_address(self) -> Optional[str]:
@@ -2009,13 +2006,36 @@ class SmarterRequestMixin(AccountMixin):
 
         session_key: Optional[str]
 
+        # dump all headers for debugging, body and full url
+        if self.url:
+            logger.debug(
+                "%s.find_session_key() - request headers: %s",
+                self.request_mixin_logger_prefix,
+                (
+                    json.dumps(dict(self.smarter_request.headers), indent=4)
+                    if self.smarter_request
+                    else "No request available"
+                ),
+            )
+            logger.debug(
+                "%s.find_session_key() - request body data: %s",
+                self.request_mixin_logger_prefix,
+                self.data if self.data else "No data available",
+            )
+            logger.debug(
+                "%s.find_session_key() - full request url: %s",
+                self.request_mixin_logger_prefix,
+                self.url if self.url else "No url available",
+            )
+
         # this is our expected case. we look for the session key in the parsed url.
         session_key = session_key_from_url(self.url)  # type: ignore
         if session_key:
             session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
+
             logger.debug(
-                f"session_key() - initialized from url: {session_key}",
+                f"{self.request_mixin_logger_prefix}{formatted_text_green(".find_session_key() - initialized from url: ")}{session_key}",
             )
             return session_key
 
@@ -2027,7 +2047,7 @@ class SmarterRequestMixin(AccountMixin):
                 session_key = session_key.rstrip("/")
                 SmarterValidator.validate_session_key(session_key)
                 logger.debug(
-                    f"session_key() - initialized from request body: {session_key}",
+                    f"{self.request_mixin_logger_prefix}{formatted_text_green(".find_session_key() - initialized from request body: ")}{session_key}",
                 )
                 return session_key
 
@@ -2038,7 +2058,7 @@ class SmarterRequestMixin(AccountMixin):
             session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
             logger.debug(
-                f"session_key() - initialized from cookie data of the request object: {session_key}",
+                f"{self.request_mixin_logger_prefix}{formatted_text_green(".find_session_key() - initialized from cookie data of the request object: ")}{session_key}",
             )
             return session_key
 
@@ -2049,9 +2069,14 @@ class SmarterRequestMixin(AccountMixin):
             session_key = session_key.rstrip("/")
             SmarterValidator.validate_session_key(session_key)
             logger.debug(
-                f"session_key() - initialized from the get() parameters of the request object: {session_key}",
+                f"{self.request_mixin_logger_prefix}{formatted_text_green(".find_session_key() - initialized from the get() parameters of the request object: ")}{session_key}",
             )
             return session_key
+
+        logger.debug(
+            f"{self.request_mixin_logger_prefix}.find_session_key() - session key not found in url, request body, cookies, or get parameters.",
+        )
+        return None
 
     def eval_chatbot_url(self):
         """

@@ -4,8 +4,10 @@ import secrets
 import string
 
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
+from smarter.common.conf import smarter_settings
 from smarter.common.const import (
     SMARTER_ACCOUNT_NUMBER,
+    SMARTER_ADMIN_USERNAME,
     SMARTER_COMPANY_NAME,
     SMARTER_CUSTOMER_SUPPORT_EMAIL,
     SMARTER_CUSTOMER_SUPPORT_PHONE,
@@ -28,8 +30,8 @@ class Command(SmarterCommand):
         """create the superuser account."""
         self.handle_begin()
 
-        username = options["username"]
-        email = options["email"]
+        username = options["username"] or SMARTER_ADMIN_USERNAME
+        email = options["email"] or f"{username}@{smarter_settings.root_api_domain}"
         password = options["password"]
 
         account, created = Account.objects.get_or_create(
@@ -75,20 +77,15 @@ class Command(SmarterCommand):
                 msg=f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}"
             )
 
-        try:
-            account_contact = AccountContact.objects.get(
-                account=account,
-                is_primary=True,
-            )
-        except AccountContact.DoesNotExist:
-            account_contact = AccountContact(
-                account=account,
-                first_name="Smarter",
-                last_name="Admin",
-                email=SMARTER_CUSTOMER_SUPPORT_EMAIL,
-                phone=SMARTER_CUSTOMER_SUPPORT_PHONE,
-                is_primary=True,
-            )
+        account_contact, created = AccountContact.objects.get_or_create(
+            account=account,
+            is_primary=True,
+        )
+        if created:
+            account_contact.first_name = "Smarter"
+            account_contact.last_name = "Admin"
+            account_contact.email = SMARTER_CUSTOMER_SUPPORT_EMAIL
+            account_contact.phone = SMARTER_CUSTOMER_SUPPORT_PHONE
             account_contact.save()
             self.handle_completed_success(
                 msg=f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"

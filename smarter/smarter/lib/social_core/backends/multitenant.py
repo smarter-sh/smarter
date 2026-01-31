@@ -32,7 +32,7 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 logger = logging.getLogger(__name__)
-logger_prefix = formatted_text("smarter.lib.django.auth")
+logger_prefix = formatted_text(__name__)
 
 USERNAME = "username"
 INACTIVE_ACCOUNT_REDIRECT_URL = "account_inactive"
@@ -128,6 +128,7 @@ class GoogleOAuth2Multitenant(GoogleOAuth2):
 
     def get_user_details(self, response):
         details = super().get_user_details(response)
+        logger.debug("%s.get_user_details() Retrieved user details: %s", logger_prefix, details)
         if details is None:
             # authentication failed, so no point in checking payment status
             return None
@@ -154,6 +155,7 @@ class GithubOAuth2Multitenant(GithubOAuth2):
 
     def get_user_details(self, response):
         details = super().get_user_details(response)
+        logger.debug("%s.get_user_details() Retrieved user details: %s", logger_prefix, details)
         if details is None:
             # authentication failed, so no point in checking payment status
             return None

@@ -115,7 +115,7 @@ class LoginView(SmarterNeverCachedWebView):
 
         google_oauth_backends = [
             "social_core.backends.google.GoogleOAuth2",
-            "smarter.lib.django.auth.GoogleOAuth2Multitenant",
+            "smarter.lib.social_core.backends.multitenant.GoogleOAuth2Multitenant",
         ]
         for backend in google_oauth_backends:
             if backend in settings.AUTHENTICATION_BACKENDS:
@@ -164,7 +164,7 @@ class LoginView(SmarterNeverCachedWebView):
             return False
         github_oauth_backends = [
             "social_core.backends.github.GithubOAuth2",
-            "smarter.lib.django.auth.GithubOAuth2Multitenant",
+            "smarter.lib.social_core.backends.multitenant.GithubOAuth2Multitenant",
         ]
         for backend in github_oauth_backends:
             if backend in settings.AUTHENTICATION_BACKENDS:
@@ -280,7 +280,7 @@ class LogoutView(SmarterNeverCachedWebView):
 class AccountInactiveView(SmarterNeverCachedWebView):
     """View for inactive account page."""
 
-    template_path = "account/authentication/account-inactive.html"
+    template_path = "account/account-inactive.html"
 
     def get(self, request, *args, **kwargs) -> HttpResponse:
         logger.debug(
@@ -453,6 +453,23 @@ class AccountActivateView(SmarterNeverCachedWebView):
             )
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
+        return self.clean_http_response(request, template_path=self.template_path)
+
+
+class SocialAuthAlreadyAssociatedView(SmarterNeverCachedWebView):
+    """View for social auth account already associated page."""
+
+    template_path = "account/authentication/social-auth-already-associated.html"
+
+    def get(self, request, *args, **kwargs) -> HttpResponse:
+        logger.debug(
+            "%s.SocialAuthAlreadyAssociatedView.get() called with request type: %s %s, args: %s, kwargs: %s",
+            self.formatted_class_name,
+            type(request),
+            request,
+            args,
+            kwargs,
+        )
         return self.clean_http_response(request, template_path=self.template_path)
 
 
