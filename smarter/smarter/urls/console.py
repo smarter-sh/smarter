@@ -8,12 +8,9 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.admin.exceptions import AlreadyRegistered
 from django.http import JsonResponse
-from django.urls import include, path, re_path
+from django.urls import include, path
 from django.views.generic.base import RedirectView
 from waffle import get_waffle_switch_model
-from wagtail import urls as wagtail_urls
-from wagtail.documents import urls as wagtaildocs_urls
-from wagtail_transfer import urls as wagtailtransfer_urls
 
 from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.views.authentication import (
@@ -42,11 +39,13 @@ from smarter.apps.prompt.const import namespace as prompt_workbench_namespace
 from smarter.apps.prompt.views import ChatConfigView
 from smarter.apps.provider.const import namespace as provider_namespace
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SmarterEnvironments
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 
 
 def session_test_view(request):
+    """
+    Deprecated?
+    """
     request.session["test_key"] = "test_value"
     request.session.modified = True  # Ensure session is saved
     return JsonResponse({"session_key": request.session.session_key, "test_key": request.session.get("test_key")})
@@ -59,6 +58,10 @@ admin.site = smarter_restricted_admin_site
 admin.autodiscover()
 
 Switch = get_waffle_switch_model()
+"""
+Add a custom admin site that is accessible to staff users, but excludes
+superuser-only models.
+"""
 smarter_restricted_admin_site.register(Switch, SmarterSwitchAdmin)
 
 EXCLUDED_MODELS = [
@@ -67,7 +70,15 @@ EXCLUDED_MODELS = [
     "waffle.Sample",
     "waffle.Flag",
 ]
+"""
+superuser-only models to exclude from registration with
+smarter_restricted_admin_site, which is accessible to staff users.
+"""
 
+# -----------------------------------------------------------------------------
+# Register all ORM models with the custom Django admin site. Where necessaary,
+# we limit access to superusers only.
+# -----------------------------------------------------------------------------
 models = apps.get_models()
 for model in models:
     # pylint: disable=protected-access
@@ -87,26 +98,24 @@ name_prefix = "root"
 urlpatterns = [
     path("", RedirectView.as_view(pattern_name="dashboard:dashboard"), name=f"{name_prefix}_home"),
     # -----------------------------------
-    # Api
-    # -----------------------------------
-    path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
-    # -----------------------------------
     # root paths
     # -----------------------------------
     path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
     path("admin/docs/", include("django.contrib.admindocs.urls")),
     path("admin/", admin.site.urls, name="django_admin"),
-    path("cms/", include("smarter.apps.cms.urls", namespace=None)),
+    path("api/", include("smarter.apps.api.urls", namespace=api_namespace)),
     path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
-    path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
     path("docs/", include("smarter.apps.docs.urls", namespace=docs_namespace)),
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
     path("plugin/", include("smarter.apps.plugin.urls", namespace=plugin_namespace)),
     path("provider/", include("smarter.apps.provider.urls", namespace=provider_namespace)),
     path("register/", AccountRegisterView.as_view(), name=f"{name_prefix}_register_view"),
+    path("session-test/", session_test_view, name="session_test"),
+    path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
     # -----------------------------------
-    # Chatbots
+    # Chatbots.
+    # mcdaniel: 2026-01-31: are these even reachable anymore?
     # -----------------------------------
     path("chat/", DefaultChatbotApiView.as_view(), name=f"{name_prefix}_chat"),
     path("config/", ChatConfigView.as_view(), name=f"{name_prefix}_config"),
@@ -123,27 +132,14 @@ urlpatterns = [
     # routes for 3rd party apps
     # -----------------------------------
     path("social-auth/", include("social_django.urls", namespace="social_auth")),
-    path("session-test/", session_test_view, name="session_test"),
-    # -----------------------------------
-    # stripe urls
-    # see: https://dj-stripe.dev/dj-stripe/
-    # -----------------------------------
-    # path("stripe/", include("djstripe.urls", namespace="djstripe")),
-    # -----------------------------------
-    # -----------------------------------
-    # IMPORTANT: place these wagtail routes at the end of the urlpatterns
-    # -----------------------------------
-    path("documents/", include(wagtaildocs_urls)),
-    re_path(r"^wagtail-transfer/", include(wagtailtransfer_urls), name="wagtail_transfer"),
-] + list(static(settings.STATIC_URL, document_root=settings.STATIC_ROOT))
+]
 
 # mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
 # Sphinx doc build error: 'TypeError: can only concatenate list (not "static") to list
+#
+urlpatterns += list(static(settings.STATIC_URL, document_root=settings.STATIC_ROOT))
 
-if smarter_settings.environment != SmarterEnvironments.LOCAL:
-    # only serve media files when not running locally in debug mode
-    urlpatterns += [re_path(r"", include(wagtail_urls))]
-
+# question: should this be limited to localhost only?
 if smarter_settings.debug_mode:
     import debug_toolbar
 

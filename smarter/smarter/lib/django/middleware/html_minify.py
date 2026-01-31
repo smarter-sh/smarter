@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""Wagtail Middleware to minify HTML"""
+"""Middleware to minify HTML"""
 
 import logging
 

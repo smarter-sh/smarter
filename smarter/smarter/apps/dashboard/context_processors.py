@@ -56,6 +56,7 @@ from smarter.apps.plugin.models import (
 from smarter.apps.provider.models import Provider
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_COMPANY_NAME
+from smarter.common.utils import smarter_build_absolute_uri
 from smarter.lib.cache import cache_results
 
 if TYPE_CHECKING:
@@ -348,7 +349,9 @@ def branding(request: "HttpRequest") -> dict:
     root_url = request.build_absolute_uri("/").rstrip("/")
     context = {
         "branding": {
+            "canonical": request.path,
             "root_url": root_url,
+            "smarter_logo": smarter_settings.logo,
             "support_phone_number": smarter_settings.branding_support_phone_number,
             "corporate_name": smarter_settings.branding_corporate_name,
             "support_email": smarter_settings.branding_support_email,
@@ -356,9 +359,12 @@ def branding(request: "HttpRequest") -> dict:
             "contact_url": smarter_settings.branding_contact_url,
             "support_hours": smarter_settings.branding_support_hours,
             "copyright": f"© {current_year} {smarter_settings.branding_corporate_name}. All rights reserved.",
+            "og_url": smarter_build_absolute_uri(request),
             "url_facebook": smarter_settings.branding_url_facebook,
             "url_twitter": smarter_settings.branding_url_twitter,
             "url_linkedin": smarter_settings.branding_url_linkedin,
+            "smarter_marketing_site_url": smarter_settings.marketing_site_url,
+            "smarter_home_url": "/",
         }
     }
     return context
@@ -384,7 +390,7 @@ def cache_buster(request) -> dict:
 def prompt_list_context(request: "HttpRequest") -> dict:
     """
     Provides default placeholder context for prompt list views in the dashboard.
-    This mitigate Django template rendering errors presumably caused by Wagtail
+    This mitigates Django template rendering errors presumably caused by Wagtail
     admin interface interactions.
 
     Example usage in a Django template::
@@ -392,6 +398,9 @@ def prompt_list_context(request: "HttpRequest") -> dict:
         {% for prompt in prompt_list.prompts %}
             {{ prompt.title }}
         {% endfor %}
+
+    DEPRECATED: This context processor is slated for removal in future releases as
+    the underlying issues with Wagtail integration are resolved.
     """
     return {"prompt_list": {"smarter_admin": smarter_cached_objects.smarter_admin, "chatbot_helpers": []}}
 
@@ -399,12 +408,15 @@ def prompt_list_context(request: "HttpRequest") -> dict:
 def prompt_chatapp_workbench_context(request: "HttpRequest") -> dict:
     """
     Provides default placeholder context for chat application workbench views in the dashboard.
-    This mitigate Django template rendering errors presumably caused by Wagtail
+    This mitigates Django template rendering errors presumably caused by Wagtail
     admin interface interactions.
 
     Example usage in a Django template::
 
         <script class="smarter-chat" async="" src="{{ chatapp_workbench.app_loader_url }}"></script>
+
+    DEPRECATED: This context processor is slated for removal in future releases as
+    the underlying issues with Wagtail integration are resolved.
     """
     return {
         "chatapp_workbench": {

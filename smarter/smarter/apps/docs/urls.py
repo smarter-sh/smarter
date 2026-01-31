@@ -1,5 +1,6 @@
 """URL configuration for dashboard legal pages."""
 
+from django.shortcuts import redirect
 from django.urls import path, re_path
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -55,6 +56,7 @@ from .views.views import JsonSchemasView, ManifestsView
 
 app_name = namespace
 urlpatterns = [
+    path("", lambda request: redirect(namespace + ":example_manifests", permanent=False), name="docs-home"),
     # -------------------------------------------------------------------------
     # Developers docs rendered from markdown in /data/docs/ in the Dockeer container
     # -------------------------------------------------------------------------
@@ -231,9 +233,9 @@ urlpatterns = [
     # -------------------------------------------------------------------------
     # manifests landing page
     # -------------------------------------------------------------------------
-    path("manifests/", ManifestsView.as_view(), name="docs_manifests"),
+    path("manifests/", ManifestsView.as_view(), name="example_manifests"),
     # -------------------------------------------------------------------------
     # json schemas landing page
     # -------------------------------------------------------------------------
-    path("json-schemas/", JsonSchemasView.as_view(), name="docs_json_schemas"),
+    path("json-schemas/", JsonSchemasView.as_view(), name="json_schemas"),
 ]

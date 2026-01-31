@@ -16,8 +16,6 @@ amqp==5.3.1
     # via kombu
 annotated-types==0.7.0
     # via pydantic
-anyascii==0.3.3
-    # via wagtail
 anyio==4.12.1
     # via
     #   httpx
@@ -45,7 +43,6 @@ beautifulsoup4==4.13.3
     # via
     #   -r smarter/requirements/in/base.in
     #   types-lxml
-    #   wagtail
 billiard==4.2.4
     # via celery
 black==26.1.0
@@ -123,7 +120,6 @@ defusedxml==0.7.1
     # via
     #   python3-openid
     #   social-auth-core
-    #   willow
 dill==0.4.1
     # via pylint
 distlib==0.4.0
@@ -138,42 +134,30 @@ django==5.2.10
     #   django-debug-toolbar
     #   django-extensions
     #   django-filter
-    #   django-modelcluster
-    #   django-permissionedforms
     #   django-redis
     #   django-rest-knox
     #   django-storages
     #   django-stubs
     #   django-stubs-ext
     #   django-taggit
-    #   django-tasks
     #   django-timezone-field
-    #   django-treebeard
     #   django-waffle
     #   djangorestframework
     #   drf-yasg
-    #   laces
     #   social-auth-app-django
     #   sphinxcontrib-django
-    #   wagtail
 django-celery-beat==2.8.1
     # via -r smarter/requirements/in/base.in
 django-cors-headers==4.9.0
     # via -r smarter/requirements/in/base.in
-django-debug-toolbar==6.0.0
+django-debug-toolbar==6.2.0
     # via -r smarter/requirements/in/local.in
 django-extensions==4.1
     # via -r smarter/requirements/in/local.in
 django-filter==25.2
-    # via
-    #   -r smarter/requirements/in/base.in
-    #   wagtail
+    # via -r smarter/requirements/in/base.in
 django-hosts==7.0.0
     # via -r smarter/requirements/in/base.in
-django-modelcluster==6.4.1
-    # via wagtail
-django-permissionedforms==0.1
-    # via wagtail
 django-redis==6.0.0
     # via -r smarter/requirements/in/base.in
 django-rest-knox==5.0.2
@@ -185,19 +169,11 @@ django-stubs==5.2.2
     #   -r smarter/requirements/in/local.in
     #   djangorestframework-stubs
 django-stubs-ext==5.2.9
-    # via
-    #   django-stubs
-    #   django-tasks
+    # via django-stubs
 django-taggit==6.1.0
-    # via
-    #   -r smarter/requirements/in/base.in
-    #   wagtail
-django-tasks==0.8.1
-    # via wagtail
+    # via -r smarter/requirements/in/base.in
 django-timezone-field==7.2.1
     # via django-celery-beat
-django-treebeard==4.8.0
-    # via wagtail
 django-waffle==5.0.0
     # via -r smarter/requirements/in/base.in
 djangorestframework==3.16.1
@@ -205,7 +181,6 @@ djangorestframework==3.16.1
     #   -r smarter/requirements/in/base.in
     #   django-rest-knox
     #   drf-yasg
-    #   wagtail
 djangorestframework-stubs==3.16.0
     # via -r smarter/requirements/in/local.in
 dnspython==2.7.0
@@ -217,21 +192,15 @@ docutils==0.21.2
     #   -r smarter/requirements/in/base.in
     #   sphinx
     #   sphinx-rtd-theme
-draftjs-exporter==5.2.0
-    # via wagtail
 drf-yasg==1.21.10
     # via -r smarter/requirements/in/base.in
 email-validator==2.3.0
     # via -r smarter/requirements/in/base.in
-et-xmlfile==2.0.0
-    # via openpyxl
 filelock==3.20.3
     # via
     #   tldextract
     #   tox
     #   virtualenv
-filetype==1.2.0
-    # via willow
 flake8==7.3.0
     # via
     #   -r smarter/requirements/in/local.in
@@ -321,8 +290,6 @@ joblib==1.5.3
     # via nltk
 kombu==5.6.2
     # via celery
-laces==0.1.2
-    # via wagtail
 lark==1.3.1
     # via python-hcl2
 levenshtein==0.27.1
@@ -382,8 +349,6 @@ openmeteo-requests==1.3.0
     # via -r smarter/requirements/in/base.in
 openmeteo-sdk==1.24.0
     # via openmeteo-requests
-openpyxl==3.1.5
-    # via wagtail
 packaging==25.0
     # via
     #   black
@@ -402,12 +367,6 @@ paramiko==4.0.0
     # via -r smarter/requirements/in/base.in
 pathspec==1.0.3
     # via black
-pillow==11.3.0
-    # via
-    #   pillow-heif
-    #   wagtail
-pillow-heif==1.1.1
-    # via willow
 pip-tools==7.5.2
     # via -r smarter/requirements/in/local.in
 platformdirs==4.5.1
@@ -563,7 +522,6 @@ requests==2.32.5
     #   social-auth-core
     #   sphinx
     #   tldextract
-    #   wagtail
 requests-cache==1.2.1
     # via -r smarter/requirements/in/base.in
 requests-file==3.0.1
@@ -636,8 +594,6 @@ sqlparse==0.5.5
     #   django-debug-toolbar
 stevedore==5.6.0
     # via bandit
-telepath==0.3.1
-    # via wagtail
 tenacity==9.1.2
     # via celery-redbeat
 textblob==0.19.0
@@ -685,7 +641,6 @@ typing-extensions==4.15.0
     #   cron-descriptor
     #   django-stubs
     #   django-stubs-ext
-    #   django-tasks
     #   djangorestframework-stubs
     #   google-generativeai
     #   grpcio
@@ -731,12 +686,6 @@ virtualenv==20.36.1
     # via
     #   pre-commit
     #   tox
-wagtail==7.1.1
-    # via
-    #   -r smarter/requirements/in/base.in
-    #   wagtail-transfer
-wagtail-transfer==0.9.4
-    # via -r smarter/requirements/in/base.in
 watchdog==6.0.0
     # via -r smarter/requirements/in/local.in
 wcwidth==0.3.0
@@ -745,10 +694,6 @@ wheel==0.45.1
     # via pip-tools
 whitenoise==6.9.0
     # via -r smarter/requirements/in/base.in
-willow[heif]==1.12.0
-    # via
-    #   wagtail
-    #   willow
 yarl==1.22.0
     # via aiohttp
 
