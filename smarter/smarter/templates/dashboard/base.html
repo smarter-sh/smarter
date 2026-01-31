@@ -482,57 +482,74 @@
 								</div>
 								<!--end:Menu item:Read the Docs-->
 
+                                <!--begin:Menu item Example Manifests-->
+								<div class="menu-item">
+                                  <!--begin:Menu link-->
+                                  <a class="menu-link" href="{% url 'docs:example_manifests' %}" target="_self">
+                                    <span class="menu-bullet">
+                                      <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Example Manifests</span>
+                                  </a>
+                                  <!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+                                <!--begin:Menu item Json Schemas-->
+								<div class="menu-item">
+                                  <!--begin:Menu link-->
+                                  <a class="menu-link" href="{% url 'docs:json_schemas' %}" target="_self">
+                                    <span class="menu-bullet">
+                                      <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Json Schemas</span>
+                                  </a>
+                                  <!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
 								<!--begin:Menu item-->
 								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/docs/learn/" target="_self">
-                                      <span class="menu-bullet">
-                                        <span class="bullet bullet-dot"></span>
-                                      </span>
-                                      <span class="menu-title">Getting Started</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-
-                <!--begin:Menu item Prompt Engineers-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/docs/" target="_self">
-                    <span class="menu-bullet">
-                      <span class="bullet bullet-dot"></span>
-                    </span>
-										<span class="menu-title">Prompt Engineers</span>
-									</a>
-									<!--end:Menu link-->
+                                  <!--begin:Menu link-->
+                                  <a class="menu-link" href="{% url 'docs:schema-swagger-ui' %}" target="_self">
+                                    <span class="menu-bullet">
+                                      <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Swagger Api Docs</span>
+                                  </a>
+                                  <!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
 
 								<!--begin:Menu item-->
 								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/docs/api/" target="_self">
-                    <span class="menu-bullet">
-                      <span class="bullet bullet-dot"></span>
-                    </span>
-										<span class="menu-title">Api Docs</span>
-									</a>
-									<!--end:Menu link-->
+                                  <!--begin:Menu link-->
+                                  <a class="menu-link" href="{% url 'docs:schema-redoc-ui' %}" target="_self">
+                                    <span class="menu-bullet">
+                                      <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Redoc</span>
+                                  </a>
+                                  <!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
 
-                                <!--begin:Menu item-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/docs/developers/" target="_self">
-                                        <span class="menu-bullet">
-                                          <span class="bullet bullet-dot"></span>
-                                        </span>
-										<span class="menu-title">Developers</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
+                                <!--begin:Menu item Change Log -->
+                                <div class="menu-item">
+                                  <!--begin:Menu link Change Log-->
+                                  <a class="menu-link"
+                                    href="https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md"
+                                    target="_blank">
+                                    <span class="menu-bullet">
+                                      <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Change Log {{ dashboard.smarter_version }}</span>
+                                  </a>
+                                  <!--end:Menu link-->
+                                </div>
+                                <!--end:Menu item-->
+
+
 
                 <!--begin:Menu item Settings-->
                 {% if user.is_superuser %}
@@ -575,37 +592,6 @@
                 {% endif %}
                 <!--end:Menu item-->
 
-                <!--begin:Menu item Wagtail admin-->
-                {% if user.is_superuser %}
-                <div class="menu-item">
-                  <!--begin:Menu link-->
-                  <a class="menu-link" href="/cms/admin/" target="_self">
-                    <span class="menu-bullet">
-                      <span class="bullet bullet-dot"></span>
-                    </span>
-                    <span class="menu-title">Wagtail Admin</span>
-                  </a>
-                  <!--end:Menu link-->
-                </div>
-                {% endif %}
-                <!--end:Menu item-->
-
-                <!--begin:Menu item Change Log -->
-                {% if user.is_superuser %}
-                <div class="menu-item">
-                  <!--begin:Menu link Change Log-->
-                  <a class="menu-link"
-                    href="https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md"
-                    target="_blank">
-                    <span class="menu-bullet">
-                      <span class="bullet bullet-dot"></span>
-                    </span>
-                    <span class="menu-title">Change Log {{ dashboard.smarter_version }}</span>
-                  </a>
-                  <!--end:Menu link-->
-                </div>
-                {% endif %}
-                <!--end:Menu item-->
 
 
 							</div>

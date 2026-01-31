@@ -1,4 +1,4 @@
-{% load static html_filters %}
+{% load static %}
 
 <!-- begin::CTA Waiting List Signup -->
 <div class="card border-transparent mb-6" data-bs-theme="light" style="background-color: #1C325E;">
@@ -14,7 +14,7 @@
         </span>
       </div>
       <div class="mb-3 d-flex justify-content-center">
-        <a href="https://{{ smarter_marketing_site_url }}/contact/"
+        <a href="https://{{ branding.smarter_marketing_site_url }}/contact/"
           class="btn btn-color-white bg-white bg-opacity-15 bg-hover-opacity-25 fw-semibold">Sales</a>
       </div>
     </div><img src="{% static 'assets/media/illustrations/sigma-1/17-dark.png' %}"
