@@ -641,7 +641,6 @@ INSTALLED_APPS = [
     "smarter.apps.api",
     "smarter.apps.chatbot",
     "smarter.apps.prompt",
-    "smarter.apps.cms",
     "smarter.apps.dashboard",
     "smarter.apps.docs",
     "smarter.apps.plugin",
@@ -657,21 +656,6 @@ INSTALLED_APPS = [
     "django.contrib.admindocs",
     "social_django",
     "waffle",
-    # Wagtail
-    # -------------------------------
-    # see https://docs.wagtail.org/en/stable/advanced_topics/add_to_django_project.html
-    "wagtail.contrib.forms",
-    "wagtail.contrib.redirects",
-    "wagtail.embeds",
-    "wagtail.sites",
-    "wagtail.users",
-    "wagtail.snippets",
-    "wagtail.documents",
-    "wagtail.images",
-    "wagtail.search",
-    "wagtail.admin",
-    "wagtail",
-    "wagtail_transfer",
     # Stripe
     # -------------------------------
     # "djstripe",
@@ -720,10 +704,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "waffle.middleware.WaffleMiddleware",
-    # wagtail middleware
-    # -------------------------------
-    "wagtail.contrib.redirects.middleware.RedirectMiddleware",
-    "smarter.apps.cms.middleware.HTMLMinifyMiddleware",
+    "smarter.lib.django.middleware.html_minify.HTMLMinifyMiddleware",
     "django_hosts.middleware.HostsResponseMiddleware",
     #
 ]
@@ -765,15 +746,13 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "smarter.apps.account.context_processors.base",
-                "smarter.apps.cms.context_processors.base",
                 "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.base",
-                "smarter.apps.dashboard.context_processors.prompt_list_context",
+                "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.prompt_chatapp_workbench_context",
                 "smarter.apps.dashboard.context_processors.file_drop_zone",
                 # "social_django.context_processors.backends",
                 # "social_django.context_processors.login_redirect",
-                "wagtail.contrib.settings.context_processors.settings",
             ],
         },
     },
@@ -1472,77 +1451,8 @@ If True, enables automatic creation of missing waffle switches in the database d
 jobs. This is intended to simplify management of waffle switches in Smarter deployments.
 """
 
-# Wagtail settings
-# This is the human-readable name of your Wagtail install
-# which welcomes users upon login to the Wagtail admin.
-WAGTAIL_SITE_NAME = "Smarter"
-"""
-The human-readable name of the Wagtail installation for Smarter. This name is displayed in the Wagtail admin interface
-and is used to identify the Wagtail site.
-
-Smarter uses Wagtail for web console CMS functionality including for example, dynamic help documentation pages
-for Smarter Manifests and Json Schemas.
-
-Do not change any Wagtail settings value unless you know what you are doing.
-
-See: https://docs.wagtail.org/en/stable/reference/settings.html#wagtail-site-name
-"""
-
-# Replace the search backend
-# WAGTAILSEARCH_BACKENDS = {
-#  'default': {
-#    'BACKEND': 'wagtail.search.backends.elasticsearch8',
-#    'INDEX': 'myapp'
-#  }
-# }
-
-# Wagtail email notifications from address
-WAGTAILADMIN_NOTIFICATION_FROM_EMAIL = SMTP_FROM_EMAIL
-
-# Wagtail email notification format
-WAGTAILADMIN_NOTIFICATION_USE_HTML = os.environ.get("WAGTAILADMIN_NOTIFICATION_USE_HTML", "True").lower() in (
-    "true",
-    "1",
-    "t",
-    "yes",
-)
-
-# Allowed file extensions for documents in the document library.
-# This can be omitted to allow all files, but note that this may present a security risk
-# if untrusted users are allowed to upload files -
-# see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
-WAGTAILDOCS_EXTENSIONS = ["csv", "docx", "key", "odt", "pdf", "pptx", "rtf", "txt", "xlsx", "zip"]
-
 # Reverse the default case-sensitive handling of tags
 TAGGIT_CASE_INSENSITIVE = os.environ.get("TAGGIT_CASE_INSENSITIVE", "True").lower() in ("true", "1", "t", "yes")
-
-WAGTAILADMIN_BASE_URL = os.environ.get("WAGTAILADMIN_BASE_URL", "/cms/admin/")
-
-WAGTAILTRANSFER_SOURCES = {
-    "localhost": {
-        "BASE_URL": "http://localhost:9357/wagtail-transfer/",
-        "SECRET_KEY": "qr4hlujl144ye5hwn0k3f0no462ms81z",
-    },
-    "alpha": {
-        "BASE_URL": "https://alpha.platform.smarter.sh/wagtail-transfer/",
-        "SECRET_KEY": "1tv70boz9norbi2puxirls697j6v4x75",
-    },
-    "beta": {
-        "BASE_URL": "https://beta.platform.smarter.sh/wagtail-transfer/",
-        "SECRET_KEY": "rle5zr18w3igmsauc3pvu4uu9eo54egg",
-    },
-    "next": {
-        "BASE_URL": "https://next.platform.smarter.sh/wagtail-transfer/",
-        "SECRET_KEY": "3uy59hvdewlihhmee4duc5ytw277f34b",
-    },
-    "production": {
-        "BASE_URL": "https://platform.smarter.sh/wagtail-transfer/",
-        "SECRET_KEY": "q6ea0u8vt1u8eoprtxq5d9p5wae83fje",
-    },
-}
-
-WAGTAILTRANSFER_SECRET_KEY = os.environ.get("WAGTAILTRANSFER_SECRET_KEY", "8egf3jj8ib64j00gomz270wgzqwrfyed")
-WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT = int(os.environ.get("WAGTAILTRANSFER_CHOOSER_API_PROXY_TIMEOUT", "30"))
 
 ###############################################################################
 # Process environment variables to override settings values

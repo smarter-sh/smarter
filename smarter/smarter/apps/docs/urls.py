@@ -231,9 +231,9 @@ urlpatterns = [
     # -------------------------------------------------------------------------
     # manifests landing page
     # -------------------------------------------------------------------------
-    path("manifests/", ManifestsView.as_view(), name="docs_manifests"),
+    path("manifests/", ManifestsView.as_view(), name="example_manifests"),
     # -------------------------------------------------------------------------
     # json schemas landing page
     # -------------------------------------------------------------------------
-    path("json-schemas/", JsonSchemasView.as_view(), name="docs_json_schemas"),
+    path("json-schemas/", JsonSchemasView.as_view(), name="json_schemas"),
 ]
