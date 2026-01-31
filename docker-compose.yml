@@ -14,10 +14,11 @@ services:
     command: ["mysqld", "--mysql-native-password=ON"]
     restart: always
     environment:
+      MYSQL_HOST: mysql.service.lawrencemcdaniel.com
       MYSQL_ROOT_PASSWORD: smarter
-      MYSQL_DATABASE: smarter
-      MYSQL_USER: smarter
-      MYSQL_PASSWORD: smarter
+      MYSQL_DATABASE: QRzGv25jceAhRSwb
+      MYSQL_USER: root
+      MYSQL_PASSWORD: QRzGv25jceAhRSwb
     ports:
       - 3306:3306
     volumes:

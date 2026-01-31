@@ -74,7 +74,7 @@ def main():
     #     AWS_ECR_REPO: ${{ env.NAMESPACE }}
     update_version_in_file(
         ".github/actions/deploy/action.yml",
-        r'(echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v?\d+\.\d+\.\d+)(\"[^\n]*)',
+        r'^(\s*echo\s+"SMARTER_DOCKER_IMAGE=mcdaniel0073/smarter:)(v\d+\.\d+\.\d+)(".*)$',
         f"\\g<1>v{new_version}\\g<3>",
     )
     print(f"Updated .github/actions/deploy/action.yml to {new_version}")
@@ -125,6 +125,13 @@ def main():
         "helm/charts/smarter/Chart.yaml",
         r"(helm\.sh/chart:\s*smarter-)\d+\.\d+\.\d+",
         f"\\g<1>{new_version}",
+    )
+
+    # Update --version flag in Quickstart section of helm/charts/smarter/README.md
+    update_version_in_file(
+        "helm/charts/smarter/README.md",
+        r"(^\s*--version\s+)(\d+\.\d+\.\d+)(\s*\\)",
+        f"\\g<1>{new_version}\\g<3>",
     )
 
     print(f"Updated helm/charts/smarter/Chart.yaml to {new_version}")

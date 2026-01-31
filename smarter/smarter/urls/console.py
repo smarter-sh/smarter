@@ -94,8 +94,8 @@ urlpatterns = [
     # root paths
     # -----------------------------------
     path("account/", include("smarter.apps.account.urls", namespace=account_namespace)),
+    path("admin/docs/", include("django.contrib.admindocs.urls")),
     path("admin/", admin.site.urls, name="django_admin"),
-    # path("admin/docs/", include("django.contrib.admindocs.urls")),
     path("cms/", include("smarter.apps.cms.urls", namespace=None)),
     path("dashboard/", include("smarter.apps.dashboard.urls", namespace=dashboard_namespace)),
     path("workbench/", include("smarter.apps.prompt.urls", namespace=prompt_workbench_namespace)),
@@ -133,8 +133,8 @@ urlpatterns = [
     # -----------------------------------
     # IMPORTANT: place these wagtail routes at the end of the urlpatterns
     # -----------------------------------
-    # path("documents/", include(wagtaildocs_urls)),
-    # re_path(r"^wagtail-transfer/", include(wagtailtransfer_urls), name="wagtail_transfer"),
+    path("documents/", include(wagtaildocs_urls)),
+    re_path(r"^wagtail-transfer/", include(wagtailtransfer_urls), name="wagtail_transfer"),
 ] + list(static(settings.STATIC_URL, document_root=settings.STATIC_ROOT))
 
 # mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
@@ -144,10 +144,11 @@ if smarter_settings.environment != SmarterEnvironments.LOCAL:
     # only serve media files when not running locally in debug mode
     urlpatterns += [re_path(r"", include(wagtail_urls))]
 
-if settings.DEBUG:
+if smarter_settings.debug_mode:
     import debug_toolbar
-urlpatterns += [
-    path("__debug__/", include(debug_toolbar.urls)),
-]
+
+    urlpatterns += [
+        path("__debug__/", include(debug_toolbar.urls)),
+    ]
 
 __all__ = ["urlpatterns"]

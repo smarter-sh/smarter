@@ -708,6 +708,11 @@ MIDDLEWARE = [
     "smarter.apps.chatbot.middleware.security.SmarterSecurityMiddleware",
     #
     # -------------------------------
+    # to handle 'already associated error from python social auth'
+    # -------------------------------
+    "smarter.apps.account.pipeline.SmarterSocialAuthExceptionMiddleware",
+    #
+    # -------------------------------
     # to ensure that all http responses are in json format
     # -------------------------------
     "smarter.lib.django.middleware.json.SmarterJsonErrorMiddleware",
@@ -877,16 +882,16 @@ SOCIAL_AUTH_PIPELINE = (
     # a similar email address.
     "social_core.pipeline.social_auth.associate_by_email",
     # Create a user account if we haven't found one yet.
-    "social_core.pipeline.user.create_user",
+    "smarter.apps.account.pipeline.create_user",
     # Create the record that associated the social account with this user.
     "social_core.pipeline.social_auth.associate_user",
     # Populate the extra_data field in the social record with the values
     # specified by settings (and the default ones like access_token, etc).
     "social_core.pipeline.social_auth.load_extra_data",
+    # Update the user record with any changed info from the auth service.
+    "smarter.apps.account.pipeline.user_details",
     # Custom: Redirect inactive accounts before finalizing login
     "smarter.apps.account.pipeline.redirect_inactive_account",
-    # Update the user record with any changed info from the auth service.
-    "social_core.pipeline.user.user_details",
 )
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = (
@@ -1592,7 +1597,7 @@ for key, value in os.environ.items():
 ###############################################################################
 if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.info("=" * 80)
-    logger.info(formatted_text(__name__ + ".settings.base.py"))
+    logger.info(formatted_text(__name__))
 
     try:
         with open("/proc/uptime", encoding="utf-8") as f:

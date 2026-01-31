@@ -306,10 +306,17 @@ def handle_chatbot_called(sender, **kwargs):
     logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
 
     request: Optional[HttpRequest] = kwargs.get("request")
+    request_data = kwargs.get("data")
     try:
-        request_data = kwargs.get("data")
         if chatbot and request_data:
             create_chatbot_request.delay(chatbot.id, request_data)
+        else:
+            logger.error(
+                "%s - Missing chatbot instance or request data. Chatbot: %s, Data: %s",
+                prefix,
+                chatbot.hostname if chatbot else "No chatbot instance provided",
+                "Present" if request_data else "No data",
+            )
     except json.JSONDecodeError:
         logger.warning(
             "%s received an empty or invalid request body from %s",

@@ -145,6 +145,8 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
     :return: The value from the environment (converted to the appropriate type), or the default if not set or conversion fails.
     :rtype: Any
     """
+    # pylint: disable=W0621
+    logger_prefix = formatted_text(__name__ + ".get_env()")
 
     def cast_value(val: Optional[str], default: Any) -> Any:
         """
@@ -163,7 +165,8 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 return int(val) if val is not None else default
             except (ValueError, TypeError):
                 logger.error(
-                    "Environment variable %s value '%s' cannot be converted to int. Using default %s.",
+                    "%s Environment variable %s value '%s' cannot be converted to int. Using default %s.",
+                    logger_prefix,
                     var_name,
                     val,
                     default,
@@ -174,7 +177,8 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 return float(val) if val is not None else default
             except (ValueError, TypeError):
                 logger.error(
-                    "Environment variable %s value '%s' cannot be converted to float. Using default %s.",
+                    "%s Environment variable %s value '%s' cannot be converted to float. Using default %s.",
+                    logger_prefix,
                     var_name,
                     val,
                     default,
@@ -187,7 +191,8 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                 return val if val is not None else default
             else:
                 logger.error(
-                    "Environment variable %s value '%s' cannot be converted to list. Using default %s.",
+                    "%s Environment variable %s value '%s' cannot be converted to list. Using default %s.",
+                    logger_prefix,
                     var_name,
                     val,
                     default,
@@ -201,7 +206,8 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                     return val if val is not None else default
                 else:
                     logger.error(
-                        "Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
+                        "%s Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
+                        logger_prefix,
                         var_name,
                         val,
                         default,
@@ -209,7 +215,11 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
                     return default
             except json.JSONDecodeError:
                 logger.error(
-                    "Environment variable %s value '%s' is not valid JSON. Using default %s.", var_name, val, default
+                    "%s Environment variable %s value '%s' is not valid JSON. Using default %s.",
+                    logger_prefix,
+                    var_name,
+                    val,
+                    default,
                 )
                 return default
         return val
@@ -220,9 +230,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
     # Strip surrounding quotes if present
     retval = str(retval).strip('"').strip("'") if retval is not None else None
     if retval is None and is_required:
-        msg = (
-            f"{formatted_text(__name__ + ".get_env()")} [WARNING] Required environment variable {var_name} is missing."
-        )
+        msg = f"{logger_prefix} [WARNING] Required environment variable {var_name} is missing."
         logger.warning(msg)
         print(msg)
         return default
@@ -230,7 +238,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         cast_val = cast_value(retval, default)  # type: ignore
         log_value = cast_val if not is_secret else "****"
         if VERBOSE_CONSOLE_OUTPUT:
-            msg = f"{formatted_text(__name__ + ".get_env()")} Environment variable {var_name} found. Overriding Smarter setting from environment variable: {var_name}={repr(log_value)}"
+            msg = f"{logger_prefix} Environment variable {var_name} found. Overriding Smarter setting from environment variable: {var_name}={repr(log_value)}"
             logger.info(msg)
             print(msg)
         return cast_val
