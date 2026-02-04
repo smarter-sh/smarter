@@ -20,7 +20,7 @@ anyio==4.12.1
     # via
     #   httpx
     #   openai
-asgiref==3.11.0
+asgiref==3.11.1
     # via
     #   django
     #   django-cors-headers
@@ -33,7 +33,7 @@ attrs==25.4.0
     #   requests-cache
 autodoc-pydantic==2.2.0
     # via -r smarter/requirements/in/local.in
-babel==2.17.0
+babel==2.18.0
     # via sphinx
 bandit==1.8.6
     # via -r smarter/requirements/in/local.in
@@ -47,16 +47,16 @@ billiard==4.2.4
     # via celery
 black==26.1.0
     # via -r smarter/requirements/in/local.in
-boto3==1.42.39
+boto3==1.42.41
     # via -r smarter/requirements/in/base.in
-botocore==1.42.39
+botocore==1.42.41
     # via
     #   -r smarter/requirements/in/base.in
     #   boto3
     #   s3transfer
 build==1.4.0
     # via pip-tools
-cachetools==6.2.6
+cachetools==7.0.0
     # via
     #   -r smarter/requirements/in/base.in
     #   tox
@@ -220,7 +220,7 @@ google-api-core[grpc]==2.29.0
     #   google-ai-generativelanguage
     #   google-api-python-client
     #   google-generativeai
-google-api-python-client==2.188.0
+google-api-python-client==2.189.0
     # via google-generativeai
 google-auth==2.49.0.dev0
     # via
@@ -280,7 +280,7 @@ isort==7.0.0
     # via pylint
 jinja2==3.1.6
     # via sphinx
-jiter==0.12.0
+jiter==0.13.0
     # via openai
 jmespath==1.1.0
     # via
@@ -335,7 +335,7 @@ nltk==3.9.1
     #   textblob
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.4.1
+numpy==2.4.2
     # via
     #   pandas
     #   pandas-stubs
@@ -393,11 +393,11 @@ propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-proto-plus==1.27.0
+proto-plus==1.27.1
     # via
     #   google-ai-generativelanguage
     #   google-api-core
-protobuf==6.33.5
+protobuf==5.29.5
     # via
     #   google-ai-generativelanguage
     #   google-api-core
@@ -531,7 +531,7 @@ requests-oauthlib==2.0.0
     # via social-auth-core
 retry-requests==2.0.0
     # via -r smarter/requirements/in/base.in
-rich==14.3.1
+rich==14.3.2
     # via bandit
 roman-numerals==4.1.0
     # via roman-numerals-py
@@ -603,7 +603,7 @@ tomlkit==0.14.0
     # via pylint
 tox==4.34.1
     # via -r smarter/requirements/in/local.in
-tqdm==4.67.2
+tqdm==4.67.3
     # via
     #   google-generativeai
     #   nltk
