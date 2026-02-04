@@ -29,6 +29,7 @@ from .models import (
 from .signals import (
     broker_ready,
     chatbot_called,
+    chatbot_deploy,
     chatbot_deploy_failed,
     chatbot_deploy_status_changed,
     chatbot_deployed,
@@ -245,15 +246,25 @@ def handle_chatbot_undeployed(sender, **kwargs):
         undeploy_default_api.delay(chatbot_id=chatbot.id)
 
 
+@receiver(chatbot_deploy, dispatch_uid="chatbot_deploy")
+def handle_chatbot_deploy(sender, **kwargs):
+    """Handle chatbot_deploy signal."""
+    prefix = formatted_text(f"{module_prefix}.chatbot_deploy()")
+
+    chatbot: Optional[ChatBot] = kwargs.get("chatbot")
+    logger.info("%s signal received - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
+    if chatbot:
+        logger.info("%s deploying chatbot - %s", prefix, chatbot.hostname)
+        deploy_default_api.delay(chatbot_id=chatbot.id)
+
+
 @receiver(chatbot_deployed, dispatch_uid="chatbot_deployed")
 def handle_chatbot_deployed(sender, **kwargs):
     """Handle chatbot_deployed signal."""
     prefix = formatted_text(f"{module_prefix}.chatbot_deployed()")
 
     chatbot: Optional[ChatBot] = kwargs.get("chatbot")
-    logger.info("%s signal received - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
-    if chatbot:
-        deploy_default_api.delay(chatbot_id=chatbot.id)
+    logger.info("%s - %s", prefix, chatbot.hostname if chatbot else "No chatbot instance provided")
 
 
 @receiver(chatbot_dns_verification_status_changed, dispatch_uid="chatbot_dns_verification_status_changed")

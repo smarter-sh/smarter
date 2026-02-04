@@ -50,9 +50,9 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.loader import SAMLoader
 
 from .signals import (
+    chatbot_deploy,
     chatbot_deploy_failed,
     chatbot_deploy_status_changed,
-    chatbot_deployed,
     chatbot_dns_failed,
     chatbot_dns_verification_initiated,
     chatbot_dns_verification_status_changed,
@@ -847,14 +847,16 @@ class ChatBot(MetaDataWithOwnershipModel):
         :kwargs: Keyword arguments for the save method.
         :returns: None
         """
+        logger.debug("%s.save() called for ChatBot id: %s %s", formatted_text(__name__), self.pk, self.default_host)
         is_new = self.pk is None
         SmarterValidator.validate_domain(self.hostname)
-        super().save(*args, **kwargs)
+        should_deploy = False
+        should_undeploy = False
         if is_new:
             if self.deployed:
-                chatbot_deployed.send(sender=self.__class__, chatbot=self)
+                chatbot_deploy.send(sender=self.__class__, chatbot=self)
         else:
-            orig = ChatBot.objects.get(pk=self.pk) if self.pk is not None else self
+            orig = ChatBot.objects.get(pk=self.pk)
             if orig.dns_verification_status != self.dns_verification_status:
                 chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
                 chatbot_deploy_status_changed.send(sender=self.__class__, chatbot=self)
@@ -866,9 +868,14 @@ class ChatBot(MetaDataWithOwnershipModel):
                     chatbot_dns_failed.send(sender=self.__class__, chatbot=self)
                     chatbot_deploy_failed.send(sender=self.__class__, chatbot=self)
             if self.deployed and not orig.deployed:
-                chatbot_deployed.send(sender=self.__class__, chatbot=self)
+                should_deploy = True
             if not self.deployed and orig.deployed:
-                chatbot_undeployed.send(sender=self.__class__, chatbot=self)
+                should_undeploy = True
+        super().save(*args, **kwargs)
+        if should_deploy:
+            chatbot_deploy.send(sender=self.__class__, chatbot=self)
+        if should_undeploy:
+            chatbot_undeployed.send(sender=self.__class__, chatbot=self)
 
 
 class ChatBotAPIKey(TimestampedModel):
