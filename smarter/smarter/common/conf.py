@@ -2870,7 +2870,7 @@ class Settings(BaseSettings):
         """
         if str(v) in [None, ""] and SettingsDefaults.MARKETING_SITE_URL is not None:
             return SettingsDefaults.MARKETING_SITE_URL
-        return v
+        return v  # type: ignore
 
     openai_api_organization: Optional[str] = Field(
         SettingsDefaults.OPENAI_API_ORGANIZATION,
@@ -4476,10 +4476,13 @@ class Settings(BaseSettings):
             )
             return fallback_url
         else:
-            raise SmarterConfigurationError(
-                f"Could not retrieve the ReactJS app loader from either {intended_url} or {fallback_url}. "
-                "Please check your CDN configuration and internet connectivity."
+            logger.error(
+                "%s Could not retrieve the ReactJS app loader from either %s or %s. Please check your CDN configuration and internet connectivity.",
+                logger_prefix,
+                intended_url,
+                fallback_url,
             )
+            return intended_url  # return intended URL even if unreachable
 
     @cached_property
     def smarter_reactjs_root_div_id(self) -> str:
