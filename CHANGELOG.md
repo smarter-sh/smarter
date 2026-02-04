@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.114](https://github.com/smarter-sh/smarter/compare/v0.13.113...v0.13.114) (2026-02-04)
+
+### Bug Fixes
+
+* roll back last commit and disable dependabot for Python dependencies ([035609d](https://github.com/smarter-sh/smarter/commit/035609de25699e4d9ba182a94175c3c5864f6f24))
+
 ## [0.13.113](https://github.com/smarter-sh/smarter/compare/v0.13.112...v0.13.113) (2026-02-04)
 
 ### Bug Fixes
