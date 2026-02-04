@@ -1463,9 +1463,6 @@ class SmarterRequestMixin(AccountMixin):
         Returns:
             bool: True if the URL matches a smarter API chatbot endpoint, otherwise False.
         """
-        if not self.smarter_request:
-            logger.debug("%s.is_chatbot_smarter_api_url() - request is None", self.request_mixin_logger_prefix)
-            return False
         if not self.qualified_request:
             logger.debug("%s.is_chatbot_smarter_api_url() - request is not qualified", self.request_mixin_logger_prefix)
             return False
@@ -1582,15 +1579,16 @@ class SmarterRequestMixin(AccountMixin):
         """
         Returns True if the url is of the form:
 
-            - https://example.3141-5926-5359.api.example.com/
-            - http://example.3141-5926-5359.api.localhost:9357/
-            - http://example.3141-5926-5359.api.localhost:9357/config/
+            - https://example-username.3141-5926-5359.api.example.com/
+            - http://example-username.3141-5926-5359.api.localhost:9357/
+            - http://example-username.3141-5926-5359.api.localhost:9357/config/
 
         Returns:
             bool: True if the URL matches the named chatbot pattern, otherwise False.
         """
-        if not self.smarter_request:
-            logger.debug("%s.is_chatbot_named_url() - request is None", self.request_mixin_logger_prefix)
+
+        if not self.qualified_request:
+            logger.debug("%s.is_chatbot_named_url() - request is not qualified", self.request_mixin_logger_prefix)
             return False
         if not self.url:
             logger.debug("%s.is_chatbot_named_url() - url is None or empty", self.request_mixin_logger_prefix)
@@ -1663,11 +1661,6 @@ class SmarterRequestMixin(AccountMixin):
         Returns:
             bool: True if the URL matches a chatbot sandbox endpoint, otherwise False.
         """
-        if not self.smarter_request:
-            logger.warning(
-                "%s.is_chatbot_sandbox_url() - request is None or not set.", self.request_mixin_logger_prefix
-            )
-            return False
         if not self.qualified_request:
             logger.debug("%s.is_chatbot_sandbox_url() - request is not qualified.", self.request_mixin_logger_prefix)
             return False

@@ -48,6 +48,7 @@ from .models import (
     ChatBotRequests,
 )
 from .signals import (
+    chatbot_deployed,
     chatbot_dns_failed,
     chatbot_dns_verification_initiated,
     chatbot_dns_verification_status_changed,
@@ -737,6 +738,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             chatbot_id=chatbot_id,
             with_domain_verification=with_domain_verification,
         )
+        chatbot_deployed.send(sender=deploy_default_api, chatbot=chatbot)
 
 
 @app.task(

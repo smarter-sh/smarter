@@ -29,7 +29,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: grafana.enabled
   - name: loki
-    version: 6.46.0
+    version: 6.51.0
     repository: https://grafana.github.io/helm-charts
     condition: loki.enabled
   - name: mysql
@@ -45,7 +45,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
-    version: 24.1.0
+    version: 24.1.3
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
 icon: https://cdn.platform.smarter.sh/images/logo/smarter-crop.png
