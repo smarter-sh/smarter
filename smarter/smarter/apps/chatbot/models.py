@@ -529,10 +529,11 @@ class ChatBot(MetaDataWithOwnershipModel):
         user_profile: UserProfile = self.user_profile
         admin_user = get_cached_admin_user_for_account(user_profile.account)
         if user_profile.user == admin_user:
-            return f"{rfc1034_compliant_str(self.name)}"
+            raw_str = self.name
         else:
             # note: rfc1034_compliant_str() filters out the "."
-            return f"{rfc1034_compliant_str(self.name)}.{rfc1034_compliant_str(user_profile.user.username)}"
+            raw_str = f"{self.name}-{user_profile.user.username}"
+        return rfc1034_compliant_str(raw_str)
 
     @property
     def default_system_role_enhanced(self):
@@ -1311,6 +1312,14 @@ def get_cached_chatbot(
         except ChatBot.DoesNotExist:
             return None
 
+    logger.debug(
+        "%s get_cached_chatbot() called with chatbot_id=%s, name=%s, user_profile=%s",
+        formatted_text(__name__),
+        str(chatbot_id),
+        str(name),
+        str(user_profile),
+    )
+
     if chatbot_id is not None:
         return get_chatbot_by_id(chatbot_id)
 
@@ -1399,18 +1408,22 @@ class ChatBotHelper(SmarterRequestMixin):
     The following are examples of valid URLs that this helper can process:
 
     - **Authentication Optional URLs:**
-        - ``https://example.3141-5926-5359.alpha.api.example.com/``
-        - ``https://example.3141-5926-5359.alpha.api.example.com/config/``
+        - ``https://example-username.3141-5926-5359.alpha.api.example.com/``
+        - ``https://example-username.3141-5926-5359.alpha.api.example.com/config/``
 
     - **Authenticated URLs:**
-        - ``https://alpha.api.example.com/smarter/example/``
-        - ``https://example.smarter.sh/chatbot/``
-        - ``https://alpha.api.example.com/workbench/1/``
-        - ``https://alpha.api.example.com/workbench/example/``
+        - ``https://alpha.api.example-username.com/smarter/example/``
+        - ``https://example-username.smarter.sh/chatbot/``
+        - ``https://alpha.api.example-username.com/workbench/1/``
+        - ``https://alpha.api.example-username.com/workbench/example/``
 
     - **Legacy (pre v0.12) URLs:**
-        - ``https://alpha.api.example.com/chatbots/1/``
-        - ``https://alpha.api.example.com/chatbots/example/``
+        - ``https://alpha.api.example-username.com/chatbots/1/``
+        - ``https://alpha.api.example-username.com/chatbots/example/``
+
+    where for ``example-username``,  ``example`` is the ChatBot name,
+    ``username`` is the Account Username, and ``3141-5926-5359`` is the
+    Account Number.
 
     **Features**
 
@@ -1666,8 +1679,7 @@ class ChatBotHelper(SmarterRequestMixin):
         if self._chatbot:
             self._name = self._chatbot.name
 
-        if self._name:
-            return self._name
+        return self._name
 
     @property
     def rfc1034_compliant_name(self) -> Optional[str]:

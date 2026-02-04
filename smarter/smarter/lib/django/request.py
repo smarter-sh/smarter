@@ -524,7 +524,7 @@ class SmarterRequestMixin(AccountMixin):
             return self.auth_header.split("Bearer ")[1].encode()
         return None
 
-    @cached_property
+    @property
     def qualified_request(self) -> bool:
         """
         A cursory screening of the WSGI request object to look for
@@ -880,9 +880,7 @@ class SmarterRequestMixin(AccountMixin):
 
         :return: The chatbot id as an integer, or None if not found.
         """
-        if not self.smarter_request:
-            return None
-        if not self.qualified_request:
+        if not self.is_chatbot:
             return None
 
         if self.is_chatbot_smarter_api_url:
@@ -891,6 +889,9 @@ class SmarterRequestMixin(AccountMixin):
 
         if self.is_chatbot_named_url:
             # can't get from ChatBot bc of circular import
+            return None
+
+        if self.is_chatbot_sandbox_url:
             return None
 
     @property
@@ -936,10 +937,15 @@ class SmarterRequestMixin(AccountMixin):
             )
             return None
 
-        # 1.) http://example.api.localhost:9357/config
+        # 1.) http://example-username.api.localhost:9357/config
         if self.is_chatbot_named_url and self.parsed_url is not None:
             netloc_parts = self.parsed_url.netloc.split(".") if self.parsed_url and self.parsed_url.netloc else None
             retval = netloc_parts[0] if netloc_parts else None
+
+            # if the name is hyphenated, then split on hyphen and take first part.
+            if retval and "-" in retval:
+                retval = retval.split("-")[0]
+
             retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
             logger.debug(
                 "%s.smarter_request_chatbot_name() - extracted chatbot name from named url: %s",
@@ -952,6 +958,11 @@ class SmarterRequestMixin(AccountMixin):
         if self.is_chatbot_sandbox_url:
             try:
                 retval = self.url_path_parts[1]
+
+                # if the name is hyphenated, then split on hyphen and take first part.
+                if retval and "-" in retval:
+                    retval = retval.split("-")[0]
+
                 retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
                 logger.debug(
                     "%s.smarter_request_chatbot_name() - extracted chatbot name from sandbox url: %s",
@@ -966,6 +977,7 @@ class SmarterRequestMixin(AccountMixin):
                     self.request_mixin_logger_prefix,
                     self.url,
                 )
+
         # 3.) http://localhost:9357/api/v1/workbench/<int:chatbot_id>
         # no name. nothing to do in this case.
         if self.is_chatbot_smarter_api_url:
@@ -981,6 +993,11 @@ class SmarterRequestMixin(AccountMixin):
         if self.is_chatbot_cli_api_url:
             try:
                 retval = self.url_path_parts[-1]
+
+                # if the name is hyphenated, then split on hyphen and take first part.
+                if retval and "-" in retval:
+                    retval = retval.split("-")[0]
+
                 retval = rfc1034_compliant_to_snake(retval) if isinstance(retval, str) else retval
                 logger.debug(
                     "%s.smarter_request_chatbot_name() - extracted chatbot name from cli api url: %s",
@@ -1372,7 +1389,7 @@ class SmarterRequestMixin(AccountMixin):
             return False
         return netloc_match and path_match
 
-    @cached_property
+    @property
     def is_chatbot(self) -> bool:
         """
         Returns True if the URL resolves to a chatbot endpoint.
@@ -1396,7 +1413,7 @@ class SmarterRequestMixin(AccountMixin):
             or self.is_chatbot_smarter_api_url
             or self.is_chatbot_cli_api_url
         )
-        logger.debug("%s.is_chatbot() - url is chatbot: %s -> %s", self.request_mixin_logger_prefix, self.url, retval)
+        logger.debug("%s.is_chatbot() - is url a chatbot: %s -> %s", self.request_mixin_logger_prefix, self.url, retval)
         return retval
 
     @cached_property
@@ -1633,12 +1650,12 @@ class SmarterRequestMixin(AccountMixin):
 
             https://alpha.platform.smarter.sh/workbench/example/
             https://<environment_domain>/workbench/<name>
-            path_parts: ['workbench', 'example']
+            path_parts: ['workbench', 'example-username']
 
             http://localhost:9357/workbench/<str:name>/chat/
             https://alpha.platform.smarter.sh/workbench/example/config/
             https://<environment_domain>/workbench/<name>/config/
-            path_parts: ['workbench', 'example', 'config']
+            path_parts: ['workbench', 'example-username', 'config']
 
             http://localhost:9357/api/v1/prompt/1/chat/
             http://<environment_domain>/api/v1/prompt/<int:chatbot_id>/chat/
@@ -1706,7 +1723,7 @@ class SmarterRequestMixin(AccountMixin):
                 path_parts,
             )
             return False
-        if not path_parts[1].isalpha():
+        if not SmarterValidator.is_valid_chatbot_slug(path_parts[1]):
             # expecting <slug> to be alpha: ['workbench', '<slug>', 'config']
             logger.debug(
                 "%s.is_chatbot_sandbox_url() - url %s second path part is not alphabetic slug: %s",
