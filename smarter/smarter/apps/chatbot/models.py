@@ -1,4 +1,4 @@
-# pylint: disable=W0613,C0115
+# pylint: disable=W0613,C0115,C0302
 """All models for the OpenAI Function Calling API app."""
 
 import logging
@@ -529,10 +529,11 @@ class ChatBot(MetaDataWithOwnershipModel):
         user_profile: UserProfile = self.user_profile
         admin_user = get_cached_admin_user_for_account(user_profile.account)
         if user_profile.user == admin_user:
-            raw_name = f"{self.name}"
+            raw_str = self.name
         else:
-            raw_name = f"{self.name}.{user_profile.user.username}"
-        return rfc1034_compliant_str(raw_name)
+            # note: rfc1034_compliant_str() filters out the "."
+            raw_str = f"{self.name}-{user_profile.user.username}"
+        return rfc1034_compliant_str(raw_str)
 
     @property
     def default_system_role_enhanced(self):
@@ -559,7 +560,7 @@ class ChatBot(MetaDataWithOwnershipModel):
             .1234-5678-9012.alpha.api.example.com
         """
         user_profile: UserProfile = self.user_profile
-        return f".{user_profile.account.account_number}.{smarter_settings.environment_api_domain}"
+        return f"{user_profile.account.account_number}.{smarter_settings.environment_api_domain}"
 
     @property
     def default_host(self):
@@ -576,7 +577,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         :returns: default hostname
         :rtype: str
         """
-        domain = f"{self.rfc1034_compliant_name}{self.base_default_host}"
+        domain = f"{self.rfc1034_compliant_name}.{self.base_default_host}"
         SmarterValidator.validate_domain(domain)
         return domain
 
@@ -1126,7 +1127,7 @@ class ChatBotFunctions(TimestampedModel):
         verbose_name_plural = "ChatBot Functions"
 
     CHOICES = [
-        ("weather", "weather"),
+        ("get_current_weather", "get_current_weather"),
         ("news", "news"),
         ("prices", "prices"),
         ("math", "math"),
@@ -1150,6 +1151,21 @@ class ChatBotFunctions(TimestampedModel):
     @classmethod
     def choices_list(cls):
         return [item[0] for item in cls.CHOICES]
+
+    @classmethod
+    def functions(cls, chatbot: ChatBot) -> List[str]:
+        """
+        Returns a list of function names associated with the given ChatBot.
+
+        :param chatbot: The ChatBot instance to retrieve functions for.
+        :returns: List of function names.
+        :rtype: List[str]
+        """
+        if not chatbot:
+            return []
+        chatbot_functions = cls.objects.filter(chatbot=chatbot)
+        retval = [chatbot_function.name for chatbot_function in chatbot_functions if chatbot_function.name]
+        return retval
 
 
 class ChatBotRequests(TimestampedModel):
@@ -1296,6 +1312,14 @@ def get_cached_chatbot(
         except ChatBot.DoesNotExist:
             return None
 
+    logger.debug(
+        "%s get_cached_chatbot() called with chatbot_id=%s, name=%s, user_profile=%s",
+        formatted_text(__name__),
+        str(chatbot_id),
+        str(name),
+        str(user_profile),
+    )
+
     if chatbot_id is not None:
         return get_chatbot_by_id(chatbot_id)
 
@@ -1384,18 +1408,22 @@ class ChatBotHelper(SmarterRequestMixin):
     The following are examples of valid URLs that this helper can process:
 
     - **Authentication Optional URLs:**
-        - ``https://example.3141-5926-5359.alpha.api.example.com/``
-        - ``https://example.3141-5926-5359.alpha.api.example.com/config/``
+        - ``https://example-username.3141-5926-5359.alpha.api.example.com/``
+        - ``https://example-username.3141-5926-5359.alpha.api.example.com/config/``
 
     - **Authenticated URLs:**
-        - ``https://alpha.api.example.com/smarter/example/``
-        - ``https://example.smarter.sh/chatbot/``
-        - ``https://alpha.api.example.com/workbench/1/``
-        - ``https://alpha.api.example.com/workbench/example/``
+        - ``https://alpha.api.example-username.com/smarter/example/``
+        - ``https://example-username.smarter.sh/chatbot/``
+        - ``https://alpha.api.example-username.com/workbench/1/``
+        - ``https://alpha.api.example-username.com/workbench/example/``
 
     - **Legacy (pre v0.12) URLs:**
-        - ``https://alpha.api.example.com/chatbots/1/``
-        - ``https://alpha.api.example.com/chatbots/example/``
+        - ``https://alpha.api.example-username.com/chatbots/1/``
+        - ``https://alpha.api.example-username.com/chatbots/example/``
+
+    where for ``example-username``,  ``example`` is the ChatBot name,
+    ``username`` is the Account Username, and ``3141-5926-5359`` is the
+    Account Number.
 
     **Features**
 
@@ -1651,8 +1679,7 @@ class ChatBotHelper(SmarterRequestMixin):
         if self._chatbot:
             self._name = self._chatbot.name
 
-        if self._name:
-            return self._name
+        return self._name
 
     @property
     def rfc1034_compliant_name(self) -> Optional[str]:

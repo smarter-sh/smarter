@@ -144,12 +144,13 @@ def get_current_weather(tool_call: ChatCompletionMessageToolCall, location, unit
         retval = {
             "error": "Google Maps Geolocation service is not initialized. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview, and add your GOOGLE_MAPS_API_KEY to .env"
         }
-        return retval
+        return [retval]
 
     unit = unit or "METRIC"
     location = location or "Cambridge, MA, near Kendall Square"
     latitude: float = 0.0
     longitude: float = 0.0
+    # pylint: disable=W0612
     address: Optional[str] = None
 
     # use Google Maps API to get the latitude and longitude of the location
