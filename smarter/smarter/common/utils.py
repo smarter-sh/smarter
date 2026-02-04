@@ -954,7 +954,6 @@ def rfc1034_compliant_str(val) -> str:
         print(rfc1034_compliant_str(long_name))  # Output: thisisareallylongchatbotnamethatshouldbetruncatedtosixtythreecharacters
 
     """
-    logger.debug("%s.rfc1034_compliant_str()", logger_prefix)
     if not isinstance(val, str):
         raise SmarterValueError(f"Could not generate RFC 1034 compliant name from {type(val)}")
     # Replace underscores with hyphens
