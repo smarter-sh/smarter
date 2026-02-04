@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.115](https://github.com/smarter-sh/smarter/compare/v0.13.114...v0.13.115) (2026-02-04)
+
+### Bug Fixes
+
+* ensure that deployment is triggered on chatbot.save() ([b87973e](https://github.com/smarter-sh/smarter/commit/b87973eb8098ead202dd439581e5de750504716d))
+
 ## [0.13.114](https://github.com/smarter-sh/smarter/compare/v0.13.113...v0.13.114) (2026-02-04)
 
 ### Bug Fixes
