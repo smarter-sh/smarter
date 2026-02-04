@@ -43,4 +43,4 @@ spec:
     - example_configuration
     - everlasting_gobstopper
   functions:
-    - weather
+    - get_current_weather

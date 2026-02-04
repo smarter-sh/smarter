@@ -101,7 +101,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
                 raise APIV1CLIChatViewError(
                     f"Internal error. 'prompt' key is missing from the request body. self.data: {self.data}"
                 )
-            logger.info("%s.prompt() found prompt: %s", self.formatted_class_name, self._prompt)
+            logger.debug("%s.prompt() found prompt: %s", self.formatted_class_name, self._prompt)
         return self._prompt
 
     @property
@@ -153,7 +153,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         """
         super().initial(request, *args, **kwargs)
         self._name = kwargs.get(SAMMetadataKeys.NAME.value)
-        logger.info("%s.initial() chat view name: %s", self.formatted_class_name, self.name)
+        logger.debug("%s.initial() chat view name: %s", self.formatted_class_name, self.name)
 
         if not self.data and not self.is_config:
             raise APIV1CLIChatViewError(
@@ -168,7 +168,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         # if the new_session url parameter was passed and is set to True
         # then we will delete the cache_key and the session_key.
         if self.new_session:
-            logger.info(
+            logger.debug(
                 "%s.initial() new_session is True, resetting the session_key and deleting cache_key: %s",
                 self.formatted_class_name,
                 self.cache_key,
@@ -176,14 +176,14 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             self._session_key = self.generate_session_key()
             cache.delete(self.cache_key)
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.info("%s.initial() deleted cache_key: %s", self.formatted_class_name, self.cache_key)
+                logger.debug("%s.initial() deleted cache_key: %s", self.formatted_class_name, self.cache_key)
 
         # 1.) attempt to retrieve a session_key from the cache. if we get a hit
         # then we will update the request body with the session_key
         # and pass it along to the ChatConfigView.
         session_key = cache.get(self.cache_key)
         if session_key is not None:
-            logger.info(
+            logger.debug(
                 "%s.initial() resetting session_key from %s to cached key: %s",
                 self.formatted_class_name,
                 self.session_key,
@@ -195,7 +195,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         #     or from SmarterRequestMixin(). Otherwise, this will raise a SmarterValueError.
         if self.session_key:
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.info(
+                logger.debug(
                     "%s.initial() caching session_key for chat config: %s", self.formatted_class_name, self.session_key
                 )
             if isinstance(self.data, dict):
@@ -305,12 +305,12 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             else:
                 # otherwise, create a new message list
                 self._messages = self.new_message_list_factory()
-        logger.info("%s.messages() value is set: %s", self.formatted_class_name, self._messages)
+        logger.debug("%s.messages() value is set: %s", self.formatted_class_name, self._messages)
         return self._messages
 
     def new_message_list_factory(self) -> list[dict[str, str]]:
 
-        logger.info("%s.new_message_list_factory() called", self.formatted_class_name)
+        logger.debug("%s.new_message_list_factory() called", self.formatted_class_name)
 
         system_dict: Optional[dict] = None
         welcome_dict: Optional[dict] = None
@@ -346,12 +346,12 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             retval.append(welcome_dict)
         retval.append(prompt_dict)
 
-        logger.info("%s.new_message_list_factory() retval: %s", self.formatted_class_name, retval)
+        logger.debug("%s.new_message_list_factory() retval: %s", self.formatted_class_name, retval)
         return retval
 
     def chat_request_body_factory(self) -> dict[str, Any]:
         retval = {SMARTER_CHAT_SESSION_KEY_NAME: self.session_key, "messages": self.messages}
-        logger.info("%s.chat_request_body_factory() retval: %s", self.formatted_class_name, retval)
+        logger.debug("%s.chat_request_body_factory() retval: %s", self.formatted_class_name, retval)
         return retval
 
     def chat_request_factory(self, request_body: dict) -> HttpRequest:
@@ -377,7 +377,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
     def handler(self, request, name, *args, **kwargs):
         # get the chat configuration for the ChatBot (name)
-        logger.info(
+        logger.debug(
             "%s.handler() 1. name: %s url: %s data: %s session_key: %s, new session: %s",
             self.formatted_class_name,
             name,
@@ -396,7 +396,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             raise APIV1CLIChatViewError(
                 f"Internal error. Failed to get chat config for chatbot: {name} {chat_config.get('content')}"
             )
-        logger.info("%s.handler() 2. chat_config: %s %s", self.formatted_class_name, chat_config, type(chat_config))
+        logger.debug("%s.handler() 2. chat_config: %s %s", self.formatted_class_name, chat_config, type(chat_config))
 
         try:
             # bootstrap our chat session configuration
@@ -413,14 +413,14 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
             if session_key is not None:
                 self._session_key = session_key
-                logger.info(
+                logger.debug(
                     "%s.handler() initialized session_key from chat_config: %s",
                     self.formatted_class_name,
                     self.session_key,
                 )
             cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.info(
+                logger.debug(
                     "%s.handler() caching session_key for chat config: %s",
                     self.formatted_class_name,
                     self.session_key,
@@ -430,7 +430,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         except TypeError as e:
             raise APIV1CLIViewError(f"Internal error. Chat config 'content' is missing: {chat_config}") from e
 
-        logger.info(
+        logger.debug(
             "%s.handler() 3. config: %s",
             self.formatted_class_name,
             json.dumps(self.chat_config),
@@ -449,7 +449,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response = json.loads(chat_response.content)
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
-        logger.info(
+        logger.debug(
             "%s.handler() 4. response_data: %s",
             self.formatted_class_name,
             json.dumps(response_data),
@@ -481,7 +481,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
 
         data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
-        logger.info("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data))
+        logger.debug("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data))
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,

@@ -1,4 +1,4 @@
-# pylint: disable=W0613,C0115
+# pylint: disable=W0613,C0115,C0302
 """All models for the OpenAI Function Calling API app."""
 
 import logging
@@ -529,10 +529,10 @@ class ChatBot(MetaDataWithOwnershipModel):
         user_profile: UserProfile = self.user_profile
         admin_user = get_cached_admin_user_for_account(user_profile.account)
         if user_profile.user == admin_user:
-            raw_name = f"{self.name}"
+            return f"{rfc1034_compliant_str(self.name)}"
         else:
-            raw_name = f"{self.name}.{user_profile.user.username}"
-        return rfc1034_compliant_str(raw_name)
+            # note: rfc1034_compliant_str() filters out the "."
+            return f"{rfc1034_compliant_str(self.name)}.{rfc1034_compliant_str(user_profile.user.username)}"
 
     @property
     def default_system_role_enhanced(self):
@@ -559,7 +559,7 @@ class ChatBot(MetaDataWithOwnershipModel):
             .1234-5678-9012.alpha.api.example.com
         """
         user_profile: UserProfile = self.user_profile
-        return f".{user_profile.account.account_number}.{smarter_settings.environment_api_domain}"
+        return f"{user_profile.account.account_number}.{smarter_settings.environment_api_domain}"
 
     @property
     def default_host(self):
@@ -576,7 +576,7 @@ class ChatBot(MetaDataWithOwnershipModel):
         :returns: default hostname
         :rtype: str
         """
-        domain = f"{self.rfc1034_compliant_name}{self.base_default_host}"
+        domain = f"{self.rfc1034_compliant_name}.{self.base_default_host}"
         SmarterValidator.validate_domain(domain)
         return domain
 
@@ -1126,7 +1126,7 @@ class ChatBotFunctions(TimestampedModel):
         verbose_name_plural = "ChatBot Functions"
 
     CHOICES = [
-        ("weather", "weather"),
+        ("get_current_weather", "get_current_weather"),
         ("news", "news"),
         ("prices", "prices"),
         ("math", "math"),
@@ -1150,6 +1150,21 @@ class ChatBotFunctions(TimestampedModel):
     @classmethod
     def choices_list(cls):
         return [item[0] for item in cls.CHOICES]
+
+    @classmethod
+    def functions(cls, chatbot: ChatBot) -> List[str]:
+        """
+        Returns a list of function names associated with the given ChatBot.
+
+        :param chatbot: The ChatBot instance to retrieve functions for.
+        :returns: List of function names.
+        :rtype: List[str]
+        """
+        if not chatbot:
+            return []
+        chatbot_functions = cls.objects.filter(chatbot=chatbot)
+        retval = [chatbot_function.name for chatbot_function in chatbot_functions if chatbot_function.name]
+        return retval
 
 
 class ChatBotRequests(TimestampedModel):

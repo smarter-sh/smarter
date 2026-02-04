@@ -160,7 +160,7 @@ class SmarterRequestMixin(AccountMixin):
         self._smarter_request: Optional[HttpRequest] = None
         self._smarter_request_user: Optional[UserType] = None
         self._timestamp = datetime.now()
-        self._url: Optional[str] = None
+        self._url: Optional[ParseResult] = None
         self._url_account_number: Optional[str] = None
         self._parsed_url: ParseResult = None
         self._params: Optional[QueryDict] = None
@@ -651,7 +651,7 @@ class SmarterRequestMixin(AccountMixin):
                 parsed = urlparse(url)
                 base_url = parsed._replace(query="", fragment="").geturl()
                 if isinstance(base_url, ParseResult):
-                    raise Exception("Unexpected ParseResult type for base_url.")
+                    raise SmarterValueError("Unexpected ParseResult type for base_url.")
                 return base_url
             except SmarterValueError as e:
                 logger.error(
