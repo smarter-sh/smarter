@@ -261,7 +261,7 @@ mariadb:
   extraVolumes: []
   image:
     repository: mariadb
-    tag: "24.0.2"
+    tag: "24.0.4"
     pullPolicy: IfNotPresent
   initdbScripts: {}
   livenessProbe:
