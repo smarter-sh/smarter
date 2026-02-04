@@ -71,6 +71,19 @@ Example::
     chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
 """
 
+chatbot_deploy = Signal()
+"""
+Signal triggered when a chatbot deployment is initiated.
+
+Arguments:
+    chatbot (ChatBot): The chatbot instance.
+
+Example::
+
+    chatbot_deploy.send(sender=self.__class__, chatbot=self)
+"""
+
+
 chatbot_deployed = Signal()
 """
 Signal triggered when a chatbot is successfully deployed.
