@@ -37,6 +37,7 @@ if apps.ready:
         pass
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return validator_logging_is_active
@@ -62,9 +63,9 @@ class SmarterValidator:
     """
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1"]
+    """List of local hosts used for validation purposes."""
     LOCAL_HOSTS += [host + ":9357" for host in LOCAL_HOSTS]
     LOCAL_HOSTS.append("testserver")
-    """List of local hosts used for validation purposes."""
 
     LOCAL_URLS = [f"http://{host}" for host in LOCAL_HOSTS] + [f"https://{host}" for host in LOCAL_HOSTS]
     """List of local URLs used for validation purposes."""
@@ -227,6 +228,7 @@ class SmarterValidator:
             return True
         except SmarterValueError:
             logger.debug("%s.is_valid_snake_case() invalid %s", logger_prefix, value)
+            return False
 
     @staticmethod
     def validate_pascal_case(value: str) -> str:
@@ -633,7 +635,7 @@ class SmarterValidator:
         if not port.isdigit():
             raise SmarterValueError(f"Port must be numeric: {port}")
         port_num = int(port)
-        if not (0 <= port_num <= 65535):
+        if not 0 <= port_num <= 65535:
             raise SmarterValueError(f"Port out of range (0-65535): {port}")
         return port
 
