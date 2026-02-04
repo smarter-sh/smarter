@@ -69,4 +69,4 @@ spec:
     subdomain: null
   functions: []
   plugins:
-  - about_smarter
+    - about_smarter

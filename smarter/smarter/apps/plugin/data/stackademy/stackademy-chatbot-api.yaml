@@ -40,5 +40,4 @@ spec:
     customDomain: null
   plugins:
     - stackademy_api
-  functions:
-    - weather
+  functions: []

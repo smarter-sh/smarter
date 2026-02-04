@@ -38,5 +38,6 @@ spec:
     dnsVerificationStatus: Verified
     provider: metaai
     subdomain: null
-  functions: []
+  functions:
+    - get_current_weather
   plugins: []

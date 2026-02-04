@@ -7,7 +7,7 @@ import logging
 import traceback
 from functools import cached_property
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Protocol, Union
 
 import openai
 
@@ -75,6 +75,7 @@ from .const import OpenAIMessageKeys
 from .mixins import ProviderDbMixin
 
 
+# pylint: disable=W0613
 def should_log(level):
     """Check if logging should be done based on the waffle switch."""
     return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
@@ -141,6 +142,36 @@ class InternalKeys:
     SMARTER_IS_NEW = SMARTER_SYSTEM_KEY_PREFIX + "is_new"
 
 
+class HandlerProtocol(Protocol):
+    """
+    A fixed Protocol for all chat provider handler functions.
+    Ensures that all handler functions have exactly the same signature.
+
+    :param user: The user making the request.
+    :type user: User
+    :param chat: The chat object.
+    :type chat: Chat
+    :param data: The request data.
+    :type data: Union[dict[str, Any], list]
+    :param plugins: Optional list of plugins to use.
+    :type plugins: Optional[List[PluginBase]]
+    :param functions: Optional list of function names to use.
+    :type functions: Optional[list[str]]
+
+    :returns: The response data.
+    :rtype: Union[dict[str, Any], list]
+    """
+
+    def __call__(
+        self,
+        user: User,
+        chat: Chat,
+        data: Union[dict[str, Any], list],
+        plugins: Optional[List[PluginBase]] = None,
+        functions: Optional[list[str]] = None,
+    ) -> Union[dict[str, Any], list]: ...
+
+
 class ChatProviderBase(ProviderDbMixin):
     """
     Base class for all chat providers.
@@ -159,6 +190,7 @@ class ChatProviderBase(ProviderDbMixin):
         "_chat",
         "data",
         "plugins",
+        "functions",
         "model",
         "temperature",
         "max_completion_tokens",
@@ -191,8 +223,9 @@ class ChatProviderBase(ProviderDbMixin):
     _api_key: Optional[str]
     _chat: Optional[Chat]
 
-    data: Optional[dict]
+    data: Optional[dict[str, Any]]
     plugins: List[PluginBase]
+    functions: Optional[List[str]]
 
     model: Optional[str]
     temperature: Optional[float]
@@ -246,7 +279,8 @@ class ChatProviderBase(ProviderDbMixin):
 
         self._chat = None
         self.data = None
-        self.plugins = []
+        self.plugins = None
+        self.functions = None
 
         self.model = None
         self.temperature = None
@@ -289,7 +323,7 @@ class ChatProviderBase(ProviderDbMixin):
         self.tools = [weather_tool] if add_built_in_tools else None
         self.available_functions = (
             {
-                "get_current_weather": get_current_weather,
+                get_current_weather.__name__: get_current_weather,
             }
             if add_built_in_tools
             else {}
@@ -789,15 +823,23 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             InternalKeys.TEMPERATURE_KEY: self.temperature,
             InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
             InternalKeys.TOOLS_KEY: self.tools,
-            InternalKeys.TOOL_CHOICE: tool_choice,
         }
 
         # create a Smarter UI message with the established configuration
-        content = f"Prompt configuration: llm={self.provider}, url={self.url} api_key={self.mask_string(self.api_key)} model={self.model}, temperature={self.temperature}, max_completion_tokens={self.max_completion_tokens}, tool_choice={tool_choice}."
+        content = f"Prompt configuration: llm={self.provider}, url={self.url} api_key={self.mask_string(self.api_key)} model={self.model}, temperature={self.temperature}, max_completion_tokens={self.max_completion_tokens}"
+        if self.tools:
+            content = content + f", tool_choice={tool_choice}."
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
-        # for any tools that are included in the request, add Smarter UI messages for each tool
         if self.tools:
+            # this is necessary because of this 400 response in cases where
+            # tool_choice is set but not tools are provided:
+            # 'Error code: 400 - Invalid value 'tool_choice' is only allowed when 'tools' are specified."
+            #
+            # pylint: disable=E1137
+            self.first_iteration[InternalKeys.REQUEST_KEY][InternalKeys.TOOL_CHOICE] = tool_choice
+
+            # for any tools that are included in the request, add Smarter UI messages for each tool
             for tool in self.tools:
                 tool_type = tool.get("type")
                 if not tool_type:
@@ -1131,21 +1173,42 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         logger.warning(
             "smarter.apps.prompt.providers.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
         )
+        if not isinstance(self.messages, list):
+            raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
         self.model = plugin.plugin_prompt.model
         self.temperature = plugin.plugin_prompt.temperature
         self.max_completion_tokens = plugin.plugin_prompt.max_completion_tokens
-        if isinstance(self.messages, list):
-            self.messages = plugin.customize_prompt(self.messages)
-        else:
-            raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
-        if isinstance(self.tools, list):
-            self.tools.append(plugin.custom_tool)
-        else:
-            raise SmarterValueError(f"{self.formatted_class_name}: tools must be a list, got {type(self.tools)}")
+        self.messages = plugin.customize_prompt(self.messages)
+        if self.tools is None:
+            self.tools = []
+        self.tools.append(plugin.custom_tool)
         self.available_functions[plugin.function_calling_identifier] = plugin.tool_call_fetch_plugin_response
         self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)  # type: ignore[call-arg]
         llm_tool_presented.send(sender=self.handle_plugin_selected, tool=plugin.custom_tool, plugin=plugin)
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
+
+    def handle_function_provided(self, function: str) -> None:
+        """
+        Handle a function being provided. At the moment there is only
+        one built-in function: get_current_weather()
+
+        :param function: The name of the function that was provided.
+        :type function: str
+
+        :returns: None
+        :rtype: None
+        """
+        logger.debug("%s.handle_function_provided() called with function: %s.", self.formatted_class_name, function)
+        if self.tools is None:
+            self.tools = []
+        if self.available_functions is None:
+            self.available_functions = {}
+
+        if function == get_current_weather.__name__:
+            weather_tool = weather_tool_factory()
+            self.tools.append(weather_tool)
+            self.available_functions[get_current_weather.__name__] = get_current_weather
+            llm_tool_presented.send(sender=self.handle_function_provided, tool=weather_tool, plugin=None)
 
     def handle_success(self) -> dict:
         """
@@ -1195,7 +1258,14 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             "input_text": self.input_text,
         }
 
-    def handler(self, chat: Chat, data: dict, plugins: Optional[list[PluginBase]], user: User) -> Union[dict, list]:
+    def handler(
+        self,
+        user: User,
+        chat: Chat,
+        data: Union[dict[str, Any], list],
+        plugins: Optional[list[PluginBase]] = None,
+        functions: Optional[list[str]] = None,
+    ) -> Union[dict[str, Any], list]:
         """
         Process a chat prompt request and invoke the appropriate OpenAI-compatible API endpoint.
 
@@ -1203,12 +1273,14 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
         - Validating input and internal state.
         - Initializing or updating the message thread.
-        - Selecting and configuring plugins for the LLM.
+        - Selecting and configuring plugins and/or functions (collectively, tool calls) for the LLM.
         - Preparing and sending requests to the OpenAI API (or compatible provider).
         - Handling tool calls and plugin responses.
         - Managing billing, logging, and signal dispatch.
         - Returning a formatted HTTP response with the LLM's output and relevant metadata.
 
+        :param user: The user instance making the request.
+        :type user: User
         :param chat: The chat session instance associated with this request.
         :type chat: Chat
         :param data: The request payload, typically containing a session key and a list of message dictionaries.
@@ -1228,8 +1300,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
         :param plugins: A list of plugin instances to be considered for selection and presentation to the LLM.
         :type plugins: Optional[list[PluginBase]]
-        :param user: The user instance making the request.
-        :type user: User
+        :param functions: A list of predefined function definitions for tool calls.
+        :type functions: Optional[list[str]]
 
         :returns: An HTTP response dictionary (or list) containing the LLM's output, tool call results, and metadata.
         :rtype: dict or list
@@ -1257,17 +1329,26 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 chat=chat_instance,
                 data=request_data,
                 plugins=[plugin1, plugin2],
+                functions=[function_definition_1, function_definition_2],
                 user=current_user
             )
         """
-        logger.debug("%s.handler() called.", self.formatted_class_name)
+        plugins_list = [plugin.name for plugin in plugins] if plugins else []
+        logger.debug(
+            "%s.handler() called with user=%s, chat=%s, plugins=%s, functions=%s",
+            self.formatted_class_name,
+            user,
+            chat,
+            plugins_list,
+            functions,
+        )
         self._chat = chat
+        self.user = user
         if chat:
             self.user_profile = chat.user_profile
         self.data = data
-        if plugins:
-            self.plugins = plugins
-        self.user = user
+        self.plugins = plugins
+        self.functions = functions
 
         chat_started.send(sender=self.handler, chat=self.chat, data=self.data)
         self.iteration = 1
@@ -1279,6 +1360,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.model = self.chat.chatbot.default_model or self.default_model
             self.temperature = self.chat.chatbot.default_temperature or self.default_temperature
             self.max_completion_tokens = self.chat.chatbot.default_max_tokens or self.default_max_tokens
+            if not self.data:
+                raise SmarterValueError(f"{self.formatted_class_name}: data is required")
             self.input_text = self.get_input_text_prompt(data=self.data)
             self.request_meta_data = self.request_meta_data_factory()
 
@@ -1300,16 +1383,17 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 # and a user message.
                 self.messages = self.get_message_thread(data=self.data)
 
-            for plugin in self.plugins:
-                logger.debug(
-                    "%s %s - handler() plugin: %s, type: %s",
-                    self.formatted_class_name,
-                    formatted_text("handler()"),
-                    plugin.name,
-                    type(plugin).__name__,
-                )
-                if plugin.selected(user=self.user, input_text=self.input_text, messages=self.messages):
-                    self.handle_plugin_selected(plugin=plugin)
+            # add plugins to the prompt if any are selected
+            if self.plugins:
+                for plugin in self.plugins:
+                    if plugin.selected(user=self.user, input_text=self.input_text, messages=self.messages):
+                        self.handle_plugin_selected(plugin=plugin)
+
+            # add all functions that are included in the chatbot definition
+            # LAWRENCE
+            if self.functions:
+                for function in self.functions:
+                    self.handle_function_provided(function)
 
             self.prep_first_request()
             completions_kwargs = {
@@ -1317,9 +1401,14 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 InternalKeys.MESSAGES_KEY: self.openai_messages,
                 InternalKeys.TEMPERATURE_KEY: self.temperature,
                 InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
-                InternalKeys.TOOLS_KEY: self.tools,
-                InternalKeys.TOOL_CHOICE: OPENAI_TOOL_CHOICE,
             }
+            if self.tools:
+                # new rule: tool_choice should only be provided if there are
+                # actual tools included in the request, otherwise OpenAI's
+                # API returns a 400 error: 'Invalid value 'tool_choice'
+                # is only allowed when 'tools' are specified.'
+                completions_kwargs[InternalKeys.TOOLS_KEY] = self.tools
+                completions_kwargs[InternalKeys.TOOL_CHOICE] = OPENAI_TOOL_CHOICE
             completions_kwargs = self.prune_empty_values(completions_kwargs)
 
             logger.debug(
