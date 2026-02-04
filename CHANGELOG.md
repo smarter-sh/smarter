@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.113](https://github.com/smarter-sh/smarter/compare/v0.13.112...v0.13.113) (2026-02-04)
+
+### Bug Fixes
+
+* enable manifest-driven functions ([2d9c6f0](https://github.com/smarter-sh/smarter/commit/2d9c6f06f8fc6b4ff01e3134f2b49261cdaf399a))
+* ensure that hyphenated chatbot name slugs work in the workbench ([36242c4](https://github.com/smarter-sh/smarter/commit/36242c4ba948d5df26351854c9b4c95e704084a1))
+
 ## [0.13.112](https://github.com/smarter-sh/smarter/compare/v0.13.111...v0.13.112) (2026-01-31)
 
 ### Bug Fixes
