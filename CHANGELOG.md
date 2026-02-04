@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.116](https://github.com/smarter-sh/smarter/compare/v0.13.115...v0.13.116) (2026-02-04)
+
+### Bug Fixes
+
+* ensure that smarter_reactjs_app_loader_url() doesn't break collectstatic ([95989f0](https://github.com/smarter-sh/smarter/commit/95989f05a9af47d81c9ab74a08fe2120cf14314e))
+
 ## [0.13.115](https://github.com/smarter-sh/smarter/compare/v0.13.114...v0.13.115) (2026-02-04)
 
 ### Bug Fixes
