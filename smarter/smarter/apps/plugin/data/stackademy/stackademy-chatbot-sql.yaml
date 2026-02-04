@@ -40,5 +40,4 @@ spec:
     appInfoUrl: https://stackademy.edu/online-courses
   plugins:
     - stackademy_sql
-  functions:
-    - weather
+  functions: []

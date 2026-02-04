@@ -180,7 +180,7 @@ class SAMChatbotBroker(AbstractBroker):
                     spec=SAMChatbotSpec(**self.loader.manifest_spec),
                 )
             if self._manifest:
-                logger.info(
+                logger.debug(
                     "%s.__init__() initialized manifest from loader for %s %s",
                     self.formatted_class_name,
                     self.kind,
@@ -188,7 +188,7 @@ class SAMChatbotBroker(AbstractBroker):
                 )
         msg = f"{self.formatted_class_name}.__init__() broker for {self.kind} {self.name} is {self.ready_state}."
         if self.ready:
-            logger.info(msg)
+            logger.debug(msg)
         else:
             logger.warning(msg)
 
@@ -261,7 +261,7 @@ class SAMChatbotBroker(AbstractBroker):
                 if self.manifest:
                     data = self.manifest_to_django_orm()
                     data["user_profile"] = self.user_profile
-                    logger.info("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
+                    logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
                     logger.debug("%s.chatbot() Creating new ChatBot with data: %s", self.formatted_class_name, data)
                     self._chatbot = ChatBot.objects.create(**data)
 
@@ -672,7 +672,7 @@ class SAMChatbotBroker(AbstractBroker):
             chatbots = ChatBot.objects.filter(user_profile__account=self.account)
         valid_owners = valid_resource_owners_for_user(user_profile=self.user_profile)
         chatbots = chatbots.filter(user_profile__in=valid_owners).order_by("name")[:MAX_RESULTS]
-        logger.info(
+        logger.debug(
             "%s.get() found %s ChatBots for account %s", self.formatted_class_name, chatbots.count(), self.account
         )
 
@@ -780,10 +780,10 @@ class SAMChatbotBroker(AbstractBroker):
                 for key in ChatBotAPIKey.objects.filter(chatbot=self.chatbot):
                     if key.api_key != api_key:
                         key.delete()
-                        logger.info("%s.apply() Detached SmarterAuthToken %s from ChatBot %s", self.formatted_class_name, key.name, self.chatbot.name)  # type: ignore[union-attr]
+                        logger.debug("%s.apply() Detached SmarterAuthToken %s from ChatBot %s", self.formatted_class_name, key.name, self.chatbot.name)  # type: ignore[union-attr]
                 _, created = ChatBotAPIKey.objects.get_or_create(chatbot=self.chatbot, api_key=api_key)
                 if created:
-                    logger.info(
+                    logger.debug(
                         "%s.apply() SmarterAuthToken %s attached to ChatBot %s",
                         self.formatted_class_name,
                         self.manifest.spec.apiKey,
@@ -795,7 +795,7 @@ class SAMChatbotBroker(AbstractBroker):
             for plugin in ChatBotPlugin.objects.filter(chatbot=self.chatbot):
                 if self.manifest and plugin.plugin_meta.name not in self.manifest.spec.plugins:
                     plugin.delete()
-                    logger.info(
+                    logger.debug(
                         "%s.apply() Detached Plugin %s from ChatBot %s",
                         self.formatted_class_name,
                         plugin.plugin_meta.name,
@@ -820,7 +820,7 @@ class SAMChatbotBroker(AbstractBroker):
                         ) from e
                     _, created = ChatBotPlugin.objects.get_or_create(chatbot=self.chatbot, plugin_meta=plugin)
                     if created:
-                        logger.info(
+                        logger.debug(
                             "%s.apply() attached Plugin %s to ChatBot %s",
                             self.formatted_class_name,
                             plugin.name,
@@ -832,7 +832,7 @@ class SAMChatbotBroker(AbstractBroker):
             for function in ChatBotFunctions.objects.filter(chatbot=self.chatbot):
                 if function.name not in self.manifest.spec.functions:
                     function.delete()
-                    logger.info(
+                    logger.debug(
                         "%s.apply() Detached Function %s from ChatBot %s",
                         self.formatted_class_name,
                         function.name,
@@ -847,7 +847,7 @@ class SAMChatbotBroker(AbstractBroker):
                         )
                     _, created = ChatBotFunctions.objects.get_or_create(chatbot=self.chatbot, name=function)
                     if created:
-                        logger.info(
+                        logger.debug(
                             "%s.apply() attached Function %s to ChatBot %s",
                             self.formatted_class_name,
                             function,
