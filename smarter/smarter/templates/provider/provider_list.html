@@ -4,6 +4,7 @@
 {% block title %}Plugins{% endblock %}
 
 {% block body_class %}
+{{ block.super }}
 <style>
   .provider-card > .card-header {
     border-bottom: 1px solid #E5E5E5;
@@ -17,142 +18,300 @@
   .card-body > p {
     margin-bottom: 2px !important;
   }
+  .card-view {
+    display: none;
+  }
+  .list-view {
+    display: block;
+  }
+  .list-view h3 {
+    padding: 8px 0;
+    margin-bottom: 16px;
+  }
+  .table-responsive {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fff;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+  .table-striped > tbody > tr {
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .table-striped > tbody > tr:last-child {
+    border-bottom: none;
+  }
+  .table thead th {
+    border-bottom: 2px solid #e5e5e5;
+    background: #f8f9fa;
+  }
+  .table td, .table th {
+    vertical-align: middle;
+  }
+  .table td.name-col {
+    font-weight: 500;
+  }
+  .min-width-250 {
+    min-width: 250px;
+  }
+  .width-150 {
+    width: 150px;
+  }
 </style>
 {% endblock %}
 
 
+
 {% block dashboard_content %}
-<div id="kt_app_content" class="app-content flex-column-fluid">
-  <!--begin::Content container-->
-  <div id="kt_app_content_container" class="app-container container-xxl">
-    <!--begin::Row-->
-    <div class="row g-5 g-xl-10">
-      <!--begin::Col-->
-      <div class="mb-5 mb-xl-10">
-        <!--begin::Row-->
-        <div class="row g-5 g-xl-10 mb-l-10">
 
-          {% for provider in provider_list.providers %}
-          <!--begin::Col Smarter provider Card-->
-          <div class="col-lg-6 mb-4 p-5">
-            <!--begin::provider card-->
-            <a href="{% url 'provider:provider_by_name' provider.rfc1034_compliant_name %}">
-              <div id="plugin_id_{{ provider.id }}" class="card card-flush h-xl-100 provider-card {% if provider.user_profile == provider_list.smarter_admin %}smarter-provider-card{% else %}user-provider-card{% endif %}">
-                <!--begin::Header-->
-                <div class="p-5">
-                  <!--begin::Title-->
-                  <h4 class="card-title card-label fw-bold text-gray-800 pb-2 text-center d-flex justify-content-between align-items-center" style="border-bottom: 1px solid red;">
-                    <span class="text-start">{{ provider.name }}{% if provider.version %} v{{ provider.version }}{% endif %}</span>
-                    {% if provider.logo %}
-                      <img src="{{ provider.logo.url }}" alt="{{ provider.name }} logo" style="max-height: 40px; max-width: 80px; object-fit: contain; margin-left: 10px;" class="float-end ms-2">
-                    {% endif %}
-                  </h4>
-                  <h5>
-                  {% if provider.is_active %}
-                    <span class="badge badge-light-success">Active</span>
-                  {% else %}
-                    <span class="badge badge-light-danger">Inactive</span>
-                  {% endif %}
-                  {% if provider.is_verified %}
-                    <span class="badge badge-light-primary">Verified</span>
-                  {% else %}
-                    <span class="badge badge-light-warning">Unverified</span>
-                  {% endif %}
-                  {% if provider.is_featured %}
-                    <span class="badge badge-light-info">Featured</span>
-                  {% endif %}
-                  {% if provider.is_official_provider %}
-                    <span class="badge badge-light-dark">Smarter Official</span>
-                  {% else %}
-                    <span class="badge badge-light-dark">User Submitted</span>
-                  {% endif %}
-                  {% if provider.is_deprecated %}
-                    <span class="badge badge-light-danger">Deprecated</span>
-                  {% endif %}
-                  {% if provider.is_flagged %}
-                    <span class="badge badge-light-danger">Flagged</span>
-                  {% endif %}
-                  {% if provider.is_suspended %}
-                    <span class="badge badge-light-danger">Suspended</span>
-                  {% endif %}
-                  </h5>
-                  <!--end::Title-->
-                </div>
-                <!--end::Header-->
-                <!--begin::Body-->
-                <div class="card-body py-6">
-                  <table class="table table-borderless table-sm mb-0">
-                    <tbody>
-                      <tr>
-                        <th class="text-end">Created:</th>
-                        <td>{{ provider.created_at }}</td>
-                      </tr>
-                      <tr>
-                        <th class="text-end">Last updated:</th>
-                        <td>{{ provider.updated_at }}</td>
-                      </tr>
-                      {% if provider.description %}
-                      <tr>
-                        <th class="text-end">Description:</th>
-                        <td>{{ provider.description }}</td>
-                      </tr>
-                      {% endif %}
-                      {% if provider.website_url %}
-                      <tr>
-                        <th class="text-end">Website:</th>
-                        <td><a href="{{ provider.website_url }}" target="_blank">{{ provider.website_url }}</a></td>
-                      </tr>
-                      {% endif %}
-                      {% if provider.support_email %}
-                      <tr>
-                        <th class="text-end">Support email:</th>
-                        <td><a href="mailto:{{ provider.support_email }}">{{ provider.support_email }}</a></td>
-                      </tr>
-                      {% endif %}
-                      {% if provider.docs_url %}
-                      <tr>
-                        <th class="text-end">Docs:</th>
-                        <td><a href="{{ provider.docs_url }}" target="_blank">{{ provider.docs_url }}</a></td>
-                      </tr>
-                      {% endif %}
-                      {% if provider.terms_of_service_url %}
-                      <tr>
-                        <th class="text-end">Terms of service:</th>
-                        <td><a href="{{ provider.terms_of_service_url }}" target="_blank">{{ provider.terms_of_service_url }}</a></td>
-                      </tr>
-                      {% endif %}
-                      {% if provider.privacy_policy_url %}
-                      <tr>
-                        <th class="text-end">Privacy policy:</th>
-                        <td><a href="{{ provider.privacy_policy_url }}" target="_blank">{{ provider.privacy_policy_url }}</a></td>
-                      </tr>
-                      {% endif %}
-                      {% if provider.tos_accepted_by %}
-                      <tr>
-                        <th class="text-end">Terms accepted by:</th>
-                        <td>{{ provider.tos_accepted_by.get_full_name }} ({{ provider.tos_accepted_by.email }})</td>
-                      </tr>
-                      {% endif %}
-                    </tbody>
-                  </table>
-                </div>
-                <!--end::Body-->
-              </div>
-            </a>
-            <!--end::provider card-->
-          </div>
-          <!--end::Col Smarter provider Card-->
-          {% endfor %}
-
-        </div>
-        <!--end::Row-->
-
-      </div>
-      <!--end::Col-->
+<section id="providers">
+  <!-- Provider List/Card Toggle  -->
+  <div id="toggle-buttons">
+    <div class="btn-group border border-light rounded-3 bg-white" role="group" aria-label="View toggle">
+      <button id="listViewBtn" type="button" class="btn btn-outline-primary btn-sm active" title="List View" aria-label="List View">
+        <i class="fas fa-list"></i>
+      </button>
+      <button id="cardViewBtn" type="button" class="btn btn-outline-secondary btn-sm" title="Card View" aria-label="Card View">
+        <i class="fas fa-th-large"></i>
+      </button>
     </div>
-    <!--end::Row-->
-
   </div>
-  <!--end::Content container-->
-</div>
+
+  <!-- Provider List View  -->
+  <div class="list-view">
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+      <div id="kt_app_content_container" class="app-container container-xxl">
+        <div class="row g-5 g-xl-10">
+          <div class="col-xl-12 mb-5 mb-xl-10">
+            <div class="mt-15">
+              <h3 class="text-center">Providers</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th class="p-3">Name</th>
+                    <th class="width-150">Status</th>
+                    <th class="width-150">Created</th>
+                    <th class="width-150">Updated</th>
+                    <th>Description</th>
+                    <th>Website</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for provider in provider_list.providers %}
+                  <tr>
+                    <td class="name-col p-3 min-width-250">
+                      <a href="{% url 'provider:provider_by_name' provider.rfc1034_compliant_name %}">
+                        {{ provider.name }}{% if provider.version %} v{{ provider.version }}{% endif %}
+                      </a>
+                    </td>
+                    <td class="width-150">
+                      {% if provider.is_active %}
+                        <span class="badge badge-light-success">Active</span>
+                      {% else %}
+                        <span class="badge badge-light-danger">Inactive</span>
+                      {% endif %}
+                      {% if provider.is_verified %}
+                        <span class="badge badge-light-primary">Verified</span>
+                      {% else %}
+                        <span class="badge badge-light-warning">Unverified</span>
+                      {% endif %}
+                      {% if provider.is_featured %}
+                        <span class="badge badge-light-info">Featured</span>
+                      {% endif %}
+                      {% if provider.is_official_provider %}
+                        <span class="badge badge-light-dark">Smarter Official</span>
+                      {% else %}
+                        <span class="badge badge-light-dark">User Submitted</span>
+                      {% endif %}
+                      {% if provider.is_deprecated %}
+                        <span class="badge badge-light-danger">Deprecated</span>
+                      {% endif %}
+                      {% if provider.is_flagged %}
+                        <span class="badge badge-light-danger">Flagged</span>
+                      {% endif %}
+                      {% if provider.is_suspended %}
+                        <span class="badge badge-light-danger">Suspended</span>
+                      {% endif %}
+                    </td>
+                    <td class="width-150">{{ provider.created_at|date:'Y-m-d H:i' }}</td>
+                    <td class="width-150">{{ provider.updated_at|date:'Y-m-d H:i' }}</td>
+                    <td>{% if provider.description %}{{ provider.description }}{% endif %}</td>
+                    <td>{% if provider.website_url %}<a href="{{ provider.website_url }}" target="_blank">{{ provider.website_url }}</a>{% endif %}</td>
+                    <td class="p-3">
+                      <a href="{% url 'provider:provider_by_name' provider.rfc1034_compliant_name %}" class="btn btn-sm btn-primary">Manifest</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Provider Card View  -->
+  <div class="card-view">
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+      <div id="kt_app_content_container" class="app-container container-xxl">
+        <div class="row g-5 g-xl-10">
+          <div class="mb-5 mb-xl-10">
+            <section class="row g-5 g-xl-10 mb-l-10">
+              {% for provider in provider_list.providers %}
+              <!--begin::Col Provider Card-->
+              <article class="col-12 mt-1 p-2">
+                <!--begin::provider card-->
+                <a href="{% url 'provider:provider_by_name' provider.rfc1034_compliant_name %}">
+                  <div id="plugin_id_{{ provider.id }}" class="card card-flush h-xl-100 provider-card {% if provider.user_profile == provider_list.smarter_admin %}smarter-provider-card{% else %}user-provider-card{% endif %}">
+                    <!--begin::Header-->
+                    <div class="p-5">
+                      <!--begin::Title-->
+                      <h4 class="card-title card-label fw-bold text-gray-800 pb-2 text-center d-flex justify-content-between align-items-center" style="border-bottom: 1px solid red;">
+                        <span class="text-start">{{ provider.name }}{% if provider.version %} v{{ provider.version }}{% endif %}</span>
+                        {% if provider.logo %}
+                          <img src="{{ provider.logo.url }}" alt="{{ provider.name }} logo" style="max-height: 40px; max-width: 80px; object-fit: contain; margin-left: 10px;" class="float-end ms-2">
+                        {% endif %}
+                      </h4>
+                      <h5>
+                      {% if provider.is_active %}
+                        <span class="badge badge-light-success">Active</span>
+                      {% else %}
+                        <span class="badge badge-light-danger">Inactive</span>
+                      {% endif %}
+                      {% if provider.is_verified %}
+                        <span class="badge badge-light-primary">Verified</span>
+                      {% else %}
+                        <span class="badge badge-light-warning">Unverified</span>
+                      {% endif %}
+                      {% if provider.is_featured %}
+                        <span class="badge badge-light-info">Featured</span>
+                      {% endif %}
+                      {% if provider.is_official_provider %}
+                        <span class="badge badge-light-dark">Smarter Official</span>
+                      {% else %}
+                        <span class="badge badge-light-dark">User Submitted</span>
+                      {% endif %}
+                      {% if provider.is_deprecated %}
+                        <span class="badge badge-light-danger">Deprecated</span>
+                      {% endif %}
+                      {% if provider.is_flagged %}
+                        <span class="badge badge-light-danger">Flagged</span>
+                      {% endif %}
+                      {% if provider.is_suspended %}
+                        <span class="badge badge-light-danger">Suspended</span>
+                      {% endif %}
+                      </h5>
+                      <!--end::Title-->
+                    </div>
+                    <!--end::Header-->
+                    <!--begin::Body-->
+                    <div class="card-body py-6">
+                      <table class="table table-borderless table-sm mb-0">
+                        <tbody>
+                          <tr>
+                            <th class="text-end">Created:</th>
+                            <td>{{ provider.created_at }}</td>
+                          </tr>
+                          <tr>
+                            <th class="text-end">Last updated:</th>
+                            <td>{{ provider.updated_at }}</td>
+                          </tr>
+                          {% if provider.description %}
+                          <tr>
+                            <th class="text-end">Description:</th>
+                            <td>{{ provider.description }}</td>
+                          </tr>
+                          {% endif %}
+                          {% if provider.website_url %}
+                          <tr>
+                            <th class="text-end">Website:</th>
+                            <td><a href="{{ provider.website_url }}" target="_blank">{{ provider.website_url }}</a></td>
+                          </tr>
+                          {% endif %}
+                          {% if provider.support_email %}
+                          <tr>
+                            <th class="text-end">Support email:</th>
+                            <td><a href="mailto:{{ provider.support_email }}">{{ provider.support_email }}</a></td>
+                          </tr>
+                          {% endif %}
+                          {% if provider.docs_url %}
+                          <tr>
+                            <th class="text-end">Docs:</th>
+                            <td><a href="{{ provider.docs_url }}" target="_blank">{{ provider.docs_url }}</a></td>
+                          </tr>
+                          {% endif %}
+                          {% if provider.terms_of_service_url %}
+                          <tr>
+                            <th class="text-end">Terms of service:</th>
+                            <td><a href="{{ provider.terms_of_service_url }}" target="_blank">{{ provider.terms_of_service_url }}</a></td>
+                          </tr>
+                          {% endif %}
+                          {% if provider.privacy_policy_url %}
+                          <tr>
+                            <th class="text-end">Privacy policy:</th>
+                            <td><a href="{{ provider.privacy_policy_url }}" target="_blank">{{ provider.privacy_policy_url }}</a></td>
+                          </tr>
+                          {% endif %}
+                          {% if provider.tos_accepted_by %}
+                          <tr>
+                            <th class="text-end">Terms accepted by:</th>
+                            <td>{{ provider.tos_accepted_by.get_full_name }} ({{ provider.tos_accepted_by.email }})</td>
+                          </tr>
+                          {% endif %}
+                        </tbody>
+                      </table>
+                    </div>
+                    <!--end::Body-->
+                  </div>
+                </a>
+                <!--end::provider card-->
+              </article>
+              <!--end::Col Provider Card-->
+              {% endfor %}
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block javascript_extra %}
+{{ block.super }}
+  <script>
+    // View toggle functionality handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const listViewBtn = document.getElementById('listViewBtn');
+      const cardViewBtn = document.getElementById('cardViewBtn');
+      const listView = document.querySelector('.list-view');
+      const cardView = document.querySelector('.card-view');
+
+      function showListView() {
+        listView.style.display = 'block';
+        cardView.style.display = 'none';
+        listViewBtn.classList.add('active');
+        listViewBtn.classList.replace('btn-outline-secondary', 'btn-outline-primary');
+        cardViewBtn.classList.remove('active');
+        cardViewBtn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
+      }
+      function showCardView() {
+        listView.style.display = 'none';
+        cardView.style.display = 'block';
+        cardViewBtn.classList.add('active');
+        cardViewBtn.classList.replace('btn-outline-secondary', 'btn-outline-primary');
+        listViewBtn.classList.remove('active');
+        listViewBtn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
+      }
+
+      listViewBtn.addEventListener('click', showListView);
+      cardViewBtn.addEventListener('click', showCardView);
+      // Default to list view on load
+      showListView();
+    });
+  </script>
 {% endblock %}

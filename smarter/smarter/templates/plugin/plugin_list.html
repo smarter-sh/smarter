@@ -110,7 +110,7 @@
                     <td class="width-150">{{ plugin.updated_at|date:'Y-m-d H:i' }}</td>
                     <td>{% if plugin.description %}{{ plugin.description }}{% endif %}</td>
                     <td class="p-3">
-                      <a href="{% url 'plugin:plugin_by_name' plugin.rfc1034_compliant_kind plugin.rfc1034_compliant_name %}" class="btn btn-sm btn-primary">View</a>
+                      <a href="{% url 'plugin:plugin_by_name' plugin.rfc1034_compliant_kind plugin.rfc1034_compliant_name %}" class="btn btn-sm btn-primary">Manifest</a>
                     </td>
                   </tr>
                   {% endfor %}
