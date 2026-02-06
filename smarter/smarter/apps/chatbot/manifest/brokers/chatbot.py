@@ -158,6 +158,13 @@ class SAMChatbotBroker(AbstractBroker):
             args,
             kwargs,
         )
+        self._chatbot = kwargs.get("chatbot")
+        if self._chatbot:
+            logger.debug(
+                "%s.__init__() initialized with existing ChatBot instance: %s",
+                self.formatted_class_name,
+                self._chatbot,
+            )
         if not self.ready:
             if not self.loader and not self.manifest and not self.chatbot:
                 logger.warning(
@@ -570,6 +577,15 @@ class SAMChatbotBroker(AbstractBroker):
                 metadata=SAMChatbotMetadata(**self.loader.manifest_metadata),
                 spec=SAMChatbotSpec(**self.loader.manifest_spec),
             )
+        if self._chatbot:
+            self._manifest = self.django_orm_to_manifest_dict()
+            if self._manifest:
+                logger.debug(
+                    "%s.manifest() initialized from loader for existing ChatBot %s with name %s",
+                    self.formatted_class_name,
+                    self._chatbot,
+                    self._chatbot.name,
+                )
         else:
             logger.warning(
                 "%s.manifest() could not initialize",

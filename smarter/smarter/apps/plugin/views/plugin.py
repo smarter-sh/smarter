@@ -14,6 +14,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.shortcuts import render
 
 from smarter.apps.account.models import User
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -99,7 +100,7 @@ class PluginDetailView(DocsBaseView):
             logger.error("%s.get() Plugin %s not found for user %s.", self.formatted_class_name, self.name, request.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Plugin not found")
 
-        logger.info(
+        logger.debug(
             "%s.get() Rendering plugin detail view for %s of kind %s, kwargs=%s.",
             self.formatted_class_name,
             self.name,
@@ -165,7 +166,5 @@ class PluginListView(SmarterAuthenticatedNeverCachedWebView):
             )
             return SmarterHttpResponseNotFound(request=request, error_message="User is not authenticated")
         self.plugins = PluginMeta.get_cached_plugins_for_user_profile_id(self.user_profile.id)  # type: ignore[attr-defined]
-        context = {
-            "plugins": self.plugins,
-        }
+        context = {"plugins": self.plugins, "smarter_admin": smarter_cached_objects.smarter_admin}
         return self.clean_http_response(request=request, template_path=self.template_path, context=context)
