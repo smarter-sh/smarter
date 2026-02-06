@@ -4,6 +4,7 @@
 {% block title %}Plugins{% endblock %}
 
 {% block body_class %}
+{{ block.super }}
 <style>
   .plugin-card > .card-header {
     border-bottom: 1px solid #E5E5E5;
@@ -17,64 +18,205 @@
   .card-body > p {
     margin-bottom: 2px !important;
   }
+  .card-view {
+    display: none;
+  }
+  .list-view {
+    display: block;
+  }
+  .list-view h3 {
+    padding: 8px 0;
+    margin-bottom: 16px;
+  }
+  .table-responsive {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fff;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+  .table-striped > tbody > tr {
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .table-striped > tbody > tr:last-child {
+    border-bottom: none;
+  }
+  .table thead th {
+    border-bottom: 2px solid #e5e5e5;
+    background: #f8f9fa;
+  }
+  .table td, .table th {
+    vertical-align: middle;
+  }
+  .table td.name-col {
+    font-weight: 500;
+  }
+  .min-width-250 {
+    min-width: 250px;
+  }
+  .width-150 {
+    width: 150px;
+  }
 </style>
 {% endblock %}
 
 
 {% block dashboard_content %}
-<div id="kt_app_content" class="app-content flex-column-fluid">
-  <!--begin::Content container-->
-  <div id="kt_app_content_container" class="app-container container-xxl">
-    <!--begin::Row-->
-    <div class="row g-5 g-xl-10">
-      <!--begin::Col-->
-      <div class="col-xl-8 mb-5 mb-xl-10">
-        <!--begin::Row-->
-        <div class="row g-5 g-xl-10 mb-l-10">
 
-          {% for plugin in plugins %}
-          <!--begin::Col Smarter plugin Card-->
-          <div class="col-lg-6 mb-4 p-5">
-            <!--begin::plugin card-->
-            <a href="{% url 'plugin:plugin_by_name' plugin.rfc1034_compliant_kind plugin.rfc1034_compliant_name %}">
-              <div id="plugin_id_{{ plugin.id }}" class="card card-flush h-xl-100 plugin-card {% if plugin.user_profile == smarter_admin %}smarter-plugin-card{% else %}user-plugin-card{% endif %}">
-                <!--begin::Header-->
-                <div class="p-5">
-                  <!--begin::Title-->
-                  <div class="card-title card-label fw-bold text-gray-800 text-center" style="border-bottom: 1px solid red;">
-                    <h4  >{{ plugin.name }}{% if plugin.version %} v{{ plugin.version }}{% endif %}</h4>
-                    <p>({{ plugin.user_profile }})</p>
-                  </div>
-                  <!--end::Title-->
-                </div>
-                <!--end::Header-->
-                <!--begin::Body-->
-                <div class="card-body py-6">
-                  <p>name: {{ plugin.name }}</p>
-                  <p>class: {{ plugin.kind }}</p>
-                  <p>created: {{ plugin.created_at }}</p>
-                  <p>last updated: {{ plugin.updated_at }}</p>
-                  {% if plugin.description %}
-                  <p>description: {{ plugin.description }}</p>
-                  {% endif %}
-                </div>
-                <!--end::Body-->
-              </div>
-            </a>
-            <!--end::plugin card-->
-          </div>
-          <!--end::Col Smarter plugin Card-->
-          {% endfor %}
-
-        </div>
-        <!--end::Row-->
-
-      </div>
-      <!--end::Col-->
+<section id="plugins">
+  <!-- Plugin List/Card Toggle  -->
+  <div id="toggle-buttons">
+    <div class="btn-group border border-light rounded-3 bg-white" role="group" aria-label="View toggle">
+      <button id="listViewBtn" type="button" class="btn btn-outline-primary btn-sm active" title="List View" aria-label="List View">
+        <i class="fas fa-list"></i>
+      </button>
+      <button id="cardViewBtn" type="button" class="btn btn-outline-secondary btn-sm" title="Card View" aria-label="Card View">
+        <i class="fas fa-th-large"></i>
+      </button>
     </div>
-    <!--end::Row-->
-
   </div>
-  <!--end::Content container-->
-</div>
+
+  <!-- Plugin List View  -->
+  <div class="list-view">
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+      <div id="kt_app_content_container" class="app-container container-xxl">
+        <div class="row g-5 g-xl-10">
+          <div class="col-xl-12 mb-5 mb-xl-10">
+            <div class="mt-15">
+              <h3 class="text-center">Plugins</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th class="p-3">Name</th>
+                    <th class="width-150">Class</th>
+                    <th class="width-150">Created</th>
+                    <th class="width-150">Updated</th>
+                    <th>Description</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for plugin in plugins %}
+                  <tr>
+                    <td class="name-col p-3 min-width-250">
+                      <a href="{% url 'plugin:plugin_by_name' plugin.rfc1034_compliant_kind plugin.rfc1034_compliant_name %}">
+                        {{ plugin.name }}{% if plugin.version %} v{{ plugin.version }}{% endif %}
+                      </a>
+                    </td>
+                    <td class="width-150">{% if plugin.kind|lower == 'plugin' %}StaticPlugin{% else %}{{ plugin.kind }}{% endif %}</td>
+                    <td class="width-150">{{ plugin.created_at|date:'Y-m-d H:i' }}</td>
+                    <td class="width-150">{{ plugin.updated_at|date:'Y-m-d H:i' }}</td>
+                    <td>{% if plugin.description %}{{ plugin.description }}{% endif %}</td>
+                    <td class="p-3">
+                      <a href="{% url 'plugin:plugin_by_name' plugin.rfc1034_compliant_kind plugin.rfc1034_compliant_name %}" class="btn btn-sm btn-primary">View</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plugin Card View  -->
+  <div class="card-view">
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+      <div id="kt_app_content_container" class="app-container container-xxl">
+        <div class="row g-5 g-xl-10">
+          <div class="col-xl-8 mb-5 mb-xl-10">
+            <section class="row g-5 g-xl-10 mb-l-10">
+              {% for plugin in plugins %}
+              <!--begin::Col Plugin Card-->
+              <article class="col-12 mt-1 p-2">
+                <!--begin::plugin card-->
+                <a href="{% url 'plugin:plugin_by_name' plugin.rfc1034_compliant_kind plugin.rfc1034_compliant_name %}">
+                  <div id="plugin_id_{{ plugin.id }}" class="card card-flush h-xl-100 plugin-card {% if plugin.user_profile == smarter_admin %}smarter-plugin-card{% else %}user-plugin-card{% endif %}">
+                    <!--begin::Header-->
+                    <div class="p-5">
+                      <!--begin::Title-->
+                      <h4 class="card-title card-label fw-bold text-gray-800 text-center" style="border-bottom: 1px solid red;">{{ plugin.name }}{% if plugin.version %} v{{ plugin.version }}{% endif %}</h4>
+                      <p>({{ plugin.user_profile }})</p>
+                    </div>
+                    <!--end::Header-->
+                    <!--begin::Body-->
+                    <div class="card-body py-2">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left; width: 30%;">Name</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ plugin.name }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Class</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{% if plugin.kind|lower == 'plugin' %}StaticPlugin{% else %}{{ plugin.kind }}{% endif %}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Created</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ plugin.created_at }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Last updated</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ plugin.updated_at }}</td>
+                        </tr>
+                        {% if plugin.description %}
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Description</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ plugin.description }}</td>
+                        </tr>
+                        {% endif %}
+                      </table>
+                    </div>
+                    <!--end::Body-->
+                  </div>
+                </a>
+                <!--end::plugin card-->
+              </article>
+              <!--end::Col Plugin Card-->
+              {% endfor %}
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block javascript_extra %}
+{{ block.super }}
+  <script>
+    // View toggle functionality handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const listViewBtn = document.getElementById('listViewBtn');
+      const cardViewBtn = document.getElementById('cardViewBtn');
+      const listView = document.querySelector('.list-view');
+      const cardView = document.querySelector('.card-view');
+
+      function showListView() {
+        listView.style.display = 'block';
+        cardView.style.display = 'none';
+        listViewBtn.classList.add('active');
+        listViewBtn.classList.replace('btn-outline-secondary', 'btn-outline-primary');
+        cardViewBtn.classList.remove('active');
+        cardViewBtn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
+      }
+      function showCardView() {
+        listView.style.display = 'none';
+        cardView.style.display = 'block';
+        cardViewBtn.classList.add('active');
+        cardViewBtn.classList.replace('btn-outline-secondary', 'btn-outline-primary');
+        listViewBtn.classList.remove('active');
+        listViewBtn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
+      }
+
+      listViewBtn.addEventListener('click', showListView);
+      cardViewBtn.addEventListener('click', showCardView);
+      // Default to list view on load
+      showListView();
+    });
+  </script>
 {% endblock %}
