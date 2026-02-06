@@ -111,7 +111,7 @@
                     <td class="width-150">{{ connection.updated_at|date:'Y-m-d H:i' }}</td>
                     <td>{% if connection.description %}{{ connection.description }}{% endif %}</td>
                     <td class="p-3">
-                      <a href="{% url 'plugin:connection_by_name' connection.kind connection.name %}" class="btn btn-sm btn-primary">View</a>
+                      <a href="{% url 'plugin:connection_by_name' connection.kind connection.name %}" class="btn btn-sm btn-primary">Manifest</a>
                     </td>
                   </tr>
                   {% endfor %}
