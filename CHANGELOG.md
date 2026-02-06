@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.118](https://github.com/smarter-sh/smarter/compare/v0.13.117...v0.13.118) (2026-02-06)
+
+### Bug Fixes
+
+* add a listview and toggle switch ([5cf937f](https://github.com/smarter-sh/smarter/commit/5cf937fa55530ffe119af536a35248a57dfca2e7))
+* add a listview and toggle switch ([340fabe](https://github.com/smarter-sh/smarter/commit/340fabe947aaab22ccce8a7b55b45a5f9cc2514c))
+* add a listview and toggle switch ([9f317a8](https://github.com/smarter-sh/smarter/commit/9f317a84d1785dbe49a920f3aa0121f8b24507ba))
+
 ## [0.13.117](https://github.com/smarter-sh/smarter/compare/v0.13.116...v0.13.117) (2026-02-06)
 
 ### Bug Fixes
