@@ -121,7 +121,7 @@
                   {% for chatbot_helper in prompt_list.user_chatbots|default:"" %}
                   <tr>
                     <td class="name-col p-3">
-                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
+                      <a href="{% url 'prompt_workbench:chat_by_name' chatbot_helper.rfc1034_compliant_name %}">
                         {{ chatbot_helper.name }}{% if chatbot_helper.chatbot.version %} v{{ chatbot_helper.chatbot.version }}{% endif %}
                       </a>
                     </td>
@@ -149,10 +149,10 @@
                       {% endif %}
                     </td>
                     <td>
-                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}" class="btn btn-sm btn-primary">Open</a>
+                      <a href="{% url 'prompt_workbench:chat_by_name' chatbot_helper.rfc1034_compliant_name %}" class="btn btn-sm btn-primary">Open</a>
                     </td>
                     <td class="p-3">
-                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}" class="btn btn-sm btn-info">Manifest</a>
+                      <a href="{% url 'prompt_workbench:chatbot_by_id_detailview' chatbot_helper.chatbot.id %}" class="btn btn-sm btn-info">Manifest</a>
                     </td>
                   </tr>
                   {% endfor %}
@@ -186,7 +186,7 @@
                   {% for chatbot_helper in prompt_list.shared_chatbots|default:"" %}
                   <tr>
                     <td class="name-col p-3">
-                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
+                      <a href="{% url 'prompt_workbench:chat_by_name' chatbot_helper.rfc1034_compliant_name %}">
                         {{ chatbot_helper.name }}{% if chatbot_helper.chatbot.version %} v{{ chatbot_helper.chatbot.version }}{% endif %}
                       </a>
                     </td>
@@ -214,10 +214,10 @@
                       {% endif %}
                     </td>
                     <td>
-                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}" class="btn btn-sm btn-primary">Open</a>
+                      <a href="{% url 'prompt_workbench:chat_by_name' chatbot_helper.rfc1034_compliant_name %}" class="btn btn-sm btn-primary">Open</a>
                     </td>
                     <td class="p-3">
-                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}" class="btn btn-sm btn-info">Manifest</a>
+                      <a href="{% url 'prompt_workbench:chatbot_by_id_detailview' chatbot_helper.chatbot.id %}" class="btn btn-sm btn-info">Manifest</a>
                     </td>
                   </tr>
                   {% endfor %}
@@ -251,7 +251,7 @@
               <!--begin::Col User Chatbot Card-->
               <article class="col-12 mt-1 p-2">
                 <!--begin::Chatbot card-->
-                <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
+                <a href="{% url 'prompt_workbench:chat_by_name' chatbot_helper.rfc1034_compliant_name %}">
                   <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card user-chatbot-card">
                     <!--begin::Header-->
                     <div class="p-5">
@@ -353,7 +353,7 @@
               <!--begin::Col Shared Chatbot Card-->
               <article class="col-12 mt-1 p-2">
                 <!--begin::Chatbot card-->
-                <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
+                <a href="{% url 'prompt_workbench:chat_by_name' chatbot_helper.rfc1034_compliant_name %}">
                   <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card smarter-chatbot-card">
                     <!--begin::Header-->
                     <div class="p-5">

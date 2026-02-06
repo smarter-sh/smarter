@@ -61,10 +61,12 @@ class DocsBaseView(SmarterAuthenticatedWebView):
             )
 
         logger.debug(
-            "Getting brokered JSON response for reverse_name=%s, kind=%s, request.user=%s",
+            "Getting brokered JSON response for reverse_name=%s, kind=%s, request.user=%s, args=%s, kwargs=%s",
             reverse_name,
             self.kind,
-            request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr]
+            request.user.username if is_authenticated_request(request) else "Anonymous",  # type: ignore[union-attr],
+            args,
+            kwargs,
         )
         if not self.template_path:
             raise DocsError("self.template_path not set.")
@@ -84,10 +86,12 @@ class DocsBaseView(SmarterAuthenticatedWebView):
             setattr(cli_request, SMARTER_IS_INTERNAL_API_REQUEST, False)
 
         logger.debug(
-            "Creating brokered request for reverse_name=%s, kind=%s, request.user=%s",
+            "Creating brokered request for reverse_name=%s, kind=%s, request.user=%s, args=%s, kwargs=%s",
             reverse_name,
             self.kind,
             cli_request.user.username if cli_request.user.is_authenticated else "Anonymous",  # type: ignore[union-attr]
+            args,
+            kwargs,
         )
         response = view(request=cli_request, kind=self.kind.value, *args, **kwargs)
         json_response = json.loads(response.content.decode("utf-8"))
