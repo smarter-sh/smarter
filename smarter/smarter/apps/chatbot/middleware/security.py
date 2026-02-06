@@ -155,7 +155,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
         # 3.) readiness and liveness checks
         # ---------------------------------------------------------------------
-        path_parts = list(filter(None, parsed_url.path.split("/")))
+        path_parts = list(filter(None, parsed_url.path.split("/")))  # type: ignore[assignment]
         # if the entire path is healthz or readiness then we don't need to check
         if len(path_parts) == 1 and path_parts[0] in self.amnesty_urls:
             logger.debug(
@@ -170,7 +170,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         #    http://platform.example.com/.well-known/acme-challenge/RYdbP7-MUXbQRZI1CZj-KKySBkHwHze8z04cjyN18Bk
         #    http://stackademy-sql.3141-5926-5359.api.example.com/.well-known/acme-challenge/QrRzO7QE7y6DhV8UqhfdD4_OoQ3Yh6XLR1qbJCRGcls
         # ---------------------------------------------------------------------
-        if ".well-known/acme-challenge" in parsed_url.path:
+        if ".well-known/acme-challenge" in str(parsed_url.path):
             logger.debug(
                 "%s %s identified as an ACME challenge request, exiting.",
                 self.formatted_class_name,
