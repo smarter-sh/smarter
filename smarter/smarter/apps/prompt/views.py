@@ -8,6 +8,7 @@ import traceback
 from http import HTTPStatus
 from typing import Any, Optional, Union
 
+import yaml
 from django.conf import settings
 from django.db import models
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -15,7 +16,9 @@ from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
+from smarter.apps.account.models import User
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.chatbot.models import (
     ChatBot,
     ChatBotHelper,
@@ -29,13 +32,17 @@ from smarter.apps.chatbot.serializers import (
     ChatBotPluginSerializer,
 )
 from smarter.apps.chatbot.utils import get_cached_chatbots_for_user_profile
+from smarter.apps.docs.views.base import DocsBaseView
 from smarter.apps.plugin.models import (
     PluginSelectorHistory,
     PluginSelectorHistorySerializer,
 )
 from smarter.apps.prompt.models import Chat, ChatHelper
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.common.const import (
+    SMARTER_CHAT_SESSION_KEY_NAME,
+    SMARTER_IS_INTERNAL_API_REQUEST,
+)
 from smarter.common.exceptions import (
     SmarterException,
 )
@@ -816,3 +823,137 @@ class PromptListView(SmarterAuthenticatedNeverCachedWebView):
             formatted_json(context),
         )
         return render(request, template_name=self.template_path, context=context)
+
+
+class PromptDetailView(DocsBaseView):
+    """
+    Renders the detail view for a Smarter chatbot.
+
+    This view renders a detailed manifest for a specific chatbot, including
+    its configuration and metadata, in YAML format. It is intended for
+    authenticated users and provides error handling for missing or
+    unsupported chatbot kinds and names.
+
+    :param request: Django HTTP request object.
+    :type request: WSGIRequest
+    :param args: Additional positional arguments.
+    :type args: tuple
+    :param kwargs: Keyword arguments, must include 'name' (chatbot name) and 'kind' (chatbot type).
+    :type kwargs: dict
+
+    :returns: Rendered HTML page with chatbot manifest details, or a 404 error page if the chatbot is not found or parameters are invalid.
+    :rtype: HttpResponse
+
+    .. note::
+
+        The chatbot name and kind must be provided and valid. Otherwise, a "not found" response is returned.
+
+    .. seealso::
+
+        :class:`ChatBot` for chatbot retrieval.
+        :class:`ApiV1CliDescribeApiView` for API details.
+
+    **Example usage**::
+
+        GET /chatbot/detail/?name=my_chatbot&kind=custom
+
+    """
+
+    template_path = "prompt/manifest_detail.html"
+
+    chatbot: Optional[ChatBot] = None
+    chatbot_helper: Optional[ChatBotHelper] = None
+
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
+        """
+        Dispatch method to handle the request for the manifest detail page.
+
+        This method is responsible for preparing and serving the Django template that
+        displays the chatbot manifest details in YAML format.
+
+        **Key Features:**
+
+        - **Authentication Protected:**
+          Requires the user to be authenticated. If the user is not authenticated, access is denied.
+
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request object.
+        *args
+            Additional positional arguments.
+        **kwargs
+            Additional keyword arguments.
+
+        Returns
+        -------
+        HttpResponse
+            Renders the Django template for the manifest detail page, displaying chatbot manifest details in YAML format.
+        """
+        if (
+            not hasattr(request, "user")
+            or not hasattr(request.user, "is_authenticated")
+            or not request.user.is_authenticated
+        ):
+            return redirect("/login/")
+
+        retval = super().dispatch(request, *args, **kwargs)
+        if retval.status_code >= HTTPStatus.BAD_REQUEST:
+            return retval
+
+        chatbot_id = kwargs.pop("id", None)
+        try:
+            self.chatbot = ChatBot.objects.get(id=chatbot_id)
+            self.chatbot_helper = ChatBotHelper(request=request, chatbot=self.chatbot)
+        except ChatBot.DoesNotExist:
+            return SmarterHttpResponseNotFound(request=request, error_message=f"ChatBot with id {chatbot_id} not found")
+
+        logger.debug(
+            "%s.dispatch() - url=%s, account=%s, user=%s, chatbot=%s",
+            self.formatted_class_name,
+            self.url,
+            self.account,
+            self.user_profile.user,
+            self.chatbot,
+        )
+
+        # get_brokered_json_response() adds self.kind to kwargs, so we remove it here.
+        # TypeError: smarter.apps.api.v1.cli.views.describe.View.as_view.<locals>.view() got multiple values for keyword argument 'kind'
+        self.kind = SAMKinds.CHATBOT
+        kwargs["name"] = self.chatbot.name
+        orginal_user = getattr(request, "user", None)
+        request.user = self.chatbot.user_profile.user
+
+        setattr(request, SMARTER_IS_INTERNAL_API_REQUEST, True)
+        logger.debug(
+            "%s.dispatch() - rendering template %s with kwargs: %s",
+            self.formatted_class_name,
+            self.template_path,
+            kwargs,
+        )
+
+        # to avoid circular imports at app startup.
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+        from smarter.apps.api.v1.cli.views.describe import ApiV1CliDescribeApiView
+
+        view = ApiV1CliDescribeApiView.as_view()
+        json_response = self.get_brokered_json_response(
+            reverse_name=ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.describe,
+            view=view,
+            request=request,
+            *args,
+            **kwargs,
+        )
+
+        yaml_response = yaml.dump(json_response, default_flow_style=False)
+        context = {
+            "manifest": yaml_response,
+            "page_title": self.chatbot.name,
+        }
+        if not self.template_path:
+            logger.error("%s.setup() self.template_path is not set.", self.formatted_class_name)
+            return SmarterHttpResponseNotFound(request=request, error_message="Template path not set")
+        request.user = orginal_user
+        return render(request, self.template_path, context=context)
