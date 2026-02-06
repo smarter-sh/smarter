@@ -4,6 +4,7 @@
 {% block title %}Connections{% endblock %}
 
 {% block body_class %}
+{{ block.super }}
 <style>
   .connection-card > .card-header {
     border-bottom: 1px solid #E5E5E5;
@@ -17,65 +18,210 @@
   .card-body > p {
     margin-bottom: 2px !important;
   }
+  .card-view {
+    display: none;
+  }
+  .list-view {
+    display: block;
+  }
+  .list-view h3 {
+    padding: 8px 0;
+    margin-bottom: 16px;
+  }
+  .table-responsive {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fff;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+  .table-striped > tbody > tr {
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .table-striped > tbody > tr:last-child {
+    border-bottom: none;
+  }
+  .table thead th {
+    border-bottom: 2px solid #e5e5e5;
+    background: #f8f9fa;
+  }
+  .table td, .table th {
+    vertical-align: middle;
+  }
+  .table td.name-col {
+    font-weight: 500;
+  }
+  .min-width-250 {
+    min-width: 250px;
+  }
+  .width-150 {
+    width: 150px;
+  }
 </style>
 {% endblock %}
 
 
+
 {% block dashboard_content %}
-<div id="kt_app_content" class="app-content flex-column-fluid">
-  <!--begin::Content container-->
-  <div id="kt_app_content_container" class="app-container container-xxl">
-    <!--begin::Row-->
-    <div class="row g-5 g-xl-10">
-      <!--begin::Col-->
-      <div class="col-xl-8 mb-5 mb-xl-10">
-        <!--begin::Row-->
-        <div class="row g-5 g-xl-10 mb-l-10">
 
-          {% for connection in connections %}
-          <!--begin::Col Smarter connection Card-->
-          <div class="col-lg-6 mb-4 p-5">
-            <!--begin::connection card-->
-            <a href="{% url 'plugin:connection_by_name' connection.kind connection.name %}">
-              <div id="connection_id_{{ connection.id }}" class="card card-flush h-xl-100 connection-card {% if connection.user_profile.account.id == 1 %}smarter-connection-card{% else %}user-connection-card{% endif %}">
-                <!--begin::Header-->
-                <div class="p-5">
-                  <!--begin::Title-->
-                  <div class="card-title card-label fw-bold text-gray-800 pb-2 text-center" style="border-bottom: 1px solid red;">
-                    <h4>{{ connection.name }}{% if connection.version %} v{{ connection.version }}{% endif %}</h4>
-                    <p>({{ connection.user_profile }})</p>
-                  </div>
-                  <!--end::Title-->
-                </div>
-                <!--end::Header-->
-                <!--begin::Body-->
-                <div class="card-body py-6">
-                  <p>name: {{ connection.name }}</p>
-                  <p>created: {{ connection.created_at }}</p>
-                  <p>last updated: {{ connection.updated_at }}</p>
-                  <p>kind: {{ connection.kind }}</p>
-                  {% if connection.description %}
-                  <p>description: {{ connection.description }}</p>
-                  {% endif %}
-                  <p>connection: {{ connection.connection_string }}</p>
-                </div>
-                <!--end::Body-->
-              </div>
-            </a>
-            <!--end::connection card-->
-          </div>
-          <!--end::Col Smarter connection Card-->
-          {% endfor %}
-
-        </div>
-        <!--end::Row-->
-
-      </div>
-      <!--end::Col-->
+<section id="connections">
+  <!-- Connection List/Card Toggle  -->
+  <div id="toggle-buttons">
+    <div class="btn-group border border-light rounded-3 bg-white" role="group" aria-label="View toggle">
+      <button id="listViewBtn" type="button" class="btn btn-outline-primary btn-sm active" title="List View" aria-label="List View">
+        <i class="fas fa-list"></i>
+      </button>
+      <button id="cardViewBtn" type="button" class="btn btn-outline-secondary btn-sm" title="Card View" aria-label="Card View">
+        <i class="fas fa-th-large"></i>
+      </button>
     </div>
-    <!--end::Row-->
-
   </div>
-  <!--end::Content container-->
-</div>
+
+  <!-- Connection List View  -->
+  <div class="list-view">
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+      <div id="kt_app_content_container" class="app-container container-xxl">
+        <div class="row g-5 g-xl-10">
+          <div class="col-xl-12 mb-5 mb-xl-10">
+            <div class="mt-15">
+              <h3 class="text-center">Connections</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th class="p-3">Name</th>
+                    <th class="width-150">Kind</th>
+                    <th class="width-150">Created</th>
+                    <th class="width-150">Updated</th>
+                    <th>Description</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for connection in connections %}
+                  <tr>
+                    <td class="name-col p-3 min-width-250">
+                      <a href="{% url 'plugin:connection_by_name' connection.kind connection.name %}">
+                        {{ connection.name }}{% if connection.version %} v{{ connection.version }}{% endif %}
+                      </a>
+                    </td>
+                    <td class="width-150">{{ connection.kind }}</td>
+                    <td class="width-150">{{ connection.created_at|date:'Y-m-d H:i' }}</td>
+                    <td class="width-150">{{ connection.updated_at|date:'Y-m-d H:i' }}</td>
+                    <td>{% if connection.description %}{{ connection.description }}{% endif %}</td>
+                    <td class="p-3">
+                      <a href="{% url 'plugin:connection_by_name' connection.kind connection.name %}" class="btn btn-sm btn-primary">Manifest</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection Card View  -->
+  <div class="card-view">
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+      <div id="kt_app_content_container" class="app-container container-xxl">
+        <div class="row g-5 g-xl-10">
+          <div class="col-xl-8 mb-5 mb-xl-10">
+            <section class="row g-5 g-xl-10 mb-l-10">
+              {% for connection in connections %}
+              <!--begin::Col Connection Card-->
+              <article class="col-12 mt-1 p-2">
+                <!--begin::connection card-->
+                <a href="{% url 'plugin:connection_by_name' connection.kind connection.name %}">
+                  <div id="connection_id_{{ connection.id }}" class="card card-flush h-xl-100 connection-card {% if connection.user_profile.account.id == 1 %}smarter-connection-card{% else %}user-connection-card{% endif %}">
+                    <!--begin::Header-->
+                    <div class="p-5">
+                      <!--begin::Title-->
+                      <h4 class="card-title card-label fw-bold text-gray-800 text-center" style="border-bottom: 1px solid red;">{{ connection.name }}{% if connection.version %} v{{ connection.version }}{% endif %}</h4>
+                      <p>({{ connection.user_profile }})</p>
+                    </div>
+                    <!--end::Header-->
+                    <!--begin::Body-->
+                    <div class="card-body py-2">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left; width: 30%;">Name</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ connection.name }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Kind</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ connection.kind }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Created</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ connection.created_at }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Last updated</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ connection.updated_at }}</td>
+                        </tr>
+                        {% if connection.description %}
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Description</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ connection.description }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Connection String</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ connection.connection_string }}</td>
+                        </tr>
+                      </table>
+                    </div>
+                    <!--end::Body-->
+                  </div>
+                </a>
+                <!--end::connection card-->
+              </article>
+              <!--end::Col Connection Card-->
+              {% endfor %}
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block javascript_extra %}
+{{ block.super }}
+  <script>
+    // View toggle functionality handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const listViewBtn = document.getElementById('listViewBtn');
+      const cardViewBtn = document.getElementById('cardViewBtn');
+      const listView = document.querySelector('.list-view');
+      const cardView = document.querySelector('.card-view');
+
+      function showListView() {
+        listView.style.display = 'block';
+        cardView.style.display = 'none';
+        listViewBtn.classList.add('active');
+        listViewBtn.classList.replace('btn-outline-secondary', 'btn-outline-primary');
+        cardViewBtn.classList.remove('active');
+        cardViewBtn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
+      }
+      function showCardView() {
+        listView.style.display = 'none';
+        cardView.style.display = 'block';
+        cardViewBtn.classList.add('active');
+        cardViewBtn.classList.replace('btn-outline-secondary', 'btn-outline-primary');
+        listViewBtn.classList.remove('active');
+        listViewBtn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
+      }
+
+      listViewBtn.addEventListener('click', showListView);
+      cardViewBtn.addEventListener('click', showCardView);
+      // Default to list view on load
+      showListView();
+    });
+  </script>
 {% endblock %}
