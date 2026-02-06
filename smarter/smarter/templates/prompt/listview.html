@@ -4,6 +4,7 @@
 {% block title %}Chatbot List{% endblock %}
 
 {% block body_class %}
+{{ block.super }}
 <style>
   .chatbot-card > .card-header {
     border-bottom: 1px solid #E5E5E5;
@@ -76,6 +77,7 @@
 
 {% block dashboard_content %}
 <section id="chatbots">
+  <!-- Chatbot List/Card Toggle  -->
   <div id="toggle-buttons">
     <div class="btn-group border border-light rounded-3 bg-white" role="group" aria-label="View toggle">
       <button id="listViewBtn" type="button" class="btn btn-outline-primary btn-sm active" title="List View" aria-label="List View">
@@ -87,6 +89,7 @@
     </div>
   </div>
 
+  <!-- Chatbot List View  -->
   <div class="list-view">
     <div id="kt_app_content" class="app-content flex-column-fluid">
       <div id="kt_app_content_container" class="app-container container-xxl">
@@ -227,6 +230,7 @@
     </div>
   </div>
 
+  <!-- Chatbot Card View  -->
   <div class="card-view">
     <div id="kt_app_content" class="app-content flex-column-fluid">
       <!--begin::Content container-->
