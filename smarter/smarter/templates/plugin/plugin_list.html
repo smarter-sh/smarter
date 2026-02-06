@@ -1,7 +1,6 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
 
-{% block title %}Plugins{% endblock %}
 
 {% block body_class %}
 {{ block.super }}
@@ -83,7 +82,7 @@
         <div class="row g-5 g-xl-10">
           <div class="col-xl-12 mb-5 mb-xl-10">
             <div class="mt-15">
-              <h3 class="text-center">Plugins</h3>
+              {% block  title %}<h2>Plugins</h2>{% endblock %}
             </div>
             <div class="table-responsive">
               <table class="table table-striped table-hover align-middle">
