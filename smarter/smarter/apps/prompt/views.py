@@ -868,8 +868,13 @@ class PromptDetailView(DocsBaseView):
         """
         Dispatch method to handle the request for the manifest detail page.
 
-        This method is responsible for preparing and serving the Django template that
-        displays the chatbot manifest details in YAML format.
+        This method is called from an action button in PromptListView,
+        which importantly, contains chatbots that are owned not only by
+        the authenticated user, but also chatbots owned by the user's
+        account, and also owned by the Smarter admin user. We therefore
+        generate this view from the actual chatbot ID, rather than
+        by name and kind, and this is ambiguous in the context of
+        shared chatbots.
 
         **Key Features:**
 
@@ -902,7 +907,7 @@ class PromptDetailView(DocsBaseView):
         if retval.status_code >= HTTPStatus.BAD_REQUEST:
             return retval
 
-        chatbot_id = kwargs.pop("id", None)
+        chatbot_id = kwargs.pop("chatbot_id", None)
         try:
             self.chatbot = ChatBot.objects.get(id=chatbot_id)
             self.chatbot_helper = ChatBotHelper(request=request, chatbot=self.chatbot)
@@ -918,8 +923,13 @@ class PromptDetailView(DocsBaseView):
             self.chatbot,
         )
 
-        # get_brokered_json_response() adds self.kind to kwargs, so we remove it here.
-        # TypeError: smarter.apps.api.v1.cli.views.describe.View.as_view.<locals>.view() got multiple values for keyword argument 'kind'
+        # we need to re-orchestrate the parameters that we'll send to
+        # self.get_brokered_json_response(), which marshals the request
+        # and kwargs to the ApiV1CliDescribeApiView view to get
+        # the json manifest for the chatbot. Since the chatbot has ownership
+        # that is not necessarily the same as the authenticated user, we need
+        # to spoof the request user to be the owner of the chatbot for the
+        # purposes of generating the manifest.
         self.kind = SAMKinds.CHATBOT
         kwargs["name"] = self.chatbot.name
         orginal_user = getattr(request, "user", None)
@@ -951,9 +961,7 @@ class PromptDetailView(DocsBaseView):
         context = {
             "manifest": yaml_response,
             "page_title": self.chatbot.name,
+            "owner": self.chatbot.user_profile,
         }
-        if not self.template_path:
-            logger.error("%s.setup() self.template_path is not set.", self.formatted_class_name)
-            return SmarterHttpResponseNotFound(request=request, error_message="Template path not set")
         request.user = orginal_user
-        return render(request, self.template_path, context=context)
+        return render(request, self.template_path, context=context)  # type: ignore
