@@ -3,6 +3,7 @@
 # Merge one branch into another.
 #------------------------------------------------------------------------------
 name: Merge
+description: "Merge one branch into another"
 branding:
   icon: "git-pull-request"
   color: "orange"
