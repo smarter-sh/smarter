@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.119](https://github.com/smarter-sh/smarter/compare/v0.13.118...v0.13.119) (2026-02-06)
+
+### Bug Fixes
+
+* add a manifest view accessible from the workbench chatbots list view ([2ab378e](https://github.com/smarter-sh/smarter/commit/2ab378ef5b106fa64b495dd8c731ff1f0b0087ea))
+* add ownership title to template. add inline documentation ([c0dc5e3](https://github.com/smarter-sh/smarter/commit/c0dc5e37bc7458fbc0cf40c869d1dc2f741d8aad))
+
 ## [0.13.118](https://github.com/smarter-sh/smarter/compare/v0.13.117...v0.13.118) (2026-02-06)
 
 ### Bug Fixes
