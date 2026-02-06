@@ -26,236 +26,470 @@
     display: block;
   }
 
+  .card-view {
+    display: none;
+  }
+  .list-view {
+    display: block;
+  }
+
+  /* New styles for list view enhancements */
+  .list-view h3 {
+    padding: 8px 0;
+    margin-bottom: 16px;
+  }
+  .table-responsive {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fff;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+  .table-striped > tbody > tr {
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .table-striped > tbody > tr:last-child {
+    border-bottom: none;
+  }
+  .table thead th {
+    border-bottom: 2px solid #e5e5e5;
+    background: #f8f9fa;
+  }
+  .table td, .table th {
+    vertical-align: middle;
+  }
+  .table td.name-col {
+    min-width: 175px;
+    width: 200px;
+    font-weight: 500;
+  }
+  .min-width-150 {
+    min-width: 150px;
+  }
+
+  .width-100 {
+    width: 100px;
+  }
 </style>
 {% endblock %}
 
 
 {% block dashboard_content %}
-<div id="kt_app_content" class="app-content flex-column-fluid">
-  <!--begin::Content container-->
-  <div id="kt_app_content_container" class="app-container container-xxl">
-    <!--begin::Row-->
-    <div class="row g-5 g-xl-10">
-      <!--begin::Col-->
-      <div class="col-xl-8 mb-5 mb-xl-10">
+<section id="chatbots">
+  <div id="toggle-buttons">
+    <div class="btn-group border border-light rounded-3 bg-white" role="group" aria-label="View toggle">
+      <button id="listViewBtn" type="button" class="btn btn-outline-primary btn-sm active" title="List View" aria-label="List View">
+        <i class="fas fa-list"></i>
+      </button>
+      <button id="cardViewBtn" type="button" class="btn btn-outline-secondary btn-sm" title="Card View" aria-label="Card View">
+        <i class="fas fa-th-large"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="list-view">
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+      <div id="kt_app_content_container" class="app-container container-xxl">
+        <div class="row g-5 g-xl-10">
+          <div class="col-xl-12 mb-5 mb-xl-10">
+            {% if prompt_list.user_chatbots_count > 0 %}
+            <div class="mt-15">
+              <h3 class="text-center">Your Chatbots</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th class="p-3">Name</th>
+
+                    <th class="width-100">Created</th>
+                    <th class="width-100">Updated</th>
+                    <th>Provider</th>
+                    <th class="min-width-150">Model</th>
+
+
+                    <th>Plugins</th>
+                    <th>Status</th>
+                    <th></th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for chatbot_helper in prompt_list.user_chatbots|default:"" %}
+                  <tr>
+                    <td class="name-col p-3">
+                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
+                        {{ chatbot_helper.name }}{% if chatbot_helper.chatbot.version %} v{{ chatbot_helper.chatbot.version }}{% endif %}
+                      </a>
+                    </td>
+
+                    <td class="width-100">{{ chatbot_helper.chatbot.created_at|date:'Y-m-d H:i' }}</td>
+                    <td class="width-100">{{ chatbot_helper.chatbot.updated_at|date:'Y-m-d H:i' }}</td>
+                    <td>
+                      {% if chatbot_helper.provider.logo %}
+                        <img src="{{ chatbot_helper.provider.logo.url }}" alt="{{ chatbot_helper.provider.name }} logo" class="provider-logo d-none" />
+                      {% endif %}
+                      {{ chatbot_helper.chatbot.provider }}
+                    </td>
+                    <td class="min-width-150">{{ chatbot_helper.chatbot.default_model|default:"default" }}</td>
+
+
+                    <td>{{ chatbot_helper.chatbot_plugins_list_str }}</td>
+                    <td>
+                      {% if chatbot_helper.is_authentication_required %}
+                        <i class="fas fa-lock" title="Authentication required" style="color: darkgreen;"></i>
+                      {% else %}
+                        <i class="fas fa-unlock" title="No authentication required" style="color: darkred;"></i>
+                      {% endif %}
+                      {% if chatbot_helper.chatbot.deployed %}
+                        <i class="fas fa-check" title="Deployed" style="background-color: green; color: white; border-radius: 50%; padding: 2px 4px;"></i>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}" class="btn btn-sm btn-primary">Open</a>
+                    </td>
+                    <td class="p-3">
+                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}" class="btn btn-sm btn-info">View</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% endif %}
+
+            <div class="{% if prompt_list.user_chatbots_count > 0 %}mt-5{% else %}mt-15{% endif %}">
+              <h3 class="text-center">Shared Chatbots</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped table-hover align-middle pb-5">
+                <thead class="table-light">
+                  <tr>
+                    <th class="p-3">Name</th>
+
+                    <th class="width-100">Created</th>
+                    <th class="width-100">Updated</th>
+                    <th>Provider</th>
+                    <th class="min-width-150">Model</th>
+
+
+                    <th>Plugins</th>
+                    <th>Status</th>
+                    <th></th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for chatbot_helper in prompt_list.shared_chatbots|default:"" %}
+                  <tr>
+                    <td class="name-col p-3">
+                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
+                        {{ chatbot_helper.name }}{% if chatbot_helper.chatbot.version %} v{{ chatbot_helper.chatbot.version }}{% endif %}
+                      </a>
+                    </td>
+
+                    <td class="width-100">{{ chatbot_helper.chatbot.created_at|date:'Y-m-d H:i' }}</td>
+                    <td class="width-100">{{ chatbot_helper.chatbot.updated_at|date:'Y-m-d H:i' }}</td>
+                    <td>
+                      {% if chatbot_helper.provider.logo %}
+                        <img src="{{ chatbot_helper.provider.logo.url }}" alt="{{ chatbot_helper.provider.name }} logo" class="provider-logo d-none" />
+                      {% endif %}
+                      {{ chatbot_helper.chatbot.provider }}
+                    </td>
+                    <td class="min-width-150">{{ chatbot_helper.chatbot.default_model|default:"default" }}</td>
+
+
+                    <td>{{ chatbot_helper.chatbot_plugins_list_str }}</td>
+                    <td>
+                      {% if chatbot_helper.is_authentication_required %}
+                        <i class="fas fa-lock" title="Authentication required" style="color: darkgreen;"></i>
+                      {% else %}
+                        <i class="fas fa-unlock" title="No authentication required" style="color: darkred;"></i>
+                      {% endif %}
+                      {% if chatbot_helper.chatbot.deployed %}
+                        <i class="fas fa-check" title="Deployed" style="background-color: green; color: white; border-radius: 50%; padding: 2px 4px;"></i>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}" class="btn btn-sm btn-primary">Open</a>
+                    </td>
+                    <td class="p-3">
+                      <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}" class="btn btn-sm btn-info">View</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-view">
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+      <!--begin::Content container-->
+      <div id="kt_app_content_container" class="app-container container-xxl">
         <!--begin::Row-->
-        <section class="row g-5 g-xl-10 mb-l-10">
+        <div class="row g-5 g-xl-10">
+          <!--begin::Col-->
+          <div class="col-xl-8 mb-5 mb-xl-10">
+            <!--begin::Row-->
+            <section class="row g-5 g-xl-10 mb-l-10">
 
-          {% if prompt_list.user_chatbots_count > 0 %}
-          <div class="mt-15">
-            <h3 class="text-center">Your Chatbots</h3>
-          </div>
-          {% endif %}
-          {% for chatbot_helper in prompt_list.user_chatbots|default:"" %}
-          <!--begin::Col User Chatbot Card-->
-          <article class="col-12 mt-1 p-2">
-            <!--begin::Chatbot card-->
-            <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
-              <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card user-chatbot-card">
-                <!--begin::Header-->
-                <div class="p-5">
-                  {% if chatbot_helper.is_authentication_required %}
-                  <i class="fas fa-lock" style="position: absolute; top: 10px; right: 30px; color: darkgreen; padding: 5px;"></i>
-                  {% else %}
-                  <i class="fas fa-unlock" style="position: absolute; top: 10px; right: 30px; color: darkred; padding: 5px;"></i>
-                  {% endif %}
-                  {% if chatbot_helper.chatbot.deployed %}
-                  <i class="fas fa-check" style="position: absolute; top: 10px; right: 10px; background-color: green; color: white; border-radius: 50%; padding: 5px;"></i>
-                  {% endif %}
-                  <!--begin::Title-->
-                  <h4 class="card-title card-label fw-bold text-gray-800 text-center" style="border-bottom: 1px solid red;">{{ chatbot_helper.name }}{% if chatbot_helper.chatbot.version %} v{{ chatbot_helper.chatbot.version }}{% endif %}</h4>
-                  <!--end::Title-->
-                </div>
-                <!--end::Header-->
-                <!--begin::Body-->
-                <div class="card-body py-2">
-                  <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left; width: 30%;">Owner</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.user_profile }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Created</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.created_at }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Last updated</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.updated_at }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">URL</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;"><span style="color: black; text-decoration: underline; cursor: pointer;">{{ chatbot_helper.chatbot.url }}</span></td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Provider</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">
-                        <div style="display: flex; align-items: center;">
-                          {% if chatbot_helper.provider.logo %}
-                            <img src="{{ chatbot_helper.provider.logo.url }}" alt="{{ chatbot_helper.provider.name }} logo" class="provider-logo" />
-                          {% endif %}
-                          <span style="padding-left: 4px;">{{ chatbot_helper.chatbot.provider }}</span>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Model</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_model }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Temperature</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_temperature }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Max Tokens</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_max_tokens }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">System Role</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_system_role }}</td>
-                    </tr>
-                    {% if chatbot_helper.chatbot.description %}
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Description</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.description }}</td>
-                    </tr>
-                    {% endif %}
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">DNS status</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.dns_verification_status }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">App assistant</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.app_assistant }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">App name</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.app_name }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Plugins</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot_plugins_list_str }}</td>
-                    </tr>
-                  </table>
-                </div>
-                <!--end::Body-->
+              {% if prompt_list.user_chatbots_count > 0 %}
+              <div class="mt-15">
+                <h3 class="text-center">Your Chatbots</h3>
               </div>
-            </a>
-            <!--end::Chatbot card-->
-          </article>
-          <!--end::Col User Chatbot Card-->
-          {% endfor %}
+              {% endif %}
+              {% for chatbot_helper in prompt_list.user_chatbots|default:"" %}
+              <!--begin::Col User Chatbot Card-->
+              <article class="col-12 mt-1 p-2">
+                <!--begin::Chatbot card-->
+                <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
+                  <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card user-chatbot-card">
+                    <!--begin::Header-->
+                    <div class="p-5">
+                      {% if chatbot_helper.is_authentication_required %}
+                      <i class="fas fa-lock" style="position: absolute; top: 10px; right: 30px; color: darkgreen; padding: 5px;"></i>
+                      {% else %}
+                      <i class="fas fa-unlock" style="position: absolute; top: 10px; right: 30px; color: darkred; padding: 5px;"></i>
+                      {% endif %}
+                      {% if chatbot_helper.chatbot.deployed %}
+                      <i class="fas fa-check" style="position: absolute; top: 10px; right: 10px; background-color: green; color: white; border-radius: 50%; padding: 5px;"></i>
+                      {% endif %}
+                      <!--begin::Title-->
+                      <h4 class="card-title card-label fw-bold text-gray-800 text-center" style="border-bottom: 1px solid red;">{{ chatbot_helper.name }}{% if chatbot_helper.chatbot.version %} v{{ chatbot_helper.chatbot.version }}{% endif %}</h4>
+                      <!--end::Title-->
+                    </div>
+                    <!--end::Header-->
+                    <!--begin::Body-->
+                    <div class="card-body py-2">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left; width: 30%;">Owner</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.user_profile }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Created</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.created_at }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Last updated</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.updated_at }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">URL</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;"><span style="color: black; text-decoration: underline; cursor: pointer;">{{ chatbot_helper.chatbot.url }}</span></td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Provider</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">
+                            <div style="display: flex; align-items: center;">
+                              {% if chatbot_helper.provider.logo %}
+                                <img src="{{ chatbot_helper.provider.logo.url }}" alt="{{ chatbot_helper.provider.name }} logo" class="provider-logo" />
+                              {% endif %}
+                              <span style="padding-left: 4px;">{{ chatbot_helper.chatbot.provider }}</span>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Model</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_model }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Temperature</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_temperature }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Max Tokens</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_max_tokens }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">System Role</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_system_role }}</td>
+                        </tr>
+                        {% if chatbot_helper.chatbot.description %}
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Description</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.description }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">DNS status</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.dns_verification_status }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">App assistant</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.app_assistant }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">App name</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.app_name }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Plugins</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot_plugins_list_str }}</td>
+                        </tr>
+                      </table>
+                    </div>
+                    <!--end::Body-->
+                  </div>
+                </a>
+                <!--end::Chatbot card-->
+              </article>
+              <!--end::Col User Chatbot Card-->
+              {% endfor %}
 
-          <div class="{% if prompt_list.user_chatbots_count > 0 %}mt-5{% else %}mt-15{% endif %}">
-            <h3 class="text-center">Shared Chatbots</h3>
-          </div>
-          {% for chatbot_helper in prompt_list.shared_chatbots|default:"" %}
-          <!--begin::Col Shared Chatbot Card-->
-          <article class="col-12 mt-1 p-2">
-            <!--begin::Chatbot card-->
-            <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
-              <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card smarter-chatbot-card">
-                <!--begin::Header-->
-                <div class="p-5">
-                  {% if chatbot_helper.is_authentication_required %}
-                  <i class="fas fa-lock" style="position: absolute; top: 10px; right: 30px; color: darkgreen; padding: 5px;"></i>
-                  {% else %}
-                  <i class="fas fa-unlock" style="position: absolute; top: 10px; right: 30px; color: darkred; padding: 5px;"></i>
-                  {% endif %}
-                  {% if chatbot_helper.chatbot.deployed %}
-                  <i class="fas fa-check" style="position: absolute; top: 10px; right: 10px; background-color: green; color: white; border-radius: 50%; padding: 5px;"></i>
-                  {% endif %}
-                  <!--begin::Title-->
-                  <h4 class="card-title card-label fw-bold text-gray-800 text-center" style="border-bottom: 1px solid red;">{{ chatbot_helper.name }}{% if chatbot_helper.chatbot.version %} v{{ chatbot_helper.chatbot.version }}{% endif %}</h4>
-                  <!--end::Title-->
-                </div>
-                <!--end::Header-->
-                <!--begin::Body-->
-                <div class="card-body py-2">
-                  <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left; width: 30%;">Owner</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.user_profile }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Created</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.created_at }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Last updated</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.updated_at }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">URL</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;"><span style="color: black; text-decoration: underline; cursor: pointer;">{{ chatbot_helper.chatbot.url }}</span></td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Provider</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">
-                        <div style="display: flex; align-items: center;">
-                          {% if chatbot_helper.provider.logo %}
-                            <img src="{{ chatbot_helper.provider.logo.url }}" alt="{{ chatbot_helper.provider.name }} logo" class="provider-logo" />
-                          {% endif %}
-                          <span style="padding-left: 4px;">{{ chatbot_helper.chatbot.provider }}</span>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Model</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_model }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Temperature</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_temperature }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Max Tokens</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_max_tokens }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">System Role</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_system_role }}</td>
-                    </tr>
-                    {% if chatbot_helper.chatbot.description %}
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Description</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.description }}</td>
-                    </tr>
-                    {% endif %}
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">DNS status</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.dns_verification_status }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">App assistant</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.app_assistant }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">App name</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.app_name }}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Plugins</td>
-                      <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot_plugins_list_str }}</td>
-                    </tr>
-                  </table>
-                </div>
-                <!--end::Body-->
+              <div class="{% if prompt_list.user_chatbots_count > 0 %}mt-5{% else %}mt-15{% endif %}">
+                <h3 class="text-center">Shared Chatbots</h3>
               </div>
-            </a>
-            <!--end::Chatbot card-->
-          </article>
-          <!--end::Col Shared Chatbot Card-->
-          {% endfor %}
+              {% for chatbot_helper in prompt_list.shared_chatbots|default:"" %}
+              <!--begin::Col Shared Chatbot Card-->
+              <article class="col-12 mt-1 p-2">
+                <!--begin::Chatbot card-->
+                <a href="{% url 'prompt_workbench:by_name' chatbot_helper.rfc1034_compliant_name %}">
+                  <div id="chatbot_id_{{ chatbot_helper.chatbot.id }}" class="card card-flush h-xl-100 chatbot-card smarter-chatbot-card">
+                    <!--begin::Header-->
+                    <div class="p-5">
+                      {% if chatbot_helper.is_authentication_required %}
+                      <i class="fas fa-lock" style="position: absolute; top: 10px; right: 30px; color: darkgreen; padding: 5px;"></i>
+                      {% else %}
+                      <i class="fas fa-unlock" style="position: absolute; top: 10px; right: 30px; color: darkred; padding: 5px;"></i>
+                      {% endif %}
+                      {% if chatbot_helper.chatbot.deployed %}
+                      <i class="fas fa-check" style="position: absolute; top: 10px; right: 10px; background-color: green; color: white; border-radius: 50%; padding: 5px;"></i>
+                      {% endif %}
+                      <!--begin::Title-->
+                      <h4 class="card-title card-label fw-bold text-gray-800 text-center" style="border-bottom: 1px solid red;">{{ chatbot_helper.name }}{% if chatbot_helper.chatbot.version %} v{{ chatbot_helper.chatbot.version }}{% endif %}</h4>
+                      <!--end::Title-->
+                    </div>
+                    <!--end::Header-->
+                    <!--begin::Body-->
+                    <div class="card-body py-2">
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left; width: 30%;">Owner</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.user_profile }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Created</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.created_at }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Last updated</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.updated_at }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">URL</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;"><span style="color: black; text-decoration: underline; cursor: pointer;">{{ chatbot_helper.chatbot.url }}</span></td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Provider</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">
+                            <div style="display: flex; align-items: center;">
+                              {% if chatbot_helper.provider.logo %}
+                                <img src="{{ chatbot_helper.provider.logo.url }}" alt="{{ chatbot_helper.provider.name }} logo" class="provider-logo" />
+                              {% endif %}
+                              <span style="padding-left: 4px;">{{ chatbot_helper.chatbot.provider }}</span>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Model</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_model }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Temperature</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_temperature }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Max Tokens</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_max_tokens }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">System Role</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.default_system_role }}</td>
+                        </tr>
+                        {% if chatbot_helper.chatbot.description %}
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Description</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.description }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">DNS status</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.dns_verification_status }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">App assistant</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.app_assistant }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">App name</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot.app_name }}</td>
+                        </tr>
+                        <tr>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">Plugins</td>
+                          <td style="border: 1px solid #ccc; padding: 4px 8px; text-align: left;">{{ chatbot_helper.chatbot_plugins_list_str }}</td>
+                        </tr>
+                      </table>
+                    </div>
+                    <!--end::Body-->
+                  </div>
+                </a>
+                <!--end::Chatbot card-->
+              </article>
+              <!--end::Col Shared Chatbot Card-->
+              {% endfor %}
 
-        </section>
+            </section>
+            <!--end::Row-->
+
+          </div>
+          <!--end::Col-->
+        </div>
         <!--end::Row-->
 
       </div>
-      <!--end::Col-->
+      <!--end::Content container-->
     </div>
-    <!--end::Row-->
-
   </div>
-  <!--end::Content container-->
-</div>
+</section>
+{% endblock %}
+
+{% block javascript_extra %}
+{{ block.super }}
+  <script>
+    // View toggle functionality handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const listViewBtn = document.getElementById('listViewBtn');
+      const cardViewBtn = document.getElementById('cardViewBtn');
+      const listView = document.querySelector('.list-view');
+      const cardView = document.querySelector('.card-view');
+
+      function showListView() {
+        listView.style.display = 'block';
+        cardView.style.display = 'none';
+        listViewBtn.classList.add('active');
+        listViewBtn.classList.replace('btn-outline-secondary', 'btn-outline-primary');
+        cardViewBtn.classList.remove('active');
+        cardViewBtn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
+      }
+      function showCardView() {
+        listView.style.display = 'none';
+        cardView.style.display = 'block';
+        cardViewBtn.classList.add('active');
+        cardViewBtn.classList.replace('btn-outline-secondary', 'btn-outline-primary');
+        listViewBtn.classList.remove('active');
+        listViewBtn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
+      }
+
+      listViewBtn.addEventListener('click', showListView);
+      cardViewBtn.addEventListener('click', showCardView);
+      // Default to list view on load
+      showListView();
+    });
+  </script>
 {% endblock %}
