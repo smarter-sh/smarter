@@ -1,7 +1,6 @@
 {% extends 'dashboard/base.html' %}
 {% load static custom_filters %}
 
-{% block title %}{{ page_title }}{% endblock %}
 
 {% block dashboard_content %}
 <section id="plugin-manifest">
@@ -14,7 +13,7 @@
         <div class="col-xl-8 mb-5 mb-xl-10">
           <!--begin::Row-->
           <div class="row g-5 g-xl-10 mb-l-10">
-
+            {% block title %}<h2>{{ page_title }}</h2>{% endblock %}
             <!--begin:: Manifest body-->
             <div class="code-sample-body">
               <pre class="code-snippet prettyprint">
