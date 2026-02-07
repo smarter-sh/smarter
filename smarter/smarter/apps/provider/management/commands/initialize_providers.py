@@ -29,7 +29,7 @@ OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
 OPENAI_API_KEY_NAME = "openai_api_key"
 
 GOOGLE_API = "GoogleAI"
-GOOGLE_DEFAULT_MODEL = "gemini-3-flash-preview"
+GOOGLE_DEFAULT_MODEL = "gemini-flash-latest"
 GOOGLE_API_KEY_NAME = "google_ai_api_key"
 
 META_API = "MetaAI"
