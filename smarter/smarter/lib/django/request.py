@@ -643,6 +643,8 @@ class SmarterRequestMixin(AccountMixin):
             print(url_str)  # e.g., 'https://example.com/path/'
 
         """
+        if not self.smarter_request:
+            return None
         if self._url:
             if isinstance(self._url, ParseResult):
                 return self._url.geturl()
@@ -666,6 +668,7 @@ class SmarterRequestMixin(AccountMixin):
             self.request_mixin_logger_prefix,
             self.smarter_request,
         )
+        return None
 
     @property
     def parsed_url(self) -> Optional[ParseResult]:
