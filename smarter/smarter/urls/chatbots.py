@@ -29,7 +29,7 @@ from smarter.apps.chatbot.api.v1.views.default import DefaultChatbotApiView
 from smarter.apps.prompt.views import ChatConfigView
 
 urlpatterns = [
-    path("", ChatConfigView.as_view(), name="chatbot_named_config"),
+    path("", ChatConfigView.as_view(), name="root_home"),
     path("config/", ChatConfigView.as_view(), name="chatbot_named_config"),
     path("chat/", DefaultChatbotApiView.as_view(), name="chatbot_named_chat"),
 ]
