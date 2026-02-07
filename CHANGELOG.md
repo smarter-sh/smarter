@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.120](https://github.com/smarter-sh/smarter/compare/v0.13.119...v0.13.120) (2026-02-07)
+
+### Bug Fixes
+
+* fixup page titles ([b7bbfc1](https://github.com/smarter-sh/smarter/commit/b7bbfc1c9694caa9ff66dfa84ed02a23aee5c464))
+* setup DJANGO_ override system for defined Django settings overrides from .env ([4f2fd23](https://github.com/smarter-sh/smarter/commit/4f2fd2300d77bf827f1097659ba5d8ae1a29bbac))
+* work on Django settings overrides ([da851d3](https://github.com/smarter-sh/smarter/commit/da851d377579feffc0de2fd1c998e5ba0ec29566))
+
 ## [0.13.119](https://github.com/smarter-sh/smarter/compare/v0.13.118...v0.13.119) (2026-02-06)
 
 ### Bug Fixes
