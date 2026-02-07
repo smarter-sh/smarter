@@ -22,6 +22,7 @@ import subprocess
 import sys
 import time
 import urllib.parse
+from datetime import datetime
 from pathlib import Path
 
 from corsheaders.defaults import default_headers
@@ -35,6 +36,8 @@ from smarter.lib import json
 
 logger = logging.getLogger(__name__)
 logger_prefix = formatted_text(__name__ + ".settings.base.py")
+
+load_dotenv()
 
 
 # pylint: disable=W0621
@@ -1454,30 +1457,40 @@ jobs. This is intended to simplify management of waffle switches in Smarter depl
 
 # Reverse the default case-sensitive handling of tags
 TAGGIT_CASE_INSENSITIVE = os.environ.get("TAGGIT_CASE_INSENSITIVE", "True").lower() in ("true", "1", "t", "yes")
+"""
+A boolean that specifies whether to make taggit tags case insensitive. This is
+derived from the environment variable "TAGGIT_CASE_INSENSITIVE", which defaults
+to "True". If set to True, tags will be treated as case insensitive
+(e.g. "Tag" and "tag" will be considered the same tag).
+"""
 
-###############################################################################
-# Process environment variables to override settings values
-#
-# This allows for 12-factor style configuration via environment variables.
-# Environment variable values are cast to the same data type as the
-# existing Django and/or Smarter setting value.
-#
-# The basic process is:
-# ----------------------
-# 1. set default settings values, above.
-# 2. load environment variables from .env file (if present) and os.environ
-# 3. for each environment variable that matches a setting name,
-#    cast the value to the same type as the existing setting value
-#    and override the default setting value.
-# 4. Django settings are prefixed with "DJANGO_" and Smarter settings are
-#    prefixed with "SMARTER_"
-###############################################################################
 
 # step 2: load environment variables from .env file (if present)
-load_dotenv()
+ASCII_CONTROL_CHAR_REGEX = re.compile(r"[\x00-\x1F\x7F]")
+"""
+Process environment variables to override settings values
+
+This allows for 12-factor style configuration via environment variables.
+Environment variable values are cast to the same data type as the
+existing Django and/or Smarter setting value.
+
+The basic process is:
+----------------------
+1. set default settings values, above.
+2. load environment variables from .env file (if present) and os.environ
+3. map environment variables to Django settings by removing the "DJANGO_"
+   prefix, and for any environment variable that matches an existing Django
+   setting, cast the value to the same type as the existing setting value
+   and override the default setting value. For anything else
+   analyze the passed value to attempt to infer the intended data type and
+   usage, and create a new setting with that name and value if it does
+   not already exist.
+
+   * Note that Django settings are prefixed with "DJANGO_"
+     and Smarter settings are prefixed with "SMARTER_".
+"""
 
 # step 3: override settings from environment variables
-ASCII_CONTROL_CHAR_REGEX = re.compile(r"[\x00-\x1F\x7F]")
 if any(key.startswith("DJANGO_") for key, _ in os.environ.items()):
     logger.debug("=" * 80)
     logger.debug("%s Django settings overrides %s", "=" * (40 - 13), "=" * (40 - 14))
@@ -1513,10 +1526,52 @@ for key, value in os.environ.items():
             key,
             value,
         )
-        # Type inference and conversion
+
         raw_value = value
+        cast_value = None
+
+        # Ideally, we'd like to leverage the built-in ast.literal_eval()
+        # function to safely evaluate string representations of Python
+        # literals (e.g. lists, dicts, numbers, booleans) in environment
+        # variables. However, this can be problematic if the value is a
+        # string that just happens to look like a Python literal
+        # (e.g. a string that looks like a list or dict). Therefore, we will
+        # attempt to use ast.literal_eval() but fall back to other inference
+        # methods if it fails or if the result is not a valid type.
+        try:
+            cast_value = ast.literal_eval(raw_value) if isinstance(raw_value, str) else raw_value
+            logger.debug(
+                "%s Successfully cast value using ast.literal_eval() for %s=%s of Type '%s'",
+                logger_prefix,
+                key,
+                cast_value,
+                type(cast_value).__name__,
+            )
+        except (ValueError, SyntaxError):
+            cast_value = None
+
+        # Attempt to find Django's default value inside of Python's global
+        # namespace and use it to infer the intended type of the environment
+        # variable value.
+        if not cast_value and globals().get(key) is not None:
+            default_value = globals()[key]
+            cast_value = smart_cast(raw_value, default_value)
+            logger.debug(
+                "%s Inferred type '%s' for %s=%s based on existing Django setting default value",
+                logger_prefix,
+                type(default_value).__name__,
+                key,
+                cast_value,
+            )
+
+        # Hereon, we're simply trying to infer the intended type of the
+        # environment variable value based on common patterns and heuristics,
+        # since we have no existing Django setting to use as a reference for
+        # type casting. This is inherently error-prone, but can be effective
+        # for the most common data types and usage patterns.
+
         # Integer
-        if str(raw_value).replace(".", "").isdigit():
+        elif not cast_value and str(raw_value).replace(".", "").isdigit():
             try:
                 cast_value = int(raw_value)
                 logger.debug("%s Inferred type 'int' for %s=%s", logger_prefix, key, cast_value)
@@ -1533,17 +1588,24 @@ for key, value in os.environ.items():
                         cast_value,
                     )
         # Date (ISO format)
-        elif re.match(r"^\d{4}-\d{2}-\d{2}$", raw_value):
-            from datetime import datetime
+        elif not cast_value and re.match(r"^\d{4}-\d{2}-\d{2}$", raw_value):
+            try:
+                cast_value = datetime.strptime(raw_value, "%Y-%m-%d").date()
+                logger.debug("%s Inferred type 'date' for %s=%s", logger_prefix, key, cast_value)
+            except ValueError:
+                pass
 
-            cast_value = datetime.strptime(raw_value, "%Y-%m-%d").date()
-            logger.debug("%s Inferred type 'date' for %s=%s", logger_prefix, key, cast_value)
         # List (comma-separated)
-        elif "," in raw_value:
-            cast_value = [item.strip() for item in raw_value.split(",")]
-            logger.debug("%s Inferred type 'list' for %s=%s", logger_prefix, key, cast_value)
+        elif not cast_value and "," in raw_value:
+            try:
+                cast_value = [item.strip() for item in raw_value.split(",")]
+                logger.debug("%s Inferred type 'list' for %s=%s", logger_prefix, key, cast_value)
+            # pylint: disable=broad-except
+            except Exception:
+                pass
+
         # Dict (JSON)
-        elif raw_value.startswith("{") and raw_value.endswith("}"):
+        elif not cast_value and raw_value.startswith("{") and raw_value.endswith("}"):
             try:
                 cast_value = json.loads(raw_value)
                 logger.debug("%s Inferred type 'dict' for %s=%s", logger_prefix, key, cast_value)
@@ -1551,19 +1613,22 @@ for key, value in os.environ.items():
             except Exception:
                 cast_value = raw_value
         # String (default)
-        else:
+        elif not cast_value:
             cast_value = str(raw_value)
             logger.debug("%s Inferred type 'str' for %s=%s", logger_prefix, key, cast_value)
 
         globals()[key] = cast_value
         logger.info(
-            "%s Created new Django setting from environment variable: %s=%s of Type '%s'",
+            "%s Creating new Django setting from environment variable: %s=%s of Type '%s'",
             logger_prefix,
             key,
             repr(cast_value),
             type(cast_value),
         )
         continue
+
+    # If the environment variable matches an existing Django setting, cast the
+    # value to the same type as the existing setting value and override it.
     default_value = globals()[key]
     cast_value = smart_cast(value, default_value)
     globals()[key] = cast_value
