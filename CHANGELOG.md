@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.13.121](https://github.com/smarter-sh/smarter/compare/v0.13.120...v0.13.121) (2026-02-07)
+
+### Bug Fixes
+
+* every main urls module needs a 'root_home' ([b2ff8f3](https://github.com/smarter-sh/smarter/commit/b2ff8f303cb22175139680555570017e50b0d2b3))
+
 ## [0.13.120](https://github.com/smarter-sh/smarter/compare/v0.13.119...v0.13.120) (2026-02-07)
 
 ### Bug Fixes
