@@ -87,7 +87,7 @@ class ProviderDetailView(DocsBaseView):
             logger.error("Provider %s not found for user %s.", self.name, request.user.username)  # type: ignore[union-attr]
             return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
 
-        logger.info("Rendering connection detail view for %s of kind %s, kwargs=%s.", self.name, self.kind, kwargs)
+        logger.debug("Rendering connection detail view for %s of kind %s, kwargs=%s.", self.name, self.kind, kwargs)
         # get_brokered_json_response() adds self.kind to kwargs, so we remove it here.
         # TypeError: smarter.apps.api.v1.cli.views.describe.View.as_view.<locals>.view() got multiple values for keyword argument 'kind'
         kwargs["name"] = self.name

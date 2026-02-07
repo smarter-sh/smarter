@@ -270,7 +270,7 @@ class SAMProviderBroker(AbstractBroker):
 
         .. code-block:: python
 
-           logger.info(broker.formatted_class_name)
+           logger.debug(broker.formatted_class_name)
 
         """
         parent_class = super().formatted_class_name

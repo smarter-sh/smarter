@@ -70,7 +70,7 @@ spec:
                 value: localhost
             initialDelaySeconds: 30
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             failureThreshold: 3
             successThreshold: 1
           startupProbe:
@@ -82,7 +82,7 @@ spec:
                 value: localhost
             initialDelaySeconds: 30
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             failureThreshold: 60
             successThreshold: 1
           ports:

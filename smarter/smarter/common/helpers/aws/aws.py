@@ -162,7 +162,7 @@ class AWSBase(SmarterHelperMixin):
 
         msg = f"{self.formatted_class_name}.__init__() is {self.authentication_credentials_state}"
         if self.authentication_credentials_are_initialized:
-            logger.info(msg)
+            logger.debug(msg)
         else:
             logger.error(msg)
 
@@ -197,7 +197,7 @@ class AWSBase(SmarterHelperMixin):
             logger.debug("%s.client() creating AWS %s client", self.formatted_class_name, self.client_type.upper())
             self._client = self.aws_session.client(self.client_type)
             msg = f"{self.formatted_class_name}.client() {formatted_text_green(f'AWS Boto {type(self._client).__name__} client created')}."
-            logger.info(msg)
+            logger.debug(msg)
         except botocore.exceptions.BotoCoreError as e:
             logger.error(
                 "%s.client() Failed to create AWS %s client: %s",
@@ -269,7 +269,7 @@ class AWSBase(SmarterHelperMixin):
 
         if self._identity:
             msg = f"{self.formatted_class_name}.identity {formatted_text_green('successfully fetched AWS IAM identity.')}: {self._identity}"
-            logger.info(msg)
+            logger.debug(msg)
         else:
             msg = f"{self.formatted_class_name}.identity {formatted_text_red('could not fetch AWS IAM identity.')}"
             logger.error(msg)
@@ -460,7 +460,7 @@ class AWSBase(SmarterHelperMixin):
 
             if self._aws_session:
                 msg = f"{self.formatted_class_name}.aws_session() {formatted_text_green('established AWS boto session using aws_profile')}: {self.aws_profile}"
-                logger.info(msg)
+                logger.debug(msg)
                 return self._aws_session
             else:
                 msg = f"{self.formatted_class_name}.aws_session() {formatted_text_red('Unable to establish AWS boto session using aws_profile')}: {self.aws_profile}"
@@ -479,7 +479,7 @@ class AWSBase(SmarterHelperMixin):
 
             if self._aws_session:
                 msg = f"{self.formatted_class_name}.aws_session() {formatted_text_green('established AWS boto session using aws key-pair')}"
-                logger.info(msg)
+                logger.debug(msg)
                 return self._aws_session
             else:
                 msg = f"{self.formatted_class_name}.aws_session() {formatted_text_red('Unable to establish AWS boto session using aws key-pair')}"
@@ -495,7 +495,7 @@ class AWSBase(SmarterHelperMixin):
 
         if self._aws_session:
             msg = f"{self.formatted_class_name}.aws_session() {formatted_text_green('established AWS boto session.')}"
-            logger.info(msg)
+            logger.debug(msg)
         else:
             msg = f"{self.formatted_class_name}.aws_session() {formatted_text_red('Unable to establish AWS boto session.')}"
             logger.error(msg)
@@ -572,7 +572,7 @@ class AWSBase(SmarterHelperMixin):
                 proxy_domain = domain.replace(smarter_settings.environment_api_domain, self.environment_api_domain)
             if proxy_domain:
                 SmarterValidator.validate_domain(domain)
-                logger.info("replacing %s with proxy domain %s", domain, proxy_domain)
+                logger.debug("replacing %s with proxy domain %s", domain, proxy_domain)
                 return proxy_domain
 
         # catch-all to ensure that we don't find ourselves working

@@ -11,7 +11,7 @@ from smarter.lib import json
 from .base import *
 
 logger = logging.getLogger(__name__)
-logger.info("Loading smarter.settings.base_aws")
+logger.debug("Loading smarter.settings.base_aws")
 default_redis_location = f"redis://:{smarter_settings.shared_resource_identifier}@{smarter_settings.shared_resource_identifier}-redis-master.{smarter_settings.environment_namespace}.svc.cluster.local:6379/1"
 
 CACHES = {
@@ -101,7 +101,7 @@ CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in smarter_settings.allowed_h
 
 if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     cache_backend = CACHES.get("default", {}).get("BACKEND", "not configured")
-    logger.info("Cache backend: %s", json.dumps(CACHES))
+    logger.debug("Cache backend: %s", json.dumps(CACHES))
     if cache_backend != "django_redis.cache.RedisCache":
         logger.warning("Recommended cache backend is django_redis.cache.RedisCache")
 

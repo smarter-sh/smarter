@@ -239,7 +239,7 @@ def get_env(var_name, default: Any = DEFAULT_MISSING_VALUE, is_secret: bool = Fa
         log_value = cast_val if not is_secret else "****"
         if VERBOSE_CONSOLE_OUTPUT:
             msg = f"{logger_prefix} Environment variable {var_name} found. Overriding Smarter setting from environment variable: {var_name}={repr(log_value)}"
-            logger.info(msg)
+            logger.debug(msg)
             print(msg)
         return cast_val
 
