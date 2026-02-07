@@ -93,15 +93,15 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
 
     # pylint: disable=unused-argument
     def get(self, request, *args, **kwargs):
-        logger.info("%s.get() begin", self.formatted_class_name)
+        logger.debug("%s.get() begin", self.formatted_class_name)
         form = PasswordResetView.NewPasswordForm()
         uidb64 = kwargs.get("uidb64", None)
         token = kwargs.get("token", None)
 
-        logger.info("%s.get() initialized", self.formatted_class_name)
+        logger.debug("%s.get() initialized", self.formatted_class_name)
         try:
             user = self.expiring_token.decode_link(uidb64=uidb64, token=token)
-            logger.info("%s.get() user: %s", self.formatted_class_name, user)
+            logger.debug("%s.get() user: %s", self.formatted_class_name, user)
         except User.DoesNotExist:
             return SmarterHttpResponseNotFound(
                 request=request, error_message="Invalid password reset link. User does not exist."
@@ -118,7 +118,7 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
         except SmarterTokenExpiredError as e:
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
-        logger.info("%s.get() finalizing", self.formatted_class_name)
+        logger.debug("%s.get() finalizing", self.formatted_class_name)
         context = {"form": form, "password_reset": {"uidb64": uidb64, "token": token, "user": user}}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 

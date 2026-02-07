@@ -232,7 +232,7 @@ class SAMChatHistoryBroker(AbstractBroker):
             except Chat.DoesNotExist:
                 pass
             chat_history = ChatHistory.objects.filter(chat=chat).order_by("-created_at")[:MAX_RESULTS]
-            logger.info(
+            logger.debug(
                 "SAMChatHistoryBroker().get() found %s chat_history records for chat session %s in account %s",
                 chat_history.count(),
                 chat.session_key,

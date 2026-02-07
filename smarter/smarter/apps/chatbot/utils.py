@@ -42,7 +42,7 @@ def get_cached_chatbot(
         """
         chatbot = ChatBot.objects.get(id=chatbot_id)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.info("_in_memory_chatbot_by_id() retrieving and caching chatbot %s", chatbot)
+            logger.debug("_in_memory_chatbot_by_id() retrieving and caching chatbot %s", chatbot)
         return chatbot
 
     # pylint: disable=W0613
@@ -53,7 +53,7 @@ def get_cached_chatbot(
         """
         chatbot = ChatBot.objects.get(name=chatbot_name, account=chatbot_account)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-            logger.info("_in_memory_chatbot_by_number() retrieving and caching chatbot %s", chatbot)
+            logger.debug("_in_memory_chatbot_by_number() retrieving and caching chatbot %s", chatbot)
         return chatbot
 
     if chatbot_id:

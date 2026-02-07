@@ -60,7 +60,7 @@ try:
         TFVARS = hcl2.load(f)
     IS_USING_TFVARS = True
 except FileNotFoundError:
-    logger.info("No terraform.tfvars file found. Using default values.")
+    logger.debug("No terraform.tfvars file found. Using default values.")
 
 
 def load_version() -> Dict[str, str]:

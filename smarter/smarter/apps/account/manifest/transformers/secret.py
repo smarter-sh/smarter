@@ -141,12 +141,12 @@ class SecretTransformer(SmarterHelperMixin):
         # identifiers for existing secrets
         #######################################################################
         if secret_id:
-            logger.info(
+            logger.debug(
                 "%s.__init__() Initializing secret transformer with secret_id: %s", self.formatted_class_name, secret_id
             )
             self.id = secret_id
         if secret:
-            logger.info(
+            logger.debug(
                 "%s.__init__() Initializing secret transformer with secret: %s", self.formatted_class_name, secret
             )
             self.id = secret.id  # type: ignore[union-attr]
@@ -157,14 +157,14 @@ class SecretTransformer(SmarterHelperMixin):
         if api_version and api_version not in SMARTER_API_MANIFEST_COMPATIBILITY:
             raise SmarterSecretTransformerError(f"API version {api_version} is not compatible.")
         if api_version:
-            logger.info(
+            logger.debug(
                 "%s.__init__() Initializing secret transformer with api_version: %s",
                 self.formatted_class_name,
                 api_version,
             )
             self._api_version = api_version
         if manifest:
-            logger.info(
+            logger.debug(
                 "%s.__init__() Initializing secret transformer with manifest: %s", self.formatted_class_name, manifest
             )
             if not isinstance(manifest, SAMSecret):
@@ -174,7 +174,7 @@ class SecretTransformer(SmarterHelperMixin):
             self.api_version = manifest.apiVersion
 
         if isinstance(data, dict):
-            logger.info("%s.__init__() Initializing secret transformer with data: %s", self.formatted_class_name, data)
+            logger.debug("%s.__init__() Initializing secret transformer with data: %s", self.formatted_class_name, data)
             # we received a yaml or json string representation of a manifest.
             self.api_version = data.get(SAMKeys.APIVERSION.value, self.api_version)
             if data.get(SAMKeys.KIND.value) != self.kind:
@@ -415,7 +415,7 @@ class SecretTransformer(SmarterHelperMixin):
 
         self._secret = get_cached_secret(name=self.name, user_profile=self.user_profile)
         if self._secret:
-            logger.info(
+            logger.debug(
                 "%s.secret() initialized Django ORM Secret %s for user profile %s.",
                 self.formatted_class_name,
                 self.name,
@@ -441,7 +441,7 @@ class SecretTransformer(SmarterHelperMixin):
                     f"but not for user profile {self.user_profile.user.username}."
                 )
             self._secret = secret
-            logger.info(
+            logger.debug(
                 "%s.secret() initialized Django ORM Secret %s for user profile %s from account-level access.",
                 self.formatted_class_name,
                 self.name,
@@ -605,7 +605,7 @@ class SecretTransformer(SmarterHelperMixin):
 
         if self._secret and self._secret.id:
             self.id = self.secret.id  # type: ignore[assignment]
-            logger.info(
+            logger.debug(
                 "%s.create() Secret %s already exists. Updating secret %s instead.",
                 self.formatted_class_name,
                 self.name,
@@ -646,7 +646,7 @@ class SecretTransformer(SmarterHelperMixin):
                 setattr(self._secret, attr, value)
         self.secret.save()
         self.secret.tags.set(self.tags)
-        logger.info("%s.update() secret %s: %s.", self.formatted_class_name, self.name, self.id)
+        logger.debug("%s.update() secret %s: %s.", self.formatted_class_name, self.name, self.id)
         secret_updated.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
 
         return True
@@ -678,7 +678,7 @@ class SecretTransformer(SmarterHelperMixin):
         self._secret = None
         self._secret_serializer = None
         secret_deleted.send(sender=self.__class__, secret_id=secret_id, secret_name=secret_name)
-        logger.info("%s.delete() secret %s: %s.", self.formatted_class_name, secret_id, secret_name)
+        logger.debug("%s.delete() secret %s: %s.", self.formatted_class_name, secret_id, secret_name)
         return True
 
     def to_json(self, version: str = "v1") -> Optional[dict[str, Any]]:

@@ -284,7 +284,7 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
             client_ip = forwarded_for.split(",")[0].strip()
             # Validate it's not a private IP (load balancer/proxy IP)
             if not self._is_private_ip(client_ip):
-                logger.info(
+                logger.debug(
                     "%s.get_client_ip() - Using X-Forwarded-For: %s",
                     self.formatted_class_name,
                     client_ip,
@@ -294,7 +294,7 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
         # Check X-Real-IP (set by Nginx ingress controller)
         real_ip = request.META.get("HTTP_X_REAL_IP")
         if real_ip and not self._is_private_ip(real_ip.strip()):
-            logger.info(
+            logger.debug(
                 "%s.get_client_ip() - Using X-Real-IP: %s",
                 self.formatted_class_name,
                 real_ip.strip(),
@@ -304,7 +304,7 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
         # Check Cloudflare connecting IP if using Cloudflare
         cf_ip = request.META.get("HTTP_CF_CONNECTING_IP")
         if cf_ip and not self._is_private_ip(cf_ip.strip()):
-            logger.info(
+            logger.debug(
                 "%s.get_client_ip() - Using CF-Connecting-IP: %s",
                 self.formatted_class_name,
                 cf_ip.strip(),
@@ -313,14 +313,14 @@ class SmarterMiddlewareMixin(MiddlewareMixin, SmarterHelperMixin):
 
         # Fallback to REMOTE_ADDR (will be load balancer IP in AWS)
         remote_addr = request.META.get("REMOTE_ADDR", "127.0.0.1")
-        logger.info(
+        logger.debug(
             "%s.get_client_ip() - Falling back to REMOTE_ADDR: %s",
             self.formatted_class_name,
             remote_addr,
         )
 
         if not self._is_private_ip(remote_addr):
-            logger.info(
+            logger.debug(
                 "%s.get_client_ip() - Using REMOTE_ADDR: %s",
                 self.formatted_class_name,
                 remote_addr,

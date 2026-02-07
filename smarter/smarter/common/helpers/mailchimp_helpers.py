@@ -21,7 +21,7 @@ class MailchimpHelper:
     def ping(self) -> bool:
         try:
             mailchimp_api_response = self.client.ping.get()
-            logger.info("Connected to MailChimp API: %s", mailchimp_api_response)
+            logger.debug("Connected to MailChimp API: %s", mailchimp_api_response)
             return True
         except ApiClientError as error:
             logger.error(
@@ -45,7 +45,7 @@ class MailchimpHelper:
                 smarter_settings.mailchimp_list_id, {"email_address": email_address, "status": "subscribed"}
             )
             if mailchimp_api_response.get("status") == "subscribed":
-                logger.info(
+                logger.debug(
                     "Added %s to list %s, response: %s",
                     email_address,
                     smarter_settings.mailchimp_list_id,
